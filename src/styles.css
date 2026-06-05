@@ -1,0 +1,364 @@
+
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-script: "Caveat", "Dancing Script", cursive;
+  --font-sans: "Quicksand", "Nunito", system-ui, sans-serif;
+  --color-blush: var(--blush);
+  --color-petal: var(--petal);
+  --color-rose: var(--rose);
+  --color-hotpink: var(--hotpink);
+  --color-magenta: var(--magenta);
+  --color-cream: var(--cream);
+}
+
+/*
+ * Design system definition.
+ *
+ * The @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary).
+ *
+ * The :root and .dark blocks define the actual color values using oklch.
+ * All colors MUST use oklch format.
+ *
+ * To add a new semantic color:
+ * 1. Add the variable to :root (light value) and .dark (dark value)
+ * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 1.5rem;
+
+  /* Bloom palette */
+  --cream: oklch(0.985 0.012 350);
+  --blush: oklch(0.965 0.025 350);
+  --petal: oklch(0.92 0.06 350);
+  --rose: oklch(0.5 0.18 0);
+  --hotpink: oklch(0.62 0.24 0);
+  --magenta: oklch(0.5 0.26 0);
+
+  --background: oklch(0.98 0.015 350);
+  --foreground: oklch(0.45 0.18 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.45 0.18 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.45 0.18 0);
+  --primary: oklch(0.7 0.22 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.04 350);
+  --secondary-foreground: oklch(0.55 0.2 0);
+  --muted: oklch(0.96 0.025 350);
+  --muted-foreground: oklch(0.65 0.12 0);
+  --accent: oklch(0.92 0.07 350);
+  --accent-foreground: oklch(0.55 0.2 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.92 0.045 350);
+  --input: oklch(0.94 0.035 350);
+  --ring: oklch(0.7 0.22 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.99 0.01 350);
+  --sidebar-foreground: oklch(0.55 0.2 0);
+  --sidebar-primary: oklch(0.7 0.22 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.04 350);
+  --sidebar-accent-foreground: oklch(0.55 0.2 0);
+  --sidebar-border: oklch(0.92 0.045 350);
+  --sidebar-ring: oklch(0.7 0.22 0);
+}
+
+.dark {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.208 0.042 265.755);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+}
+
+@utility font-script {
+  font-family: var(--font-script);
+}
+
+@utility bloom-glow {
+  background-image:
+    radial-gradient(circle at 10% 10%, oklch(0.92 0.1 350 / 0.6), transparent 40%),
+    radial-gradient(circle at 90% 80%, oklch(0.88 0.12 350 / 0.5), transparent 45%);
+}
+
+@utility bloom-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--hotpink) 0 14px,
+    transparent 14px 28px
+  );
+}
+
+@utility text-bloom-gradient {
+  background-image: linear-gradient(135deg, oklch(0.65 0.27 350), oklch(0.55 0.3 0), oklch(0.7 0.25 20));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility bloom-aurora {
+  background:
+    radial-gradient(40rem 30rem at 10% 0%, oklch(0.85 0.18 350 / 0.55), transparent 60%),
+    radial-gradient(35rem 30rem at 90% 20%, oklch(0.8 0.22 10 / 0.5), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 100%, oklch(0.88 0.14 330 / 0.55), transparent 60%),
+    linear-gradient(180deg, oklch(0.98 0.02 350), oklch(0.95 0.05 350));
+  background-size: 200% 200%;
+  animation: bloom-aurora-shift 18s ease-in-out infinite;
+}
+
+@keyframes bloom-aurora-shift {
+  0%, 100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
+  50% { background-position: 20% 30%, 70% 40%, 40% 70%, 0 0; }
+}
+
+@keyframes bloom-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(6deg); }
+}
+
+@keyframes bloom-sparkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+}
+
+@keyframes bloom-orbit {
+  from { transform: rotate(0deg) translateX(var(--r, 180px)) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(var(--r, 180px)) rotate(-360deg); }
+}
+
+@keyframes bloom-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+@keyframes bloom-rise {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(-120vh) translateX(20px) scale(1.1); opacity: 0; }
+}
+
+@keyframes bloom-bounce-in {
+  0% { transform: scale(0.85); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1.05); }
+}
+
+@keyframes bloom-peak-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.7 0.27 350 / 0.55), 0 0 12px 2px oklch(0.75 0.25 350 / 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 0 8px oklch(0.7 0.27 350 / 0), 0 0 22px 6px oklch(0.75 0.27 350 / 0.7); transform: scale(1.06); }
+}
+
+@utility animate-bloom-float {
+  animation: bloom-float 6s ease-in-out infinite;
+}
+@utility animate-bloom-sparkle {
+  animation: bloom-sparkle 2.4s ease-in-out infinite;
+}
+@utility animate-bloom-orbit {
+  animation: bloom-orbit 14s linear infinite;
+}
+@utility animate-bloom-pulse {
+  animation: bloom-pulse 4s ease-in-out infinite;
+}
+@utility animate-bloom-rise {
+  animation: bloom-rise 18s linear infinite;
+}
+@utility animate-bloom-bounce {
+  animation: bloom-bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@utility animate-bloom-peak {
+  animation: bloom-peak-glow 2.6s ease-in-out infinite;
+}
+
+@keyframes bloom-drift {
+  0%   { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+  25%  { transform: translate3d(20px,-30px,0) rotate(8deg) scale(1.05); }
+  50%  { transform: translate3d(-15px,-55px,0) rotate(-6deg) scale(0.97); }
+  75%  { transform: translate3d(25px,-30px,0) rotate(10deg) scale(1.04); }
+  100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+}
+@utility animate-bloom-drift {
+  animation: bloom-drift 16s ease-in-out infinite;
+}
+
+@keyframes bloom-spin-slow {
+  to { transform: rotate(360deg); }
+}
+@utility animate-bloom-spin-slow {
+  animation: bloom-spin-slow 22s linear infinite;
+}
+
+@keyframes bloom-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@utility bloom-kawaii-bg {
+  background:
+    radial-gradient(60rem 40rem at 15% 10%, oklch(0.92 0.14 350 / 0.55), transparent 60%),
+    radial-gradient(50rem 40rem at 90% 30%, oklch(0.88 0.2 10 / 0.45), transparent 60%),
+    radial-gradient(55rem 45rem at 50% 100%, oklch(0.9 0.16 330 / 0.55), transparent 60%),
+    linear-gradient(135deg, oklch(0.98 0.03 350), oklch(0.94 0.08 350) 50%, oklch(0.97 0.05 10));
+  background-size: 200% 200%;
+  animation: bloom-gradient-shift 14s ease-in-out infinite;
+}
+
+@keyframes bloom-button-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 oklch(0.7 0.27 350 / 0.55),
+      0 6px 22px oklch(0.62 0.27 350 / 0.55),
+      0 0 18px oklch(0.75 0.25 350 / 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px oklch(0.7 0.27 350 / 0),
+      0 8px 30px oklch(0.62 0.3 350 / 0.75),
+      0 0 36px oklch(0.78 0.27 350 / 0.85);
+    transform: scale(1.04);
+  }
+}
+@utility animate-bloom-button-glow {
+  animation: bloom-button-glow 2.2s ease-in-out infinite;
+}
+@utility bloom-button-gradient {
+  background: linear-gradient(120deg, oklch(0.72 0.27 350), oklch(0.6 0.3 10) 45%, oklch(0.75 0.25 330));
+  background-size: 200% 200%;
+  animation: bloom-gradient-shift 4s ease-in-out infinite, bloom-button-glow 2.2s ease-in-out infinite;
+}
+
+@keyframes bloom-shimmer {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(220%) skewX(-20deg); }
+}
+@utility animate-bloom-shimmer {
+  animation: bloom-shimmer 2.8s ease-in-out infinite;
+}
+
+@utility bloom-bubble {
+  background:
+    radial-gradient(circle at 30% 28%, oklch(1 0 0 / 0.85), oklch(0.95 0.05 350 / 0.35) 35%, oklch(0.85 0.15 350 / 0.18) 65%, transparent 75%);
+  border: 1px solid oklch(1 0 0 / 0.5);
+  box-shadow:
+    inset -4px -6px 12px oklch(0.7 0.18 350 / 0.18),
+    inset 4px 6px 10px oklch(1 0 0 / 0.55),
+    0 8px 20px oklch(0.7 0.18 350 / 0.15);
+}
+
+@keyframes bloom-fall {
+  0% {
+    transform: translateY(-160px) translateX(0) rotate(0deg) scale(var(--start-scale, 0.8));
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--max-opacity, 0.7);
+  }
+  85% {
+    opacity: var(--max-opacity, 0.7);
+  }
+  100% {
+    transform: translateY(115vh) translateX(var(--drift-x, 60px)) rotate(var(--rotation, 360deg)) scale(var(--end-scale, 1.1));
+    opacity: 0;
+  }
+}
+
+@utility animate-bloom-fall {
+  animation: bloom-fall 25s linear infinite;
+}
+

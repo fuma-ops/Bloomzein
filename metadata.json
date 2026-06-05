@@ -1,0 +1,6 @@
+{
+  "name": "BloomyGirl",
+  "description": "A premium, cute, hyper-feminine wellness, lifestyle, and self-care tracker for women.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
