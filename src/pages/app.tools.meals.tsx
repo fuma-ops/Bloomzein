@@ -22,6 +22,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { img } from "@/lib/images";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import {
   RECIPES,
@@ -422,7 +423,7 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
         </div>
         <div
           className="hidden sm:block bg-cover bg-center min-h-[180px]"
-          style={{ backgroundImage: "url(/images/meals-hero.jpg)" }}
+          style={{ backgroundImage: `url(${img("meals-hero.jpg")})` }}
           aria-hidden
         />
       </div>
@@ -574,7 +575,7 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
             >
               {r?.image && (
                 <div className="aspect-square w-full overflow-hidden rounded-xl bg-blush mb-2">
-                  <img src={r.image} alt={r.name} loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={img(r.image)} alt={r.name} loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                 </div>
               )}
               <p className="text-[11px] uppercase font-bold text-hotpink">{d}</p>
@@ -880,7 +881,7 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
       {list.map((r) => (
         <Glass key={r.id} className="p-3">
           <button onClick={() => onOpen(r.id)} className="w-full text-left">
-            {r.image && <div className="aspect-[4/3] rounded-xl overflow-hidden bg-blush mb-2"><img src={r.image} loading="lazy" alt={r.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" /></div>}
+            {r.image && <div className="aspect-[4/3] rounded-xl overflow-hidden bg-blush mb-2"><img src={img(r.image)} loading="lazy" alt={r.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" /></div>}
             <p className="font-semibold text-rose">{r.name}</p>
           </button>
           <div className="mt-2 flex items-center gap-1">
@@ -936,7 +937,7 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
         className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl">
-        {r.image && <div className="h-40 sm:h-56 bg-cover bg-center" style={{ backgroundImage: `url(${r.image})` }} />}
+        {r.image && <div className="h-40 sm:h-56 bg-cover bg-center" style={{ backgroundImage: `url(${img(r.image)})` }} />}
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div>

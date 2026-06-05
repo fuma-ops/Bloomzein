@@ -1,4 +1,5 @@
 import { ArrowRight, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X } from "lucide-react";
+import { img } from "@/lib/images";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { TOOLS } from "@/components/bloom/tools";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
@@ -147,7 +148,7 @@ export default function Landing() {
               <div className="hidden lg:block"><SparkleRing radius={200} /></div>
               <div className="animate-bloom-float h-full w-full">
                 <img
-                  src="/images/hero-girl.png"
+                  src={img("hero-girl.png")}
                   alt="A joyful girl with vibrant pink hair smiling"
                   width={520}
                   height={520}
@@ -319,7 +320,7 @@ export default function Landing() {
         {/* Big image feature */}
         <section className="mt-20 grid gap-8 rounded-[3rem] bg-white/70 p-6 shadow-xl shadow-rose/10 backdrop-blur lg:grid-cols-2 md:p-10">
           <div className="relative overflow-hidden rounded-[2rem]">
-            <img src="/images/feature-1.png" alt="Cozy pink bedroom" loading="lazy" width={896} height={640} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+            <img src={img("feature-1.png")} alt="Cozy pink bedroom" loading="lazy" width={896} height={640} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
             <Sparkles className="absolute right-4 top-4 h-7 w-7 animate-bloom-sparkle text-white drop-shadow-lg" aria-hidden />
           </div>
           <div className="flex flex-col justify-center">
@@ -425,9 +426,9 @@ const FEATURES = [
 ];
 
 const POSTS = [
-  { title: "morning rituals", blurb: "5 soft habits to start your day pink.", tag: "Lifestyle", img: "/images/blog-1.png" },
-  { title: "pink pilates", blurb: "A 10-min flow for your softest era.", tag: "Movement", img: "/images/blog-2.png" },
-  { title: "strawberry season", blurb: "Sweet little recipes to glow on.", tag: "Treats", img: "/images/blog-3.png" },
+  { title: "morning rituals", blurb: "5 soft habits to start your day pink.", tag: "Lifestyle", img: img("blog-1.png") },
+  { title: "pink pilates", blurb: "A 10-min flow for your softest era.", tag: "Movement", img: img("blog-2.png") },
+  { title: "strawberry season", blurb: "Sweet little recipes to glow on.", tag: "Treats", img: img("blog-3.png") },
 ];
 
 const QUOTES = [

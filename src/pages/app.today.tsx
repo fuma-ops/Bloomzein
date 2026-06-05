@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { img } from "@/lib/images";
 import {
   Sparkles, Flower2, Pill, Wallet, Footprints, Heart,
   PencilLine, ArrowRight, Clock, Flame, Sun, Moon, Smile,
@@ -114,7 +115,7 @@ export default function TodayPage() {
         className="relative overflow-hidden -mx-3 sm:-mx-6 md:mx-0 -mt-3 sm:-mt-5 md:mt-0 rounded-b-[1.75rem] sm:rounded-b-[2.5rem] md:rounded-[2.5rem] rounded-t-none md:rounded-t-[2.5rem] border-b border-petal/60 md:border md:border-t shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)] stagger"
         style={{ animationDelay: "0ms" }}
       >
-        <img src="/images/today-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+        <img src={img("today-hero.png")} alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent" />
         <div className="relative px-4 py-5 sm:px-12 sm:py-14 max-w-xl">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
@@ -291,7 +292,7 @@ export default function TodayPage() {
           className="group flex flex-col sm:flex-row items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_10px_24px_-14px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-0.5"
         >
           <div className="relative sm:w-64 h-44 sm:h-auto overflow-hidden">
-            <img src="/images/read-selfcare.png" alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+            <img src={img("read-selfcare.png")} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
           </div>
           <div className="p-5 sm:p-6 flex-1 flex flex-col">
             <span className="inline-flex w-fit items-center rounded-full bg-blush text-hotpink text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border border-petal/60">
