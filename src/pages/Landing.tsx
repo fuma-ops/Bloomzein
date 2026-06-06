@@ -7,8 +7,6 @@ import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { useEffect, useState } from "react";
 
-import newHeroImage from "@/assets/images/regenerated_image_1780757853907.jpg";
-
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // light parallax for sparkles
@@ -149,7 +147,7 @@ export default function Landing() {
               <div className="hidden lg:block"><SparkleRing radius={200} /></div>
               <div className="animate-bloom-float h-full w-full">
                 <img
-                  src={newHeroImage}
+                  src="/images/hero-girl.png"
                   alt="A joyful girl with vibrant pink hair smiling"
                   width={520}
                   height={520}

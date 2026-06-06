@@ -8,8 +8,6 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
-
-
 // ===================== DATA =====================
 
 type Level = "Beginner" | "Intermediate" | "Advanced";

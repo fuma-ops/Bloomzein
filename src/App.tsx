@@ -10,7 +10,6 @@ import ShopPage from "./pages/app.shop";
 import MePage from "./pages/app.me";
 import NotesPage from "./pages/app.tools.notes";
 import { AppShell } from "./components/bloom/AppShell";
-import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
@@ -116,12 +115,7 @@ export default function App() {
   }
 
   if (content) {
-    return (
-      <>
-        <AppShell currentPath={path}>{content}</AppShell>
-        <InstallPrompt />
-      </>
-    );
+    return <AppShell currentPath={path}>{content}</AppShell>;
   }
 
   // Fallback 404 screen
