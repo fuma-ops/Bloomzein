@@ -1,4 +1,4 @@
-import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Share } from "lucide-react";
+import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Share, MoreVertical, Plus } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { TOOLS } from "@/components/bloom/tools";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
@@ -8,13 +8,17 @@ import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { storePWAPrompt, triggerPWAInstall, hasPWAPrompt, isIOS } from "@/lib/pwa";
 import { useEffect, useRef, useState } from "react";
 
+function isAndroid() {
+  return /android/i.test(navigator.userAgent);
+}
+
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [iosTooltip, setIosTooltip] = useState(false);
+  const [showInstallTip, setShowInstallTip] = useState(false);
   const [hasPrompt, setHasPrompt] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  // light parallax for sparkles
   const [scrollY, setScrollY] = useState(0);
+
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -28,31 +32,25 @@ export default function Landing() {
     };
   }, []);
 
-  // Close iOS tooltip when clicking outside
   useEffect(() => {
-    if (!iosTooltip) return;
+    if (!showInstallTip) return;
     const handleOutside = (e: MouseEvent) => {
       if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
-        setIosTooltip(false);
+        setShowInstallTip(false);
       }
     };
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
-  }, [iosTooltip]);
+  }, [showInstallTip]);
 
   const handleDownload = async (e: React.MouseEvent) => {
-    if (isIOS()) {
-      e.preventDefault();
-      setIosTooltip(true);
-      return;
-    }
+    e.preventDefault(); // never navigate — always handle install
     if (hasPWAPrompt()) {
-      e.preventDefault();
       const result = await triggerPWAInstall();
       if (result === "accepted") setHasPrompt(false);
       return;
     }
-    // fallback: navigate to app where the 10s banner will appear
+    setShowInstallTip(true);
   };
 
   return (
@@ -212,20 +210,39 @@ export default function Landing() {
                   <span className="bloom-cta-shine" aria-hidden />
                 </a>
                 <div className="relative" ref={tooltipRef}>
-                  <a
-                    href="/app/today"
+                  <button
                     onClick={handleDownload}
                     className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-hotpink transition hover:bg-white"
                   >
                     <Download className="h-4 w-4" />
                     Download App
-                  </a>
-                  {iosTooltip && (
-                    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 rounded-2xl bg-white shadow-xl shadow-[#EC4899]/20 border border-[#EC4899]/20 p-4 animate-fade-in z-50">
-                      <p className="text-sm font-bold text-[#831843] mb-1">Installer sur iPhone</p>
-                      <p className="text-xs text-[#9D5C7E] leading-snug">
-                        Appuie sur <span className="inline-flex items-center gap-0.5 font-semibold"><Share className="h-3 w-3" /> Partager</span> en bas de ton navigateur, puis <span className="font-semibold">Sur l'écran d'accueil</span>.
+                  </button>
+                  {showInstallTip && (
+                    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-72 rounded-2xl bg-white shadow-xl shadow-[#EC4899]/25 border border-[#EC4899]/20 p-4 animate-fade-in z-50">
+                      <p className="text-sm font-bold text-[#831843] mb-2">
+                        {isIOS() ? "Installer sur iPhone / iPad" : isAndroid() ? "Installer sur Android" : "Installer sur ton appareil"}
                       </p>
+                      {isIOS() ? (
+                        <ol className="text-xs text-[#9D5C7E] leading-relaxed space-y-1">
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">1</span> Appuie sur <Share className="inline h-3.5 w-3.5 mx-0.5" /> <span className="font-semibold">Partager</span> en bas</li>
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">2</span> Appuie sur <Plus className="inline h-3.5 w-3.5 mx-0.5" /> <span className="font-semibold">Sur l'écran d'accueil</span></li>
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">3</span> Appuie sur <span className="font-semibold">Ajouter</span> ✿</li>
+                        </ol>
+                      ) : isAndroid() ? (
+                        <ol className="text-xs text-[#9D5C7E] leading-relaxed space-y-1">
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">1</span> Appuie sur <MoreVertical className="inline h-3.5 w-3.5 mx-0.5" /> menu du navigateur</li>
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">2</span> Sélectionne <span className="font-semibold">Ajouter à l'écran d'accueil</span></li>
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">3</span> Appuie sur <span className="font-semibold">Ajouter</span> ✿</li>
+                        </ol>
+                      ) : (
+                        <ol className="text-xs text-[#9D5C7E] leading-relaxed space-y-1">
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">1</span> Cherche l'icône <Download className="inline h-3.5 w-3.5 mx-0.5" /> dans la barre d'adresse</li>
+                          <li className="flex items-start gap-1.5"><span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#FBCFE8] text-[#EC4899] font-bold text-[10px]">2</span> Clique sur <span className="font-semibold">Installer</span> ✿</li>
+                        </ol>
+                      )}
+                      <button onClick={() => setShowInstallTip(false)} className="absolute top-2.5 right-2.5 grid h-6 w-6 place-items-center rounded-full text-[#9D5C7E] hover:bg-[#FBCFE8] transition">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                       <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 bg-white border-r border-b border-[#EC4899]/20" />
                     </div>
                   )}
