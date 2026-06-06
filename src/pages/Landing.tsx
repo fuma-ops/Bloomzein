@@ -5,7 +5,7 @@ import { SparkleRing } from "@/components/bloom/SparkleRing";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
-import { storePWAPrompt, triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
+import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { useEffect, useState } from "react";
 
 export default function Landing() {
@@ -17,11 +17,7 @@ export default function Landing() {
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("beforeinstallprompt", storePWAPrompt);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("beforeinstallprompt", storePWAPrompt);
-    };
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Auto-hide iOS hint after 5s

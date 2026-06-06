@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react"
 import { Download, X } from "lucide-react"
-import { storePWAPrompt, triggerPWAInstall, hasPWAPrompt, isIOS, isStandalone } from "@/lib/pwa"
+import { triggerPWAInstall, hasPWAPrompt, isIOS, isStandalone } from "@/lib/pwa"
 
 export function InstallPrompt() {
   const [visible, setVisible] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [installed, setInstalled] = useState(false)
-  const [hasPrompt, setHasPrompt] = useState(false)
+  const [hasPrompt, setHasPrompt] = useState(hasPWAPrompt())
 
   useEffect(() => {
     if (isStandalone()) { setInstalled(true); return }
 
-    const handler = (e: Event) => {
-      storePWAPrompt(e)
-      setHasPrompt(true)
-    }
+    // Prompt may already be stored (captured in main.tsx), or fire later
+    const handler = () => setHasPrompt(true)
     window.addEventListener("beforeinstallprompt", handler)
     window.addEventListener("appinstalled", () => setInstalled(true))
 
@@ -29,7 +27,6 @@ export function InstallPrompt() {
   const handleInstall = async () => {
     const result = await triggerPWAInstall()
     if (result === "accepted") setInstalled(true)
-    setHasPrompt(false)
   }
 
   if (installed || dismissed || !visible) return null
