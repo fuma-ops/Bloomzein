@@ -1,4 +1,4 @@
-import { ArrowRight, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X } from "lucide-react";
+import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { TOOLS } from "@/components/bloom/tools";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
@@ -114,7 +114,7 @@ export default function Landing() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 sm:py-3.5 bg-hotpink text-white rounded-full font-bold shadow-md shadow-hotpink/30 hover:bg-magenta transition text-center"
               >
-                Open Bloom & Zein App
+                Download Bloom & Zein App
               </a>
               <p className="text-center font-script text-base text-rose/80">stay soft, bloom on ✿</p>
             </div>
@@ -175,9 +175,10 @@ export default function Landing() {
                 </a>
                 <a
                   href="/app/today"
-                  className="hover-scale inline-flex items-center rounded-full border-2 border-white bg-white/90 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-hotpink transition hover:bg-white"
+                  className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-hotpink transition hover:bg-white"
                 >
-                  Open App
+                  <Download className="h-4 w-4" />
+                  Download App
                 </a>
               </div>
             </div>

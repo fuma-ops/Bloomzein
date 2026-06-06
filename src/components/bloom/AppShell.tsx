@@ -1,5 +1,6 @@
 import { Sun, LayoutGrid, BookOpen, ShoppingBag, User, type LucideIcon } from "lucide-react";
 import { BloomLogo } from "./BloomLogo";
+import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 
 interface NavItem {
@@ -28,9 +29,9 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
         <div>
           <div className="mb-8 px-1">
             <div className="lg:block hidden"><BloomLogo /></div>
-            <div className="lg:hidden grid h-10 w-10 place-items-center rounded-full bg-blush text-hotpink">
+            <div className="lg:hidden">
               <a href="/" aria-label="Bloom & Zein home">
-                <span className="font-script text-2xl text-[#EC4899]">B</span>
+                <AppIcon size={38} />
               </a>
             </div>
           </div>
