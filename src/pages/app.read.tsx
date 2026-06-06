@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { img } from "@/lib/images";
 import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
@@ -18,13 +17,13 @@ interface Article {
 }
 
 const IMG = {
-  featured: img("read-featured.png"),
-  "Cycle & Body": img("read-cycle.png"),
-  "Self-care": img("read-selfcare.png"),
-  "Money": img("read-money.png"),
-  "Movement": img("read-movement.png"),
-  "Mindset": img("read-mindset.png"),
-  "Recipes": img("read-recipes.png"),
+  featured: "/images/read-featured.png",
+  "Cycle & Body": "/images/read-cycle.png",
+  "Self-care": "/images/read-selfcare.png",
+  "Money": "/images/read-money.png",
+  "Movement": "/images/read-movement.png",
+  "Mindset": "/images/read-mindset.png",
+  "Recipes": "/images/read-recipes.png",
 } as const;
 
 const ARTICLES: Article[] = [
