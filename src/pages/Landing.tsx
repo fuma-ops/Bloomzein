@@ -1,21 +1,59 @@
-import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X } from "lucide-react";
+import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Share } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { TOOLS } from "@/components/bloom/tools";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
-import { useEffect, useState } from "react";
+import { storePWAPrompt, triggerPWAInstall, hasPWAPrompt, isIOS } from "@/lib/pwa";
+import { useEffect, useRef, useState } from "react";
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [iosTooltip, setIosTooltip] = useState(false);
+  const [hasPrompt, setHasPrompt] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   // light parallax for sparkles
   const [scrollY, setScrollY] = useState(0);
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    const handler = (e: Event) => { storePWAPrompt(e); setHasPrompt(true); };
+    window.addEventListener("beforeinstallprompt", handler);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
+
+  // Close iOS tooltip when clicking outside
+  useEffect(() => {
+    if (!iosTooltip) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        setIosTooltip(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [iosTooltip]);
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    if (isIOS()) {
+      e.preventDefault();
+      setIosTooltip(true);
+      return;
+    }
+    if (hasPWAPrompt()) {
+      e.preventDefault();
+      const result = await triggerPWAInstall();
+      if (result === "accepted") setHasPrompt(false);
+      return;
+    }
+    // fallback: navigate to app where the 10s banner will appear
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bloom-breathe bg-gradient-to-br from-[#e0c3fc]/40 via-[#8ec5fc]/30 to-[#ffc3a0]/30">
@@ -173,13 +211,25 @@ export default function Landing() {
                   <span className="relative z-10 inline-flex items-center gap-2">Start Blooming <ArrowRight className="h-4 w-4" /></span>
                   <span className="bloom-cta-shine" aria-hidden />
                 </a>
-                <a
-                  href="/app/today"
-                  className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-hotpink transition hover:bg-white"
-                >
-                  <Download className="h-4 w-4" />
-                  Download App
-                </a>
+                <div className="relative" ref={tooltipRef}>
+                  <a
+                    href="/app/today"
+                    onClick={handleDownload}
+                    className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-hotpink transition hover:bg-white"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download App
+                  </a>
+                  {iosTooltip && (
+                    <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-64 rounded-2xl bg-white shadow-xl shadow-[#EC4899]/20 border border-[#EC4899]/20 p-4 animate-fade-in z-50">
+                      <p className="text-sm font-bold text-[#831843] mb-1">Installer sur iPhone</p>
+                      <p className="text-xs text-[#9D5C7E] leading-snug">
+                        Appuie sur <span className="inline-flex items-center gap-0.5 font-semibold"><Share className="h-3 w-3" /> Partager</span> en bas de ton navigateur, puis <span className="font-semibold">Sur l'écran d'accueil</span>.
+                      </p>
+                      <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 bg-white border-r border-b border-[#EC4899]/20" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
