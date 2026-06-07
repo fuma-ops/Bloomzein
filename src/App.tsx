@@ -11,12 +11,14 @@ import MePage from "./pages/app.me";
 import NotesPage from "./pages/app.tools.notes";
 import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
+import { AuthProvider } from "./contexts/AuthContext";
+import { AuthGate } from "./components/bloom/AuthGate";
 import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
 import { CycleTracker } from "./components/bloom/CycleTracker";
 
-export default function App() {
+function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
 
   useEffect(() => {
@@ -116,9 +118,13 @@ export default function App() {
   }
 
   if (content) {
+    // Today, Tools and Me require an account — Shop and Read stay public for visibility/SEO
+    const isProtected = path === "/app/today" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
     return (
       <>
-        <AppShell currentPath={path}>{content}</AppShell>
+        <AppShell currentPath={path}>
+          {isProtected ? <AuthGate>{content}</AuthGate> : content}
+        </AppShell>
         <InstallPrompt />
       </>
     );
@@ -133,5 +139,13 @@ export default function App() {
         Go Home
       </a>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

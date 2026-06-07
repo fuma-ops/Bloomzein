@@ -6,6 +6,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* ---------- count-up ---------- */
 function useCountUp(target: number, duration = 900) {
@@ -123,6 +124,9 @@ const settingsGroups: { items: { Icon: typeof User; label: string; href?: string
 ];
 
 export default function MePage() {
+  const { profile, user, signOut } = useAuth();
+  const displayName = profile?.name || user?.email?.split("@")[0] || "Bloom girl";
+
   return (
     <div className="relative animate-bloom-bounce">
       <BloomBubbles count={10} />
@@ -149,11 +153,8 @@ export default function MePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-script text-3xl sm:text-6xl text-white drop-shadow-[0_2px_6px_oklch(0.4_0.2_350/0.6)] leading-none">
-                Sofia
+                {displayName}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-hotpink shadow">
-                <Crown className="h-3 w-3" strokeWidth={2} /> PREMIUM
-              </span>
             </div>
             <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm font-medium text-white/95 drop-shadow">blooming since 2026 ✿</p>
           </div>
@@ -254,6 +255,7 @@ export default function MePage() {
               {group.items.map((item, i) => (
                 <button
                   key={item.label}
+                  onClick={item.label === "Log out" ? () => signOut() : undefined}
                   className={[
                     "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-blush/60",
                     i > 0 ? "border-t border-petal/40" : "",
