@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { 
-  ArrowLeft, Search, Pin, PinOff, Plus, Trash2, Edit3, CheckCircle2, 
-  Sparkles, Bell, BellRing, Smartphone, Check, Calendar, Clock, 
+  ArrowLeft, Search, Pin, PinOff, Plus, Minus, Trash2, Edit3, CheckCircle2,
+  Sparkles, Bell, BellRing, Smartphone, Check, Calendar, Clock,
   Heart, Palette, Tag, AlertCircle, X, ChevronDown, ChevronUp, RotateCcw,
-  Pill, Users, BookOpen, Sparkle, Gift, type LucideIcon
+  Pill, Users, Sparkle, Cake, Stethoscope, Plane, Briefcase, CalendarClock, type LucideIcon
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
@@ -22,15 +22,22 @@ interface Note {
   createdAt: string;
 }
 
+type ReminderKind = "medication" | "birthday" | "event";
+
 interface Reminder {
   id: string;
+  kind: ReminderKind;
   title: string;
-  date: string;     // "YYYY-MM-DD"
-  time: string;     // "HH:MM"
-  repeat: "None" | "Daily" | "Weekly";
-  category: string; // Self-care, Health, Social, Study, Chore, Sweet-moment
-  done: boolean;
-  notified?: boolean;
+  category: string;       // event sub-category — ignored for medication & birthday
+  date: string;           // "YYYY-MM-DD" — anchor date (event start / birthday month+day reference)
+  endDate?: string;       // event range end, e.g. vacations
+  time?: string;          // "HH:MM" — single time of day for events & birthdays
+  times: string[];        // medication time slots, e.g. ["09:00", "21:00"]
+  weekdays: number[];     // medication recurrence days, 0=Sun..6=Sat — empty means every day
+  leadDays: number;       // 0 = remind on the day only; >0 also nudge this many days ahead
+  done: boolean;          // only meaningful for one-off events
+  notifiedKey?: string;   // dedupe key for the last alert fired
+  createdAt: string;
 }
 
 const NOTE_COLORS = [
@@ -43,14 +50,123 @@ const NOTE_COLORS = [
 
 const NOTE_TAGS = ["Self-care", "Ideas", "To-do", "Love", "Other"];
 
-const REMINDER_CATEGORIES = [
-  { key: "self-care", label: "Self-care", Icon: Heart, color: "text-hotpink bg-blush" },
-  { key: "health", label: "Health", Icon: Pill, color: "text-emerald-600 bg-emerald-50" },
-  { key: "social", label: "Social", Icon: Users, color: "text-purple-600 bg-purple-50" },
-  { key: "study", label: "Study", Icon: BookOpen, color: "text-blue-600 bg-blue-50" },
-  { key: "chore", label: "Chore", Icon: Sparkle, color: "text-amber-600 bg-amber-50" },
-  { key: "sweet", label: "Sweet moment", Icon: Gift, color: "text-rose-600 bg-rose-50" },
+const KIND_OPTIONS: { key: ReminderKind; label: string; emoji: string; Icon: LucideIcon; hint: string }[] = [
+  { key: "medication", label: "Medication", emoji: "💊", Icon: Pill, hint: "Pills, vitamins & daily habits" },
+  { key: "event", label: "Appointment & events", emoji: "📅", Icon: CalendarClock, hint: "Meetings, doctor visits, vacations…" },
+  { key: "birthday", label: "Birthday", emoji: "🎂", Icon: Cake, hint: "Repeats every year, forever ✿" },
 ];
+
+const EVENT_CATEGORIES = [
+  { key: "appointment", label: "Appointment", Icon: Stethoscope, color: "text-sky-600 bg-sky-50" },
+  { key: "meeting", label: "Meeting", Icon: Briefcase, color: "text-indigo-600 bg-indigo-50" },
+  { key: "vacation", label: "Vacation", Icon: Plane, color: "text-amber-600 bg-amber-50" },
+  { key: "social", label: "Social", Icon: Users, color: "text-purple-600 bg-purple-50" },
+  { key: "chore", label: "Chore", Icon: Sparkle, color: "text-amber-600 bg-amber-50" },
+  { key: "other", label: "Other", Icon: Heart, color: "text-rose-600 bg-rose-50" },
+];
+
+const WEEKDAYS = [
+  { key: 0, short: "S", label: "Sunday" },
+  { key: 1, short: "M", label: "Monday" },
+  { key: 2, short: "T", label: "Tuesday" },
+  { key: 3, short: "W", label: "Wednesday" },
+  { key: 4, short: "T", label: "Thursday" },
+  { key: 5, short: "F", label: "Friday" },
+  { key: 6, short: "S", label: "Saturday" },
+];
+
+const LEAD_OPTIONS = [
+  { value: 0, label: "On the day" },
+  { value: 1, label: "1 day before" },
+  { value: 2, label: "2 days before" },
+  { value: 3, label: "3 days before" },
+  { value: 7, label: "1 week before" },
+];
+
+/* ---- date helpers (local, no timezone surprises) ---- */
+function pad2(n: number) {
+  return String(n).padStart(2, "0");
+}
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function parseLocalDate(s?: string): Date | null {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map((n) => parseInt(n, 10));
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+function fmtLocalDate(d: Date) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function addDays(d: Date, n: number) {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function prettyDate(s?: string) {
+  const d = parseLocalDate(s);
+  if (!d) return "";
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+}
+function prettyMonthDay(s?: string) {
+  const d = parseLocalDate(s);
+  if (!d) return "";
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "long" });
+}
+
+/** Soonest relevant calendar date (today or future) — drives sorting & notification badges. */
+function nextOccurrence(rem: Reminder, from: Date = new Date()): Date | null {
+  const today = startOfDay(from);
+
+  if (rem.kind === "medication") {
+    for (let i = 0; i < 14; i++) {
+      const d = addDays(today, i);
+      if (rem.weekdays.length === 0 || rem.weekdays.includes(d.getDay())) return d;
+    }
+    return null;
+  }
+
+  if (rem.kind === "birthday") {
+    const ref = parseLocalDate(rem.date);
+    if (!ref) return null;
+    let next = new Date(today.getFullYear(), ref.getMonth(), ref.getDate());
+    if (next < today) next = new Date(today.getFullYear() + 1, ref.getMonth(), ref.getDate());
+    return next;
+  }
+
+  const start = parseLocalDate(rem.date);
+  if (!start) return null;
+  const end = parseLocalDate(rem.endDate) || start;
+  if (start <= today && today <= end) return today;
+  return start;
+}
+
+/** Age the person turns on their next birthday occurrence — null if no birth year was given. */
+function turningAge(rem: Reminder): number | null {
+  if (rem.kind !== "birthday") return null;
+  const ref = parseLocalDate(rem.date);
+  const next = nextOccurrence(rem);
+  if (!ref || !next || ref.getFullYear() < 1900) return null;
+  return next.getFullYear() - ref.getFullYear();
+}
+
+function reminderVisual(rem: Reminder): { Icon: LucideIcon; color: string; label: string } {
+  if (rem.kind === "medication") return { Icon: Pill, color: "text-emerald-600 bg-emerald-50", label: "Medication" };
+  if (rem.kind === "birthday") return { Icon: Cake, color: "text-pink-600 bg-pink-50", label: "Birthday" };
+  const cat = EVENT_CATEGORIES.find((c) => c.key === rem.category);
+  return cat ? { Icon: cat.Icon, color: cat.color, label: cat.label } : { Icon: Heart, color: "text-hotpink bg-blush", label: "Event" };
+}
+
+function weekdaysLabel(days: number[]) {
+  if (days.length === 0) return "Every day";
+  if (days.length === 1) return `Every ${WEEKDAYS[days[0]].label}`;
+  return days.map((d) => WEEKDAYS[d].label.slice(0, 3)).join(", ");
+}
 
 const STORAGE_KEYS = {
   notes: "bloom:notes",
@@ -136,11 +252,37 @@ export default function NotesPage() {
   // Form states (Reminders)
   const [showReminderForm, setShowReminderForm] = useState(false);
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
+  const [remKind, setRemKind] = useState<ReminderKind>("medication");
   const [remTitle, setRemTitle] = useState("");
-  const [remDate, setRemDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [remCategory, setRemCategory] = useState("appointment");
+  // event & birthday date
+  const [remDate, setRemDate] = useState(() => todayStr());
+  const [remIsRange, setRemIsRange] = useState(false);
+  const [remEndDate, setRemEndDate] = useState("");
+  const [remHasTime, setRemHasTime] = useState(false);
   const [remTime, setRemTime] = useState("09:00");
-  const [remRepeat, setRemRepeat] = useState<"None" | "Daily" | "Weekly">("None");
-  const [remCategory, setRemCategory] = useState("self-care");
+  // medication recurrence
+  const [remTimes, setRemTimes] = useState<string[]>(["09:00"]);
+  const [remEveryDay, setRemEveryDay] = useState(true);
+  const [remWeekdays, setRemWeekdays] = useState<number[]>([]);
+  // shared anticipation
+  const [remLeadDays, setRemLeadDays] = useState(0);
+
+  const resetReminderForm = () => {
+    setEditingReminderId(null);
+    setRemKind("medication");
+    setRemTitle("");
+    setRemCategory("appointment");
+    setRemDate(todayStr());
+    setRemIsRange(false);
+    setRemEndDate("");
+    setRemHasTime(false);
+    setRemTime("09:00");
+    setRemTimes(["09:00"]);
+    setRemEveryDay(true);
+    setRemWeekdays([]);
+    setRemLeadDays(0);
+  };
 
   // Completed section collapsed state
   const [doneCollapsed, setDoneCollapsed] = useState(true);
@@ -234,45 +376,61 @@ export default function NotesPage() {
   const handleSaveReminder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!remTitle.trim()) return;
+    if (remKind === "event" && remIsRange && remEndDate && remEndDate < remDate) return;
+
+    let payload: Omit<Reminder, "id" | "done" | "notifiedKey" | "createdAt">;
+
+    if (remKind === "medication") {
+      const times = remTimes.filter(Boolean);
+      payload = {
+        kind: "medication",
+        title: remTitle.trim(),
+        category: "medication",
+        date: todayStr(),
+        time: undefined,
+        endDate: undefined,
+        times: times.length ? times : ["09:00"],
+        weekdays: remEveryDay ? [] : remWeekdays,
+        leadDays: 0,
+      };
+    } else if (remKind === "birthday") {
+      payload = {
+        kind: "birthday",
+        title: remTitle.trim(),
+        category: "birthday",
+        date: remDate,
+        time: undefined,
+        endDate: undefined,
+        times: [],
+        weekdays: [],
+        leadDays: remLeadDays,
+      };
+    } else {
+      payload = {
+        kind: "event",
+        title: remTitle.trim(),
+        category: remCategory,
+        date: remDate,
+        endDate: remIsRange && remEndDate ? remEndDate : undefined,
+        time: remHasTime ? remTime : undefined,
+        times: [],
+        weekdays: [],
+        leadDays: remLeadDays,
+      };
+    }
 
     if (editingReminderId) {
       setReminders((prev) =>
-        prev.map((r) =>
-          r.id === editingReminderId
-            ? {
-                ...r,
-                title: remTitle,
-                date: remDate,
-                time: remTime,
-                repeat: remRepeat,
-                category: remCategory,
-                done: false, // reset done if editing
-                notified: false,
-              }
-            : r
-        )
+        prev.map((r) => (r.id === editingReminderId ? { ...r, ...payload, done: false, notifiedKey: undefined } : r))
       );
-      setEditingReminderId(null);
     } else {
-      const newRem: Reminder = {
-        id: Math.random().toString(36).slice(2, 10),
-        title: remTitle,
-        date: remDate,
-        time: remTime,
-        repeat: remRepeat,
-        category: remCategory,
-        done: false,
-        notified: false,
-      };
-      setReminders((prev) => [...prev, newRem]);
+      setReminders((prev) => [
+        ...prev,
+        { id: Math.random().toString(36).slice(2, 10), done: false, createdAt: new Date().toISOString(), ...payload },
+      ]);
     }
 
-    // Reset Form
-    setRemTitle("");
-    setRemDate(new Date().toISOString().slice(0, 10));
-    setRemTime("09:00");
-    setRemRepeat("None");
-    setRemCategory("self-care");
+    resetReminderForm();
     setShowReminderForm(false);
 
     // Anim
@@ -282,11 +440,18 @@ export default function NotesPage() {
 
   const handleEditReminder = (rem: Reminder) => {
     setEditingReminderId(rem.id);
+    setRemKind(rem.kind);
     setRemTitle(rem.title);
+    setRemCategory(rem.kind === "event" ? rem.category : "appointment");
     setRemDate(rem.date);
-    setRemTime(rem.time);
-    setRemRepeat(rem.repeat);
-    setRemCategory(rem.category);
+    setRemIsRange(!!rem.endDate);
+    setRemEndDate(rem.endDate || "");
+    setRemHasTime(!!rem.time);
+    setRemTime(rem.time || "09:00");
+    setRemTimes(rem.times.length ? rem.times : ["09:00"]);
+    setRemEveryDay(rem.weekdays.length === 0);
+    setRemWeekdays(rem.weekdays);
+    setRemLeadDays(rem.leadDays);
     setShowReminderForm(true);
   };
 
@@ -302,7 +467,7 @@ export default function NotesPage() {
 
   const handleToggleReminderDone = (id: string) => {
     setReminders((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, done: !r.done } : r))
+      prev.map((r) => (r.id === id && r.kind === "event" ? { ...r, done: !r.done } : r))
     );
     // Visual sparkle confirmation
     setJustSaved(true);
@@ -337,61 +502,70 @@ export default function NotesPage() {
     } catch {}
   };
 
-  // Reminder Checker Loop (runs every 10 seconds while the app is open)
+  // Smart Reminder Checker Loop — understands medication recurrence, yearly birthdays,
+  // one-off/range events, and "remind me X days before" anticipation for all of them.
   useEffect(() => {
-    const checkReminders = () => {
-      const now = new Date();
-      const todayString = now.toISOString().slice(0, 10);
-      const currentHours = String(now.getHours()).padStart(2, "0");
-      const currentMinutes = String(now.getMinutes()).padStart(2, "0");
-      const currentFullTime = `${currentHours}:${currentMinutes}`;
-
-      setReminders((prev) => {
-        let updated = false;
-        const nextList = prev.map((rem) => {
-          if (rem.done || rem.notified) return rem;
-
-          // Check if exactly reached or passed
-          const isTodayOrPastDate = rem.date <= todayString;
-          const isAtTimeOrPastTime = rem.time <= currentFullTime;
-
-          if (isTodayOrPastDate && isAtTimeOrPastTime) {
-            updated = true;
-            triggerNotification(rem);
-            return { ...rem, notified: true };
-          }
-          return rem;
-        });
-        return updated ? nextList : prev;
-      });
-    };
-
-    const triggerNotification = (rem: Reminder) => {
-      // 1. Browser Notification
+    const fireAlert = (rem: Reminder, body: string) => {
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         try {
-          new Notification("BloomyGirl Nudge ✿", {
-            body: `Gentle Reminder: ${rem.title} 💕`,
-            icon: "/images/me-avatar.png", // absolute icon path placeholder
-          });
+          new Notification("BloomyGirl Nudge ✿", { body: `${body} 💕`, icon: "/images/me-avatar.png" });
         } catch (e) {
           console.error("Browser notification failed to fire:", e);
         }
       }
+      setActiveAlert({ id: rem.id, title: rem.title, category: rem.kind === "event" ? rem.category : rem.kind });
+    };
 
-      // 2. In-App Sweet Top Alert Modal
-      setActiveAlert({
-        id: rem.id,
-        title: rem.title,
-        category: rem.category,
+    const checkReminders = () => {
+      const now = new Date();
+      const todayString = todayStr();
+      const currentTime = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+
+      setReminders((prev) => {
+        let changed = false;
+        const nextList = prev.map((rem) => {
+          if (rem.kind === "event" && rem.done) return rem;
+
+          if (rem.kind === "medication") {
+            const isActiveDay = rem.weekdays.length === 0 || rem.weekdays.includes(now.getDay());
+            if (!isActiveDay) return rem;
+            const dueSlot = [...rem.times].sort().find((t) => t <= currentTime);
+            if (!dueSlot) return rem;
+            const key = `${todayString}|${dueSlot}`;
+            if (rem.notifiedKey === key) return rem;
+            changed = true;
+            fireAlert(rem, `Time to take ${rem.title} · ${dueSlot}`);
+            return { ...rem, notifiedKey: key };
+          }
+
+          const occurrence = nextOccurrence(rem, now);
+          if (!occurrence) return rem;
+          const occStr = fmtLocalDate(occurrence);
+          const leadStr = rem.leadDays > 0 ? fmtLocalDate(addDays(occurrence, -rem.leadDays)) : null;
+          const dueTime = rem.time || "00:00";
+
+          let matchKey: string | null = null;
+          let label = "";
+          if (occStr === todayString && currentTime >= dueTime) {
+            matchKey = `due:${occStr}`;
+            label = rem.kind === "birthday" ? `${rem.title}'s birthday is today` : `${rem.title} is today`;
+          } else if (leadStr === todayString) {
+            matchKey = `lead:${leadStr}`;
+            label = `${rem.title} is coming up in ${rem.leadDays} day${rem.leadDays > 1 ? "s" : ""}`;
+          }
+
+          if (!matchKey || rem.notifiedKey === matchKey) return rem;
+          changed = true;
+          fireAlert(rem, label);
+          return { ...rem, notifiedKey: matchKey };
+        });
+        return changed ? nextList : prev;
       });
     };
 
-    // Initial check
+    // Initial check, then every 30s
     checkReminders();
-
-    // Check every 10s
-    const interval = setInterval(checkReminders, 10000);
+    const interval = setInterval(checkReminders, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -426,29 +600,24 @@ export default function NotesPage() {
   }, [notes, searchQuery, selectedTag]);
 
   const sortedReminders = useMemo(() => {
-    // Upcoming reminders
-    const upcoming = reminders.filter((r) => !r.done);
-    // Sorted by date first, then time
-    return upcoming.sort((a, b) => {
-      const dateDiff = a.date.localeCompare(b.date);
-      if (dateDiff !== 0) return dateDiff;
-      return a.time.localeCompare(b.time);
-    });
+    const now = new Date();
+    return reminders
+      .filter((r) => !(r.kind === "event" && r.done))
+      .map((r) => ({ rem: r, next: nextOccurrence(r, now) }))
+      .filter((x): x is { rem: Reminder; next: Date } => x.next !== null)
+      .sort((a, b) => {
+        const diff = a.next.getTime() - b.next.getTime();
+        if (diff !== 0) return diff;
+        const at = a.rem.kind === "medication" ? [...a.rem.times].sort()[0] || "" : a.rem.time || "";
+        const bt = b.rem.kind === "medication" ? [...b.rem.times].sort()[0] || "" : b.rem.time || "";
+        return at.localeCompare(bt);
+      })
+      .map((x) => x.rem);
   }, [reminders]);
 
   const completedReminders = useMemo(() => {
-    return reminders.filter((r) => r.done);
+    return reminders.filter((r) => r.kind === "event" && r.done);
   }, [reminders]);
-
-  const activeCategoryDetails = (catKey: string) => {
-    return (
-      REMINDER_CATEGORIES.find((c) => c.key === catKey) || {
-        Icon: Heart,
-        color: "text-hotpink bg-blush",
-        label: "Reminder",
-      }
-    );
-  };
 
   return (
     <div className="relative animate-fade-in min-h-screen">
@@ -634,12 +803,7 @@ export default function NotesPage() {
           {tab === "reminders" && (
             <button
               onClick={() => {
-                setEditingReminderId(null);
-                setRemTitle("");
-                setRemDate(new Date().toISOString().slice(0, 10));
-                setRemTime("09:00");
-                setRemRepeat("None");
-                setRemCategory("self-care");
+                resetReminderForm();
                 setShowReminderForm((v) => !v);
               }}
               className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md hover:bg-magenta hover:scale-105 transition"
@@ -886,7 +1050,7 @@ export default function NotesPage() {
         {/* ==================== REMINDERS TAB ==================== */}
         {tab === "reminders" && (
           <div className="animate-fade-in space-y-5">
-            {/* INLINE FORM FOR NEW / EDIT REMINDER */}
+            {/* INLINE SMART FORM FOR NEW / EDIT REMINDER */}
             {showReminderForm && (
               <form
                 onSubmit={handleSaveReminder}
@@ -894,7 +1058,7 @@ export default function NotesPage() {
               >
                 <div className="flex justify-between items-center">
                   <h3 className="font-script text-2xl text-hotpink">
-                    {editingReminderId ? "Edit gorgeous Reminder ✿" : "Set cute nudge Reminder ✿"}
+                    {editingReminderId ? "Edit gorgeous Reminder ✿" : "Set a smart nudge ✿"}
                   </h3>
                   <button
                     type="button"
@@ -905,74 +1069,246 @@ export default function NotesPage() {
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  {/* Kind selector */}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">
+                      What kind of reminder? ✿
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {KIND_OPTIONS.map((k) => (
+                        <button
+                          key={k.key}
+                          type="button"
+                          onClick={() => setRemKind(k.key)}
+                          className={[
+                            "flex items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition",
+                            remKind === k.key
+                              ? "border-hotpink bg-hotpink/10 shadow-sm"
+                              : "border-pink-200 bg-white hover:bg-blush",
+                          ].join(" ")}
+                        >
+                          <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-xl", remKind === k.key ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
+                            <k.Icon className="h-4 w-4" strokeWidth={1.8} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-xs font-bold text-rose">{k.emoji} {k.label}</span>
+                            <span className="block text-[10px] text-rose/50 truncate">{k.hint}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Title */}
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
-                      Reminder Goal Name
+                      {remKind === "medication" ? "Medication or habit name" : remKind === "birthday" ? "Whose birthday?" : "Title"}
                     </label>
                     <input
                       type="text"
                       required
                       value={remTitle}
                       onChange={(e) => setRemTitle(e.target.value)}
-                      placeholder="e.g. Sip Rose Tea, Take Multi-vitamin, Call sis..."
+                      placeholder={
+                        remKind === "medication"
+                          ? "e.g. Vitamin D, Iron pills, Allergy meds..."
+                          : remKind === "birthday"
+                            ? "e.g. Mom's birthday, Lina's birthday..."
+                            : "e.g. Dentist appointment, Team meeting, Beach vacation..."
+                      }
                       className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] placeholder:text-[#9D5C7E]/40 border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
-                        Date ✿
-                      </label>
-                      <CuteDatePicker
-                        value={remDate}
-                        onChange={(v) => setRemDate(v || new Date().toISOString().slice(0, 10))}
-                      />
-                    </div>
+                  {/* ===== Medication fields ===== */}
+                  {remKind === "medication" && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">
+                          Time(s) of day ✿
+                        </label>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {remTimes.map((t, i) => (
+                            <div key={i} className="flex items-center gap-1">
+                              <CuteTimePicker
+                                value={t}
+                                onChange={(v) => setRemTimes((prev) => prev.map((x, idx) => (idx === i ? v : x)))}
+                              />
+                              {remTimes.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setRemTimes((prev) => prev.filter((_, idx) => idx !== i))}
+                                  className="grid h-6 w-6 place-items-center rounded-full bg-blush text-rose/60 hover:text-hotpink hover:bg-petal transition"
+                                  title="Remove this time"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => setRemTimes((prev) => [...prev, "09:00"])}
+                            className="inline-flex items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-[11px] font-bold text-hotpink hover:bg-petal transition"
+                          >
+                            <Plus className="h-3 w-3" /> Add another time
+                          </button>
+                        </div>
+                      </div>
 
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1 flex items-center justify-between">
-                        <span>Time ✿</span>
-                        <span className="text-[9px] font-semibold text-hotpink lowercase">custom pink picker</span>
-                      </label>
-                      <CuteTimePicker value={remTime} onChange={setRemTime} />
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">
+                          How often? ✿
+                        </label>
+                        <div className="inline-flex rounded-full bg-white p-1 border border-pink-200/70">
+                          <button
+                            type="button"
+                            onClick={() => setRemEveryDay(true)}
+                            className={["rounded-full px-4 py-1.5 text-xs font-bold transition", remEveryDay ? "bg-hotpink text-white shadow-sm" : "text-rose/70 hover:bg-blush"].join(" ")}
+                          >
+                            Every day
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRemEveryDay(false)}
+                            className={["rounded-full px-4 py-1.5 text-xs font-bold transition", !remEveryDay ? "bg-hotpink text-white shadow-sm" : "text-rose/70 hover:bg-blush"].join(" ")}
+                          >
+                            Choose days
+                          </button>
+                        </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
-                        Repeat settings
-                      </label>
-                      <select
-                        value={remRepeat}
-                        onChange={(e) => setRemRepeat(e.target.value as any)}
-                        className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
-                      >
-                        <option value="None">Once (None)</option>
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                      </select>
-                    </div>
+                        {!remEveryDay && (
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            {WEEKDAYS.map((wd) => {
+                              const active = remWeekdays.includes(wd.key);
+                              return (
+                                <button
+                                  key={wd.key}
+                                  type="button"
+                                  title={wd.label}
+                                  onClick={() =>
+                                    setRemWeekdays((prev) => (active ? prev.filter((d) => d !== wd.key) : [...prev, wd.key].sort()))
+                                  }
+                                  className={[
+                                    "grid h-8 w-8 place-items-center rounded-full text-xs font-bold border transition",
+                                    active ? "bg-hotpink text-white border-hotpink shadow-sm" : "bg-white text-rose/60 border-pink-200 hover:bg-blush",
+                                  ].join(" ")}
+                                >
+                                  {wd.short}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
 
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
-                        Cute Category
+                  {/* ===== Birthday fields ===== */}
+                  {remKind === "birthday" && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
+                          Birthday date ✿
+                        </label>
+                        <CuteDatePicker value={remDate} onChange={(v) => setRemDate(v || todayStr())} />
+                        <p className="mt-1.5 text-[10px] text-rose/50 leading-snug">
+                          🎂 We'll remind you every year on this day, forever — the year you pick is only used to celebrate the right age.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
+                          Anticipation — give yourself time to prepare ✿
+                        </label>
+                        <select
+                          value={remLeadDays}
+                          onChange={(e) => setRemLeadDays(parseInt(e.target.value, 10))}
+                          className="w-full sm:w-auto rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
+                        >
+                          {LEAD_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* ===== Event / appointment fields ===== */}
+                  {remKind === "event" && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
+                          Category
+                        </label>
+                        <select
+                          value={remCategory}
+                          onChange={(e) => setRemCategory(e.target.value)}
+                          className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
+                        >
+                          {EVENT_CATEGORIES.map((c) => (
+                            <option key={c.key} value={c.key}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <label className="flex items-center gap-2 text-xs font-semibold text-rose/70">
+                        <input
+                          type="checkbox"
+                          checked={remIsRange}
+                          onChange={(e) => setRemIsRange(e.target.checked)}
+                          className="h-4 w-4 rounded accent-hotpink"
+                        />
+                        This spans multiple days (like a vacation)
                       </label>
-                      <select
-                        value={remCategory}
-                        onChange={(e) => setRemCategory(e.target.value)}
-                        className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
-                      >
-                        {REMINDER_CATEGORIES.map((c) => (
-                          <option key={c.key} value={c.key}>
-                            {c.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+
+                      <div className={["grid gap-3", remIsRange ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"].join(" ")}>
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
+                            {remIsRange ? "Starts ✿" : "Date ✿"}
+                          </label>
+                          <CuteDatePicker value={remDate} onChange={(v) => setRemDate(v || todayStr())} />
+                        </div>
+                        {remIsRange && (
+                          <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
+                              Ends ✿
+                            </label>
+                            <CuteDatePicker value={remEndDate} onChange={setRemEndDate} placeholder="Pick the end date" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-2 text-xs font-semibold text-rose/70 mb-1.5">
+                          <input
+                            type="checkbox"
+                            checked={remHasTime}
+                            onChange={(e) => setRemHasTime(e.target.checked)}
+                            className="h-4 w-4 rounded accent-hotpink"
+                          />
+                          Add a specific time
+                        </label>
+                        {remHasTime && <CuteTimePicker value={remTime} onChange={setRemTime} />}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
+                          Anticipation — get a heads-up before it happens ✿
+                        </label>
+                        <select
+                          value={remLeadDays}
+                          onChange={(e) => setRemLeadDays(parseInt(e.target.value, 10))}
+                          className="w-full sm:w-auto rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
+                        >
+                          {LEAD_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
 
                   <div className="flex justify-end gap-2 pt-3">
                     <button
@@ -1009,73 +1345,15 @@ export default function NotesPage() {
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {sortedReminders.map((rem) => {
-                    const cat = activeCategoryDetails(rem.category);
-                    return (
-                      <div
-                        key={rem.id}
-                        className="group flex items-center justify-between rounded-2xl border border-pink-100 bg-white p-3 sm:px-4 shadow-sm transition hover:shadow duration-150 animate-scale-in"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          {/* Checkbox button */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleReminderDone(rem.id)}
-                            className="p-1 h-6 w-6 shrink-0 rounded-full border border-pink-200 hover:border-hotpink hover:bg-pink-50 flex items-center justify-center transition"
-                            title="Complete"
-                          >
-                            <div className="h-4 w-4 rounded-full border border-transparent hover:bg-hotpink/10" />
-                          </button>
-
-                          <div className="min-w-0">
-                            {/* Title reminder representation style */}
-                            <h4 className="font-semibold text-rose text-xs sm:text-sm truncate">
-                              {rem.title}
-                            </h4>
-
-                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-[10px] text-rose/60 font-bold">
-                              <span className="flex items-center gap-1 text-hotpink shrink-0">
-                                <Calendar className="h-3 w-3" />
-                                {rem.date}
-                              </span>
-                              <span className="flex items-center gap-1 text-purple-600 shrink-0">
-                                <Clock className="h-3 w-3" />
-                                {rem.time}
-                              </span>
-                              {rem.repeat !== "None" && (
-                                <span className="text-emerald-600 font-extrabold lowercase shrink-0 flex items-center gap-1">
-                                  <RotateCcw className="h-2.5 w-2.5" />
-                                  {rem.repeat.toLowerCase()}
-                                </span>
-                              )}
-                              <span className={["px-2 py-0.5 rounded-full uppercase text-[9px] shrink-0 flex items-center gap-1", cat.color].join(" ")}>
-                                <cat.Icon className="h-2.5 w-2.5" />
-                                {cat.label}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Reminder item actions */}
-                        <div className="flex gap-1 shrink-0 ml-1.5 opacity-60 group-hover:opacity-100 transition">
-                          <button
-                            onClick={() => handleEditReminder(rem)}
-                            className="p-1.5 rounded-full bg-blush text-rose hover:text-hotpink hover:bg-petal transition"
-                            title="Edit"
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteReminder(rem.id)}
-                            className="p-1.5 rounded-full bg-blush text-rose hover:text-[#F87171] hover:bg-petal transition"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {sortedReminders.map((rem) => (
+                    <ReminderRow
+                      key={rem.id}
+                      rem={rem}
+                      onToggleDone={() => handleToggleReminderDone(rem.id)}
+                      onEdit={() => handleEditReminder(rem)}
+                      onDelete={() => handleDeleteReminder(rem.id)}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -1099,43 +1377,40 @@ export default function NotesPage() {
 
                 {!doneCollapsed && (
                   <div className="p-4 sm:p-5 border-t border-pink-200/20 bg-white/45 space-y-2">
-                    {completedReminders.map((rem) => {
-                      const cat = activeCategoryDetails(rem.category);
-                      return (
-                        <div
-                          key={rem.id}
-                          className="flex items-center justify-between rounded-xl bg-white/60 p-2.5 px-3 border border-pink-200/20 shadow-sm transition animate-scale-in"
-                        >
-                          <div className="flex items-center gap-3.5 min-w-0 opacity-60">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleReminderDone(rem.id)}
-                              className="p-1 h-5 w-5 shrink-0 rounded-full bg-hotpink text-white flex items-center justify-center transition"
-                              title="Undo completion"
-                            >
-                              <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                            </button>
-
-                            <div className="min-w-0">
-                              <h4 className="font-semibold text-rose text-xs line-through truncate leading-normal">
-                                {rem.title}
-                              </h4>
-                              <p className="text-[9px] text-rose/50 mt-0.5 font-semibold">
-                                completed ✿ {rem.category} ✿ {rem.date} @ {rem.time}
-                              </p>
-                            </div>
-                          </div>
-
+                    {completedReminders.map((rem) => (
+                      <div
+                        key={rem.id}
+                        className="flex items-center justify-between rounded-xl bg-white/60 p-2.5 px-3 border border-pink-200/20 shadow-sm transition animate-scale-in"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0 opacity-60">
                           <button
-                            onClick={() => handleDeleteReminder(rem.id)}
-                            className="p-1 text-rose/50 hover:text-[#F87171] transition"
-                            title="Delete"
+                            type="button"
+                            onClick={() => handleToggleReminderDone(rem.id)}
+                            className="p-1 h-5 w-5 shrink-0 rounded-full bg-hotpink text-white flex items-center justify-center transition"
+                            title="Undo completion"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Check className="h-3 w-3 text-white" strokeWidth={3} />
                           </button>
+
+                          <div className="min-w-0">
+                            <h4 className="font-semibold text-rose text-xs line-through truncate leading-normal">
+                              {rem.title}
+                            </h4>
+                            <p className="text-[9px] text-rose/50 mt-0.5 font-semibold">
+                              completed ✿ {prettyDate(rem.date)}{rem.time ? ` @ ${rem.time}` : ""}
+                            </p>
+                          </div>
                         </div>
-                      );
-                    })}
+
+                        <button
+                          onClick={() => handleDeleteReminder(rem.id)}
+                          className="p-1 text-rose/50 hover:text-[#F87171] transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1155,6 +1430,109 @@ export default function NotesPage() {
           animation: bloom-bounce 3.5s ease-in-out infinite;
         }
       `}</style>
+    </div>
+  );
+}
+
+function ReminderRow({
+  rem, onToggleDone, onEdit, onDelete,
+}: {
+  rem: Reminder;
+  onToggleDone: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const visual = reminderVisual(rem);
+  const age = turningAge(rem);
+
+  return (
+    <div className="group flex items-center justify-between rounded-2xl border border-pink-100 bg-white p-3 sm:px-4 shadow-sm transition hover:shadow duration-150 animate-scale-in">
+      <div className="flex items-center gap-3 min-w-0">
+        {rem.kind === "event" ? (
+          <button
+            type="button"
+            onClick={onToggleDone}
+            className="p-1 h-6 w-6 shrink-0 rounded-full border border-pink-200 hover:border-hotpink hover:bg-pink-50 flex items-center justify-center transition"
+            title="Mark as done"
+          >
+            <div className="h-4 w-4 rounded-full border border-transparent hover:bg-hotpink/10" />
+          </button>
+        ) : (
+          <span className={["grid h-7 w-7 shrink-0 place-items-center rounded-full", visual.color].join(" ")}>
+            <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
+          </span>
+        )}
+
+        <div className="min-w-0">
+          <h4 className="font-semibold text-rose text-xs sm:text-sm truncate">
+            {rem.title}
+            {age !== null && <span className="ml-1.5 font-bold text-hotpink">· turning {age} ✿</span>}
+          </h4>
+
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-[10px] text-rose/60 font-bold">
+            {rem.kind === "medication" ? (
+              <>
+                <span className="flex items-center gap-1 text-purple-600 shrink-0">
+                  <Clock className="h-3 w-3" />
+                  {[...rem.times].sort().join(" · ")}
+                </span>
+                <span className="text-emerald-600 font-extrabold shrink-0 flex items-center gap-1">
+                  <RotateCcw className="h-2.5 w-2.5" />
+                  {weekdaysLabel(rem.weekdays)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-1 text-hotpink shrink-0">
+                  <Calendar className="h-3 w-3" />
+                  {rem.kind === "birthday"
+                    ? prettyMonthDay(rem.date)
+                    : rem.endDate
+                      ? `${prettyDate(rem.date)} → ${prettyDate(rem.endDate)}`
+                      : prettyDate(rem.date)}
+                </span>
+                {rem.time && (
+                  <span className="flex items-center gap-1 text-purple-600 shrink-0">
+                    <Clock className="h-3 w-3" />
+                    {rem.time}
+                  </span>
+                )}
+                {rem.kind === "birthday" && (
+                  <span className="text-emerald-600 font-extrabold shrink-0 flex items-center gap-1">
+                    <RotateCcw className="h-2.5 w-2.5" /> every year
+                  </span>
+                )}
+                {rem.leadDays > 0 && (
+                  <span className="text-amber-600 font-extrabold shrink-0 flex items-center gap-1">
+                    <Bell className="h-2.5 w-2.5" /> nudge {rem.leadDays}d before
+                  </span>
+                )}
+              </>
+            )}
+            <span className={["px-2 py-0.5 rounded-full uppercase text-[9px] shrink-0 flex items-center gap-1", visual.color].join(" ")}>
+              <visual.Icon className="h-2.5 w-2.5" />
+              {visual.label}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-1 shrink-0 ml-1.5 opacity-60 group-hover:opacity-100 transition">
+        <button
+          onClick={onEdit}
+          className="p-1.5 rounded-full bg-blush text-rose hover:text-hotpink hover:bg-petal transition"
+          title="Edit"
+        >
+          <Edit3 className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={onDelete}
+          className="p-1.5 rounded-full bg-blush text-rose hover:text-[#F87171] hover:bg-petal transition"
+          title="Delete"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
