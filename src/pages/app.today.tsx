@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Sparkles, Flower2, Pill, Wallet, Footprints, Heart,
+  Sparkles, Flower2, Pill, Wallet, Heart,
   PencilLine, ArrowRight, Clock, Flame, Sun, Moon, Smile,
   Cloud, CloudRain, Battery, Droplet, Activity,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { useToolSnapshots } from "@/lib/toolSnapshots";
 
 const NAME = "Sofia";
 const STORAGE = { mood: "bloom:today-mood", streak: "bloom:streak-days" };
@@ -19,23 +20,6 @@ const MOODS = [
   { key: "cramps",    label: "Cramps",     Icon: Activity },
   { key: "bloated",   label: "Bloated",    Icon: Droplet },
 ] as const;
-
-function useCountUp(target: number, duration = 900) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min((t - t0) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setV(target * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return v;
-}
 
 function greeting(): { text: string; Icon: typeof Sun } {
   const h = new Date().getHours();
@@ -57,6 +41,7 @@ export default function TodayPage() {
 
   const [reminders, setReminders] = useState<any[]>([]);
   const [pinnedNotes, setPinnedNotes] = useState<any[]>([]);
+  const snapshots = useToolSnapshots();
 
   useEffect(() => {
     try { setMood(localStorage.getItem(STORAGE.mood)); } catch {}
@@ -81,15 +66,6 @@ export default function TodayPage() {
     return reminders.filter((r) => !r.done && r.date <= todayISO);
   }, [reminders, todayISO]);
 
-  const activeRemindersCount = activeReminders.length;
-  const nextReminder = useMemo(() => {
-    return [...activeReminders].sort((a, b) => {
-      const dateDiff = a.date.localeCompare(b.date);
-      if (dateDiff !== 0) return dateDiff;
-      return a.time.localeCompare(b.time);
-    })[0];
-  }, [activeReminders]);
-
   const pickMood = (key: string) => {
     setMood(key);
     setJustPicked(key);
@@ -98,10 +74,6 @@ export default function TodayPage() {
   };
 
   // Sample data
-  const steps = 6420;
-  const stepsGoal = 8000;
-  const spentToday = 24;
-  const leftThisMonth = 840;
   const cycleDay = 14;
   const streak = 7;
 
@@ -181,15 +153,9 @@ export default function TodayPage() {
         <SectionTitle hint="today">Today at a glance</SectionTitle>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <GlanceCard Icon={Flower2} label="Cycle" value={`Day ${cycleDay}`} note="Bloom phase — you're radiant" tone="from-hotpink to-magenta" />
-          <GlanceCard
-            Icon={Pill}
-            label="Reminders"
-            value={activeRemindersCount > 0 ? `${activeRemindersCount} due` : "All clear"}
-            note={nextReminder ? `${nextReminder.title} — at ${nextReminder.time}` : "No nudges today 🌸"}
-            tone="from-hotpink to-magenta"
-          />
-          <BudgetGlance spent={spentToday} left={leftThisMonth} />
-          <StepsGlance steps={steps} goal={stepsGoal} />
+          {snapshots.map((s) => (
+            <GlanceCard key={s.slug} Icon={s.Icon} label={s.label} value={s.value} note={s.note} tone="from-hotpink to-magenta" />
+          ))}
         </div>
       </section>
 
@@ -356,43 +322,6 @@ function GlanceCard({
       </div>
       <div className="mt-2 font-script text-3xl text-hotpink leading-none">{value}</div>
       <p className="mt-1 text-xs text-rose/75 leading-snug">{note}</p>
-    </div>
-  );
-}
-
-function BudgetGlance({ spent, left }: { spent: number; left: number }) {
-  const s = Math.round(useCountUp(spent));
-  const l = Math.round(useCountUp(left));
-  return (
-    <div className="rounded-3xl bg-white/85 backdrop-blur p-4 sm:p-5 border border-petal/50 shadow-[0_8px_24px_-14px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-0.5">
-      <div className="flex items-center gap-2 text-rose/80">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
-          <Wallet className="h-4 w-4" strokeWidth={1.6} />
-        </span>
-        <span className="text-[10px] font-bold uppercase tracking-wider">Budget</span>
-      </div>
-      <div className="mt-2 font-script text-3xl text-hotpink leading-none">${s} <span className="text-base font-sans text-rose/70">today</span></div>
-      <p className="mt-1 text-xs text-rose/75">${l} left this month</p>
-    </div>
-  );
-}
-
-function StepsGlance({ steps, goal }: { steps: number; goal: number }) {
-  const v = Math.round(useCountUp(steps));
-  const pct = Math.min(100, Math.round((steps / goal) * 100));
-  return (
-    <div className="rounded-3xl bg-white/85 backdrop-blur p-4 sm:p-5 border border-petal/50 shadow-[0_8px_24px_-14px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-0.5">
-      <div className="flex items-center gap-2 text-rose/80">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
-          <Footprints className="h-4 w-4" strokeWidth={1.6} />
-        </span>
-        <span className="text-[10px] font-bold uppercase tracking-wider">Steps</span>
-      </div>
-      <div className="mt-2 font-script text-3xl text-hotpink leading-none">{v.toLocaleString()}</div>
-      <div className="mt-1.5 h-1.5 rounded-full bg-blush overflow-hidden">
-        <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${pct}%` }} />
-      </div>
-      <p className="mt-1 text-xs text-rose/75">Try a 15-min slow yoga flow tonight</p>
     </div>
   );
 }

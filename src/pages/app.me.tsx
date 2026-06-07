@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-  Pencil, Sparkles, Droplet, Wallet, Footprints, Flame,
+  Pencil, Sparkles, Droplet, Flame, Wallet,
   Heart, BookOpen, Flower2, UtensilsCrossed, Target, ChevronRight,
   User, Crown, Bell, Settings as SettingsIcon, Shield, LifeBuoy, LogOut,
   ArrowRight,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToolSnapshots } from "@/lib/toolSnapshots";
 
 /* ---------- count-up ---------- */
 function useCountUp(target: number, duration = 900) {
@@ -126,6 +127,7 @@ const settingsGroups: { items: { Icon: typeof User; label: string; href?: string
 export default function MePage() {
   const { profile, user, signOut } = useAuth();
   const displayName = profile?.name || user?.email?.split("@")[0] || "Bloom girl";
+  const snapshots = useToolSnapshots();
 
   return (
     <div className="relative animate-bloom-bounce">
@@ -169,9 +171,10 @@ export default function MePage() {
         <SectionTitle hint="this week">Your Bloom journey</SectionTitle>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4">
           <Stat Icon={Droplet} label="Cycle phase" value="Luteal" />
-          <Stat Icon={Wallet} label="Budget left" value={840} suffix="$" />
-          <Stat Icon={Footprints} label="Steps today" value={6420} />
           <Stat Icon={Flame} label="Streak" value={7} suffix="days" />
+          {snapshots.map((s) => (
+            <Stat key={s.slug} Icon={s.Icon} label={s.label} value={s.value} />
+          ))}
         </div>
       </section>
 

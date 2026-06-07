@@ -9,6 +9,7 @@ import ReadPage from "./pages/app.read";
 import ShopPage from "./pages/app.shop";
 import MePage from "./pages/app.me";
 import NotesPage from "./pages/app.tools.notes";
+import DiaryPage from "./pages/app.tools.diary";
 import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -85,6 +86,8 @@ function AppContent() {
     content = <MealsPage />;
   } else if (path === "/app/tools/notes") {
     content = <NotesPage />;
+  } else if (path === "/app/tools/diary") {
+    content = <DiaryPage />;
   } else if (path === "/budget" || path === "/app/tools/budget") {
     content = <BudgetPage />;
   } else if (path === "/app/tools/cycle") {
