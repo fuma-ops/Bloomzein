@@ -34,6 +34,7 @@ function prettyShort(s: string) {
 
 export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", className = "" }: Props) {
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const initial = parse(value) || new Date();
   const [view, setView] = useState({ y: initial.getFullYear(), m: initial.getMonth() });
   const rootRef = useRef<HTMLDivElement>(null);
@@ -50,6 +51,15 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
     if (open) document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
+
+  const toggleOpen = () => {
+    if (!open && rootRef.current) {
+      const rect = rootRef.current.getBoundingClientRect();
+      const POPOVER_HEIGHT = 360;
+      setOpenUpward(window.innerHeight - rect.bottom < POPOVER_HEIGHT && rect.top > POPOVER_HEIGHT);
+    }
+    setOpen((v) => !v);
+  };
 
   const first = new Date(view.y, view.m, 1);
   const startWeekday = first.getDay();
@@ -73,7 +83,7 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
     <div ref={rootRef} className={`relative w-full min-w-0 ${className}`}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         className="w-full inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-sm text-rose border border-petal/60 hover:bg-blush focus:outline-none focus:ring-2 focus:ring-hotpink/30"
       >
         <CalendarIcon className="h-4 w-4 text-hotpink shrink-0" strokeWidth={1.8} />
@@ -83,7 +93,11 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
       </button>
 
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-[260px] max-w-[calc(100vw-1.5rem)] rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in">
+        <div
+          className={`absolute right-0 z-40 w-[260px] max-w-[calc(100vw-1.5rem)] rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in max-h-[calc(100vh-2rem)] overflow-y-auto ${
+            openUpward ? "bottom-full mb-2" : "top-full mt-2"
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <button type="button" onClick={() => shift(-1)} className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
               <ChevronLeft className="h-4 w-4" />

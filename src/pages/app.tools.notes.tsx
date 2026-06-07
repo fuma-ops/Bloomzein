@@ -378,6 +378,16 @@ export default function NotesPage() {
     if (!remTitle.trim()) return;
     if (remKind === "event" && remIsRange && remEndDate && remEndDate < remDate) return;
 
+    // A reminder is only useful if we can actually nudge the user — ask right
+    // when she creates one (a real user gesture), not just on a banner she may dismiss.
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((perm) => {
+        setNotifPermission(perm);
+        setPromptNotif(false);
+        try { localStorage.setItem(STORAGE_KEYS.permissionDismissed, "true"); } catch {}
+      });
+    }
+
     let payload: Omit<Reminder, "id" | "done" | "notifiedKey" | "createdAt">;
 
     if (remKind === "medication") {
@@ -804,7 +814,18 @@ export default function NotesPage() {
             <button
               onClick={() => {
                 resetReminderForm();
-                setShowReminderForm((v) => !v);
+                setShowReminderForm((v) => {
+                  const next = !v;
+                  if (
+                    next &&
+                    typeof window !== "undefined" &&
+                    "Notification" in window &&
+                    Notification.permission === "default"
+                  ) {
+                    setPromptNotif(true);
+                  }
+                  return next;
+                });
               }}
               className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md hover:bg-magenta hover:scale-105 transition"
             >
