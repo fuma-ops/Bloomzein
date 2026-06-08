@@ -443,8 +443,8 @@ export default function Landing() {
                   >
                     <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} aria-hidden />
                     <div className="flex items-center gap-2.5">
-                      <span className="grid h-11 w-11 place-items-center rounded-2xl shadow-md" style={{ background: u.iconBg }}>
-                        {u.icon}
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl shadow-lg shadow-black/10 ring-1 ring-white/30" style={{ background: u.iconBg, backdropFilter: "blur(6px)" }}>
+                        <span style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.12))" }}>{u.icon}</span>
                       </span>
                       <div>
                         <p className="font-script text-3xl" style={{ color: u.titleColor, textShadow: `0 0 8px ${u.titleGlow}cc, 0 0 18px ${u.titleGlow}88, 0 0 32px ${u.titleGlow}44` }}>{u.title}</p>
@@ -471,8 +471,8 @@ export default function Landing() {
                             <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug sm:line-clamp-2" style={{ color: u.textColor }}>{t.blurb}</p>
                           </div>
                           <span
-                            className="bloom-tap-arrow grid h-5 w-5 shrink-0 place-items-center rounded-full text-white opacity-50 transition-opacity duration-300 group-hover/card:opacity-100"
-                            style={{ background: u.iconBg }}
+                            className="bloom-tap-arrow grid h-5 w-5 shrink-0 place-items-center rounded-full text-white opacity-70 transition-opacity duration-300 group-hover/card:opacity-100"
+                            style={{ background: "oklch(1 0 0 / 0.38)" }}
                             aria-hidden
                           >
                             <ArrowRight className="h-3 w-3" />
@@ -656,7 +656,7 @@ interface Universe {
   tools: UniverseTool[];
 }
 
-const ICON_STROKE = "#c4186e";
+const ICON_STROKE = "#ffffff";
 
 const UNIVERSES: Universe[] = [
   {
@@ -677,7 +677,7 @@ const UNIVERSES: Universe[] = [
       </svg>
     ),
     bgGradient: "linear-gradient(145deg, oklch(0.72 0.27 350) 0%, oklch(0.60 0.30 0) 55%, oklch(0.70 0.26 15) 100%)",
-    iconBg: "oklch(1 0 0 / 0.22)",
+    iconBg: "oklch(1 0 0 / 0.32)",
     glow: "oklch(0.78 0.22 350 / 0.5)",
     shadow: "oklch(0.55 0.30 350 / 0.45)",
     titleColor: "#ffffff",
@@ -710,7 +710,7 @@ const UNIVERSES: Universe[] = [
       </svg>
     ),
     bgGradient: "linear-gradient(145deg, oklch(0.68 0.28 330) 0%, oklch(0.58 0.31 350) 55%, oklch(0.66 0.28 0) 100%)",
-    iconBg: "oklch(1 0 0 / 0.22)",
+    iconBg: "oklch(1 0 0 / 0.32)",
     glow: "oklch(0.75 0.22 330 / 0.5)",
     shadow: "oklch(0.52 0.30 330 / 0.45)",
     titleColor: "#ffffff",
@@ -738,7 +738,7 @@ const UNIVERSES: Universe[] = [
       </svg>
     ),
     bgGradient: "linear-gradient(145deg, oklch(0.72 0.27 10) 0%, oklch(0.60 0.30 350) 50%, oklch(0.68 0.27 330) 100%)",
-    iconBg: "oklch(1 0 0 / 0.22)",
+    iconBg: "oklch(1 0 0 / 0.32)",
     glow: "oklch(0.78 0.22 10 / 0.5)",
     shadow: "oklch(0.55 0.30 10 / 0.45)",
     titleColor: "#ffffff",
