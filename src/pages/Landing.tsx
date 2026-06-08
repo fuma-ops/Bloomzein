@@ -14,33 +14,23 @@ export default function Landing() {
   const [iosHint, setIosHint] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [kitActive, setKitActive] = useState(0);
-  const kitScrollRef = useRef<HTMLDivElement>(null);
+  const [kitPaused, setKitPaused] = useState(false);
 
-  const handleKitScroll = () => {
-    const el = kitScrollRef.current;
-    if (!el) return;
-    const cards = Array.from(el.querySelectorAll<HTMLElement>("[data-kit-card]"));
-    if (cards.length === 0) return;
-    const center = el.scrollLeft + el.clientWidth / 2;
-    let closest = 0;
-    let closestDist = Infinity;
-    cards.forEach((card, i) => {
-      const dist = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = i;
-      }
-    });
-    setKitActive(closest);
-  };
+  // gentle auto-advance, right to left, like a soft carousel breeze — pauses while you're browsing it
+  useEffect(() => {
+    if (kitPaused) return;
+    const t = setInterval(() => {
+      setKitActive((prev) => (prev + 1) % UNIVERSES.length);
+    }, 4200);
+    return () => clearInterval(t);
+  }, [kitPaused]);
 
-  const scrollKitBy = (dir: 1 | -1) => {
-    const el = kitScrollRef.current;
-    if (!el) return;
-    const card = el.querySelector<HTMLElement>("[data-kit-card]");
-    const step = card ? card.offsetWidth + 24 : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  const kitGoTo = (index: number) => {
+    setKitActive(((index % UNIVERSES.length) + UNIVERSES.length) % UNIVERSES.length);
+    setKitPaused(true);
   };
+  const kitNext = () => kitGoTo(kitActive + 1);
+  const kitPrev = () => kitGoTo(kitActive - 1);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -326,101 +316,131 @@ export default function Landing() {
 
           .bloom-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
           .bloom-no-scrollbar::-webkit-scrollbar { display: none; }
+
+          .bz-carousel-stage { perspective: 1400px; }
+          .bz-carousel-3d { transform-style: preserve-3d; }
+          .bz-carousel-card { transform-style: preserve-3d; backface-visibility: hidden; }
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
-        <section id="kit" className="mt-20 scroll-mt-24">
+        <section id="kit" className="mt-8 scroll-mt-24 sm:mt-14 lg:mt-20">
           <div className="text-center">
             <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
             <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
-            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60 lg:hidden">✿ swipe to explore ✿</p>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">✿ drifting softly through your worlds ✿</p>
           </div>
 
-          <div className="relative mt-6 sm:mt-10">
-            {/* prev/next nudge arrows — desktop only, mirrors the carousel feel */}
+          <div
+            className="bz-carousel-stage relative mx-auto mt-6 h-[27rem] max-w-md sm:mt-8 sm:h-[26rem] sm:max-w-xl lg:h-[24rem] lg:max-w-3xl"
+            onMouseEnter={() => setKitPaused(true)}
+            onMouseLeave={() => setKitPaused(false)}
+          >
+            {/* prev/next arrows — gently glide the 3D stack */}
             <button
               type="button"
-              onClick={() => scrollKitBy(-1)}
+              onClick={kitPrev}
               aria-label="Previous universe"
-              className="absolute -left-4 top-1/2 z-20 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2.5 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur lg:grid lg:place-items-center"
+              className="absolute left-0 top-1/2 z-30 -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:p-2.5"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <button
               type="button"
-              onClick={() => scrollKitBy(1)}
+              onClick={kitNext}
               aria-label="Next universe"
-              className="absolute -right-4 top-1/2 z-20 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2.5 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur lg:grid lg:place-items-center"
+              className="absolute right-0 top-1/2 z-30 -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:p-2.5"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
-            <div
-              ref={kitScrollRef}
-              onScroll={handleKitScroll}
-              className="bloom-no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-3 sm:gap-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0"
-            >
-            {UNIVERSES.map((u, ui) => (
-              <div
-                key={u.title}
-                data-kit-card
-                className="bloom-flower-item group relative w-[82%] shrink-0 snap-center overflow-hidden rounded-[2rem] p-6 shadow-xl backdrop-blur transition hover:-translate-y-1.5 sm:w-[60%] lg:w-auto"
-                style={{ background: u.bgGradient, boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`, animationDelay: `${ui * 120}ms` }}
-              >
-                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl opacity-50 transition group-hover:opacity-80" style={{ background: u.glow }} aria-hidden />
-                <div className="flex items-center gap-2.5">
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl text-xl text-white shadow-md" style={{ background: u.iconBg }}>
-                    {u.emoji}
-                  </span>
-                  <div>
-                    <p className="font-script text-3xl" style={{ color: u.titleColor }}>{u.title}</p>
-                    <p className="text-[11px] sm:text-xs font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
-                  </div>
-                </div>
+            <div className="bz-carousel-3d absolute inset-0">
+              {UNIVERSES.map((u, ui) => {
+                const n = UNIVERSES.length;
+                const rel = (((ui - kitActive) % n) + n) % n;
+                const offset = rel === 0 ? 0 : rel === 1 ? 1 : -1;
+                const isActive = offset === 0;
+                let transform = "";
+                if (offset === 0) transform = "translate3d(0,0,0) rotateY(0deg) scale(1)";
+                else if (offset === 1) transform = "translate3d(54%,0,-180px) rotateY(-34deg) scale(0.8)";
+                else transform = "translate3d(-54%,0,-180px) rotateY(34deg) scale(0.8)";
 
-                <div className="mt-5 flex flex-col gap-3">
-                  {u.tools.map((t, ti) => (
-                    <a
-                      key={t.slug}
-                      href={`/app/tools/${t.slug}`}
-                      className="bloom-tap-card group/card flex items-center gap-3 rounded-2xl bg-white/70 p-3 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
-                      style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
-                    >
-                      <span className="bloom-flower relative grid h-12 w-12 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
-                        <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" style={{ background: u.glow }} aria-hidden />
-                        <CuteToolIcon slug={t.slug} className="relative z-10 h-10 w-10 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
+                return (
+                  <button
+                    key={u.title}
+                    type="button"
+                    onClick={() => (isActive ? undefined : kitGoTo(ui))}
+                    aria-label={`Show the ${u.title} universe`}
+                    className="bz-carousel-card group absolute inset-0 mx-auto w-full max-w-[19rem] cursor-pointer overflow-hidden rounded-[2rem] p-5 text-left shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6"
+                    style={{
+                      background: u.bgGradient,
+                      boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`,
+                      transform,
+                      zIndex: isActive ? 30 : 10,
+                      opacity: isActive ? 1 : 0.55,
+                      filter: isActive ? "blur(0px)" : "blur(1px) saturate(0.85)",
+                      pointerEvents: "auto",
+                    }}
+                  >
+                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} aria-hidden />
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl text-xl text-white shadow-md" style={{ background: u.iconBg }}>
+                        {u.emoji}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold" style={{ color: u.titleColor }}>{t.label}</p>
-                        <p className="mt-0.5 text-[11px] sm:text-xs font-medium leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
+                      <div>
+                        <p className="font-script text-3xl" style={{ color: u.titleColor }}>{u.title}</p>
+                        <p className="text-[11px] sm:text-xs font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
                       </div>
-                      <span
-                        className="bloom-tap-arrow grid h-7 w-7 shrink-0 place-items-center rounded-full text-white opacity-50 transition-opacity duration-300 group-hover/card:opacity-100"
-                        style={{ background: u.iconBg }}
-                        aria-hidden
-                      >
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ))}
-            </div>
+                    </div>
 
-            {/* cute little dot trail — shows which universe you're floating in */}
-            <div className="mt-4 flex items-center justify-center gap-2 lg:hidden">
-              {UNIVERSES.map((u, i) => (
-                <span
-                  key={u.title}
-                  className="h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: kitActive === i ? "1.5rem" : "0.5rem",
-                    background: kitActive === i ? "linear-gradient(135deg, oklch(0.72 0.27 350), oklch(0.58 0.3 0))" : "oklch(0.85 0.1 350)",
-                  }}
-                />
-              ))}
+                    <div className="mt-4 flex flex-col gap-2.5">
+                      {u.tools.map((t, ti) => (
+                        <a
+                          key={t.slug}
+                          href={`/app/tools/${t.slug}`}
+                          onClick={(e) => { if (!isActive) e.preventDefault(); }}
+                          tabIndex={isActive ? 0 : -1}
+                          className="bloom-tap-card group/card flex items-center gap-3 rounded-2xl bg-white/70 p-2.5 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
+                          style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
+                        >
+                          <span className="bloom-flower relative grid h-11 w-11 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
+                            <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" style={{ background: u.glow }} aria-hidden />
+                            <CuteToolIcon slug={t.slug} className="relative z-10 h-9 w-9 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold" style={{ color: u.titleColor }}>{t.label}</p>
+                            <p className="mt-0.5 text-[11px] leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
+                          </div>
+                          <span
+                            className="bloom-tap-arrow grid h-6 w-6 shrink-0 place-items-center rounded-full text-white opacity-50 transition-opacity duration-300 group-hover/card:opacity-100"
+                            style={{ background: u.iconBg }}
+                            aria-hidden
+                          >
+                            <ArrowRight className="h-3 w-3" />
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          </div>
+
+          {/* cute little dot trail — shows which universe is gently drifting into focus */}
+          <div className="mt-3 flex items-center justify-center gap-2">
+            {UNIVERSES.map((u, i) => (
+              <button
+                key={u.title}
+                type="button"
+                onClick={() => kitGoTo(i)}
+                aria-label={`Go to ${u.title}`}
+                className="h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: kitActive === i ? "1.5rem" : "0.5rem",
+                  background: kitActive === i ? "linear-gradient(135deg, oklch(0.72 0.27 350), oklch(0.58 0.3 0))" : "oklch(0.85 0.1 350)",
+                }}
+              />
+            ))}
           </div>
         </section>
 
