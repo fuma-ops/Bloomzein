@@ -359,11 +359,11 @@ export default function Landing() {
           .bz-carousel-3d { transform-style: preserve-3d; }
           .bz-carousel-card { transform-style: preserve-3d; backface-visibility: hidden; }
 
-          @keyframes bloom-how-pulse {
-            0%, 100% { box-shadow: 0 0 0 1.5px #ff69b4aa, 0 0 22px 6px #ff69b433, 0 30px 80px -30px oklch(0.6 0.25 0 / 0.38); }
-            50%       { box-shadow: 0 0 0 2px #e8338acc,   0 0 32px 10px #e8338455, 0 30px 80px -30px oklch(0.6 0.25 0 / 0.38); }
+          @keyframes bloom-how-breathe {
+            0%, 100% { box-shadow: 0 0 28px 5px #ff69b418, 0 18px 55px -15px oklch(0.65 0.26 350 / 0.28); }
+            50%       { box-shadow: 0 0 38px 8px #ff69b428, 0 18px 55px -15px oklch(0.65 0.26 350 / 0.28); }
           }
-          .bloom-how-card { animation: bloom-how-pulse 3.2s ease-in-out infinite; }
+          .bloom-how-circle { animation: bloom-how-breathe 4s ease-in-out infinite; }
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
@@ -387,7 +387,7 @@ export default function Landing() {
             <Sparkles className="pointer-events-none absolute right-6 top-6 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" aria-hidden />
 
           <div
-            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y overflow-hidden rounded-[2rem] sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
+            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y rounded-[2rem] sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
             onMouseEnter={() => setKitPaused(true)}
             onMouseLeave={() => setKitPaused(false)}
             onTouchStart={onKitTouchStart}
@@ -459,8 +459,8 @@ export default function Landing() {
                           href={`/app/tools/${t.slug}`}
                           onClick={(e) => { if (!isActive) e.preventDefault(); }}
                           tabIndex={isActive ? 0 : -1}
-                          className="bloom-tap-card group/card flex items-center gap-2.5 rounded-2xl bg-white/70 p-2 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
-                          style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
+                          className="bloom-tap-card group/card flex items-center gap-2.5 rounded-2xl p-2 transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
+                          style={{ animationDelay: `${ui * 120 + ti * 90}ms`, background: u.toolRowBg }}
                         >
                           <span className="bloom-flower relative grid h-9 w-9 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
                             <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" style={{ background: u.glow }} aria-hidden />
@@ -515,18 +515,28 @@ export default function Landing() {
           </p>
         </div>
 
-        {/* How-it-works diagram card — same rounded-rect shape and width as hero/kit */}
-        <div
-          id="how-it-works-card"
-          className="bloom-how-card relative mx-auto mt-8 max-w-6xl rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-8 md:p-12"
-          style={{
-            background: "linear-gradient(160deg, oklch(0.97 0.035 350) 0%, oklch(0.94 0.07 345) 55%, oklch(0.92 0.08 20) 100%)",
-          }}
-        >
-          <Flower2 className="pointer-events-none absolute -left-6 top-10 h-20 w-20 text-hotpink/15 animate-bloom-float" aria-hidden />
-          <Flower2 className="pointer-events-none absolute -right-8 bottom-6 h-24 w-24 text-magenta/12 animate-bloom-float" style={{ animationDelay: "1.8s" }} aria-hidden />
-          <Sparkles className="pointer-events-none absolute right-8 top-8 h-5 w-5 text-hotpink/35 animate-bloom-sparkle" aria-hidden />
-          <ConnectionsDiagram />
+        {/* How-it-works — circular diagram with cute decorations scattered outside */}
+        <div className="relative mx-auto mt-8" style={{ width: "min(92vw, 40rem)", aspectRatio: "1" }}>
+          {/* decorative toggles around the circle */}
+          <Sparkles className="pointer-events-none absolute left-[6%] top-[8%] h-5 w-5 text-hotpink/50 animate-bloom-sparkle" aria-hidden />
+          <Heart className="pointer-events-none absolute right-[8%] top-[6%] h-4 w-4 fill-magenta/40 text-magenta/40 animate-bloom-float" aria-hidden />
+          <Star className="pointer-events-none absolute bottom-[10%] left-[4%] h-4 w-4 fill-hotpink/35 text-hotpink/35 animate-bloom-sparkle" style={{ animationDelay: "1.1s" }} aria-hidden />
+          <Flower2 className="pointer-events-none absolute bottom-[7%] right-[6%] h-6 w-6 text-magenta/35 animate-bloom-float" style={{ animationDelay: "1.8s" }} aria-hidden />
+          <Sparkles className="pointer-events-none absolute left-[2%] top-[48%] h-3 w-3 text-hotpink/40 animate-bloom-sparkle" style={{ animationDelay: "0.6s" }} aria-hidden />
+          <Star className="pointer-events-none absolute right-[3%] top-[52%] h-3 w-3 fill-magenta/30 text-magenta/30 animate-bloom-sparkle" style={{ animationDelay: "1.4s" }} aria-hidden />
+          <Flower2 className="pointer-events-none absolute left-[12%] bottom-[16%] h-4 w-4 text-hotpink/30 animate-bloom-float" style={{ animationDelay: "2.4s" }} aria-hidden />
+          <Heart className="pointer-events-none absolute right-[14%] bottom-[18%] h-3 w-3 fill-hotpink/30 text-hotpink/30 animate-bloom-float" style={{ animationDelay: "0.9s" }} aria-hidden />
+
+          {/* the actual circle */}
+          <div
+            id="how-it-works-card"
+            className="bloom-how-circle absolute inset-[7%] rounded-full p-[8%]"
+            style={{
+              background: "radial-gradient(circle at 40% 38%, oklch(0.99 0.01 350) 0%, oklch(0.97 0.03 350) 45%, oklch(0.94 0.055 345) 100%)",
+            }}
+          >
+            <ConnectionsDiagram />
+          </div>
         </div>
 
         {/* CTA sits below the circle, outside it */}
@@ -642,6 +652,7 @@ interface Universe {
   titleGlow: string;
   cardGlow: string;
   textColor: string;
+  toolRowBg: string;
   tools: UniverseTool[];
 }
 
@@ -665,14 +676,15 @@ const UNIVERSES: Universe[] = [
         <path d="M9.5 13.5 Q12 14.5 14.5 13.5" strokeWidth="1.1" />
       </svg>
     ),
-    bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 350) 0%, oklch(0.85 0.17 350) 100%)",
-    iconBg: "oklch(0.97 0.05 350)",
-    glow: "oklch(0.78 0.22 350 / 0.45)",
-    shadow: "oklch(0.62 0.27 350 / 0.35)",
-    titleColor: "#c8185e",
-    titleGlow: "#ff69b4",
-    cardGlow: "oklch(0.78 0.24 350 / 0.7)",
-    textColor: "#9D5C7E",
+    bgGradient: "linear-gradient(145deg, oklch(0.72 0.27 350) 0%, oklch(0.60 0.30 0) 55%, oklch(0.70 0.26 15) 100%)",
+    iconBg: "oklch(1 0 0 / 0.22)",
+    glow: "oklch(0.78 0.22 350 / 0.5)",
+    shadow: "oklch(0.55 0.30 350 / 0.45)",
+    titleColor: "#ffffff",
+    titleGlow: "#ffb6d9",
+    cardGlow: "oklch(0.75 0.28 350 / 0.65)",
+    textColor: "rgba(255,255,255,0.82)",
+    toolRowBg: "rgba(255,255,255,0.18)",
     tools: [
       { slug: "cycle", label: "Cycle Tracker", blurb: "You'll see your Yoga and Meals adjust to exactly how you feel today" },
       { slug: "meals", label: "Meal Planner", blurb: "You get gentle meal ideas that match your energy and your phase" },
@@ -697,14 +709,15 @@ const UNIVERSES: Universe[] = [
         <path d="M15.5 13 C14.5 13.5 13.5 13.5 13 13" strokeWidth="1.15" />
       </svg>
     ),
-    bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 320) 0%, oklch(0.85 0.16 320) 100%)",
-    iconBg: "oklch(0.97 0.05 320)",
-    glow: "oklch(0.78 0.18 320 / 0.45)",
-    shadow: "oklch(0.62 0.24 320 / 0.32)",
-    titleColor: "#b5166a",
-    titleGlow: "#e879be",
-    cardGlow: "oklch(0.75 0.22 320 / 0.7)",
-    textColor: "#9D5C7E",
+    bgGradient: "linear-gradient(145deg, oklch(0.68 0.28 330) 0%, oklch(0.58 0.31 350) 55%, oklch(0.66 0.28 0) 100%)",
+    iconBg: "oklch(1 0 0 / 0.22)",
+    glow: "oklch(0.75 0.22 330 / 0.5)",
+    shadow: "oklch(0.52 0.30 330 / 0.45)",
+    titleColor: "#ffffff",
+    titleGlow: "#f5c2e8",
+    cardGlow: "oklch(0.72 0.27 330 / 0.65)",
+    textColor: "rgba(255,255,255,0.82)",
+    toolRowBg: "rgba(255,255,255,0.18)",
     tools: [
       { slug: "diary", label: "Dreamy Diary", blurb: "You'll start noticing your own patterns — and so does the rest of your kit" },
     ],
@@ -724,14 +737,15 @@ const UNIVERSES: Universe[] = [
         <line x1="3.8" y1="8.2" x2="6.4" y2="8.8" />
       </svg>
     ),
-    bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 20) 0%, oklch(0.85 0.16 20) 100%)",
-    iconBg: "oklch(0.97 0.05 20)",
-    glow: "oklch(0.8 0.16 20 / 0.45)",
-    shadow: "oklch(0.64 0.22 15 / 0.32)",
-    titleColor: "#c8185e",
-    titleGlow: "#ff80c0",
-    cardGlow: "oklch(0.78 0.22 10 / 0.7)",
-    textColor: "#9D5C7E",
+    bgGradient: "linear-gradient(145deg, oklch(0.72 0.27 10) 0%, oklch(0.60 0.30 350) 50%, oklch(0.68 0.27 330) 100%)",
+    iconBg: "oklch(1 0 0 / 0.22)",
+    glow: "oklch(0.78 0.22 10 / 0.5)",
+    shadow: "oklch(0.55 0.30 10 / 0.45)",
+    titleColor: "#ffffff",
+    titleGlow: "#ffc0d8",
+    cardGlow: "oklch(0.75 0.27 10 / 0.65)",
+    textColor: "rgba(255,255,255,0.82)",
+    toolRowBg: "rgba(255,255,255,0.18)",
     tools: [
       { slug: "budget", label: "Budget Planner", blurb: "You'll notice when your spending follows your mood — gently, never judgy" },
       { slug: "notes", label: "Reminders", blurb: "Your little moments find their place on your calendar, all on their own" },
