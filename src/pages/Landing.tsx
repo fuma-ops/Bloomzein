@@ -434,7 +434,9 @@ export default function Landing() {
                     className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer overflow-hidden rounded-[2rem] p-5 text-left shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
                     style={{
                       background: u.bgGradient,
-                      boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`,
+                      boxShadow: isActive
+                        ? `0 25px 60px -28px ${u.shadow}, 0 0 0 1.5px ${u.cardGlow}, 0 0 18px 5px ${u.glow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`
+                        : `0 8px 30px -15px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.3) inset`,
                       transform,
                       zIndex: isActive ? 30 : 10,
                       opacity: isActive ? 1 : 0.55,
@@ -448,7 +450,7 @@ export default function Landing() {
                         {u.icon}
                       </span>
                       <div>
-                        <p className="font-script text-3xl" style={{ color: u.titleColor }}>{u.title}</p>
+                        <p className="font-script text-3xl" style={{ color: u.titleColor, textShadow: `0 0 8px ${u.titleGlow}cc, 0 0 18px ${u.titleGlow}88, 0 0 32px ${u.titleGlow}44` }}>{u.title}</p>
                         <p className="text-[11px] sm:text-xs font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
                       </div>
                     </div>
@@ -517,14 +519,48 @@ export default function Landing() {
         </div>
 
         {/* Circular animated-border section housing the web diagram */}
-        <div className="relative mx-auto mt-8" style={{ width: "min(88vw, 34rem)", aspectRatio: "1" }}>
+        <div
+          className="relative mx-auto mt-8"
+          style={{ width: "min(88vw, 34rem)", aspectRatio: "1", filter: "drop-shadow(0 22px 55px oklch(0.62 0.27 350 / 0.45))" }}
+        >
           {/* spinning gradient ring — border layer */}
           <div className="bloom-orbit-ring absolute inset-0" aria-hidden />
-          {/* content circle */}
+          {/* 3D sphere content circle */}
           <div
-            className="absolute inset-[4px] rounded-full flex items-center justify-center"
-            style={{ background: "radial-gradient(circle at 50% 50%, oklch(0.97 0.035 350) 0%, oklch(0.93 0.07 345) 55%, oklch(0.90 0.09 20) 100%)" }}
+            className="absolute inset-[4px] rounded-full flex items-center justify-center overflow-hidden"
+            style={{
+              background: [
+                "radial-gradient(circle at 30% 28%,",
+                "  rgba(255,255,255,0.88) 0%,",
+                "  oklch(0.97 0.03 350) 7%,",
+                "  oklch(0.94 0.07 350) 26%,",
+                "  oklch(0.91 0.09 345) 50%,",
+                "  oklch(0.87 0.12 350) 72%,",
+                "  oklch(0.81 0.17 355) 88%,",
+                "  oklch(0.75 0.21 350) 100%",
+                ")",
+              ].join(""),
+              boxShadow: "inset -5px -8px 22px oklch(0.6 0.24 350 / 0.28), inset 3px 4px 14px oklch(1 0 0 / 0.18)",
+            }}
           >
+            {/* specular highlight — simulates top-left light source */}
+            <div
+              className="pointer-events-none absolute"
+              style={{
+                top: "6%", left: "12%",
+                width: "42%", height: "34%",
+                background: "radial-gradient(ellipse, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.18) 45%, transparent 70%)",
+                borderRadius: "50%",
+                transform: "rotate(-22deg)",
+              }}
+              aria-hidden
+            />
+            {/* rim highlight — subtle bright edge at bottom-right */}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-full"
+              style={{ background: "radial-gradient(circle at 78% 82%, oklch(0.95 0.06 10 / 0.35) 0%, transparent 50%)" }}
+              aria-hidden
+            />
             <ConnectionsDiagram />
           </div>
         </div>
@@ -639,6 +675,8 @@ interface Universe {
   glow: string;
   shadow: string;
   titleColor: string;
+  titleGlow: string;
+  cardGlow: string;
   textColor: string;
   tools: UniverseTool[];
 }
@@ -667,7 +705,9 @@ const UNIVERSES: Universe[] = [
     iconBg: "oklch(0.97 0.05 350)",
     glow: "oklch(0.78 0.22 350 / 0.45)",
     shadow: "oklch(0.62 0.27 350 / 0.35)",
-    titleColor: "#831843",
+    titleColor: "#c8185e",
+    titleGlow: "#ff69b4",
+    cardGlow: "oklch(0.78 0.24 350 / 0.7)",
     textColor: "#9D5C7E",
     tools: [
       { slug: "cycle", label: "Cycle Tracker", blurb: "You'll see your Yoga and Meals adjust to exactly how you feel today" },
@@ -697,7 +737,9 @@ const UNIVERSES: Universe[] = [
     iconBg: "oklch(0.97 0.05 320)",
     glow: "oklch(0.78 0.18 320 / 0.45)",
     shadow: "oklch(0.62 0.24 320 / 0.32)",
-    titleColor: "#702459",
+    titleColor: "#b5166a",
+    titleGlow: "#e879be",
+    cardGlow: "oklch(0.75 0.22 320 / 0.7)",
     textColor: "#9D5C7E",
     tools: [
       { slug: "diary", label: "Dreamy Diary", blurb: "You'll start noticing your own patterns — and so does the rest of your kit" },
@@ -722,7 +764,9 @@ const UNIVERSES: Universe[] = [
     iconBg: "oklch(0.97 0.05 20)",
     glow: "oklch(0.8 0.16 20 / 0.45)",
     shadow: "oklch(0.64 0.22 15 / 0.32)",
-    titleColor: "#831843",
+    titleColor: "#c8185e",
+    titleGlow: "#ff80c0",
+    cardGlow: "oklch(0.78 0.22 10 / 0.7)",
     textColor: "#9D5C7E",
     tools: [
       { slug: "budget", label: "Budget Planner", blurb: "You'll notice when your spending follows your mood — gently, never judgy" },
