@@ -1,4 +1,4 @@
-import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Lock } from "lucide-react";
+import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -6,13 +6,41 @@ import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [kitActive, setKitActive] = useState(0);
+  const kitScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleKitScroll = () => {
+    const el = kitScrollRef.current;
+    if (!el) return;
+    const cards = Array.from(el.querySelectorAll<HTMLElement>("[data-kit-card]"));
+    if (cards.length === 0) return;
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let closest = 0;
+    let closestDist = Infinity;
+    cards.forEach((card, i) => {
+      const dist = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = i;
+      }
+    });
+    setKitActive(closest);
+  };
+
+  const scrollKitBy = (dir: 1 | -1) => {
+    const el = kitScrollRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-kit-card]");
+    const step = card ? card.offsetWidth + 24 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -295,21 +323,49 @@ export default function Landing() {
           }
           .bloom-tap-arrow { animation: bloom-tap-nudge 1.6s ease-in-out infinite; }
           .bloom-tap-card:hover .bloom-tap-arrow { animation-play-state: paused; transform: translateX(2px); }
+
+          .bloom-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+          .bloom-no-scrollbar::-webkit-scrollbar { display: none; }
         `}</style>
 
-        {/* Your Bloom & Zein Kit — 3 universes, each its own pink nuance */}
+        {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
         <section id="kit" className="mt-20 scroll-mt-24">
           <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">your bloom & zein kit</p>
-            <h2 className="font-script text-6xl text-bloom-gradient">three little universes, one soft you</h2>
+            <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
+            <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60 lg:hidden">✿ swipe to explore ✿</p>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          <div className="relative mt-6 sm:mt-10">
+            {/* prev/next nudge arrows — desktop only, mirrors the carousel feel */}
+            <button
+              type="button"
+              onClick={() => scrollKitBy(-1)}
+              aria-label="Previous universe"
+              className="absolute -left-4 top-1/2 z-20 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2.5 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur lg:grid lg:place-items-center"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollKitBy(1)}
+              aria-label="Next universe"
+              className="absolute -right-4 top-1/2 z-20 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2.5 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur lg:grid lg:place-items-center"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div
+              ref={kitScrollRef}
+              onScroll={handleKitScroll}
+              className="bloom-no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-3 sm:gap-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0"
+            >
             {UNIVERSES.map((u, ui) => (
               <div
                 key={u.title}
-                className="group relative overflow-hidden rounded-[2rem] p-6 shadow-xl backdrop-blur transition hover:-translate-y-1.5"
-                style={{ background: u.bgGradient, boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset` }}
+                data-kit-card
+                className="bloom-flower-item group relative w-[82%] shrink-0 snap-center overflow-hidden rounded-[2rem] p-6 shadow-xl backdrop-blur transition hover:-translate-y-1.5 sm:w-[60%] lg:w-auto"
+                style={{ background: u.bgGradient, boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`, animationDelay: `${ui * 120}ms` }}
               >
                 <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl opacity-50 transition group-hover:opacity-80" style={{ background: u.glow }} aria-hidden />
                 <div className="flex items-center gap-2.5">
@@ -327,7 +383,7 @@ export default function Landing() {
                     <a
                       key={t.slug}
                       href={`/app/tools/${t.slug}`}
-                      className="bloom-flower-item bloom-tap-card group/card flex items-center gap-3 rounded-2xl bg-white/70 p-3 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
+                      className="bloom-tap-card group/card flex items-center gap-3 rounded-2xl bg-white/70 p-3 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
                       style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
                     >
                       <span className="bloom-flower relative grid h-12 w-12 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
@@ -350,6 +406,21 @@ export default function Landing() {
                 </div>
               </div>
             ))}
+            </div>
+
+            {/* cute little dot trail — shows which universe you're floating in */}
+            <div className="mt-4 flex items-center justify-center gap-2 lg:hidden">
+              {UNIVERSES.map((u, i) => (
+                <span
+                  key={u.title}
+                  className="h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: kitActive === i ? "1.5rem" : "0.5rem",
+                    background: kitActive === i ? "linear-gradient(135deg, oklch(0.72 0.27 350), oklch(0.58 0.3 0))" : "oklch(0.85 0.1 350)",
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </section>
 
