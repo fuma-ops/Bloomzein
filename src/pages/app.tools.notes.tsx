@@ -8,7 +8,15 @@ import {
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { subscribeToPush, syncScheduledNotifications, cancelScheduledNotifications, type ScheduledNotificationInput } from "@/lib/push";
+import {
+  subscribeToPush,
+  syncScheduledNotifications,
+  cancelScheduledNotifications,
+  fetchMedicationAcks,
+  getCurrentUserId,
+  doseConfirmToken,
+  type ScheduledNotificationInput,
+} from "@/lib/push";
 
 /* ============================================================
    TYPES & CONSTANTS
@@ -162,24 +170,39 @@ const PUSH_SYNC_WINDOW_DAYS = 35;
  * birthday & event due/lead days) but produces absolute timestamps so the
  * backend can dispatch them even while the app is closed.
  */
-function upcomingFires(rem: Reminder, from: Date = new Date()): { dedupeKey: string; fireAt: Date; body: string }[] {
+type FireItem = { dedupeKey: string; fireAt: Date; body: string; data?: Record<string, unknown> };
+
+function upcomingFires(rem: Reminder, from: Date, userId: string | null): FireItem[] {
   if (rem.kind === "event" && rem.done) return [];
   const today = startOfDay(from);
   const horizon = addDays(today, PUSH_SYNC_WINDOW_DAYS);
-  const out: { dedupeKey: string; fireAt: Date; body: string }[] = [];
+  const out: FireItem[] = [];
 
   if (rem.kind === "medication") {
     const slots = rem.times.length ? rem.times : ["09:00"];
     // Mirror the in-app "alarm" — schedule the original push plus follow-up
-    // nudges MED_ALARM_INTERVAL_MIN apart; tapping "Taken ✓" cancels the whole
-    // chain via cancelScheduledNotifications, so closed-app users still get
-    // repeat reminders until they confirm (capped at MED_ALARM_FOLLOWUPS).
+    // nudges MED_ALARM_INTERVAL_MIN apart; tapping "Taken ✓" (in-app, or right
+    // on the system notification itself) cancels the whole chain, so
+    // closed-app users still get repeat reminders until they confirm
+    // (capped at MED_ALARM_FOLLOWUPS).
     for (let i = 0; i < PUSH_SYNC_WINDOW_DAYS; i++) {
       const day = addDays(today, i);
       if (rem.weekdays.length > 0 && !rem.weekdays.includes(day.getDay())) continue;
       for (const slot of slots) {
         const [hh, mm] = slot.split(":").map((n) => parseInt(n, 10));
         const base = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hh || 0, mm || 0);
+        const doseKey = `${fmtLocalDate(day)}|${slot}`;
+        const dedupePrefix = `${rem.id}:${doseKey}`;
+        const data = userId
+          ? {
+              url: "/app/tools/notes",
+              kind: "medication" as const,
+              reminderId: rem.id,
+              doseKey,
+              dedupePrefix,
+              confirmToken: doseConfirmToken(userId, rem.id, doseKey),
+            }
+          : undefined;
         for (let n = 0; n <= MED_ALARM_FOLLOWUPS; n++) {
           const fireAt = new Date(base.getTime() + n * MED_ALARM_INTERVAL_MIN * 60000);
           if (fireAt < from) continue;
@@ -187,7 +210,7 @@ function upcomingFires(rem: Reminder, from: Date = new Date()): { dedupeKey: str
             n === 0
               ? `Time to take ${rem.title} · ${slot} 💊`
               : `Still waiting — take your ${rem.title} (${slot}) 💊`;
-          out.push({ dedupeKey: `${fmtLocalDate(day)}|${slot}|${n}`, fireAt, body });
+          out.push({ dedupeKey: `${doseKey}|${n}`, fireAt, body, data });
         }
       }
     }
@@ -680,17 +703,54 @@ export default function NotesPage() {
   // so the backend (Edge Function + cron) can push them even while the app is closed.
   // No-ops silently when signed out — push is an enhancement on top of the local checker above.
   useEffect(() => {
-    const items: ScheduledNotificationInput[] = reminders.flatMap((rem) =>
-      upcomingFires(rem).map((fire) => ({
-        dedupeKey: `${rem.id}:${fire.dedupeKey}`,
-        fireAt: fire.fireAt.toISOString(),
-        title: "BloomyGirl Nudge ✿",
-        body: fire.body,
-        data: { url: "/app/tools/notes", reminderId: rem.id },
-      }))
-    );
-    syncScheduledNotifications("reminders", items);
+    let cancelled = false;
+    (async () => {
+      const userId = await getCurrentUserId();
+      if (cancelled) return;
+      const items: ScheduledNotificationInput[] = reminders.flatMap((rem) =>
+        upcomingFires(rem, new Date(), userId).map((fire) => ({
+          dedupeKey: `${rem.id}:${fire.dedupeKey}`,
+          fireAt: fire.fireAt.toISOString(),
+          title: "BloomyGirl Nudge ✿",
+          body: fire.body,
+          data: fire.data ?? { url: "/app/tools/notes", reminderId: rem.id },
+        }))
+      );
+      syncScheduledNotifications("reminders", items);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [reminders]);
+
+  // Reconcile "Taken ✓" confirmations made directly from a system push notification
+  // (app closed, no React state) — pulls them in so the in-app alarm stays silenced.
+  useEffect(() => {
+    let stopped = false;
+    const reconcile = async () => {
+      const acked = await fetchMedicationAcks();
+      if (stopped || acked.size === 0) return;
+      setReminders((prev) => {
+        let changed = false;
+        const next = prev.map((r) => {
+          if (r.kind !== "medication") return r;
+          const pendingKey = r.medAlarm?.key;
+          if (pendingKey && acked.has(`${r.id}|${pendingKey}`) && r.takenKey !== pendingKey) {
+            changed = true;
+            return { ...r, takenKey: pendingKey, medAlarm: undefined };
+          }
+          return r;
+        });
+        return changed ? next : prev;
+      });
+    };
+    reconcile();
+    const interval = setInterval(reconcile, 30000);
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   /* ============================================================
      MEMOIZED SELECTIONS & FILTERING

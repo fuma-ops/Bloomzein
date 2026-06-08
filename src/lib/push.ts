@@ -17,6 +17,27 @@ function urlBase64ToUint8Array(base64String: string) {
   return output;
 }
 
+/** The current signed-in user's id, or null — used by tools to scope their scheduled notifications. */
+export async function getCurrentUserId(): Promise<string | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
+/**
+ * Deterministic, stable per-dose token: derived from (userId, reminderId, doseKey)
+ * so it stays the same across resyncs — a notification already sitting in the
+ * tray must keep matching after the underlying rows get regenerated. It's a
+ * capability scoped to cancelling that one dose's alarm chain, nothing more.
+ */
+export function doseConfirmToken(userId: string, reminderId: string, doseKey: string): string {
+  const s = `${userId}:${reminderId}:${doseKey}`;
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return `t${(h >>> 0).toString(36)}`;
+}
+
 export function isPushSupported() {
   return (
     typeof window !== "undefined" &&
@@ -111,6 +132,25 @@ export async function cancelScheduledNotifications(tool: string, dedupeKeyPrefix
   if (error) return { error: error.message };
 
   return { error: null };
+}
+
+/**
+ * Fetches "taken" confirmations recorded server-side — e.g. from a user tapping
+ * "Taken ✓" directly on a system push notification while the app was closed.
+ * Returns dose keys as `${reminder_id}|${dose_key}` so the caller can reconcile
+ * its local alarm state on load (and stop repeating an alarm that was already
+ * silenced from the lock screen).
+ */
+export async function fetchMedicationAcks(): Promise<Set<string>> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return new Set();
+
+  const { data, error } = await supabase.from("medication_acks").select("reminder_id, dose_key").eq("user_id", user.id);
+  if (error || !data) return new Set();
+
+  return new Set(data.map((row) => `${row.reminder_id}|${row.dose_key}`));
 }
 
 /**
