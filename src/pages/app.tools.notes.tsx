@@ -8,7 +8,7 @@ import {
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { subscribeToPush, syncScheduledNotifications, type ScheduledNotificationInput } from "@/lib/push";
+import { subscribeToPush, syncScheduledNotifications, cancelScheduledNotifications, type ScheduledNotificationInput } from "@/lib/push";
 
 /* ============================================================
    TYPES & CONSTANTS
@@ -38,6 +38,8 @@ interface Reminder {
   leadDays: number;       // 0 = remind on the day only; >0 also nudge this many days ahead
   done: boolean;          // only meaningful for one-off events
   notifiedKey?: string;   // dedupe key for the last alert fired
+  takenKey?: string;      // medication only — dedupe key of the slot last confirmed "taken"
+  medAlarm?: { key: string; lastNudgeAt: string }; // medication only — active alarm awaiting confirmation, re-nudges every MED_ALARM_INTERVAL_MIN
   createdAt: string;
 }
 
@@ -75,6 +77,11 @@ const WEEKDAYS = [
   { key: 5, short: "F", label: "Friday" },
   { key: 6, short: "S", label: "Saturday" },
 ];
+
+/** Medication nudges repeat like an alarm — every N minutes — until marked "Taken". */
+const MED_ALARM_INTERVAL_MIN = 15;
+/** How many backend follow-up pushes to pre-schedule per dose (in case the app stays closed) — original + this many. */
+const MED_ALARM_FOLLOWUPS = 3;
 
 const LEAD_OPTIONS = [
   { value: 0, label: "On the day" },
@@ -163,14 +170,25 @@ function upcomingFires(rem: Reminder, from: Date = new Date()): { dedupeKey: str
 
   if (rem.kind === "medication") {
     const slots = rem.times.length ? rem.times : ["09:00"];
+    // Mirror the in-app "alarm" — schedule the original push plus follow-up
+    // nudges MED_ALARM_INTERVAL_MIN apart; tapping "Taken ✓" cancels the whole
+    // chain via cancelScheduledNotifications, so closed-app users still get
+    // repeat reminders until they confirm (capped at MED_ALARM_FOLLOWUPS).
     for (let i = 0; i < PUSH_SYNC_WINDOW_DAYS; i++) {
       const day = addDays(today, i);
       if (rem.weekdays.length > 0 && !rem.weekdays.includes(day.getDay())) continue;
       for (const slot of slots) {
         const [hh, mm] = slot.split(":").map((n) => parseInt(n, 10));
-        const fireAt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hh || 0, mm || 0);
-        if (fireAt < from) continue;
-        out.push({ dedupeKey: `${fmtLocalDate(day)}|${slot}`, fireAt, body: `Time to take ${rem.title} · ${slot} 💊` });
+        const base = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hh || 0, mm || 0);
+        for (let n = 0; n <= MED_ALARM_FOLLOWUPS; n++) {
+          const fireAt = new Date(base.getTime() + n * MED_ALARM_INTERVAL_MIN * 60000);
+          if (fireAt < from) continue;
+          const body =
+            n === 0
+              ? `Time to take ${rem.title} · ${slot} 💊`
+              : `Still waiting — take your ${rem.title} (${slot}) 💊`;
+          out.push({ dedupeKey: `${fmtLocalDate(day)}|${slot}|${n}`, fireAt, body });
+        }
       }
     }
     return out;
@@ -343,7 +361,7 @@ export default function NotesPage() {
   const [doneCollapsed, setDoneCollapsed] = useState(true);
 
   // In-app alert banner
-  const [activeAlert, setActiveAlert] = useState<{ id: string; title: string; category: string } | null>(null);
+  const [activeAlert, setActiveAlert] = useState<{ id: string; title: string; category: string; kind: ReminderKind; medKey?: string } | null>(null);
 
   // Sparkle animation triggers
   const [justSaved, setJustSaved] = useState(false);
@@ -531,6 +549,17 @@ export default function NotesPage() {
     }
   };
 
+  /** Silences the alarm for this medication slot — stops the every-15-minute re-nudges for today, in-app and via push. */
+  const handleMarkMedicationTaken = (id: string, key: string) => {
+    setReminders((prev) =>
+      prev.map((r) => (r.id === id && r.kind === "medication" ? { ...r, takenKey: key, medAlarm: undefined } : r))
+    );
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 800);
+    // `key` is "${date}|${slot}" — cancel any not-yet-sent push nudges (original + alarm follow-ups) for this exact dose
+    cancelScheduledNotifications("reminders", `${id}:${key}`).catch(() => {});
+  };
+
   const handleToggleReminderDone = (id: string) => {
     setReminders((prev) =>
       prev.map((r) => (r.id === id && r.kind === "event" ? { ...r, done: !r.done } : r))
@@ -574,7 +603,7 @@ export default function NotesPage() {
   // Smart Reminder Checker Loop — understands medication recurrence, yearly birthdays,
   // one-off/range events, and "remind me X days before" anticipation for all of them.
   useEffect(() => {
-    const fireAlert = (rem: Reminder, body: string) => {
+    const fireAlert = (rem: Reminder, body: string, medKey?: string) => {
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         try {
           new Notification("BloomyGirl Nudge ✿", { body: `${body} 💕`, icon: "/images/me-avatar.png" });
@@ -582,7 +611,7 @@ export default function NotesPage() {
           console.error("Browser notification failed to fire:", e);
         }
       }
-      setActiveAlert({ id: rem.id, title: rem.title, category: rem.kind === "event" ? rem.category : rem.kind });
+      setActiveAlert({ id: rem.id, title: rem.title, category: rem.kind === "event" ? rem.category : rem.kind, kind: rem.kind, medKey });
     };
 
     const checkReminders = () => {
@@ -601,10 +630,19 @@ export default function NotesPage() {
             const dueSlot = [...rem.times].sort().find((t) => t <= currentTime);
             if (!dueSlot) return rem;
             const key = `${todayString}|${dueSlot}`;
-            if (rem.notifiedKey === key) return rem;
+            if (rem.takenKey === key) return rem; // already confirmed taken — alarm silenced for this slot
+
+            // Alarm-style: keep re-nudging every MED_ALARM_INTERVAL_MIN until she taps "Taken ✓"
+            if (!rem.medAlarm || rem.medAlarm.key !== key) {
+              changed = true;
+              fireAlert(rem, `Time to take ${rem.title} · ${dueSlot}`, key);
+              return { ...rem, notifiedKey: key, medAlarm: { key, lastNudgeAt: now.toISOString() } };
+            }
+            const minsSinceLastNudge = (now.getTime() - new Date(rem.medAlarm.lastNudgeAt).getTime()) / 60000;
+            if (minsSinceLastNudge < MED_ALARM_INTERVAL_MIN) return rem;
             changed = true;
-            fireAlert(rem, `Time to take ${rem.title} · ${dueSlot}`);
-            return { ...rem, notifiedKey: key };
+            fireAlert(rem, `Still waiting — take your ${rem.title} (${dueSlot})`, key);
+            return { ...rem, medAlarm: { key, lastNudgeAt: now.toISOString() } };
           }
 
           const occurrence = nextOccurrence(rem, now);
@@ -740,23 +778,47 @@ export default function NotesPage() {
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Gentle Bloom Nudge</p>
               <h4 className="font-semibold text-rose text-sm truncate">{activeAlert.title}</h4>
-              <p className="text-xs text-rose/70 mt-0.5">It's time to bloom! 💕</p>
+              <p className="text-xs text-rose/70 mt-0.5">
+                {activeAlert.kind === "medication" ? "Like an alarm — it'll keep nudging you until you confirm 💊" : "It's time to bloom! 💕"}
+              </p>
               <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    handleToggleReminderDone(activeAlert.id);
-                    setActiveAlert(null);
-                  }}
-                  className="px-3 py-1.5 bg-hotpink text-white text-xs font-bold rounded-full hover:bg-magenta transition flex-1"
-                >
-                  Mark done ✿
-                </button>
-                <button
-                  onClick={() => setActiveAlert(null)}
-                  className="px-3 py-1.5 bg-blush text-hotpink text-xs font-bold rounded-full hover:bg-petal transition"
-                >
-                  Dismiss
-                </button>
+                {activeAlert.kind === "medication" ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (activeAlert.medKey) handleMarkMedicationTaken(activeAlert.id, activeAlert.medKey);
+                        setActiveAlert(null);
+                      }}
+                      className="px-3 py-1.5 bg-hotpink text-white text-xs font-bold rounded-full hover:bg-magenta transition flex-1"
+                    >
+                      Taken ✓
+                    </button>
+                    <button
+                      onClick={() => setActiveAlert(null)}
+                      className="px-3 py-1.5 bg-blush text-hotpink text-xs font-bold rounded-full hover:bg-petal transition"
+                    >
+                      Snooze {MED_ALARM_INTERVAL_MIN}m
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleToggleReminderDone(activeAlert.id);
+                        setActiveAlert(null);
+                      }}
+                      className="px-3 py-1.5 bg-hotpink text-white text-xs font-bold rounded-full hover:bg-magenta transition flex-1"
+                    >
+                      Mark done ✿
+                    </button>
+                    <button
+                      onClick={() => setActiveAlert(null)}
+                      className="px-3 py-1.5 bg-blush text-hotpink text-xs font-bold rounded-full hover:bg-petal transition"
+                    >
+                      Dismiss
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             <button onClick={() => setActiveAlert(null)} className="text-rose/40 hover:text-rose transition">

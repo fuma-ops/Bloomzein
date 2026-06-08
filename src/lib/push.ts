@@ -91,6 +91,29 @@ export type ScheduledNotificationInput = {
 };
 
 /**
+ * Cancels not-yet-sent scheduled notifications whose dedupe key starts with the
+ * given prefix — e.g. used to silence an "alarm chain" (a dose's original push
+ * plus its scheduled follow-up nudges) the moment the user confirms in-app.
+ */
+export async function cancelScheduledNotifications(tool: string, dedupeKeyPrefix: string): Promise<{ error: string | null }> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+
+  const { error } = await supabase
+    .from("scheduled_notifications")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("tool", tool)
+    .is("sent_at", null)
+    .like("dedupe_key", `${dedupeKeyPrefix}%`);
+  if (error) return { error: error.message };
+
+  return { error: null };
+}
+
+/**
  * Replaces a tool's set of pending (not-yet-sent) scheduled notifications with
  * the given list. Call this whenever the tool's reminder data changes — it
  * reconciles by deleting the tool's stale unsent rows and inserting the fresh
