@@ -182,26 +182,23 @@ export default function Landing() {
                 <Sparkles className="absolute -left-3 top-2 h-3 w-3 animate-bloom-sparkle text-magenta" style={{ animationDelay: "0.8s" }} aria-hidden />
               </h1>
               <p className="mt-2 font-script text-xl sm:text-2xl md:text-3xl text-magenta">your softest era starts here ✿</p>
-              <p className="mt-4 max-w-md text-sm sm:text-base font-medium text-magenta/80">
-                One soft little app that quietly learns your rhythm — your cycle, your mood, your days — and gently shapes everything else around you.
-              </p>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <div className="mt-5 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
                 <a
                   href="/app/today"
-                  className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-white transition"
+                  className="bloom-cta relative overflow-hidden hover-scale inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:flex-none sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
-                  <span className="relative z-10 inline-flex items-center gap-2">Start Blooming <ArrowRight className="h-4 w-4" /></span>
+                  <span className="relative z-10 inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">Start Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
                   <span className="bloom-cta-shine" aria-hidden />
                 </a>
                 <button
                   onClick={handleDownload}
                   disabled={installing}
-                  className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-hotpink transition hover:bg-white disabled:opacity-70"
+                  className="hover-scale inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white bg-white/90 px-4 py-2.5 text-xs font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:flex-none sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
                   {installing ? (
-                    <span className="h-4 w-4 rounded-full border-2 border-hotpink border-t-transparent animate-spin" />
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
                   ) : (
-                    <Download className="h-4 w-4" />
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   )}
                   {installing ? "Préparation…" : "Download App"}
                 </button>
@@ -291,6 +288,13 @@ export default function Landing() {
           .bloom-flower-item { opacity: 0; animation: bloom-flower-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
           .bloom-flower > svg.flower-bg { animation: bloom-flower-bob 5s ease-in-out infinite; }
           .bloom-flower-item:hover .flower-bg { filter: drop-shadow(0 8px 18px oklch(0.65 0.28 350 / 0.55)); }
+
+          @keyframes bloom-tap-nudge {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
+          }
+          .bloom-tap-arrow { animation: bloom-tap-nudge 1.6s ease-in-out infinite; }
+          .bloom-tap-card:hover .bloom-tap-arrow { animation-play-state: paused; transform: translateX(2px); }
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, each its own pink nuance */}
@@ -298,9 +302,6 @@ export default function Landing() {
           <div className="text-center">
             <p className="font-script text-2xl text-hotpink">your bloom & zein kit</p>
             <h2 className="font-script text-6xl text-bloom-gradient">three little universes, one soft you</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base font-medium text-magenta/80">
-              Every tool lives in one of your worlds — and they all quietly talk to each other so you never have to.
-            </p>
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
@@ -326,17 +327,24 @@ export default function Landing() {
                     <a
                       key={t.slug}
                       href={`/app/tools/${t.slug}`}
-                      className="bloom-flower-item flex items-center gap-3 rounded-2xl bg-white/70 p-3 transition hover:bg-white/95 hover:-translate-y-0.5"
+                      className="bloom-flower-item bloom-tap-card group/card flex items-center gap-3 rounded-2xl bg-white/70 p-3 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
                       style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
                     >
-                      <span className="bloom-flower relative grid h-12 w-12 shrink-0 place-items-center text-white">
-                        <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60" style={{ background: u.glow }} aria-hidden />
+                      <span className="bloom-flower relative grid h-12 w-12 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
+                        <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" style={{ background: u.glow }} aria-hidden />
                         <CuteToolIcon slug={t.slug} className="relative z-10 h-10 w-10 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold" style={{ color: u.titleColor }}>{t.label}</p>
                         <p className="mt-0.5 text-[11px] sm:text-xs font-medium leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
                       </div>
+                      <span
+                        className="bloom-tap-arrow grid h-7 w-7 shrink-0 place-items-center rounded-full text-white opacity-50 transition-opacity duration-300 group-hover/card:opacity-100"
+                        style={{ background: u.iconBg }}
+                        aria-hidden
+                      >
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
                     </a>
                   ))}
                 </div>
@@ -348,16 +356,15 @@ export default function Landing() {
         {/* How it Connects — circular web diagram, replaces all flowchart-y explanations */}
         <section id="how-it-works" className="mt-20 scroll-mt-24 animate-fade-in rounded-[2.5rem] bg-white/80 p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:p-8 md:p-12">
           <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">how it all connects</p>
-            <h2 className="mx-auto max-w-2xl font-script text-5xl sm:text-6xl text-bloom-gradient leading-tight">
-              Every tool knows what the others know.
+            <h2 className="mx-auto max-w-md font-script text-3xl sm:text-5xl md:text-6xl text-bloom-gradient leading-tight">
+              Every tool knows what the others know ✿
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base font-medium text-magenta/80">
-              Hover or tap a tool and watch your Bloom Calendar light up — that's the quiet thread tying your whole day together.
+            <p className="mx-auto mt-1.5 max-w-sm text-[11px] sm:text-sm font-medium text-magenta/70">
+              Tap a tool and watch your Bloom Calendar light up.
             </p>
           </div>
 
-          <div className="mt-10">
+          <div className="mt-6 sm:mt-10">
             <ConnectionsDiagram />
           </div>
 
