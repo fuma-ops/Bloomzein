@@ -6,7 +6,7 @@ import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -358,10 +358,29 @@ export default function Landing() {
           .bz-carousel-stage { perspective: 1400px; }
           .bz-carousel-3d { transform-style: preserve-3d; }
           .bz-carousel-card { transform-style: preserve-3d; backface-visibility: hidden; }
+
+          @keyframes bloom-conic-spin {
+            to { transform: rotate(360deg); }
+          }
+          .bloom-orbit-ring {
+            background: conic-gradient(from 0deg, #e8338a, #ff69b4, #ff1493, #ffb6c1, #c71585, #ff69b4, #ffc8e8, #e8338a);
+            animation: bloom-conic-spin 3s linear infinite;
+            border-radius: 50%;
+          }
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
         <section id="kit" className="relative mt-4 scroll-mt-24 sm:mt-6 lg:mt-6">
+
+          {/* Title sits above the card, not inside it */}
+          <div className="text-center mb-4 sm:mb-6">
+            <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
+            <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">
+              {isPhone ? "✿ swipe to drift through your worlds ✿" : "✿ drifting softly through your worlds ✿"}
+            </p>
+          </div>
+
           <div
             className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-10 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.35)]"
             style={{ background: "linear-gradient(160deg, oklch(0.97 0.035 350) 0%, oklch(0.94 0.07 345) 55%, oklch(0.92 0.08 20) 100%)" }}
@@ -369,14 +388,6 @@ export default function Landing() {
             <Flower2 className="pointer-events-none absolute -left-6 -top-6 h-20 w-20 text-hotpink/20 animate-bloom-float" aria-hidden />
             <Flower2 className="pointer-events-none absolute -right-8 bottom-0 h-24 w-24 text-magenta/15 animate-bloom-float" style={{ animationDelay: "1.4s" }} aria-hidden />
             <Sparkles className="pointer-events-none absolute right-6 top-6 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" aria-hidden />
-
-          <div className="relative text-center">
-            <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
-            <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
-            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">
-              {isPhone ? "✿ swipe to drift through your worlds ✿" : "✿ drifting softly through your worlds ✿"}
-            </p>
-          </div>
 
           <div
             className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y overflow-hidden rounded-[2rem] sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
@@ -433,8 +444,8 @@ export default function Landing() {
                   >
                     <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} aria-hidden />
                     <div className="flex items-center gap-2.5">
-                      <span className="grid h-11 w-11 place-items-center rounded-2xl text-xl text-white shadow-md" style={{ background: u.iconBg }}>
-                        {u.emoji}
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl shadow-md" style={{ background: u.iconBg }}>
+                        {u.icon}
                       </span>
                       <div>
                         <p className="font-script text-3xl" style={{ color: u.titleColor }}>{u.title}</p>
@@ -495,41 +506,40 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* How it Connects — circular web diagram, replaces all flowchart-y explanations */}
-        <section
-          id="how-it-works"
-          className="relative mx-auto mt-20 max-w-6xl scroll-mt-24 animate-fade-in overflow-hidden rounded-[2.5rem] p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:p-8 md:p-12"
-          style={{ background: "linear-gradient(160deg, oklch(0.95 0.045 350) 0%, oklch(0.9 0.07 345) 60%, oklch(0.89 0.08 20) 100%)" }}
-        >
-          <Flower2 className="pointer-events-none absolute -left-8 top-10 h-24 w-24 text-hotpink/15 animate-bloom-float" aria-hidden />
-          <Flower2 className="pointer-events-none absolute -right-10 bottom-6 h-28 w-28 text-magenta/15 animate-bloom-float" style={{ animationDelay: "1.8s" }} aria-hidden />
-          <Sparkles className="pointer-events-none absolute left-10 bottom-10 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" style={{ animationDelay: "0.6s" }} aria-hidden />
-          <Heart className="pointer-events-none absolute right-12 top-12 h-5 w-5 fill-magenta/25 text-magenta/25 animate-bloom-float" style={{ animationDelay: "1s" }} aria-hidden />
+        {/* How it Connects — title sits above the circle */}
+        <div id="how-it-works" className="mt-20 scroll-mt-24 text-center">
+          <h2 className="mx-auto max-w-md font-script text-3xl sm:text-5xl md:text-6xl text-bloom-gradient leading-tight">
+            Every tool knows what the others know ✿
+          </h2>
+          <p className="mx-auto mt-1.5 max-w-sm text-[11px] sm:text-sm font-medium text-magenta/70">
+            Tap a tool and watch your Bloom Calendar light up.
+          </p>
+        </div>
 
-          <div className="relative text-center">
-            <h2 className="mx-auto max-w-md font-script text-3xl sm:text-5xl md:text-6xl text-bloom-gradient leading-tight">
-              Every tool knows what the others know ✿
-            </h2>
-            <p className="mx-auto mt-1.5 max-w-sm text-[11px] sm:text-sm font-medium text-magenta/70">
-              Tap a tool and watch your Bloom Calendar light up.
-            </p>
-          </div>
-
-          <div className="relative mt-6 sm:mt-10">
+        {/* Circular animated-border section housing the web diagram */}
+        <div className="relative mx-auto mt-8" style={{ width: "min(88vw, 34rem)", aspectRatio: "1" }}>
+          {/* spinning gradient ring — border layer */}
+          <div className="bloom-orbit-ring absolute inset-0" aria-hidden />
+          {/* content circle */}
+          <div
+            className="absolute inset-[4px] rounded-full flex items-center justify-center"
+            style={{ background: "radial-gradient(circle at 50% 50%, oklch(0.97 0.035 350) 0%, oklch(0.93 0.07 345) 55%, oklch(0.90 0.09 20) 100%)" }}
+          >
             <ConnectionsDiagram />
           </div>
+        </div>
 
-          <div className="relative mx-auto mt-10 max-w-xl text-center">
-            <p className="font-script text-3xl sm:text-4xl text-bloom-gradient">One app. One you. Everything connected.</p>
-            <a
-              href="/app/today"
-              className="mt-5 inline-flex hover-scale items-center gap-2 rounded-full px-6 py-3 font-semibold text-white shadow-lg shadow-hotpink/40"
-              style={{ background: "linear-gradient(135deg, oklch(0.7 0.25 350), oklch(0.6 0.28 0))" }}
-            >
-              See it in action <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-        </section>
+        {/* CTA sits below the circle, outside it */}
+        <div className="mt-10 text-center">
+          <p className="font-script text-3xl sm:text-4xl text-bloom-gradient">One app. One you. Everything connected.</p>
+          <a
+            href="/app/today"
+            className="mt-5 inline-flex hover-scale items-center gap-2 rounded-full px-6 py-3 font-semibold text-white shadow-lg shadow-hotpink/40"
+            style={{ background: "linear-gradient(135deg, oklch(0.7 0.25 350), oklch(0.6 0.28 0))" }}
+          >
+            See it in action <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
 
         {/* Social proof — real, warm voices, never cold stats */}
         <section className="mt-20">
@@ -623,7 +633,7 @@ interface UniverseTool {
 interface Universe {
   title: string;
   subtitle: string;
-  emoji: string;
+  icon: ReactNode;
   bgGradient: string;
   iconBg: string;
   glow: string;
@@ -633,13 +643,28 @@ interface Universe {
   tools: UniverseTool[];
 }
 
+const ICON_STROKE = "#c4186e";
+
 const UNIVERSES: Universe[] = [
   {
     title: "Body",
     subtitle: "for your cycle, your meals, your movement",
-    emoji: "🌸",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+        <circle cx="12" cy="4.5" r="2" />
+        {/* shoulder / bust line */}
+        <path d="M9 8 Q9.2 7 10.2 7.6 Q11 8.6 12 8.6 Q13 8.6 13.8 7.6 Q14.8 7 15 8" />
+        {/* torso sides */}
+        <path d="M9 8 Q7.5 10 7.5 13 Q8.5 15.8 10 16.8 L10.5 19.5" />
+        <path d="M15 8 Q16.5 10 16.5 13 Q15.5 15.8 14 16.8 L13.5 19.5" />
+        {/* hip base */}
+        <path d="M10.5 19.5 Q12 20.5 13.5 19.5" />
+        {/* inner waist suggestion */}
+        <path d="M9.5 13.5 Q12 14.5 14.5 13.5" strokeWidth="1.1" />
+      </svg>
+    ),
     bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 350) 0%, oklch(0.85 0.17 350) 100%)",
-    iconBg: "linear-gradient(135deg, oklch(0.74 0.25 350), oklch(0.6 0.28 350))",
+    iconBg: "oklch(0.97 0.05 350)",
     glow: "oklch(0.78 0.22 350 / 0.45)",
     shadow: "oklch(0.62 0.27 350 / 0.35)",
     titleColor: "#831843",
@@ -653,9 +678,23 @@ const UNIVERSES: Universe[] = [
   {
     title: "Mind",
     subtitle: "for your moods, your thoughts, your softness",
-    emoji: "🌙",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+        {/* left lobe */}
+        <path d="M12 6.5 C10.5 5.5 7.5 6 6.5 8.5 C5.5 11 6.5 13.5 8 14.5 C8 16 9 17.5 10.5 17.5 L12 17.5" />
+        {/* right lobe */}
+        <path d="M12 6.5 C13.5 5.5 16.5 6 17.5 8.5 C18.5 11 17.5 13.5 16 14.5 C16 16 15 17.5 13.5 17.5 L12 17.5" />
+        {/* center fold */}
+        <line x1="12" y1="6.5" x2="12" y2="17.5" />
+        {/* gyrus detail lines */}
+        <path d="M8.5 10.5 C9.5 11 10.5 11 11 10.5" strokeWidth="1.15" />
+        <path d="M15.5 10.5 C14.5 11 13.5 11 13 10.5" strokeWidth="1.15" />
+        <path d="M8.5 13 C9.5 13.5 10.5 13.5 11 13" strokeWidth="1.15" />
+        <path d="M15.5 13 C14.5 13.5 13.5 13.5 13 13" strokeWidth="1.15" />
+      </svg>
+    ),
     bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 320) 0%, oklch(0.85 0.16 320) 100%)",
-    iconBg: "linear-gradient(135deg, oklch(0.72 0.2 320), oklch(0.58 0.25 320))",
+    iconBg: "oklch(0.97 0.05 320)",
     glow: "oklch(0.78 0.18 320 / 0.45)",
     shadow: "oklch(0.62 0.24 320 / 0.32)",
     titleColor: "#702459",
@@ -667,9 +706,20 @@ const UNIVERSES: Universe[] = [
   {
     title: "Life",
     subtitle: "for your money, your moments, your memory",
-    emoji: "🌷",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.65" strokeLinecap="round" className="h-7 w-7">
+        {/* heart */}
+        <path d="M12 18 C12 18 5 13.5 5 9 A3.75 3.75 0 0 1 12 7.8 A3.75 3.75 0 0 1 19 9 C19 13.5 12 18 12 18 Z" strokeLinejoin="round" />
+        {/* radiating rays */}
+        <line x1="12" y1="1.5" x2="12" y2="4" />
+        <line x1="17.2" y1="3" x2="15.6" y2="5" />
+        <line x1="20.2" y1="8.2" x2="17.6" y2="8.8" />
+        <line x1="6.8" y1="3" x2="8.4" y2="5" />
+        <line x1="3.8" y1="8.2" x2="6.4" y2="8.8" />
+      </svg>
+    ),
     bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 20) 0%, oklch(0.85 0.16 20) 100%)",
-    iconBg: "linear-gradient(135deg, oklch(0.74 0.2 20), oklch(0.6 0.25 10))",
+    iconBg: "oklch(0.97 0.05 20)",
     glow: "oklch(0.8 0.16 20 / 0.45)",
     shadow: "oklch(0.64 0.22 15 / 0.32)",
     titleColor: "#831843",
