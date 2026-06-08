@@ -1,4 +1,4 @@
-import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Lock, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Lock, ChevronLeft, ChevronRight, Flower2 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -197,7 +197,7 @@ export default function Landing() {
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6 2xl:max-w-[96rem]">
         {/* Hero — compact, centered, lifted on mobile */}
-        <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-8 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.45)]"
+        <section className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-8 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.45)]"
           style={{ background: "linear-gradient(135deg, oklch(0.94 0.08 350) 0%, oklch(0.88 0.14 350) 50%, oklch(0.92 0.1 10) 100%)" }}>
           <div className="pointer-events-none absolute -right-10 -top-10 hidden h-64 w-64 opacity-60 md:block" aria-hidden>
             <Sunburst />
@@ -361,8 +361,16 @@ export default function Landing() {
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
-        <section id="kit" className="mt-4 scroll-mt-24 sm:mt-6 lg:mt-6">
-          <div className="text-center">
+        <section id="kit" className="relative mt-4 scroll-mt-24 sm:mt-6 lg:mt-6">
+          <div
+            className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-10 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.35)]"
+            style={{ background: "linear-gradient(160deg, oklch(0.97 0.035 350) 0%, oklch(0.94 0.07 345) 55%, oklch(0.92 0.08 20) 100%)" }}
+          >
+            <Flower2 className="pointer-events-none absolute -left-6 -top-6 h-20 w-20 text-hotpink/20 animate-bloom-float" aria-hidden />
+            <Flower2 className="pointer-events-none absolute -right-8 bottom-0 h-24 w-24 text-magenta/15 animate-bloom-float" style={{ animationDelay: "1.4s" }} aria-hidden />
+            <Sparkles className="pointer-events-none absolute right-6 top-6 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" aria-hidden />
+
+          <div className="relative text-center">
             <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
             <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
             <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">
@@ -469,7 +477,7 @@ export default function Landing() {
           </div>
 
           {/* cute little dot trail — shows which universe is gently drifting into focus */}
-          <div className="mt-3 flex items-center justify-center gap-2">
+          <div className="relative mt-3 flex items-center justify-center gap-2">
             {UNIVERSES.map((u, i) => (
               <button
                 key={u.title}
@@ -484,11 +492,21 @@ export default function Landing() {
               />
             ))}
           </div>
+          </div>
         </section>
 
         {/* How it Connects — circular web diagram, replaces all flowchart-y explanations */}
-        <section id="how-it-works" className="mt-20 scroll-mt-24 animate-fade-in rounded-[2.5rem] bg-white/80 p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:p-8 md:p-12">
-          <div className="text-center">
+        <section
+          id="how-it-works"
+          className="relative mx-auto mt-20 max-w-6xl scroll-mt-24 animate-fade-in overflow-hidden rounded-[2.5rem] p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:p-8 md:p-12"
+          style={{ background: "linear-gradient(160deg, oklch(0.95 0.045 350) 0%, oklch(0.9 0.07 345) 60%, oklch(0.89 0.08 20) 100%)" }}
+        >
+          <Flower2 className="pointer-events-none absolute -left-8 top-10 h-24 w-24 text-hotpink/15 animate-bloom-float" aria-hidden />
+          <Flower2 className="pointer-events-none absolute -right-10 bottom-6 h-28 w-28 text-magenta/15 animate-bloom-float" style={{ animationDelay: "1.8s" }} aria-hidden />
+          <Sparkles className="pointer-events-none absolute left-10 bottom-10 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" style={{ animationDelay: "0.6s" }} aria-hidden />
+          <Heart className="pointer-events-none absolute right-12 top-12 h-5 w-5 fill-magenta/25 text-magenta/25 animate-bloom-float" style={{ animationDelay: "1s" }} aria-hidden />
+
+          <div className="relative text-center">
             <h2 className="mx-auto max-w-md font-script text-3xl sm:text-5xl md:text-6xl text-bloom-gradient leading-tight">
               Every tool knows what the others know ✿
             </h2>
@@ -497,11 +515,11 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="mt-6 sm:mt-10">
+          <div className="relative mt-6 sm:mt-10">
             <ConnectionsDiagram />
           </div>
 
-          <div className="mx-auto mt-10 max-w-xl text-center">
+          <div className="relative mx-auto mt-10 max-w-xl text-center">
             <p className="font-script text-3xl sm:text-4xl text-bloom-gradient">One app. One you. Everything connected.</p>
             <a
               href="/app/today"
