@@ -3,7 +3,6 @@ import {
   Flower,
   BookHeart,
   CalendarHeart,
-  CalendarDays,
   UtensilsCrossed,
   Notebook,
   type LucideIcon,
@@ -17,7 +16,6 @@ export interface Tool {
 }
 
 export const TOOLS: Tool[] = [
-  { slug: "calendar", label: "Bloom Calendar", icon: CalendarDays, blurb: "Your whole soft life, in one glance." },
   { slug: "notes", label: "Notes & Reminders", icon: Notebook, blurb: "Scribble thoughts, set dreamy nudges." },
   { slug: "budget", label: "Budget Planner", icon: Wallet, blurb: "Plan your soft-girl spending." },
   { slug: "meals", label: "Meal Planner", icon: UtensilsCrossed, blurb: "Glow-up your week, plate by plate." },

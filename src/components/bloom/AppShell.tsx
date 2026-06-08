@@ -1,4 +1,4 @@
-import { Sun, LayoutGrid, BookOpen, ShoppingBag, User, type LucideIcon } from "lucide-react";
+import { Sun, CalendarDays, LayoutGrid, BookOpen, ShoppingBag, User, type LucideIcon } from "lucide-react";
 import { BloomLogo } from "./BloomLogo";
 import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
@@ -11,6 +11,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/app/today", label: "Today", icon: Sun },
+  { to: "/app/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/app/tools", label: "Tools", icon: LayoutGrid },
   { to: "/app/read", label: "Read", icon: BookOpen },
   { to: "/app/shop", label: "Shop", icon: ShoppingBag },

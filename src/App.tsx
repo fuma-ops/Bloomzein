@@ -9,7 +9,7 @@ import ReadPage from "./pages/app.read";
 import ShopPage from "./pages/app.shop";
 import MePage from "./pages/app.me";
 import NotesPage from "./pages/app.tools.notes";
-import CalendarPage from "./pages/app.tools.calendar";
+import CalendarPage from "./pages/app.calendar";
 import DiaryPage from "./pages/app.tools.diary";
 import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
@@ -73,6 +73,8 @@ function AppContent() {
 
   if (path === "/app/today") {
     content = <TodayPage />;
+  } else if (path === "/app/calendar") {
+    content = <CalendarPage />;
   } else if (path === "/app/tools" || path === "/app/tools/") {
     content = <ToolsIndex />;
   } else if (path === "/app/read") {
@@ -81,8 +83,6 @@ function AppContent() {
     content = <ShopPage />;
   } else if (path === "/app/me") {
     content = <MePage />;
-  } else if (path === "/app/tools/calendar") {
-    content = <CalendarPage />;
   } else if (path === "/app/tools/yoga") {
     content = <YogaPage />;
   } else if (path === "/app/tools/meals") {
@@ -124,8 +124,8 @@ function AppContent() {
   }
 
   if (content) {
-    // Today, Tools and Me require an account — Shop and Read stay public for visibility/SEO
-    const isProtected = path === "/app/today" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
+    // Today, Calendar, Tools and Me require an account — Shop and Read stay public for visibility/SEO
+    const isProtected = path === "/app/today" || path === "/app/calendar" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
     return (
       <>
         <AppShell currentPath={path}>
