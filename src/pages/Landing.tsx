@@ -1,10 +1,10 @@
-import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X } from "lucide-react";
+import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Lock } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
-import { TOOLS } from "@/components/bloom/tools";
 import { SparkleRing } from "@/components/bloom/SparkleRing";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
+import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { useEffect, useState } from "react";
 
@@ -50,28 +50,27 @@ export default function Landing() {
       <div className="pointer-events-none absolute -left-32 top-40 -z-0 h-80 w-80 rounded-full bg-hotpink/20 blur-3xl animate-bloom-pulse" aria-hidden />
       <div className="pointer-events-none absolute -right-32 top-[60%] -z-0 h-96 w-96 rounded-full bg-rose/30 blur-3xl animate-bloom-pulse" style={{ animationDelay: "1.5s" }} aria-hidden />
 
-      {/* Navbar */}
+      {/* Navbar — exactly 3 links, kept soft & uncluttered */}
       <header className="sticky top-0 z-40 border-b border-petal/60 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <BloomLogo />
           <nav className="hidden items-center gap-8 text-sm font-medium text-rose md:flex">
-            <a href="/app/tools" className="hover:text-hotpink font-semibold">Tools</a>
-            <a href="#favorites" className="hover:text-hotpink font-semibold">Favorites</a>
-            <a href="#blog" className="hover:text-hotpink font-semibold">Blog</a>
-            <a href="#subscribe" className="hover:text-hotpink font-semibold">Subscribe</a>
+            <a href="#kit" className="hover:text-hotpink font-semibold">Our Kit</a>
+            <a href="#how-it-works" className="hover:text-hotpink font-semibold">How it works</a>
+            <a
+              href="/app/today"
+              className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition"
+            >
+              <span className="relative z-10 inline-flex items-center gap-1.5">Start Blooming <ArrowRight className="h-3.5 w-3.5" /></span>
+              <span className="bloom-cta-shine" aria-hidden />
+            </a>
           </nav>
-          <div className="flex items-center gap-2">
-            <a href="#" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
-              <Instagram className="h-4 w-4" />
-            </a>
-            <a href="#" aria-label="TikTok" className="grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white hover:bg-magenta mr-1">
-              <Music2 className="h-4 w-4" />
-            </a>
+          <div className="flex items-center gap-2 md:hidden">
             {/* Mobile hamburger button */}
             <button
               id="landing-menu-toggle"
               onClick={() => setMobileMenuOpen(true)}
-              className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal"
               aria-label="Open navigation menu"
             >
               <Menu className="h-5 w-5" />
@@ -103,32 +102,18 @@ export default function Landing() {
               </div>
               <div className="mt-8 flex flex-col gap-5">
                 <a
-                  href="/app/tools"
+                  href="#kit"
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
                 >
-                  ✿ Tools
+                  ✿ Our Kit
                 </a>
                 <a
-                  href="#favorites"
+                  href="#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
                   className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
                 >
-                  ✿ Favorites
-                </a>
-                <a
-                  href="#blog"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
-                >
-                  ✿ Blog
-                </a>
-                <a
-                  href="#subscribe"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
-                >
-                  ✿ Subscribe
+                  ✿ How it works
                 </a>
               </div>
             </div>
@@ -138,8 +123,16 @@ export default function Landing() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3 sm:py-3.5 bg-hotpink text-white rounded-full font-bold shadow-md shadow-hotpink/30 hover:bg-magenta transition text-center"
               >
-                Download Bloom & Zein App
+                Start Blooming
               </a>
+              <div className="flex items-center justify-center gap-2">
+                <a href="#" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
+                  <Instagram className="h-4 w-4" />
+                </a>
+                <a href="#" aria-label="TikTok" className="grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white hover:bg-magenta">
+                  <Music2 className="h-4 w-4" />
+                </a>
+              </div>
               <p className="text-center font-script text-base text-rose/80">stay soft, bloom on ✿</p>
             </div>
           </nav>
@@ -189,9 +182,12 @@ export default function Landing() {
                 <Sparkles className="absolute -left-3 top-2 h-3 w-3 animate-bloom-sparkle text-magenta" style={{ animationDelay: "0.8s" }} aria-hidden />
               </h1>
               <p className="mt-2 font-script text-xl sm:text-2xl md:text-3xl text-magenta">your softest era starts here ✿</p>
+              <p className="mt-4 max-w-md text-sm sm:text-base font-medium text-magenta/80">
+                One soft little app that quietly learns your rhythm — your cycle, your mood, your days — and gently shapes everything else around you.
+              </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <a
-                  href="/app/tools"
+                  href="/app/today"
                   className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-white transition"
                 >
                   <span className="relative z-10 inline-flex items-center gap-2">Start Blooming <ArrowRight className="h-4 w-4" /></span>
@@ -211,30 +207,6 @@ export default function Landing() {
                 </button>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Tools strip — animated flower buttons */}
-        <section className="mt-5 sm:mt-8 animate-fade-in rounded-[2rem] sm:rounded-[2.5rem] bg-white/85 p-5 sm:p-8 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur">
-          <div className="mb-4 sm:mb-6 text-center">
-            <p className="font-script text-2xl sm:text-3xl text-bloom-gradient leading-none">your bloom & zein kit</p>
-            <p className="mt-1 text-xs sm:text-sm font-medium text-magenta/80">Everything you need in one soft little app ✿</p>
-          </div>
-          <div className="grid grid-cols-3 gap-3 sm:gap-5 md:grid-cols-6">
-            {TOOLS.map((t, i) => (
-              <a
-                key={t.slug}
-                href={`/app/tools/${t.slug}`}
-                className="bloom-flower-item group flex flex-col items-center gap-1.5 sm:gap-2 text-center"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <span className="bloom-flower relative grid h-16 w-16 sm:h-20 sm:w-20 place-items-center text-white transition-transform duration-500 group-hover:scale-110 group-active:scale-95">
-                  <span className="pointer-events-none absolute inset-0 -m-2 rounded-full bg-hotpink/25 blur-xl opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden />
-                  <CuteToolIcon slug={t.slug} className="relative z-10 h-13 w-13 sm:h-17 sm:w-17 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.3)] animate-bloom-pulse" />
-                </span>
-                <span className="text-[11px] sm:text-xs font-bold text-magenta leading-tight">{t.label}</span>
-              </a>
-            ))}
           </div>
         </section>
 
@@ -321,79 +293,87 @@ export default function Landing() {
           .bloom-flower-item:hover .flower-bg { filter: drop-shadow(0 8px 18px oklch(0.65 0.28 350 / 0.55)); }
         `}</style>
 
-        {/* Features section */}
-        <section id="favorites" className="mt-20">
+        {/* Your Bloom & Zein Kit — 3 universes, each its own pink nuance */}
+        <section id="kit" className="mt-20 scroll-mt-24">
           <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">why you'll love it</p>
-            <h2 className="font-script text-6xl text-bloom-gradient">made for your soft era</h2>
+            <p className="font-script text-2xl text-hotpink">your bloom & zein kit</p>
+            <h2 className="font-script text-6xl text-bloom-gradient">three little universes, one soft you</h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base font-medium text-magenta/80">
+              Every tool lives in one of your worlds — and they all quietly talk to each other so you never have to.
+            </p>
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {FEATURES.map((f, i) => (
+
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            {UNIVERSES.map((u, ui) => (
               <div
-                key={f.title}
-                className="group relative overflow-hidden rounded-[2rem] bg-white/85 p-6 shadow-xl shadow-rose/10 backdrop-blur transition hover:-translate-y-2"
-                style={{ animationDelay: `${i * 100}ms` }}
+                key={u.title}
+                className="group relative overflow-hidden rounded-[2rem] p-6 shadow-xl backdrop-blur transition hover:-translate-y-1.5"
+                style={{ background: u.bgGradient, boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset` }}
               >
-                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-hotpink/20 blur-2xl transition group-hover:bg-hotpink/40" aria-hidden />
-                <span className="inline-grid h-12 w-12 place-items-center rounded-2xl text-white shadow-md"
-                  style={{ background: "linear-gradient(135deg, oklch(0.7 0.25 350), oklch(0.58 0.28 0))" }}>
-                  <f.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 font-script text-3xl text-bloom-gradient">{f.title}</h3>
-                <p className="mt-2 text-sm font-medium text-magenta/80">{f.text}</p>
+                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl opacity-50 transition group-hover:opacity-80" style={{ background: u.glow }} aria-hidden />
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl text-xl text-white shadow-md" style={{ background: u.iconBg }}>
+                    {u.emoji}
+                  </span>
+                  <div>
+                    <p className="font-script text-3xl" style={{ color: u.titleColor }}>{u.title}</p>
+                    <p className="text-[11px] sm:text-xs font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3">
+                  {u.tools.map((t, ti) => (
+                    <a
+                      key={t.slug}
+                      href={`/app/tools/${t.slug}`}
+                      className="bloom-flower-item flex items-center gap-3 rounded-2xl bg-white/70 p-3 transition hover:bg-white/95 hover:-translate-y-0.5"
+                      style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
+                    >
+                      <span className="bloom-flower relative grid h-12 w-12 shrink-0 place-items-center text-white">
+                        <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60" style={{ background: u.glow }} aria-hidden />
+                        <CuteToolIcon slug={t.slug} className="relative z-10 h-10 w-10 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold" style={{ color: u.titleColor }}>{t.label}</p>
+                        <p className="mt-0.5 text-[11px] sm:text-xs font-medium leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Big image feature */}
-        <section className="mt-20 grid gap-8 rounded-[3rem] bg-white/70 p-6 shadow-xl shadow-rose/10 backdrop-blur lg:grid-cols-2 md:p-10">
-          <div className="relative overflow-hidden rounded-[2rem]">
-            <img src="/images/feature-1.png" alt="Cozy pink bedroom" loading="lazy" width={896} height={640} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-            <Sparkles className="absolute right-4 top-4 h-7 w-7 animate-bloom-sparkle text-white drop-shadow-lg" aria-hidden />
-          </div>
-          <div className="flex flex-col justify-center">
-            <p className="font-script text-2xl text-hotpink">your cozy era ✿</p>
-            <h2 className="mt-2 font-script text-6xl text-bloom-gradient">soft routines, big bloom</h2>
-            <p className="mt-4 max-w-md text-base font-medium text-magenta/90">
-              Build sweet little habits that make you feel like the main character. Keep sweet notes, organize your meals, and gentle reminders for your daily steps — all wrapped in pink.
+        {/* How it Connects — circular web diagram, replaces all flowchart-y explanations */}
+        <section id="how-it-works" className="mt-20 scroll-mt-24 animate-fade-in rounded-[2.5rem] bg-white/80 p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:p-8 md:p-12">
+          <div className="text-center">
+            <p className="font-script text-2xl text-hotpink">how it all connects</p>
+            <h2 className="mx-auto max-w-2xl font-script text-5xl sm:text-6xl text-bloom-gradient leading-tight">
+              Every tool knows what the others know.
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base font-medium text-magenta/80">
+              Hover or tap a tool and watch your Bloom Calendar light up — that's the quiet thread tying your whole day together.
             </p>
-            <div className="mt-6">
-              <a href="/app/tools"
-                className="hover-scale inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-white shadow-lg shadow-hotpink/40"
-                style={{ background: "linear-gradient(135deg, oklch(0.7 0.25 350), oklch(0.6 0.28 0))" }}>
-                Explore tools <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
+          </div>
+
+          <div className="mt-10">
+            <ConnectionsDiagram />
+          </div>
+
+          <div className="mx-auto mt-10 max-w-xl text-center">
+            <p className="font-script text-3xl sm:text-4xl text-bloom-gradient">One app. One you. Everything connected.</p>
+            <a
+              href="/app/today"
+              className="mt-5 inline-flex hover-scale items-center gap-2 rounded-full px-6 py-3 font-semibold text-white shadow-lg shadow-hotpink/40"
+              style={{ background: "linear-gradient(135deg, oklch(0.7 0.25 350), oklch(0.6 0.28 0))" }}
+            >
+              See it in action <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         </section>
 
-        {/* Blog section */}
-        <section id="blog" className="mt-20">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="font-script text-2xl text-hotpink">from the blog</p>
-              <h2 className="font-script text-6xl text-bloom-gradient">sweet little reads</h2>
-            </div>
-            <a href="#" className="hidden text-sm font-bold text-magenta hover:text-hotpink sm:inline">see all →</a>
-          </div>
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
-            {POSTS.map((p) => (
-              <article key={p.title} className="group overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] bg-white/90 shadow-xl shadow-rose/10 backdrop-blur transition hover:-translate-y-2 hover:shadow-rose/30">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={p.img} alt={p.title} loading="lazy" width={768} height={576} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" referrerPolicy="no-referrer" />
-                  <span className="absolute left-2 top-2 sm:left-4 sm:top-4 rounded-full bg-white/90 px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-bold text-hotpink shadow">{p.tag}</span>
-                </div>
-                <div className="p-3 sm:p-5">
-                  <h3 className="font-script text-xl sm:text-3xl text-bloom-gradient leading-tight">{p.title}</h3>
-                  <p className="mt-1 text-xs sm:text-sm font-medium text-magenta/80">{p.blurb}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {/* Testimonials */}
+        {/* Social proof — real, warm voices, never cold stats */}
         <section className="mt-20">
           <div className="text-center">
             <p className="font-script text-2xl text-hotpink">our pink girls say</p>
@@ -416,23 +396,29 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* CTA / Subscribe */}
-        <section id="subscribe" className="relative mt-20 overflow-hidden rounded-[3rem] p-10 text-center shadow-2xl shadow-hotpink/30"
+        {/* Final CTA */}
+        <section className="relative mt-20 overflow-hidden rounded-[3rem] p-8 sm:p-12 text-center shadow-2xl shadow-hotpink/30"
           style={{ background: "linear-gradient(135deg, oklch(0.72 0.26 350), oklch(0.58 0.3 0), oklch(0.7 0.25 20))" }}>
           <Sparkles className="absolute left-10 top-8 h-6 w-6 animate-bloom-sparkle text-white" aria-hidden />
           <Heart className="absolute right-10 top-10 h-6 w-6 animate-bloom-float fill-white text-white" aria-hidden />
           <Star className="absolute bottom-8 left-1/4 h-5 w-5 animate-bloom-sparkle fill-white text-white" style={{ animationDelay: "0.8s" }} aria-hidden />
-          <p className="font-script text-3xl text-white/90">join the bloom & zein club</p>
-          <h2 className="mt-2 font-script text-6xl text-white drop-shadow">your softest era awaits</h2>
-          <p className="mx-auto mt-4 max-w-md text-white/90">Get weekly pink mail with feel-good rituals, recipes & reads. No spam, just sparkles.</p>
-          <form className="mx-auto mt-6 flex max-w-md flex-col gap-2 sm:flex-row" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 rounded-full border-0 bg-white/95 px-5 py-3 text-sm font-medium text-magenta placeholder:text-rose/60 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <button className="hover-scale rounded-full bg-white px-6 py-3 text-sm font-bold text-hotpink shadow-lg">Subscribe ✿</button>
-          </form>
+          <p className="font-script text-3xl text-white/90">your softest era is one tap away</p>
+          <h2 className="mt-2 font-script text-6xl text-white drop-shadow">Start your softest era</h2>
+          <p className="mx-auto mt-4 max-w-md text-white/90">
+            Everything connected, nothing complicated — just one gentle little app that grows with you.
+          </p>
+          <div className="mt-7 flex justify-center">
+            <a
+              href="/app/today"
+              className="hover-scale inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-bold text-hotpink shadow-lg"
+            >
+              Start your softest era <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+          <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-2 text-xs sm:text-sm font-medium text-white/85">
+            <Lock className="h-3.5 w-3.5 shrink-0" />
+            Your softest secrets stay yours — stored safely on your device, never sold, never shared.
+          </p>
         </section>
 
         {/* Striped accent */}
@@ -441,7 +427,15 @@ export default function Landing() {
 
       <footer className="relative z-10 border-t border-petal/60 bg-white/70 py-8 text-center backdrop-blur">
         <p className="font-script text-2xl text-bloom-gradient">stay soft, bloom on 🌸</p>
-        <p className="mt-1 text-xs font-medium text-magenta/70">© {new Date().getFullYear()} Bloom & Zein — all in pink</p>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <a href="#" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
+            <Instagram className="h-4 w-4" />
+          </a>
+          <a href="#" aria-label="TikTok" className="grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white hover:bg-magenta">
+            <Music2 className="h-4 w-4" />
+          </a>
+        </div>
+        <p className="mt-3 text-xs font-medium text-magenta/70">© {new Date().getFullYear()} Bloom & Zein — all in pink</p>
       </footer>
 
       {/* iOS install toast — only on iPhone/iPad */}
@@ -462,23 +456,77 @@ export default function Landing() {
   );
 }
 
-import { Wallet, Heart as HeartIcon, Flower } from "lucide-react";
-const FEATURES = [
-  { icon: HeartIcon, title: "made with love", text: "Every tool is hand-crafted to feel cozy, cute and calm." },
-  { icon: Flower, title: "all in one", text: "Notes, reminders, meal planning & more — no more app juggling." },
-  { icon: Wallet, title: "soft & free", text: "Start free, glow up to Premium when you're ready to shine." },
-];
+interface UniverseTool {
+  slug: string;
+  label: string;
+  blurb: string;
+}
 
-const POSTS = [
-  { title: "morning rituals", blurb: "5 soft habits to start your day pink.", tag: "Lifestyle", img: "/images/blog-1.png" },
-  { title: "pink pilates", blurb: "A 10-min flow for your softest era.", tag: "Movement", img: "/images/blog-2.png" },
-  { title: "strawberry season", blurb: "Sweet little recipes to glow on.", tag: "Treats", img: "/images/blog-3.png" },
+interface Universe {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  bgGradient: string;
+  iconBg: string;
+  glow: string;
+  shadow: string;
+  titleColor: string;
+  textColor: string;
+  tools: UniverseTool[];
+}
+
+const UNIVERSES: Universe[] = [
+  {
+    title: "Body",
+    subtitle: "for your cycle, your meals, your movement",
+    emoji: "🌿",
+    bgGradient: "linear-gradient(160deg, oklch(0.96 0.05 350) 0%, oklch(0.92 0.09 350) 100%)",
+    iconBg: "linear-gradient(135deg, oklch(0.74 0.25 350), oklch(0.6 0.28 350))",
+    glow: "oklch(0.78 0.22 350 / 0.45)",
+    shadow: "oklch(0.62 0.27 350 / 0.35)",
+    titleColor: "#831843",
+    textColor: "#9D5C7E",
+    tools: [
+      { slug: "cycle", label: "Cycle Tracker", blurb: "You'll see your Yoga and Meals adjust to exactly how you feel today" },
+      { slug: "meals", label: "Meal Planner", blurb: "You get gentle meal ideas that match your energy and your phase" },
+      { slug: "yoga", label: "Yoga Flows", blurb: "Your flow softens on your low-energy days — no need to ask" },
+    ],
+  },
+  {
+    title: "Mind",
+    subtitle: "for your moods, your thoughts, your softness",
+    emoji: "🧠",
+    bgGradient: "linear-gradient(160deg, oklch(0.96 0.05 320) 0%, oklch(0.92 0.08 320) 100%)",
+    iconBg: "linear-gradient(135deg, oklch(0.72 0.2 320), oklch(0.58 0.25 320))",
+    glow: "oklch(0.78 0.18 320 / 0.45)",
+    shadow: "oklch(0.62 0.24 320 / 0.32)",
+    titleColor: "#702459",
+    textColor: "#9D5C7E",
+    tools: [
+      { slug: "diary", label: "Dreamy Diary", blurb: "You'll start noticing your own patterns — and so does the rest of your kit" },
+    ],
+  },
+  {
+    title: "Life",
+    subtitle: "for your money, your moments, your memory",
+    emoji: "💗",
+    bgGradient: "linear-gradient(160deg, oklch(0.96 0.05 20) 0%, oklch(0.92 0.08 20) 100%)",
+    iconBg: "linear-gradient(135deg, oklch(0.74 0.2 20), oklch(0.6 0.25 10))",
+    glow: "oklch(0.8 0.16 20 / 0.45)",
+    shadow: "oklch(0.64 0.22 15 / 0.32)",
+    titleColor: "#831843",
+    textColor: "#9D5C7E",
+    tools: [
+      { slug: "budget", label: "Budget Planner", blurb: "You'll notice when your spending follows your mood — gently, never judgy" },
+      { slug: "notes", label: "Reminders", blurb: "Your little moments find their place on your calendar, all on their own" },
+    ],
+  },
 ];
 
 const QUOTES = [
-  { name: "Mia", text: "Bloom & Zein turned my chaotic mornings into a soft pink ritual. I journal every day now ✿" },
-  { name: "Luna", text: "The cycle tracker is sooo cute and the mood circles literally made my week." },
-  { name: "Sofia", text: "Finally an app that gets the vibe. It's like my phone got a pink makeover 💕" },
+  { name: "Mia", text: "I stopped using 6 different apps the day I found Bloomzein — everything I need just lives here now ✿" },
+  { name: "Luna", text: "It's the first app that actually gets that my mood, my cycle and my budget are all the same story." },
+  { name: "Sofia", text: "I open it for my cycle and somehow my whole week just makes sense. It feels like it actually knows me 💕" },
 ];
 
 function Sunburst() {
@@ -495,28 +543,6 @@ function Sunburst() {
       </g>
       <circle cx="100" cy="100" r="14" fill="oklch(0.7 0.22 0)" />
       <path d="M100 92 l8 10 -8 10 -8 -10z" fill="oklch(0.92 0.06 350)" />
-    </svg>
-  );
-}
-
-function FlowerShape() {
-  // 6-petal flower silhouette with soft gradient + glossy highlight
-  return (
-    <svg viewBox="0 0 100 100" className="flower-bg absolute inset-0 h-full w-full" aria-hidden>
-      <defs>
-        <radialGradient id="petal-grad" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="oklch(0.92 0.12 350)" />
-          <stop offset="55%" stopColor="oklch(0.72 0.25 350)" />
-          <stop offset="100%" stopColor="oklch(0.58 0.28 0)" />
-        </radialGradient>
-      </defs>
-      <g fill="url(#petal-grad)">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <ellipse key={i} cx="50" cy="22" rx="16" ry="22" transform={`rotate(${i * 60} 50 50)`} />
-        ))}
-      </g>
-      <circle cx="50" cy="50" r="18" fill="oklch(0.78 0.22 350)" />
-      <ellipse cx="42" cy="42" rx="6" ry="3" fill="oklch(1 0 0 / 0.55)" />
     </svg>
   );
 }
