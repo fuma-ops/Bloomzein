@@ -91,9 +91,24 @@ export default function Landing() {
       <div className="pointer-events-none absolute -left-32 top-40 -z-0 h-80 w-80 rounded-full bg-hotpink/20 blur-3xl animate-bloom-pulse" aria-hidden />
       <div className="pointer-events-none absolute -right-32 top-[60%] -z-0 h-96 w-96 rounded-full bg-rose/30 blur-3xl animate-bloom-pulse" style={{ animationDelay: "1.5s" }} aria-hidden />
 
+      {/* extra dreamy fillers for ultra-wide screens — keeps the wide gutters feeling alive instead of empty */}
+      <div className="pointer-events-none absolute left-[3%] top-[14%] hidden -z-0 h-72 w-72 rounded-full bg-magenta/15 blur-3xl animate-bloom-pulse xl:block" style={{ animationDelay: "2.2s" }} aria-hidden />
+      <div className="pointer-events-none absolute right-[4%] top-[46%] hidden -z-0 h-80 w-80 rounded-full bg-hotpink/15 blur-3xl animate-bloom-pulse xl:block" style={{ animationDelay: "0.7s" }} aria-hidden />
+      <div className="pointer-events-none absolute left-[6%] bottom-[12%] hidden -z-0 h-64 w-64 rounded-full bg-petal/40 blur-3xl animate-bloom-pulse xl:block" style={{ animationDelay: "3.4s" }} aria-hidden />
+      <div className="pointer-events-none absolute left-[5%] top-[30%] hidden flex-col items-center gap-12 opacity-80 xl:flex" aria-hidden>
+        <Heart className="h-8 w-8 fill-hotpink/40 text-hotpink/40 animate-bloom-float" />
+        <Sparkles className="h-10 w-10 text-magenta/40 animate-bloom-sparkle" style={{ animationDelay: "1s" }} />
+        <Star className="h-7 w-7 fill-hotpink/30 text-hotpink/30 animate-bloom-float" style={{ animationDelay: "2s" }} />
+      </div>
+      <div className="pointer-events-none absolute right-[5%] top-[20%] hidden flex-col items-center gap-14 opacity-80 xl:flex" aria-hidden>
+        <Sparkles className="h-9 w-9 text-hotpink/40 animate-bloom-sparkle" style={{ animationDelay: "0.5s" }} />
+        <Heart className="h-8 w-8 fill-magenta/30 text-magenta/30 animate-bloom-float" style={{ animationDelay: "1.5s" }} />
+        <Star className="h-6 w-6 fill-magenta/30 text-magenta/30 animate-bloom-sparkle" style={{ animationDelay: "2.5s" }} />
+      </div>
+
       {/* Navbar — exactly 3 links, kept soft & uncluttered */}
       <header className="sticky top-0 z-40 border-b border-petal/60 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 2xl:max-w-[96rem]">
           <BloomLogo />
           <nav className="hidden items-center gap-8 text-sm font-medium text-rose md:flex">
             <a href="#kit" className="hover:text-hotpink font-semibold">Our Kit</a>
@@ -180,7 +195,7 @@ export default function Landing() {
         </div>
       )}
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6 2xl:max-w-[96rem]">
         {/* Hero — compact, centered, lifted on mobile */}
         <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-8 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.45)]"
           style={{ background: "linear-gradient(135deg, oklch(0.94 0.08 350) 0%, oklch(0.88 0.14 350) 50%, oklch(0.92 0.1 10) 100%)" }}>
@@ -350,7 +365,9 @@ export default function Landing() {
           <div className="text-center">
             <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
             <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
-            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">✿ drifting softly through your worlds ✿</p>
+            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">
+              {isPhone ? "✿ swipe to drift through your worlds ✿" : "✿ drifting softly through your worlds ✿"}
+            </p>
           </div>
 
           <div
@@ -377,11 +394,6 @@ export default function Landing() {
             >
               <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
-
-            {/* phones: a tiny swipe hint instead of arrows */}
-            <p className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-magenta/50 sm:hidden">
-              ✿ swipe to explore your worlds ✿
-            </p>
 
             <div className="bz-carousel-3d absolute inset-0">
               {UNIVERSES.map((u, ui) => {
