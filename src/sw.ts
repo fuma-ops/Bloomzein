@@ -44,6 +44,7 @@ self.addEventListener("push", (event: PushEvent) => {
   type AlarmNotificationOptions = NotificationOptions & {
     vibrate?: number[];
     actions?: { action: string; title: string }[];
+    renotify?: boolean;
   };
 
   const options: AlarmNotificationOptions = {
@@ -54,11 +55,22 @@ self.addEventListener("push", (event: PushEvent) => {
   };
 
   // Medication doses behave like an alarm: action buttons right on the
-  // notification (so she can confirm without opening the app), insistent
-  // vibration, and it stays on screen until she interacts with it.
+  // notification (so she can confirm without opening the app), a branded pink
+  // pill icon instead of the generic app logo, a long ringing-style vibration,
+  // and it stays on screen until she interacts with it.
   if (payload.alarm && data.kind === "medication") {
+    options.icon = "/medication-icon-192.png";
+    options.badge = "/medication-badge-96.png";
     options.requireInteraction = true;
-    options.vibrate = [300, 150, 300, 150, 300, 150, 600];
+    options.tag = `medication-${data.dedupePrefix ?? data.doseKey ?? "alarm"}`;
+    options.renotify = true;
+    // A long buzz/pause loop — the closest a one-shot Vibration API pattern
+    // can get to "rings like a phone call" within what browsers allow.
+    options.vibrate = [
+      400, 200, 400, 200, 400, 600,
+      400, 200, 400, 200, 400, 600,
+      400, 200, 400, 200, 400,
+    ];
     options.actions = [
       { action: "taken", title: "Taken ✓" },
       { action: "snooze", title: "Snooze" },
