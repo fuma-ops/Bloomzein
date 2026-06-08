@@ -7,6 +7,7 @@ import {
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 
 // ===================== DATA =====================
 
@@ -331,6 +332,17 @@ const CYCLE_PHASE_KEY = "bloom:cycle-phase"; // optional, read-only
 interface Streak { count: number; lastISO: string | null; }
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+function fmtLocalDate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function addDays(d: Date, n: number) {
+  const next = new Date(d);
+  next.setDate(next.getDate() + n);
+  return next;
+}
+const YOGA_PUSH_SYNC_WINDOW_DAYS = 14;
+// JS getDay(): 0=Sun..6=Sat — map to the Mon-first labels used by the schedule grid.
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function isYesterday(iso: string) {
   const d = new Date(iso); const y = new Date(); y.setDate(y.getDate() - 1);
   return d.toISOString().slice(0,10) === y.toISOString().slice(0,10);
@@ -646,15 +658,63 @@ function Organizer() {
     } catch {}
   }, []);
 
+  // A schedule is only useful if we can actually nudge her — ask right when
+  // she picks a practice day (a real user gesture), not via a banner she may dismiss.
+  const askForNotifications = () => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((perm) => {
+        if (perm === "granted") subscribeToPush().catch(() => {});
+      });
+    }
+  };
+
   const update = (day: string, val: string | null) => {
     const next = { ...schedule, [day]: val };
     setSchedule(next);
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    if (val) askForNotifications();
   };
   const updateReminder = (v: string) => {
     setReminder(v);
     try { localStorage.setItem(REMINDER_KEY, v); } catch {}
+    askForNotifications();
   };
+
+  // Keep the shared `scheduled_notifications` table in sync with this weekly
+  // schedule, so the backend (Edge Function + cron) can nudge her even while
+  // the app is closed. No-ops silently when signed out.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const userId = await getCurrentUserId();
+      if (cancelled || !userId) {
+        if (!cancelled) syncScheduledNotifications("yoga", []);
+        return;
+      }
+      const [hh, mm] = reminder.split(":").map((n) => parseInt(n, 10));
+      const today = new Date();
+      const items: ScheduledNotificationInput[] = [];
+      for (let i = 0; i < YOGA_PUSH_SYNC_WINDOW_DAYS; i++) {
+        const day = addDays(today, i);
+        const label = WEEKDAY_LABELS[day.getDay()];
+        const focus = schedule[label];
+        if (!focus) continue;
+        const fireAt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hh || 0, mm || 0);
+        if (fireAt < today) continue;
+        const dateStr = fmtLocalDate(day);
+        items.push({
+          dedupeKey: `session:${dateStr}`,
+          fireAt: fireAt.toISOString(),
+          title: "Yoga time ✿",
+          body: `Your ${focus.toLowerCase()} flow is waiting — ${reminder} 🧘`,
+          data: { url: "/app/tools/yoga", kind: "yoga" },
+        });
+      }
+      if (cancelled) return;
+      syncScheduledNotifications("yoga", items);
+    })();
+    return () => { cancelled = true; };
+  }, [schedule, reminder]);
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength"];

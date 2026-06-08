@@ -50,7 +50,10 @@ self.addEventListener("push", (event: PushEvent) => {
   const options: AlarmNotificationOptions = {
     body: payload.body || "",
     icon: "/pwa-192x192.png",
-    badge: "/pwa-192x192.png",
+    // The full-colour app icon has no clean silhouette, so Android's monochrome
+    // badge extraction renders it as a blank circle — use a dedicated white
+    // flower silhouette instead so the brand mark stays recognisable there.
+    badge: "/brand-badge-96.png",
     data,
   };
 
@@ -60,8 +63,10 @@ self.addEventListener("push", (event: PushEvent) => {
   // and it stays on screen until she interacts with it.
   if (payload.alarm && data.kind === "medication") {
     options.icon = "/medication-icon-192.png";
-    options.badge = "/medication-badge-96.png";
     options.requireInteraction = true;
+    // Be explicit: this must ring with the device's full notification sound +
+    // vibration, not the muted/silent delivery the OS uses for routine pushes.
+    options.silent = false;
     options.tag = `medication-${data.dedupePrefix ?? data.doseKey ?? "alarm"}`;
     options.renotify = true;
     // A long buzz/pause loop — the closest a one-shot Vibration API pattern
