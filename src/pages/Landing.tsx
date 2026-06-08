@@ -15,15 +15,25 @@ export default function Landing() {
   const [scrollY, setScrollY] = useState(0);
   const [kitActive, setKitActive] = useState(0);
   const [kitPaused, setKitPaused] = useState(false);
+  const [isPhone, setIsPhone] = useState(false);
 
-  // gentle auto-advance, right to left, like a soft carousel breeze — pauses while you're browsing it
+  // on phones we hand control over to a swipe — no auto-glide fighting the user's thumb
   useEffect(() => {
-    if (kitPaused) return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsPhone(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // gentle auto-advance, right to left, like a soft carousel breeze — pauses while you're browsing it, off on phones
+  useEffect(() => {
+    if (kitPaused || isPhone) return;
     const t = setInterval(() => {
       setKitActive((prev) => (prev + 1) % UNIVERSES.length);
     }, 4200);
     return () => clearInterval(t);
-  }, [kitPaused]);
+  }, [kitPaused, isPhone]);
 
   const kitGoTo = (index: number) => {
     setKitActive(((index % UNIVERSES.length) + UNIVERSES.length) % UNIVERSES.length);
@@ -31,6 +41,19 @@ export default function Landing() {
   };
   const kitNext = () => kitGoTo(kitActive + 1);
   const kitPrev = () => kitGoTo(kitActive - 1);
+
+  const kitTouchStart = useRef<number | null>(null);
+  const onKitTouchStart = (e: React.TouchEvent) => {
+    kitTouchStart.current = e.touches[0].clientX;
+  };
+  const onKitTouchEnd = (e: React.TouchEvent) => {
+    if (kitTouchStart.current === null) return;
+    const dx = e.changedTouches[0].clientX - kitTouchStart.current;
+    kitTouchStart.current = null;
+    if (Math.abs(dx) < 36) return;
+    if (dx < 0) kitNext();
+    else kitPrev();
+  };
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -331,16 +354,18 @@ export default function Landing() {
           </div>
 
           <div
-            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
+            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
             onMouseEnter={() => setKitPaused(true)}
             onMouseLeave={() => setKitPaused(false)}
+            onTouchStart={onKitTouchStart}
+            onTouchEnd={onKitTouchEnd}
           >
-            {/* prev/next arrows — gently glide the 3D stack */}
+            {/* prev/next arrows — gently glide the 3D stack (tablet & up; phones swipe instead) */}
             <button
               type="button"
               onClick={kitPrev}
               aria-label="Previous universe"
-              className="absolute left-0 top-1/2 z-30 -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:p-2.5"
+              className="absolute left-0 top-1/2 z-30 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:block sm:p-2.5"
             >
               <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
@@ -348,10 +373,15 @@ export default function Landing() {
               type="button"
               onClick={kitNext}
               aria-label="Next universe"
-              className="absolute right-0 top-1/2 z-30 -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:p-2.5"
+              className="absolute right-0 top-1/2 z-30 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:block sm:p-2.5"
             >
               <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
+
+            {/* phones: a tiny swipe hint instead of arrows */}
+            <p className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-magenta/50 sm:hidden">
+              ✿ swipe to explore your worlds ✿
+            </p>
 
             <div className="bz-carousel-3d absolute inset-0">
               {UNIVERSES.map((u, ui) => {
@@ -392,26 +422,26 @@ export default function Landing() {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-col gap-2.5">
+                    <div className="mt-3 flex flex-col gap-1.5 sm:gap-2">
                       {u.tools.map((t, ti) => (
                         <a
                           key={t.slug}
                           href={`/app/tools/${t.slug}`}
                           onClick={(e) => { if (!isActive) e.preventDefault(); }}
                           tabIndex={isActive ? 0 : -1}
-                          className="bloom-tap-card group/card flex items-center gap-3 rounded-2xl bg-white/70 p-2.5 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
+                          className="bloom-tap-card group/card flex items-center gap-2.5 rounded-2xl bg-white/70 p-2 transition duration-300 hover:bg-white/95 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
                           style={{ animationDelay: `${ui * 120 + ti * 90}ms` }}
                         >
-                          <span className="bloom-flower relative grid h-11 w-11 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
+                          <span className="bloom-flower relative grid h-9 w-9 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
                             <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" style={{ background: u.glow }} aria-hidden />
-                            <CuteToolIcon slug={t.slug} className="relative z-10 h-9 w-9 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
+                            <CuteToolIcon slug={t.slug} className="relative z-10 h-7 w-7 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold" style={{ color: u.titleColor }}>{t.label}</p>
-                            <p className="mt-0.5 text-[11px] leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
+                            <p className="text-[13px] font-bold leading-tight" style={{ color: u.titleColor }}>{t.label}</p>
+                            <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug sm:line-clamp-2" style={{ color: u.textColor }}>{t.blurb}</p>
                           </div>
                           <span
-                            className="bloom-tap-arrow grid h-6 w-6 shrink-0 place-items-center rounded-full text-white opacity-50 transition-opacity duration-300 group-hover/card:opacity-100"
+                            className="bloom-tap-arrow grid h-5 w-5 shrink-0 place-items-center rounded-full text-white opacity-50 transition-opacity duration-300 group-hover/card:opacity-100"
                             style={{ background: u.iconBg }}
                             aria-hidden
                           >
