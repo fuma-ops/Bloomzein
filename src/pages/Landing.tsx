@@ -159,7 +159,7 @@ export default function Landing() {
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6">
         {/* Hero — compact, centered, lifted on mobile */}
-        <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-8 md:p-10 lg:p-11 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.45)]"
+        <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-8 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.45)]"
           style={{ background: "linear-gradient(135deg, oklch(0.94 0.08 350) 0%, oklch(0.88 0.14 350) 50%, oklch(0.92 0.1 10) 100%)" }}>
           <div className="pointer-events-none absolute -right-10 -top-10 hidden h-64 w-64 opacity-60 md:block" aria-hidden>
             <Sunburst />
@@ -174,19 +174,19 @@ export default function Landing() {
           <Sparkles className="absolute left-[12%] bottom-[28%] h-3 w-3 animate-bloom-sparkle text-white/80" style={{ animationDelay: "2.1s", transform: `translateY(${scrollY * -0.05}px)` }} aria-hidden />
 
           {/* Mobile/tablet: stacked & centered. Desktop: 2-col */}
-          <div className="flex flex-col items-center gap-6 text-center lg:grid lg:grid-cols-2 lg:items-center lg:gap-10 lg:text-left">
-            <div className="relative mx-auto h-[180px] w-[180px] sm:h-[260px] sm:w-[260px] md:h-[320px] md:w-[320px] lg:h-[340px] lg:w-[340px] lg:mt-0">
+          <div className="flex flex-col items-center gap-3 text-center lg:grid lg:grid-cols-2 lg:items-center lg:gap-8 lg:text-left">
+            <div className="relative mx-auto h-[140px] w-[140px] sm:h-[200px] sm:w-[200px] md:h-[250px] md:w-[250px] lg:h-[270px] lg:w-[270px] lg:mt-0">
               {/* glowing aura behind the hero photo */}
               <div className="absolute inset-0 -m-6 rounded-[45%_55%_60%_40%/55%_45%_50%_50%] bg-hotpink/40 blur-2xl animate-bloom-pulse" aria-hidden />
               <div className="absolute inset-0 -m-10 rounded-full bg-gradient-to-br from-hotpink/30 via-magenta/20 to-transparent blur-3xl animate-bloom-pulse" style={{ animationDelay: "1s" }} aria-hidden />
-              <div className="hidden lg:block"><SparkleRing radius={150} /></div>
+              <div className="hidden lg:block"><SparkleRing radius={130} /></div>
               <div className="animate-bloom-float h-full w-full">
                 <img
                   src="/images/hero-girl.png"
                   alt="A joyful girl with vibrant pink hair smiling"
                   width={520}
                   height={520}
-                  className="relative h-full w-full object-cover shadow-[0_25px_60px_-15px_oklch(0.55_0.28_0/0.55)] mx-auto lg:h-[300px] lg:w-[300px] lg:mt-3"
+                  className="relative h-full w-full object-cover shadow-[0_25px_60px_-15px_oklch(0.55_0.28_0/0.55)] mx-auto lg:h-[240px] lg:w-[240px] lg:mt-2"
                   style={{ borderRadius: "55% 45% 50% 50% / 60% 55% 45% 40%" }}
                   referrerPolicy="no-referrer"
                 />
@@ -199,8 +199,8 @@ export default function Landing() {
                 <Sparkles className="absolute -right-4 -top-2 h-4 w-4 sm:h-5 sm:w-5 animate-bloom-sparkle text-hotpink" aria-hidden />
                 <Sparkles className="absolute -left-3 top-2 h-3 w-3 animate-bloom-sparkle text-magenta" style={{ animationDelay: "0.8s" }} aria-hidden />
               </h1>
-              <p className="mt-2 font-script text-xl sm:text-2xl md:text-3xl text-magenta">your softest era starts here ✿</p>
-              <div className="mt-5 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
+              <p className="mt-1 font-script text-xl sm:text-2xl md:text-3xl text-magenta">your softest era starts here ✿</p>
+              <div className="mt-3 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
                 <a
                   href="/app/today"
                   className="bloom-cta relative overflow-hidden hover-scale inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:flex-none sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
@@ -323,7 +323,7 @@ export default function Landing() {
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
-        <section id="kit" className="mt-6 scroll-mt-24 sm:mt-10 lg:mt-12">
+        <section id="kit" className="mt-4 scroll-mt-24 sm:mt-6 lg:mt-6">
           <div className="text-center">
             <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
             <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
@@ -331,7 +331,7 @@ export default function Landing() {
           </div>
 
           <div
-            className="bz-carousel-stage relative mx-auto mt-5 h-[28rem] max-w-lg sm:mt-6 sm:h-[25rem] sm:max-w-2xl lg:h-[22rem] lg:max-w-4xl"
+            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
             onMouseEnter={() => setKitPaused(true)}
             onMouseLeave={() => setKitPaused(false)}
           >
