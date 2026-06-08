@@ -352,6 +352,36 @@ export function CuteToolIcon({ slug, className = "h-8 w-8" }: Props) {
         </svg>
       );
 
+    case "calendar":
+      return (
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <linearGradient id="calendarCoverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.78 0.22 350)" />
+              <stop offset="55%" stopColor="oklch(0.62 0.28 350)" />
+              <stop offset="100%" stopColor="oklch(0.48 0.26 350)" />
+            </linearGradient>
+            <linearGradient id="calendarMarkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.95 0.07 350)" />
+              <stop offset="100%" stopColor="oklch(0.62 0.28 350)" />
+            </linearGradient>
+          </defs>
+          <rect x="34" y="14" width="6" height="16" rx="3" fill="oklch(0.85 0.12 350)" stroke="#ffffff" strokeWidth="1" />
+          <rect x="60" y="14" width="6" height="16" rx="3" fill="oklch(0.85 0.12 350)" stroke="#ffffff" strokeWidth="1" />
+          <rect x="16" y="22" width="68" height="62" rx="14" fill="url(#calendarCoverGrad)" stroke="#ffffff" strokeWidth="2.5" />
+          <rect x="24" y="34" width="52" height="42" rx="8" fill="#ffffff" />
+          <line x1="24" y1="48" x2="76" y2="48" stroke="oklch(0.85 0.12 350)" strokeWidth="2" opacity="0.55" />
+          <line x1="24" y1="62" x2="76" y2="62" stroke="oklch(0.85 0.12 350)" strokeWidth="2" opacity="0.55" />
+          <line x1="40" y1="34" x2="40" y2="76" stroke="oklch(0.85 0.12 350)" strokeWidth="2" opacity="0.4" />
+          <line x1="60" y1="34" x2="60" y2="76" stroke="oklch(0.85 0.12 350)" strokeWidth="2" opacity="0.4" />
+          <circle cx="50" cy="55" r="9" fill="url(#calendarMarkGrad)" stroke="#ffffff" strokeWidth="1.5" />
+          <circle cx="50" cy="55" r="3" fill="#ffffff" opacity="0.9" />
+          <path d="M 21,28 C 36,23 58,26 66,34" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" opacity="0.7" />
+          <path d="M 30,18 L 32,13 L 34,18 L 39,20 L 34,22 L 32,27 L 30,22 L 25,20 Z" fill="oklch(0.88 0.12 350)" />
+          <circle cx="72" cy="80" r="2" fill="#ffffff" opacity="0.85" />
+        </svg>
+      );
+
     default:
       return null;
   }
