@@ -359,14 +359,11 @@ export default function Landing() {
           .bz-carousel-3d { transform-style: preserve-3d; }
           .bz-carousel-card { transform-style: preserve-3d; backface-visibility: hidden; }
 
-          @keyframes bloom-conic-spin {
-            to { transform: rotate(360deg); }
+          @keyframes bloom-how-pulse {
+            0%, 100% { box-shadow: 0 0 0 1.5px #ff69b4aa, 0 0 22px 6px #ff69b433, 0 30px 80px -30px oklch(0.6 0.25 0 / 0.38); }
+            50%       { box-shadow: 0 0 0 2px #e8338acc,   0 0 32px 10px #e8338455, 0 30px 80px -30px oklch(0.6 0.25 0 / 0.38); }
           }
-          .bloom-orbit-ring {
-            background: conic-gradient(from 0deg, #e8338a, #ff69b4, #ff1493, #ffb6c1, #c71585, #ff69b4, #ffc8e8, #e8338a);
-            animation: bloom-conic-spin 3s linear infinite;
-            border-radius: 50%;
-          }
+          .bloom-how-card { animation: bloom-how-pulse 3.2s ease-in-out infinite; }
         `}</style>
 
         {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
@@ -382,7 +379,7 @@ export default function Landing() {
           </div>
 
           <div
-            className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-10 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.35)]"
+            className="relative mx-auto max-w-6xl rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-10 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.35)]"
             style={{ background: "linear-gradient(160deg, oklch(0.97 0.035 350) 0%, oklch(0.94 0.07 345) 55%, oklch(0.92 0.08 20) 100%)" }}
           >
             <Flower2 className="pointer-events-none absolute -left-6 -top-6 h-20 w-20 text-hotpink/20 animate-bloom-float" aria-hidden />
@@ -518,51 +515,18 @@ export default function Landing() {
           </p>
         </div>
 
-        {/* Circular animated-border section housing the web diagram */}
+        {/* How-it-works diagram card — same rounded-rect shape and width as hero/kit */}
         <div
-          className="relative mx-auto mt-8"
-          style={{ width: "min(88vw, 34rem)", aspectRatio: "1", filter: "drop-shadow(0 22px 55px oklch(0.62 0.27 350 / 0.45))" }}
+          id="how-it-works-card"
+          className="bloom-how-card relative mx-auto mt-8 max-w-6xl rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-8 md:p-12"
+          style={{
+            background: "linear-gradient(160deg, oklch(0.97 0.035 350) 0%, oklch(0.94 0.07 345) 55%, oklch(0.92 0.08 20) 100%)",
+          }}
         >
-          {/* spinning gradient ring — border layer */}
-          <div className="bloom-orbit-ring absolute inset-0" aria-hidden />
-          {/* 3D sphere content circle */}
-          <div
-            className="absolute inset-[4px] rounded-full flex items-center justify-center overflow-hidden"
-            style={{
-              background: [
-                "radial-gradient(circle at 30% 28%,",
-                "  rgba(255,255,255,0.88) 0%,",
-                "  oklch(0.97 0.03 350) 7%,",
-                "  oklch(0.94 0.07 350) 26%,",
-                "  oklch(0.91 0.09 345) 50%,",
-                "  oklch(0.87 0.12 350) 72%,",
-                "  oklch(0.81 0.17 355) 88%,",
-                "  oklch(0.75 0.21 350) 100%",
-                ")",
-              ].join(""),
-              boxShadow: "inset -5px -8px 22px oklch(0.6 0.24 350 / 0.28), inset 3px 4px 14px oklch(1 0 0 / 0.18)",
-            }}
-          >
-            {/* specular highlight — simulates top-left light source */}
-            <div
-              className="pointer-events-none absolute"
-              style={{
-                top: "6%", left: "12%",
-                width: "42%", height: "34%",
-                background: "radial-gradient(ellipse, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.18) 45%, transparent 70%)",
-                borderRadius: "50%",
-                transform: "rotate(-22deg)",
-              }}
-              aria-hidden
-            />
-            {/* rim highlight — subtle bright edge at bottom-right */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-full"
-              style={{ background: "radial-gradient(circle at 78% 82%, oklch(0.95 0.06 10 / 0.35) 0%, transparent 50%)" }}
-              aria-hidden
-            />
-            <ConnectionsDiagram />
-          </div>
+          <Flower2 className="pointer-events-none absolute -left-6 top-10 h-20 w-20 text-hotpink/15 animate-bloom-float" aria-hidden />
+          <Flower2 className="pointer-events-none absolute -right-8 bottom-6 h-24 w-24 text-magenta/12 animate-bloom-float" style={{ animationDelay: "1.8s" }} aria-hidden />
+          <Sparkles className="pointer-events-none absolute right-8 top-8 h-5 w-5 text-hotpink/35 animate-bloom-sparkle" aria-hidden />
+          <ConnectionsDiagram />
         </div>
 
         {/* CTA sits below the circle, outside it */}
