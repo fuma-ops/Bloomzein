@@ -387,7 +387,7 @@ export default function Landing() {
             <Sparkles className="pointer-events-none absolute right-6 top-6 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" aria-hidden />
 
           <div
-            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y rounded-[2rem] sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
+            className="bz-carousel-stage relative mx-auto mt-3 h-[27rem] max-w-lg touch-pan-y rounded-[2rem] sm:mt-4 sm:h-[26rem] sm:max-w-2xl lg:h-[23rem] lg:max-w-4xl"
             onMouseEnter={() => setKitPaused(true)}
             onMouseLeave={() => setKitPaused(false)}
             onTouchStart={onKitTouchStart}
@@ -428,7 +428,7 @@ export default function Landing() {
                     type="button"
                     onClick={() => (isActive ? undefined : kitGoTo(ui))}
                     aria-label={`Show the ${u.title} universe`}
-                    className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer overflow-hidden rounded-[2rem] p-5 text-left shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
+                    className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer overflow-hidden rounded-[2rem] p-5 shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
                     style={{
                       background: u.bgGradient,
                       boxShadow: isActive
@@ -442,14 +442,13 @@ export default function Landing() {
                     }}
                   >
                     <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} aria-hidden />
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid h-11 w-11 place-items-center rounded-2xl shadow-lg shadow-black/10 ring-1 ring-white/30" style={{ background: u.iconBg, backdropFilter: "blur(6px)" }}>
-                        <span style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.12))" }}>{u.icon}</span>
+                    {/* Centered category identity */}
+                    <div className="flex flex-col items-center text-center gap-1 pb-1">
+                      <span className="grid h-14 w-14 place-items-center rounded-[1.25rem] shadow-lg shadow-black/10 ring-1 ring-white/30" style={{ background: u.iconBg, backdropFilter: "blur(8px)" }}>
+                        <span style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.15))" }}>{u.icon}</span>
                       </span>
-                      <div>
-                        <p className="font-script text-3xl" style={{ color: u.titleColor, textShadow: `0 0 8px ${u.titleGlow}cc, 0 0 18px ${u.titleGlow}88, 0 0 32px ${u.titleGlow}44` }}>{u.title}</p>
-                        <p className="text-[11px] sm:text-xs font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
-                      </div>
+                      <p className="mt-1 font-script text-4xl sm:text-5xl leading-none" style={{ color: u.titleColor, textShadow: `0 0 10px ${u.titleGlow}cc, 0 0 22px ${u.titleGlow}88, 0 0 40px ${u.titleGlow}44` }}>{u.title}</p>
+                      <p className="text-[10px] sm:text-[11px] font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
                     </div>
 
                     <div className="mt-3 flex flex-col gap-1.5 sm:gap-2">
@@ -462,9 +461,15 @@ export default function Landing() {
                           className="bloom-tap-card group/card flex items-center gap-2.5 rounded-2xl p-2 transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
                           style={{ animationDelay: `${ui * 120 + ti * 90}ms`, background: u.toolRowBg }}
                         >
-                          <span className="bloom-flower relative grid h-9 w-9 shrink-0 place-items-center text-white transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3">
-                            <span className="pointer-events-none absolute inset-0 -m-1.5 rounded-full blur-lg opacity-60 transition-opacity duration-300 group-hover/card:opacity-100" style={{ background: u.glow }} aria-hidden />
-                            <CuteToolIcon slug={t.slug} className="relative z-10 h-7 w-7 drop-shadow-[0_5px_12px_oklch(0.4_0.22_350/0.25)] animate-bloom-pulse" />
+                          <span
+                            className="bloom-flower relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3"
+                            style={{
+                              background: "oklch(1 0 0 / 0.28)",
+                              backdropFilter: "blur(6px)",
+                              boxShadow: "0 0 12px 3px rgba(255,255,255,0.45), inset 0 1px 0 rgba(255,255,255,0.6)",
+                            }}
+                          >
+                            <CuteToolIcon slug={t.slug} className="relative z-10 h-7 w-7" />
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-[13px] font-bold leading-tight" style={{ color: u.titleColor }}>{t.label}</p>
