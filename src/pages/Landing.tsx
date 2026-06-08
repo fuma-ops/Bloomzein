@@ -371,7 +371,7 @@ export default function Landing() {
           </div>
 
           <div
-            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
+            className="bz-carousel-stage relative mx-auto mt-3 h-[24rem] max-w-lg touch-pan-y overflow-hidden rounded-[2rem] sm:mt-4 sm:h-[22rem] sm:max-w-2xl lg:h-[19rem] lg:max-w-4xl"
             onMouseEnter={() => setKitPaused(true)}
             onMouseLeave={() => setKitPaused(false)}
             onTouchStart={onKitTouchStart}
@@ -412,7 +412,7 @@ export default function Landing() {
                     type="button"
                     onClick={() => (isActive ? undefined : kitGoTo(ui))}
                     aria-label={`Show the ${u.title} universe`}
-                    className="bz-carousel-card group absolute inset-0 mx-auto w-full max-w-[19rem] cursor-pointer overflow-hidden rounded-[2rem] p-5 text-left shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
+                    className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer overflow-hidden rounded-[2rem] p-5 text-left shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
                     style={{
                       background: u.bgGradient,
                       boxShadow: `0 25px 60px -28px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`,
