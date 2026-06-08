@@ -619,8 +619,8 @@ const UNIVERSES: Universe[] = [
   {
     title: "Body",
     subtitle: "for your cycle, your meals, your movement",
-    emoji: "🌿",
-    bgGradient: "linear-gradient(160deg, oklch(0.96 0.05 350) 0%, oklch(0.92 0.09 350) 100%)",
+    emoji: "🌸",
+    bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 350) 0%, oklch(0.85 0.17 350) 100%)",
     iconBg: "linear-gradient(135deg, oklch(0.74 0.25 350), oklch(0.6 0.28 350))",
     glow: "oklch(0.78 0.22 350 / 0.45)",
     shadow: "oklch(0.62 0.27 350 / 0.35)",
@@ -635,8 +635,8 @@ const UNIVERSES: Universe[] = [
   {
     title: "Mind",
     subtitle: "for your moods, your thoughts, your softness",
-    emoji: "🧠",
-    bgGradient: "linear-gradient(160deg, oklch(0.96 0.05 320) 0%, oklch(0.92 0.08 320) 100%)",
+    emoji: "🌙",
+    bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 320) 0%, oklch(0.85 0.16 320) 100%)",
     iconBg: "linear-gradient(135deg, oklch(0.72 0.2 320), oklch(0.58 0.25 320))",
     glow: "oklch(0.78 0.18 320 / 0.45)",
     shadow: "oklch(0.62 0.24 320 / 0.32)",
@@ -649,8 +649,8 @@ const UNIVERSES: Universe[] = [
   {
     title: "Life",
     subtitle: "for your money, your moments, your memory",
-    emoji: "💗",
-    bgGradient: "linear-gradient(160deg, oklch(0.96 0.05 20) 0%, oklch(0.92 0.08 20) 100%)",
+    emoji: "🌷",
+    bgGradient: "linear-gradient(160deg, oklch(0.93 0.10 20) 0%, oklch(0.85 0.16 20) 100%)",
     iconBg: "linear-gradient(135deg, oklch(0.74 0.2 20), oklch(0.6 0.25 10))",
     glow: "oklch(0.8 0.16 20 / 0.45)",
     shadow: "oklch(0.64 0.22 15 / 0.32)",
