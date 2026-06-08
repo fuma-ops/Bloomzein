@@ -25,7 +25,7 @@ import { BloomBubbles } from "./BloomBubbles";
 import { KawaiiBackground } from "./KawaiiBackground";
 
 /* ---------- Default cycle settings (easy to edit) ---------- */
-const DEFAULT_SETTINGS: CycleSettings = {
+export const DEFAULT_SETTINGS: CycleSettings = {
   lastPeriodStart: new Date(2026, 5, 1), // Jun 1, 2026
   periodLength: 5,
   cycleLength: 28,
@@ -36,9 +36,9 @@ const DEFAULT_SETTINGS: CycleSettings = {
   deviceNotifications: true,
 };
 
-type Phase = "period" | "follicular" | "fertile" | "ovulation" | "luteal" | null;
+export type Phase = "period" | "follicular" | "fertile" | "ovulation" | "luteal" | null;
 
-function phaseForDay(date: Date, s: CycleSettings): Phase {
+export function phaseForDay(date: Date, s: CycleSettings): Phase {
   const ms = 1000 * 60 * 60 * 24;
   const diff = Math.floor((date.getTime() - s.lastPeriodStart.getTime()) / ms);
   const day = ((diff % s.cycleLength) + s.cycleLength) % s.cycleLength;
@@ -50,7 +50,7 @@ function phaseForDay(date: Date, s: CycleSettings): Phase {
   return "luteal";
 }
 
-const PHASE_META: Record<Exclude<Phase, null>, { label: string; color: string; ring: string; Icon: any }> = {
+export const PHASE_META: Record<Exclude<Phase, null>, { label: string; color: string; ring: string; Icon: any }> = {
   period:     { label: "PERIOD",     color: "bg-hotpink text-white",                ring: "ring-hotpink/40",  Icon: Droplet },
   follicular: { label: "FOLLICULAR", color: "bg-amber-100 text-amber-700",          ring: "ring-amber-200",   Icon: Sprout },
   fertile:    { label: "FERTILE",    color: "bg-pink-100 text-hotpink",             ring: "ring-pink-200",    Icon: Flower2 },

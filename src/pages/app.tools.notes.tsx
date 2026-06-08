@@ -31,9 +31,9 @@ interface Note {
   createdAt: string;
 }
 
-type ReminderKind = "medication" | "birthday" | "event";
+export type ReminderKind = "medication" | "birthday" | "event";
 
-interface Reminder {
+export interface Reminder {
   id: string;
   kind: ReminderKind;
   title: string;
@@ -264,7 +264,7 @@ function weekdaysLabel(days: number[]) {
   return days.map((d) => WEEKDAYS[d].label.slice(0, 3)).join(", ");
 }
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   notes: "bloom:notes",
   reminders: "bloom:reminders",
   welcomed: "bloom:notes-welcomed",

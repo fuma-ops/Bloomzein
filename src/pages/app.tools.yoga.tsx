@@ -324,8 +324,8 @@ const CLOSING: Record<Lang, string> = {
 const ONBOARD_KEY = "bloom:yoga-onboarded";
 const STEP_KEY = "bloom:yoga-step"; // 1 learn, 2 visual, 3 audio
 const STREAK_KEY = "bloom:yoga-streak";
-const SCHEDULE_KEY = "bloom:yoga-schedule";
-const REMINDER_KEY = "bloom:yoga-reminder";
+export const SCHEDULE_KEY = "bloom:yoga-schedule";
+export const REMINDER_KEY = "bloom:yoga-reminder";
 const DIARY_KEY = "bloom:diary-entries";
 const CYCLE_PHASE_KEY = "bloom:cycle-phase"; // optional, read-only
 
