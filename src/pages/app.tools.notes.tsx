@@ -8,6 +8,7 @@ import {
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { subscribeToPush, syncScheduledNotifications, type ScheduledNotificationInput } from "@/lib/push";
 
 /* ============================================================
    TYPES & CONSTANTS
@@ -144,6 +145,60 @@ function nextOccurrence(rem: Reminder, from: Date = new Date()): Date | null {
   const end = parseLocalDate(rem.endDate) || start;
   if (start <= today && today <= end) return today;
   return start;
+}
+
+const PUSH_SYNC_WINDOW_DAYS = 35;
+
+/**
+ * Expands a reminder into concrete future fire-times for the generic push
+ * scheduler — mirrors the in-app checker's logic (medication slots/weekdays,
+ * birthday & event due/lead days) but produces absolute timestamps so the
+ * backend can dispatch them even while the app is closed.
+ */
+function upcomingFires(rem: Reminder, from: Date = new Date()): { dedupeKey: string; fireAt: Date; body: string }[] {
+  if (rem.kind === "event" && rem.done) return [];
+  const today = startOfDay(from);
+  const horizon = addDays(today, PUSH_SYNC_WINDOW_DAYS);
+  const out: { dedupeKey: string; fireAt: Date; body: string }[] = [];
+
+  if (rem.kind === "medication") {
+    const slots = rem.times.length ? rem.times : ["09:00"];
+    for (let i = 0; i < PUSH_SYNC_WINDOW_DAYS; i++) {
+      const day = addDays(today, i);
+      if (rem.weekdays.length > 0 && !rem.weekdays.includes(day.getDay())) continue;
+      for (const slot of slots) {
+        const [hh, mm] = slot.split(":").map((n) => parseInt(n, 10));
+        const fireAt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hh || 0, mm || 0);
+        if (fireAt < from) continue;
+        out.push({ dedupeKey: `${fmtLocalDate(day)}|${slot}`, fireAt, body: `Time to take ${rem.title} · ${slot} 💊` });
+      }
+    }
+    return out;
+  }
+
+  const occurrence = nextOccurrence(rem, from);
+  if (!occurrence || occurrence > horizon) return out;
+
+  const time = rem.time || "09:00";
+  const [hh, mm] = time.split(":").map((n) => parseInt(n, 10));
+  const occStr = fmtLocalDate(occurrence);
+  const dueAt = new Date(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate(), hh || 0, mm || 0);
+  const label = rem.kind === "birthday" ? `${rem.title}'s birthday is today 🎂` : `${rem.title} is today`;
+  if (dueAt >= from) out.push({ dedupeKey: `due:${occStr}`, fireAt: dueAt, body: `${label} 💕` });
+
+  if (rem.leadDays > 0) {
+    const lead = addDays(occurrence, -rem.leadDays);
+    const leadAt = new Date(lead.getFullYear(), lead.getMonth(), lead.getDate(), hh || 0, mm || 0);
+    if (leadAt >= from && leadAt <= horizon) {
+      out.push({
+        dedupeKey: `lead:${fmtLocalDate(lead)}`,
+        fireAt: leadAt,
+        body: `${rem.title} is coming up in ${rem.leadDays} day${rem.leadDays > 1 ? "s" : ""} 💕`,
+      });
+    }
+  }
+
+  return out;
 }
 
 /** Age the person turns on their next birthday occurrence — null if no birth year was given. */
@@ -385,6 +440,7 @@ export default function NotesPage() {
         setNotifPermission(perm);
         setPromptNotif(false);
         try { localStorage.setItem(STORAGE_KEYS.permissionDismissed, "true"); } catch {}
+        if (perm === "granted") subscribeToPush().catch(() => {});
       });
     }
 
@@ -495,6 +551,9 @@ export default function NotesPage() {
       try {
         localStorage.setItem(STORAGE_KEYS.permissionDismissed, "true");
       } catch {}
+      // Also register for real push delivery (works even when the app is closed) —
+      // silently no-ops if unsupported or signed out, since in-tab nudges still work either way.
+      if (perm === "granted") subscribeToPush().catch(() => {});
     }
   };
 
@@ -578,6 +637,22 @@ export default function NotesPage() {
     const interval = setInterval(checkReminders, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Keep the shared `scheduled_notifications` table in sync with these reminders,
+  // so the backend (Edge Function + cron) can push them even while the app is closed.
+  // No-ops silently when signed out — push is an enhancement on top of the local checker above.
+  useEffect(() => {
+    const items: ScheduledNotificationInput[] = reminders.flatMap((rem) =>
+      upcomingFires(rem).map((fire) => ({
+        dedupeKey: `${rem.id}:${fire.dedupeKey}`,
+        fireAt: fire.fireAt.toISOString(),
+        title: "BloomyGirl Nudge ✿",
+        body: fire.body,
+        data: { url: "/app/tools/notes", reminderId: rem.id },
+      }))
+    );
+    syncScheduledNotifications("reminders", items);
+  }, [reminders]);
 
   /* ============================================================
      MEMOIZED SELECTIONS & FILTERING
