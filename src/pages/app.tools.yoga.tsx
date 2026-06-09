@@ -1081,7 +1081,7 @@ function SessionPlayer({
   const [idx, setIdx] = useState(0);
   const [running, setRunning] = useState(true);
   const [remaining, setRemaining] = useState(hold);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [peek, setPeek] = useState(false);
   const { supported, speak, stop } = useSpeaker();
   const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
@@ -1218,8 +1218,19 @@ function SessionPlayer({
               </div>
             </>
           ) : (
-            <div className="w-full aspect-square sm:aspect-[4/3] grid place-items-center">
-              <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={true} />
+            // Eyes-closed: pose faintly visible behind, pacer front and center
+            <div className="relative w-full aspect-square sm:aspect-[4/3] grid place-items-center">
+              <img
+                src={pose.image}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 w-full h-full object-contain"
+                style={{ opacity: 0.12, filter: "blur(2px) saturate(0.5)" }}
+              />
+              <div className="absolute inset-0 bg-rose/80" />
+              <div className="relative z-10">
+                <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={true} />
+              </div>
             </div>
           )}
         </div>
