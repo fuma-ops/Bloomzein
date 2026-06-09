@@ -85,7 +85,7 @@ export default function Landing() {
   return (
     <div className="relative min-h-screen overflow-hidden bloom-breathe bg-gradient-to-br from-[#e0c3fc]/40 via-[#8ec5fc]/30 to-[#ffc3a0]/30">
       {/* gentle living background: kawaii shapes and glossy orbs */}
-      <KawaiiBackground count={20} />
+      <KawaiiBackground />
       <DreamyFallingIcons count={14} />
       {/* floating soft blobs */}
       <div className="pointer-events-none absolute -left-32 top-40 -z-0 h-80 w-80 rounded-full bg-hotpink/20 blur-3xl animate-bloom-pulse" aria-hidden />
