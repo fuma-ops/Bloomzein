@@ -17,10 +17,13 @@ export default defineConfig({
       srcDir: "src",
       filename: "sw.ts",
       injectManifest: {
-        // Only precache static assets — NOT js/css/html.
-        // Vite already content-hashes JS/CSS so the browser HTTP cache
-        // handles them. Precaching JS caused stale bundles after every deploy.
-        globPatterns: ["**/*.{ico,png,jpg,jpeg,svg,woff2}"],
+        // Only precache the small PWA shell icons — never large user-content
+        // images. The ** glob was catching 74MB of images in public/images/,
+        // causing SW installation to fail on slow mobile connections (any
+        // single download failure rejects the install promise and puts the SW
+        // in "redundant" state, so the activate event never fires).
+        globPatterns: ["*.{ico,png,svg,woff2}"],
+        globIgnores: ["images/**"],
       },
       includeAssets: ["apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
