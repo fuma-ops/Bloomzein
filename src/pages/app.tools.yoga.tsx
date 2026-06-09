@@ -383,6 +383,127 @@ function playBell() {
   } catch {}
 }
 
+// ===================== BREATH PACER =====================
+
+type BreathPhase = "inhale" | "hold" | "exhale";
+const BREATH_CYCLE: { phase: BreathPhase; dur: number }[] = [
+  { phase: "inhale", dur: 4 },
+  { phase: "hold",   dur: 2 },
+  { phase: "exhale", dur: 6 },
+];
+const BREATH_TOTAL = BREATH_CYCLE.reduce((s, c) => s + c.dur, 0); // 12s
+
+function playBreathTone(phase: BreathPhase) {
+  try {
+    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+    const ctx = new Ctx();
+    const g = ctx.createGain();
+    g.connect(ctx.destination);
+    if (phase === "inhale") {
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(396, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(528, ctx.currentTime + 0.8);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.15);
+      g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.0);
+      o.connect(g); o.start(); o.stop(ctx.currentTime + 1.1);
+    } else if (phase === "hold") {
+      const o = ctx.createOscillator();
+      o.type = "sine"; o.frequency.value = 528;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.7);
+      o.connect(g); o.start(); o.stop(ctx.currentTime + 0.8);
+    } else {
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(528, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(396, ctx.currentTime + 1.2);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.1);
+      g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.4);
+      o.connect(g); o.start(); o.stop(ctx.currentTime + 1.5);
+    }
+  } catch {}
+}
+
+function useBreathPacer(running: boolean, muted: boolean) {
+  const [tick, setTick] = useState(0);
+  const [phase, setPhase] = useState<BreathPhase>("inhale");
+  const [phaseProgress, setPhaseProgress] = useState(0);
+
+  useEffect(() => {
+    if (!running) return;
+    setTick(0);
+    setPhase("inhale");
+    if (!muted) playBreathTone("inhale");
+  }, [running]);
+
+  useEffect(() => {
+    if (!running) return;
+    const interval = setInterval(() => {
+      setTick((t) => {
+        const next = (t + 1) % BREATH_TOTAL;
+        let acc = 0;
+        for (const step of BREATH_CYCLE) {
+          if (next < acc + step.dur) {
+            const posInPhase = next - acc;
+            setPhase(step.phase);
+            setPhaseProgress(posInPhase / step.dur);
+            if (posInPhase === 0 && !muted) playBreathTone(step.phase);
+            break;
+          }
+          acc += step.dur;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [running, muted]);
+
+  return { phase, phaseProgress };
+}
+
+const BREATH_LABEL: Record<Lang, Record<BreathPhase, string>> = {
+  en: { inhale: "Inhale", hold: "Hold", exhale: "Exhale" },
+  fr: { inhale: "Inspirez", hold: "Retenez", exhale: "Expirez" },
+  ar: { inhale: "شهيق", hold: "احبسي", exhale: "زفير" },
+};
+
+function BreathPacer({ phase, phaseProgress, lang, dim }: {
+  phase: BreathPhase; phaseProgress: number; lang: Lang; dim: boolean;
+}) {
+  const scale = phase === "inhale" ? 0.7 + phaseProgress * 0.3
+    : phase === "exhale" ? 1.0 - phaseProgress * 0.3 : 1.0;
+  const bgColor = dim ? `rgba(255,255,255,${0.15 + scale * 0.1})` : `oklch(0.92 0.08 350 / ${0.4 + scale * 0.2})`;
+  const borderColor = dim ? "rgba(255,255,255,0.45)" : "oklch(0.72 0.22 350 / 0.7)";
+  const glow = dim
+    ? `0 0 ${10 + scale * 14}px rgba(255,255,255,${0.1 + scale * 0.15})`
+    : `0 0 ${10 + scale * 14}px oklch(0.72 0.25 350 / ${0.2 + scale * 0.35})`;
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className="grid place-items-center rounded-full border-2"
+        style={{
+          width: 64, height: 64,
+          transform: `scale(${scale})`,
+          transition: "transform 1s ease-in-out, box-shadow 1s ease-in-out",
+          background: bgColor,
+          borderColor,
+          boxShadow: glow,
+        }}
+      >
+        <span className={["text-[9px] font-bold uppercase tracking-widest text-center leading-tight px-1",
+          dim ? "text-white/90" : "text-hotpink"].join(" ")}>
+          {BREATH_LABEL[lang][phase]}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ===================== PAGE =====================
 
 type View =
@@ -962,6 +1083,7 @@ function SessionPlayer({
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
   const { supported, speak, stop } = useSpeaker();
+  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted);
   const wakeLockRef = useRef<any>(null);
   const lastSpokenIdx = useRef<number>(-1);
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
@@ -1088,13 +1210,15 @@ function SessionPlayer({
         {/* IMAGE / PACER */}
         <div className={["relative", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
-            <img src={pose.image} alt={pose.name} className="w-full aspect-square sm:aspect-[4/3] object-contain bg-[oklch(0.96_0.04_350)]" />
-          ) : (
-            <div className="w-full aspect-[4/3] sm:aspect-[16/9] grid place-items-center relative">
-              <div className="breath-pacer h-28 w-28 sm:h-40 sm:w-40 rounded-full bg-white/20 border border-white/40 grid place-items-center text-white">
-                <CircleDot className="h-7 w-7 opacity-80" strokeWidth={1.5} />
+            <>
+              <img src={pose.image} alt={pose.name} className="w-full aspect-square sm:aspect-[4/3] object-contain bg-[oklch(0.96_0.04_350)]" />
+              <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
+                <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
-              <p className="absolute bottom-3 text-[11px] font-semibold uppercase tracking-wider text-white/70">breathe with the circle</p>
+            </>
+          ) : (
+            <div className="w-full aspect-square sm:aspect-[4/3] grid place-items-center">
+              <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={true} />
             </div>
           )}
         </div>
