@@ -1,14 +1,27 @@
 /// <reference lib="webworker" />
-import { clientsClaim } from "workbox-core";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 
 declare let self: ServiceWorkerGlobalScope;
 
 self.skipWaiting();
-clientsClaim();
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
+
+// On every new SW activation: delete ALL old caches (removes stale JS bundles
+// cached by previous SW versions), claim clients, then hard-reload every open
+// window so it fetches fresh assets from the network.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((names) => Promise.all(names.map((n) => caches.delete(n))))
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window" }))
+      .then((clients) =>
+        Promise.all(clients.map((c) => (c as WindowClient).navigate(c.url)))
+      )
+  );
+});
 
 interface PushPayload {
   title?: string;
