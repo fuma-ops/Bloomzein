@@ -448,7 +448,7 @@ export default function Landing() {
                         <span style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.15))" }}>{u.icon}</span>
                       </span>
                       <p className="mt-1 font-script text-4xl sm:text-5xl leading-none" style={{ color: u.titleColor, textShadow: `0 0 10px ${u.titleGlow}cc, 0 0 22px ${u.titleGlow}88, 0 0 40px ${u.titleGlow}44` }}>{u.title}</p>
-                      <p className="text-[10px] sm:text-[11px] font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
+                      <p className="text-xs sm:text-sm font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
                     </div>
 
                     <div className="mt-3 flex flex-col gap-1.5 sm:gap-2">
@@ -472,8 +472,8 @@ export default function Landing() {
                             <CuteToolIcon slug={t.slug} className="relative z-10 h-7 w-7" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-bold leading-tight" style={{ color: u.titleColor }}>{t.label}</p>
-                            <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug sm:line-clamp-2" style={{ color: u.textColor }}>{t.blurb}</p>
+                            <p className="text-sm font-bold leading-tight" style={{ color: u.titleColor }}>{t.label}</p>
+                            <p className="mt-0.5 line-clamp-2 text-xs leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
                           </div>
                           <span
                             className="bloom-tap-arrow grid h-5 w-5 shrink-0 place-items-center rounded-full text-white opacity-70 transition-opacity duration-300 group-hover/card:opacity-100"
@@ -688,7 +688,7 @@ const UNIVERSES: Universe[] = [
     titleColor: "#ffffff",
     titleGlow: "#ffb6d9",
     cardGlow: "oklch(0.75 0.28 350 / 0.65)",
-    textColor: "rgba(255,255,255,0.82)",
+    textColor: "rgba(255,255,255,0.95)",
     toolRowBg: "rgba(255,255,255,0.18)",
     tools: [
       { slug: "cycle", label: "Cycle Tracker", blurb: "You'll see your Yoga and Meals adjust to exactly how you feel today" },
@@ -721,7 +721,7 @@ const UNIVERSES: Universe[] = [
     titleColor: "#ffffff",
     titleGlow: "#f5c2e8",
     cardGlow: "oklch(0.72 0.27 330 / 0.65)",
-    textColor: "rgba(255,255,255,0.82)",
+    textColor: "rgba(255,255,255,0.95)",
     toolRowBg: "rgba(255,255,255,0.18)",
     tools: [
       { slug: "diary", label: "Dreamy Diary", blurb: "You'll start noticing your own patterns — and so does the rest of your kit" },
@@ -749,7 +749,7 @@ const UNIVERSES: Universe[] = [
     titleColor: "#ffffff",
     titleGlow: "#ffc0d8",
     cardGlow: "oklch(0.75 0.27 10 / 0.65)",
-    textColor: "rgba(255,255,255,0.82)",
+    textColor: "rgba(255,255,255,0.95)",
     toolRowBg: "rgba(255,255,255,0.18)",
     tools: [
       { slug: "budget", label: "Budget Planner", blurb: "You'll notice when your spending follows your mood — gently, never judgy" },

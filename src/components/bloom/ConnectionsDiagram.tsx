@@ -222,7 +222,7 @@ export function ConnectionsDiagram() {
         return (
           <div
             key={`phrase-${link.id}`}
-            className="absolute z-20 w-40 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-petal/60 bg-white/95 px-3 py-2 text-center text-[10px] font-semibold leading-snug text-[#831843] shadow-xl shadow-hotpink/30 backdrop-blur animate-fade-in pointer-events-none sm:text-[11px]"
+            className="absolute z-20 w-44 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-petal/60 bg-white/95 px-3 py-2 text-center text-xs font-semibold leading-snug text-[#831843] shadow-xl shadow-hotpink/30 backdrop-blur animate-fade-in pointer-events-none sm:text-[13px]"
             style={{ left: `${cx}%`, top: `${cy}%` }}
           >
             {link.phrase}
@@ -232,7 +232,7 @@ export function ConnectionsDiagram() {
 
       {centerPhrase && (
         <div
-          className="absolute z-20 w-44 -translate-x-1/2 -translate-y-[125%] rounded-2xl border border-petal/60 bg-white/95 px-3 py-2 text-center text-[10px] font-semibold leading-snug text-[#831843] shadow-xl shadow-hotpink/30 backdrop-blur animate-fade-in pointer-events-none sm:text-[11px]"
+          className="absolute z-20 w-48 -translate-x-1/2 -translate-y-[125%] rounded-2xl border border-petal/60 bg-white/95 px-3 py-2 text-center text-xs font-semibold leading-snug text-[#831843] shadow-xl shadow-hotpink/30 backdrop-blur animate-fade-in pointer-events-none sm:text-[13px]"
           style={{ left: `${CENTER.x}%`, top: `${CENTER.y}%` }}
         >
           {centerPhrase}
@@ -263,7 +263,7 @@ export function ConnectionsDiagram() {
             <CuteToolIcon slug="calendar" className="relative z-10 h-9 w-9 sm:h-11 sm:w-11" />
           </span>
         </span>
-        <span className="whitespace-nowrap rounded-full border border-petal/60 bg-white/90 px-2.5 py-0.5 text-[10px] font-bold text-hotpink shadow sm:text-xs">
+        <span className="whitespace-nowrap rounded-full border border-petal/60 bg-white/90 px-3 py-1 text-xs font-bold text-hotpink shadow sm:text-sm">
           {CENTER.label}
         </span>
       </div>
@@ -304,7 +304,7 @@ export function ConnectionsDiagram() {
           </span>
           <span
             className={[
-              "whitespace-nowrap rounded-full px-2 py-0.5 text-[9px] font-bold shadow-sm transition-colors sm:text-[10px]",
+              "whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold shadow-sm transition-colors sm:text-xs",
               active === n.slug ? "bg-hotpink text-white" : "bg-white/85 text-rose",
             ].join(" ")}
           >
