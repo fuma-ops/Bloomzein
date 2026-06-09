@@ -8,12 +8,12 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "premium";
 
 const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] = [
-  { key: "selfcare",    label: "Self-care",   img: "https://images.pexels.com/photos/4608232/pexels-photo-4608232.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { key: "beauty",      label: "Beauty",      img: "https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { key: "cycle",       label: "Cycle Care",  img: "https://images.pexels.com/photos/4226896/pexels-photo-4226896.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { key: "active",      label: "Activewear",  img: "https://images.pexels.com/photos/4162489/pexels-photo-4162489.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { key: "accessories", label: "Accessories", img: "https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { key: "premium",     label: "Bloom Premium", img: "https://images.pexels.com/photos/606540/pexels-photo-606540.jpeg?auto=compress&cs=tinysrgb&w=400" },
+  { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.jpg" },
+  { key: "beauty",      label: "Beauty",      img: "/images/shop-cat-beauty.jpg" },
+  { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.jpg" },
+  { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.jpg" },
+  { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.jpg" },
+  { key: "premium",     label: "Bloom Premium", img: "/images/shop-cat-premium.jpg" },
 ];
 
 interface Product {
@@ -27,15 +27,15 @@ interface Product {
 }
 
 const PRODUCTS: Product[] = [
-  { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=400",   bestseller: true },
-  { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "https://images.pexels.com/photos/3820071/pexels-photo-3820071.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "https://images.pexels.com/photos/2533483/pexels-photo-2533483.jpeg?auto=compress&cs=tinysrgb&w=400",    bestseller: true },
-  { id: "serum",    name: "Rose Petal Serum",    price: 42,  rating: 4.9, cat: "beauty",      img: "https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { id: "heat",     name: "Cozy Heat Wrap",      price: 36,  rating: 4.8, cat: "cycle",       img: "https://images.pexels.com/photos/4226896/pexels-photo-4226896.jpeg?auto=compress&cs=tinysrgb&w=400",     bestseller: true },
-  { id: "bottle",   name: "Bloom Water Bottle",  price: 24,  rating: 4.6, cat: "active",      img: "https://images.pexels.com/photos/4162489/pexels-photo-4162489.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "https://images.pexels.com/photos/4162489/pexels-photo-4162489.jpeg?auto=compress&cs=tinysrgb&w=400", bestseller: true },
-  { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=400" },
-  { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "premium",     img: "https://images.pexels.com/photos/5699456/pexels-photo-5699456.jpeg?auto=compress&cs=tinysrgb&w=400",  bestseller: true },
+  { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "/images/shop-p-candle.jpg",   bestseller: true },
+  { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "/images/shop-p-mask.jpg" },
+  { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "/images/shop-p-gloss.jpg",    bestseller: true },
+  { id: "serum",    name: "Rose Petal Serum",    price: 42,  rating: 4.9, cat: "beauty",      img: "/images/shop-p-serum.jpg" },
+  { id: "heat",     name: "Cozy Heat Wrap",      price: 36,  rating: 4.8, cat: "cycle",       img: "/images/shop-p-heat.jpg",     bestseller: true },
+  { id: "bottle",   name: "Bloom Water Bottle",  price: 24,  rating: 4.6, cat: "active",      img: "/images/shop-p-bottle.jpg" },
+  { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "/images/shop-p-leggings.jpg", bestseller: true },
+  { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "/images/shop-p-clip.jpg" },
+  { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "premium",     img: "/images/shop-p-planner.jpg",  bestseller: true },
 ];
 
 const STORAGE = { cart: "bloom:shop-cart", saved: "bloom:shop-saved" };
@@ -150,7 +150,7 @@ export default function ShopPage() {
       {/* FEATURED BANNER */}
       <section className="mt-6 sm:mt-8 stagger" style={{ animationDelay: "160ms" }}>
         <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
-          <img src="https://images.pexels.com/photos/606540/pexels-photo-606540.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+          <img src="/images/shop-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent" />
           <div className="relative px-4 py-5 sm:px-12 sm:py-14 max-w-xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">

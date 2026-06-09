@@ -136,7 +136,7 @@ export default function MePage() {
       {/* HEADER */}
       <section className="relative overflow-hidden -mx-3 sm:-mx-6 md:mx-0 -mt-3 sm:-mt-5 md:mt-0 rounded-b-[1.75rem] sm:rounded-b-[2.5rem] md:rounded-[2.5rem] rounded-t-none md:rounded-t-[2.5rem] border-b border-petal/60 md:border md:border-t shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
         <img
-          src="https://images.pexels.com/photos/376469/pexels-photo-376469.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          src="/images/me-header.png"
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           referrerPolicy="no-referrer"
@@ -146,7 +146,7 @@ export default function MePage() {
           <div className="relative shrink-0">
             <div className="absolute -inset-1 rounded-full bg-white/60 blur-md" />
             <img
-              src="https://images.pexels.com/photos/3756165/pexels-photo-3756165.jpeg?auto=compress&cs=tinysrgb&w=300"
+              src="/images/me-avatar.png"
               alt="Your avatar"
               className="relative h-16 w-16 sm:h-32 sm:w-32 rounded-full border-2 sm:border-4 border-white/90 object-cover shadow-xl shadow-hotpink/30"
               referrerPolicy="no-referrer"

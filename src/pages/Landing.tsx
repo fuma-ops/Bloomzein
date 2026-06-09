@@ -220,7 +220,7 @@ export default function Landing() {
               <div className="hidden lg:block"><SparkleRing radius={130} /></div>
               <div className="animate-bloom-float h-full w-full">
                 <img
-                  src="https://images.pexels.com/photos/3756165/pexels-photo-3756165.jpeg?auto=compress&cs=tinysrgb&w=600"
+                  src="/images/hero-girl.png"
                   alt="A joyful girl with vibrant pink hair smiling"
                   width={520}
                   height={520}
