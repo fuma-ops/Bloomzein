@@ -72,7 +72,7 @@ export const POSES: Pose[] = [
       fr: "Depuis quatre pattes, amène le tibia droit devant, jambe arrière allongée. Plie-toi doucement sur la jambe avant. Respire dans la hanche.",
       ar: "من وضع الأطراف الأربع، قدّمي الساق اليمنى وامديها للخلف. ساوي الوركين وانحني فوق الساق الأمامية. تنفّسي في الورك.",
     }}),
-  P({ slug: "garland", name: "Garland", sanskrit: "Malasana", group: "Hips", level: "Intermediate", image: "/images/pose-garland.png",
+  P({ slug: "garland", name: "Garland", sanskrit: "Malasana", group: "Hips", level: "Intermediate", image: "/images/pose-garland.webp",
     cues: {
       en: "Feet a little wider than hips, sink into a deep squat. Hands at heart, elbows press knees open. Lift the chest, lengthen the spine.",
       fr: "Pieds un peu plus larges que les hanches, accroupis-toi profondément. Mains au cœur, coudes ouvrent les genoux. Poitrine haute.",
@@ -84,7 +84,7 @@ export const POSES: Pose[] = [
       fr: "Debout, pieds ancrés. La couronne s'élève, les épaules se relâchent. Sens-toi stable comme une montagne.",
       ar: "قفي بثبات، القدمان متجذرتان، التاج يرتفع، الكتفان مرتاحان. اشعري بالقوة كجبل.",
     }}),
-  P({ slug: "forward-fold", name: "Forward Fold", group: "Standing", level: "Beginner", image: "/images/pose-forward-fold.png",
+  P({ slug: "forward-fold", name: "Forward Fold", group: "Standing", level: "Beginner", image: "/images/pose-forward-fold.webp",
     cues: {
       en: "From standing, hinge at the hips and fold forward. Knees soft. Let the head hang heavy. Release the spine with every exhale.",
       fr: "Debout, plie-toi à partir des hanches. Genoux souples, tête lourde. À chaque expir, relâche la colonne.",
