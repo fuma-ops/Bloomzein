@@ -9,23 +9,14 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Skip waiting immediately so this SW takes over from any stale version.
 self.skipWaiting();
 
-// On activation: wipe every cache left by any previous SW version, claim
-// all open clients, then hard-reload each window so fresh assets load.
+// On activation: wipe stale caches and claim clients.
+// Do NOT force-reload clients — the main.tsx purge mechanism handles that
+// when needed, and auto-reloading causes infinite loops in dev previews.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
       .then((names) => Promise.all(names.map((n) => caches.delete(n))))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: "window" }))
-      .then((clients) =>
-        Promise.all(
-          clients.map((c) =>
-            (c as WindowClient).navigate(c.url).catch(() =>
-              c.postMessage({ type: "SW_FORCE_RELOAD" })
-            )
-          )
-        )
-      )
   );
 });
 

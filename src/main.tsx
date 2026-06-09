@@ -8,16 +8,20 @@ import { storePWAPrompt } from "./lib/pwa"
 // Bump PURGE_KEY whenever a deploy keeps showing stale UI to force every
 // browser to unregister the old SW, wipe all caches, and reload fresh.
 const PURGE_KEY = "cache-purge-v4";
-if (!localStorage.getItem(PURGE_KEY)) {
-  localStorage.setItem(PURGE_KEY, "1");
-  (async () => {
-    const regs = await navigator.serviceWorker?.getRegistrations() ?? [];
-    await Promise.all(regs.map((r) => r.unregister()));
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => caches.delete(k)));
-    window.location.reload();
-  })();
-}
+try {
+  if (!localStorage.getItem(PURGE_KEY)) {
+    localStorage.setItem(PURGE_KEY, "1");
+    (async () => {
+      try {
+        const regs = await navigator.serviceWorker?.getRegistrations() ?? [];
+        await Promise.all(regs.map((r) => r.unregister()));
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch {}
+      window.location.reload();
+    })();
+  }
+} catch {}
 // ──────────────────────────────────────────────────────────────────────────
 
 // Capture the install prompt as early as possible — before React renders
