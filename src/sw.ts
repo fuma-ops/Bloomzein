@@ -18,7 +18,15 @@ self.addEventListener("activate", (event) => {
       .then(() => self.clients.claim())
       .then(() => self.clients.matchAll({ type: "window" }))
       .then((clients) =>
-        Promise.all(clients.map((c) => (c as WindowClient).navigate(c.url)))
+        Promise.all(
+          clients.map((c) =>
+            // navigate() forces a hard reload; postMessage is a fallback for
+            // browsers (e.g. iOS Safari) where navigate() may be restricted.
+            (c as WindowClient).navigate(c.url).catch(() =>
+              c.postMessage({ type: "SW_FORCE_RELOAD" })
+            )
+          )
+        )
       )
   );
 });
