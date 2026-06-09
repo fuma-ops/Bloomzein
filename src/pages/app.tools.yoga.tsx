@@ -795,7 +795,7 @@ function PoseCard({ pose }: { pose: Pose }) {
     <div className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition">
       <button onClick={() => setOpen((v) => !v)} className="block w-full text-left">
         <div className="aspect-square bg-blush/40">
-          <img src={pose.image} alt={pose.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+          <img src={pose.image} alt={pose.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-contain bg-[oklch(0.96_0.04_350)]" />
         </div>
         <div className="p-3">
           <p className="text-sm font-bold text-rose leading-tight">{pose.name}</p>
@@ -1088,7 +1088,7 @@ function SessionPlayer({
         {/* IMAGE / PACER */}
         <div className={["relative", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
-            <img src={pose.image} alt={pose.name} className="w-full aspect-[4/3] sm:aspect-[16/9] object-cover" referrerPolicy="no-referrer" />
+            <img src={pose.image} alt={pose.name} className="w-full aspect-square sm:aspect-[4/3] object-contain bg-[oklch(0.96_0.04_350)]" />
           ) : (
             <div className="w-full aspect-[4/3] sm:aspect-[16/9] grid place-items-center relative">
               <div className="breath-pacer h-28 w-28 sm:h-40 sm:w-40 rounded-full bg-white/20 border border-white/40 grid place-items-center text-white">
