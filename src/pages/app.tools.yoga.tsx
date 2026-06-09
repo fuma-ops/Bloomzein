@@ -428,17 +428,18 @@ function playBreathTone(phase: BreathPhase) {
   } catch {}
 }
 
-function useBreathPacer(running: boolean, muted: boolean) {
+function useBreathPacer(running: boolean, muted: boolean, poseIdx: number) {
   const [tick, setTick] = useState(0);
   const [phase, setPhase] = useState<BreathPhase>("inhale");
   const [phaseProgress, setPhaseProgress] = useState(0);
 
+  // Reset to INHALE every time a new pose starts or session resumes
   useEffect(() => {
-    if (!running) return;
     setTick(0);
     setPhase("inhale");
-    if (!muted) playBreathTone("inhale");
-  }, [running]);
+    setPhaseProgress(0);
+    if (running && !muted) playBreathTone("inhale");
+  }, [poseIdx, running]);
 
   useEffect(() => {
     if (!running) return;
@@ -460,7 +461,7 @@ function useBreathPacer(running: boolean, muted: boolean) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [running, muted]);
+  }, [running, muted, poseIdx]);
 
   return { phase, phaseProgress };
 }
@@ -1083,7 +1084,7 @@ function SessionPlayer({
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
   const { supported, speak, stop } = useSpeaker();
-  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted);
+  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
   const wakeLockRef = useRef<any>(null);
   const lastSpokenIdx = useRef<number>(-1);
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
