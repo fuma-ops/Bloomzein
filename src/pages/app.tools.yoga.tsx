@@ -550,7 +550,7 @@ function YogaHome({
         </div>
 
         <div className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-xl shadow-rose/10 min-h-[180px]">
-          <img src="/images/yoga-hero.png" alt="Soft pink yoga moment" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+          <img src="https://images.pexels.com/photos/3820106/pexels-photo-3820106.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Soft pink yoga moment" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-gradient-to-t from-blush/60 via-transparent to-transparent" />
         </div>
       </header>

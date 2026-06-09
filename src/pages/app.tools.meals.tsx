@@ -422,7 +422,7 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
         </div>
         <div
           className="hidden sm:block bg-cover bg-center min-h-[180px]"
-          style={{ backgroundImage: "url(/images/meals-hero.jpg)" }}
+          style={{ backgroundImage: "url(https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=800)" }}
           aria-hidden
         />
       </div>

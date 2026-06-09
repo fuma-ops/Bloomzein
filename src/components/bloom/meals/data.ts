@@ -133,7 +133,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "rose-oats",
     name: "Rose-Berry Overnight Oats",
-    image: "/images/meal-oats.jpg",
+    image: "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=400",
     mealType: "breakfast",
     intention: ["light", "energy", "quick"],
     cyclePhase: ["follicular", "ovulation", "any"],
@@ -161,7 +161,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "rainbow-buddha",
     name: "Rainbow Salmon Buddha Bowl",
-    image: "/images/meal-buddha.jpg",
+    image: "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=400",
     mealType: "lunch",
     intention: ["protein", "energy", "cycle"],
     cyclePhase: ["ovulation", "follicular", "any"],
@@ -190,7 +190,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "cozy-lentil",
     name: "Cozy Lentil Sweet Potato Stew",
-    image: "/images/meal-stew.jpg",
+    image: "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=400",
     mealType: "dinner",
     intention: ["comfort", "plant", "budget", "cycle"],
     cyclePhase: ["period", "luteal", "any"],
@@ -220,7 +220,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "kid-bento",
     name: "Strawberry Bento Lunchbox",
-    image: "/images/meal-lunchbox.jpg",
+    image: "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=400",
     mealType: "lunchbox",
     intention: ["quick", "budget"],
     cyclePhase: ["any"],

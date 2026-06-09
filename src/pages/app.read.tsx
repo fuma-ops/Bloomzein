@@ -17,13 +17,13 @@ interface Article {
 }
 
 const IMG = {
-  featured: "/images/read-featured.png",
-  "Cycle & Body": "/images/read-cycle.png",
-  "Self-care": "/images/read-selfcare.png",
-  "Money": "/images/read-money.png",
-  "Movement": "/images/read-movement.png",
-  "Mindset": "/images/read-mindset.png",
-  "Recipes": "/images/read-recipes.png",
+  featured: "https://images.pexels.com/photos/3820071/pexels-photo-3820071.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Cycle & Body": "https://images.pexels.com/photos/4226896/pexels-photo-4226896.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Self-care": "https://images.pexels.com/photos/4608232/pexels-photo-4608232.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Money": "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Movement": "https://images.pexels.com/photos/3820106/pexels-photo-3820106.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Mindset": "https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg?auto=compress&cs=tinysrgb&w=600",
+  "Recipes": "https://images.pexels.com/photos/4226893/pexels-photo-4226893.jpeg?auto=compress&cs=tinysrgb&w=600",
 } as const;
 
 const ARTICLES: Article[] = [

@@ -86,7 +86,7 @@ export default function TodayPage() {
         className="relative overflow-hidden -mx-3 sm:-mx-6 md:mx-0 -mt-3 sm:-mt-5 md:mt-0 rounded-b-[1.75rem] sm:rounded-b-[2.5rem] md:rounded-[2.5rem] rounded-t-none md:rounded-t-[2.5rem] border-b border-petal/60 md:border md:border-t shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)] stagger"
         style={{ animationDelay: "0ms" }}
       >
-        <img src="/images/today-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+        <img src="https://images.pexels.com/photos/3820071/pexels-photo-3820071.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent" />
         <div className="relative px-4 py-5 sm:px-12 sm:py-14 max-w-xl">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
