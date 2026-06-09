@@ -36,7 +36,7 @@ export const POSES: Pose[] = [
       fr: "Installe-toi en tailleur, dos long, épaules relâchées, mains sur les genoux. Inspire lentement par le nez, expire par le nez.",
       ar: "اجلسي متربعةً بثبات، أطيلي العمود الفقري، أرخي الكتفين، وضعي يديكِ على ركبتيكِ. شهيق بطيء من الأنف، ثم زفير من الأنف.",
     }}),
-  P({ slug: "cat-cow", name: "Cat-Cow", group: "Warm-up", level: "Beginner", image: "/images/pose-cat-cow.png", floorOnly: true,
+  P({ slug: "cat-cow", name: "Cat-Cow", group: "Warm-up", level: "Beginner", image: "/images/pose-cat-cow.webp", floorOnly: true,
     cues: {
       en: "On your hands and knees, inhale and drop the belly, lift the chest and gaze. Exhale, round the spine, tuck the chin. Flow gently with your breath.",
       fr: "À quatre pattes. Inspire en creusant le dos et en levant le regard. Expire en arrondissant le dos, menton rentré. Suis ton souffle.",
@@ -78,7 +78,7 @@ export const POSES: Pose[] = [
       fr: "Pieds un peu plus larges que les hanches, accroupis-toi profondément. Mains au cœur, coudes ouvrent les genoux. Poitrine haute.",
       ar: "افتحي القدمين قليلاً، انزلي في القرفصاء العميق. اليدان أمام القلب، المرفقان يفتحان الركبتين. ارفعي الصدر.",
     }}),
-  P({ slug: "mountain", name: "Mountain", sanskrit: "Tadasana", group: "Standing", level: "Beginner", image: "/images/pose-mountain.png",
+  P({ slug: "mountain", name: "Mountain", sanskrit: "Tadasana", group: "Standing", level: "Beginner", image: "/images/pose-mountain.webp",
     cues: {
       en: "Stand tall, feet rooted. Crown lifts, shoulders soften, arms long by your sides. Feel grounded and steady, like a mountain.",
       fr: "Debout, pieds ancrés. La couronne s'élève, les épaules se relâchent. Sens-toi stable comme une montagne.",
@@ -144,13 +144,13 @@ export const POSES: Pose[] = [
       fr: "Sur le dos, genoux pliés, pieds à plat. Pousse pour lever les hanches. Rentre les épaules dessous. Ouvre la poitrine.",
       ar: "استلقي على ظهرك، الركبتان مثنيتان والقدمان مسطحتان. اضغطي بالقدمين لرفع الوركين. افتحي الصدر.",
     }}),
-  P({ slug: "camel", name: "Camel", sanskrit: "Ustrasana", group: "Backbends", level: "Advanced", image: "/images/pose-camel.png",
+  P({ slug: "camel", name: "Camel", sanskrit: "Ustrasana", group: "Backbends", level: "Advanced", image: "/images/pose-camel.webp",
     cues: {
       en: "Kneel, hips over knees. Hands on the low back. Lift the chest up and back, then reach for the heels if it feels safe. Open the heart, soften the throat.",
       fr: "À genoux, hanches au-dessus des genoux. Mains au bas du dos. Lève la poitrine, puis attrape les talons si tu peux. Ouvre le cœur.",
       ar: "اركعي، الوركان فوق الركبتين. اليدان أسفل الظهر. ارفعي الصدر للأعلى وللخلف، ثم اتجهي للكعبين إن أمكن. افتحي القلب.",
     }}),
-  P({ slug: "seated-forward-fold", name: "Seated Forward Fold", sanskrit: "Paschimottanasana", group: "Forward folds", level: "Beginner", image: "/images/pose-seated-forward-fold.png", floorOnly: true,
+  P({ slug: "seated-forward-fold", name: "Seated Forward Fold", sanskrit: "Paschimottanasana", group: "Forward folds", level: "Beginner", image: "/images/pose-seated-forward-fold.webp", floorOnly: true,
     cues: {
       en: "Sit with legs long. Inhale, lengthen the spine. Exhale and fold forward from the hips. Hands to shins or feet. Soften, breathe, surrender.",
       fr: "Assise, jambes tendues. Inspire, allonge le dos. Expire, plie-toi en avant. Mains sur les tibias ou les pieds.",
@@ -168,7 +168,7 @@ export const POSES: Pose[] = [
       fr: "Pieds bien écartés, orteils légèrement vers l'intérieur. Plie-toi depuis les hanches. Mains au sol ou aux coudes.",
       ar: "افتحي القدمين، الأصابع للداخل قليلاً. انحني من الوركين للأمام. اليدان على البساط أو على المرفقين.",
     }}),
-  P({ slug: "reclined-bound-angle", name: "Reclined Bound Angle", group: "Restorative", level: "Beginner", image: "/images/pose-reclined-bound-angle.png", floorOnly: true,
+  P({ slug: "reclined-bound-angle", name: "Reclined Bound Angle", group: "Restorative", level: "Beginner", image: "/images/pose-reclined-bound-angle.webp", floorOnly: true,
     cues: {
       en: "Lie on your back. Bring the soles of the feet together and let the knees fall open. Arms relaxed by your sides. Rest here, soften the belly.",
       fr: "Sur le dos. Plantes des pieds jointes, genoux ouverts. Bras le long du corps. Repose-toi, ventre doux.",
@@ -180,7 +180,7 @@ export const POSES: Pose[] = [
       fr: "Sur le dos. Serre doucement les genoux contre la poitrine. Berce-toi de côté à côté si tu veux. Masse le bas du dos.",
       ar: "استلقي على ظهرك. عانقي الركبتين برفق على الصدر. تمايلي يمنة ويسرة، ودلّكي أسفل الظهر.",
     }}),
-  P({ slug: "supine-twist", name: "Supine Twist", group: "Restorative", level: "Beginner", image: "/images/pose-supine-twist.png", floorOnly: true,
+  P({ slug: "supine-twist", name: "Supine Twist", group: "Restorative", level: "Beginner", image: "/images/pose-supine-twist.webp", floorOnly: true,
     cues: {
       en: "On your back, arms out like a T. Draw the knees in, then let them fall to the right. Turn your head left. Long, soft breaths. Switch sides.",
       fr: "Sur le dos, bras en T. Genoux pliés, laisse-les tomber à droite. Regarde à gauche. Respiration longue. Change de côté.",
@@ -198,19 +198,19 @@ export const POSES: Pose[] = [
       fr: "Allonge-toi à plat. Jambes légèrement écartées, bras le long du corps, paumes ouvertes. Ferme les yeux. Lâche tout effort.",
       ar: "استلقي بلطف. الساقان متباعدتان قليلاً، والذراعان بجانبك والراحتان للأعلى. أغمضي عينيكِ، وتخلّي عن أي مجهود.",
     }}),
-  P({ slug: "plank", name: "Plank", group: "Strength", level: "Intermediate", image: "/images/pose-plank.png",
+  P({ slug: "plank", name: "Plank", group: "Strength", level: "Intermediate", image: "/images/pose-plank.webp",
     cues: {
       en: "Hands under shoulders, legs long. One straight line from crown to heels. Hug the belly in, breathe steadily. Strong everywhere.",
       fr: "Mains sous les épaules, jambes tendues. Une ligne droite du sommet aux talons. Engage le ventre, respire.",
       ar: "اليدان تحت الكتفين، الساقان ممدودتان. خط مستقيم من التاج إلى الكعبين. شدّي البطن وتنفّسي.",
     }}),
-  P({ slug: "boat", name: "Boat", sanskrit: "Navasana", group: "Strength", level: "Intermediate", image: "/images/pose-boat.png",
+  P({ slug: "boat", name: "Boat", sanskrit: "Navasana", group: "Strength", level: "Intermediate", image: "/images/pose-boat.webp",
     cues: {
       en: "Sit, lean back slightly, lift the feet. Shins parallel to the floor, or legs straight if you can. Arms reach forward. Long spine, strong core.",
       fr: "Assise, penche-toi un peu en arrière, soulève les pieds. Tibias parallèles, ou jambes tendues. Bras devant. Dos long.",
       ar: "اجلسي ومالي للخلف قليلاً، ارفعي القدمين. الساقان موازيتان للأرض أو ممدودتان. الذراعان للأمام، عمود طويل.",
     }}),
-  P({ slug: "side-plank", name: "Side Plank", group: "Strength", level: "Advanced", image: "/images/pose-side-plank.png",
+  P({ slug: "side-plank", name: "Side Plank", group: "Strength", level: "Advanced", image: "/images/pose-side-plank.webp",
     cues: {
       en: "From plank, roll onto the right hand, stack the feet. Lift the hips, reach the left arm up. Strong line, steady breath. Switch sides.",
       fr: "Depuis la planche, roule sur la main droite, empile les pieds. Lève les hanches, bras gauche au ciel. Change de côté.",
