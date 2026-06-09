@@ -1079,7 +1079,7 @@ function SessionPlayer({
   flow: Pose[]; lang: Lang; mode: Mode; hold: number; onExit: () => void; onDone: () => void;
 }) {
   const [idx, setIdx] = useState(0);
-  const [running, setRunning] = useState(true);
+  const [running, setRunning] = useState(false);
   const [remaining, setRemaining] = useState(hold);
   const [muted, setMuted] = useState(true);
   const [peek, setPeek] = useState(false);
@@ -1260,7 +1260,7 @@ function SessionPlayer({
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button onClick={() => setRunning((r) => !r)}
               className="inline-flex items-center gap-2 rounded-full bg-hotpink px-4 py-2 text-sm font-bold text-white shadow-md shadow-hotpink/30">
-              {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" /> Resume</>}
+              {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === hold ? "Start" : "Resume"}</>}
             </button>
             <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
               className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-rose border border-petal/60">
