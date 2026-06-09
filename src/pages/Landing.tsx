@@ -387,7 +387,7 @@ export default function Landing() {
             <Sparkles className="pointer-events-none absolute right-6 top-6 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" aria-hidden />
 
           <div
-            className="bz-carousel-stage relative mx-auto mt-3 h-[27rem] max-w-lg touch-pan-y rounded-[2rem] sm:mt-4 sm:h-[26rem] sm:max-w-2xl lg:h-[23rem] lg:max-w-4xl"
+            className="bz-carousel-stage relative mx-auto mt-3 h-[28rem] max-w-lg touch-pan-y rounded-[2rem] sm:mt-4 sm:h-[28rem] sm:max-w-2xl lg:h-[27rem] lg:max-w-4xl"
             onMouseEnter={() => setKitPaused(true)}
             onMouseLeave={() => setKitPaused(false)}
             onTouchStart={onKitTouchStart}
@@ -428,7 +428,7 @@ export default function Landing() {
                     type="button"
                     onClick={() => (isActive ? undefined : kitGoTo(ui))}
                     aria-label={`Show the ${u.title} universe`}
-                    className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer overflow-hidden rounded-[2rem] p-5 shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
+                    className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer rounded-[2rem] p-5 shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
                     style={{
                       background: u.bgGradient,
                       boxShadow: isActive
@@ -441,7 +441,10 @@ export default function Landing() {
                       pointerEvents: "auto",
                     }}
                   >
-                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} aria-hidden />
+                    {/* decoration layer — overflow-hidden here so the glow blob clips to rounded card corners without clipping card content */}
+                    <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]" aria-hidden>
+                      <span className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} />
+                    </span>
                     {/* Centered category identity */}
                     <div className="flex flex-col items-center text-center gap-1 pb-1">
                       <span className="grid h-14 w-14 place-items-center rounded-[1.25rem] shadow-lg shadow-black/10 ring-1 ring-white/30" style={{ background: u.iconBg, backdropFilter: "blur(8px)" }}>
