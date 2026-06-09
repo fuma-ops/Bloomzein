@@ -17,7 +17,10 @@ export default defineConfig({
       srcDir: "src",
       filename: "sw.ts",
       injectManifest: {
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,svg,woff2}"],
+        // Only precache static assets — NOT js/css/html.
+        // Vite already content-hashes JS/CSS so the browser HTTP cache
+        // handles them. Precaching JS caused stale bundles after every deploy.
+        globPatterns: ["**/*.{ico,png,jpg,jpeg,svg,woff2}"],
       },
       includeAssets: ["apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
