@@ -132,7 +132,7 @@ export function KawaiiBackground({ className = "" }: Props) {
       {/* ── BIG OUTLINE FLOWERS — left edge ─────────────────────────────── */}
       <span className="bz-f" style={{
         position:"absolute", top:"2%", left:"-13%", opacity:0.28,
-        "--bz-r":"−10deg","--bz-d":"28s","--bz-del":"-5s",
+        "--bz-r":"-10deg","--bz-d":"28s","--bz-del":"-5s",
       } as React.CSSProperties}>
         <BigFlower size={420} color="oklch(0.76 0.20 350)" sw={2} />
       </span>
