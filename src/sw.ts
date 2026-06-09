@@ -10,6 +10,16 @@ clientsClaim();
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Force all clients to reload once the new SW has taken over,
+// so stale-cache deployments become visible immediately.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+      clients.forEach((client) => (client as WindowClient).navigate(client.url));
+    })
+  );
+});
+
 interface PushPayload {
   title?: string;
   body?: string;
