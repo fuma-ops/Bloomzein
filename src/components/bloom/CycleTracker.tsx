@@ -23,6 +23,7 @@ import {
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
 import { BloomBubbles } from "./BloomBubbles";
 import { KawaiiBackground } from "./KawaiiBackground";
+import { type CyclePhase, phaseForDay } from "./cyclePhase";
 
 /* ---------- Default cycle settings (easy to edit) ---------- */
 export const DEFAULT_SETTINGS: CycleSettings = {
@@ -36,19 +37,10 @@ export const DEFAULT_SETTINGS: CycleSettings = {
   deviceNotifications: true,
 };
 
-export type Phase = "period" | "follicular" | "fertile" | "ovulation" | "luteal" | null;
+/** @deprecated use CyclePhase from "./cyclePhase" — kept for existing imports */
+export type Phase = Exclude<CyclePhase, "any"> | null;
 
-export function phaseForDay(date: Date, s: CycleSettings): Phase {
-  const ms = 1000 * 60 * 60 * 24;
-  const diff = Math.floor((date.getTime() - s.lastPeriodStart.getTime()) / ms);
-  const day = ((diff % s.cycleLength) + s.cycleLength) % s.cycleLength;
-  const ovulationDay = s.cycleLength - 14; // luteal phase ~14 days
-  if (day < s.periodLength) return "period";
-  if (day === ovulationDay) return "ovulation";
-  if (day >= ovulationDay - 4 && day <= ovulationDay + 2) return "fertile";
-  if (day < ovulationDay) return "follicular";
-  return "luteal";
-}
+export { phaseForDay };
 
 export const PHASE_META: Record<Exclude<Phase, null>, { label: string; color: string; ring: string; Icon: any }> = {
   period:     { label: "PERIOD",     color: "bg-hotpink text-white",                ring: "ring-hotpink/40",  Icon: Droplet },
