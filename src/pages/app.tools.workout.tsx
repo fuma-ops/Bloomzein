@@ -159,7 +159,12 @@ function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase): Record<
 
 function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone?: Zone; className: string }) {
   const [broken, setBroken] = useState(false);
+  const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
+
   if (broken) {
+    if (fallbackImage) {
+      return <img src={fallbackImage} alt={exercise.name} className={className} />;
+    }
     return (
       <div className={`${className} grid place-items-center bg-gradient-to-br from-blush/70 to-petal/50`}>
         <Sparkles className="h-10 w-10 text-hotpink/50" strokeWidth={1.5} />
@@ -996,7 +1001,7 @@ function Library() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex) => (
             <div key={ex.slug} className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10">
-              <ExercisePhoto exercise={ex} className="aspect-square w-full object-cover" />
+              <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
               <div className="p-2.5">
                 <p className="text-sm font-bold text-rose leading-tight">{ex.name}</p>
                 <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{ex.muscles}</p>
