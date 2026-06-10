@@ -278,7 +278,7 @@ export default function ReadPage() {
             <h2 className="font-script text-2xl sm:text-4xl text-hotpink">Recommended for you ✿</h2>
             <p className="text-xs text-rose/70">Based on your cycle phase & recent reads</p>
           </div>
-          <button className="bloom-shine shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-hotpink to-magenta px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-6px_oklch(0.65_0.27_350/0.6)] transition active:scale-95 hover:scale-[1.03]">
+          <button className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white">
             See more <ArrowRight className="h-3 w-3" strokeWidth={2} />
           </button>
         </div>
@@ -324,7 +324,7 @@ export default function ReadPage() {
             <p className="mt-3 text-sm text-rose">Tap the heart on any article to save it here.</p>
             <button
               onClick={() => { setTopic("All"); setQuery(""); document.scrollingElement?.scrollTo({ top: 0, behavior: "smooth" }); }}
-              className="bloom-shine mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-hotpink to-magenta px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-6px_oklch(0.65_0.27_350/0.6)] transition active:scale-95 hover:scale-[1.03]"
+              className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
             >
               <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} /> Browse articles
             </button>
@@ -381,7 +381,7 @@ function EmptyCard({ text, cta, onClick }: { text: string; cta: string; onClick:
       <p className="mt-3 text-sm text-rose">{text}</p>
       <button
         onClick={onClick}
-        className="bloom-shine mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-hotpink to-magenta px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-6px_oklch(0.65_0.27_350/0.6)] transition active:scale-95 hover:scale-[1.03]"
+        className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
       >
         {cta} <ArrowRight className="h-3 w-3" strokeWidth={2} />
       </button>
