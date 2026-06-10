@@ -362,3 +362,43 @@
   animation: bloom-fall 25s linear infinite;
 }
 
+/* ===================== Premium scroll & shine helpers ===================== */
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+@keyframes bloom-shine-sweep {
+  0%, 15% { transform: translateX(-150%) skewX(-20deg); }
+  55%, 100% { transform: translateX(150%) skewX(-20deg); }
+}
+
+@utility bloom-shine {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(100deg, transparent 35%, oklch(1 0 0 / 0.55) 50%, transparent 65%);
+    transform: translateX(-150%) skewX(-20deg);
+    animation: bloom-shine-sweep 3.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+@keyframes bloom-scroll-hint {
+  0%, 55%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-18px); }
+}
+
+@utility animate-bloom-scroll-hint {
+  animation: bloom-scroll-hint 1.6s ease-in-out 0.5s 2;
+}
+

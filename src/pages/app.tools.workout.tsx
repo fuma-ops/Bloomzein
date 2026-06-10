@@ -558,7 +558,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
                   className={[
                     "group relative aspect-square w-full rounded-2xl overflow-hidden border transition active:scale-95",
                     active
-                      ? "border-white/70 shadow-[0_10px_28px_-8px_oklch(0.65_0.27_350/0.6)] ring-2 ring-hotpink/50"
+                      ? "bloom-shine border-white/70 shadow-[0_10px_28px_-8px_oklch(0.65_0.27_350/0.6)] ring-2 ring-hotpink/50"
                       : "border-white/40 shadow-[0_6px_18px_-10px_oklch(0.65_0.18_350/0.4)] hover:shadow-[0_10px_24px_-10px_oklch(0.65_0.22_350/0.5)] hover:-translate-y-0.5",
                   ].join(" ")}
                 >
@@ -594,7 +594,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
                     onClick={() => setIntention(it.key)}
                     className={[
                       "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left shadow-sm transition active:scale-95",
-                      active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/70 border-petal/50 text-rose hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
+                      active ? "bloom-shine bg-gradient-to-br from-hotpink to-magenta text-white border-transparent shadow-[0_8px_22px_-8px_oklch(0.65_0.27_350/0.6)]" : "bg-white/70 border-petal/50 text-rose hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                     ].join(" ")}
                   >
                     <span className="flex items-center gap-1.5">
@@ -641,7 +641,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
           <h2 className="font-script text-2xl text-hotpink leading-none">Streak & badges</h2>
           <p className="text-sm font-bold text-rose">{streak.count} day{streak.count === 1 ? "" : "s"} 🔥</p>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {BADGES.map((b) => {
             const unlocked = badges.has(b.id);
             return (
