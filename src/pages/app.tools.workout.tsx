@@ -232,9 +232,11 @@ function HeroHeader({
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
       <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
         <div>
-          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Workout Programs</h1>
-          <p className="mt-1 text-xs sm:text-sm text-white/90 drop-shadow">Move with strength, on your terms.</p>
-          <div className="mt-2 sm:mt-3 inline-flex flex-wrap rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
+          <h2 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">{sectionTitle}</h2>
+          <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">{sectionSubtitle}</p>
+        </div>
+        <div className="flex justify-center">
+          <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
             {(["discover", "program", "library"] as const).map((t) => (
               <button
                 key={t}
@@ -248,10 +250,6 @@ function HeroHeader({
               </button>
             ))}
           </div>
-        </div>
-        <div>
-          <h2 className="font-script text-2xl sm:text-4xl text-white leading-none drop-shadow-md">{sectionTitle}</h2>
-          <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">{sectionSubtitle}</p>
         </div>
       </div>
     </div>
