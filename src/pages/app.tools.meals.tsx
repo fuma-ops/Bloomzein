@@ -169,12 +169,12 @@ function PinkBtn({
   variant?: "solid" | "ghost" | "outline"; className?: string;
   as?: "button" | "div"; [k: string]: any;
 }) {
-  const base = "inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition active:scale-95";
+  const base = "inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold transition";
   const cls = variant === "solid"
-    ? "bg-hotpink text-white shadow-md shadow-hotpink/30 hover:bg-magenta"
+    ? "bloom-luxury-btn text-white"
     : variant === "outline"
-      ? "border border-hotpink/60 text-hotpink hover:bg-hotpink/10"
-      : "text-hotpink hover:bg-hotpink/10";
+      ? "rounded-full border border-hotpink/60 text-hotpink hover:bg-hotpink/10 active:scale-95"
+      : "rounded-full text-hotpink hover:bg-hotpink/10 active:scale-95";
   const Tag: any = as;
   return <Tag onClick={onClick} className={`${base} ${cls} ${className}`} {...rest}>{children}</Tag>;
 }
@@ -415,7 +415,7 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
             <li><b className="text-hotpink">3.</b> Get your week ✨</li>
           </ol>
           <div className="mt-4">
-            <PinkBtn onClick={onStart} className="animate-bloom-button-glow bloom-button-gradient text-white">
+            <PinkBtn onClick={onStart}>
               Start here <ChevronRight className="h-4 w-4" />
             </PinkBtn>
           </div>
@@ -469,7 +469,7 @@ function WeekTab({
           })}
         </div>
         <div className="mt-3 flex flex-wrap gap-2 items-center">
-          <PinkBtn onClick={onGenerate} className="bloom-button-gradient text-white animate-bloom-button-glow">
+          <PinkBtn onClick={onGenerate}>
             <Sparkles className="h-4 w-4" /> Plan my week
           </PinkBtn>
           {!hasPantry && (

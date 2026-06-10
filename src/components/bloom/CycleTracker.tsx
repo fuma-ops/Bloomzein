@@ -126,13 +126,11 @@ export function CycleTracker() {
             <h2 className="font-script text-5xl text-hotpink">Cycle ✿</h2>
             <button
               onClick={() => setSetupOpen(true)}
-              className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-full bloom-button-gradient px-5 py-2.5 text-sm font-bold text-white transition hover:scale-[1.06] active:scale-95"
+              className="bloom-luxury-btn group relative inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"
             >
               <Sparkles className="h-4 w-4 animate-bloom-sparkle" />
               <Plus className="h-4 w-4" />
               <span>Log &amp; Settings</span>
-              {/* shimmer sweep */}
-              <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-bloom-shimmer" />
             </button>
           </div>
 

@@ -146,7 +146,7 @@ export default function DiaryPage() {
           <ViewSwitcher view={view} onChange={setView} />
           <button
             onClick={() => setComposing(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta"
+            className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
           >
             <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New entry
           </button>
@@ -187,7 +187,7 @@ function EmptyDiary({ onStart }: { onStart: () => void }) {
       <p className="mt-1.5 text-sm text-rose/80">Write down how today felt — your future self will love reading it back.</p>
       <button
         onClick={onStart}
-        className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta"
+        className="bloom-luxury-btn mt-5 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white"
       >
         <Plus className="h-4 w-4" strokeWidth={2} /> Write your first entry
       </button>

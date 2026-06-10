@@ -849,7 +849,7 @@ export default function NotesPage() {
                         if (activeAlert.medKey) handleMarkMedicationTaken(activeAlert.id, activeAlert.medKey);
                         setActiveAlert(null);
                       }}
-                      className="px-3 py-1.5 bg-hotpink text-white text-xs font-bold rounded-full hover:bg-magenta transition flex-1"
+                      className="bloom-luxury-btn px-3 py-1.5 text-xs font-bold text-white flex-1"
                     >
                       Taken ✓
                     </button>
@@ -867,7 +867,7 @@ export default function NotesPage() {
                         handleToggleReminderDone(activeAlert.id);
                         setActiveAlert(null);
                       }}
-                      className="px-3 py-1.5 bg-hotpink text-white text-xs font-bold rounded-full hover:bg-magenta transition flex-1"
+                      className="bloom-luxury-btn px-3 py-1.5 text-xs font-bold text-white flex-1"
                     >
                       Mark done ✿
                     </button>
@@ -923,7 +923,7 @@ export default function NotesPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={handleRequestNotifPermission}
-                    className="px-3 py-1.5 bg-hotpink text-white text-[10px] font-bold rounded-full hover:bg-magenta transition shadow-md shadow-pink-300"
+                    className="bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white"
                   >
                     Enable Nudges ✿
                   </button>
@@ -958,7 +958,7 @@ export default function NotesPage() {
               </p>
               <button
                 onClick={handleStartHere}
-                className="mt-4 px-4 py-1.5 bg-hotpink text-white rounded-full text-xs font-bold shadow-md shadow-hotpink/20 hover:bg-magenta transition"
+                className="bloom-luxury-btn mt-4 px-4 py-1.5 text-xs font-bold text-white"
               >
                 Start Here ✿
               </button>
@@ -1001,7 +1001,7 @@ export default function NotesPage() {
                 setNoteTag("Self-care");
                 setShowNoteForm((v) => !v);
               }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md hover:bg-magenta hover:scale-105 transition"
+              className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{showNoteForm ? "Close Form" : "New Note"}</span>
@@ -1024,7 +1024,7 @@ export default function NotesPage() {
                   return next;
                 });
               }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md hover:bg-magenta hover:scale-105 transition"
+              className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{showReminderForm ? "Close Form" : "New Reminder"}</span>
@@ -1135,7 +1135,7 @@ export default function NotesPage() {
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-full bg-hotpink text-white text-xs font-bold hover:bg-magenta transition shadow-md shadow-pink-300"
+                      className="bloom-luxury-btn px-5 py-2 text-xs font-bold text-white"
                     >
                       Save note ✿
                     </button>
@@ -1184,7 +1184,7 @@ export default function NotesPage() {
                 </p>
                 <button
                   onClick={() => setShowNoteForm(true)}
-                  className="mt-4 px-4 py-2 bg-hotpink text-white rounded-full text-xs font-bold inline-flex items-center gap-1 hover:bg-magenta hover:scale-105 transition shadow-md shadow-pink-200"
+                  className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
                 >
                   <Plus className="h-3.5 w-3.5" /> + New note
                 </button>
@@ -1538,7 +1538,7 @@ export default function NotesPage() {
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-full bg-hotpink text-white text-xs font-bold hover:bg-magenta transition shadow-md shadow-pink-300"
+                      className="bloom-luxury-btn px-5 py-2 text-xs font-bold text-white"
                     >
                       Save Reminder ✿
                     </button>
@@ -1556,7 +1556,7 @@ export default function NotesPage() {
                   <p className="text-xs sm:text-sm text-rose italic">All clear! No upcoming reminders due.</p>
                   <button
                     onClick={() => setShowReminderForm(true)}
-                    className="mt-4 px-4 py-2 bg-hotpink text-white rounded-full text-xs font-bold inline-flex items-center gap-1 hover:bg-magenta hover:scale-105 transition shadow-md shadow-pink-200"
+                    className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
                   >
                     <Plus className="h-3.5 w-3.5" /> + New reminder
                   </button>

@@ -89,7 +89,7 @@ export default function ToolsIndex() {
           <p className="text-sm text-rose">No tools match "{query}".</p>
           <button
             onClick={() => setQuery("")}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta"
+            className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
           >
             Clear search
           </button>
