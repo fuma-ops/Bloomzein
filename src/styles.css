@@ -404,10 +404,10 @@
   background: linear-gradient(180deg, #ff7ec8 0%, #ff1493 45%, #e0007f 75%, #cc0073 100%);
   transform: translateY(-2px);
   box-shadow:
-    /* small contact shadow directly under the button */
-    0 2px 4px -1px oklch(0.32 0.18 340 / 0.4),
-    /* larger soft pink ambient shadow, lifting it off the surface */
-    0 14px 26px -12px oklch(0.6 0.22 345 / 0.4),
+    /* small, slightly stronger contact shadow directly under the button */
+    0 2px 5px -1px oklch(0.32 0.18 340 / 0.46),
+    /* softer ambient shadow (toned down ~15%, less colored halo) */
+    0 13px 22px -13px oklch(0.6 0.22 345 / 0.34),
     /* polished acrylic inner border */
     inset 0 0 0 1px oklch(1 0 0 / 0.22),
     /* top rim thickness */
@@ -439,8 +439,8 @@
     transform: translateY(-3px);
     filter: brightness(1.02);
     box-shadow:
-      0 3px 6px -1px oklch(0.32 0.18 340 / 0.42),
-      0 18px 32px -12px oklch(0.6 0.22 345 / 0.45),
+      0 3px 7px -1px oklch(0.32 0.18 340 / 0.48),
+      0 17px 28px -13px oklch(0.6 0.22 345 / 0.38),
       inset 0 0 0 1px oklch(1 0 0 / 0.26),
       inset 0 1px 0 oklch(1 0 0 / 0.55),
       inset 0 -5px 9px oklch(0.32 0.22 340 / 0.35);
@@ -451,8 +451,8 @@
     transform: translateY(0px) scale(0.99);
     filter: brightness(0.985);
     box-shadow:
-      0 1px 2px -1px oklch(0.32 0.18 340 / 0.35),
-      0 6px 14px -10px oklch(0.6 0.22 345 / 0.3),
+      0 1px 3px -1px oklch(0.32 0.18 340 / 0.4),
+      0 6px 12px -11px oklch(0.6 0.22 345 / 0.25),
       inset 0 0 0 1px oklch(1 0 0 / 0.16),
       inset 0 1px 0 oklch(1 0 0 / 0.3),
       inset 0 3px 8px oklch(0.28 0.22 340 / 0.45);
@@ -461,6 +461,24 @@
       background: radial-gradient(120% 75% at 50% -32%, oklch(1 0 0 / 0.35), transparent 60%);
     }
   }
+}
+
+/* Premium pearl surface for cards — subtle, matte depth (not glass, not glossy) */
+@utility bloom-pearl-card {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.92) 0%, oklch(0.98 0.012 350 / 0.88) 100%);
+  box-shadow:
+    /* extremely soft pink ambient shadow */
+    0 16px 32px -22px oklch(0.65 0.2 345 / 0.28),
+    /* a touch of contact depth */
+    0 2px 6px -3px oklch(0.4 0.06 340 / 0.12),
+    /* almost invisible inner border */
+    inset 0 0 0 1px oklch(1 0 0 / 0.6),
+    /* very subtle top highlight */
+    inset 0 1px 0 oklch(1 0 0 / 0.8),
+    /* faint base shading for depth */
+    inset 0 -1px 6px oklch(0.85 0.05 345 / 0.15);
 }
 
 @keyframes bloom-scroll-hint {

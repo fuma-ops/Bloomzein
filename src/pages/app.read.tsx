@@ -317,7 +317,7 @@ export default function ReadPage() {
           {savedArticles.length > 0 && <span className="text-xs text-rose/70">{savedArticles.length} saved</span>}
         </div>
         {savedArticles.length === 0 ? (
-          <div className="rounded-3xl bg-white/85 backdrop-blur p-8 border border-petal/50 text-center">
+          <div className="bloom-pearl-card rounded-3xl p-8 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-blush text-hotpink">
               <Heart className="h-5 w-5" strokeWidth={1.6} />
             </span>
