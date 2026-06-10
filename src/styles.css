@@ -393,47 +393,67 @@
   }
 }
 
-/* Luxury glossy 3D primary button — beauty-packaging style */
+/* Luxury glossy 3D primary button — polished acrylic capsule, beauty-packaging style */
 @utility bloom-luxury-btn {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
   border-radius: 26px;
   border: none;
-  background: linear-gradient(160deg, #ff4db8 0%, #ff1493 100%);
+  /* 3-layer body: bright top, saturated middle, deeper bottom */
+  background: linear-gradient(180deg, #ff8fd4 0%, #ff1493 48%, #d6006e 100%);
   transform: translateY(-1px);
   box-shadow:
-    0 16px 34px -16px oklch(0.55 0.27 350 / 0.6),
-    0 0 22px -4px oklch(0.72 0.26 350 / 0.45),
-    inset 0 1px 1px oklch(1 0 0 / 0.55),
-    inset 0 -3px 7px oklch(0.42 0.28 340 / 0.35);
+    /* small contact shadow directly under the button */
+    0 3px 6px -1px oklch(0.4 0.22 340 / 0.45),
+    /* larger soft pink bloom shadow underneath */
+    0 16px 28px -12px oklch(0.6 0.25 345 / 0.5),
+    /* inner thickness: bright rim top, recessed shade bottom */
+    inset 0 1px 0 oklch(1 0 0 / 0.65),
+    inset 0 -4px 8px oklch(0.35 0.25 340 / 0.45);
   transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.2s ease;
 
+  /* specular highlight band across the upper ~30% */
   &::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
-    border-radius: inherit;
-    background: linear-gradient(180deg, oklch(1 0 0 / 0.45) 0%, oklch(1 0 0 / 0.1) 42%, transparent 65%);
+    background: linear-gradient(180deg, oklch(1 0 0 / 0.5) 0%, oklch(1 0 0 / 0.12) 28%, transparent 38%);
+  }
+
+  /* curved glass reflection, clipped inside the capsule */
+  &::after {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 6%;
+    height: 42%;
+    z-index: -1;
+    border-radius: 50%;
+    background: linear-gradient(180deg, oklch(1 0 0 / 0.6), oklch(1 0 0 / 0) 75%);
+    opacity: 0.85;
   }
 
   &:hover {
     transform: translateY(-2px);
-    filter: brightness(1.04);
+    filter: brightness(1.03);
     box-shadow:
-      0 20px 40px -16px oklch(0.55 0.27 350 / 0.65),
-      0 0 28px -4px oklch(0.72 0.26 350 / 0.55),
-      inset 0 1px 1px oklch(1 0 0 / 0.6),
-      inset 0 -3px 7px oklch(0.42 0.28 340 / 0.4);
+      0 4px 8px -1px oklch(0.4 0.22 340 / 0.5),
+      0 20px 32px -12px oklch(0.6 0.25 345 / 0.55),
+      inset 0 1px 0 oklch(1 0 0 / 0.7),
+      inset 0 -4px 8px oklch(0.35 0.25 340 / 0.5);
   }
 
   &:active {
-    transform: translateY(0) scale(0.98);
-    filter: brightness(0.99);
+    transform: translateY(1px) scale(0.98);
+    filter: brightness(0.98);
     box-shadow:
-      0 8px 18px -10px oklch(0.55 0.27 350 / 0.5),
-      0 0 14px -4px oklch(0.72 0.26 350 / 0.35),
-      inset 0 2px 6px oklch(0.4 0.28 340 / 0.45);
+      0 2px 4px -1px oklch(0.4 0.22 340 / 0.45),
+      0 8px 16px -10px oklch(0.6 0.25 345 / 0.45),
+      inset 0 1px 0 oklch(1 0 0 / 0.4),
+      inset 0 3px 8px oklch(0.3 0.25 340 / 0.5);
   }
 }
 
