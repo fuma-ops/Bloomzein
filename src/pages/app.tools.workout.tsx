@@ -1050,10 +1050,19 @@ function SessionActive({ session, onExit, onDone }: {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
+      <div className="relative flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
+        {phase === "exercise" && next && remaining > 0 && remaining <= 5 && (
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-3 pr-4 animate-fade-in">
+            <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-xl border border-petal/60" />
+            <div className="text-left">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-hotpink/70 leading-none">Next up</p>
+              <p className="text-sm sm:text-base font-bold text-rose leading-tight mt-1">{next.name}</p>
+            </div>
+          </div>
+        )}
         {phase === "exercise" ? (
           <>
-            <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-h-[55vh] aspect-square sm:aspect-[4/3] object-cover rounded-3xl border border-petal/60 shadow-md" />
+            <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-w-md mx-auto aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
             <h2 className="font-script text-3xl text-hotpink leading-none text-center">{exercise.name}</h2>
             <p className="text-sm text-rose/70 text-center">{exercise.muscles}</p>
             <CircularTimer totalSec={totalSec} remainingSec={remaining} size={104} />
