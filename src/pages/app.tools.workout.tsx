@@ -549,18 +549,33 @@ function Discover({ profile, onStartSession, onBestShape }: {
           {ZONES.map((z) => {
             const active = zone === z.key;
             return (
-              <button
-                key={z.key}
-                onClick={() => onPickZone(z.key)}
-                className={[
-                  "relative aspect-square rounded-2xl overflow-hidden border shadow-sm transition active:scale-95",
-                  active ? "border-hotpink shadow-md shadow-hotpink/30 ring-2 ring-hotpink/40" : "border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
-                ].join(" ")}
-              >
-                <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-                <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
-              </button>
+              <div key={z.key} className="relative">
+                {active && (
+                  <div className="absolute -inset-1.5 rounded-[1.4rem] bg-gradient-to-br from-hotpink/60 to-magenta/50 blur-md animate-bloom-pulse -z-10" />
+                )}
+                <button
+                  onClick={() => onPickZone(z.key)}
+                  className={[
+                    "group relative aspect-square w-full rounded-2xl overflow-hidden border transition active:scale-95",
+                    active
+                      ? "border-white/70 shadow-[0_10px_28px_-8px_oklch(0.65_0.27_350/0.6)] ring-2 ring-hotpink/50"
+                      : "border-white/40 shadow-[0_6px_18px_-10px_oklch(0.65_0.18_350/0.4)] hover:shadow-[0_10px_24px_-10px_oklch(0.65_0.22_350/0.5)] hover:-translate-y-0.5",
+                  ].join(" ")}
+                >
+                  <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
+                  {/* glossy sheen */}
+                  <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/45 via-white/10 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+                  {/* top edge highlight */}
+                  <div className="absolute inset-x-0 top-0 h-px bg-white/60" />
+                  <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
+                  {active && (
+                    <span className="absolute top-1.5 right-1.5 grid h-5 w-5 sm:h-6 sm:w-6 place-items-center rounded-full bg-gradient-to-br from-white to-blush text-hotpink shadow-md ring-1 ring-white/70">
+                      <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={3} />
+                    </span>
+                  )}
+                </button>
+              </div>
             );
           })}
         </div>
