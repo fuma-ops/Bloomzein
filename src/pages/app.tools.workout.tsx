@@ -201,22 +201,23 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
 // ===================== CIRCULAR TIMER =====================
 
 function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number; remainingSec: number; size?: number }) {
-  const r = size / 2 - 6;
+  const strokeWidth = Math.max(6, Math.round(size / 14));
+  const r = size / 2 - strokeWidth;
   const c = 2 * Math.PI * r;
   const progress = totalSec > 0 ? remainingSec / totalSec : 0;
   const offset = c * (1 - progress);
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.92 0.04 350)" strokeWidth="6" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.92 0.04 350)" strokeWidth={strokeWidth} fill="none" />
         <circle
-          cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.65 0.24 350)" strokeWidth="6" fill="none"
+          cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.65 0.24 350)" strokeWidth={strokeWidth} fill="none"
           strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
           style={{ transition: "stroke-dashoffset 1s linear" }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="text-xl font-bold text-hotpink">{remainingSec}</span>
+        <span className="font-bold text-hotpink" style={{ fontSize: size * 0.32 }}>{remainingSec}</span>
       </div>
     </div>
   );
@@ -991,6 +992,27 @@ function SessionActive({ session, onExit, onDone }: {
   const exercise = session.exercises[index];
   const next = session.exercises[index + 1];
 
+  // Keep the screen awake for the duration of the workout.
+  useEffect(() => {
+    let lock: any = null;
+    const requestLock = async () => {
+      try {
+        if ("wakeLock" in navigator) {
+          lock = await (navigator as any).wakeLock.request("screen");
+        }
+      } catch {}
+    };
+    requestLock();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") requestLock();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (lock) lock.release().catch(() => {});
+    };
+  }, []);
+
   useEffect(() => {
     if (paused) return;
     const t = setInterval(() => {
@@ -1043,56 +1065,56 @@ function SessionActive({ session, onExit, onDone }: {
       </div>
 
       <div className="flex items-center justify-between p-3">
-        <button onClick={onExit} className="rounded-full bg-white/90 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
-        <p className="text-xs font-bold text-rose">{index + 1} / {session.exercises.length}</p>
-        <button onClick={() => setSound((s) => !s)} className="rounded-full bg-white/90 p-2 text-rose border border-petal/60">
-          {sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        <button onClick={onExit} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60"><X className="h-5 w-5 sm:h-6 sm:w-6" /></button>
+        <p className="text-base sm:text-xl font-bold text-rose">{index + 1} / {session.exercises.length}</p>
+        <button onClick={() => setSound((s) => !s)} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60">
+          {sound ? <Volume2 className="h-5 w-5 sm:h-6 sm:w-6" /> : <VolumeX className="h-5 w-5 sm:h-6 sm:w-6" />}
         </button>
       </div>
 
       <div className="relative flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
         {phase === "exercise" && next && remaining > 0 && remaining <= 5 && (
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-3 pr-4 animate-fade-in">
-            <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-xl border border-petal/60" />
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-3 sm:p-4 pr-4 sm:pr-6 animate-fade-in">
+            <ExercisePhoto exercise={next} zone={session.zone} className="h-20 w-20 sm:h-28 sm:w-28 object-cover rounded-xl border border-petal/60" />
             <div className="text-left">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-hotpink/70 leading-none">Next up</p>
-              <p className="text-sm sm:text-base font-bold text-rose leading-tight mt-1">{next.name}</p>
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-wide text-hotpink/70 leading-none">Next up</p>
+              <p className="text-lg sm:text-2xl font-bold text-rose leading-tight mt-1">{next.name}</p>
             </div>
           </div>
         )}
         {phase === "exercise" ? (
           <>
             <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-w-md mx-auto aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
-            <h2 className="font-script text-3xl text-hotpink leading-none text-center">{exercise.name}</h2>
-            <p className="text-sm text-rose/70 text-center">{exercise.muscles}</p>
-            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={104} />
+            <h2 className="font-script text-4xl sm:text-6xl text-hotpink leading-none text-center">{exercise.name}</h2>
+            <p className="text-base sm:text-xl text-rose/70 text-center">{exercise.muscles}</p>
+            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={160} />
           </>
         ) : (
-          <div className="w-full max-w-sm rounded-3xl bg-white/90 border border-petal/60 p-6 text-center shadow-md">
-            <p className="text-xs font-bold uppercase tracking-wide text-hotpink/70 mb-2">Rest</p>
-            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={88} />
+          <div className="w-full max-w-md rounded-3xl bg-white/90 border border-petal/60 p-6 sm:p-8 text-center shadow-md">
+            <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70 mb-2">Rest</p>
+            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
             {next && (
               <div className="mt-4">
-                <p className="text-xs font-semibold text-rose/70 mb-2">Next up</p>
-                <ExercisePhoto exercise={next} zone={session.zone} className="mx-auto h-20 w-20 object-cover rounded-2xl border border-petal/60" />
-                <p className="mt-2 font-bold text-rose">{next.name}</p>
+                <p className="text-sm sm:text-lg font-semibold text-rose/70 mb-2">Next up</p>
+                <ExercisePhoto exercise={next} zone={session.zone} className="mx-auto h-24 w-24 sm:h-32 sm:w-32 object-cover rounded-2xl border border-petal/60" />
+                <p className="mt-2 text-lg sm:text-2xl font-bold text-rose">{next.name}</p>
               </div>
             )}
-            <button onClick={skipRest} className="mt-4 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">Skip rest</button>
+            <button onClick={skipRest} className="mt-4 rounded-full bg-white/90 px-5 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-rose border border-petal/60">Skip rest</button>
           </div>
         )}
       </div>
 
       {phase === "exercise" && (
         <div className="grid grid-cols-3 gap-2 p-3 bg-white/60">
-          <button onClick={() => setPaused((p) => !p)} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-2 text-xs font-semibold text-rose">
-            {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />} {paused ? "Resume" : "Pause"}
+          <button onClick={() => setPaused((p) => !p)} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
+            {paused ? <Play className="h-5 w-5 sm:h-6 sm:w-6" /> : <Pause className="h-5 w-5 sm:h-6 sm:w-6" />} {paused ? "Resume" : "Pause"}
           </button>
-          <button onClick={repeat} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-2 text-xs font-semibold text-rose">
-            <RotateCcw className="h-4 w-4" /> Repeat this
+          <button onClick={repeat} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
+            <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" /> Repeat this
           </button>
-          <button onClick={skip} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-2 text-xs font-semibold text-rose">
-            <SkipForward className="h-4 w-4" /> Skip
+          <button onClick={skip} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
+            <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" /> Skip
           </button>
         </div>
       )}
