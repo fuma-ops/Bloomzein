@@ -29,16 +29,28 @@ export interface Exercise {
   muscles: string;
 }
 
-/* ==================== ZONES ==================== */
+/* ==================== ZONES ====================
+   Zone image naming convention: /images/zone-{key}.jpg (square, 800x800) */
 
-export const ZONES: { key: Zone; label: string; icon: LucideIcon }[] = [
-  { key: "glutes", label: "Glutes", icon: Flame },
-  { key: "core", label: "Abs & Core", icon: Activity },
-  { key: "arms", label: "Arms & Shoulders", icon: Zap },
-  { key: "back", label: "Back", icon: Wind },
-  { key: "legs", label: "Legs & Thighs", icon: Footprints },
-  { key: "full-body", label: "Full Body", icon: Sparkles },
+export const ZONES: { key: Zone; label: string; icon: LucideIcon; image: string }[] = [
+  { key: "glutes", label: "Glutes", icon: Flame, image: "/images/zone-glutes.jpg" },
+  { key: "core", label: "Abs & Core", icon: Activity, image: "/images/zone-core.jpg" },
+  { key: "arms", label: "Arms & Shoulders", icon: Zap, image: "/images/zone-arms.jpg" },
+  { key: "back", label: "Back", icon: Wind, image: "/images/zone-back.jpg" },
+  { key: "legs", label: "Legs & Thighs", icon: Footprints, image: "/images/zone-legs.jpg" },
+  { key: "full-body", label: "Full Body", icon: Sparkles, image: "/images/zone-full-body.jpg" },
 ];
+
+/* ==================== HERO IMAGES ====================
+   Wide banner images (1600x900, 16:9). Displayed responsively with object-cover. */
+
+export const HERO_IMAGES = {
+  discover: "/images/workout-hero-discover.jpg",
+  program: "/images/workout-hero-program.jpg",
+  library: "/images/workout-hero-library.jpg",
+  bestShape: "/images/workout-hero-bestshape.jpg",
+  session: "/images/workout-hero-session.jpg",
+};
 
 /* ==================== INTENTIONS ==================== */
 
@@ -208,6 +220,25 @@ export const ZONE_INTENTION_EXERCISES: Record<string, string[]> = {
   "full-body-stretch": ["full-body-flow", "sun-salutation-adapted", "morning-mobility-routine"],
   "full-body-recover": ["yin-sequence", "body-scan-stretch", "full-body-foam-roll"],
 };
+
+/* ==================== ZONE → ALL EXERCISES (for Library) ==================== */
+
+export const ZONE_EXERCISES: Record<Zone, Exercise[]> = (() => {
+  const out = {} as Record<Zone, Exercise[]>;
+  for (const zone of ["glutes", "core", "arms", "back", "legs", "full-body"] as Zone[]) {
+    const seen = new Set<string>();
+    const list: Exercise[] = [];
+    for (const intention of ["tonify", "strengthen", "stretch", "recover"] as WorkoutIntention[]) {
+      for (const slug of ZONE_INTENTION_EXERCISES[`${zone}-${intention}`] ?? []) {
+        if (seen.has(slug)) continue;
+        seen.add(slug);
+        list.push(EXERCISES[slug]);
+      }
+    }
+    out[zone] = list;
+  }
+  return out;
+})();
 
 /* ==================== SESSION NAMES ==================== */
 

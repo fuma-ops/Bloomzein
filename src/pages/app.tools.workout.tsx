@@ -7,7 +7,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
-  PHASE_OPTIMAL, buildSession,
+  PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession,
   type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
   type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
 } from "@/components/bloom/workout/data";
@@ -176,6 +176,28 @@ function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone
   );
 }
 
+// ===================== HERO BANNER =====================
+
+function HeroBanner({ src, title, subtitle }: { src: string; title: string; subtitle?: string }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] max-h-[260px] rounded-3xl overflow-hidden border border-petal/60 shadow-md shadow-rose/10 mb-4">
+      {broken ? (
+        <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
+          <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
+        </div>
+      ) : (
+        <img src={src} alt={title} className="absolute inset-0 h-full w-full object-cover" onError={() => setBroken(true)} />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+      <div className="absolute bottom-0 left-0 p-3 sm:p-5">
+        <h2 className="font-script text-2xl sm:text-4xl text-white leading-none drop-shadow-md">{title}</h2>
+        {subtitle && <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
 // ===================== CIRCULAR TIMER =====================
 
 function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number; remainingSec: number; size?: number }) {
@@ -205,6 +227,7 @@ function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number
 type View =
   | { kind: "discover" }
   | { kind: "program" }
+  | { kind: "library" }
   | { kind: "best-shape" }
   | { kind: "session-start"; session: WorkoutSession }
   | { kind: "session-active"; session: WorkoutSession }
@@ -214,7 +237,7 @@ export default function WorkoutPage() {
   const [onboarded, setOnboarded] = useLS<boolean>(ONBOARD_KEY, false);
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
   const [view, setView] = useState<View>({ kind: "discover" });
-  const [tab, setTab] = useState<"discover" | "program">("discover");
+  const [tab, setTab] = useState<"discover" | "program" | "library">("discover");
 
   if (!onboarded) {
     return (
@@ -263,8 +286,8 @@ export default function WorkoutPage() {
       <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10 mb-4">
         <h1 className="font-script text-4xl sm:text-6xl text-hotpink leading-none">Workout Programs</h1>
         <p className="mt-2 text-sm text-rose/80">Move with strength, on your terms.</p>
-        <div className="mt-4 inline-flex rounded-full bg-blush/60 border border-petal/60 p-1">
-          {(["discover", "program"] as const).map((t) => (
+        <div className="mt-4 inline-flex flex-wrap rounded-full bg-blush/60 border border-petal/60 p-1">
+          {(["discover", "program", "library"] as const).map((t) => (
             <button
               key={t}
               onClick={() => { setTab(t); setView({ kind: t }); }}
@@ -273,7 +296,7 @@ export default function WorkoutPage() {
                 tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
               ].join(" ")}
             >
-              {t === "discover" ? "Discover" : "My Program"}
+              {t === "discover" ? "Discover" : t === "program" ? "My Program" : "Library"}
             </button>
           ))}
         </div>
@@ -297,6 +320,7 @@ export default function WorkoutPage() {
       {view.kind === "program" && (
         <MyProgram profile={profile} onStartSession={(session) => setView({ kind: "session-start", session })} />
       )}
+      {view.kind === "library" && <Library />}
     </div>
   );
 }
@@ -472,6 +496,8 @@ function Discover({ profile, onStartSession, onBestShape }: {
 
   return (
     <div className="space-y-4">
+      <HeroBanner src={HERO_IMAGES.discover} title="Discover" subtitle="Explore sessions, mini-tools, and find what fits your day." />
+
       {/* Energy Check */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <h2 className="font-script text-2xl text-hotpink leading-none mb-3">How's your energy today?</h2>
@@ -508,21 +534,21 @@ function Discover({ profile, onStartSession, onBestShape }: {
       {/* Body Focus */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {ZONES.map((z) => {
-            const Icon = z.icon;
             const active = zone === z.key;
             return (
               <button
                 key={z.key}
                 onClick={() => onPickZone(z.key)}
                 className={[
-                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition",
-                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50",
+                  "relative aspect-square rounded-2xl overflow-hidden border transition",
+                  active ? "border-hotpink shadow-md shadow-hotpink/30 ring-2 ring-hotpink/40" : "border-petal/50",
                 ].join(" ")}
               >
-                <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
-                <span className="text-[11px] font-semibold text-rose text-center leading-tight">{z.label}</span>
+                <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
               </button>
             );
           })}
@@ -674,9 +700,18 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
 
   return (
     <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h1 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Best Shape Calculator</h1>
         <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">Back</button>
+      </div>
+
+      <HeroBanner src={HERO_IMAGES.bestShape} title="Know your strengths" subtitle="A gentle way to find the workouts that already suit your body." />
+
+      <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3 mb-4 text-sm text-rose/85">
+        <p className="font-bold text-rose mb-1">How it works</p>
+        <p>1. Enter your weight &amp; height, or simply tap the body shape that feels like yours.</p>
+        <p>2. We'll show your natural strengths and the workout intentions that complement them.</p>
+        <p>3. Tap "Start with this" to jump straight into a matching session — no numbers, no judgment.</p>
       </div>
 
       <div className="flex gap-2 mb-4">
@@ -772,6 +807,20 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
 
   return (
     <div className="space-y-4">
+      <HeroBanner src={HERO_IMAGES.program} title="My Program" subtitle="Your personalized weekly plan — built for you, adjustable anytime." />
+
+      {!program && (
+        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+          <p className="font-bold text-rose mb-2">How My Program works</p>
+          <ol className="space-y-1.5 text-sm text-rose/85 list-decimal list-inside">
+            <li>We use your setup profile (level, goal, equipment, days/week) and your current cycle phase{phase !== "any" ? ` (${PHASE_LABEL[phase].toLowerCase()})` : ""}.</li>
+            <li>We propose a full week — a zone &amp; intention for each active day, rest days for the rest.</li>
+            <li>Tap <span className="font-bold">Validate</span> to accept it, <span className="font-bold">Adjust</span> to regenerate, or <span className="font-bold">Skip</span> to plan it yourself later.</li>
+            <li>Tap any day's card to start that session. Use the filters to browse by zone, intention, or equipment.</li>
+          </ol>
+        </section>
+      )}
+
       {!program && !bannerSeen && (
         <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
           <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Your weekly plan is ready</h2>
@@ -811,7 +860,10 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
         </div>
 
         {!program ? (
-          <p className="mt-4 text-sm text-rose/70">Validate your weekly plan above to see it here.</p>
+          <div className="mt-4 text-sm text-rose/70">
+            <p className="mb-2">No plan yet — generate your personalized week in one tap.</p>
+            <button onClick={validate} className="rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">Generate my week</button>
+          </div>
         ) : (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-7 gap-2">
             {DAYS.map((d) => {
@@ -847,6 +899,48 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
   );
 }
 
+// ===================== LIBRARY =====================
+
+function Library() {
+  const [zone, setZone] = useState<Zone>("glutes");
+  const exercises = ZONE_EXERCISES[zone];
+
+  return (
+    <div className="space-y-4">
+      <HeroBanner src={HERO_IMAGES.library} title="Library" subtitle="Get familiar with every move — browse positions by zone." />
+
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+        <div className="flex flex-wrap gap-2 mb-4">
+          {ZONES.map((z) => (
+            <button
+              key={z.key}
+              onClick={() => setZone(z.key)}
+              className={[
+                "rounded-full px-3 py-1.5 text-xs font-semibold border transition",
+                zone === z.key ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60",
+              ].join(" ")}
+            >
+              {z.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {exercises.map((ex) => (
+            <div key={ex.slug} className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10">
+              <ExercisePhoto exercise={ex} className="aspect-square w-full object-cover" />
+              <div className="p-2.5">
+                <p className="text-sm font-bold text-rose leading-tight">{ex.name}</p>
+                <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{ex.muscles}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 // ===================== SESSION MODE =====================
 
 function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; onStart: () => void; onExit: () => void }) {
@@ -856,9 +950,11 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   const intention = WORKOUT_INTENTIONS.find((i) => i.key === session.intention);
 
   return (
-    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur grid place-items-center p-4">
-      <div className="w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center">
-        <button onClick={onExit} className="absolute right-6 top-6 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
+    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 shadow-2xl text-center overflow-hidden my-8">
+        <ExercisePhoto exercise={{ slug: session.zone, name: session.name, image: ZONES.find((z) => z.key === session.zone)?.image ?? HERO_IMAGES.session, muscles: "" }} className="w-full aspect-[16/9] object-cover" />
+        <button onClick={onExit} className="absolute right-3 top-3 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
+        <div className="p-6 sm:p-8">
         <h1 className="font-script text-4xl text-hotpink leading-none mb-2">{session.name}</h1>
         <p className="text-sm text-rose/80 mb-4">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
         <div className="flex justify-center gap-2 mb-4">
@@ -871,6 +967,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         <button onClick={onStart} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-8 py-4 text-base font-bold text-white shadow-xl">
           <Play className="h-5 w-5" /> Start
         </button>
+        </div>
       </div>
     </div>
   );
