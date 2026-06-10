@@ -198,6 +198,66 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
   );
 }
 
+// ===================== HERO HEADER (Workout Programs + tabs, on image) =====================
+
+const SECTION_META: Record<"discover" | "program" | "library", { title: string; subtitle: string }> = {
+  discover: { title: "Discover", subtitle: "Explore sessions, mini-tools, and find what fits your day." },
+  program: { title: "My Program", subtitle: "Your personalized weekly plan — built for you, adjustable anytime." },
+  library: { title: "Library", subtitle: "Get familiar with every move — browse positions by zone." },
+};
+
+function HeroHeader({
+  src,
+  tab,
+  onPickTab,
+  sectionTitle,
+  sectionSubtitle,
+}: {
+  src: string;
+  tab: "discover" | "program" | "library";
+  onPickTab: (t: "discover" | "program" | "library") => void;
+  sectionTitle: string;
+  sectionSubtitle: string;
+}) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4">
+      {broken ? (
+        <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
+          <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
+        </div>
+      ) : (
+        <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover" onError={() => setBroken(true)} />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
+      <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
+        <div>
+          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Workout Programs</h1>
+          <p className="mt-1 text-xs sm:text-sm text-white/90 drop-shadow">Move with strength, on your terms.</p>
+          <div className="mt-2 sm:mt-3 inline-flex flex-wrap rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
+            {(["discover", "program", "library"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => onPickTab(t)}
+                className={[
+                  "rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition",
+                  tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
+                ].join(" ")}
+              >
+                {t === "discover" ? "Discover" : t === "program" ? "My Program" : "Library"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="font-script text-2xl sm:text-4xl text-white leading-none drop-shadow-md">{sectionTitle}</h2>
+          <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">{sectionSubtitle}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===================== CIRCULAR TIMER =====================
 
 function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number; remainingSec: number; size?: number }) {
@@ -283,24 +343,34 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10 mb-4">
-        <h1 className="font-script text-4xl sm:text-6xl text-hotpink leading-none">Workout Programs</h1>
-        <p className="mt-2 text-sm text-rose/80">Move with strength, on your terms.</p>
-        <div className="mt-4 inline-flex flex-wrap rounded-full bg-blush/60 border border-petal/60 p-1">
-          {(["discover", "program", "library"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => { setTab(t); setView({ kind: t }); }}
-              className={[
-                "rounded-full px-4 py-2 text-sm font-bold transition",
-                tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
-              ].join(" ")}
-            >
-              {t === "discover" ? "Discover" : t === "program" ? "My Program" : "Library"}
-            </button>
-          ))}
+      {view.kind === "discover" || view.kind === "program" || view.kind === "library" ? (
+        <HeroHeader
+          src={HERO_IMAGES[view.kind]}
+          tab={tab}
+          onPickTab={(t) => { setTab(t); setView({ kind: t }); }}
+          sectionTitle={SECTION_META[view.kind].title}
+          sectionSubtitle={SECTION_META[view.kind].subtitle}
+        />
+      ) : (
+        <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10 mb-4">
+          <h1 className="font-script text-4xl sm:text-6xl text-hotpink leading-none">Workout Programs</h1>
+          <p className="mt-2 text-sm text-rose/80">Move with strength, on your terms.</p>
+          <div className="mt-4 inline-flex flex-wrap rounded-full bg-blush/60 border border-petal/60 p-1">
+            {(["discover", "program", "library"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => { setTab(t); setView({ kind: t }); }}
+                className={[
+                  "rounded-full px-4 py-2 text-sm font-bold transition",
+                  tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
+                ].join(" ")}
+              >
+                {t === "discover" ? "Discover" : t === "program" ? "My Program" : "Library"}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {view.kind === "discover" && (
         <Discover
@@ -496,7 +566,6 @@ function Discover({ profile, onStartSession, onBestShape }: {
 
   return (
     <div className="space-y-4">
-      <HeroBanner src={HERO_IMAGES.discover} title="Discover" subtitle="Explore sessions, mini-tools, and find what fits your day." />
 
       {/* Energy Check */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
@@ -807,7 +876,6 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
 
   return (
     <div className="space-y-4">
-      <HeroBanner src={HERO_IMAGES.program} title="My Program" subtitle="Your personalized weekly plan — built for you, adjustable anytime." />
 
       {!program && (
         <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
@@ -907,7 +975,6 @@ function Library() {
 
   return (
     <div className="space-y-4">
-      <HeroBanner src={HERO_IMAGES.library} title="Library" subtitle="Get familiar with every move — browse positions by zone." />
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         <div className="flex flex-wrap gap-2 mb-4">
