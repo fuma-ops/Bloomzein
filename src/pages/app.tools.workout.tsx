@@ -1016,11 +1016,12 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
   const zone = ZONES.find((z) => z.key === session.zone);
   const intention = WORKOUT_INTENTIONS.find((i) => i.key === session.intention);
+  const first = session.exercises[0];
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
       <div className="relative w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 shadow-2xl text-center overflow-hidden my-8">
-        <ExercisePhoto exercise={{ slug: session.zone, name: session.name, image: ZONES.find((z) => z.key === session.zone)?.image ?? HERO_IMAGES.session, muscles: "" }} className="w-full aspect-[16/9] object-cover" />
+        <ExercisePhoto exercise={first} zone={session.zone} className="w-full aspect-[16/9] object-cover" />
         <button onClick={onExit} className="absolute right-3 top-3 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
         <div className="p-6 sm:p-8">
         <h1 className="font-script text-4xl text-hotpink leading-none mb-2">{session.name}</h1>
@@ -1032,6 +1033,11 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         {phase !== "any" && session.phaseOptimal.includes(phase) && (
           <p className="mb-4 text-xs font-bold uppercase tracking-wide text-hotpink">Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase</p>
         )}
+        <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 mb-4 text-left">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1">First up</p>
+          <p className="font-bold text-rose">{first.name}</p>
+          <p className="text-xs text-rose/70">{first.muscles}</p>
+        </div>
         <button onClick={onStart} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-8 py-4 text-base font-bold text-white shadow-xl">
           <Play className="h-5 w-5" /> Start
         </button>
@@ -1065,7 +1071,7 @@ function SessionActive({ session, onExit, onDone }: {
       elapsedRef.current += 1;
       setRemaining((r) => {
         const nr = r - 1;
-        if (nr === 3 && phase === "exercise" && sound) playTimerBip(false);
+        if (nr === 5 && phase === "exercise" && sound) playTimerBip(false);
         if (nr <= 0) {
           if (phase === "exercise") {
             if (sound) playTimerBip(true);
@@ -1118,7 +1124,16 @@ function SessionActive({ session, onExit, onDone }: {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
+      <div className="relative flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
+        {phase === "exercise" && next && remaining > 0 && remaining <= 5 && (
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-2 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-2 pr-3 animate-fade-in">
+            <ExercisePhoto exercise={next} zone={session.zone} className="h-10 w-10 object-cover rounded-xl border border-petal/60" />
+            <div className="text-left">
+              <p className="text-[9px] font-bold uppercase tracking-wide text-hotpink/70 leading-none">Next up</p>
+              <p className="text-xs font-bold text-rose leading-tight">{next.name}</p>
+            </div>
+          </div>
+        )}
         {phase === "exercise" ? (
           <>
             <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-h-[55vh] aspect-square sm:aspect-[4/3] object-cover rounded-3xl border border-petal/60 shadow-md" />
