@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight } from "lucide-react";
+import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
 /* ---------- data ---------- */
@@ -12,9 +12,20 @@ interface Article {
   excerpt: string;
   topic: Exclude<Topic, "All">;
   minutes: number;
+  blooms: string;
   image: string;
   body: string;
 }
+
+const TOPIC_LABELS: Record<Topic, string> = {
+  All: "All",
+  "Cycle & Body": "Cycle & Body",
+  "Self-care": "Self-care",
+  Money: "Money",
+  Movement: "Movement",
+  Mindset: "Mind",
+  Recipes: "Recipes",
+};
 
 const IMG = {
   featured: "/images/read-featured.png",
@@ -27,34 +38,34 @@ const IMG = {
 } as const;
 
 const ARTICLES: Article[] = [
-  { id: "a1", title: "Cycle syncing 101", topic: "Cycle & Body", minutes: 6, image: IMG["Cycle & Body"],
+  { id: "a1", title: "Cycle syncing 101", topic: "Cycle & Body", minutes: 6, blooms: "2.3k", image: IMG["Cycle & Body"],
     excerpt: "Match your routine to your phase and feel like yourself again.",
     body: "Your cycle is a four-season superpower. In follicular days, lean into new beginnings — pitch ideas, try new workouts. Ovulation is your social peak. Luteal asks for slower, nourishing rituals. Menstrual is rest — and rest is productive too." },
-  { id: "a2", title: "Soft girl morning ritual", topic: "Self-care", minutes: 4, image: IMG["Self-care"],
+  { id: "a2", title: "Soft girl morning ritual", topic: "Self-care", minutes: 4, blooms: "1.9k", image: IMG["Self-care"],
     excerpt: "Ten gentle minutes that change the entire tone of your day.",
     body: "Open the curtains slowly. Warm water with lemon. A two-song stretch. Mist your face. Write one sentence in your journal — just one. The point isn't productivity; it's softness." },
-  { id: "a3", title: "Pink budgeting that actually works", topic: "Money", minutes: 8, image: IMG["Money"],
+  { id: "a3", title: "Pink budgeting that actually works", topic: "Money", minutes: 8, blooms: "1.6k", image: IMG["Money"],
     excerpt: "A kinder framework for the girlie who hates spreadsheets.",
     body: "Forget restriction. Try the 50/30/20 with a twist: 50% needs, 20% future-you, 30% joy. Name your joy categories — flowers, lattes, books — so spending feels intentional, not guilty." },
-  { id: "a4", title: "Moon salutation flow", topic: "Movement", minutes: 5, image: IMG["Movement"],
+  { id: "a4", title: "Moon salutation flow", topic: "Movement", minutes: 5, blooms: "2.1k", image: IMG["Movement"],
     excerpt: "A slow flow for evenings when sun salutations feel like too much.",
     body: "Start in mountain pose. Sweep arms overhead, fold, step into a low lunge. Move like honey — there's nowhere to be. Finish in child's pose with three long breaths." },
-  { id: "a5", title: "Reframing 'I should'", topic: "Mindset", minutes: 5, image: IMG["Mindset"],
+  { id: "a5", title: "Reframing 'I should'", topic: "Mindset", minutes: 5, blooms: "1.4k", image: IMG["Mindset"],
     excerpt: "How to soften your inner voice without losing your edge.",
     body: "Every time you catch a should, swap it for 'I get to' or 'I'm choosing'. Watch what happens. The task is the same; the relationship to it transforms." },
-  { id: "a6", title: "Strawberry oat bowl", topic: "Recipes", minutes: 3, image: IMG["Recipes"],
+  { id: "a6", title: "Strawberry oat bowl", topic: "Recipes", minutes: 3, blooms: "2.6k", image: IMG["Recipes"],
     excerpt: "A pink breakfast that feels like a hug in a bowl.",
     body: "Blend frozen strawberries with banana and oat milk until creamy. Top with toasted oats, coconut, and a swirl of almond butter. Eat with your favorite spoon." },
-  { id: "a7", title: "Luteal phase glow-up", topic: "Cycle & Body", minutes: 7, image: IMG["Cycle & Body"],
+  { id: "a7", title: "Luteal phase glow-up", topic: "Cycle & Body", minutes: 7, blooms: "1.8k", image: IMG["Cycle & Body"],
     excerpt: "Why the week before your period can be your most creative.",
     body: "Luteal is finishing energy. It's when you tidy projects, journal honestly, and crave warmth. Honor the inward pull — schedule deep work and decline what doesn't matter." },
-  { id: "a8", title: "The 7-minute skincare edit", topic: "Self-care", minutes: 4, image: IMG["Self-care"],
+  { id: "a8", title: "The 7-minute skincare edit", topic: "Self-care", minutes: 4, blooms: "2.0k", image: IMG["Self-care"],
     excerpt: "Three steps, two products, one glowing you.",
     body: "Cleanse with cool water. Pat — never rub. A pea of moisturizer on damp skin locks in everything. SPF every morning. That's it. The rest is marketing." },
-  { id: "a9", title: "Hip-opening sequence", topic: "Movement", minutes: 6, image: IMG["Movement"],
+  { id: "a9", title: "Hip-opening sequence", topic: "Movement", minutes: 6, blooms: "1.5k", image: IMG["Movement"],
     excerpt: "Release a week of sitting in one delicious flow.",
     body: "Pigeon, then half-frog, then a deep malasana squat. Hold each for 8 slow breaths. Your hips store your stress — let them spill it out." },
-  { id: "a10", title: "Rose latte at home", topic: "Recipes", minutes: 3, image: IMG["Recipes"],
+  { id: "a10", title: "Rose latte at home", topic: "Recipes", minutes: 3, blooms: "1.2k", image: IMG["Recipes"],
     excerpt: "Café vibes for the cost of one rose petal.",
     body: "Warm oat milk with a teaspoon of rose syrup and a shot of espresso. Top with foam and a dusting of cardamom. Drink slowly by the window." },
 ];
@@ -70,10 +81,34 @@ function TopicBadge({ topic }: { topic: string }) {
   );
 }
 
-function ReadTime({ minutes }: { minutes: number }) {
+function ReadTime({ minutes, light }: { minutes: number; light?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose/70">
+    <span className={["inline-flex items-center gap-1 text-[11px] font-semibold", light ? "text-white/95" : "text-rose/70"].join(" ")}>
       <Clock className="h-3 w-3" strokeWidth={1.8} /> {minutes} min
+    </span>
+  );
+}
+
+function BloomCount({ count, light }: { count: string; light?: boolean }) {
+  return (
+    <span className={["inline-flex items-center gap-1 text-[11px] font-semibold", light ? "text-white/95" : "text-rose/70"].join(" ")}>
+      <Flower2 className="h-3 w-3" strokeWidth={1.8} /> {count}
+    </span>
+  );
+}
+
+const AVATAR_GRADIENTS = [
+  "from-hotpink to-magenta",
+  "from-petal to-blush",
+  "from-magenta to-rose",
+];
+
+function AvatarStack() {
+  return (
+    <span className="inline-flex items-center -space-x-2">
+      {AVATAR_GRADIENTS.map((g, i) => (
+        <span key={i} className={`h-5 w-5 rounded-full bg-gradient-to-br ${g} border-2 border-white/90 shadow-sm`} />
+      ))}
     </span>
   );
 }
@@ -159,7 +194,7 @@ export default function ReadPage() {
             id="search-reads"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search articles, topics…"
+            placeholder="What would you like to bloom into today?"
             className="w-full rounded-full bg-white/90 backdrop-blur pl-11 pr-4 py-2 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/60 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
           />
         </div>
@@ -181,7 +216,7 @@ export default function ReadPage() {
                     : "bg-blush text-rose border-petal/50 hover:bg-petal/60",
                 ].join(" ")}
               >
-                {t}
+                {TOPIC_LABELS[t]}
               </button>
             );
           })}
@@ -209,6 +244,8 @@ export default function ReadPage() {
             <p className="mt-1.5 sm:mt-2 max-w-xl text-xs sm:text-base text-white/95 drop-shadow line-clamp-2">{featured.excerpt}</p>
             <div className="mt-2 sm:mt-3 flex items-center gap-3 text-white/95">
               <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold"><Clock className="h-3.5 w-3.5" strokeWidth={1.8} /> {featured.minutes} min read</span>
+              <AvatarStack />
+              <BloomCount count={`${featured.blooms} blooms`} light />
             </div>
           </div>
         </button>
@@ -233,9 +270,14 @@ export default function ReadPage() {
 
       {/* FOR YOU */}
       <section className="mt-8 sm:mt-12">
-        <div className="mb-3">
-          <h2 className="font-script text-2xl sm:text-4xl text-hotpink">For you</h2>
-          <p className="text-xs text-rose/70">Picked for your week ✿</p>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="font-script text-2xl sm:text-4xl text-hotpink">Recommended for you ✿</h2>
+            <p className="text-xs text-rose/70">Based on your cycle phase & recent reads</p>
+          </div>
+          <button className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta">
+            See more <ArrowRight className="h-3 w-3" strokeWidth={2} />
+          </button>
         </div>
         <div className="-mx-3 px-3 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
           <div className="flex gap-3 sm:gap-4 pb-2">
@@ -251,7 +293,10 @@ export default function ReadPage() {
                 </div>
                 <div className="p-3 sm:p-4">
                   <h3 className="text-xs sm:text-sm font-bold text-rose leading-tight line-clamp-2">{a.title}</h3>
-                  <div className="mt-2"><ReadTime minutes={a.minutes} /></div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <ReadTime minutes={a.minutes} />
+                    <BloomCount count={a.blooms} />
+                  </div>
                 </div>
               </button>
             ))}
@@ -308,7 +353,10 @@ function ArticleCard({ article, saved, onSave, onOpen }: { article: Article; sav
         <h3 className="text-sm sm:text-base font-bold text-rose leading-snug line-clamp-2">{article.title}</h3>
         <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-rose/75 line-clamp-2 hidden sm:block">{article.excerpt}</p>
         <div className="mt-2 sm:mt-3 flex items-center justify-between">
-          <ReadTime minutes={article.minutes} />
+          <span className="flex items-center gap-2">
+            <ReadTime minutes={article.minutes} />
+            <BloomCount count={article.blooms} />
+          </span>
           <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition">
             Read <ArrowRight className="h-3 w-3" strokeWidth={2} />
           </span>
