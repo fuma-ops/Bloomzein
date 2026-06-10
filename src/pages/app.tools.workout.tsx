@@ -338,8 +338,8 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
     <button
       onClick={onClick}
       className={[
-        "rounded-full px-4 py-2 text-sm font-semibold border transition",
-        active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60",
+        "rounded-full px-4 py-2 text-sm font-semibold border shadow-sm transition active:scale-95",
+        active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
       ].join(" ")}
     >
       {label}
@@ -445,10 +445,20 @@ function Discover({ profile, onStartSession, onBestShape }: {
   const [intention, setIntention] = useState<WorkoutIntention | null>(null);
   const [suggestRecover, setSuggestRecover] = useState(false);
   const [challenge, setChallenge] = useLS<{ phase: CyclePhase | "any"; weekStart: string; done: number }>(CHALLENGE_KEY, { phase: "any", weekStart: "", done: 0 });
+  const intentionSectionRef = useRef<HTMLDivElement>(null);
+  const sessionListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPhase(readCyclePhase() ?? "any");
   }, []);
+
+  // Auto-scroll to reveal the next step once a choice is made, so it's clear there's more to pick.
+  useEffect(() => {
+    const target = zone && intention ? sessionListRef.current : zone ? intentionSectionRef.current : null;
+    if (target) {
+      requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [zone, intention]);
 
   const todayEnergy = energy.date === todayISO() ? energy.level : null;
 
@@ -511,8 +521,8 @@ function Discover({ profile, onStartSession, onBestShape }: {
                 key={opt.key}
                 onClick={() => onPickEnergy(opt.key)}
                 className={[
-                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition",
-                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50",
+                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95",
+                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                 ].join(" ")}
               >
                 <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
@@ -543,12 +553,12 @@ function Discover({ profile, onStartSession, onBestShape }: {
                 key={z.key}
                 onClick={() => onPickZone(z.key)}
                 className={[
-                  "relative aspect-square rounded-2xl overflow-hidden border transition",
-                  active ? "border-hotpink shadow-md shadow-hotpink/30 ring-2 ring-hotpink/40" : "border-petal/50",
+                  "relative aspect-square rounded-2xl overflow-hidden border shadow-sm transition active:scale-95",
+                  active ? "border-hotpink shadow-md shadow-hotpink/30 ring-2 ring-hotpink/40" : "border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                 ].join(" ")}
               >
                 <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
                 <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
               </button>
             );
@@ -556,7 +566,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
         </div>
 
         {zone && (
-          <div className="mt-4">
+          <div ref={intentionSectionRef} className="mt-4 scroll-mt-20">
             <p className="text-sm font-bold text-rose mb-2">Pick an intention</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {WORKOUT_INTENTIONS.map((it) => {
@@ -568,8 +578,8 @@ function Discover({ profile, onStartSession, onBestShape }: {
                     key={it.key}
                     onClick={() => setIntention(it.key)}
                     className={[
-                      "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition",
-                      active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/70 border-petal/50 text-rose",
+                      "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left shadow-sm transition active:scale-95",
+                      active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/70 border-petal/50 text-rose hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                     ].join(" ")}
                   >
                     <span className="flex items-center gap-1.5">
@@ -590,12 +600,12 @@ function Discover({ profile, onStartSession, onBestShape }: {
         )}
 
         {zone && intention && (
-          <div className="mt-4 grid sm:grid-cols-3 gap-3">
+          <div ref={sessionListRef} className="mt-4 grid sm:grid-cols-3 gap-3 scroll-mt-20">
             {intentionList.map((session) => (
               <button
                 key={session.id}
                 onClick={() => onStartSession(session)}
-                className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition text-left p-4"
+                className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition text-left p-4"
               >
                 <p className="font-bold text-rose">{session.name}</p>
                 <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
@@ -720,7 +730,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
           <button
             key={u}
             onClick={() => setUnit(u)}
-            className={["rounded-full px-3 py-1.5 text-xs font-semibold border", unit === u ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}
+            className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", unit === u ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}
           >
             {u === "metric" ? "kg / cm" : "lb / in"}
           </button>
@@ -750,8 +760,8 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
               key={key}
               onClick={() => setSelected(key)}
               className={[
-                "flex flex-col items-center gap-2 rounded-2xl border p-3 transition",
-                isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50",
+                "flex flex-col items-center gap-2 rounded-2xl border p-3 shadow-sm transition active:scale-95",
+                isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
               ].join(" ")}
             >
               <ExercisePhoto exercise={{ slug: key, name: bt.label, image: bt.image, muscles: "" }} className="h-12 w-12 object-contain" />
@@ -848,15 +858,15 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">Your week</h2>
         <div className="flex flex-wrap gap-2 mb-2">
-          <button onClick={() => setZoneFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", zoneFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>All zones</button>
+          <button onClick={() => setZoneFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", zoneFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>All zones</button>
           {ZONES.map((z) => (
-            <button key={z.key} onClick={() => setZoneFilter(z.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", zoneFilter === z.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>{z.label}</button>
+            <button key={z.key} onClick={() => setZoneFilter(z.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", zoneFilter === z.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>{z.label}</button>
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setIntentionFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", intentionFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>All intentions</button>
+          <button onClick={() => setIntentionFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", intentionFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>All intentions</button>
           {WORKOUT_INTENTIONS.map((it) => (
-            <button key={it.key} onClick={() => setIntentionFilter(it.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", intentionFilter === it.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>{it.label}</button>
+            <button key={it.key} onClick={() => setIntentionFilter(it.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", intentionFilter === it.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>{it.label}</button>
           ))}
         </div>
 
@@ -880,7 +890,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
                   ) : (
                     <button
                       onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level))}
-                      className="flex-1 rounded-xl bg-white/90 border border-petal/60 p-2 text-left hover:-translate-y-0.5 transition"
+                      className="flex-1 rounded-xl bg-white/90 border border-petal/60 p-2 text-left shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-hotpink/40 active:scale-95 transition"
                     >
                       <p className="text-xs font-bold text-rose">{ZONES.find((z) => z.key === plan.zone)?.label}</p>
                       <p className="text-[11px] text-rose/70">{WORKOUT_INTENTIONS.find((i) => i.key === plan.intention)?.label}</p>
@@ -917,8 +927,8 @@ function Library() {
               key={z.key}
               onClick={() => setZone(z.key)}
               className={[
-                "rounded-full px-3 py-1.5 text-xs font-semibold border transition",
-                zone === z.key ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60",
+                "rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95",
+                zone === z.key ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
               ].join(" ")}
             >
               {z.label}
