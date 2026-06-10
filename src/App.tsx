@@ -4,6 +4,7 @@ import ToolsIndex from "./pages/app.tools.index";
 import BudgetPage from "./pages/budget";
 import YogaPage from "./pages/app.tools.yoga";
 import MealsPage from "./pages/app.tools.meals";
+import WorkoutPage from "./pages/app.tools.workout";
 import TodayPage from "./pages/app.today";
 import ReadPage from "./pages/app.read";
 import ShopPage from "./pages/app.shop";
@@ -87,6 +88,8 @@ function AppContent() {
     content = <YogaPage />;
   } else if (path === "/app/tools/meals") {
     content = <MealsPage />;
+  } else if (path === "/app/tools/workout") {
+    content = <WorkoutPage />;
   } else if (path === "/app/tools/notes") {
     content = <NotesPage />;
   } else if (path === "/app/tools/diary") {

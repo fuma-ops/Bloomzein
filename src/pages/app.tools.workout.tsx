@@ -1,0 +1,1098 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
+  Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
+} from "lucide-react";
+import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
+import {
+  ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
+  PHASE_OPTIMAL, buildSession,
+  type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
+  type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
+} from "@/components/bloom/workout/data";
+
+// ===================== STORAGE =====================
+
+const ONBOARD_KEY = "bloom:workout-onboarded";
+const PROFILE_KEY = "bloom:workout-profile";
+const ENERGY_KEY = "bloom:workout-energy";
+const STREAK_KEY = "bloom:workout-streak";
+const BADGES_KEY = "bloom:workout-badges";
+const PROGRAM_KEY = "bloom:workout-program";
+const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
+const PROGRAM_BANNER_KEY = "bloom:workout-program-banner-seen";
+const CHALLENGE_KEY = "bloom:workout-challenge";
+const SOUND_KEY = "bloom:workout-sound";
+const VOICE_KEY = "bloom:workout-voice";
+export const WORKOUT_LOG_KEY = "bloom:workout-history";
+
+const DEFAULT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
+
+interface HistoryEntry {
+  date: string;
+  zone: Zone;
+  intention: WorkoutIntention;
+  phase: CyclePhase;
+  durationMin: number;
+  calories: number;
+  sessionName: string;
+}
+
+interface DayPlan { zone: Zone; intention: WorkoutIntention; durationMin: 10 | 20 | 30; }
+
+function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) as T) : initial;
+    } catch {
+      return initial;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  }, [key, value]);
+  return [value, setValue];
+}
+
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function isYesterday(iso: string) {
+  const d = new Date(iso); const y = new Date(); y.setDate(y.getDate() - 1);
+  return d.toISOString().slice(0, 10) === y.toISOString().slice(0, 10);
+}
+
+// ===================== SOUND LAYER =====================
+// Soft bip at 3s, clear bip at 0, gentle chime at rest end. No external audio files needed.
+
+function playTimerBip(loud: boolean) {
+  try {
+    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+    const ctx = new Ctx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine"; o.frequency.value = loud ? 880 : 660;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(loud ? 0.25 : 0.12, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (loud ? 0.5 : 0.3));
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + (loud ? 0.6 : 0.4));
+  } catch {}
+}
+
+function playRestChime() {
+  try {
+    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+    const ctx = new Ctx();
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + i * 0.08 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.08 + 1.0);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + i * 0.08); o.stop(ctx.currentTime + i * 0.08 + 1.1);
+    });
+  } catch {}
+}
+
+function speakNext(text: string) {
+  try {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  } catch {}
+}
+
+// ===================== HELPERS =====================
+
+const CALORIES_PER_MIN: Record<WorkoutIntention, number> = {
+  tonify: 4, strengthen: 6, stretch: 2.5, recover: 2,
+};
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const ACTIVE_DAY_PATTERNS: Record<2 | 3 | 4 | 5, string[]> = {
+  2: ["Mon", "Thu"],
+  3: ["Mon", "Wed", "Fri"],
+  4: ["Mon", "Tue", "Thu", "Fri"],
+  5: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+};
+
+function durationForLevel(level: Level): 10 | 20 | 30 {
+  return level === "Beginner" ? 10 : level === "Intermediate" ? 20 : 30;
+}
+
+const INTENTION_ORDER: WorkoutIntention[] = ["tonify", "strengthen", "stretch", "recover"];
+
+function pickIntentionForPhase(phase: CyclePhase, goal: Goal, idx: number): WorkoutIntention {
+  const phaseFirst = INTENTION_ORDER.filter((i) => PHASE_OPTIMAL[i].includes(phase));
+  const goalPick: WorkoutIntention = goal === "strengthen" ? "strengthen" : goal === "flexibility" ? "stretch" : "tonify";
+  const pool = phaseFirst.length ? phaseFirst : INTENTION_ORDER;
+  const candidates = pool.includes(goalPick) ? [goalPick, ...pool.filter((p) => p !== goalPick)] : pool;
+  return candidates[idx % candidates.length];
+}
+
+const ZONE_ROTATION: Zone[] = ["full-body", "glutes", "core", "legs", "arms", "back"];
+
+function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase): Record<string, DayPlan | null> {
+  const activeDays = ACTIVE_DAY_PATTERNS[profile.daysPerWeek];
+  const durationMin = durationForLevel(profile.level);
+  const plan: Record<string, DayPlan | null> = {};
+  let zi = 0, ii = 0;
+  for (const d of DAYS) {
+    if (activeDays.includes(d)) {
+      const intention = pickIntentionForPhase(phase, profile.goal, ii++);
+      const zone = ZONE_ROTATION[zi++ % ZONE_ROTATION.length];
+      plan[d] = { zone, intention, durationMin };
+    } else {
+      plan[d] = null;
+    }
+  }
+  return plan;
+}
+
+// ===================== EXERCISE PHOTO (with graceful placeholder) =====================
+
+function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone?: Zone; className: string }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <div className={`${className} grid place-items-center bg-gradient-to-br from-blush/70 to-petal/50`}>
+        <Sparkles className="h-10 w-10 text-hotpink/50" strokeWidth={1.5} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={exercise.image}
+      alt={exercise.name}
+      className={className}
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
+// ===================== CIRCULAR TIMER =====================
+
+function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number; remainingSec: number; size?: number }) {
+  const r = size / 2 - 6;
+  const c = 2 * Math.PI * r;
+  const progress = totalSec > 0 ? remainingSec / totalSec : 0;
+  const offset = c * (1 - progress);
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.92 0.04 350)" strokeWidth="6" fill="none" />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.65 0.24 350)" strokeWidth="6" fill="none"
+          strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 1s linear" }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">
+        <span className="text-xl font-bold text-hotpink">{remainingSec}</span>
+      </div>
+    </div>
+  );
+}
+
+// ===================== PAGE =====================
+
+type View =
+  | { kind: "discover" }
+  | { kind: "program" }
+  | { kind: "best-shape" }
+  | { kind: "session-start"; session: WorkoutSession }
+  | { kind: "session-active"; session: WorkoutSession }
+  | { kind: "session-end"; session: WorkoutSession; elapsedSec: number };
+
+export default function WorkoutPage() {
+  const [onboarded, setOnboarded] = useLS<boolean>(ONBOARD_KEY, false);
+  const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
+  const [view, setView] = useState<View>({ kind: "discover" });
+  const [tab, setTab] = useState<"discover" | "program">("discover");
+
+  if (!onboarded) {
+    return (
+      <div className="relative animate-fade-in">
+        <BloomBubbles count={10} />
+        <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
+          <ArrowLeft className="h-4 w-4" /> All tools
+        </a>
+        <SetupProfile
+          initial={profile}
+          onDone={(p) => { setProfile(p); setOnboarded(true); }}
+        />
+      </div>
+    );
+  }
+
+  if (view.kind === "session-start") {
+    return <SessionStart session={view.session} onStart={() => setView({ kind: "session-active", session: view.session })} onExit={() => setView({ kind: tab })} />;
+  }
+  if (view.kind === "session-active") {
+    return (
+      <SessionActive
+        session={view.session}
+        onExit={() => setView({ kind: tab })}
+        onDone={(elapsedSec) => setView({ kind: "session-end", session: view.session, elapsedSec })}
+      />
+    );
+  }
+  if (view.kind === "session-end") {
+    return (
+      <SessionEnd
+        session={view.session}
+        elapsedSec={view.elapsedSec}
+        onDone={() => setView({ kind: tab })}
+      />
+    );
+  }
+
+  return (
+    <div className="relative animate-fade-in">
+      <BloomBubbles count={10} />
+      <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
+        <ArrowLeft className="h-4 w-4" /> All tools
+      </a>
+
+      <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10 mb-4">
+        <h1 className="font-script text-4xl sm:text-6xl text-hotpink leading-none">Workout Programs</h1>
+        <p className="mt-2 text-sm text-rose/80">Move with strength, on your terms.</p>
+        <div className="mt-4 inline-flex rounded-full bg-blush/60 border border-petal/60 p-1">
+          {(["discover", "program"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => { setTab(t); setView({ kind: t }); }}
+              className={[
+                "rounded-full px-4 py-2 text-sm font-bold transition",
+                tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
+              ].join(" ")}
+            >
+              {t === "discover" ? "Discover" : "My Program"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {view.kind === "discover" && (
+        <Discover
+          profile={profile}
+          onStartSession={(session) => setView({ kind: "session-start", session })}
+          onBestShape={() => setView({ kind: "best-shape" })}
+        />
+      )}
+      {view.kind === "best-shape" && (
+        <BestShapeCalculator
+          onBack={() => setView({ kind: "discover" })}
+          onStartWith={(zone, intention) => {
+            setView({ kind: "session-start", session: buildSession(zone, intention, durationForLevel(profile.level), profile.level) });
+          }}
+        />
+      )}
+      {view.kind === "program" && (
+        <MyProgram profile={profile} onStartSession={(session) => setView({ kind: "session-start", session })} />
+      )}
+    </div>
+  );
+}
+
+// ===================== SETUP PROFILE =====================
+
+function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p: WorkoutProfile) => void }) {
+  const [level, setLevel] = useState<Level>(initial.level);
+  const [goal, setGoal] = useState<Goal>(initial.goal);
+  const [equipment, setEquipment] = useState<Equipment>(initial.equipment);
+  const [days, setDays] = useState<2 | 3 | 4 | 5>(initial.daysPerWeek);
+
+  const Pill = ({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className={[
+        "rounded-full px-4 py-2 text-sm font-semibold border transition",
+        active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60",
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10">
+      <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none">Let's set you up</h1>
+      <p className="mt-2 text-sm text-rose/80">Four quick questions — editable anytime in Me settings.</p>
+
+      <div className="mt-6 space-y-5">
+        <div>
+          <p className="text-sm font-bold text-rose mb-2">Your level</p>
+          <div className="flex flex-wrap gap-2">
+            {(["Beginner", "Intermediate", "Advanced"] as Level[]).map((l) => (
+              <Pill key={l} active={level === l} label={l} onClick={() => setLevel(l)} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-rose mb-2">Your main goal</p>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { key: "energy", label: "Energy" },
+              { key: "tonify", label: "Tonify" },
+              { key: "strengthen", label: "Strengthen" },
+              { key: "flexibility", label: "Flexibility" },
+            ] as { key: Goal; label: string }[]).map((g) => (
+              <Pill key={g.key} active={goal === g.key} label={g.label} onClick={() => setGoal(g.key)} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-rose mb-2">Equipment available</p>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { key: "none", label: "Nothing" },
+              { key: "mat", label: "Mat only" },
+              { key: "bands", label: "Bands" },
+              { key: "dumbbells", label: "Dumbbells" },
+              { key: "gym", label: "Full gym" },
+            ] as { key: Equipment; label: string }[]).map((e) => (
+              <Pill key={e.key} active={equipment === e.key} label={e.label} onClick={() => setEquipment(e.key)} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-rose mb-2">Days available per week</p>
+          <div className="flex flex-wrap gap-2">
+            {([2, 3, 4, 5] as const).map((d) => (
+              <Pill key={d} active={days === d} label={d === 5 ? "5+" : String(d)} onClick={() => setDays(d)} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => onDone({ level, goal, equipment, daysPerWeek: days })}
+        className="mt-6 inline-flex items-center gap-2 rounded-full bloom-button-gradient px-6 py-3 text-sm font-bold text-white shadow-xl"
+      >
+        Start <ChevronRight className="h-4 w-4" />
+      </button>
+    </section>
+  );
+}
+
+// ===================== DISCOVER =====================
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(WORKOUT_LOG_KEY);
+    return raw ? (JSON.parse(raw) as HistoryEntry[]) : [];
+  } catch { return []; }
+}
+
+function unlockedBadges(history: HistoryEntry[], streak: { count: number }): Set<string> {
+  const ids = new Set<string>();
+  if (history.length >= 1) ids.add("first-session");
+  if (streak.count >= 7) ids.add("streak-7");
+  if (history.length >= 12) ids.add("weekly-warrior");
+  if (history.some((h) => h.phase === "period")) ids.add("first-period-session");
+  if (history.filter((h) => h.phase === "luteal").length >= 5) ids.add("luteal-legend");
+  if (history.filter((h) => h.phase === "ovulation" || h.phase === "fertile").length >= 3) ids.add("ovulation-fire");
+  if (history.filter((h) => h.zone === "glutes").length >= 5) ids.add("glutes-queen");
+  if (history.filter((h) => h.zone === "core").length >= 5) ids.add("core-crusher");
+  if (history.filter((h) => h.zone === "full-body").length >= 3) ids.add("full-body-week");
+  return ids;
+}
+
+function Discover({ profile, onStartSession, onBestShape }: {
+  profile: WorkoutProfile;
+  onStartSession: (s: WorkoutSession) => void;
+  onBestShape: () => void;
+}) {
+  const [phase, setPhase] = useState<CyclePhase>("any");
+  const [energy, setEnergy] = useLS<{ date: string; level: EnergyLevel | null }>(ENERGY_KEY, { date: "", level: null });
+  const [streak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
+  const [zone, setZone] = useState<Zone | null>(null);
+  const [intention, setIntention] = useState<WorkoutIntention | null>(null);
+  const [suggestRecover, setSuggestRecover] = useState(false);
+  const [challenge, setChallenge] = useLS<{ phase: CyclePhase | "any"; weekStart: string; done: number }>(CHALLENGE_KEY, { phase: "any", weekStart: "", done: 0 });
+
+  useEffect(() => {
+    setPhase(readCyclePhase() ?? "any");
+  }, []);
+
+  const todayEnergy = energy.date === todayISO() ? energy.level : null;
+
+  const onPickEnergy = (level: EnergyLevel) => {
+    setEnergy({ date: todayISO(), level });
+    if (level === "exhausted" && (phase === "luteal" || phase === "period")) {
+      setSuggestRecover(true);
+    } else {
+      setSuggestRecover(false);
+    }
+  };
+
+  const onPickZone = (z: Zone) => {
+    setZone(z);
+    if (suggestRecover) {
+      setIntention("recover");
+    } else {
+      setIntention(null);
+    }
+  };
+
+  const history = useMemo(() => loadHistory(), [zone, intention]);
+  const badges = useMemo(() => unlockedBadges(history, streak), [history, streak]);
+
+  // Weekly challenge — reset if a new week started
+  const weekStart = useMemo(() => {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    d.setDate(d.getDate() + diff);
+    return d.toISOString().slice(0, 10);
+  }, []);
+  useEffect(() => {
+    if (challenge.weekStart !== weekStart || challenge.phase !== phase) {
+      setChallenge({ phase, weekStart, done: 0 });
+    }
+  }, [phase, weekStart]);
+
+  const challengeData = phase !== "any" ? WEEKLY_CHALLENGES[phase] : null;
+
+  // sessions sorted with phase-optimal intention durations first
+  const intentionList = useMemo(() => {
+    if (!intention) return [];
+    return ([10, 20, 30] as const).map((d) => buildSession(zone!, intention, d, profile.level));
+  }, [zone, intention, profile.level]);
+
+  return (
+    <div className="space-y-4">
+      {/* Energy Check */}
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-3">How's your energy today?</h2>
+        <div className="grid grid-cols-4 gap-2">
+          {ENERGY_OPTIONS.map((opt) => {
+            const Icon = opt.icon;
+            const active = todayEnergy === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => onPickEnergy(opt.key)}
+                className={[
+                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition",
+                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50",
+                ].join(" ")}
+              >
+                <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
+                <span className="text-[11px] font-semibold text-rose text-center leading-tight">{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {suggestRecover && (
+          <div className="mt-3 rounded-2xl bg-blush/60 border border-petal/50 p-3">
+            <p className="text-sm text-rose/85">Sounds like your body wants rest today — switch to a Recovery session?</p>
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => setSuggestRecover(false)} className="rounded-full bloom-button-gradient px-4 py-1.5 text-xs font-bold text-white">Yes, show recovery</button>
+              <button onClick={() => setSuggestRecover(false)} className="rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">No, keep my plan</button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Body Focus */}
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {ZONES.map((z) => {
+            const Icon = z.icon;
+            const active = zone === z.key;
+            return (
+              <button
+                key={z.key}
+                onClick={() => onPickZone(z.key)}
+                className={[
+                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition",
+                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50",
+                ].join(" ")}
+              >
+                <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
+                <span className="text-[11px] font-semibold text-rose text-center leading-tight">{z.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {zone && (
+          <div className="mt-4">
+            <p className="text-sm font-bold text-rose mb-2">Pick an intention</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {WORKOUT_INTENTIONS.map((it) => {
+                const Icon = it.icon;
+                const active = intention === it.key;
+                const optimal = phase !== "any" && PHASE_OPTIMAL[it.key].includes(phase);
+                return (
+                  <button
+                    key={it.key}
+                    onClick={() => setIntention(it.key)}
+                    className={[
+                      "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition",
+                      active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/70 border-petal/50 text-rose",
+                    ].join(" ")}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Icon className={["h-4 w-4", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
+                      <span className="text-sm font-bold">{it.label}</span>
+                      {optimal && (
+                        <span className={["ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
+                          {PHASE_LABEL[phase]}
+                        </span>
+                      )}
+                    </span>
+                    <span className={["text-[11px] leading-snug", active ? "text-white/85" : "text-rose/75"].join(" ")}>{it.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {zone && intention && (
+          <div className="mt-4 grid sm:grid-cols-3 gap-3">
+            {intentionList.map((session) => (
+              <button
+                key={session.id}
+                onClick={() => onStartSession(session)}
+                className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition text-left p-4"
+              >
+                <p className="font-bold text-rose">{session.name}</p>
+                <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
+                {phase !== "any" && session.phaseOptimal.includes(phase) && (
+                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
+                    Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
+                  </p>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Streak & Badges */}
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-script text-2xl text-hotpink leading-none">Streak & badges</h2>
+          <p className="text-sm font-bold text-rose">{streak.count} day{streak.count === 1 ? "" : "s"} 🔥</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {BADGES.map((b) => {
+            const unlocked = badges.has(b.id);
+            return (
+              <div
+                key={b.id}
+                className={[
+                  "flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border p-3 w-24 text-center transition",
+                  unlocked ? "bg-blush/70 border-hotpink/40" : "bg-white/60 border-petal/40 opacity-50",
+                ].join(" ")}
+              >
+                <Trophy className={["h-5 w-5", unlocked ? "text-hotpink" : "text-rose/50"].join(" ")} strokeWidth={1.8} />
+                <span className="text-[10px] font-semibold text-rose leading-tight">{b.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Weekly Challenge */}
+      {challengeData && (
+        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Weekly challenge</h2>
+          <p className="text-sm text-rose/85 mb-3">{challengeData.title}</p>
+          <div className="flex items-center gap-2">
+            <div className="h-2 flex-1 rounded-full bg-blush/60 overflow-hidden">
+              <div className="h-full bg-hotpink rounded-full transition-all" style={{ width: `${Math.min(100, (challenge.done / challengeData.target) * 100)}%` }} />
+            </div>
+            <span className="text-xs font-bold text-rose whitespace-nowrap">{challenge.done}/{challengeData.target}</span>
+          </div>
+          <button
+            onClick={() => setChallenge((c) => ({ ...c, done: Math.min(challengeData.target, c.done + 1) }))}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60"
+          >
+            <Check className="h-3.5 w-3.5" /> Mark done
+          </button>
+        </section>
+      )}
+
+      {/* Best Shape Calculator */}
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Best Shape Calculator</h2>
+            <p className="text-sm text-rose/80">Discover your natural strengths — not numbers.</p>
+          </div>
+          <button onClick={onBestShape} className="shrink-0 inline-flex items-center gap-1.5 rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">
+            <Wand2 className="h-3.5 w-3.5" /> Open
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ===================== BEST SHAPE CALCULATOR =====================
+
+function suggestBodyType(weightKg: number, heightCm: number): BodyType {
+  const ratio = weightKg / (heightCm / 100);
+  if (ratio < 25) return "rectangle";
+  if (ratio < 30) return "hourglass";
+  if (ratio < 35) return "pear";
+  if (ratio < 40) return "apple";
+  return "inverted-triangle";
+}
+
+function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onStartWith: (zone: Zone, intention: WorkoutIntention) => void }) {
+  const [unit, setUnit] = useState<"metric" | "imperial">("metric");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [selected, setSelected] = useState<BodyType | null>(null);
+
+  const suggested = useMemo(() => {
+    const w = parseFloat(weight), h = parseFloat(height);
+    if (!w || !h) return null;
+    const wKg = unit === "metric" ? w : w * 0.453592;
+    const hCm = unit === "metric" ? h : h * 2.54;
+    return suggestBodyType(wKg, hCm);
+  }, [weight, height, unit]);
+
+  const active = selected ?? suggested;
+  const data = active ? BODY_TYPES[active] : null;
+
+  return (
+    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Best Shape Calculator</h1>
+        <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">Back</button>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {(["metric", "imperial"] as const).map((u) => (
+          <button
+            key={u}
+            onClick={() => setUnit(u)}
+            className={["rounded-full px-3 py-1.5 text-xs font-semibold border", unit === u ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}
+          >
+            {u === "metric" ? "kg / cm" : "lb / in"}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div>
+          <label className="text-xs font-bold text-rose">Weight ({unit === "metric" ? "kg" : "lb"})</label>
+          <input value={weight} onChange={(e) => setWeight(e.target.value)} type="number" inputMode="decimal"
+            className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-rose">Height ({unit === "metric" ? "cm" : "in"})</label>
+          <input value={height} onChange={(e) => setHeight(e.target.value)} type="number" inputMode="decimal"
+            className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+        </div>
+      </div>
+
+      <p className="text-sm font-bold text-rose mb-2">Or simply pick what feels right</p>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
+        {(Object.keys(BODY_TYPES) as BodyType[]).map((key) => {
+          const bt = BODY_TYPES[key];
+          const isActive = active === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setSelected(key)}
+              className={[
+                "flex flex-col items-center gap-2 rounded-2xl border p-3 transition",
+                isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50",
+              ].join(" ")}
+            >
+              <ExercisePhoto exercise={{ slug: key, name: bt.label, image: bt.image, muscles: "" }} className="h-12 w-12 object-contain" />
+              <span className="text-[11px] font-semibold text-rose text-center leading-tight">{bt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {data && (
+        <div className="rounded-2xl bg-blush/60 border border-petal/50 p-4">
+          <p className="font-bold text-rose mb-1">{data.label}</p>
+          <p className="text-sm text-rose/85 mb-3">{data.strengths}</p>
+          <p className="text-xs font-bold text-rose mb-2">Recommended intentions</p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {data.recommended.map((i) => (
+              <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-xs font-semibold text-rose">
+                {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
+              </span>
+            ))}
+          </div>
+          <button
+            onClick={() => onStartWith("full-body", data.recommended[0])}
+            className="inline-flex items-center gap-1.5 rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
+          >
+            Start with this <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ===================== MY PROGRAM =====================
+
+function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onStartSession: (s: WorkoutSession) => void }) {
+  const [phase, setPhase] = useState<CyclePhase>("any");
+  const [program, setProgram] = useLS<Record<string, DayPlan | null> | null>(PROGRAM_KEY, null);
+  const [programPhase, setProgramPhase] = useLS<CyclePhase | null>(PROGRAM_PHASE_KEY, null);
+  const [bannerSeen, setBannerSeen] = useLS<boolean>(PROGRAM_BANNER_KEY, false);
+  const [zoneFilter, setZoneFilter] = useState<Zone | "all">("all");
+  const [intentionFilter, setIntentionFilter] = useState<WorkoutIntention | "all">("all");
+
+  useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
+
+  const validate = () => {
+    setProgram(generateWeeklyPlan(profile, phase));
+    setProgramPhase(phase);
+    setBannerSeen(true);
+  };
+  const skip = () => setBannerSeen(true);
+
+  const phaseChanged = !!program && programPhase !== null && programPhase !== phase;
+
+  return (
+    <div className="space-y-4">
+      {!program && !bannerSeen && (
+        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Your weekly plan is ready</h2>
+          <p className="text-sm text-rose/85 mb-3">Based on your profile{phase !== "any" ? ` and your ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}, here's a soft proposal for the week.</p>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={validate} className="rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">Validate</button>
+            <button onClick={validate} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Adjust</button>
+            <button onClick={skip} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Skip for now</button>
+          </div>
+        </section>
+      )}
+
+      {phaseChanged && (
+        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+          <p className="text-sm text-rose/85 mb-3">Your phase changed — want to update this week's intensity?</p>
+          <div className="flex gap-2">
+            <button onClick={validate} className="rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">Yes, adjust</button>
+            <button onClick={() => setProgramPhase(phase)} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Keep as is</button>
+          </div>
+        </section>
+      )}
+
+      {/* Filter bar */}
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">Your week</h2>
+        <div className="flex flex-wrap gap-2 mb-2">
+          <button onClick={() => setZoneFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", zoneFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>All zones</button>
+          {ZONES.map((z) => (
+            <button key={z.key} onClick={() => setZoneFilter(z.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", zoneFilter === z.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>{z.label}</button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setIntentionFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", intentionFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>All intentions</button>
+          {WORKOUT_INTENTIONS.map((it) => (
+            <button key={it.key} onClick={() => setIntentionFilter(it.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border", intentionFilter === it.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60"].join(" ")}>{it.label}</button>
+          ))}
+        </div>
+
+        {!program ? (
+          <p className="mt-4 text-sm text-rose/70">Validate your weekly plan above to see it here.</p>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-7 gap-2">
+            {DAYS.map((d) => {
+              const plan = program[d];
+              const hidden = plan && ((zoneFilter !== "all" && plan.zone !== zoneFilter) || (intentionFilter !== "all" && plan.intention !== intentionFilter));
+              return (
+                <div key={d} className="rounded-2xl bg-blush/40 border border-petal/50 p-2 min-h-[110px] flex flex-col">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1">{d}</p>
+                  {!plan ? (
+                    <div className="flex-1 grid place-items-center text-[11px] font-semibold text-rose/50">Rest day</div>
+                  ) : hidden ? (
+                    <div className="flex-1 grid place-items-center text-[11px] text-rose/40">Filtered</div>
+                  ) : (
+                    <button
+                      onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level))}
+                      className="flex-1 rounded-xl bg-white/90 border border-petal/60 p-2 text-left hover:-translate-y-0.5 transition"
+                    >
+                      <p className="text-xs font-bold text-rose">{ZONES.find((z) => z.key === plan.zone)?.label}</p>
+                      <p className="text-[11px] text-rose/70">{WORKOUT_INTENTIONS.find((i) => i.key === plan.intention)?.label}</p>
+                      <p className="mt-1 text-[10px] text-rose/60">{plan.durationMin} min</p>
+                      {phase !== "any" && PHASE_OPTIMAL[plan.intention].includes(phase) && (
+                        <p className="mt-1 inline-block rounded-full bg-blush/70 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-hotpink">{PHASE_LABEL[phase]}</p>
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ===================== SESSION MODE =====================
+
+function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; onStart: () => void; onExit: () => void }) {
+  const [phase, setPhase] = useState<CyclePhase>("any");
+  useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
+  const zone = ZONES.find((z) => z.key === session.zone);
+  const intention = WORKOUT_INTENTIONS.find((i) => i.key === session.intention);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur grid place-items-center p-4">
+      <div className="w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center">
+        <button onClick={onExit} className="absolute right-6 top-6 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
+        <h1 className="font-script text-4xl text-hotpink leading-none mb-2">{session.name}</h1>
+        <p className="text-sm text-rose/80 mb-4">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
+        <div className="flex justify-center gap-2 mb-4">
+          {zone && <span className="rounded-full bg-blush/70 px-3 py-1 text-xs font-semibold text-rose">{zone.label}</span>}
+          {intention && <span className="rounded-full bg-blush/70 px-3 py-1 text-xs font-semibold text-rose">{intention.label}</span>}
+        </div>
+        {phase !== "any" && session.phaseOptimal.includes(phase) && (
+          <p className="mb-4 text-xs font-bold uppercase tracking-wide text-hotpink">Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase</p>
+        )}
+        <button onClick={onStart} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-8 py-4 text-base font-bold text-white shadow-xl">
+          <Play className="h-5 w-5" /> Start
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type ExercisePhase = "exercise" | "rest";
+
+function SessionActive({ session, onExit, onDone }: {
+  session: WorkoutSession;
+  onExit: () => void;
+  onDone: (elapsedSec: number) => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const [phase, setPhase] = useState<ExercisePhase>("exercise");
+  const [remaining, setRemaining] = useState(session.workSec);
+  const [paused, setPaused] = useState(false);
+  const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);
+  const [voice] = useLS<boolean>(VOICE_KEY, false);
+  const elapsedRef = useRef(0);
+
+  const exercise = session.exercises[index];
+  const next = session.exercises[index + 1];
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => {
+      elapsedRef.current += 1;
+      setRemaining((r) => {
+        const nr = r - 1;
+        if (nr === 3 && phase === "exercise" && sound) playTimerBip(false);
+        if (nr <= 0) {
+          if (phase === "exercise") {
+            if (sound) playTimerBip(true);
+            if (index === session.exercises.length - 1) {
+              onDone(elapsedRef.current);
+              return 0;
+            }
+            setPhase("rest");
+            if (sound) playRestChime();
+            if (voice && next) speakNext(`Next up: ${next.name}`);
+            return session.restSec;
+          } else {
+            setPhase("exercise");
+            setIndex((i) => i + 1);
+            return session.workSec;
+          }
+        }
+        return nr;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [paused, phase, index, sound, voice, session, next]);
+
+  const repeat = () => { setRemaining(phase === "exercise" ? session.workSec : session.restSec); };
+  const skip = () => {
+    if (phase === "exercise") {
+      if (index === session.exercises.length - 1) { onDone(elapsedRef.current); return; }
+      setPhase("rest"); setRemaining(session.restSec);
+      if (voice && next) speakNext(`Next up: ${next.name}`);
+    } else {
+      setPhase("exercise"); setIndex((i) => i + 1); setRemaining(session.workSec);
+    }
+  };
+  const skipRest = () => { setPhase("exercise"); setIndex((i) => i + 1); setRemaining(session.workSec); };
+
+  const totalSec = phase === "exercise" ? session.workSec : session.restSec;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur flex flex-col">
+      {/* Progress bar */}
+      <div className="h-1.5 bg-white/60">
+        <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / session.exercises.length) * 100}%` }} />
+      </div>
+
+      <div className="flex items-center justify-between p-3">
+        <button onClick={onExit} className="rounded-full bg-white/90 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
+        <p className="text-xs font-bold text-rose">{index + 1} / {session.exercises.length}</p>
+        <button onClick={() => setSound((s) => !s)} className="rounded-full bg-white/90 p-2 text-rose border border-petal/60">
+          {sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
+        {phase === "exercise" ? (
+          <>
+            <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-h-[55vh] aspect-square sm:aspect-[4/3] object-cover rounded-3xl border border-petal/60 shadow-md" />
+            <h2 className="font-script text-3xl text-hotpink leading-none text-center">{exercise.name}</h2>
+            <p className="text-sm text-rose/70 text-center">{exercise.muscles}</p>
+            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={104} />
+          </>
+        ) : (
+          <div className="w-full max-w-sm rounded-3xl bg-white/90 border border-petal/60 p-6 text-center shadow-md">
+            <p className="text-xs font-bold uppercase tracking-wide text-hotpink/70 mb-2">Rest</p>
+            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={88} />
+            {next && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold text-rose/70 mb-2">Next up</p>
+                <ExercisePhoto exercise={next} zone={session.zone} className="mx-auto h-20 w-20 object-cover rounded-2xl border border-petal/60" />
+                <p className="mt-2 font-bold text-rose">{next.name}</p>
+              </div>
+            )}
+            <button onClick={skipRest} className="mt-4 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">Skip rest</button>
+          </div>
+        )}
+      </div>
+
+      {phase === "exercise" && (
+        <div className="grid grid-cols-3 gap-2 p-3 bg-white/60">
+          <button onClick={() => setPaused((p) => !p)} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-2 text-xs font-semibold text-rose">
+            {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />} {paused ? "Resume" : "Pause"}
+          </button>
+          <button onClick={repeat} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-2 text-xs font-semibold text-rose">
+            <RotateCcw className="h-4 w-4" /> Repeat this
+          </button>
+          <button onClick={skip} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-2 text-xs font-semibold text-rose">
+            <SkipForward className="h-4 w-4" /> Skip
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SessionEnd({ session, elapsedSec, onDone }: { session: WorkoutSession; elapsedSec: number; onDone: () => void }) {
+  const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
+  const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
+  const calories = Math.round((elapsedSec / 60) * CALORIES_PER_MIN[session.intention]);
+  const minutes = Math.floor(elapsedSec / 60);
+  const seconds = elapsedSec % 60;
+
+  useEffect(() => {
+    const phase = readCyclePhase() ?? "any";
+    const before = unlockedBadges(loadHistory(), streak);
+
+    const history = loadHistory();
+    const entry: HistoryEntry = {
+      date: todayISO(), zone: session.zone, intention: session.intention, phase,
+      durationMin: session.durationMin, calories, sessionName: session.name,
+    };
+    history.push(entry);
+    try { localStorage.setItem(WORKOUT_LOG_KEY, JSON.stringify(history)); } catch {}
+
+    setStreak((s) => {
+      if (s.lastISO === todayISO()) return s;
+      if (s.lastISO && isYesterday(s.lastISO)) return { count: s.count + 1, lastISO: todayISO() };
+      return { count: 1, lastISO: todayISO() };
+    });
+
+    const after = unlockedBadges(history, { count: streak.lastISO === todayISO() ? streak.count : streak.count + 1 });
+    setUnlockedNew([...after].filter((id) => !before.has(id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const addToJournal = () => {
+    try {
+      const raw = localStorage.getItem("bloom:notes");
+      const notes = raw ? JSON.parse(raw) : [];
+      notes.unshift({
+        id: `workout-${Date.now()}`,
+        title: `${session.name} — completed`,
+        text: `${session.durationMin} min · ${session.exercises.length} exercises · ~${calories} kcal · ${minutes}:${String(seconds).padStart(2, "0")}`,
+        color: "sakura", tag: "Self-care", pinned: false, createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem("bloom:notes", JSON.stringify(notes));
+    } catch {}
+    window.location.href = "/app/tools/notes";
+  };
+
+  const share = () => {
+    const text = `I just completed "${session.name}" on Bloomzein 🌸 ${session.durationMin} min · ~${calories} kcal`;
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(text).catch(() => {});
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
+      <div className="w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-8">
+        <h1 className="font-script text-4xl text-hotpink leading-none mb-2">Beautifully done ✿</h1>
+        <p className="text-sm text-rose/80 mb-4">{session.name}</p>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3">
+            <p className="text-2xl font-bold text-hotpink">{minutes}:{String(seconds).padStart(2, "0")}</p>
+            <p className="text-[11px] font-semibold text-rose/70">Total time</p>
+          </div>
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3">
+            <p className="text-2xl font-bold text-hotpink">~{calories}</p>
+            <p className="text-[11px] font-semibold text-rose/70">kcal (approx.)</p>
+          </div>
+        </div>
+
+        {unlockedNew.length > 0 && (
+          <div className="mb-4 rounded-2xl bg-blush/70 border border-hotpink/30 p-3 animate-fade-in">
+            <p className="text-xs font-bold uppercase tracking-wide text-hotpink mb-1">New badge unlocked!</p>
+            {unlockedNew.map((id) => (
+              <p key={id} className="text-sm font-semibold text-rose flex items-center justify-center gap-1.5">
+                <Trophy className="h-4 w-4 text-hotpink" /> {BADGES.find((b) => b.id === id)?.label}
+              </p>
+            ))}
+          </div>
+        )}
+
+        <p className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-rose/70">
+          <CalendarHeart className="h-3.5 w-3.5 text-hotpink" /> Added to your Bloom Calendar
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-2 mb-4">
+          <button onClick={addToJournal} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">
+            <BookHeart className="h-3.5 w-3.5" /> Add to journal
+          </button>
+          <button onClick={share} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">
+            <Share2 className="h-3.5 w-3.5" /> Share
+          </button>
+        </div>
+
+        <button onClick={onDone} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-8 py-3 text-sm font-bold text-white shadow-xl">
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
