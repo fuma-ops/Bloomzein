@@ -1212,14 +1212,14 @@ function SessionPlayer({
         <div className={["relative", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
             <>
-              <img src={pose.image} alt={pose.name} className="w-full aspect-square sm:aspect-[4/3] max-h-[32vh] sm:max-h-[38vh] object-contain bg-[oklch(0.96_0.04_350)]" />
+              <img src={pose.image} alt={pose.name} className="w-full aspect-square object-contain sm:aspect-[4/3] sm:max-h-[50vh] sm:object-cover bg-[oklch(0.96_0.04_350)]" />
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
                 <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
             </>
           ) : (
             // Eyes-closed: pose faintly visible behind, pacer front and center
-            <div className="relative w-full aspect-square sm:aspect-[4/3] max-h-[32vh] sm:max-h-[38vh] grid place-items-center">
+            <div className="relative w-full aspect-square sm:aspect-[4/3] sm:max-h-[50vh] grid place-items-center">
               <img
                 src={pose.image}
                 alt=""
