@@ -34,7 +34,7 @@ export interface Exercise {
 
 export const ZONES: { key: Zone; label: string; icon: LucideIcon; image: string }[] = [
   { key: "glutes", label: "Glutes", icon: Flame, image: "/images/zone-glutes.png" },
-  { key: "core", label: "Abs & Core", icon: Activity, image: "/images/zone-core.jpg" },
+  { key: "core", label: "Abs & Core", icon: Activity, image: "/images/zone-core.png" },
   { key: "arms", label: "Arms & Shoulders", icon: Zap, image: "/images/zone-arms.png" },
   { key: "back", label: "Back", icon: Wind, image: "/images/zone-back.png" },
   { key: "legs", label: "Legs & Thighs", icon: Footprints, image: "/images/zone-legs.png" },
@@ -45,11 +45,11 @@ export const ZONES: { key: Zone; label: string; icon: LucideIcon; image: string 
    Wide banner images (1600x900, 16:9). Displayed responsively with object-cover. */
 
 export const HERO_IMAGES = {
-  discover: "/images/workout-hero-discover.jpg",
-  program: "/images/workout-hero-program.jpg",
-  library: "/images/workout-hero-library.jpg",
-  bestShape: "/images/workout-hero-bestshape.jpg",
-  session: "/images/workout-hero-session.jpg",
+  discover: "/images/workout-hero-discover.png",
+  program: "/images/workout-hero-program.png",
+  library: "/images/workout-hero-library.png",
+  bestShape: "/images/workout-hero-bestshape.png",
+  session: "/images/workout-hero-session.png",
 };
 
 /* ==================== INTENTIONS ==================== */
