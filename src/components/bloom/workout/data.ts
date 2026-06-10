@@ -33,12 +33,12 @@ export interface Exercise {
    Zone image naming convention: /images/zone-{key}.jpg (square, 800x800) */
 
 export const ZONES: { key: Zone; label: string; icon: LucideIcon; image: string }[] = [
-  { key: "glutes", label: "Glutes", icon: Flame, image: "/images/zone-glutes.jpg" },
+  { key: "glutes", label: "Glutes", icon: Flame, image: "/images/zone-glutes.png" },
   { key: "core", label: "Abs & Core", icon: Activity, image: "/images/zone-core.jpg" },
-  { key: "arms", label: "Arms & Shoulders", icon: Zap, image: "/images/zone-arms.jpg" },
-  { key: "back", label: "Back", icon: Wind, image: "/images/zone-back.jpg" },
-  { key: "legs", label: "Legs & Thighs", icon: Footprints, image: "/images/zone-legs.jpg" },
-  { key: "full-body", label: "Full Body", icon: Sparkles, image: "/images/zone-full-body.jpg" },
+  { key: "arms", label: "Arms & Shoulders", icon: Zap, image: "/images/zone-arms.png" },
+  { key: "back", label: "Back", icon: Wind, image: "/images/zone-back.png" },
+  { key: "legs", label: "Legs & Thighs", icon: Footprints, image: "/images/zone-legs.png" },
+  { key: "full-body", label: "Full Body", icon: Sparkles, image: "/images/zone-full-body.png" },
 ];
 
 /* ==================== HERO IMAGES ====================
