@@ -164,7 +164,7 @@ export default function ShopPage() {
             </p>
             <button
               onClick={() => setActive("premium")}
-              className="bloom-shine mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-gradient-to-br from-hotpink to-magenta text-white font-semibold text-xs sm:text-sm px-3.5 py-1.5 sm:px-5 sm:py-2.5 shadow-[0_8px_22px_-6px_oklch(0.65_0.27_350/0.6)] active:scale-95 hover:-translate-y-0.5 transition"
+              className="bloom-luxury-btn mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 text-white font-semibold text-xs sm:text-sm px-3.5 py-1.5 sm:px-5 sm:py-2.5"
             >
               Shop premium — 20% off <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
             </button>
@@ -312,7 +312,7 @@ function ProductCard({
           <span className="font-script text-xl sm:text-2xl text-hotpink leading-none">${p.price}</span>
           <button
             onClick={onAdd}
-            className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 shadow-md shadow-hotpink/30 hover:-translate-y-0.5 transition"
+            className="bloom-luxury-btn inline-flex items-center gap-1 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5"
           >
             <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.4} /> {qty > 0 ? `${qty}` : "Add"}
           </button>
@@ -329,7 +329,7 @@ function EmptyState({ title, body, cta, onCta }: { title: string; body: string; 
       <p className="mt-1 text-sm text-rose/80">{body}</p>
       <button
         onClick={onCta}
-        className="mt-4 inline-flex items-center gap-2 rounded-full bg-hotpink text-white font-semibold text-sm px-5 py-2.5 shadow-md shadow-hotpink/30 hover:-translate-y-0.5 transition"
+        className="bloom-luxury-btn mt-4 inline-flex items-center gap-2 text-white font-semibold text-sm px-5 py-2.5"
       >
         {cta}
       </button>
@@ -378,7 +378,7 @@ function CartPanel({
               <p className="mt-1 text-sm text-rose/80">Find a little something to soften your day.</p>
               <button
                 onClick={onClose}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-hotpink text-white font-semibold text-sm px-5 py-2.5 shadow-md shadow-hotpink/30 hover:-translate-y-0.5 transition"
+                className="bloom-luxury-btn mt-4 inline-flex items-center gap-2 text-white font-semibold text-sm px-5 py-2.5"
               >
                 Explore the shop <ArrowRight className="h-4 w-4" strokeWidth={2} />
               </button>
@@ -418,7 +418,7 @@ function CartPanel({
               <span className="font-script text-2xl text-hotpink leading-none">Total</span>
               <span className="font-script text-3xl text-hotpink leading-none">${subtotal}</span>
             </div>
-            <button className="bloom-shine w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-hotpink to-magenta text-white font-semibold text-sm px-5 py-3 shadow-[0_8px_22px_-6px_oklch(0.65_0.27_350/0.6)] active:scale-95 hover:-translate-y-0.5 transition">
+            <button className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 text-white font-semibold text-sm px-5 py-3">
               Checkout <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </button>
             <p className="text-center text-[11px] text-rose/60">Soft & secure — no card needed for sample.</p>

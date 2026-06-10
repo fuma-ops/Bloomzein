@@ -115,7 +115,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
         <button
           onClick={() => { onSave(draft); onClose(); }}
-          className="mt-5 w-full rounded-full bg-hotpink py-3 font-semibold text-white shadow-md shadow-hotpink/40 hover:bg-magenta hover:scale-[1.01] transition"
+          className="bloom-luxury-btn mt-5 w-full py-3 font-semibold text-white"
         >
           Save Period
         </button>

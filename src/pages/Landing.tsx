@@ -177,7 +177,7 @@ export default function Landing() {
               <a
                 href="/app/today"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 sm:py-3.5 bg-hotpink text-white rounded-full font-bold shadow-md shadow-hotpink/30 hover:bg-magenta transition text-center"
+                className="bloom-luxury-btn w-full py-3 sm:py-3.5 font-bold text-white text-center"
               >
                 Start Blooming
               </a>

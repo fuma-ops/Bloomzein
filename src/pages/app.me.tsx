@@ -70,7 +70,7 @@ function PrimaryBtn({ children, href }: { children: React.ReactNode; href: strin
   return (
     <a
       href={href}
-      className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta"
+      className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
     >
       {children}
     </a>

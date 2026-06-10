@@ -83,7 +83,7 @@ export function CuteTimePicker({ value, onChange }: TimePickerProps) {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-full bg-hotpink px-3 py-1.5 text-xs font-bold text-white hover:bg-magenta transition"
+              className="bloom-luxury-btn mt-3 inline-flex w-full items-center justify-center gap-1 px-3 py-1.5 text-xs font-bold text-white"
             >
               <Check className="h-3 w-3" /> Done
             </button>

@@ -475,7 +475,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
 
       <button
         onClick={() => onDone({ level, goal, equipment, daysPerWeek: days })}
-        className="mt-6 inline-flex items-center gap-2 rounded-full bloom-button-gradient px-6 py-3 text-sm font-bold text-white shadow-xl"
+        className="bloom-luxury-btn mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white"
       >
         Start <ChevronRight className="h-4 w-4" />
       </button>
@@ -607,7 +607,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
           <div className="mt-3 rounded-2xl bg-blush/60 border border-petal/50 p-3">
             <p className="text-sm text-rose/85">Sounds like your body wants rest today — switch to a Recovery session?</p>
             <div className="mt-2 flex gap-2">
-              <button onClick={() => setSuggestRecover(false)} className="rounded-full bloom-button-gradient px-4 py-1.5 text-xs font-bold text-white">Yes, show recovery</button>
+              <button onClick={() => setSuggestRecover(false)} className="bloom-luxury-btn px-4 py-1.5 text-xs font-bold text-white">Yes, show recovery</button>
               <button onClick={() => setSuggestRecover(false)} className="rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">No, keep my plan</button>
             </div>
           </div>
@@ -759,7 +759,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
             <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Best Shape Calculator</h2>
             <p className="text-sm text-rose/80">Discover your natural strengths — not numbers.</p>
           </div>
-          <button onClick={onBestShape} className="shrink-0 inline-flex items-center gap-1.5 rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">
+          <button onClick={onBestShape} className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
             <Wand2 className="h-3.5 w-3.5" /> Open
           </button>
         </div>
@@ -872,7 +872,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
           </div>
           <button
             onClick={() => onStartWith("full-body", data.recommended[0])}
-            className="inline-flex items-center gap-1.5 rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
+            className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white"
           >
             Start with this <ChevronRight className="h-3.5 w-3.5" />
           </button>
@@ -923,7 +923,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
           <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Your weekly plan is ready</h2>
           <p className="text-sm text-rose/85 mb-3">Based on your profile{phase !== "any" ? ` and your ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}, here's a soft proposal for the week.</p>
           <div className="flex flex-wrap gap-2">
-            <button onClick={validate} className="rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">Validate</button>
+            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Validate</button>
             <button onClick={validate} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Adjust</button>
             <button onClick={skip} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Skip for now</button>
           </div>
@@ -934,7 +934,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
         <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
           <p className="text-sm text-rose/85 mb-3">Your phase changed — want to update this week's intensity?</p>
           <div className="flex gap-2">
-            <button onClick={validate} className="rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">Yes, adjust</button>
+            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Yes, adjust</button>
             <button onClick={() => setProgramPhase(phase)} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Keep as is</button>
           </div>
         </section>
@@ -959,7 +959,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
         {!program ? (
           <div className="mt-4 text-sm text-rose/70">
             <p className="mb-2">No plan yet — generate your personalized week in one tap.</p>
-            <button onClick={validate} className="rounded-full bloom-button-gradient px-4 py-2 text-xs font-bold text-white shadow-lg">Generate my week</button>
+            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Generate my week</button>
           </div>
         ) : (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-7 gap-2">
@@ -1066,7 +1066,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
           <p className="font-bold text-rose">{first.name}</p>
           <p className="text-xs text-rose/70">{first.muscles}</p>
         </div>
-        <button onClick={onStart} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-8 py-4 text-base font-bold text-white shadow-xl">
+        <button onClick={onStart} className="bloom-luxury-btn inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white">
           <Play className="h-5 w-5" /> Start
         </button>
         </div>
@@ -1318,7 +1318,7 @@ function SessionEnd({ session, elapsedSec, onDone }: { session: WorkoutSession; 
           </button>
         </div>
 
-        <button onClick={onDone} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-8 py-3 text-sm font-bold text-white shadow-xl">
+        <button onClick={onDone} className="bloom-luxury-btn inline-flex items-center gap-2 px-8 py-3 text-sm font-bold text-white">
           Done
         </button>
       </div>

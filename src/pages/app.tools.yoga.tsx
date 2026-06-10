@@ -654,14 +654,14 @@ function YogaHome({
               <p className="text-xs text-rose/80 mt-1">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
               <button
                 onClick={onBegin}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bloom-button-gradient px-5 py-3 text-sm font-bold text-white shadow-xl"
+                className="bloom-luxury-btn mt-4 inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
               >
                 <Sparkles className="h-4 w-4" /> Start Here
               </button>
             </div>
           ) : (
             <div className="mt-4 flex flex-wrap gap-2">
-              <button onClick={onSetup} className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-4 py-2.5 text-sm font-bold text-white shadow-lg">
+              <button onClick={onSetup} className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white">
                 <Play className="h-4 w-4" /> Start a session
               </button>
               <button onClick={onLibrary} className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2.5 text-sm font-semibold text-rose border border-petal/60">
@@ -722,7 +722,7 @@ function YogaHome({
           </div>
           <button
             onClick={onSetup}
-            className="mt-3 inline-flex items-center gap-1 rounded-full bg-hotpink px-3.5 py-1.5 text-xs font-semibold text-white shadow-md"
+            className="bloom-luxury-btn mt-3 inline-flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white"
           >
             Practice for today <ArrowRight className="h-3 w-3" />
           </button>
@@ -888,7 +888,7 @@ function Library({ onBack, onSetup }: { onBack: () => void; onSetup: () => void 
         </div>
         <div className="flex gap-2">
           <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">Home</button>
-          <button onClick={onSetup} className="rounded-full bg-hotpink px-3 py-1.5 text-xs font-semibold text-white shadow-md">Next: try a flow</button>
+          <button onClick={onSetup} className="bloom-luxury-btn px-3 py-1.5 text-xs font-semibold text-white">Next: try a flow</button>
         </div>
       </div>
 
@@ -1041,7 +1041,7 @@ function Setup({
       <div className="pt-2 flex justify-end">
         <button
           onClick={() => onStart({ durationMin, intention, level, lang, sound, mode, phase })}
-          className="inline-flex items-center gap-2 rounded-full bloom-button-gradient px-6 py-3 text-sm font-bold text-white shadow-xl"
+          className="bloom-luxury-btn inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white"
         >
           <Play className="h-4 w-4" /> Begin practice
         </button>
@@ -1259,7 +1259,7 @@ function SessionPlayer({
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button onClick={() => setRunning((r) => !r)}
-              className="inline-flex items-center gap-2 rounded-full bg-hotpink px-4 py-2 text-sm font-bold text-white shadow-md shadow-hotpink/30">
+              className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white">
               {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === hold ? "Start" : "Resume"}</>}
             </button>
             <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
@@ -1368,7 +1368,7 @@ function Summary({
         />
         <div className="mt-2 flex items-center gap-2">
           <button onClick={saveDiaryNote} disabled={!note.trim() || saved}
-            className="inline-flex items-center gap-1 rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md disabled:opacity-60">
+            className="bloom-luxury-btn inline-flex items-center gap-1 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60">
             <Heart className="h-3.5 w-3.5" /> {saved ? "Saved" : "Save to diary"}
           </button>
           {saved && <span className="text-xs text-rose/70">a soft little memory ✿</span>}
@@ -1386,7 +1386,7 @@ function Summary({
 
       <div className="flex flex-wrap gap-2 justify-end">
         <button onClick={onHome} className="rounded-full bg-white/85 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Home</button>
-        <button onClick={onAgain} className="rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md">Practice again</button>
+        <button onClick={onAgain} className="bloom-luxury-btn px-4 py-2 text-xs font-semibold text-white">Practice again</button>
       </div>
     </div>
   );
