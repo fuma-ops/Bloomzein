@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
@@ -601,79 +601,82 @@ function Discover({ profile, onStartSession, onBestShape }: {
       {/* Body Focus */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 grid-flow-row-dense">
           {ZONES.map((z) => {
             const active = zone === z.key;
             return (
-              <button
-                key={z.key}
-                onClick={() => onPickZone(z.key)}
-                className={[
-                  "relative aspect-square rounded-2xl overflow-hidden border transition",
-                  active ? "border-hotpink shadow-md shadow-hotpink/30 ring-2 ring-hotpink/40" : "border-petal/50",
-                ].join(" ")}
-              >
-                <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
-              </button>
+              <Fragment key={z.key}>
+                <button
+                  onClick={() => onPickZone(z.key)}
+                  className={[
+                    "relative aspect-square rounded-2xl overflow-hidden border transition",
+                    active ? "border-hotpink shadow-md shadow-hotpink/30 ring-2 ring-hotpink/40" : "border-petal/50",
+                  ].join(" ")}
+                >
+                  <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                  <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
+                </button>
+
+                {active && (
+                  <div className="col-span-full">
+                    <div className="mt-1">
+                      <p className="text-sm font-bold text-rose mb-2">Pick an intention</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {WORKOUT_INTENTIONS.map((it) => {
+                          const Icon = it.icon;
+                          const intentionActive = intention === it.key;
+                          const optimal = phase !== "any" && PHASE_OPTIMAL[it.key].includes(phase);
+                          return (
+                            <button
+                              key={it.key}
+                              onClick={() => setIntention(it.key)}
+                              className={[
+                                "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition",
+                                intentionActive ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/70 border-petal/50 text-rose",
+                              ].join(" ")}
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Icon className={["h-4 w-4", intentionActive ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
+                                <span className="text-sm font-bold">{it.label}</span>
+                                {optimal && (
+                                  <span className={["ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", intentionActive ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
+                                    {PHASE_LABEL[phase]}
+                                  </span>
+                                )}
+                              </span>
+                              <span className={["text-[11px] leading-snug", intentionActive ? "text-white/85" : "text-rose/75"].join(" ")}>{it.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {intention && (
+                      <div className="mt-4 grid sm:grid-cols-3 gap-3">
+                        {intentionList.map((session) => (
+                          <button
+                            key={session.id}
+                            onClick={() => onStartSession(session)}
+                            className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition text-left p-4"
+                          >
+                            <p className="font-bold text-rose">{session.name}</p>
+                            <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
+                            {phase !== "any" && session.phaseOptimal.includes(phase) && (
+                              <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
+                                Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
+                              </p>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Fragment>
             );
           })}
         </div>
-
-        {zone && (
-          <div className="mt-4">
-            <p className="text-sm font-bold text-rose mb-2">Pick an intention</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {WORKOUT_INTENTIONS.map((it) => {
-                const Icon = it.icon;
-                const active = intention === it.key;
-                const optimal = phase !== "any" && PHASE_OPTIMAL[it.key].includes(phase);
-                return (
-                  <button
-                    key={it.key}
-                    onClick={() => setIntention(it.key)}
-                    className={[
-                      "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition",
-                      active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/70 border-petal/50 text-rose",
-                    ].join(" ")}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Icon className={["h-4 w-4", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
-                      <span className="text-sm font-bold">{it.label}</span>
-                      {optimal && (
-                        <span className={["ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
-                          {PHASE_LABEL[phase]}
-                        </span>
-                      )}
-                    </span>
-                    <span className={["text-[11px] leading-snug", active ? "text-white/85" : "text-rose/75"].join(" ")}>{it.desc}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {zone && intention && (
-          <div className="mt-4 grid sm:grid-cols-3 gap-3">
-            {intentionList.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => onStartSession(session)}
-                className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition text-left p-4"
-              >
-                <p className="font-bold text-rose">{session.name}</p>
-                <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
-                {phase !== "any" && session.phaseOptimal.includes(phase) && (
-                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
-                    Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
-                  </p>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* Streak & Badges */}
@@ -1015,7 +1018,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   const intention = WORKOUT_INTENTIONS.find((i) => i.key === session.intention);
 
   return (
-    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
       <div className="relative w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 shadow-2xl text-center overflow-hidden my-8">
         <ExercisePhoto exercise={{ slug: session.zone, name: session.name, image: ZONES.find((z) => z.key === session.zone)?.image ?? HERO_IMAGES.session, muscles: "" }} className="w-full aspect-[16/9] object-cover" />
         <button onClick={onExit} className="absolute right-3 top-3 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
@@ -1101,7 +1104,7 @@ function SessionActive({ session, onExit, onDone }: {
   const totalSec = phase === "exercise" ? session.workSec : session.restSec;
 
   return (
-    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur flex flex-col">
+    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col">
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60">
         <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / session.exercises.length) * 100}%` }} />
@@ -1211,7 +1214,7 @@ function SessionEnd({ session, elapsedSec, onDone }: { session: WorkoutSession; 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
       <div className="w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-8">
         <h1 className="font-script text-4xl text-hotpink leading-none mb-2">Beautifully done ✿</h1>
         <p className="text-sm text-rose/80 mb-4">{session.name}</p>
