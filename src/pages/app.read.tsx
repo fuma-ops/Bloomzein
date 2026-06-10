@@ -201,8 +201,8 @@ export default function ReadPage() {
       </header>
 
       {/* TOPIC CHIPS */}
-      <nav className="mt-3 sm:mt-6 -mx-3 px-3 sm:mx-0 sm:px-0">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      <nav className="relative mt-3 sm:mt-6 -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
           {TOPICS.map((t) => {
             const active = topic === t;
             return (
@@ -210,10 +210,10 @@ export default function ReadPage() {
                 key={t}
                 onClick={() => setTopic(t)}
                 className={[
-                  "shrink-0 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold whitespace-nowrap transition border",
+                  "shrink-0 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold whitespace-nowrap transition border active:scale-95",
                   active
-                    ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30"
-                    : "bg-blush text-rose border-petal/50 hover:bg-petal/60",
+                    ? "bloom-shine bg-gradient-to-br from-hotpink to-magenta text-white border-transparent shadow-[0_6px_18px_-6px_oklch(0.65_0.27_350/0.6)]"
+                    : "bg-blush text-rose border-petal/50 hover:bg-petal/60 hover:-translate-y-0.5 hover:shadow-md",
                 ].join(" ")}
               >
                 {TOPIC_LABELS[t]}
@@ -221,6 +221,9 @@ export default function ReadPage() {
             );
           })}
         </div>
+        {/* edge fades hint there's more to scroll */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-blush sm:from-background to-transparent" />
       </nav>
 
       {/* FEATURED */}
@@ -275,17 +278,17 @@ export default function ReadPage() {
             <h2 className="font-script text-2xl sm:text-4xl text-hotpink">Recommended for you ✿</h2>
             <p className="text-xs text-rose/70">Based on your cycle phase & recent reads</p>
           </div>
-          <button className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta">
+          <button className="bloom-shine shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-br from-hotpink to-magenta px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-6px_oklch(0.65_0.27_350/0.6)] transition active:scale-95 hover:scale-[1.03]">
             See more <ArrowRight className="h-3 w-3" strokeWidth={2} />
           </button>
         </div>
-        <div className="-mx-3 px-3 sm:mx-0 sm:px-0 overflow-x-auto no-scrollbar">
-          <div className="flex gap-3 sm:gap-4 pb-2">
+        <div className="relative -mx-3 px-3 sm:mx-0 sm:px-0">
+          <div className="flex gap-3 sm:gap-4 pb-2 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
             {recommended.map((a) => (
               <button
                 key={a.id}
                 onClick={() => setOpenId(a.id)}
-                className="group relative shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-0.5"
+                className="group relative shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95"
               >
                 <div className="relative h-24 sm:h-36 overflow-hidden">
                   <img src={a.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
@@ -301,6 +304,9 @@ export default function ReadPage() {
               </button>
             ))}
           </div>
+          {/* edge fades hint there's more to scroll */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
         </div>
       </section>
 
@@ -318,7 +324,7 @@ export default function ReadPage() {
             <p className="mt-3 text-sm text-rose">Tap the heart on any article to save it here.</p>
             <button
               onClick={() => { setTopic("All"); setQuery(""); document.scrollingElement?.scrollTo({ top: 0, behavior: "smooth" }); }}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta"
+              className="bloom-shine mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-hotpink to-magenta px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-6px_oklch(0.65_0.27_350/0.6)] transition active:scale-95 hover:scale-[1.03]"
             >
               <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} /> Browse articles
             </button>
@@ -375,7 +381,7 @@ function EmptyCard({ text, cta, onClick }: { text: string; cta: string; onClick:
       <p className="mt-3 text-sm text-rose">{text}</p>
       <button
         onClick={onClick}
-        className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-xs font-semibold text-white shadow-md shadow-hotpink/30 transition hover:scale-[1.03] hover:bg-magenta"
+        className="bloom-shine mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-hotpink to-magenta px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_-6px_oklch(0.65_0.27_350/0.6)] transition active:scale-95 hover:scale-[1.03]"
       >
         {cta} <ArrowRight className="h-3 w-3" strokeWidth={2} />
       </button>

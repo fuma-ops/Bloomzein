@@ -164,7 +164,7 @@ export default function ShopPage() {
             </p>
             <button
               onClick={() => setActive("premium")}
-              className="mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-hotpink text-white font-semibold text-xs sm:text-sm px-3.5 py-1.5 sm:px-5 sm:py-2.5 shadow-md shadow-hotpink/40 hover:-translate-y-0.5 transition"
+              className="bloom-shine mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-gradient-to-br from-hotpink to-magenta text-white font-semibold text-xs sm:text-sm px-3.5 py-1.5 sm:px-5 sm:py-2.5 shadow-[0_8px_22px_-6px_oklch(0.65_0.27_350/0.6)] active:scale-95 hover:-translate-y-0.5 transition"
             >
               Shop premium — 20% off <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
             </button>
@@ -204,19 +204,24 @@ export default function ShopPage() {
       <section className="mt-8 sm:mt-10 stagger" style={{ animationDelay: "320ms" }}>
         <SectionTitle hint="loved by the Bloom girls">For you</SectionTitle>
         <p className="-mt-1 mb-3 text-xs sm:text-sm text-rose/75">Soft picks our community can't stop adding to bag.</p>
-        <div className="-mx-3 sm:mx-0 px-3 sm:px-0 flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2">
-          {bestsellers.map((p) => (
-            <div key={p.id} className="snap-start shrink-0 w-40 sm:w-60">
-              <ProductCard
-                p={p}
-                saved={!!saved[p.id]}
-                qty={cart[p.id] || 0}
-                onAdd={() => add(p.id)}
-                onSave={() => toggleSave(p.id)}
-                compact
-              />
-            </div>
-          ))}
+        <div className="relative -mx-3 sm:mx-0 px-3 sm:px-0">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint snap-x snap-mandatory pb-2">
+            {bestsellers.map((p) => (
+              <div key={p.id} className="snap-start shrink-0 w-40 sm:w-60">
+                <ProductCard
+                  p={p}
+                  saved={!!saved[p.id]}
+                  qty={cart[p.id] || 0}
+                  onAdd={() => add(p.id)}
+                  onSave={() => toggleSave(p.id)}
+                  compact
+                />
+              </div>
+            ))}
+          </div>
+          {/* edge fades hint there's more to scroll */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
         </div>
       </section>
 
@@ -413,7 +418,7 @@ function CartPanel({
               <span className="font-script text-2xl text-hotpink leading-none">Total</span>
               <span className="font-script text-3xl text-hotpink leading-none">${subtotal}</span>
             </div>
-            <button className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-hotpink text-white font-semibold text-sm px-5 py-3 shadow-md shadow-hotpink/40 hover:-translate-y-0.5 transition">
+            <button className="bloom-shine w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-hotpink to-magenta text-white font-semibold text-sm px-5 py-3 shadow-[0_8px_22px_-6px_oklch(0.65_0.27_350/0.6)] active:scale-95 hover:-translate-y-0.5 transition">
               Checkout <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </button>
             <p className="text-center text-[11px] text-rose/60">Soft & secure — no card needed for sample.</p>
