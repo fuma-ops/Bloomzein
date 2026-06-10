@@ -418,12 +418,12 @@ function playBreathTone(phase: BreathPhase) {
     } else {
       const o = ctx.createOscillator();
       o.type = "sine";
-      o.frequency.setValueAtTime(528, ctx.currentTime);
-      o.frequency.linearRampToValueAtTime(396, ctx.currentTime + 1.2);
+      o.frequency.setValueAtTime(440, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(380, ctx.currentTime + 1.6);
       g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.1);
-      g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.4);
-      o.connect(g); o.start(); o.stop(ctx.currentTime + 1.5);
+      g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.3);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.8);
+      o.connect(g); o.start(); o.stop(ctx.currentTime + 1.9);
     }
   } catch {}
 }
