@@ -120,10 +120,11 @@ export default function ToolsIndex() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {ordered.map((t) => (
+            {ordered.map((t, i) => (
               <ToolCard
                 key={t.slug}
                 tool={t}
+                index={i}
                 pinned={pins.includes(t.slug)}
                 onGo={() => remember(t.slug)}
                 onTogglePin={() => togglePin(t.slug)}
@@ -160,7 +161,7 @@ export default function ToolsIndex() {
   );
 }
 
-function ToolCard({ tool, onGo, pinned, onTogglePin }: { tool: Tool; onGo: () => void; pinned: boolean; onTogglePin: () => void }) {
+function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo: () => void; pinned: boolean; onTogglePin: () => void; index: number }) {
   const handleClick = (_e: MouseEvent) => {
     onGo();
   };
@@ -169,7 +170,8 @@ function ToolCard({ tool, onGo, pinned, onTogglePin }: { tool: Tool; onGo: () =>
     <a
       {...linkPropsFor(tool)}
       onClick={handleClick}
-      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5"
+      style={{ animationDelay: `${index * 0.06}s` }}
+      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-pop-in"
     >
       <div
         className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
