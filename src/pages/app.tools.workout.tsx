@@ -226,7 +226,7 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4">
+    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
       {broken ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
@@ -583,17 +583,18 @@ function Discover({ profile, onStartSession, onBestShape }: {
 
       {/* Energy Check */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <h2 className="font-script text-2xl text-hotpink leading-none mb-3">How's your energy today?</h2>
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-3 animate-text-pop">How's your energy today?</h2>
         <div className="grid grid-cols-4 gap-2">
-          {ENERGY_OPTIONS.map((opt) => {
+          {ENERGY_OPTIONS.map((opt, i) => {
             const Icon = opt.icon;
             const active = todayEnergy === opt.key;
             return (
               <button
                 key={opt.key}
                 onClick={() => onPickEnergy(opt.key)}
+                style={{ animationDelay: `${1.9 + i * 0.18}s` }}
                 className={[
-                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95",
+                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95 animate-choice-glow-hint",
                   active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                 ].join(" ")}
               >
