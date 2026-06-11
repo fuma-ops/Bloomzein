@@ -192,6 +192,44 @@ export function CuteToolIcon({ slug, className = "h-8 w-8" }: Props) {
         </svg>
       );
 
+    case "workout":
+      /* Glossy pink skeuomorphic dumbbell with gold accent caps and sparkle highlights */
+      return (
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <linearGradient id="dumbbellBarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.92 0.08 90)" />
+              <stop offset="100%" stopColor="oklch(0.75 0.15 70)" />
+            </linearGradient>
+            <linearGradient id="dumbbellWeightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.78 0.22 350)" />
+              <stop offset="60%" stopColor="oklch(0.62 0.28 350)" />
+              <stop offset="100%" stopColor="oklch(0.46 0.26 350)" />
+            </linearGradient>
+          </defs>
+          {/* Sparkles around the dumbbell to suggest motion/energy */}
+          <path d="M 20,18 L 22,12 L 24,18 L 30,20 L 24,22 L 22,28 L 20,22 L 14,20 Z" fill="oklch(0.88 0.12 350)" />
+          <circle cx="80" cy="74" r="2.5" fill="#ffffff" opacity="0.9" />
+          <circle cx="76" cy="22" r="2" fill="oklch(0.88 0.12 350)" />
+          {/* Connecting bar */}
+          <rect x="30" y="46" width="40" height="8" rx="4" fill="url(#dumbbellBarGrad)" stroke="#ffffff" strokeWidth="2" />
+          {/* Inner grip sleeves */}
+          <rect x="36" y="40" width="8" height="20" rx="3" fill="oklch(0.85 0.12 350)" stroke="#ffffff" strokeWidth="1.5" />
+          <rect x="56" y="40" width="8" height="20" rx="3" fill="oklch(0.85 0.12 350)" stroke="#ffffff" strokeWidth="1.5" />
+          {/* Left weight plates */}
+          <rect x="14" y="28" width="14" height="44" rx="7" fill="url(#dumbbellWeightGrad)" stroke="#ffffff" strokeWidth="2.5" />
+          <rect x="22" y="34" width="9" height="32" rx="4.5" fill="url(#dumbbellWeightGrad)" stroke="#ffffff" strokeWidth="2" />
+          {/* Right weight plates */}
+          <rect x="72" y="28" width="14" height="44" rx="7" fill="url(#dumbbellWeightGrad)" stroke="#ffffff" strokeWidth="2.5" />
+          <rect x="69" y="34" width="9" height="32" rx="4.5" fill="url(#dumbbellWeightGrad)" stroke="#ffffff" strokeWidth="2" />
+          {/* Gloss highlight reflections on plates */}
+          <path d="M 18,32 C 16,42 16,58 18,68" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
+          <path d="M 76,32 C 74,42 74,58 76,68" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.75" />
+          {/* Bar gloss sheen */}
+          <path d="M 34,49 L 66,49" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+        </svg>
+      );
+
     case "steps":
       /* Sparkling, energetic platform sneaker with magical golden/pink wings and fast trace lines */
       return (
