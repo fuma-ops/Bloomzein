@@ -7,7 +7,6 @@ import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 
 const LAST_KEY = "bloom:last-tool";
 const PINS_KEY = "bloom:pinned-tools";
-const TOUR_KEY = "bloom:tools-tour-seen";
 
 function linkPropsFor(t: Tool) {
   return t.slug === "budget"
@@ -18,21 +17,11 @@ function linkPropsFor(t: Tool) {
 export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
   const [query, setQuery] = useState("");
-  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(PINS_KEY);
       if (raw) setPins(JSON.parse(raw));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(TOUR_KEY)) {
-        setShowTour(true);
-        localStorage.setItem(TOUR_KEY, "1");
-      }
     } catch {}
   }, []);
 
@@ -138,7 +127,6 @@ export default function ToolsIndex() {
                 pinned={pins.includes(t.slug)}
                 onGo={() => remember(t.slug)}
                 onTogglePin={() => togglePin(t.slug)}
-                showHint={showTour}
               />
             ))}
           </div>
@@ -172,7 +160,7 @@ export default function ToolsIndex() {
   );
 }
 
-function ToolCard({ tool, onGo, pinned, onTogglePin, showHint }: { tool: Tool; onGo: () => void; pinned: boolean; onTogglePin: () => void; showHint?: boolean }) {
+function ToolCard({ tool, onGo, pinned, onTogglePin }: { tool: Tool; onGo: () => void; pinned: boolean; onTogglePin: () => void }) {
   const handleClick = (_e: MouseEvent) => {
     onGo();
   };
@@ -205,10 +193,7 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, showHint }: { tool: Tool; o
             <Pin className="h-3.5 w-3.5" strokeWidth={2} fill={pinned ? "currentColor" : "none"} />
           </button>
           <ChevronRight
-            className={[
-              "h-4 w-4 sm:h-5 sm:w-5",
-              showHint ? "animate-chevron-glow" : "text-rose/30",
-            ].join(" ")}
+            className="h-4 w-4 sm:h-5 sm:w-5 animate-chevron-glow"
             strokeWidth={2}
           />
         </div>

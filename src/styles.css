@@ -544,13 +544,13 @@
 
 @keyframes chevron-glow {
   0%, 100% {
-    color: oklch(0.75 0.05 350 / 0.5);
-    filter: drop-shadow(0 0 0 transparent);
+    color: oklch(0.75 0.27 350 / 0.7);
+    filter: drop-shadow(0 0 2px oklch(0.75 0.27 350 / 0.4));
     transform: translateX(0);
   }
   50% {
     color: oklch(0.65 0.27 0);
-    filter: drop-shadow(0 0 6px oklch(0.65 0.27 0 / 0.6));
+    filter: drop-shadow(0 0 8px oklch(0.65 0.27 0 / 0.85));
     transform: translateX(2px);
   }
 }
