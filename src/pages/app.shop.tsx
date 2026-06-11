@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Search, ShoppingBag, Heart, Star, Plus, Minus, X, ArrowRight, Sparkles,
+  Droplet, Dumbbell, Gem, Crown, Flower2, Gift, Percent,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
 /* ---------- data ---------- */
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "premium";
 
-const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] = [
-  { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.jpg" },
-  { key: "beauty",      label: "Beauty",      img: "/images/shop-cat-beauty.jpg" },
-  { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.jpg" },
-  { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.jpg" },
-  { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.jpg" },
-  { key: "premium",     label: "Bloom Premium", img: "/images/shop-cat-premium.jpg" },
+const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; icon: typeof Heart }[] = [
+  { key: "selfcare",    label: "Self-care",   icon: Heart },
+  { key: "beauty",      label: "Beauty",      icon: Sparkles },
+  { key: "cycle",       label: "Cycle Care",  icon: Droplet },
+  { key: "active",      label: "Activewear",  icon: Dumbbell },
+  { key: "accessories", label: "Accessories", icon: Gem },
+  { key: "premium",     label: "Premium",     icon: Crown },
 ];
 
 interface Product {
@@ -36,6 +37,21 @@ const PRODUCTS: Product[] = [
   { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "/images/shop-p-leggings.jpg", bestseller: true },
   { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "/images/shop-p-clip.jpg" },
   { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "premium",     img: "/images/shop-p-planner.jpg",  bestseller: true },
+];
+
+const MOODS: { label: string; img: string }[] = [
+  { label: "Romanticize My Day", img: "/images/shop-cat-selfcare.jpg" },
+  { label: "Cozy Evening",       img: "/images/shop-cat-premium.jpg" },
+  { label: "Glow Up",            img: "/images/shop-cat-beauty.jpg" },
+  { label: "PMS Comfort",        img: "/images/shop-cat-cycle.jpg" },
+  { label: "Self-care Sunday",   img: "/images/shop-cat-accessories.jpg" },
+];
+
+const PERKS: { label: string; icon: typeof Gift }[] = [
+  { label: "Premium products", icon: Gift },
+  { label: "Exclusive content", icon: Sparkles },
+  { label: "Excellent quality", icon: Star },
+  { label: "Member discount", icon: Percent },
 ];
 
 const STORAGE = { cart: "bloom:shop-cart", saved: "bloom:shop-saved" };
@@ -69,7 +85,7 @@ export default function ShopPage() {
       .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
   }, [query, active]);
 
-  const bestsellers = PRODUCTS.filter((p) => p.bestseller);
+  const recommended = PRODUCTS.filter((p) => p.bestseller);
 
   const add = (id: string) => {
     setCart((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
@@ -87,21 +103,29 @@ export default function ShopPage() {
   const toggleSave = (id: string) => setSaved((s) => ({ ...s, [id]: !s[id] }));
 
   return (
-    <div className="relative">
+    <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      {/* HEADER */}
-      <section className="stagger sticky top-0 z-30 -mx-3 px-3 pt-2 pb-2 sm:static sm:mx-0 sm:px-0 sm:pt-0 sm:pb-0 bg-blush/70 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none" style={{ animationDelay: "0ms" }}>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none">Shop</h1>
-            <p className="mt-1 text-xs sm:text-base text-rose/85 italic">treat yourself, you deserve it ✿</p>
+      {/* HERO */}
+      <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
+          <img src="/images/shop-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 z-[1] bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
+          <div className="relative z-[2] px-4 py-6 sm:px-10 sm:py-14 max-w-md">
+            <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2">
+              Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
+            </h1>
+            <p className="mt-1.5 sm:mt-3 text-xs sm:text-base text-rose/90">Curated treasures for your softest era ✿</p>
+            <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
+              Beauty • Wellness • Self-care • Cycle Care
+            </p>
           </div>
+
           <button
             onClick={() => setOpen(true)}
             aria-label="Open cart"
             className={[
-              "relative grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5 shrink-0",
+              "absolute top-3 right-3 sm:top-5 sm:right-5 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
               bumped ? "animate-bloom-bounce" : "",
             ].join(" ")}
           >
@@ -113,23 +137,26 @@ export default function ShopPage() {
             )}
           </button>
         </div>
+      </section>
 
-        <div className="mt-2 sm:mt-4 relative">
+      {/* SEARCH */}
+      <section className="relative z-10 -mt-5 sm:-mt-7 px-2 sm:px-4 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
+        <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
           <input
             id="search-boutique"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search the boutique…"
-            className="w-full rounded-full bg-white/90 backdrop-blur border border-petal/60 pl-11 pr-4 py-2 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-sm focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
+            className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-lg shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
           />
         </div>
       </section>
 
       {/* CATEGORIES */}
-      <section className="mt-3 sm:mt-8 stagger" style={{ animationDelay: "80ms" }}>
+      <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
         <SectionTitle hint={active === "all" ? "browse" : "filtering"}>Shop by category</SectionTitle>
-        <div className="grid grid-cols-4 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <div className="flex items-start gap-3 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
           <CategoryTile
             allMode
             active={active === "all"}
@@ -139,7 +166,7 @@ export default function ShopPage() {
             <CategoryTile
               key={c.key}
               label={c.label}
-              img={c.img}
+              icon={c.icon}
               active={active === c.key}
               onClick={() => setActive(c.key)}
             />
@@ -147,35 +174,88 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* FEATURED BANNER */}
-      <section className="mt-6 sm:mt-8 stagger" style={{ animationDelay: "160ms" }}>
-        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
-          <img src="/images/shop-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent" />
-          <div className="relative px-4 py-5 sm:px-12 sm:py-14 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
-              <Sparkles className="h-3 w-3" strokeWidth={2} /> Limited offer
-            </span>
-            <h2 className="mt-2 sm:mt-3 font-script text-2xl sm:text-5xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
-              Bloom Premium
-            </h2>
-            <p className="mt-1.5 sm:mt-3 text-xs sm:text-base text-rose/90">
-              Unlock every tool, every planner — 20% off this week.
-            </p>
-            <button
-              onClick={() => setActive("premium")}
-              className="bloom-luxury-btn mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 text-white font-semibold text-xs sm:text-sm px-3.5 py-1.5 sm:px-5 sm:py-2.5"
-            >
-              Shop premium — 20% off <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
-            </button>
+      {/* RECOMMENDED FOR YOU */}
+      <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
+        <SectionTitle hint="Why these picks →">Recommended for you</SectionTitle>
+        <p className="-mt-1 mb-3 text-xs sm:text-sm text-rose/75">Curated based on your current phase ✿</p>
+        <div className="relative -mx-3 sm:mx-0 px-3 sm:px-0">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2">
+            {recommended.map((p) => (
+              <div key={p.id} className="snap-start shrink-0 w-40 sm:w-60">
+                <ProductCard
+                  p={p}
+                  saved={!!saved[p.id]}
+                  qty={cart[p.id] || 0}
+                  onAdd={() => add(p.id)}
+                  onSave={() => toggleSave(p.id)}
+                  compact
+                />
+              </div>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
+        </div>
+      </section>
+
+      {/* BLOOM MEMBERSHIP */}
+      <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "240ms" }}>
+        <div
+          className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] p-5 sm:p-9"
+          style={{ background: "linear-gradient(135deg, #ff8ed1 0%, #ec4899 50%, #c2186e 100%)" }}
+        >
+          <div className="relative z-[2] flex items-center justify-between gap-4">
+            <div className="max-w-xs">
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">
+                <Crown className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} /> Bloom Membership
+              </span>
+              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/95">Your soft life toolkit — save up to 30% & unlock everything.</p>
+              <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:gap-y-2">
+                {PERKS.map((perk) => (
+                  <span key={perk.label} className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-white">
+                    <perk.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" strokeWidth={2} /> {perk.label}
+                  </span>
+                ))}
+              </div>
+              <button
+                onClick={() => setActive("premium")}
+                className="mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white text-hotpink font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 shadow-md shadow-rose/30 transition hover:-translate-y-0.5"
+              >
+                Join Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.4} />
+              </button>
+            </div>
+            <p className="hidden sm:block font-script text-7xl lg:text-8xl text-white/25 leading-none select-none shrink-0">Bloom</p>
           </div>
         </div>
       </section>
 
-      {/* PRODUCT GRID */}
-      <section className="mt-6 sm:mt-8 stagger" style={{ animationDelay: "240ms" }}>
+      {/* SHOP BY MOOD */}
+      <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "300ms" }}>
+        <SectionTitle hint="View all →">Shop by mood</SectionTitle>
+        <div className="relative -mx-3 sm:mx-0 px-3 sm:px-0">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2">
+            {MOODS.map((m) => (
+              <div
+                key={m.label}
+                className="snap-start shrink-0 relative w-28 h-36 sm:w-40 sm:h-48 overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 shadow-[0_10px_24px_-14px_oklch(0.7_0.18_350/0.3)]"
+              >
+                <img src={m.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <div className="absolute inset-0 bg-gradient-to-t from-rose/80 via-rose/15 to-transparent" />
+                <span className="absolute inset-x-2 bottom-2 sm:inset-x-3 sm:bottom-3 text-white font-semibold text-xs sm:text-sm leading-snug drop-shadow-[0_2px_6px_oklch(0_0_0/0.45)]">
+                  {m.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
+        </div>
+      </section>
+
+      {/* BEST SELLERS / FILTERED PRODUCTS */}
+      <section className="mt-6 sm:mt-8 mb-2 animate-card-pop-in" style={{ animationDelay: "360ms" }}>
         <SectionTitle hint={`${filtered.length} items`}>
-          {active === "all" ? "All products" : CATEGORIES.find((c) => c.key === active)?.label}
+          {active === "all" ? "Best sellers" : CATEGORIES.find((c) => c.key === active)?.label}
         </SectionTitle>
         {filtered.length === 0 ? (
           <EmptyState
@@ -200,31 +280,6 @@ export default function ShopPage() {
         )}
       </section>
 
-      {/* BESTSELLERS */}
-      <section className="mt-8 sm:mt-10 stagger" style={{ animationDelay: "320ms" }}>
-        <SectionTitle hint="loved by the Bloom girls">For you</SectionTitle>
-        <p className="-mt-1 mb-3 text-xs sm:text-sm text-rose/75">Soft picks our community can't stop adding to bag.</p>
-        <div className="relative -mx-3 sm:mx-0 px-3 sm:px-0">
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint snap-x snap-mandatory pb-2">
-            {bestsellers.map((p) => (
-              <div key={p.id} className="snap-start shrink-0 w-40 sm:w-60">
-                <ProductCard
-                  p={p}
-                  saved={!!saved[p.id]}
-                  qty={cart[p.id] || 0}
-                  onAdd={() => add(p.id)}
-                  onSave={() => toggleSave(p.id)}
-                  compact
-                />
-              </div>
-            ))}
-          </div>
-          {/* edge fades hint there's more to scroll */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
-        </div>
-      </section>
-
       {/* CART PANEL */}
       <CartPanel
         open={open}
@@ -243,38 +298,38 @@ export default function ShopPage() {
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
-      <h2 className="font-script text-3xl sm:text-4xl text-hotpink">{children}</h2>
-      {hint && <span className="text-xs text-rose/70">{hint}</span>}
+      <h2 className="font-script text-3xl sm:text-4xl text-hotpink flex items-center gap-1.5">
+        {children} <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-hotpink/70" strokeWidth={1.8} />
+      </h2>
+      {hint && <span className="text-xs text-rose/70 shrink-0">{hint}</span>}
     </div>
   );
 }
 
 function CategoryTile(
-  props: { allMode: true; active: boolean; onClick: () => void; label?: undefined; img?: undefined }
-    | { allMode?: false; label: string; img: string; active: boolean; onClick: () => void },
+  props: { allMode: true; active: boolean; onClick: () => void; label?: undefined; icon?: undefined }
+    | { allMode?: false; label: string; icon: typeof Heart; active: boolean; onClick: () => void },
 ) {
   const { active, onClick } = props;
+  const Icon = props.allMode ? Flower2 : props.icon;
   return (
     <button
       onClick={onClick}
-      className={[
-        "relative overflow-hidden rounded-2xl sm:rounded-3xl border text-left transition hover:-translate-y-0.5",
-        active
-          ? "border-hotpink/70 ring-2 ring-hotpink/40 shadow-[0_14px_30px_-14px_oklch(0.7_0.27_350/0.5)]"
-          : "border-petal/60 shadow-[0_8px_22px_-14px_oklch(0.7_0.18_350/0.3)]",
-      ].join(" ")}
+      className="flex flex-col items-center gap-1.5 shrink-0 w-16 sm:w-20"
     >
-      <div className="relative h-16 sm:h-28 w-full">
-        {props.allMode ? (
-          <div className="absolute inset-0 bg-gradient-to-br from-hotpink via-magenta to-hotpink" />
-        ) : (
-          <img src={props.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-rose/70 via-rose/10 to-transparent" />
-        <span className="absolute bottom-1.5 left-2 right-2 sm:bottom-2 sm:left-3 sm:right-3 text-white font-script text-sm sm:text-xl leading-tight drop-shadow-[0_2px_6px_oklch(0_0_0/0.45)]">
-          {props.allMode ? "All" : props.label}
-        </span>
-      </div>
+      <span
+        className={[
+          "grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-2xl sm:rounded-[1.25rem] border transition",
+          active
+            ? "bg-hotpink text-white border-hotpink shadow-lg shadow-hotpink/30"
+            : "bg-blush/70 text-hotpink border-petal/60",
+        ].join(" ")}
+      >
+        <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+      </span>
+      <span className="text-[10px] sm:text-xs font-semibold text-rose text-center leading-tight">
+        {props.allMode ? "All" : props.label}
+      </span>
     </button>
   );
 }
@@ -351,13 +406,13 @@ function CartPanel({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[60]">
       <button
         aria-label="Close cart"
         onClick={onClose}
         className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in"
       />
-      <aside className="fixed right-0 top-0 h-full w-full sm:w-[26rem] bg-gradient-to-b from-blush/95 to-white/95 backdrop-blur-xl border-l border-petal/60 shadow-2xl shadow-rose/30 flex flex-col z-50">
+      <aside className="fixed right-0 top-0 h-full w-full sm:w-[26rem] bg-gradient-to-b from-blush/95 to-white/95 backdrop-blur-xl border-l border-petal/60 shadow-2xl shadow-rose/30 flex flex-col z-[60]">
         <header className="flex items-center justify-between px-5 py-4 border-b border-petal/50">
           <div>
             <h3 className="font-script text-3xl text-hotpink leading-none">Your bag</h3>
