@@ -164,7 +164,7 @@ export default function ReadPage() {
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
         </button>
         <div className="mt-4 overflow-hidden rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.4)]">
-          <img src={open.image} alt="" className="h-64 sm:h-80 w-full object-cover" referrerPolicy="no-referrer" />
+          <img src={open.image} alt="" className="block h-64 sm:h-80 w-full object-cover" referrerPolicy="no-referrer" />
         </div>
         <header className="mt-6 flex flex-wrap items-center gap-3">
           <TopicBadge topic={open.topic} />
@@ -288,10 +288,10 @@ export default function ReadPage() {
               <button
                 key={a.id}
                 onClick={() => setOpenId(a.id)}
-                className="group relative shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95"
+                className="group relative self-start shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95"
               >
                 <div className="relative h-24 sm:h-36 overflow-hidden">
-                  <img src={a.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+                  <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
                   <div className="absolute top-2 left-2"><TopicBadge topic={a.topic} /></div>
                 </div>
                 <div className="p-3 sm:p-4">
@@ -351,7 +351,7 @@ function ArticleCard({ article, saved, onSave, onOpen }: { article: Article; sav
       className="group relative text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] cursor-pointer"
     >
       <div className="relative h-28 sm:h-44 overflow-hidden">
-        <img src={article.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+        <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.topic} /></div>
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3"><HeartBtn saved={saved} onClick={onSave} /></div>
       </div>
