@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart, Flower2 } from "lucide-react";
+import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
@@ -181,9 +181,9 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, showHint }: { tool: Tool; o
       onClick={handleClick}
       className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5"
     >
-      <Flower2
-        className="pointer-events-none absolute -right-4 -bottom-4 h-24 w-24 sm:h-28 sm:w-28 -z-10 text-hotpink/10 rotate-12"
-        strokeWidth={1}
+      <div
+        className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
+        style={{ background: "radial-gradient(circle, oklch(0.75 0.18 350 / 0.18), transparent 70%)" }}
       />
 
       <div className="flex items-start justify-between">
