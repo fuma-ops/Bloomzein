@@ -485,22 +485,26 @@
 @utility pearl-frame {
   position: relative;
   isolation: isolate;
-  border: 1.5px solid oklch(1 0 0 / 0.75);
+  border: 1px solid oklch(1 0 0 / 0.35);
   box-shadow:
-    /* glossy glass border ring */
-    inset 0 0 0 2px oklch(1 0 0 / 0.55),
-    inset 0 0 0 6px oklch(1 0 0 / 0.16),
+    /* bright top edge highlight, fading toward the sides */
+    inset 0 1px 0 oklch(1 0 0 / 0.75),
+    /* faint side edges */
+    inset 1px 0 0 oklch(1 0 0 / 0.25),
+    inset -1px 0 0 oklch(1 0 0 / 0.12),
+    /* soft dark base recess for roundness */
+    inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18),
     /* soft outer glow */
     0 12px 30px -16px oklch(0.6 0.27 350 / 0.45);
 
-  /* curved highlight sweeping across the top */
+  /* curved highlight sweeping across the top, fading unevenly */
   &::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: radial-gradient(120% 60% at 50% -10%, oklch(1 0 0 / 0.7), transparent 60%);
+    background: radial-gradient(90% 55% at 35% -15%, oklch(1 0 0 / 0.55), transparent 62%);
   }
 
   /* corner sparkle / shine accent */
