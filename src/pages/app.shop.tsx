@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Search, ShoppingBag, Heart, Star, Plus, Minus, X, ArrowRight, Sparkles,
-  Droplet, Dumbbell, Gem, Crown, Flower2, Gift, Percent,
+  Flower2, Gift, Percent, Crown,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
 /* ---------- data ---------- */
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "premium";
 
-const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; icon: typeof Heart }[] = [
-  { key: "selfcare",    label: "Self-care",   icon: Heart },
-  { key: "beauty",      label: "Beauty",      icon: Sparkles },
-  { key: "cycle",       label: "Cycle Care",  icon: Droplet },
-  { key: "active",      label: "Activewear",  icon: Dumbbell },
-  { key: "accessories", label: "Accessories", icon: Gem },
-  { key: "premium",     label: "Premium",     icon: Crown },
+const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] = [
+  { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.jpg" },
+  { key: "beauty",      label: "Beauty",      img: "/images/shop-cat-beauty.jpg" },
+  { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.jpg" },
+  { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.jpg" },
+  { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.jpg" },
+  { key: "premium",     label: "Premium",     img: "/images/shop-cat-premium.jpg" },
 ];
 
 interface Product {
@@ -140,7 +140,7 @@ export default function ShopPage() {
       </section>
 
       {/* SEARCH */}
-      <section className="relative z-10 -mt-5 sm:-mt-7 px-2 sm:px-4 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
+      <section className="mt-3 sm:mt-5 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
           <input
@@ -148,7 +148,7 @@ export default function ShopPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search the boutique…"
-            className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-lg shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
+            className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-md shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
           />
         </div>
       </section>
@@ -156,7 +156,7 @@ export default function ShopPage() {
       {/* CATEGORIES */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
         <SectionTitle hint={active === "all" ? "browse" : "filtering"}>Shop by category</SectionTitle>
-        <div className="flex items-start gap-3 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
+        <div className="flex items-start gap-2.5 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
           <CategoryTile
             allMode
             active={active === "all"}
@@ -166,7 +166,7 @@ export default function ShopPage() {
             <CategoryTile
               key={c.key}
               label={c.label}
-              icon={c.icon}
+              img={c.img}
               active={active === c.key}
               onClick={() => setActive(c.key)}
             />
@@ -178,23 +178,17 @@ export default function ShopPage() {
       <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
         <SectionTitle hint="Why these picks →">Recommended for you</SectionTitle>
         <p className="-mt-1 mb-3 text-xs sm:text-sm text-rose/75">Curated based on your current phase ✿</p>
-        <div className="relative -mx-3 sm:mx-0 px-3 sm:px-0">
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2">
-            {recommended.map((p) => (
-              <div key={p.id} className="snap-start shrink-0 w-40 sm:w-60">
-                <ProductCard
-                  p={p}
-                  saved={!!saved[p.id]}
-                  qty={cart[p.id] || 0}
-                  onAdd={() => add(p.id)}
-                  onSave={() => toggleSave(p.id)}
-                  compact
-                />
-              </div>
-            ))}
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+          {recommended.map((p) => (
+            <ProductCard
+              key={p.id}
+              p={p}
+              saved={!!saved[p.id]}
+              qty={cart[p.id] || 0}
+              onAdd={() => add(p.id)}
+              onSave={() => toggleSave(p.id)}
+            />
+          ))}
         </div>
       </section>
 
@@ -265,7 +259,7 @@ export default function ShopPage() {
             onCta={() => { setQuery(""); setActive("all"); }}
           />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
             {filtered.map((p) => (
               <ProductCard
                 key={p.id}
@@ -307,27 +301,32 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
 }
 
 function CategoryTile(
-  props: { allMode: true; active: boolean; onClick: () => void; label?: undefined; icon?: undefined }
-    | { allMode?: false; label: string; icon: typeof Heart; active: boolean; onClick: () => void },
+  props: { allMode: true; active: boolean; onClick: () => void; label?: undefined; img?: undefined }
+    | { allMode?: false; label: string; img: string; active: boolean; onClick: () => void },
 ) {
   const { active, onClick } = props;
-  const Icon = props.allMode ? Flower2 : props.icon;
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 shrink-0 w-16 sm:w-20"
+      className="flex flex-col items-center gap-1 shrink-0 w-12 sm:w-16"
     >
       <span
         className={[
-          "grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-2xl sm:rounded-[1.25rem] border transition",
+          "grid h-11 w-11 sm:h-14 sm:w-14 place-items-center overflow-hidden rounded-xl sm:rounded-2xl border-2 transition",
           active
-            ? "bg-hotpink text-white border-hotpink shadow-lg shadow-hotpink/30"
-            : "bg-blush/70 text-hotpink border-petal/60",
+            ? "border-hotpink ring-2 ring-hotpink/30 shadow-md shadow-hotpink/30"
+            : "border-petal/60",
         ].join(" ")}
       >
-        <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+        {props.allMode ? (
+          <span className="grid h-full w-full place-items-center bg-blush/70 text-hotpink">
+            <Flower2 className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
+          </span>
+        ) : (
+          <img src={props.img} alt="" loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+        )}
       </span>
-      <span className="text-[10px] sm:text-xs font-semibold text-rose text-center leading-tight">
+      <span className="text-[9px] sm:text-[11px] font-semibold text-rose text-center leading-tight line-clamp-1 w-full">
         {props.allMode ? "All" : props.label}
       </span>
     </button>
@@ -335,41 +334,48 @@ function CategoryTile(
 }
 
 function ProductCard({
-  p, saved, qty, onAdd, onSave, compact,
-}: { p: Product; saved: boolean; qty: number; onAdd: () => void; onSave: () => void; compact?: boolean }) {
+  p, saved, qty, onAdd, onSave,
+}: { p: Product; saved: boolean; qty: number; onAdd: () => void; onSave: () => void }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 shadow-[0_10px_24px_-14px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)]">
+    <div className="group flex flex-col overflow-hidden rounded-xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 shadow-[0_10px_24px_-14px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)]">
       <div className="relative aspect-square overflow-hidden">
         <img src={p.img} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
         <button
           onClick={onSave}
           aria-label={saved ? "Unsave" : "Save"}
           className={[
-            "absolute top-1.5 right-1.5 sm:top-2 sm:right-2 grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full border backdrop-blur transition",
+            "absolute top-1 right-1 sm:top-2 sm:right-2 grid h-5 w-5 sm:h-9 sm:w-9 place-items-center rounded-full border backdrop-blur transition",
             saved ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/40" : "bg-white/85 text-hotpink border-petal/60 hover:scale-105",
           ].join(" ")}
         >
-          <Heart className="h-4 w-4" strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
+          <Heart className="h-2.5 w-2.5 sm:h-4 sm:w-4" strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
         </button>
         {p.bestseller && (
-          <span className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 inline-flex items-center gap-1 rounded-full bg-white/90 text-hotpink text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 border border-petal/60">
-            <Sparkles className="h-3 w-3" strokeWidth={2} /> Loved
+          <span className="absolute top-1 left-1 sm:top-2 sm:left-2 inline-flex items-center gap-0.5 sm:gap-1 rounded-full bg-white/90 text-hotpink text-[7px] sm:text-[10px] font-bold uppercase tracking-wider px-1 sm:px-2 py-0.5 border border-petal/60">
+            <Sparkles className="h-2 w-2 sm:h-3 sm:w-3" strokeWidth={2} /> <span className="hidden sm:inline">Loved</span>
           </span>
         )}
       </div>
-      <div className={["flex flex-col flex-1", compact ? "p-2.5" : "p-3 sm:p-4"].join(" ")}>
-        <h3 className="font-semibold text-rose text-xs sm:text-sm leading-snug line-clamp-2">{p.name}</h3>
-        <div className="mt-1 flex items-center gap-1 text-[11px] sm:text-xs text-rose/75">
-          <Star className="h-3 w-3 text-hotpink" strokeWidth={1.8} fill="currentColor" />
+      <div className="flex flex-col flex-1 p-1.5 sm:p-4 gap-0.5 sm:gap-0">
+        <h3 className="font-semibold text-rose text-[10px] sm:text-sm leading-snug line-clamp-2">{p.name}</h3>
+        <div className="mt-0.5 sm:mt-1 flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-xs text-rose/75">
+          <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-hotpink" strokeWidth={1.8} fill="currentColor" />
           {p.rating.toFixed(1)}
         </div>
-        <div className="mt-2 sm:mt-3 flex items-center justify-between gap-1.5">
-          <span className="font-script text-xl sm:text-2xl text-hotpink leading-none">${p.price}</span>
+        <div className="mt-auto pt-1 sm:pt-3 flex items-center justify-between gap-1">
+          <span className="font-script text-base sm:text-2xl text-hotpink leading-none">${p.price}</span>
           <button
             onClick={onAdd}
-            className="bloom-luxury-btn inline-flex items-center gap-1 text-white text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5"
+            aria-label="Add to bag"
+            className="bloom-luxury-btn relative inline-flex items-center justify-center gap-1 text-white text-[11px] sm:text-xs font-semibold h-6 w-6 sm:h-auto sm:w-auto sm:px-3 sm:py-1.5 rounded-full shrink-0"
           >
-            <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.4} /> {qty > 0 ? `${qty}` : "Add"}
+            <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.4} />
+            <span className="hidden sm:inline">{qty > 0 ? `${qty}` : "Add"}</span>
+            {qty > 0 && (
+              <span className="sm:hidden absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 grid place-items-center rounded-full bg-white text-hotpink text-[8px] font-bold border border-hotpink">
+                {qty}
+              </span>
+            )}
           </button>
         </div>
       </div>
