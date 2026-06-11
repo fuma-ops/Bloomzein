@@ -74,16 +74,16 @@ export default function ToolsIndex() {
       <section className="mt-4 sm:mt-6">
         <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
           <img src="/images/tools-hero-journey.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
-          <div className="relative px-4 py-4 sm:px-8 sm:py-7 max-w-sm">
+          <div className="absolute inset-0 bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
+          <div className="relative ml-auto px-4 py-4 sm:px-8 sm:py-7 max-w-sm text-right">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
-              <Sparkles className="h-3 w-3" strokeWidth={2} /> Continue your bloom journey
+              Continue your bloom journey <Sparkles className="h-3 w-3" strokeWidth={2} />
             </span>
             <h2 className="mt-2 sm:mt-3 font-bold text-lg sm:text-2xl text-[#831843] leading-tight">Workout Programs</h2>
             <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/80">Day 12 · 3 workouts completed</p>
 
-            <div className="mt-3 sm:mt-4">
-              <div className="h-2 sm:h-2.5 w-full max-w-[180px] sm:max-w-[220px] rounded-full bg-white/70 border border-petal/60 overflow-hidden">
+            <div className="mt-3 sm:mt-4 ml-auto">
+              <div className="h-2 sm:h-2.5 w-full max-w-[180px] sm:max-w-[220px] ml-auto rounded-full bg-white/70 border border-petal/60 overflow-hidden">
                 <div className="h-full rounded-full bg-hotpink" style={{ width: "78%" }} />
               </div>
               <p className="mt-1 text-[10px] sm:text-xs font-bold text-hotpink">78% complete</p>
@@ -137,9 +137,9 @@ export default function ToolsIndex() {
       <section className="mt-4 sm:mt-6">
         <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
           <img src="/images/tools-hero-affirmation.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
-          <div className="relative px-4 py-4 sm:px-8 sm:py-7 max-w-sm">
-            <span className="clay-blob inline-grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-2xl text-white">
+          <div className="absolute inset-0 bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
+          <div className="relative ml-auto px-4 py-4 sm:px-8 sm:py-7 max-w-sm text-right">
+            <span className="clay-blob ml-auto inline-grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-2xl text-white">
               <Heart className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} fill="currentColor" />
             </span>
             <p className="mt-2 sm:mt-3 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">Daily Bloom Affirmation</p>
