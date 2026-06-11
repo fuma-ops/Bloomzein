@@ -481,6 +481,17 @@
     inset 0 -1px 6px oklch(0.85 0.05 345 / 0.15);
 }
 
+/* Glossy clay gradient blob — used behind tool icons */
+@utility clay-blob {
+  background:
+    radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%);
+  box-shadow:
+    inset 4px 6px 12px oklch(1 0 0 / 0.45),
+    inset -6px -8px 14px oklch(0.45 0.26 0 / 0.5),
+    0 14px 28px -10px oklch(0.62 0.27 0 / 0.55),
+    0 4px 10px oklch(0.62 0.27 0 / 0.3);
+}
+
 @keyframes bloom-scroll-hint {
   0%, 55%, 100% { transform: translateX(0); }
   30% { transform: translateX(-18px); }
