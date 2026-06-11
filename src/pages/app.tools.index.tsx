@@ -72,7 +72,7 @@ export default function ToolsIndex() {
 
       {/* HERO — Continue your bloom journey */}
       <section className="mt-4 sm:mt-6">
-        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
+        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] aspect-[2.35/1] shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
           <img src="/images/tools-hero-journey.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
           <div className="relative ml-auto px-4 py-4 sm:px-8 sm:py-7 max-w-sm text-right">
@@ -135,7 +135,7 @@ export default function ToolsIndex() {
 
       {/* HERO — Daily Bloom Affirmation */}
       <section className="mt-4 sm:mt-6">
-        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
+        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] aspect-[2.4/1] shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
           <img src="/images/tools-hero-affirmation.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
           <div className="relative ml-auto px-4 py-4 sm:px-8 sm:py-7 max-w-sm text-right">
