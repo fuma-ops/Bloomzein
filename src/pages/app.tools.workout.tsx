@@ -597,15 +597,15 @@ function Discover({ profile, onStartSession, onBestShape }: {
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <h2 className="font-script text-2xl text-hotpink leading-none mb-3 animate-text-pop">How's your energy today?</h2>
         <div className="grid grid-cols-4 gap-2">
-          {ENERGY_OPTIONS.map((opt) => {
+          {ENERGY_OPTIONS.map((opt, i) => {
             const Icon = opt.icon;
             const active = todayEnergy === opt.key;
             return (
+              <div key={opt.key} className="animate-card-pop-in" style={{ animationDelay: `${i * 0.06}s` }}>
               <button
-                key={opt.key}
                 onClick={() => onPickEnergy(opt.key)}
                 className={[
-                  "flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95",
+                  "w-full flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95",
                   active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                   !todayEnergy ? "animate-hint-glow-delayed" : "",
                 ].join(" ")}
@@ -613,6 +613,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
                 <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
                 <span className="text-[11px] font-semibold text-rose text-center leading-tight">{opt.label}</span>
               </button>
+              </div>
             );
           })}
         </div>
@@ -631,10 +632,10 @@ function Discover({ profile, onStartSession, onBestShape }: {
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 grid-flow-row-dense">
-          {ZONES.map((z) => {
+          {ZONES.map((z, i) => {
             const active = zone === z.key;
             return (
-              <div key={z.key} className="relative">
+              <div key={z.key} className="relative animate-card-pop-in" style={{ animationDelay: `${i * 0.06}s` }}>
                 {active && (
                   <div className="absolute -inset-1.5 rounded-[1.4rem] bg-gradient-to-br from-hotpink/60 to-magenta/50 blur-md animate-bloom-pulse -z-10" />
                 )}
@@ -1045,8 +1046,12 @@ function Library() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {exercises.map((ex) => (
-            <div key={ex.slug} className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10">
+          {exercises.map((ex, i) => (
+            <div
+              key={ex.slug}
+              className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
               <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
               <div className="p-2.5">
                 <p className="text-sm font-bold text-rose leading-tight">{ex.name}</p>
