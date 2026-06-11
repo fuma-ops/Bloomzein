@@ -20,6 +20,8 @@ const KEYS = {
   streak:       "bloom:streak-days",
 } as const;
 
+export const TODAY_WATER_KEY = KEYS.water;
+
 function readJSON<T>(key: string, fallback: T): T {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }

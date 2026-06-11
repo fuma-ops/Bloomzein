@@ -29,7 +29,7 @@ export const WORKOUT_LOG_KEY = "bloom:workout-history";
 
 const DEFAULT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
 
-interface HistoryEntry {
+export interface HistoryEntry {
   date: string;
   zone: Zone;
   intention: WorkoutIntention;

@@ -55,6 +55,8 @@ const LS = {
   phase: "bloom:cycle-phase",          // shared
 };
 
+export const MEALS_PLAN_KEY = LS.plan;
+
 function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
   const [v, setV] = useState<T>(initial);
   useEffect(() => {
