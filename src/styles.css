@@ -644,3 +644,44 @@
   animation-fill-mode: backwards;
 }
 
+/* One-time glow hint ring for the "Discover" tab pill (step 1 of guided tour) */
+@keyframes tab-glow-hint {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px oklch(0.65 0.27 350 / 0.45), 0 0 16px 4px oklch(0.65 0.27 350 / 0.5);
+  }
+}
+
+@utility animate-tab-glow-hint {
+  animation: tab-glow-hint 0.7s ease-in-out 1;
+  animation-delay: 0.5s;
+  animation-fill-mode: backwards;
+}
+
+/* Persistent soft glow for a selected choice (energy / intention) */
+@keyframes selected-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0.35); }
+  50% { box-shadow: 0 0 14px 3px oklch(0.65 0.27 350 / 0.55); }
+}
+
+@utility animate-selected-glow {
+  animation: selected-glow 2.4s ease-in-out infinite;
+}
+
+/* Lighter sequential glow hint for the body-focus zone cards */
+@keyframes zone-glow-hint {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+  }
+  50% {
+    box-shadow: 0 0 10px 2px oklch(0.65 0.27 350 / 0.35);
+  }
+}
+
+@utility animate-zone-glow-hint {
+  animation: zone-glow-hint 0.45s ease-in-out 1;
+  animation-fill-mode: backwards;
+}
+
