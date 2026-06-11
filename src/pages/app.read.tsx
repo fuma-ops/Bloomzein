@@ -264,8 +264,8 @@ export default function ReadPage() {
           />
         ) : (
           <div key={topic + query} className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 animate-fade-in">
-            {filtered.map((a) => (
-              <ArticleCard key={a.id} article={a} saved={!!saved[a.id]} onSave={() => toggleSave(a.id)} onOpen={() => setOpenId(a.id)} />
+            {filtered.map((a, i) => (
+              <ArticleCard key={a.id} article={a} index={i} saved={!!saved[a.id]} onSave={() => toggleSave(a.id)} onOpen={() => setOpenId(a.id)} />
             ))}
           </div>
         )}
@@ -284,11 +284,12 @@ export default function ReadPage() {
         </div>
         <div className="relative -mx-3 px-3 sm:mx-0 sm:px-0">
           <div className="flex gap-3 sm:gap-4 pb-2 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
-            {recommended.map((a) => (
+            {recommended.map((a, i) => (
               <button
                 key={a.id}
                 onClick={() => setOpenId(a.id)}
-                className="group relative self-start shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95"
+                style={{ animationDelay: `${i * 0.06}s` }}
+                className="group relative self-start shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95 animate-card-pop-in"
               >
                 <div className="relative h-24 sm:h-36 overflow-hidden">
                   <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
@@ -331,8 +332,8 @@ export default function ReadPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 animate-fade-in">
-            {savedArticles.map((a) => (
-              <ArticleCard key={a.id} article={a} saved onSave={() => toggleSave(a.id)} onOpen={() => setOpenId(a.id)} />
+            {savedArticles.map((a, i) => (
+              <ArticleCard key={a.id} article={a} index={i} saved onSave={() => toggleSave(a.id)} onOpen={() => setOpenId(a.id)} />
             ))}
           </div>
         )}
@@ -341,14 +342,15 @@ export default function ReadPage() {
   );
 }
 
-function ArticleCard({ article, saved, onSave, onOpen }: { article: Article; saved: boolean; onSave: () => void; onOpen: () => void }) {
+function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: Article; saved: boolean; onSave: () => void; onOpen: () => void; index?: number }) {
   return (
     <div
       onClick={onOpen}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(); }}
-      className="group relative text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] cursor-pointer"
+      style={{ animationDelay: `${index * 0.06}s` }}
+      className="group relative text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] cursor-pointer animate-card-pop-in"
     >
       <div className="relative h-28 sm:h-44 overflow-hidden">
         <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
