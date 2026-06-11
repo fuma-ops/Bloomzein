@@ -517,6 +517,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
   const [streak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [zone, setZone] = useState<Zone | null>(null);
   const [intention, setIntention] = useState<WorkoutIntention | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [suggestRecover, setSuggestRecover] = useState(false);
   const [challenge, setChallenge] = useLS<{ phase: CyclePhase | "any"; weekStart: string; done: number }>(CHALLENGE_KEY, { phase: "any", weekStart: "", done: 0 });
   const intentionSectionRef = useRef<HTMLDivElement>(null);
@@ -525,6 +526,10 @@ function Discover({ profile, onStartSession, onBestShape }: {
   useEffect(() => {
     setPhase(readCyclePhase() ?? "any");
   }, []);
+
+  useEffect(() => {
+    setSelectedSessionId(null);
+  }, [intention]);
 
   // Auto-scroll to reveal the next step once a choice is made, so it's clear there's more to pick.
   useEffect(() => {
@@ -552,6 +557,12 @@ function Discover({ profile, onStartSession, onBestShape }: {
     } else {
       setIntention(null);
     }
+    setSelectedSessionId(null);
+  };
+
+  const onPickSession = (session: WorkoutSession) => {
+    setSelectedSessionId(session.id);
+    setTimeout(() => onStartSession(session), 200);
   };
 
   const history = useMemo(() => loadHistory(), [zone, intention]);
@@ -694,11 +705,16 @@ function Discover({ profile, onStartSession, onBestShape }: {
 
         {zone && intention && (
           <div ref={sessionListRef} className="mt-4 grid sm:grid-cols-3 gap-3 scroll-mt-20">
-            {intentionList.map((session) => (
+            {intentionList.map((session) => {
+              const active = selectedSessionId === session.id;
+              return (
               <button
                 key={session.id}
-                onClick={() => onStartSession(session)}
-                className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition text-left p-4"
+                onClick={() => onPickSession(session)}
+                className={[
+                  "rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition text-left p-4",
+                  active ? "animate-selected-glow" : "animate-hint-glow",
+                ].join(" ")}
               >
                 <p className="font-bold text-rose">{session.name}</p>
                 <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
@@ -708,7 +724,8 @@ function Discover({ profile, onStartSession, onBestShape }: {
                   </p>
                 )}
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
