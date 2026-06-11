@@ -72,8 +72,8 @@ export default function ToolsIndex() {
 
       {/* HERO — Continue your bloom journey */}
       <section className="mt-4 sm:mt-6">
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-          <img src="/images/tools-hero-journey.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] bg-gradient-to-br from-[#fbcfe8] to-[#f472b6]">
+          <img src="/images/tools-hero-journey.png" alt="" className="absolute inset-0 h-full w-full object-contain object-center" />
           <div className="absolute inset-0 z-[2] bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
           <div className="relative z-[2] ml-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-right">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
@@ -135,8 +135,8 @@ export default function ToolsIndex() {
 
       {/* HERO — Daily Bloom Affirmation */}
       <section className="mt-4 sm:mt-6">
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-          <img src="/images/tools-hero-affirmation.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] bg-gradient-to-br from-[#fbcfe8] to-[#f472b6]">
+          <img src="/images/tools-hero-affirmation.png" alt="" className="absolute inset-0 h-full w-full object-contain object-center" />
           <div className="absolute inset-0 z-[2] bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
           <div className="relative z-[2] ml-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-right">
             <span className="clay-blob ml-auto inline-grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-2xl text-white">

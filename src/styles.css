@@ -485,10 +485,11 @@
 @utility pearl-frame {
   position: relative;
   isolation: isolate;
+  border: 1.5px solid oklch(1 0 0 / 0.75);
   box-shadow:
-    /* glossy glass border */
-    inset 0 0 0 1.5px oklch(1 0 0 / 0.65),
-    inset 0 0 0 4px oklch(1 0 0 / 0.18),
+    /* glossy glass border ring */
+    inset 0 0 0 2px oklch(1 0 0 / 0.55),
+    inset 0 0 0 6px oklch(1 0 0 / 0.16),
     /* soft outer glow */
     0 12px 30px -16px oklch(0.6 0.27 350 / 0.45);
 
@@ -499,7 +500,7 @@
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: radial-gradient(120% 60% at 50% -10%, oklch(1 0 0 / 0.55), transparent 65%);
+    background: radial-gradient(120% 60% at 50% -10%, oklch(1 0 0 / 0.7), transparent 60%);
   }
 
   /* corner sparkle / shine accent */
