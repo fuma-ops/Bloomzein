@@ -149,13 +149,15 @@ export default function ToolsIndex() {
       <section className="mt-4 sm:mt-6">
         <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
           <img src="/images/tools-hero-affirmation.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
-          <div className="absolute inset-0 z-[2] bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
-          <div className="relative z-[2] ml-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-right">
-            <span className="clay-blob ml-auto inline-grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-2xl text-white">
-              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} fill="currentColor" />
+          <div
+            className="absolute inset-0 z-[2]"
+            style={{ background: "radial-gradient(65% 90% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.6) 45%, transparent 80%)" }}
+          />
+          <div className="relative z-[2] mx-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-center flex flex-col items-center">
+            <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">
+              <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} fill="currentColor" /> Daily Bloom Affirmation
             </span>
-            <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">Daily Bloom Affirmation</p>
-            <p className="mt-0.5 sm:mt-1 font-script text-xl sm:text-3xl text-[#831843] leading-snug">I choose myself, every single day. 💗</p>
+            <p className="mt-1.5 sm:mt-2 font-script text-xl sm:text-3xl text-[#831843] leading-snug">"I choose myself, every single day."</p>
 
             <a
               href="/app/today"
