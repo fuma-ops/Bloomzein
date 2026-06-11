@@ -687,3 +687,25 @@
   animation-fill-mode: backwards;
 }
 
+/* Hide scrollbars while keeping horizontal scroll usable */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* One-time nudge to hint a row can be scrolled horizontally */
+@keyframes scroll-hint {
+  0%, 100% { transform: translateX(0); }
+  40% { transform: translateX(-22px); }
+  70% { transform: translateX(-22px); }
+}
+
+@utility animate-scroll-hint {
+  animation: scroll-hint 1.4s ease-in-out 1;
+  animation-delay: 0.7s;
+  animation-fill-mode: backwards;
+}
+

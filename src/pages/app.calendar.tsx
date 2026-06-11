@@ -471,22 +471,24 @@ function FilterBar({ stats, activeFilter, onToggle }: {
   if (stats.vacation) items.push({ key: "vacation", Icon: Plane, label: `Vacation · ${fmtRange(stats.vacation.start, stats.vacation.end)}` });
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 mb-4 -mx-1 px-1">
-      {items.map((it, i) => {
-        const active = activeFilter === it.key;
-        return (
-          <button
-            key={it.key}
-            onClick={() => onToggle(it.key)}
-            className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in",
-              active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/80 border-petal/60 text-[#831843] hover:bg-blush/60"].join(" ")}
-            style={{ animationDelay: `${i * 0.05}s` }}
-          >
-            <it.Icon className={["h-4 w-4 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
-            {it.label}
-          </button>
-        );
-      })}
+    <div className="overflow-x-auto scrollbar-hide pb-1 mb-4 -mx-1 px-1">
+      <div className="flex items-center gap-2 w-max sm:w-auto md:flex-wrap animate-scroll-hint">
+        {items.map((it, i) => {
+          const active = activeFilter === it.key;
+          return (
+            <button
+              key={it.key}
+              onClick={() => onToggle(it.key)}
+              className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in",
+                active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/80 border-petal/60 text-[#831843] hover:bg-blush/60"].join(" ")}
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <it.Icon className={["h-4 w-4 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
+              {it.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -574,7 +576,7 @@ function MonthGrid({
   return (
     <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-6">
       <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
-        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
+        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
       </div>
       <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
@@ -590,31 +592,31 @@ function MonthGrid({
             <button
               key={fmtLocalDate(cell.date)}
               onClick={() => onSelect(cell.date)}
-              className={["min-h-[60px] sm:min-h-[78px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 gap-0.5 text-left transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
+              className={["min-h-[60px] sm:min-h-[78px] lg:min-h-[110px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 lg:p-2 gap-0.5 lg:gap-1 text-left transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
                 cellTone ?? "bg-white/60 border-petal/30",
                 cell.inMonth ? "" : "opacity-40",
                 activeFilter ? (matches ? "ring-2 ring-hotpink/50" : "opacity-25 grayscale") : ""].join(" ")}
               style={{ animationDelay: `${i * 0.015}s` }}
             >
-              <span className={["text-[10px] sm:text-xs font-bold leading-none shrink-0",
-                isToday ? "grid h-4 w-4 sm:h-5 sm:w-5 place-items-center rounded-full bg-hotpink text-white" : "text-[#831843]"].join(" ")}>
+              <span className={["text-[10px] sm:text-xs lg:text-sm font-bold leading-none shrink-0",
+                isToday ? "grid h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 place-items-center rounded-full bg-hotpink text-white" : "text-[#831843]"].join(" ")}>
                 {cell.date.getDate()}
               </span>
               {items.length > 0 && (
-                <div className="flex flex-col gap-px mt-0.5 overflow-hidden">
+                <div className="flex flex-col gap-px lg:gap-0.5 mt-0.5 overflow-hidden">
                   {items.slice(0, 3).map((item) => {
                     const meta = CATEGORY_META[item.category];
                     if (!meta) return null;
                     return (
-                      <div key={item.id} title={item.label} className="flex items-center gap-0.5 overflow-hidden">
-                        <span className={["grid h-2.5 w-2.5 sm:h-3 sm:w-3 place-items-center rounded-full shrink-0", meta.chip].join(" ")}>
-                          <meta.Icon className="h-1.5 w-1.5 sm:h-2 sm:w-2" />
+                      <div key={item.id} title={item.label} className="flex items-center gap-0.5 lg:gap-1 overflow-hidden">
+                        <span className={["grid h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-4 lg:w-4 place-items-center rounded-full shrink-0", meta.chip].join(" ")}>
+                          <meta.Icon className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5" />
                         </span>
-                        <span className="text-[6px] sm:text-[7px] leading-tight truncate text-[#831843]">{item.label}</span>
+                        <span className="text-[6px] sm:text-[7px] lg:text-[10px] leading-tight truncate text-[#831843]">{item.label}</span>
                       </div>
                     );
                   })}
-                  {items.length > 3 && <span className="text-[6px] sm:text-[7px] font-bold text-rose/50 leading-none">+{items.length - 3} more</span>}
+                  {items.length > 3 && <span className="text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-rose/50 leading-none">+{items.length - 3} more</span>}
                 </div>
               )}
             </button>
@@ -733,9 +735,9 @@ function DayDrawer({
   const meta = phase ? PHASE_META[phase] : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-rose/30 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-rose/30 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="relative w-full sm:max-w-lg max-h-[88vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
+        className="relative w-full sm:max-w-lg max-h-[88vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 pb-28 sm:pb-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-blush/60 text-rose hover:bg-blush transition">
