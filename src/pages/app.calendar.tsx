@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb,
+  ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb, CalendarDays,
   Droplet, Sprout, Star, Moon, Circle,
   Dumbbell, PersonStanding, BookOpen, CalendarClock, Bell, Soup, Heart, Droplets, Cake, Plane,
   type LucideIcon,
@@ -241,6 +241,7 @@ export default function CalendarPage() {
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState<Date | null>(null);
   const [hiddenCats, setHiddenCats] = useState<Set<string>>(new Set());
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [yogaSchedule, setYogaSchedule] = useState<Record<string, string | null>>({});
@@ -335,6 +336,7 @@ export default function CalendarPage() {
     if (next.has(key)) next.delete(key); else next.add(key);
     return next;
   });
+  const toggleFilter = (key: string) => setActiveFilter((prev) => (prev === key ? null : key));
 
   const rangeLabel = useMemo(() => {
     if (view === "week") {
@@ -350,7 +352,7 @@ export default function CalendarPage() {
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={14} />
-      <PageHeader title="Bloom Calendar" emoji="🗓️">
+      <PageHeader title="Bloom Calendar" emoji={<CalendarDays className="inline h-7 w-7 text-hotpink align-middle" />}>
         <div className="flex items-center gap-2">
           <button
             onClick={goToday}
@@ -371,7 +373,7 @@ export default function CalendarPage() {
         Your life, beautifully planned.
       </p>
 
-      <StatsBar stats={monthStats} />
+      <FilterBar stats={monthStats} activeFilter={activeFilter} onToggle={toggleFilter} />
 
       <div className="flex items-center justify-between mb-3 px-1">
         <p className="text-sm font-bold text-hotpink inline-flex items-center gap-1">
@@ -397,6 +399,7 @@ export default function CalendarPage() {
           today={today}
           planningFor={planningFor}
           hiddenCats={hiddenCats}
+          activeFilter={activeFilter}
           moodFor={(d) => moodForDate(diaryEntries, d)}
           onSelect={setSelected}
         />
@@ -407,6 +410,7 @@ export default function CalendarPage() {
           today={today}
           planningFor={planningFor}
           hiddenCats={hiddenCats}
+          activeFilter={activeFilter}
           onSelect={setSelected}
         />
       )}
@@ -416,6 +420,7 @@ export default function CalendarPage() {
           today={today}
           planningFor={planningFor}
           hiddenCats={hiddenCats}
+          activeFilter={activeFilter}
           onSelect={setSelected}
         />
       )}
@@ -441,11 +446,13 @@ export default function CalendarPage() {
   );
 }
 
-function StatsBar({ stats }: {
+function FilterBar({ stats, activeFilter, onToggle }: {
   stats: {
     workouts: number; yogaCount: number; journalCount: number; reminderCount: number;
     vacation: { start: Date; end: Date } | null; phase: Phase; cycleDay: number;
   };
+  activeFilter: string | null;
+  onToggle: (key: string) => void;
 }) {
   const phaseMeta = stats.phase ? PHASE_META[stats.phase] : null;
   const fmtRange = (start: Date, end: Date) => {
@@ -455,24 +462,31 @@ function StatsBar({ stats }: {
       : `${MONTHS[start.getMonth()].slice(0, 3)} ${start.getDate()} – ${MONTHS[end.getMonth()].slice(0, 3)} ${end.getDate()}`;
   };
 
-  const items: { Icon: LucideIcon; label: string; color: string }[] = [];
-  if (phaseMeta) items.push({ Icon: phaseMeta.Icon, label: `${phaseMeta.label} · Day ${stats.cycleDay}`, color: "text-violet-500" });
-  items.push({ Icon: Dumbbell, label: `${stats.workouts} Workout${stats.workouts === 1 ? "" : "s"}`, color: "text-orange-500" });
-  items.push({ Icon: PersonStanding, label: `${stats.yogaCount} Yoga Session${stats.yogaCount === 1 ? "" : "s"}`, color: "text-teal-500" });
-  items.push({ Icon: BookOpen, label: `${stats.journalCount} Journal Entr${stats.journalCount === 1 ? "y" : "ies"}`, color: "text-indigo-500" });
-  items.push({ Icon: Bell, label: `${stats.reminderCount} Reminder${stats.reminderCount === 1 ? "" : "s"}`, color: "text-yellow-600" });
-  if (stats.vacation) items.push({ Icon: Plane, label: `Vacation · ${fmtRange(stats.vacation.start, stats.vacation.end)}`, color: "text-blue-500" });
+  const items: { key: string; Icon: LucideIcon; label: string }[] = [];
+  if (phaseMeta && stats.phase) items.push({ key: stats.phase, Icon: phaseMeta.Icon, label: `${phaseMeta.label} · Day ${stats.cycleDay}` });
+  items.push({ key: "workout", Icon: Dumbbell, label: `${stats.workouts} Workout${stats.workouts === 1 ? "" : "s"}` });
+  items.push({ key: "yoga", Icon: PersonStanding, label: `${stats.yogaCount} Yoga Session${stats.yogaCount === 1 ? "" : "s"}` });
+  items.push({ key: "journal", Icon: BookOpen, label: `${stats.journalCount} Journal Entr${stats.journalCount === 1 ? "y" : "ies"}` });
+  items.push({ key: "reminder", Icon: Bell, label: `${stats.reminderCount} Reminder${stats.reminderCount === 1 ? "" : "s"}` });
+  if (stats.vacation) items.push({ key: "vacation", Icon: Plane, label: `Vacation · ${fmtRange(stats.vacation.start, stats.vacation.end)}` });
 
   return (
-    <div className="rounded-2xl bg-white/85 backdrop-blur border border-petal/60 p-3 mb-4 overflow-x-auto">
-      <div className="flex items-stretch gap-3 min-w-max divide-x divide-petal/40">
-        {items.map((it, i) => (
-          <div key={i} className={["flex items-center gap-1.5", i > 0 ? "pl-3" : ""].join(" ")}>
-            <it.Icon className={["h-4 w-4 shrink-0", it.color].join(" ")} />
-            <span className="text-xs font-semibold text-[#831843] whitespace-nowrap">{it.label}</span>
-          </div>
-        ))}
-      </div>
+    <div className="flex items-center gap-2 overflow-x-auto pb-1 mb-4 -mx-1 px-1">
+      {items.map((it, i) => {
+        const active = activeFilter === it.key;
+        return (
+          <button
+            key={it.key}
+            onClick={() => onToggle(it.key)}
+            className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in",
+              active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/80 border-petal/60 text-[#831843] hover:bg-blush/60"].join(" ")}
+            style={{ animationDelay: `${i * 0.05}s` }}
+          >
+            <it.Icon className={["h-4 w-4 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
+            {it.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -489,29 +503,34 @@ function ItemChip({ item }: { item: PlanningItem }) {
 }
 
 function WeekView({
-  days, today, planningFor, hiddenCats, moodFor, onSelect,
+  days, today, planningFor, hiddenCats, activeFilter, moodFor, onSelect,
 }: {
   days: Date[];
   today: Date;
   planningFor: (d: Date) => PlanningItem[];
   hiddenCats: Set<string>;
+  activeFilter: string | null;
   moodFor: (d: Date) => ReturnType<typeof moodMeta> | null;
   onSelect: (d: Date) => void;
 }) {
   return (
     <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
       <div className="space-y-2.5">
-        {days.map((day) => {
+        {days.map((day, i) => {
           const phase = phaseForDay(day, DEFAULT_SETTINGS);
-          const items = planningFor(day).filter((i) => !hiddenCats.has(i.category));
+          const allItems = planningFor(day).filter((it) => !hiddenCats.has(it.category));
+          const matches = !activeFilter || allItems.some((it) => it.category === activeFilter);
+          const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
           const mood = moodFor(day);
           const isToday = sameDay(day, today);
           return (
             <button
               key={fmtLocalDate(day)}
               onClick={() => onSelect(day)}
-              className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10",
-                isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50"].join(" ")}
+              className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
+                isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50",
+                activeFilter ? (matches ? "ring-2 ring-hotpink/50" : "opacity-30 grayscale") : ""].join(" ")}
+              style={{ animationDelay: `${i * 0.05}s` }}
             >
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-bold",
@@ -542,12 +561,13 @@ function WeekView({
 }
 
 function MonthGrid({
-  cells, today, planningFor, hiddenCats, onSelect,
+  cells, today, planningFor, hiddenCats, activeFilter, onSelect,
 }: {
   cells: { date: Date; inMonth: boolean }[];
   today: Date;
   planningFor: (d: Date) => PlanningItem[];
   hiddenCats: Set<string>;
+  activeFilter: string | null;
   onSelect: (d: Date) => void;
 }) {
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -557,37 +577,44 @@ function MonthGrid({
         {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
       </div>
       <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-        {cells.map((cell) => {
+        {cells.map((cell, i) => {
           const phase = phaseForDay(cell.date, DEFAULT_SETTINGS);
-          const items = planningFor(cell.date).filter((i) => !hiddenCats.has(i.category));
+          const allItems = planningFor(cell.date).filter((it) => !hiddenCats.has(it.category));
           const isToday = sameDay(cell.date, today);
-          const isVacation = items.some((i) => i.category === "vacation");
+          const isVacation = allItems.some((it) => it.category === "vacation");
           const cellTone = isVacation ? CATEGORY_META.vacation.cell : CATEGORY_META[phase]?.cell;
+          const matches = !activeFilter || allItems.some((it) => it.category === activeFilter);
+          const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
 
           return (
             <button
               key={fmtLocalDate(cell.date)}
               onClick={() => onSelect(cell.date)}
-              className={["aspect-square rounded-[8px] sm:rounded-[10px] border flex flex-col items-center pt-1 gap-0.5 transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden",
+              className={["min-h-[60px] sm:min-h-[78px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 gap-0.5 text-left transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
                 cellTone ?? "bg-white/60 border-petal/30",
-                cell.inMonth ? "" : "opacity-40"].join(" ")}
+                cell.inMonth ? "" : "opacity-40",
+                activeFilter ? (matches ? "ring-2 ring-hotpink/50" : "opacity-25 grayscale") : ""].join(" ")}
+              style={{ animationDelay: `${i * 0.015}s` }}
             >
-              <span className={["text-[10px] sm:text-xs font-bold leading-none",
+              <span className={["text-[10px] sm:text-xs font-bold leading-none shrink-0",
                 isToday ? "grid h-4 w-4 sm:h-5 sm:w-5 place-items-center rounded-full bg-hotpink text-white" : "text-[#831843]"].join(" ")}>
                 {cell.date.getDate()}
               </span>
               {items.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-0.5 px-0.5">
+                <div className="flex flex-col gap-px mt-0.5 overflow-hidden">
                   {items.slice(0, 3).map((item) => {
                     const meta = CATEGORY_META[item.category];
                     if (!meta) return null;
                     return (
-                      <span key={item.id} title={item.label} className={["grid h-3 w-3 sm:h-3.5 sm:w-3.5 place-items-center rounded-full", meta.chip].join(" ")}>
-                        <meta.Icon className="h-1.5 w-1.5 sm:h-2 sm:w-2" />
-                      </span>
+                      <div key={item.id} title={item.label} className="flex items-center gap-0.5 overflow-hidden">
+                        <span className={["grid h-2.5 w-2.5 sm:h-3 sm:w-3 place-items-center rounded-full shrink-0", meta.chip].join(" ")}>
+                          <meta.Icon className="h-1.5 w-1.5 sm:h-2 sm:w-2" />
+                        </span>
+                        <span className="text-[6px] sm:text-[7px] leading-tight truncate text-[#831843]">{item.label}</span>
+                      </div>
                     );
                   })}
-                  {items.length > 3 && <span className="text-[7px] sm:text-[8px] font-bold text-rose/50 leading-none">+{items.length - 3}</span>}
+                  {items.length > 3 && <span className="text-[6px] sm:text-[7px] font-bold text-rose/50 leading-none">+{items.length - 3} more</span>}
                 </div>
               )}
             </button>
@@ -599,12 +626,13 @@ function MonthGrid({
 }
 
 function ListView({
-  cursor, today, planningFor, hiddenCats, onSelect,
+  cursor, today, planningFor, hiddenCats, activeFilter, onSelect,
 }: {
   cursor: Date;
   today: Date;
   planningFor: (d: Date) => PlanningItem[];
   hiddenCats: Set<string>;
+  activeFilter: string | null;
   onSelect: (d: Date) => void;
 }) {
   const days = useMemo(() => {
@@ -613,11 +641,12 @@ function ListView({
     const result: { date: Date; items: PlanningItem[] }[] = [];
     for (let d = 1; d <= totalDays; d++) {
       const date = new Date(year, month, d);
-      const items = planningFor(date).filter((i) => !hiddenCats.has(i.category));
+      const allItems = planningFor(date).filter((it) => !hiddenCats.has(it.category));
+      const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
       if (items.length) result.push({ date, items });
     }
     return result;
-  }, [cursor, planningFor, hiddenCats]);
+  }, [cursor, planningFor, hiddenCats, activeFilter]);
 
   return (
     <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
@@ -625,14 +654,16 @@ function ListView({
         <p className="text-center text-sm text-rose/60 py-8">Nothing planned this month yet ✿</p>
       ) : (
         <div className="space-y-2.5">
-          {days.map(({ date, items }) => {
+          {days.map(({ date, items }, i) => {
             const isToday = sameDay(date, today);
             return (
               <button
                 key={fmtLocalDate(date)}
                 onClick={() => onSelect(date)}
-                className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10",
-                  isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50"].join(" ")}
+                className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
+                  isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50",
+                  activeFilter ? "ring-2 ring-hotpink/50" : ""].join(" ")}
+                style={{ animationDelay: `${i * 0.05}s` }}
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-bold",
@@ -661,14 +692,15 @@ function CalendarKey({ hiddenCats, onToggle }: { hiddenCats: Set<string>; onTogg
       <p className="text-sm font-bold text-hotpink">Calendar Key</p>
       <p className="text-[11px] text-rose/60 mb-3">Tap an item to show/hide</p>
       <div className="flex flex-wrap gap-2">
-        {Object.entries(CATEGORY_META).map(([key, meta]) => {
+        {Object.entries(CATEGORY_META).map(([key, meta], i) => {
           const hidden = hiddenCats.has(key);
           return (
             <button
               key={key}
               onClick={() => onToggle(key)}
-              className={["inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition",
+              className={["inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition animate-card-pop-in",
                 hidden ? "opacity-40 border-petal/40 bg-white/50 text-rose/50" : ["border-transparent", meta.chip].join(" ")].join(" ")}
+              style={{ animationDelay: `${i * 0.04}s` }}
             >
               <meta.Icon className="h-3 w-3" /> {meta.label}
             </button>

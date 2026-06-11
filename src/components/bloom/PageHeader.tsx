@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export function PageHeader({ title, emoji, children }: { title: string; emoji?: string; children?: ReactNode }) {
+export function PageHeader({ title, emoji, children }: { title: string; emoji?: ReactNode; children?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <h1 className="font-script text-5xl text-hotpink">
