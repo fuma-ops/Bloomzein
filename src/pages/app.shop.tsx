@@ -6,7 +6,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
 /* ---------- data ---------- */
-type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "premium";
+type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "bestsellers";
 
 const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] = [
   { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.jpg" },
@@ -14,7 +14,7 @@ const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] 
   { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.jpg" },
   { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.jpg" },
   { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.jpg" },
-  { key: "premium",     label: "Premium",     img: "/images/shop-cat-premium.jpg" },
+  { key: "bestsellers", label: "Best sellers", img: "/images/shop-cat-premium.jpg" },
 ];
 
 interface Product {
@@ -22,21 +22,21 @@ interface Product {
   name: string;
   price: number;
   rating: number;
-  cat: Exclude<CatKey, "all">;
+  cat: Exclude<CatKey, "all" | "bestsellers">;
   img: string;
   bestseller?: boolean;
 }
 
 const PRODUCTS: Product[] = [
-  { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "/images/shop-p-candle.jpg",   bestseller: true },
-  { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "/images/shop-p-mask.jpg" },
-  { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "/images/shop-p-gloss.jpg",    bestseller: true },
-  { id: "serum",    name: "Rose Petal Serum",    price: 42,  rating: 4.9, cat: "beauty",      img: "/images/shop-p-serum.jpg" },
-  { id: "heat",     name: "Cozy Heat Wrap",      price: 36,  rating: 4.8, cat: "cycle",       img: "/images/shop-p-heat.jpg",     bestseller: true },
-  { id: "bottle",   name: "Bloom Water Bottle",  price: 24,  rating: 4.6, cat: "active",      img: "/images/shop-p-bottle.jpg" },
-  { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "/images/shop-p-leggings.jpg", bestseller: true },
-  { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "/images/shop-p-clip.jpg" },
-  { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "premium",     img: "/images/shop-p-planner.jpg",  bestseller: true },
+  { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "/images/shop-cat-selfcare.jpg",    bestseller: true },
+  { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "/images/shop-hero.png" },
+  { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "/images/shop-cat-beauty.jpg",      bestseller: true },
+  { id: "serum",    name: "Rose Petal Serum",    price: 42,  rating: 4.9, cat: "beauty",      img: "/images/shop-hero.png" },
+  { id: "heat",     name: "Cozy Heat Wrap",      price: 36,  rating: 4.8, cat: "cycle",       img: "/images/shop-cat-cycle.jpg",       bestseller: true },
+  { id: "bottle",   name: "Bloom Water Bottle",  price: 24,  rating: 4.6, cat: "active",      img: "/images/shop-cat-active.jpg" },
+  { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "/images/shop-hero.png",            bestseller: true },
+  { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "/images/shop-cat-accessories.jpg" },
+  { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "accessories", img: "/images/shop-cat-premium.jpg",     bestseller: true },
 ];
 
 const MOODS: { label: string; img: string }[] = [
@@ -63,6 +63,7 @@ export default function ShopPage() {
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
   const [bumped, setBumped] = useState(false);
+  const [showWhy, setShowWhy] = useState(false);
 
   useEffect(() => {
     try {
@@ -81,8 +82,9 @@ export default function ShopPage() {
   const subtotal = cartItems.reduce((s, { p, q }) => s + p.price * q, 0);
 
   const filtered = useMemo(() => {
-    return PRODUCTS.filter((p) => (active === "all" || p.cat === active))
-      .filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
+    return PRODUCTS.filter((p) => (
+      active === "all" ? true : active === "bestsellers" ? !!p.bestseller : p.cat === active
+    )).filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
   }, [query, active]);
 
   const recommended = PRODUCTS.filter((p) => p.bestseller);
@@ -176,18 +178,37 @@ export default function ShopPage() {
 
       {/* RECOMMENDED FOR YOU */}
       <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
-        <SectionTitle hint="Why these picks →">Recommended for you</SectionTitle>
-        <p className="-mt-1 mb-3 text-xs sm:text-sm text-rose/75">Curated based on your current phase ✿</p>
-        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 className="font-script text-3xl sm:text-4xl text-hotpink flex items-center gap-1.5">
+            Recommended for you <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-hotpink/70" strokeWidth={1.8} />
+          </h2>
+        </div>
+        <div className="-mt-1 mb-3 flex items-center justify-between gap-2">
+          <p className="text-xs sm:text-sm text-rose/75">Curated based on your current phase ✿</p>
+          <button
+            onClick={() => setShowWhy((v) => !v)}
+            aria-expanded={showWhy}
+            className="shrink-0 text-xs font-semibold text-hotpink/80 hover:text-hotpink transition"
+          >
+            Why these picks {showWhy ? "↑" : "→"}
+          </button>
+        </div>
+        {showWhy && (
+          <p className="-mt-1 mb-3 rounded-2xl border border-petal/60 bg-white/80 px-3 py-2 text-xs sm:text-sm text-rose/80 animate-fade-in">
+            Curated from your current cycle phase, saved favorites, and the Bloom community's most-loved picks ✿
+          </p>
+        )}
+        <div className="-mx-3 sm:mx-0 px-3 sm:px-0 flex gap-2.5 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1 animate-bloom-scroll-hint">
           {recommended.map((p) => (
-            <ProductCard
-              key={p.id}
-              p={p}
-              saved={!!saved[p.id]}
-              qty={cart[p.id] || 0}
-              onAdd={() => add(p.id)}
-              onSave={() => toggleSave(p.id)}
-            />
+            <div key={p.id} className="snap-start shrink-0 w-28 sm:w-44">
+              <ProductCard
+                p={p}
+                saved={!!saved[p.id]}
+                qty={cart[p.id] || 0}
+                onAdd={() => add(p.id)}
+                onSave={() => toggleSave(p.id)}
+              />
+            </div>
           ))}
         </div>
       </section>
@@ -212,7 +233,7 @@ export default function ShopPage() {
                 ))}
               </div>
               <button
-                onClick={() => setActive("premium")}
+                onClick={() => setActive("bestsellers")}
                 className="mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white text-hotpink font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 shadow-md shadow-rose/30 transition hover:-translate-y-0.5"
               >
                 Join Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.4} />
