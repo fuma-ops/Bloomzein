@@ -559,6 +559,24 @@
   animation: chevron-glow 1.8s ease-in-out infinite;
 }
 
+@keyframes icon-breathe {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(-2deg); }
+}
+
+@utility animate-icon-breathe {
+  animation: icon-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes hero-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+
+@utility animate-hero-breathe {
+  animation: hero-breathe 14s ease-in-out infinite;
+}
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:
