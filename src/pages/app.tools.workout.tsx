@@ -586,17 +586,17 @@ function Discover({ profile, onStartSession, onBestShape }: {
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <h2 className="font-script text-2xl text-hotpink leading-none mb-3 animate-text-pop">How's your energy today?</h2>
         <div className="grid grid-cols-4 gap-2">
-          {ENERGY_OPTIONS.map((opt, i) => {
+          {ENERGY_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             const active = todayEnergy === opt.key;
             return (
               <button
                 key={opt.key}
                 onClick={() => onPickEnergy(opt.key)}
-                style={{ animationDelay: `${1.9 + i * 0.18}s` }}
                 className={[
                   "flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95",
-                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5 animate-choice-glow-hint",
+                  active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
+                  !todayEnergy ? "animate-hint-glow-delayed" : "",
                 ].join(" ")}
               >
                 <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
@@ -620,7 +620,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 grid-flow-row-dense">
-          {ZONES.map((z, i) => {
+          {ZONES.map((z) => {
             const active = zone === z.key;
             return (
               <div key={z.key} className="relative">
@@ -629,13 +629,12 @@ function Discover({ profile, onStartSession, onBestShape }: {
                 )}
                 <button
                   onClick={() => onPickZone(z.key)}
-                  style={!zone ? { animationDelay: `${2.9 + i * 0.15}s` } : undefined}
                   className={[
                     "group relative aspect-square w-full rounded-2xl overflow-hidden border transition active:scale-95",
                     active
                       ? "bloom-shine border-white/70 shadow-[0_10px_28px_-8px_oklch(0.65_0.27_350/0.6)] ring-2 ring-hotpink/50"
                       : "border-white/40 shadow-[0_6px_18px_-10px_oklch(0.65_0.18_350/0.4)] hover:shadow-[0_10px_24px_-10px_oklch(0.65_0.22_350/0.5)] hover:-translate-y-0.5",
-                    !zone ? "animate-zone-glow-hint" : "",
+                    todayEnergy && !zone ? "animate-hint-glow" : "",
                   ].join(" ")}
                 >
                   <ExercisePhoto exercise={{ slug: z.key, name: z.label, image: z.image, muscles: "" }} className="absolute inset-0 h-full w-full object-cover" />
@@ -660,7 +659,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
           <div ref={intentionSectionRef} className="mt-4 scroll-mt-20">
             <p className="text-sm font-bold text-rose mb-2">Pick an intention</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {WORKOUT_INTENTIONS.map((it, i) => {
+              {WORKOUT_INTENTIONS.map((it) => {
                 const Icon = it.icon;
                 const active = intention === it.key;
                 const optimal = phase !== "any" && PHASE_OPTIMAL[it.key].includes(phase);
@@ -668,13 +667,12 @@ function Discover({ profile, onStartSession, onBestShape }: {
                   <button
                     key={it.key}
                     onClick={() => setIntention(it.key)}
-                    style={!intention ? { animationDelay: `${0.3 + i * 0.15}s` } : undefined}
                     className={[
                       "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left shadow-sm transition active:scale-95",
                       active
                         ? "bloom-shine bg-gradient-to-br from-hotpink to-magenta text-white border-transparent shadow-[0_8px_22px_-8px_oklch(0.65_0.27_350/0.6)] animate-selected-glow"
                         : "bg-white/70 border-petal/50 text-rose hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
-                      !intention ? "animate-zone-glow-hint" : "",
+                      !intention ? "animate-hint-glow" : "",
                     ].join(" ")}
                   >
                     <span className="flex items-center gap-1.5">
