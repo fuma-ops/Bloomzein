@@ -72,17 +72,17 @@ export default function ToolsIndex() {
 
       {/* HERO — Continue your bloom journey */}
       <section className="mt-4 sm:mt-6">
-        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] aspect-[2.35/1] shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
-          <img src="/images/tools-hero-journey.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
+          <img src="/images/tools-hero-journey.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
-          <div className="relative ml-auto px-4 py-4 sm:px-8 sm:py-7 max-w-sm text-right">
+          <div className="relative ml-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-right">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
               Continue your bloom journey <Sparkles className="h-3 w-3" strokeWidth={2} />
             </span>
-            <h2 className="mt-2 sm:mt-3 font-bold text-lg sm:text-2xl text-[#831843] leading-tight">Workout Programs</h2>
-            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/80">Day 12 · 3 workouts completed</p>
+            <h2 className="mt-1.5 sm:mt-2 font-bold text-lg sm:text-2xl text-[#831843] leading-tight">Workout Programs</h2>
+            <p className="mt-0.5 text-[11px] sm:text-sm text-rose/80">Day 12 · 3 workouts completed</p>
 
-            <div className="mt-3 sm:mt-4 ml-auto">
+            <div className="mt-2 sm:mt-3 ml-auto">
               <div className="h-2 sm:h-2.5 w-full max-w-[180px] sm:max-w-[220px] ml-auto rounded-full bg-white/70 border border-petal/60 overflow-hidden">
                 <div className="h-full rounded-full bg-hotpink" style={{ width: "78%" }} />
               </div>
@@ -91,7 +91,7 @@ export default function ToolsIndex() {
 
             <a
               href="/app/tools/workout"
-              className="bloom-luxury-btn mt-3 sm:mt-4 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
+              className="bloom-luxury-btn mt-2 sm:mt-3 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
             >
               Continue <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
             </a>
@@ -135,19 +135,19 @@ export default function ToolsIndex() {
 
       {/* HERO — Daily Bloom Affirmation */}
       <section className="mt-4 sm:mt-6">
-        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] aspect-[2.4/1] shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
-          <img src="/images/tools-hero-affirmation.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.45)]">
+          <img src="/images/tools-hero-affirmation.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
-          <div className="relative ml-auto px-4 py-4 sm:px-8 sm:py-7 max-w-sm text-right">
-            <span className="clay-blob ml-auto inline-grid h-9 w-9 sm:h-11 sm:w-11 place-items-center rounded-2xl text-white">
-              <Heart className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} fill="currentColor" />
+          <div className="relative ml-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-right">
+            <span className="clay-blob ml-auto inline-grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-2xl text-white">
+              <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} fill="currentColor" />
             </span>
-            <p className="mt-2 sm:mt-3 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">Daily Bloom Affirmation</p>
-            <p className="mt-1 sm:mt-1.5 font-script text-xl sm:text-3xl text-[#831843] leading-snug">I choose myself, every single day. 💗</p>
+            <p className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">Daily Bloom Affirmation</p>
+            <p className="mt-0.5 sm:mt-1 font-script text-xl sm:text-3xl text-[#831843] leading-snug">I choose myself, every single day. 💗</p>
 
             <a
               href="/app/today"
-              className="bloom-luxury-btn mt-3 sm:mt-4 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
+              className="bloom-luxury-btn mt-2 sm:mt-3 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
             >
               Read more <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
             </a>
