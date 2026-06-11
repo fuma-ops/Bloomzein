@@ -518,6 +518,47 @@
   }
 }
 
+/* Subtle glass sheen overlay — adds the same pearl shine to cards without altering their existing border/shadow */
+@utility pearl-sheen {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(85% 55% at 30% -10%, oklch(1 0 0 / 0.55), transparent 62%);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(40% 60% at 100% 0%, oklch(1 0 0 / 0.3), transparent 70%);
+  }
+}
+
+@keyframes chevron-glow {
+  0%, 100% {
+    color: oklch(0.75 0.05 350 / 0.5);
+    filter: drop-shadow(0 0 0 transparent);
+    transform: translateX(0);
+  }
+  50% {
+    color: oklch(0.65 0.27 0);
+    filter: drop-shadow(0 0 6px oklch(0.65 0.27 0 / 0.6));
+    transform: translateX(2px);
+  }
+}
+
+@utility animate-chevron-glow {
+  animation: chevron-glow 1.8s ease-in-out infinite;
+}
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:

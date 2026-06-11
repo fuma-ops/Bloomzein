@@ -1,12 +1,13 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart } from "lucide-react";
+import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart, Flower2 } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 
 const LAST_KEY = "bloom:last-tool";
 const PINS_KEY = "bloom:pinned-tools";
+const TOUR_KEY = "bloom:tools-tour-seen";
 
 function linkPropsFor(t: Tool) {
   return t.slug === "budget"
@@ -17,11 +18,21 @@ function linkPropsFor(t: Tool) {
 export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(PINS_KEY);
       if (raw) setPins(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(TOUR_KEY)) {
+        setShowTour(true);
+        localStorage.setItem(TOUR_KEY, "1");
+      }
     } catch {}
   }, []);
 
@@ -127,6 +138,7 @@ export default function ToolsIndex() {
                 pinned={pins.includes(t.slug)}
                 onGo={() => remember(t.slug)}
                 onTogglePin={() => togglePin(t.slug)}
+                showHint={showTour}
               />
             ))}
           </div>
@@ -158,7 +170,7 @@ export default function ToolsIndex() {
   );
 }
 
-function ToolCard({ tool, onGo, pinned, onTogglePin }: { tool: Tool; onGo: () => void; pinned: boolean; onTogglePin: () => void }) {
+function ToolCard({ tool, onGo, pinned, onTogglePin, showHint }: { tool: Tool; onGo: () => void; pinned: boolean; onTogglePin: () => void; showHint?: boolean }) {
   const handleClick = (_e: MouseEvent) => {
     onGo();
   };
@@ -167,8 +179,13 @@ function ToolCard({ tool, onGo, pinned, onTogglePin }: { tool: Tool; onGo: () =>
     <a
       {...linkPropsFor(tool)}
       onClick={handleClick}
-      className="bloom-pearl-card group relative block rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5"
+      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5"
     >
+      <Flower2
+        className="pointer-events-none absolute -right-4 -bottom-4 h-24 w-24 sm:h-28 sm:w-28 -z-10 text-hotpink/10 rotate-12"
+        strokeWidth={1}
+      />
+
       <div className="flex items-start justify-between">
         <span className="clay-blob grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0">
           <CuteToolIcon slug={tool.slug} className="h-7 w-7 sm:h-8 sm:w-8 drop-shadow-[0_2px_3px_oklch(0.4_0.22_350/0.3)]" />
@@ -185,7 +202,13 @@ function ToolCard({ tool, onGo, pinned, onTogglePin }: { tool: Tool; onGo: () =>
           >
             <Pin className="h-3.5 w-3.5" strokeWidth={2} fill={pinned ? "currentColor" : "none"} />
           </button>
-          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-rose/30" strokeWidth={2} />
+          <ChevronRight
+            className={[
+              "h-4 w-4 sm:h-5 sm:w-5",
+              showHint ? "animate-chevron-glow" : "text-rose/30",
+            ].join(" ")}
+            strokeWidth={2}
+          />
         </div>
       </div>
 
