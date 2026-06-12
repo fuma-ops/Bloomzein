@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 
@@ -114,16 +114,23 @@ function AvatarStack() {
 }
 
 function HeartBtn({ saved, onClick }: { saved: boolean; onClick: (e: React.MouseEvent) => void }) {
+  const [popped, setPopped] = useState(false);
   return (
     <button
-      onClick={(e) => { e.stopPropagation(); onClick(e); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(e);
+        setPopped(true);
+        setTimeout(() => setPopped(false), 400);
+      }}
       aria-label={saved ? "Unsave" : "Save"}
       className={[
         "grid h-8 w-8 place-items-center rounded-full transition border backdrop-blur",
+        popped && "animate-heart-pop",
         saved
           ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/40"
           : "bg-white/85 text-hotpink border-petal/60 hover:bg-white",
-      ].join(" ")}
+      ].filter(Boolean).join(" ")}
     >
       <Heart className="h-4 w-4" strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
     </button>
@@ -136,6 +143,13 @@ export default function ReadPage() {
   const [topic, setTopic] = useState<Topic>("All");
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [openId, setOpenId] = useState<string | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (openId) return;
+    const h = headerRef.current?.getBoundingClientRect().height ?? 0;
+    if (h > 0) window.scrollTo({ top: h });
+  }, [openId]);
 
   const toggleSave = (id: string) => setSaved((s) => ({ ...s, [id]: !s[id] }));
 
@@ -185,7 +199,7 @@ export default function ReadPage() {
       <BloomBubbles count={10} />
 
       {/* HEADER */}
-      <header className="sticky top-0 z-30 -mx-3 px-3 pt-2 pb-2 sm:static sm:mx-0 sm:px-0 sm:pt-0 sm:pb-0 bg-blush/70 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none">
+      <header ref={headerRef}>
         <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none">Read</h1>
         <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-rose/80">soft reads for your softest era ✿</p>
         <div className="mt-2 sm:mt-4 relative max-w-xl">
@@ -230,10 +244,13 @@ export default function ReadPage() {
       <section className="mt-4 sm:mt-8">
         <button
           onClick={() => setOpenId(featured.id)}
-          className="group block w-full text-left relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.4)] transition hover:-translate-y-0.5"
+          className="animate-card-breathe group block w-full text-left relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.4)] transition hover:-translate-y-0.5"
         >
           <img src={IMG.featured} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-gradient-to-t from-magenta/70 via-hotpink/20 to-transparent" />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-5 right-6 sm:top-8 sm:right-10 h-4 w-4 sm:h-5 sm:w-5 text-white/80" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-1/3 right-12 sm:right-24 h-3 w-3 sm:h-4 sm:w-4 text-white/70" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-10 right-20 sm:top-16 sm:right-40 h-2.5 w-2.5 sm:h-3 sm:w-3 text-white/60" strokeWidth={1.8} style={{ animationDelay: "2.4s" }} />
           <div className="relative px-4 py-5 sm:px-10 sm:py-14 min-h-[170px] sm:min-h-[360px] flex flex-col justify-end">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-hotpink">
@@ -278,7 +295,7 @@ export default function ReadPage() {
             <h2 className="font-script text-2xl sm:text-4xl text-hotpink">Recommended for you ✿</h2>
             <p className="text-xs text-rose/70">Based on your cycle phase & recent reads</p>
           </div>
-          <button className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white">
+          <button className="animate-cta-glow bloom-luxury-btn shrink-0 inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white">
             See more <ArrowRight className="h-3 w-3" strokeWidth={2} />
           </button>
         </div>

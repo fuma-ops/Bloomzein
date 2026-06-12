@@ -709,3 +709,45 @@
   animation-fill-mode: backwards;
 }
 
+/* Very subtle ambient breathing for hero cards — calm, slow, almost imperceptible */
+@keyframes card-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.012); }
+}
+
+@utility animate-card-breathe {
+  animation: card-breathe 4s ease-in-out infinite;
+}
+
+/* Soft glow pulse for primary CTAs */
+@keyframes cta-glow-pulse {
+  0%, 100% { box-shadow: 0 8px 22px -10px oklch(0.65 0.27 350 / 0.55); }
+  50%      { box-shadow: 0 8px 26px -6px oklch(0.65 0.27 350 / 0.9), 0 0 0 6px oklch(0.75 0.27 350 / 0.16); }
+}
+
+@utility animate-cta-glow {
+  animation: cta-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Gentle drifting sparkle accents inside hero cards */
+@keyframes sparkle-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50%      { transform: translate(6px, -10px) scale(1.2); opacity: 1; }
+}
+
+@utility animate-sparkle-drift {
+  animation: sparkle-drift 5s ease-in-out infinite;
+}
+
+/* Quick pop feedback when tapping a heart/save button */
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  60%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+@utility animate-heart-pop {
+  animation: heart-pop 0.4s ease-out 1;
+}
+

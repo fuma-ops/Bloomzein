@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ShoppingBag, Heart, Star, Plus, Minus, X, ArrowRight, Sparkles,
   Flower2, Gift, Percent, Crown,
@@ -64,6 +64,12 @@ export default function ShopPage() {
   const [open, setOpen] = useState(false);
   const [bumped, setBumped] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const h = headerRef.current?.getBoundingClientRect().height ?? 0;
+    if (h > 0) window.scrollTo({ top: h });
+  }, []);
 
   useEffect(() => {
     try {
@@ -108,52 +114,58 @@ export default function ShopPage() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      {/* HERO */}
-      <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-          <img src="/images/shop-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
-          <div className="absolute inset-0 z-[1] bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
-          <div className="relative z-[2] px-4 py-6 sm:px-10 sm:py-14 max-w-md">
-            <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2">
-              Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
-            </h1>
-            <p className="mt-1.5 sm:mt-3 text-xs sm:text-base text-rose/90">Curated treasures for your softest era ✿</p>
-            <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
-              Beauty • Wellness • Self-care • Cycle Care
-            </p>
+      <div ref={headerRef}>
+        {/* HERO */}
+        <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+          <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
+            <img src="/images/shop-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 z-[1] bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
+            <div className="relative z-[2] px-4 py-6 sm:px-10 sm:py-14 max-w-md">
+              <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2">
+                Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
+              </h1>
+              <p className="mt-1.5 sm:mt-3 text-xs sm:text-base text-rose/90">Curated treasures for your softest era ✿</p>
+              <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
+                Beauty • Wellness • Self-care • Cycle Care
+              </p>
+            </div>
+
+            <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-16 sm:top-8 sm:right-24 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/60 z-[1]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
+            <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-1/2 right-28 sm:right-40 h-3 w-3 sm:h-4 sm:w-4 text-hotpink/50 z-[1]" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
+            <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-10 sm:bottom-10 sm:right-16 h-2.5 w-2.5 sm:h-3 sm:w-3 text-hotpink/40 z-[1]" strokeWidth={1.8} style={{ animationDelay: "2.4s" }} />
+
+            <button
+              onClick={() => setOpen(true)}
+              aria-label="Open cart"
+              className={[
+                "absolute top-3 right-3 sm:top-5 sm:right-5 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
+                bumped ? "animate-bloom-bounce" : "",
+              ].join(" ")}
+            >
+              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold border-2 border-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </div>
+        </section>
 
-          <button
-            onClick={() => setOpen(true)}
-            aria-label="Open cart"
-            className={[
-              "absolute top-3 right-3 sm:top-5 sm:right-5 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
-              bumped ? "animate-bloom-bounce" : "",
-            ].join(" ")}
-          >
-            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
-            {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold border-2 border-white">
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </section>
-
-      {/* SEARCH */}
-      <section className="mt-3 sm:mt-5 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
-          <input
-            id="search-boutique"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search the boutique…"
-            className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-md shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
-          />
-        </div>
-      </section>
+        {/* SEARCH */}
+        <section className="mt-3 sm:mt-5 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
+            <input
+              id="search-boutique"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search the boutique…"
+              className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-md shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
+            />
+          </div>
+        </section>
+      </div>
 
       {/* CATEGORIES */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
@@ -234,7 +246,7 @@ export default function ShopPage() {
               </div>
               <button
                 onClick={() => setActive("bestsellers")}
-                className="mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white text-hotpink font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 shadow-md shadow-rose/30 transition hover:-translate-y-0.5"
+                className="animate-cta-glow mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white text-hotpink font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 shadow-md shadow-rose/30 transition hover:-translate-y-0.5"
               >
                 Join Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.4} />
               </button>
@@ -357,17 +369,19 @@ function CategoryTile(
 function ProductCard({
   p, saved, qty, onAdd, onSave,
 }: { p: Product; saved: boolean; qty: number; onAdd: () => void; onSave: () => void }) {
+  const [popped, setPopped] = useState(false);
   return (
     <div className="group flex flex-col overflow-hidden rounded-xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 shadow-[0_10px_24px_-14px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)]">
       <div className="relative aspect-square overflow-hidden">
         <img src={p.img} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
         <button
-          onClick={onSave}
+          onClick={() => { onSave(); setPopped(true); setTimeout(() => setPopped(false), 400); }}
           aria-label={saved ? "Unsave" : "Save"}
           className={[
             "absolute top-1 right-1 sm:top-2 sm:right-2 grid h-5 w-5 sm:h-9 sm:w-9 place-items-center rounded-full border backdrop-blur transition",
+            popped && "animate-heart-pop",
             saved ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/40" : "bg-white/85 text-hotpink border-petal/60 hover:scale-105",
-          ].join(" ")}
+          ].filter(Boolean).join(" ")}
         >
           <Heart className="h-2.5 w-2.5 sm:h-4 sm:w-4" strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
         </button>

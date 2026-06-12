@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
@@ -17,6 +17,12 @@ function linkPropsFor(t: Tool) {
 export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const h = headerRef.current?.getBoundingClientRect().height ?? 0;
+    if (h > 0) window.scrollTo({ top: h });
+  }, []);
 
   useEffect(() => {
     try {
@@ -52,7 +58,7 @@ export default function ToolsIndex() {
       <BloomBubbles count={10} />
 
       {/* HEADER */}
-      <header className="mb-5 sm:mb-7">
+      <header ref={headerRef} className="mb-5 sm:mb-7">
         <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2">
           Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
         </h1>
@@ -72,9 +78,12 @@ export default function ToolsIndex() {
 
       {/* HERO — Continue your bloom journey */}
       <section className="mt-4 sm:mt-6">
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
+        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
           <img src="/images/tools-hero-journey.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
           <div className="absolute inset-0 z-[2] bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 left-6 sm:top-8 sm:left-10 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/50 z-[1]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-1/2 left-14 sm:left-24 h-3 w-3 sm:h-4 sm:w-4 text-hotpink/40 z-[1]" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 left-8 sm:bottom-10 sm:left-16 h-2.5 w-2.5 sm:h-3 sm:w-3 text-hotpink/30 z-[1]" strokeWidth={1.8} style={{ animationDelay: "2.4s" }} />
           <div className="relative z-[2] ml-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-right">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
               Continue your bloom journey <Sparkles className="h-3 w-3" strokeWidth={2} />
@@ -91,7 +100,7 @@ export default function ToolsIndex() {
 
             <a
               href="/app/tools/workout"
-              className="bloom-luxury-btn mt-2 sm:mt-3 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
+              className="animate-cta-glow bloom-luxury-btn mt-2 sm:mt-3 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
             >
               Continue <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
             </a>
