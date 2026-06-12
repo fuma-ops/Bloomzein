@@ -303,7 +303,7 @@ export default function Landing() {
               return (
                 <article
                   key={u.key}
-                  className="pearl-frame animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 shadow-lg sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                  className="pearl-frame animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl p-2.5 text-center shadow-lg sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                   style={{ animationDelay: `${i * 120}ms`, background: u.cardBg }}
                 >
                   {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
@@ -315,10 +315,10 @@ export default function Landing() {
                     className="pointer-events-none absolute inset-0 h-full w-full object-cover"
                   />
                   {/* white glow behind the text so it stays readable over busy photo backgrounds */}
-                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(115% 85% at 12% 28%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.55) 45%, transparent 78%)" }} />
+                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(85% 75% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.55) 55%, transparent 85%)" }} />
 
                   <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
-                  <ul className="relative z-10 mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2.5">
+                  <ul className="relative z-10 mt-2 flex flex-col items-center gap-1 sm:mt-4 sm:gap-2.5">
                     {u.items.map((it) => {
                       const Icon = it.icon;
                       return (
@@ -334,7 +334,7 @@ export default function Landing() {
                   <a
                     href={u.href}
                     aria-label={`Explore ${u.title}`}
-                    className="hover-scale relative z-10 mt-auto grid h-7 w-7 place-items-center self-end justify-self-end rounded-full bg-white text-hotpink shadow-md sm:h-10 sm:w-10"
+                    className="hover-scale relative z-10 mt-auto grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow-md sm:h-10 sm:w-10"
                   >
                     <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </a>
