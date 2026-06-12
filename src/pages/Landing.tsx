@@ -13,13 +13,6 @@ export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Auto-hide iOS hint after 5s
   useEffect(() => {
@@ -166,27 +159,7 @@ export default function Landing() {
             }}
           />
 
-          {/* decorative glass orbs */}
-          <img
-            src="/images/landing-orb-flower.png"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute -left-8 bottom-0 h-28 w-28 object-contain opacity-90 animate-bloom-float sm:h-40 sm:w-40 lg:-left-10 lg:h-52 lg:w-52"
-            style={{ transform: `translateY(${scrollY * -0.04}px)` }}
-          />
-          <img
-            src="/images/landing-orb-life.png"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute -right-10 top-[55%] h-24 w-24 object-contain opacity-90 animate-bloom-float sm:h-36 sm:w-36 lg:h-52 lg:w-52"
-            style={{ animationDelay: "1.2s", transform: `translateY(${scrollY * -0.03}px)` }}
-          />
-
-          <Sparkles className="pointer-events-none absolute left-[8%] top-[34%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
-          <Sparkles className="pointer-events-none absolute right-[14%] top-[40%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
-          <Star className="pointer-events-none absolute left-[10%] bottom-[24%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
-
-          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-3 pt-7 sm:gap-6 sm:px-10 sm:pb-3 sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
+          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-4 pt-7 sm:gap-6 sm:px-10 sm:pb-4 sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
             <div className="text-left sm:max-w-md lg:max-w-xl" style={{ textShadow: "0 1px 16px oklch(0.97 0.025 350 / 0.9), 0 1px 3px oklch(0.97 0.025 350 / 0.9)" }}>
               <h1 className="font-script text-5xl leading-tight text-hotpink sm:text-6xl lg:text-7xl">
                 Bloom<br className="sm:hidden" /> &amp; Zein
@@ -322,7 +295,7 @@ export default function Landing() {
                       lg:bg-[radial-gradient(60%_75%_at_50%_40%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]"
                   />
 
-                  <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
+                  <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleAccent }}>{u.title}</h3>
                   <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
                     {u.items.map((it) => {
                       const Icon = it.icon;
@@ -618,7 +591,7 @@ interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
   key: string; title: string; href: string;
   badgeIcon: LucideIcon; badgeColor: string;
-  cardBg: string; titleColor: string; itemBg: string; glowColor: string; borderColor: string;
+  cardBg: string; titleColor: string; titleAccent: string; itemBg: string; glowColor: string; borderColor: string;
   cardImage: string;
   items: UniverseItem[];
 }
@@ -628,7 +601,7 @@ const UNIVERSES: Universe[] = [
     key: "body", title: "Body", href: "/app/tools/cycle",
     badgeIcon: Flower2, badgeColor: "#ec4899",
     cardBg: "linear-gradient(160deg, oklch(0.96 0.035 350) 0%, oklch(0.9 0.08 350) 100%)",
-    titleColor: "#db2777", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)", borderColor: "oklch(0.62 0.14 350 / 0.5)",
+    titleColor: "#db2777", titleAccent: "#e60076", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)", borderColor: "oklch(0.62 0.14 350 / 0.5)",
     cardImage: "/images/landing-card-body.png",
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
@@ -641,7 +614,7 @@ const UNIVERSES: Universe[] = [
     key: "mind", title: "Mind", href: "/app/tools/diary",
     badgeIcon: Moon, badgeColor: "#9333ea",
     cardBg: "linear-gradient(160deg, oklch(0.95 0.03 300) 0%, oklch(0.87 0.09 300) 100%)",
-    titleColor: "#7c3aed", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)", borderColor: "oklch(0.56 0.15 300 / 0.5)",
+    titleColor: "#7c3aed", titleAccent: "#7c0cf2", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)", borderColor: "oklch(0.56 0.15 300 / 0.5)",
     cardImage: "/images/landing-card-mind.png",
     items: [
       { icon: NotebookPen, label: "Journal" },
@@ -654,7 +627,7 @@ const UNIVERSES: Universe[] = [
     key: "life", title: "Life", href: "/app/calendar",
     badgeIcon: Star, badgeColor: "#f43f5e",
     cardBg: "linear-gradient(160deg, oklch(0.96 0.03 20) 0%, oklch(0.89 0.08 15) 100%)",
-    titleColor: "#e11d48", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)", borderColor: "oklch(0.6 0.14 18 / 0.5)",
+    titleColor: "#e11d48", titleAccent: "#ff0a47", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)", borderColor: "oklch(0.6 0.14 18 / 0.5)",
     cardImage: "/images/landing-card-life.png",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
