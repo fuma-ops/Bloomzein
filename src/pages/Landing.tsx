@@ -1,59 +1,19 @@
-import { ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Quote, Menu, X, Lock, ChevronLeft, ChevronRight, Flower2 } from "lucide-react";
+import {
+  ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
+  Moon, Sun, Droplet, Smile, PenLine, BookOpen, Dumbbell, Salad, Wallet, Bell, Calendar as CalendarIcon,
+  Target, TrendingUp, Quote, type LucideIcon,
+} from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
-import { SparkleRing } from "@/components/bloom/SparkleRing";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
-import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
-import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const [kitActive, setKitActive] = useState(0);
-  const [kitPaused, setKitPaused] = useState(false);
-  const [isPhone, setIsPhone] = useState(false);
-
-  // on phones we hand control over to a swipe — no auto-glide fighting the user's thumb
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const update = () => setIsPhone(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  // gentle auto-advance, right to left, like a soft carousel breeze — pauses while you're browsing it, off on phones
-  useEffect(() => {
-    if (kitPaused || isPhone) return;
-    const t = setInterval(() => {
-      setKitActive((prev) => (prev + 1) % UNIVERSES.length);
-    }, 4200);
-    return () => clearInterval(t);
-  }, [kitPaused, isPhone]);
-
-  const kitGoTo = (index: number) => {
-    setKitActive(((index % UNIVERSES.length) + UNIVERSES.length) % UNIVERSES.length);
-    setKitPaused(true);
-  };
-  const kitNext = () => kitGoTo(kitActive + 1);
-  const kitPrev = () => kitGoTo(kitActive - 1);
-
-  const kitTouchStart = useRef<number | null>(null);
-  const onKitTouchStart = (e: React.TouchEvent) => {
-    kitTouchStart.current = e.touches[0].clientX;
-  };
-  const onKitTouchEnd = (e: React.TouchEvent) => {
-    if (kitTouchStart.current === null) return;
-    const dx = e.changedTouches[0].clientX - kitTouchStart.current;
-    kitTouchStart.current = null;
-    if (Math.abs(dx) < 36) return;
-    if (dx < 0) kitNext();
-    else kitPrev();
-  };
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -84,45 +44,34 @@ export default function Landing() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bloom-breathe bg-gradient-to-br from-[#e0c3fc]/40 via-[#8ec5fc]/30 to-[#ffc3a0]/30">
-      {/* gentle living background: kawaii shapes and glossy orbs */}
+      {/* gentle living background */}
       <KawaiiBackground />
-      <DreamyFallingIcons count={14} />
-      {/* floating soft blobs */}
+      <DreamyFallingIcons count={12} />
       <div className="pointer-events-none absolute -left-32 top-40 -z-0 h-80 w-80 rounded-full bg-hotpink/20 blur-3xl animate-bloom-pulse" aria-hidden />
       <div className="pointer-events-none absolute -right-32 top-[60%] -z-0 h-96 w-96 rounded-full bg-rose/30 blur-3xl animate-bloom-pulse" style={{ animationDelay: "1.5s" }} aria-hidden />
-
-      {/* extra dreamy fillers for ultra-wide screens — keeps the wide gutters feeling alive instead of empty */}
       <div className="pointer-events-none absolute left-[3%] top-[14%] hidden -z-0 h-72 w-72 rounded-full bg-magenta/15 blur-3xl animate-bloom-pulse xl:block" style={{ animationDelay: "2.2s" }} aria-hidden />
       <div className="pointer-events-none absolute right-[4%] top-[46%] hidden -z-0 h-80 w-80 rounded-full bg-hotpink/15 blur-3xl animate-bloom-pulse xl:block" style={{ animationDelay: "0.7s" }} aria-hidden />
-      <div className="pointer-events-none absolute left-[6%] bottom-[12%] hidden -z-0 h-64 w-64 rounded-full bg-petal/40 blur-3xl animate-bloom-pulse xl:block" style={{ animationDelay: "3.4s" }} aria-hidden />
-      <div className="pointer-events-none absolute left-[5%] top-[30%] hidden flex-col items-center gap-12 opacity-80 xl:flex" aria-hidden>
-        <Heart className="h-8 w-8 fill-hotpink/40 text-hotpink/40 animate-bloom-float" />
-        <Sparkles className="h-10 w-10 text-magenta/40 animate-bloom-sparkle" style={{ animationDelay: "1s" }} />
-        <Star className="h-7 w-7 fill-hotpink/30 text-hotpink/30 animate-bloom-float" style={{ animationDelay: "2s" }} />
-      </div>
-      <div className="pointer-events-none absolute right-[5%] top-[20%] hidden flex-col items-center gap-14 opacity-80 xl:flex" aria-hidden>
-        <Sparkles className="h-9 w-9 text-hotpink/40 animate-bloom-sparkle" style={{ animationDelay: "0.5s" }} />
-        <Heart className="h-8 w-8 fill-magenta/30 text-magenta/30 animate-bloom-float" style={{ animationDelay: "1.5s" }} />
-        <Star className="h-6 w-6 fill-magenta/30 text-magenta/30 animate-bloom-sparkle" style={{ animationDelay: "2.5s" }} />
-      </div>
 
-      {/* Navbar — exactly 3 links, kept soft & uncluttered */}
+      {/* Navbar */}
       <header className="sticky top-0 z-40 border-b border-petal/60 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 2xl:max-w-[96rem]">
           <BloomLogo />
-          <nav className="hidden items-center gap-8 text-sm font-medium text-rose md:flex">
-            <a href="#kit" className="hover:text-hotpink font-semibold">Our Kit</a>
-            <a href="#how-it-works" className="hover:text-hotpink font-semibold">How it works</a>
-            <a
-              href="/app/today"
-              className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition"
+          <nav className="hidden items-center gap-7 text-sm font-semibold text-rose md:flex">
+            <a href="#universes" className="hover:text-hotpink transition">Universes</a>
+            <a href="#features" className="hover:text-hotpink transition">Features</a>
+            <a href="#stories" className="hover:text-hotpink transition">Stories</a>
+            <button
+              onClick={handleDownload}
+              disabled={installing}
+              className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition disabled:opacity-70"
             >
-              <span className="relative z-10 inline-flex items-center gap-1.5">Start Blooming <ArrowRight className="h-3.5 w-3.5" /></span>
+              <span className="relative z-10 inline-flex items-center gap-1.5">
+                {installing ? "Préparation…" : "Download App"} <Download className="h-3.5 w-3.5" />
+              </span>
               <span className="bloom-cta-shine" aria-hidden />
-            </a>
+            </button>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
-            {/* Mobile hamburger button */}
             <button
               id="landing-menu-toggle"
               onClick={() => setMobileMenuOpen(true)}
@@ -156,21 +105,21 @@ export default function Landing() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="mt-8 flex flex-col gap-5">
-                <a
-                  href="#kit"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
-                >
-                  ✿ Our Kit
-                </a>
-                <a
-                  href="#how-it-works"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
-                >
-                  ✿ How it works
-                </a>
+              <div className="mt-8 flex flex-col gap-3">
+                {[
+                  { href: "#universes", label: "Universes" },
+                  { href: "#features", label: "Features" },
+                  { href: "#stories", label: "Stories" },
+                ].map((l) => (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-3 text-[#831843] font-semibold text-lg hover:bg-blush rounded-2xl transition hover:text-hotpink"
+                  >
+                    ✿ {l.label}
+                  </a>
+                ))}
               </div>
             </div>
             <div className="flex flex-col gap-4 border-t border-petal/30 pt-6">
@@ -196,73 +145,73 @@ export default function Landing() {
       )}
 
       <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6 2xl:max-w-[96rem]">
-        {/* Hero — compact, centered, lifted on mobile */}
-        <section className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-8 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.45)]"
-          style={{ background: "linear-gradient(135deg, oklch(0.94 0.08 350) 0%, oklch(0.88 0.14 350) 50%, oklch(0.92 0.1 10) 100%)" }}>
-          <div className="pointer-events-none absolute -right-10 -top-10 hidden h-64 w-64 opacity-60 md:block" aria-hidden>
-            <Sunburst />
-          </div>
-          <Sparkles className="absolute left-4 top-5 h-4 w-4 sm:h-6 sm:w-6 animate-bloom-sparkle text-hotpink" aria-hidden />
-          <Sparkles className="absolute right-6 top-8 h-4 w-4 animate-bloom-sparkle text-magenta" style={{ animationDelay: "0.6s" }} aria-hidden />
-          <Star className="absolute right-8 bottom-8 h-4 w-4 animate-bloom-sparkle fill-hotpink text-hotpink" style={{ animationDelay: "1.2s" }} aria-hidden />
-          <Heart className="absolute bottom-6 left-5 h-4 w-4 animate-bloom-float fill-hotpink text-hotpink" aria-hidden />
-          {/* extra gentle twinkles near hero with light parallax */}
-          <Sparkles className="absolute left-[20%] top-[18%] h-3 w-3 animate-bloom-sparkle text-white/90" style={{ animationDelay: "0.3s", transform: `translateY(${scrollY * -0.06}px)` }} aria-hidden />
-          <Sparkles className="absolute right-[18%] top-[28%] h-3 w-3 animate-bloom-sparkle text-white/80" style={{ animationDelay: "1.4s", transform: `translateY(${scrollY * -0.04}px)` }} aria-hidden />
-          <Sparkles className="absolute left-[12%] bottom-[28%] h-3 w-3 animate-bloom-sparkle text-white/80" style={{ animationDelay: "2.1s", transform: `translateY(${scrollY * -0.05}px)` }} aria-hidden />
 
-          {/* Mobile/tablet: stacked & centered. Desktop: 2-col */}
-          <div className="flex flex-col items-center gap-3 text-center lg:grid lg:grid-cols-2 lg:items-center lg:gap-8 lg:text-left">
-            <div className="relative mx-auto h-[140px] w-[140px] sm:h-[200px] sm:w-[200px] md:h-[250px] md:w-[250px] lg:h-[270px] lg:w-[270px] lg:mt-0">
-              {/* glowing aura behind the hero photo */}
-              <div className="absolute inset-0 -m-6 rounded-[45%_55%_60%_40%/55%_45%_50%_50%] bg-hotpink/40 blur-2xl animate-bloom-pulse" aria-hidden />
-              <div className="absolute inset-0 -m-10 rounded-full bg-gradient-to-br from-hotpink/30 via-magenta/20 to-transparent blur-3xl animate-bloom-pulse" style={{ animationDelay: "1s" }} aria-hidden />
-              <div className="hidden lg:block"><SparkleRing radius={130} /></div>
-              <div className="animate-bloom-float h-full w-full">
-                <img
-                  src="/images/hero-girl.png"
-                  alt="A joyful girl with vibrant pink hair smiling"
-                  width={520}
-                  height={520}
-                  className="relative h-full w-full object-cover shadow-[0_25px_60px_-15px_oklch(0.55_0.28_0/0.55)] mx-auto lg:h-[240px] lg:w-[240px] lg:mt-2"
-                  style={{ borderRadius: "55% 45% 50% 50% / 60% 55% 45% 40%" }}
-                  referrerPolicy="no-referrer"
-                />
+        {/* ───────────────────────── HERO ───────────────────────── */}
+        <section className="relative mx-auto max-w-6xl">
+          <div className="pearl-frame relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] aspect-[4/5] sm:aspect-[16/10] lg:aspect-[21/9]">
+            <img
+              src="/images/landing-hero.png"
+              alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
+              className="absolute inset-0 h-full w-full object-cover object-[68%_center] animate-card-breathe"
+              referrerPolicy="no-referrer"
+            />
+            {/* legibility scrim: strong pink at bottom-left, clearing toward the girl on the right */}
+            <div className="absolute inset-0" aria-hidden style={{
+              background: "linear-gradient(105deg, oklch(0.45 0.27 350 / 0.82) 0%, oklch(0.55 0.27 350 / 0.55) 32%, oklch(0.7 0.2 350 / 0.18) 55%, transparent 75%)",
+            }} />
+            {/* drifting sparkles */}
+            <Sparkles className="absolute left-[10%] top-[16%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
+            <Sparkles className="absolute left-[30%] top-[60%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
+            <Star className="absolute left-[8%] top-[42%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
+
+            {/* text block — anchored bottom-left, always inside the dark scrim so nothing is unreadable */}
+            <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 lg:p-12">
+              <div className="max-w-[78%] sm:max-w-[60%] lg:max-w-[52%]">
+                <h1 className="relative font-script text-4xl leading-[0.95] text-white drop-shadow-[0_3px_14px_oklch(0.4_0.2_350/0.7)] sm:text-6xl lg:text-7xl bloom-title-shimmer">
+                  Bloom &amp; Zein
+                </h1>
+                <p className="mt-2 font-script text-xl text-white/95 drop-shadow sm:text-2xl lg:text-3xl">
+                  your softest era starts here ✿
+                </p>
+                <p className="mt-2 hidden max-w-md text-sm font-medium text-white/90 drop-shadow sm:block lg:text-base">
+                  One gentle little app for your cycle, your mind and your life — everything you are, blooming in one soft place.
+                </p>
+                <div className="mt-4 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
+                  <a
+                    href="/app/today"
+                    className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  >
+                    <span className="relative z-10 inline-flex items-center gap-1.5 whitespace-nowrap">Start Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
+                    <span className="bloom-cta-shine" aria-hidden />
+                  </a>
+                  <button
+                    onClick={handleDownload}
+                    disabled={installing}
+                    className="hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white/80 bg-white/90 px-4 py-2.5 text-xs font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  >
+                    {installing ? (
+                      <span className="h-3.5 w-3.5 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    )}
+                    {installing ? "Préparation…" : "Download App"}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col items-center lg:items-start">
-              <h1 className="relative font-script text-5xl sm:text-7xl md:text-8xl lg:text-[117px] leading-none text-bloom-gradient drop-shadow-[0_4px_20px_oklch(0.7_0.25_0/0.25)] bloom-title-shimmer">
-                Bloom & Zein
-                <Sparkles className="absolute -right-4 -top-2 h-4 w-4 sm:h-5 sm:w-5 animate-bloom-sparkle text-hotpink" aria-hidden />
-                <Sparkles className="absolute -left-3 top-2 h-3 w-3 animate-bloom-sparkle text-magenta" style={{ animationDelay: "0.8s" }} aria-hidden />
-              </h1>
-              <p className="mt-1 font-script text-xl sm:text-2xl md:text-3xl text-magenta">your softest era starts here ✿</p>
-              <div className="mt-3 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
-                <a
-                  href="/app/today"
-                  className="bloom-cta relative overflow-hidden hover-scale inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:flex-none sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
-                >
-                  <span className="relative z-10 inline-flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">Start Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
-                  <span className="bloom-cta-shine" aria-hidden />
-                </a>
-                <button
-                  onClick={handleDownload}
-                  disabled={installing}
-                  className="hover-scale inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white bg-white/90 px-4 py-2.5 text-xs font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:flex-none sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
-                >
-                  {installing ? (
-                    <span className="h-3.5 w-3.5 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
-                  ) : (
-                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  )}
-                  {installing ? "Préparation…" : "Download App"}
-                </button>
-              </div>
-            </div>
+            {/* floating transparent orb overlapping the bottom-left corner */}
+            <img
+              src="/images/landing-orb-flower.png"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute -bottom-4 right-3 h-20 w-20 object-contain drop-shadow-[0_10px_24px_oklch(0.6_0.27_350/0.5)] animate-bloom-float sm:right-6 sm:h-28 sm:w-28 lg:h-36 lg:w-36"
+              style={{ transform: `translateY(${scrollY * -0.04}px)` }}
+            />
           </div>
         </section>
 
+        {/* Inline keyframes reused from the old hero (background breathe, CTA, title shimmer) */}
         <style>{`
           @keyframes bloom-breathe-bg {
             0%, 100% { background-position: 0% 50%, 100% 50%, 50% 100%, 0 0; }
@@ -277,21 +226,6 @@ export default function Landing() {
             background-size: 200% 200%;
             animation: bloom-breathe-bg 22s ease-in-out infinite;
           }
-
-          @keyframes bloom-slow-rise {
-            0%   { transform: translateY(0) translateX(0); opacity: 0; }
-            10%  { opacity: var(--o, 0.5); }
-            90%  { opacity: var(--o, 0.5); }
-            100% { transform: translateY(-110vh) translateX(var(--drift, 10px)); opacity: 0; }
-          }
-          .bloom-slow-bubble { animation: bloom-slow-rise linear infinite; }
-
-          @keyframes bloom-bokeh {
-            0%, 100% { opacity: 0; transform: scale(0.7); }
-            50%      { opacity: var(--o, 0.7); transform: scale(1); }
-          }
-          .bloom-bokeh { animation: bloom-bokeh ease-in-out infinite; }
-
           @keyframes bloom-title-shimmer-kf {
             0%   { background-position: -150% 0; }
             60%  { background-position: 250% 0; }
@@ -307,7 +241,6 @@ export default function Landing() {
             animation: bloom-title-shimmer-kf 5.5s ease-in-out infinite;
             mix-blend-mode: screen;
           }
-
           .bloom-cta {
             background: linear-gradient(135deg, oklch(0.72 0.27 350), oklch(0.55 0.3 0) 60%, oklch(0.68 0.27 330));
             box-shadow:
@@ -331,250 +264,169 @@ export default function Landing() {
             55%  { left: 130%; }
             100% { left: 130%; }
           }
-
-          @keyframes bloom-flower-bob {
-            0%, 100% { transform: translateY(0) rotate(-3deg); }
-            50% { transform: translateY(-5px) rotate(3deg); }
-          }
-          @keyframes bloom-flower-pop {
-            0% { opacity: 0; transform: scale(0.6) translateY(12px); }
-            70% { opacity: 1; transform: scale(1.06) translateY(-2px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          .bloom-flower-item { opacity: 0; animation: bloom-flower-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-          .bloom-flower > svg.flower-bg { animation: bloom-flower-bob 5s ease-in-out infinite; }
-          .bloom-flower-item:hover .flower-bg { filter: drop-shadow(0 8px 18px oklch(0.65 0.28 350 / 0.55)); }
-
-          @keyframes bloom-tap-nudge {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(3px); }
-          }
-          .bloom-tap-arrow { animation: bloom-tap-nudge 1.6s ease-in-out infinite; }
-          .bloom-tap-card:hover .bloom-tap-arrow { animation-play-state: paused; transform: translateX(2px); }
-
-          .bloom-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
-          .bloom-no-scrollbar::-webkit-scrollbar { display: none; }
-
-          .bz-carousel-stage { perspective: 1400px; }
-          .bz-carousel-3d { transform-style: preserve-3d; }
-          .bz-carousel-card { transform-style: preserve-3d; backface-visibility: hidden; }
-
-          @keyframes bloom-how-breathe {
-            0%, 100% { box-shadow: 0 0 28px 5px #ff69b418, 0 18px 55px -15px oklch(0.65 0.26 350 / 0.28); }
-            50%       { box-shadow: 0 0 38px 8px #ff69b428, 0 18px 55px -15px oklch(0.65 0.26 350 / 0.28); }
-          }
-          .bloom-how-circle { animation: bloom-how-breathe 4s ease-in-out infinite; }
         `}</style>
 
-        {/* Your Bloom & Zein Kit — 3 universes, swipeable like a cute little carousel */}
-        <section id="kit" className="relative mt-4 scroll-mt-24 sm:mt-6 lg:mt-6">
-
-          {/* Title sits above the card, not inside it */}
-          <div className="text-center mb-4 sm:mb-6">
-            <p className="font-script text-xl sm:text-2xl text-hotpink">your bloom & zein kit</p>
-            <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-bloom-gradient">three little universes, one soft you</h2>
-            <p className="mt-1 text-[11px] sm:text-sm font-semibold text-magenta/60">
-              {isPhone ? "✿ swipe to drift through your worlds ✿" : "✿ drifting softly through your worlds ✿"}
-            </p>
-          </div>
-
-          <div
-            className="relative mx-auto max-w-6xl rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 md:p-8 lg:p-10 shadow-[0_30px_80px_-30px_oklch(0.6_0.25_0/0.35)]"
-            style={{ background: "linear-gradient(160deg, oklch(0.97 0.035 350) 0%, oklch(0.94 0.07 345) 55%, oklch(0.92 0.08 20) 100%)" }}
-          >
-            <Flower2 className="pointer-events-none absolute -left-6 -top-6 h-20 w-20 text-hotpink/20 animate-bloom-float" aria-hidden />
-            <Flower2 className="pointer-events-none absolute -right-8 bottom-0 h-24 w-24 text-magenta/15 animate-bloom-float" style={{ animationDelay: "1.4s" }} aria-hidden />
-            <Sparkles className="pointer-events-none absolute right-6 top-6 h-5 w-5 text-hotpink/40 animate-bloom-sparkle" aria-hidden />
-
-          <div
-            className="bz-carousel-stage relative mx-auto mt-3 h-[28rem] max-w-lg touch-pan-y rounded-[2rem] sm:mt-4 sm:h-[28rem] sm:max-w-2xl lg:h-[27rem] lg:max-w-4xl"
-            onMouseEnter={() => setKitPaused(true)}
-            onMouseLeave={() => setKitPaused(false)}
-            onTouchStart={onKitTouchStart}
-            onTouchEnd={onKitTouchEnd}
-          >
-            {/* prev/next arrows — gently glide the 3D stack (tablet & up; phones swipe instead) */}
-            <button
-              type="button"
-              onClick={kitPrev}
-              aria-label="Previous universe"
-              className="absolute left-0 top-1/2 z-30 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:block sm:p-2.5"
-            >
-              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={kitNext}
-              aria-label="Next universe"
-              className="absolute right-0 top-1/2 z-30 hidden -translate-y-1/2 hover-scale rounded-full bg-white/90 p-2 text-hotpink shadow-lg shadow-hotpink/20 backdrop-blur sm:block sm:p-2.5"
-            >
-              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
-            <div className="bz-carousel-3d absolute inset-0">
-              {UNIVERSES.map((u, ui) => {
-                const n = UNIVERSES.length;
-                const rel = (((ui - kitActive) % n) + n) % n;
-                const offset = rel === 0 ? 0 : rel === 1 ? 1 : -1;
-                const isActive = offset === 0;
-                let transform = "";
-                if (offset === 0) transform = "translate3d(0,0,0) rotateY(0deg) scale(1)";
-                else if (offset === 1) transform = "translate3d(54%,0,-180px) rotateY(-34deg) scale(0.8)";
-                else transform = "translate3d(-54%,0,-180px) rotateY(34deg) scale(0.8)";
-
-                return (
-                  <button
-                    key={u.title}
-                    type="button"
-                    onClick={() => (isActive ? undefined : kitGoTo(ui))}
-                    aria-label={`Show the ${u.title} universe`}
-                    className="bz-carousel-card group absolute inset-0 mx-auto flex w-full max-w-[19rem] flex-col items-stretch justify-start cursor-pointer rounded-[2rem] p-5 shadow-2xl backdrop-blur transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] sm:max-w-sm sm:p-6 lg:max-w-md"
-                    style={{
-                      background: u.bgGradient,
-                      boxShadow: isActive
-                        ? `0 25px 60px -28px ${u.shadow}, 0 0 0 1.5px ${u.cardGlow}, 0 0 18px 5px ${u.glow}, 0 0 0 1px oklch(1 0 0 / 0.5) inset`
-                        : `0 8px 30px -15px ${u.shadow}, 0 0 0 1px oklch(1 0 0 / 0.3) inset`,
-                      transform,
-                      zIndex: isActive ? 30 : 10,
-                      opacity: isActive ? 1 : 0.55,
-                      filter: isActive ? "blur(0px)" : "blur(1px) saturate(0.85)",
-                      pointerEvents: "auto",
-                    }}
-                  >
-                    {/* decoration layer — overflow-hidden here so the glow blob clips to rounded card corners without clipping card content */}
-                    <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]" aria-hidden>
-                      <span className="absolute -right-10 -top-10 h-28 w-28 rounded-full blur-2xl transition" style={{ background: u.glow, opacity: isActive ? 0.8 : 0.3 }} />
-                    </span>
-                    {/* Centered category identity */}
-                    <div className="flex flex-col items-center text-center gap-1 pb-1">
-                      <span className="grid h-14 w-14 place-items-center rounded-[1.25rem] shadow-lg shadow-black/10 ring-1 ring-white/30" style={{ background: u.iconBg, backdropFilter: "blur(8px)" }}>
-                        <span style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.15))" }}>{u.icon}</span>
-                      </span>
-                      <p className="mt-1 font-script text-4xl sm:text-5xl leading-none" style={{ color: u.titleColor, textShadow: `0 0 10px ${u.titleGlow}cc, 0 0 22px ${u.titleGlow}88, 0 0 40px ${u.titleGlow}44` }}>{u.title}</p>
-                      <p className="text-xs sm:text-sm font-semibold" style={{ color: u.textColor }}>{u.subtitle}</p>
-                    </div>
-
-                    <div className="mt-3 flex flex-col gap-1.5 sm:gap-2">
-                      {u.tools.map((t, ti) => (
+        {/* ──────────────── THREE UNIVERSES. ONE YOU. ──────────────── */}
+        <section id="universes" className="mt-16 scroll-mt-24 sm:mt-24">
+          <SectionHeading kicker="your bloom & zein kit" title="Three universes. One you." />
+          {/* 3 columns on every screen — phone & tablet included, per spec */}
+          <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
+            {UNIVERSES.map((u, i) => (
+              <article
+                key={u.key}
+                className="bloom-pearl-card animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                style={{ animationDelay: `${i * 120}ms`, boxShadow: `0 18px 40px -22px ${u.ring}, inset 0 0 0 1px oklch(1 0 0 / 0.6)` }}
+              >
+                {/* colored top glow strip */}
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-1.5 rounded-t-2xl" style={{ background: u.accent }} aria-hidden />
+                {/* themed orb emblem — circular crop hides the square art background cleanly */}
+                <div className="relative mx-auto mt-1 h-12 w-12 overflow-hidden rounded-full ring-2 ring-white/70 shadow-md sm:h-16 sm:w-16 lg:h-20 lg:w-20">
+                  <img src={u.orb} alt="" aria-hidden className="h-full w-full scale-110 object-cover" />
+                </div>
+                <h3 className="mt-2 text-center font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.text }}>{u.title}</h3>
+                <p className="mt-0.5 text-center text-[8px] font-semibold leading-tight text-magenta/70 sm:text-xs">{u.subtitle}</p>
+                <ul className="mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2">
+                  {u.items.map((it) => {
+                    const Icon = it.icon;
+                    return (
+                      <li key={it.label}>
                         <a
-                          key={t.slug}
-                          href={`/app/tools/${t.slug}`}
-                          onClick={(e) => { if (!isActive) e.preventDefault(); }}
-                          tabIndex={isActive ? 0 : -1}
-                          className="bloom-tap-card group/card flex items-center gap-2.5 rounded-2xl p-2 transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-hotpink/20 active:scale-[0.97]"
-                          style={{ animationDelay: `${ui * 120 + ti * 90}ms`, background: u.toolRowBg }}
+                          href={it.href}
+                          className="group flex items-center gap-1 rounded-lg bg-white/60 px-1 py-1 transition hover:-translate-y-0.5 hover:shadow-md sm:gap-2 sm:rounded-xl sm:px-2 sm:py-1.5"
                         >
-                          <span
-                            className="bloom-flower relative grid h-10 w-10 shrink-0 place-items-center rounded-full transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-3"
-                            style={{
-                              background: "oklch(1 0 0 / 0.28)",
-                              backdropFilter: "blur(6px)",
-                              boxShadow: "0 0 12px 3px rgba(255,255,255,0.45), inset 0 1px 0 rgba(255,255,255,0.6)",
-                            }}
-                          >
-                            <CuteToolIcon slug={t.slug} className="relative z-10 h-7 w-7" />
+                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white shadow-sm sm:h-8 sm:w-8" style={{ background: u.accent }}>
+                            <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                           </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold leading-tight" style={{ color: u.titleColor }}>{t.label}</p>
-                            <p className="mt-0.5 line-clamp-2 text-xs leading-snug" style={{ color: u.textColor }}>{t.blurb}</p>
-                          </div>
-                          <span
-                            className="bloom-tap-arrow grid h-5 w-5 shrink-0 place-items-center rounded-full text-white opacity-70 transition-opacity duration-300 group-hover/card:opacity-100"
-                            style={{ background: "oklch(1 0 0 / 0.38)" }}
-                            aria-hidden
-                          >
-                            <ArrowRight className="h-3 w-3" />
-                          </span>
+                          <span className="min-w-0 flex-1 text-[9px] font-bold leading-tight text-magenta sm:text-sm" style={{ color: u.text }}>{it.label}</span>
+                          <ArrowRight className="hidden h-3 w-3 shrink-0 text-magenta/40 transition group-hover:translate-x-0.5 group-hover:text-magenta sm:block" aria-hidden />
                         </a>
-                      ))}
-                    </div>
-                  </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR ──────────────── */}
+        <section id="features" className="mt-16 scroll-mt-24 sm:mt-24">
+          <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
+          <div className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7">
+            <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
+              <CalendarMock />
+              <div className="flex flex-col justify-center">
+                <p className="font-script text-2xl text-hotpink sm:text-3xl">all your worlds, one calendar</p>
+                <p className="mt-1.5 text-sm font-medium text-magenta/80">
+                  Your cycle, workouts, journaling, money and little reminders all land on the same gentle calendar — so your whole life finally rhymes.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2">
+                  {CALENDAR_LEGEND.map((l) => (
+                    <span key={l.label} className="flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-magenta shadow-sm sm:text-xs">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: l.color }} />
+                      {l.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ──────────────── PERSONALIZED BY YOUR CYCLE ──────────────── */}
+        <section className="mt-16 scroll-mt-24 sm:mt-24">
+          <SectionHeading kicker="it grows with you" title="Personalized by your cycle." />
+          {/* 4-phase timeline — stays a single row on every screen */}
+          <div className="relative mx-auto mt-8 max-w-4xl">
+            <div className="pointer-events-none absolute left-[12%] right-[12%] top-6 h-1 rounded-full sm:top-8" style={{ background: "linear-gradient(90deg, oklch(0.72 0.27 10), oklch(0.78 0.18 60), oklch(0.72 0.27 350), oklch(0.62 0.28 330))" }} aria-hidden />
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-4">
+              {CYCLE_PHASES.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                  <div key={p.label} className="animate-card-pop-in flex flex-col items-center text-center" style={{ animationDelay: `${i * 110}ms` }}>
+                    <span className="grid h-12 w-12 place-items-center rounded-full text-white shadow-lg ring-4 ring-white sm:h-16 sm:w-16" style={{ background: p.color }}>
+                      <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
+                    </span>
+                    <p className="mt-1.5 text-[10px] font-bold leading-tight text-magenta sm:text-sm">{p.label}</p>
+                    <p className="text-[8px] leading-tight text-magenta/60 sm:text-xs">{p.sub}</p>
+                  </div>
                 );
               })}
             </div>
           </div>
-
-          {/* cute little dot trail — shows which universe is gently drifting into focus */}
-          <div className="relative mt-3 flex items-center justify-center gap-2">
-            {UNIVERSES.map((u, i) => (
-              <button
-                key={u.title}
-                type="button"
-                onClick={() => kitGoTo(i)}
-                aria-label={`Go to ${u.title}`}
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: kitActive === i ? "1.5rem" : "0.5rem",
-                  background: kitActive === i ? "linear-gradient(135deg, oklch(0.72 0.27 350), oklch(0.58 0.3 0))" : "oklch(0.85 0.1 350)",
-                }}
-              />
-            ))}
-          </div>
+          {/* adapts-to-you cards: 2 cols on phone, 4 on desktop */}
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {ADAPTS.map((a, i) => {
+              const Icon = a.icon;
+              return (
+                <article key={a.title} className="bloom-pearl-card animate-card-pop-in flex flex-col items-center rounded-2xl p-3 text-center sm:p-4" style={{ animationDelay: `${i * 90}ms` }}>
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl text-white shadow-md sm:h-12 sm:w-12" style={{ background: a.accent }}>
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </span>
+                  <p className="mt-2 text-sm font-bold text-magenta">{a.title}</p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-magenta/70 sm:text-xs">{a.blurb}</p>
+                </article>
+              );
+            })}
           </div>
         </section>
 
-        {/* How it Connects — title sits above the circle */}
-        <div id="how-it-works" className="mt-20 scroll-mt-24 text-center">
-          <h2 className="mx-auto max-w-md font-script text-3xl sm:text-5xl md:text-6xl text-bloom-gradient leading-tight">
-            Every tool knows what the others know ✿
-          </h2>
-          <p className="mx-auto mt-1.5 max-w-sm text-[11px] sm:text-sm font-medium text-magenta/70">
-            Tap a tool and watch your Bloom Calendar light up.
-          </p>
-        </div>
-
-        {/* How-it-works — circular diagram with cute decorations scattered outside */}
-        <div className="relative mx-auto mt-8" style={{ width: "min(92vw, 40rem)", aspectRatio: "1" }}>
-          {/* decorative toggles around the circle */}
-          <Sparkles className="pointer-events-none absolute left-[6%] top-[8%] h-5 w-5 text-hotpink/50 animate-bloom-sparkle" aria-hidden />
-          <Heart className="pointer-events-none absolute right-[8%] top-[6%] h-4 w-4 fill-magenta/40 text-magenta/40 animate-bloom-float" aria-hidden />
-          <Star className="pointer-events-none absolute bottom-[10%] left-[4%] h-4 w-4 fill-hotpink/35 text-hotpink/35 animate-bloom-sparkle" style={{ animationDelay: "1.1s" }} aria-hidden />
-          <Flower2 className="pointer-events-none absolute bottom-[7%] right-[6%] h-6 w-6 text-magenta/35 animate-bloom-float" style={{ animationDelay: "1.8s" }} aria-hidden />
-          <Sparkles className="pointer-events-none absolute left-[2%] top-[48%] h-3 w-3 text-hotpink/40 animate-bloom-sparkle" style={{ animationDelay: "0.6s" }} aria-hidden />
-          <Star className="pointer-events-none absolute right-[3%] top-[52%] h-3 w-3 fill-magenta/30 text-magenta/30 animate-bloom-sparkle" style={{ animationDelay: "1.4s" }} aria-hidden />
-          <Flower2 className="pointer-events-none absolute left-[12%] bottom-[16%] h-4 w-4 text-hotpink/30 animate-bloom-float" style={{ animationDelay: "2.4s" }} aria-hidden />
-          <Heart className="pointer-events-none absolute right-[14%] bottom-[18%] h-3 w-3 fill-hotpink/30 text-hotpink/30 animate-bloom-float" style={{ animationDelay: "0.9s" }} aria-hidden />
-
-          {/* the actual circle */}
-          <div
-            id="how-it-works-card"
-            className="bloom-how-circle absolute inset-[7%] rounded-full p-[8%]"
-            style={{
-              background: "radial-gradient(circle at 40% 38%, oklch(0.99 0.01 350) 0%, oklch(0.97 0.03 350) 45%, oklch(0.94 0.055 345) 100%)",
-            }}
-          >
-            <ConnectionsDiagram />
+        {/* ──────────────── DAILY SOFT GIRL DASHBOARD ──────────────── */}
+        <section className="mt-16 scroll-mt-24 sm:mt-24">
+          <SectionHeading kicker="every little day" title="Your daily soft girl dashboard." />
+          {/* 3 columns × 2 rows on every screen */}
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-3 gap-2.5 sm:gap-4">
+            {DASHBOARD.map((d, i) => {
+              const Icon = d.icon;
+              return (
+                <article
+                  key={d.title}
+                  className="bloom-pearl-card animate-card-pop-in relative flex flex-col items-center justify-center overflow-hidden rounded-2xl p-2.5 text-center sm:rounded-[1.5rem] sm:p-5"
+                  style={{ animationDelay: `${i * 90}ms` }}
+                >
+                  <span className="pointer-events-none absolute -right-5 -top-5 h-16 w-16 rounded-full opacity-50 blur-2xl" style={{ background: d.accent }} aria-hidden />
+                  <span className="grid h-10 w-10 place-items-center rounded-2xl text-white shadow-md sm:h-12 sm:w-12" style={{ background: d.accent }}>
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </span>
+                  <p className="mt-1.5 text-[10px] font-bold leading-tight text-magenta sm:text-sm">{d.title}</p>
+                  <p className="font-script text-base leading-none text-hotpink sm:text-2xl">{d.value}</p>
+                </article>
+              );
+            })}
           </div>
-        </div>
+        </section>
 
-        {/* CTA sits below the circle, outside it */}
-        <div className="mt-10 text-center">
-          <p className="font-script text-3xl sm:text-4xl text-bloom-gradient">One app. One you. Everything connected.</p>
-          <a
-            href="/app/today"
-            className="mt-5 inline-flex hover-scale items-center gap-2 rounded-full px-6 py-3 font-semibold text-white shadow-lg shadow-hotpink/40"
-            style={{ background: "linear-gradient(135deg, oklch(0.7 0.25 350), oklch(0.6 0.28 0))" }}
-          >
-            See it in action <ArrowRight className="h-4 w-4" />
-          </a>
-        </div>
-
-        {/* Social proof — real, warm voices, never cold stats */}
-        <section className="mt-20">
-          <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">our pink girls say</p>
-            <h2 className="font-script text-6xl text-bloom-gradient">love letters 💌</h2>
+        {/* ──────────────── REAL TRANSFORMATION — STATS ──────────────── */}
+        <section id="stories" className="mt-16 scroll-mt-24 sm:mt-24">
+          <SectionHeading kicker="real blooming" title="Real blooming. Real transformation." />
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-3 gap-2.5 sm:gap-5">
+            {STATS.map((s, i) => (
+              <article
+                key={s.days}
+                className="animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl p-3 text-center text-white shadow-xl sm:rounded-[1.75rem] sm:p-6"
+                style={{ animationDelay: `${i * 120}ms`, background: s.bg }}
+              >
+                <img src="/images/landing-stat-flower.png" alt="" aria-hidden className="pointer-events-none absolute -right-3 -top-3 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:h-24 sm:w-24" style={{ transform: `rotate(${i * 18}deg)` }} />
+                <p className="font-script text-3xl leading-none drop-shadow sm:text-6xl">{s.days}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide sm:text-sm">days</p>
+                <p className="mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm">{s.text}</p>
+              </article>
+            ))}
           </div>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {QUOTES.map((q) => (
-              <div key={q.name} className="rounded-[2rem] bg-white/85 p-6 shadow-xl shadow-rose/10 backdrop-blur">
+        </section>
+
+        {/* ──────────────── STORIES / SOCIAL PROOF ──────────────── */}
+        <section className="mt-16 sm:mt-24">
+          <div className="mt-8 grid gap-4 sm:gap-6 md:grid-cols-3">
+            {QUOTES.map((q, i) => (
+              <div key={q.name} className="bloom-pearl-card animate-card-pop-in rounded-[1.75rem] p-5 sm:p-6" style={{ animationDelay: `${i * 110}ms` }}>
                 <Quote className="h-6 w-6 text-hotpink" />
                 <p className="mt-3 text-sm font-medium text-magenta/90">{q.text}</p>
                 <div className="mt-4 flex items-center gap-3">
                   <span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink font-script text-xl text-white">{q.name[0]}</span>
                   <div>
                     <p className="text-sm font-bold text-magenta">{q.name}</p>
-                    <div className="flex gap-0.5 text-hotpink">{Array.from({length: 5}).map((_, i) => <Star key={i} className="h-3 w-3 fill-hotpink" />)}</div>
+                    <div className="flex gap-0.5 text-hotpink">{Array.from({ length: 5 }).map((_, j) => <Star key={j} className="h-3 w-3 fill-hotpink" />)}</div>
                   </div>
                 </div>
               </div>
@@ -582,32 +434,45 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="relative mt-20 overflow-hidden rounded-[3rem] p-8 sm:p-12 text-center shadow-2xl shadow-hotpink/30"
+        {/* ──────────────── FINAL CTA — GLASS HEART + PHONE ──────────────── */}
+        <section className="relative mt-16 overflow-hidden rounded-[2.5rem] p-5 shadow-2xl shadow-hotpink/30 sm:mt-24 sm:p-10"
           style={{ background: "linear-gradient(135deg, oklch(0.72 0.26 350), oklch(0.58 0.3 0), oklch(0.7 0.25 20))" }}>
-          <Sparkles className="absolute left-10 top-8 h-6 w-6 animate-bloom-sparkle text-white" aria-hidden />
-          <Heart className="absolute right-10 top-10 h-6 w-6 animate-bloom-float fill-white text-white" aria-hidden />
-          <Star className="absolute bottom-8 left-1/4 h-5 w-5 animate-bloom-sparkle fill-white text-white" style={{ animationDelay: "0.8s" }} aria-hidden />
-          <p className="font-script text-3xl text-white/90">your softest era is one tap away</p>
-          <h2 className="mt-2 font-script text-6xl text-white drop-shadow">Start your softest era</h2>
-          <p className="mx-auto mt-4 max-w-md text-white/90">
-            Everything connected, nothing complicated — just one gentle little app that grows with you.
-          </p>
-          <div className="mt-7 flex justify-center">
-            <a
-              href="/app/today"
-              className="hover-scale inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-base font-bold text-hotpink shadow-lg"
-            >
-              Start your softest era <ArrowRight className="h-4 w-4" />
-            </a>
+          <Sparkles className="absolute left-8 top-6 h-5 w-5 animate-sparkle-drift text-white" aria-hidden />
+          <Heart className="absolute right-10 top-8 h-5 w-5 animate-bloom-float fill-white text-white" aria-hidden />
+          <div className="grid items-center gap-6 lg:grid-cols-2">
+            {/* glass heart — framed so its art background reads as intentional */}
+            <div className="order-2 flex items-center justify-center gap-4 lg:order-1">
+              <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] animate-card-breathe sm:w-52 lg:w-60">
+                <img src="/images/landing-glass-heart.png" alt="A glowing crystal heart cradling a soft pink bloom" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+              <PhoneMock />
+            </div>
+            <div className="order-1 text-center lg:order-2 lg:text-left">
+              <p className="font-script text-2xl text-white/90 sm:text-3xl">your softest era is one tap away</p>
+              <h2 className="mt-1 font-script text-4xl text-white drop-shadow sm:text-6xl">Ready to bloom at your own pace?</h2>
+              <p className="mx-auto mt-3 max-w-md text-sm text-white/90 lg:mx-0">
+                Everything connected, nothing complicated — just one gentle little app that grows with you, exactly as fast as you bloom.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
+                <a href="/app/today" className="bloom-luxury-btn inline-flex items-center gap-2 px-7 py-3.5 text-base font-bold text-white">
+                  Start Blooming <ArrowRight className="h-4 w-4" />
+                </a>
+                <button
+                  onClick={handleDownload}
+                  disabled={installing}
+                  className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-7 py-3.5 text-base font-bold text-hotpink transition hover:bg-white disabled:opacity-70"
+                >
+                  <Download className="h-4 w-4" /> Download App
+                </button>
+              </div>
+              <p className="mx-auto mt-5 flex max-w-md items-center justify-center gap-2 text-xs font-medium text-white/85 lg:mx-0 lg:justify-start">
+                <Lock className="h-3.5 w-3.5 shrink-0" />
+                Your softest secrets stay yours — stored safely on your device, never sold, never shared.
+              </p>
+            </div>
           </div>
-          <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-2 text-xs sm:text-sm font-medium text-white/85">
-            <Lock className="h-3.5 w-3.5 shrink-0" />
-            Your softest secrets stay yours — stored safely on your device, never sold, never shared.
-          </p>
         </section>
 
-        {/* Striped accent */}
         <div className="mt-10 h-3 rounded-full bloom-stripes opacity-70" aria-hidden />
       </main>
 
@@ -624,7 +489,6 @@ export default function Landing() {
         <p className="mt-3 text-xs font-medium text-magenta/70">© {new Date().getFullYear()} Bloom & Zein — all in pink</p>
       </footer>
 
-      {/* iOS install toast — only on iPhone/iPad */}
       {iosHint && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-xs animate-fade-in">
           <div className="flex items-center gap-3 rounded-2xl bg-[#831843] px-4 py-3 shadow-xl">
@@ -642,123 +506,152 @@ export default function Landing() {
   );
 }
 
-interface UniverseTool {
-  slug: string;
-  label: string;
-  blurb: string;
+/* ────────────────────────── small presentational pieces ────────────────────────── */
+
+function SectionHeading({ kicker, title }: { kicker: string; title: string }) {
+  return (
+    <div className="text-center">
+      <p className="font-script text-xl text-hotpink sm:text-2xl">{kicker}</p>
+      <h2 className="mx-auto max-w-2xl font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">{title}</h2>
+    </div>
+  );
 }
 
+/** A soft, on-brand May calendar mockup with colored event dots. */
+function CalendarMock() {
+  // May 2025 starts on a Thursday (Sun=0 … Sat=6 → 4 leading blanks)
+  const lead = 4;
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const events: Record<number, string[]> = {
+    3: ["#f43f5e"], 5: ["#a855f7"], 8: ["#22c55e"], 12: ["#f43f5e", "#ec4899"],
+    15: ["#f59e0b"], 18: ["#a855f7"], 22: ["#22c55e"], 25: ["#ec4899"], 28: ["#f43f5e"], 30: ["#f59e0b"],
+  };
+  return (
+    <div className="rounded-2xl bg-white/80 p-3 shadow-inner sm:p-4">
+      <div className="flex items-center justify-between px-1">
+        <p className="font-script text-xl text-hotpink sm:text-2xl">May 2025</p>
+        <Flower2 className="h-5 w-5 text-hotpink/60" aria-hidden />
+      </div>
+      <div className="mt-2 grid grid-cols-7 gap-0.5 text-center sm:gap-1">
+        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+          <span key={i} className="text-[9px] font-bold text-magenta/50 sm:text-xs">{d}</span>
+        ))}
+        {Array.from({ length: lead }).map((_, i) => <span key={`b${i}`} />)}
+        {days.map((d) => (
+          <span key={d} className="relative grid aspect-square place-items-center rounded-md text-[9px] font-semibold text-magenta sm:rounded-lg sm:text-xs">
+            <span className="relative z-10">{d}</span>
+            {events[d] && (
+              <span className="absolute bottom-0.5 flex gap-0.5">
+                {events[d].map((c, ci) => <span key={ci} className="h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5" style={{ background: c }} />)}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** A tiny CSS phone frame showing the app's bloom splash. */
+function PhoneMock() {
+  return (
+    <div className="relative h-56 w-28 shrink-0 rounded-[1.75rem] border-[5px] border-white/90 bg-white shadow-2xl sm:h-72 sm:w-36" aria-hidden>
+      <span className="absolute left-1/2 top-1.5 z-10 h-1 w-8 -translate-x-1/2 rounded-full bg-magenta/20" />
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[1.4rem]"
+        style={{ background: "linear-gradient(160deg, oklch(0.92 0.1 350), oklch(0.82 0.16 350) 60%, oklch(0.78 0.18 10))" }}>
+        <Sparkles className="absolute left-3 top-6 h-3 w-3 animate-sparkle-drift text-white/80" />
+        <Heart className="absolute right-3 top-10 h-3 w-3 animate-bloom-float fill-white/70 text-white/70" />
+        <Flower2 className="absolute bottom-6 left-4 h-3 w-3 animate-bloom-float text-white/70" />
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/30 backdrop-blur sm:h-14 sm:w-14">
+          <Flower2 className="h-7 w-7 text-white" />
+        </span>
+        <p className="font-script text-lg leading-none text-white drop-shadow sm:text-xl">Bloom</p>
+        <p className="text-[8px] font-semibold text-white/90">your softest era</p>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── data ────────────────────────── */
+
+interface UniverseItem { icon: LucideIcon; label: string; href: string; }
 interface Universe {
-  title: string;
-  subtitle: string;
-  icon: ReactNode;
-  bgGradient: string;
-  iconBg: string;
-  glow: string;
-  shadow: string;
-  titleColor: string;
-  titleGlow: string;
-  cardGlow: string;
-  textColor: string;
-  toolRowBg: string;
-  tools: UniverseTool[];
+  key: string; title: string; subtitle: string; orb: string;
+  accent: string; text: string; ring: string; items: UniverseItem[];
 }
-
-const ICON_STROKE = "#ffffff";
 
 const UNIVERSES: Universe[] = [
   {
-    title: "Body",
-    subtitle: "for your cycle, your meals, your movement",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
-        <circle cx="12" cy="4.5" r="2" />
-        {/* shoulder / bust line */}
-        <path d="M9 8 Q9.2 7 10.2 7.6 Q11 8.6 12 8.6 Q13 8.6 13.8 7.6 Q14.8 7 15 8" />
-        {/* torso sides */}
-        <path d="M9 8 Q7.5 10 7.5 13 Q8.5 15.8 10 16.8 L10.5 19.5" />
-        <path d="M15 8 Q16.5 10 16.5 13 Q15.5 15.8 14 16.8 L13.5 19.5" />
-        {/* hip base */}
-        <path d="M10.5 19.5 Q12 20.5 13.5 19.5" />
-        {/* inner waist suggestion */}
-        <path d="M9.5 13.5 Q12 14.5 14.5 13.5" strokeWidth="1.1" />
-      </svg>
-    ),
-    bgGradient: "linear-gradient(145deg, oklch(0.72 0.27 350) 0%, oklch(0.60 0.30 0) 55%, oklch(0.70 0.26 15) 100%)",
-    iconBg: "oklch(1 0 0 / 0.32)",
-    glow: "oklch(0.78 0.22 350 / 0.5)",
-    shadow: "oklch(0.55 0.30 350 / 0.45)",
-    titleColor: "#ffffff",
-    titleGlow: "#ffb6d9",
-    cardGlow: "oklch(0.75 0.28 350 / 0.65)",
-    textColor: "rgba(255,255,255,0.95)",
-    toolRowBg: "rgba(255,255,255,0.18)",
-    tools: [
-      { slug: "cycle", label: "Cycle Tracker", blurb: "You'll see your Yoga and Meals adjust to exactly how you feel today" },
-      { slug: "meals", label: "Meal Planner", blurb: "You get gentle meal ideas that match your energy and your phase" },
-      { slug: "yoga", label: "Yoga Flows", blurb: "Your flow softens on your low-energy days — no need to ask" },
+    key: "body", title: "Body", subtitle: "cycle · meals · movement",
+    orb: "/images/landing-orb-flower.png",
+    accent: "linear-gradient(135deg, #ff8fc7, #ff1493)", text: "#be185d", ring: "oklch(0.7 0.27 350 / 0.5)",
+    items: [
+      { icon: Moon, label: "Cycle", href: "/app/tools/cycle" },
+      { icon: Salad, label: "Meals", href: "/app/tools/meals" },
+      { icon: Flower2, label: "Yoga", href: "/app/tools/yoga" },
+      { icon: Dumbbell, label: "Workouts", href: "/app/tools/workout" },
     ],
   },
   {
-    title: "Mind",
-    subtitle: "for your moods, your thoughts, your softness",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
-        {/* left lobe */}
-        <path d="M12 6.5 C10.5 5.5 7.5 6 6.5 8.5 C5.5 11 6.5 13.5 8 14.5 C8 16 9 17.5 10.5 17.5 L12 17.5" />
-        {/* right lobe */}
-        <path d="M12 6.5 C13.5 5.5 16.5 6 17.5 8.5 C18.5 11 17.5 13.5 16 14.5 C16 16 15 17.5 13.5 17.5 L12 17.5" />
-        {/* center fold */}
-        <line x1="12" y1="6.5" x2="12" y2="17.5" />
-        {/* gyrus detail lines */}
-        <path d="M8.5 10.5 C9.5 11 10.5 11 11 10.5" strokeWidth="1.15" />
-        <path d="M15.5 10.5 C14.5 11 13.5 11 13 10.5" strokeWidth="1.15" />
-        <path d="M8.5 13 C9.5 13.5 10.5 13.5 11 13" strokeWidth="1.15" />
-        <path d="M15.5 13 C14.5 13.5 13.5 13.5 13 13" strokeWidth="1.15" />
-      </svg>
-    ),
-    bgGradient: "linear-gradient(145deg, oklch(0.68 0.28 330) 0%, oklch(0.58 0.31 350) 55%, oklch(0.66 0.28 0) 100%)",
-    iconBg: "oklch(1 0 0 / 0.32)",
-    glow: "oklch(0.75 0.22 330 / 0.5)",
-    shadow: "oklch(0.52 0.30 330 / 0.45)",
-    titleColor: "#ffffff",
-    titleGlow: "#f5c2e8",
-    cardGlow: "oklch(0.72 0.27 330 / 0.65)",
-    textColor: "rgba(255,255,255,0.95)",
-    toolRowBg: "rgba(255,255,255,0.18)",
-    tools: [
-      { slug: "diary", label: "Dreamy Diary", blurb: "You'll start noticing your own patterns — and so does the rest of your kit" },
+    key: "mind", title: "Mind", subtitle: "moods · thoughts · softness",
+    orb: "/images/landing-orb-mind.png",
+    accent: "linear-gradient(135deg, #c084fc, #9333ea)", text: "#7c3aed", ring: "oklch(0.65 0.27 300 / 0.5)",
+    items: [
+      { icon: Smile, label: "Mood", href: "/app/today" },
+      { icon: PenLine, label: "Diary", href: "/app/tools/diary" },
+      { icon: Heart, label: "Affirmations", href: "/app/today" },
+      { icon: BookOpen, label: "Reading", href: "/app/read" },
     ],
   },
   {
-    title: "Life",
-    subtitle: "for your money, your moments, your memory",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke={ICON_STROKE} strokeWidth="1.65" strokeLinecap="round" className="h-7 w-7">
-        {/* heart */}
-        <path d="M12 18 C12 18 5 13.5 5 9 A3.75 3.75 0 0 1 12 7.8 A3.75 3.75 0 0 1 19 9 C19 13.5 12 18 12 18 Z" strokeLinejoin="round" />
-        {/* radiating rays */}
-        <line x1="12" y1="1.5" x2="12" y2="4" />
-        <line x1="17.2" y1="3" x2="15.6" y2="5" />
-        <line x1="20.2" y1="8.2" x2="17.6" y2="8.8" />
-        <line x1="6.8" y1="3" x2="8.4" y2="5" />
-        <line x1="3.8" y1="8.2" x2="6.4" y2="8.8" />
-      </svg>
-    ),
-    bgGradient: "linear-gradient(145deg, oklch(0.72 0.27 10) 0%, oklch(0.60 0.30 350) 50%, oklch(0.68 0.27 330) 100%)",
-    iconBg: "oklch(1 0 0 / 0.32)",
-    glow: "oklch(0.78 0.22 10 / 0.5)",
-    shadow: "oklch(0.55 0.30 10 / 0.45)",
-    titleColor: "#ffffff",
-    titleGlow: "#ffc0d8",
-    cardGlow: "oklch(0.75 0.27 10 / 0.65)",
-    textColor: "rgba(255,255,255,0.95)",
-    toolRowBg: "rgba(255,255,255,0.18)",
-    tools: [
-      { slug: "budget", label: "Budget Planner", blurb: "You'll notice when your spending follows your mood — gently, never judgy" },
-      { slug: "notes", label: "Reminders", blurb: "Your little moments find their place on your calendar, all on their own" },
+    key: "life", title: "Life", subtitle: "money · moments · memory",
+    orb: "/images/landing-orb-life.png",
+    accent: "linear-gradient(135deg, #fb7185, #f43f5e)", text: "#e11d48", ring: "oklch(0.68 0.27 15 / 0.5)",
+    items: [
+      { icon: Wallet, label: "Budget", href: "/app/tools/budget" },
+      { icon: Bell, label: "Reminders", href: "/app/tools/notes" },
+      { icon: CalendarIcon, label: "Calendar", href: "/app/calendar" },
+      { icon: Target, label: "Goals", href: "/app/today" },
     ],
   },
+];
+
+const CALENDAR_LEGEND = [
+  { label: "Cycle", color: "#f43f5e" },
+  { label: "Yoga", color: "#ec4899" },
+  { label: "Workout", color: "#a855f7" },
+  { label: "Journal", color: "#22c55e" },
+  { label: "Reminders", color: "#f59e0b" },
+  { label: "Budget", color: "#0ea5e9" },
+];
+
+const CYCLE_PHASES = [
+  { label: "Period", sub: "rest & restore", icon: Droplet, color: "linear-gradient(135deg, #fb7185, #e11d48)" },
+  { label: "Follicular", sub: "rising energy", icon: Flower2, color: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
+  { label: "Ovulation", sub: "peak & glow", icon: Sun, color: "linear-gradient(135deg, #f472b6, #ec4899)" },
+  { label: "Luteal", sub: "soften & slow", icon: Moon, color: "linear-gradient(135deg, #c084fc, #9333ea)" },
+];
+
+const ADAPTS = [
+  { title: "Workouts", blurb: "lighter on low days", icon: Dumbbell, accent: "linear-gradient(135deg, #fb7185, #f43f5e)" },
+  { title: "Yoga", blurb: "flows for your phase", icon: Flower2, accent: "linear-gradient(135deg, #f472b6, #ec4899)" },
+  { title: "Meals", blurb: "match your energy", icon: Salad, accent: "linear-gradient(135deg, #34d399, #10b981)" },
+  { title: "Articles", blurb: "made for today", icon: BookOpen, accent: "linear-gradient(135deg, #c084fc, #9333ea)" },
+];
+
+const DASHBOARD = [
+  { title: "Mood", value: "😊", icon: Smile, accent: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
+  { title: "Hydration", value: "6/8", icon: Droplet, accent: "linear-gradient(135deg, #38bdf8, #0ea5e9)" },
+  { title: "Affirmation", value: "♡", icon: Heart, accent: "linear-gradient(135deg, #fb7185, #f43f5e)" },
+  { title: "Reading", value: "12m", icon: BookOpen, accent: "linear-gradient(135deg, #c084fc, #9333ea)" },
+  { title: "Diary", value: "✎", icon: PenLine, accent: "linear-gradient(135deg, #34d399, #10b981)" },
+  { title: "Progress", value: "78%", icon: TrendingUp, accent: "linear-gradient(135deg, #f472b6, #ec4899)" },
+];
+
+const STATS = [
+  { days: "7", text: "softer mornings & a calmer first week", bg: "linear-gradient(145deg, oklch(0.72 0.27 350), oklch(0.6 0.3 0))" },
+  { days: "30", text: "your cycle, mood & money start to rhyme", bg: "linear-gradient(145deg, oklch(0.68 0.28 330), oklch(0.58 0.31 350))" },
+  { days: "90", text: "a whole new soft era, fully bloomed", bg: "linear-gradient(145deg, oklch(0.72 0.27 10), oklch(0.6 0.3 350))" },
 ];
 
 const QUOTES = [
@@ -766,21 +659,3 @@ const QUOTES = [
   { name: "Luna", text: "It's the first app that actually gets that my mood, my cycle and my budget are all the same story." },
   { name: "Sofia", text: "I open it for my cycle and somehow my whole week just makes sense. It feels like it actually knows me 💕" },
 ];
-
-function Sunburst() {
-  return (
-    <svg viewBox="0 0 200 200" className="h-full w-full">
-      <g fill="oklch(0.82 0.13 350 / 0.7)">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <polygon
-            key={i}
-            points="100,100 95,0 105,0"
-            transform={`rotate(${i * 18} 100 100)`}
-          />
-        ))}
-      </g>
-      <circle cx="100" cy="100" r="14" fill="oklch(0.7 0.22 0)" />
-      <path d="M100 92 l8 10 -8 10 -8 -10z" fill="oklch(0.92 0.06 350)" />
-    </svg>
-  );
-}
