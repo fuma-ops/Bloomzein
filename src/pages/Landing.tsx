@@ -317,9 +317,9 @@ export default function Landing() {
                   {/* soft white glow hugging just the title/list area, leaving the photo visible around it — sized per breakpoint so text stays readable on every screen */}
                   <div
                     className="pointer-events-none absolute inset-0
-                      bg-[radial-gradient(58%_72%_at_50%_42%,oklch(1_0_0_/_0.92)_0%,oklch(1_0_0_/_0.45)_50%,transparent_75%)]
-                      sm:bg-[radial-gradient(50%_68%_at_50%_42%,oklch(1_0_0_/_0.92)_0%,oklch(1_0_0_/_0.45)_50%,transparent_75%)]
-                      lg:bg-[radial-gradient(42%_60%_at_50%_40%,oklch(1_0_0_/_0.92)_0%,oklch(1_0_0_/_0.45)_50%,transparent_75%)]"
+                      bg-[radial-gradient(75%_85%_at_50%_42%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]
+                      sm:bg-[radial-gradient(68%_80%_at_50%_42%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]
+                      lg:bg-[radial-gradient(60%_75%_at_50%_40%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]"
                   />
 
                   <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
