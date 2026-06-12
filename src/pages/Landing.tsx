@@ -329,7 +329,10 @@ export default function Landing() {
         {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR ──────────────── */}
         <section id="features" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
-          <div className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7">
+          <div
+            className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7"
+            style={{ background: "linear-gradient(135deg, oklch(0.94 0.06 350 / 0.55) 0%, oklch(0.88 0.1 340 / 0.35) 100%)" }}
+          >
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <img
                 src="/images/landing-calendar.webp"
