@@ -314,23 +314,23 @@ export default function Landing() {
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                     className="pointer-events-none absolute inset-0 h-full w-full object-cover"
                   />
-                  {/* white glow behind the text so it stays readable over busy photo backgrounds */}
-                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(85% 75% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.55) 55%, transparent 85%)" }} />
-
-                  <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
-                  <ul className="relative z-10 mt-2 flex flex-col items-center gap-1 sm:mt-4 sm:gap-2.5">
-                    {u.items.map((it) => {
-                      const Icon = it.icon;
-                      return (
-                        <li key={it.label} className="flex items-center gap-1 sm:gap-2">
-                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg }}>
-                            <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
-                          </span>
-                          <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                  {/* white glow behind the text only, so it stays readable over busy photo backgrounds */}
+                  <div className="relative z-10 flex flex-col items-center rounded-2xl px-3 py-2 sm:rounded-[1.25rem] sm:px-5 sm:py-3.5" style={{ background: "oklch(1 0 0 / 0.8)", backdropFilter: "blur(3px)" }}>
+                    <h3 className="font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
+                    <ul className="mt-2 flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
+                      {u.items.map((it) => {
+                        const Icon = it.icon;
+                        return (
+                          <li key={it.label} className="flex items-center gap-1 sm:gap-2">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg }}>
+                              <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
+                            </span>
+                            <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                   <a
                     href={u.href}
                     aria-label={`Explore ${u.title}`}
