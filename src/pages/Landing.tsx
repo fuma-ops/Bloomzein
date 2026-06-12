@@ -145,8 +145,9 @@ export default function Landing() {
         <section className="section-pink-shadow relative -mx-4 -mt-4 min-h-0 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]">
           {/* hero photo — fills the entire banner, text sits on top of it */}
           <img
-            src="/images/landing-hero.png"
+            src="/images/landing-hero.webp"
             alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
+            fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover object-[center_18%] animate-card-breathe sm:object-[65%_12%]"
             referrerPolicy="no-referrer"
           />
@@ -276,9 +277,10 @@ export default function Landing() {
         <section id="universes" className="section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
           {/* shared background photo for the whole section, faded so the cards stay readable */}
           <img
-            src="/images/landing-universes-bg.png"
+            src="/images/landing-universes-bg.webp"
             alt=""
             aria-hidden
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover object-top animate-card-breathe"
           />
           {/* radial fade — keeps the photo mostly visible while letting the edges melt into the page background */}
@@ -328,8 +330,9 @@ export default function Landing() {
           <div className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7">
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <img
-                src="/images/landing-calendar.png"
+                src="/images/landing-calendar.webp"
                 alt="Bloom & Zein calendar for May 2025 showing cycle, yoga, workout, journal, reminder, budget and goal events"
+                loading="lazy"
                 className="animate-card-pop-in animate-card-breathe w-full self-center rounded-2xl object-contain shadow-lg"
               />
               <div className="flex flex-col justify-center">
@@ -423,7 +426,7 @@ export default function Landing() {
                 className="animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl p-3 text-center text-white shadow-xl sm:rounded-[1.75rem] sm:p-6"
                 style={{ animationDelay: `${i * 120}ms`, background: s.bg }}
               >
-                <img src="/images/landing-stat-flower.png" alt="" aria-hidden className="pointer-events-none absolute -right-3 -top-3 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:h-24 sm:w-24" style={{ transform: `rotate(${i * 18}deg)` }} />
+                <img src="/images/landing-stat-flower.webp" alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -right-3 -top-3 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:h-24 sm:w-24" style={{ transform: `rotate(${i * 18}deg)` }} />
                 <p className="font-script text-3xl leading-none drop-shadow sm:text-6xl">{s.days}</p>
                 <p className="text-[10px] font-bold uppercase tracking-wide sm:text-sm">days</p>
                 <p className="mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm">{s.text}</p>
@@ -460,7 +463,7 @@ export default function Landing() {
             {/* glass heart — framed so its art background reads as intentional */}
             <div className="order-2 flex items-center justify-center gap-4 lg:order-1">
               <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] animate-card-breathe sm:w-52 lg:w-60">
-                <img src="/images/landing-glass-heart.png" alt="A glowing crystal heart cradling a soft pink bloom" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <PhoneMock />
             </div>
