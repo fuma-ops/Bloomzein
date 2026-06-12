@@ -263,62 +263,57 @@ export default function Landing() {
         `}</style>
 
         {/* ──────────────── THREE UNIVERSES. ONE YOU. ──────────────── */}
-        <section id="universes" className="mt-6 scroll-mt-24 sm:mt-10">
-          <div className="text-center">
-            <h2 className="mx-auto inline-flex max-w-2xl items-center gap-2 whitespace-nowrap font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">
-              Three Universes. One You. <Sparkles className="h-5 w-5 text-hotpink sm:h-7 sm:w-7" aria-hidden />
-            </h2>
-            <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">Everything you need, beautifully organized.</p>
-          </div>
-          {/* 3 columns on every screen — phone & tablet included, per spec */}
-          <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
-            {UNIVERSES.map((u, i) => {
-              return (
-                <article
-                  key={u.key}
-                  className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center opacity-90 sm:rounded-[1.75rem] sm:p-5 lg:p-6"
-                  style={{ animationDelay: `${i * 120}ms`, background: u.cardBg, "--card-glow": u.glowColor } as CSSProperties}
-                >
-                  {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
-                  <img
-                    src={u.cardImage}
-                    alt=""
-                    aria-hidden
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    className="pointer-events-none absolute inset-0 h-full w-full object-cover animate-card-breathe saturate-[0.75] brightness-[1.05] opacity-90"
-                  />
-                  {/* soft white glow hugging just the title/list area, leaving the photo visible around it — sized per breakpoint so text stays readable on every screen */}
-                  <div
-                    className="pointer-events-none absolute inset-0
-                      bg-[radial-gradient(75%_85%_at_50%_42%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]
-                      sm:bg-[radial-gradient(68%_80%_at_50%_42%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]
-                      lg:bg-[radial-gradient(60%_75%_at_50%_40%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]"
-                  />
+        <section id="universes" className="relative -mx-4 mt-6 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-10 sm:rounded-[3rem]">
+          {/* shared background photo for the whole section, faded so the cards stay readable */}
+          <img
+            src="/images/landing-universes-bg.png"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover animate-card-breathe"
+          />
+          <div className="absolute inset-0" style={{ background: "oklch(0.98 0.02 350 / 0.7)" }} />
 
-                  <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
-                  <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
-                    {u.items.map((it) => {
-                      const Icon = it.icon;
-                      return (
-                        <li key={it.label} className="flex items-center gap-1 sm:gap-2">
-                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg }}>
-                            <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
-                          </span>
-                          <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  <a
-                    href={u.href}
-                    aria-label={`Explore ${u.title}`}
-                    className="hover-scale relative z-10 mt-2 inline-flex items-center justify-center sm:mt-3"
+          <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
+            <div className="text-center">
+              <h2 className="mx-auto inline-flex max-w-2xl items-center gap-2 whitespace-nowrap font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">
+                Three Universes. One You. <Sparkles className="h-5 w-5 text-hotpink sm:h-7 sm:w-7" aria-hidden />
+              </h2>
+              <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">Everything you need, beautifully organized.</p>
+            </div>
+            {/* 3 columns on every screen — phone & tablet included, per spec */}
+            <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
+              {UNIVERSES.map((u, i) => {
+                return (
+                  <article
+                    key={u.key}
+                    className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    style={{ animationDelay: `${i * 120}ms`, background: "oklch(1 0 0 / 0.55)", backdropFilter: "blur(6px)", "--card-glow": u.glowColor } as CSSProperties}
                   >
-                    <ArrowRight className="animate-arrow-nudge h-4 w-4 sm:h-5 sm:w-5" style={{ color: u.titleColor }} />
-                  </a>
-                </article>
-              );
-            })}
+                    <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
+                    <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
+                      {u.items.map((it) => {
+                        const Icon = it.icon;
+                        return (
+                          <li key={it.label} className="flex items-center gap-1 sm:gap-2">
+                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg }}>
+                              <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
+                            </span>
+                            <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <a
+                      href={u.href}
+                      aria-label={`Explore ${u.title}`}
+                      className="hover-scale relative z-10 mt-2 inline-flex items-center justify-center sm:mt-3"
+                    >
+                      <ArrowRight className="animate-arrow-nudge h-4 w-4 sm:h-5 sm:w-5" style={{ color: u.titleColor }} />
+                    </a>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -590,19 +585,14 @@ function PhoneMock() {
 interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
   key: string; title: string; href: string;
-  badgeIcon: LucideIcon; badgeColor: string;
-  cardBg: string; titleColor: string; titleAccent: string; itemBg: string; glowColor: string; borderColor: string;
-  cardImage: string;
+  titleColor: string; titleAccent: string; itemBg: string; glowColor: string;
   items: UniverseItem[];
 }
 
 const UNIVERSES: Universe[] = [
   {
     key: "body", title: "Body", href: "/app/tools/cycle",
-    badgeIcon: Flower2, badgeColor: "#ec4899",
-    cardBg: "linear-gradient(160deg, oklch(0.96 0.035 350) 0%, oklch(0.9 0.08 350) 100%)",
-    titleColor: "#db2777", titleAccent: "#e60076", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)", borderColor: "oklch(0.62 0.14 350 / 0.5)",
-    cardImage: "/images/landing-card-body.png",
+    titleColor: "#db2777", titleAccent: "#e60076", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)",
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
       { icon: Utensils, label: "Meals & Recipes" },
@@ -612,10 +602,7 @@ const UNIVERSES: Universe[] = [
   },
   {
     key: "mind", title: "Mind", href: "/app/tools/diary",
-    badgeIcon: Moon, badgeColor: "#9333ea",
-    cardBg: "linear-gradient(160deg, oklch(0.95 0.03 300) 0%, oklch(0.87 0.09 300) 100%)",
-    titleColor: "#7c3aed", titleAccent: "#7c0cf2", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)", borderColor: "oklch(0.56 0.15 300 / 0.5)",
-    cardImage: "/images/landing-card-mind.png",
+    titleColor: "#7c3aed", titleAccent: "#7c0cf2", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)",
     items: [
       { icon: NotebookPen, label: "Journal" },
       { icon: StickyNote, label: "Notes" },
@@ -625,10 +612,7 @@ const UNIVERSES: Universe[] = [
   },
   {
     key: "life", title: "Life", href: "/app/calendar",
-    badgeIcon: Star, badgeColor: "#f43f5e",
-    cardBg: "linear-gradient(160deg, oklch(0.96 0.03 20) 0%, oklch(0.89 0.08 15) 100%)",
-    titleColor: "#e11d48", titleAccent: "#ff0a47", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)", borderColor: "oklch(0.6 0.14 18 / 0.5)",
-    cardImage: "/images/landing-card-life.png",
+    titleColor: "#e11d48", titleAccent: "#ff0a47", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
       { icon: Wallet, label: "Budget" },
