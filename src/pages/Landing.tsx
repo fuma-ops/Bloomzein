@@ -152,8 +152,17 @@ export default function Landing() {
 
         {/* ───────────────────────── HERO ───────────────────────── */}
         {/* full-bleed banner — escapes the page's side padding to span edge-to-edge like the reference */}
-        <section className="relative -mx-4 -mt-4 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]"
-          style={{ background: "linear-gradient(135deg, oklch(0.97 0.025 350) 0%, oklch(0.93 0.07 350) 55%, oklch(0.88 0.1 345) 100%)" }}>
+        <section className="relative -mx-4 -mt-4 min-h-[560px] overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:min-h-[620px] sm:rounded-b-[3rem] lg:min-h-[680px]">
+          {/* hero photo — fills the entire banner, text sits on top of it */}
+          <img
+            src="/images/landing-hero.png"
+            alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
+            className="absolute inset-0 h-full w-full object-cover object-[center_22%] animate-card-breathe sm:object-[68%_center]"
+            referrerPolicy="no-referrer"
+          />
+          {/* soft gradient so the text stays readable over the photo */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.97_0.025_350)] via-[oklch(0.97_0.025_350)/55%] to-transparent sm:bg-gradient-to-r sm:from-[oklch(0.97_0.025_350)] sm:via-[oklch(0.97_0.025_350)/45%] sm:to-transparent" />
+
           {/* decorative glass orbs */}
           <img
             src="/images/landing-orb-flower.png"
@@ -170,8 +179,12 @@ export default function Landing() {
             style={{ animationDelay: "1.2s", transform: `translateY(${scrollY * -0.03}px)` }}
           />
 
-          <div className="relative mx-auto grid max-w-7xl items-center gap-1 px-6 pb-0 pt-7 sm:gap-6 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-10 lg:pb-20 lg:pt-20 2xl:max-w-[96rem]">
-            <div className="relative z-10 text-left">
+          <Sparkles className="pointer-events-none absolute left-[8%] top-[34%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
+          <Sparkles className="pointer-events-none absolute right-[14%] top-[40%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
+          <Star className="pointer-events-none absolute left-[10%] bottom-[24%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
+
+          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-center gap-1 px-6 pb-10 pt-7 sm:gap-6 sm:px-10 sm:py-16 lg:gap-10 lg:pb-20 lg:pt-20 2xl:max-w-[96rem]">
+            <div className="max-w-[15rem] text-left sm:max-w-sm lg:max-w-xl">
               <h1 className="font-script text-4xl leading-[1.05] text-bloom-gradient sm:text-7xl lg:text-8xl">
                 Bloom<br />&amp; Zein
               </h1>
@@ -202,19 +215,6 @@ export default function Landing() {
                   {installing ? "Préparation…" : "Download App"}
                 </button>
               </div>
-            </div>
-
-            {/* hero photo — full-bleed on mobile (fades into the pink at the top edge), framed in its own column on desktop (fades on the left edge) */}
-            <div className="relative -mx-6 mt-3 aspect-[4/3] w-[calc(100%+3rem)] sm:mx-0 sm:mt-6 sm:aspect-square sm:w-full lg:aspect-[6/5]">
-              <img
-                src="/images/landing-hero.png"
-                alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
-                className="absolute inset-0 h-full w-full object-cover object-[center_22%] animate-card-breathe [mask-image:linear-gradient(to_bottom,transparent_0%,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_14%)] sm:rounded-[2rem] sm:object-[60%_center] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_28%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_28%)]"
-                referrerPolicy="no-referrer"
-              />
-              <Sparkles className="absolute left-[8%] top-[28%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
-              <Sparkles className="absolute right-[14%] top-[34%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
-              <Star className="absolute left-[10%] bottom-[18%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
             </div>
           </div>
         </section>
