@@ -157,7 +157,7 @@ export default function Landing() {
           <img
             src="/images/landing-hero.png"
             alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
-            className="absolute inset-0 h-full w-full object-cover object-[center_22%] animate-card-breathe sm:object-[68%_center]"
+            className="absolute inset-0 h-full w-full object-cover object-[center_18%] animate-card-breathe sm:object-[65%_12%]"
             referrerPolicy="no-referrer"
           />
           {/* gradient so the text stays readable on the left, while the right side stays clear and glowy */}
@@ -189,7 +189,7 @@ export default function Landing() {
           <Sparkles className="pointer-events-none absolute right-[14%] top-[40%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
           <Star className="pointer-events-none absolute left-[10%] bottom-[24%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
 
-          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-10 pt-7 sm:gap-6 sm:px-10 sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
+          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-14 pt-7 sm:gap-6 sm:px-10 sm:pb-10 sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
             <div className="text-left sm:max-w-md lg:max-w-xl" style={{ textShadow: "0 1px 16px oklch(0.97 0.025 350 / 0.9), 0 1px 3px oklch(0.97 0.025 350 / 0.9)" }}>
               <h1 className="font-script text-5xl leading-tight text-hotpink sm:text-6xl lg:text-7xl">
                 Bloom<br className="sm:hidden" /> &amp; Zein
@@ -197,10 +197,12 @@ export default function Landing() {
               <p className="mt-1 font-script text-lg leading-tight text-hotpink sm:mt-2 sm:text-xl lg:text-2xl">
                 Your softest era<br className="sm:hidden" /> starts here.
               </p>
-              <p className="mt-3 max-w-[16rem] text-xs font-medium text-magenta sm:mt-4 sm:max-w-sm sm:text-sm lg:text-base">
-                The all-in-one app for your body, mind and life. Designed for you, guided by your cycle.
+              <p className="mt-3 max-w-[16rem] text-[11px] font-normal text-magenta sm:mt-4 sm:max-w-sm sm:text-sm lg:text-base">
+                The all-in-one app for your body, mind<br />
+                and life. Designed for you, guided by<br />
+                your cycle.
               </p>
-              <div className="mt-4 flex flex-row items-center gap-2 sm:mt-6 sm:gap-3">
+              <div className="mt-4 flex flex-row items-center gap-2 sm:mt-8 sm:gap-3 lg:mt-10">
                 <a
                   href="/app/today"
                   className="bloom-luxury-btn hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
