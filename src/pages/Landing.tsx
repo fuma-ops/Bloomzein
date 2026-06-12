@@ -327,7 +327,11 @@ export default function Landing() {
           <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
           <div className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7">
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-              <CalendarMock />
+              <img
+                src="/images/landing-calendar.png"
+                alt="Bloom & Zein calendar for May 2025 showing cycle, yoga, workout, journal, reminder, budget and goal events"
+                className="animate-card-pop-in animate-card-breathe w-full self-center rounded-2xl object-contain shadow-lg"
+              />
               <div className="flex flex-col justify-center">
                 <p className="font-script text-2xl text-hotpink sm:text-3xl">all your worlds, one calendar</p>
                 <p className="mt-1.5 text-sm font-medium text-magenta/80">
@@ -531,40 +535,6 @@ function SectionHeading({ kicker, title }: { kicker: string; title: string }) {
 }
 
 /** A soft, on-brand May calendar mockup with colored event dots. */
-function CalendarMock() {
-  // May 2025 starts on a Thursday (Sun=0 … Sat=6 → 4 leading blanks)
-  const lead = 4;
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const events: Record<number, string[]> = {
-    3: ["#f43f5e"], 5: ["#a855f7"], 8: ["#22c55e"], 12: ["#f43f5e", "#ec4899"],
-    15: ["#f59e0b"], 18: ["#a855f7"], 22: ["#22c55e"], 25: ["#ec4899"], 28: ["#f43f5e"], 30: ["#f59e0b"],
-  };
-  return (
-    <div className="rounded-2xl bg-white/80 p-3 shadow-inner sm:p-4">
-      <div className="flex items-center justify-between px-1">
-        <p className="font-script text-xl text-hotpink sm:text-2xl">May 2025</p>
-        <Flower2 className="h-5 w-5 text-hotpink/60" aria-hidden />
-      </div>
-      <div className="mt-2 grid grid-cols-7 gap-0.5 text-center sm:gap-1">
-        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <span key={i} className="text-[9px] font-bold text-magenta/50 sm:text-xs">{d}</span>
-        ))}
-        {Array.from({ length: lead }).map((_, i) => <span key={`b${i}`} />)}
-        {days.map((d) => (
-          <span key={d} className="relative grid aspect-square place-items-center rounded-md text-[9px] font-semibold text-magenta sm:rounded-lg sm:text-xs">
-            <span className="relative z-10">{d}</span>
-            {events[d] && (
-              <span className="absolute bottom-0.5 flex gap-0.5">
-                {events[d].map((c, ci) => <span key={ci} className="h-1 w-1 rounded-full sm:h-1.5 sm:w-1.5" style={{ background: c }} />)}
-              </span>
-            )}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /** A tiny CSS phone frame showing the app's bloom splash. */
 function PhoneMock() {
   return (
