@@ -359,7 +359,10 @@ export default function Landing() {
         {/* ──────────────── PERSONALIZED BY YOUR CYCLE ──────────────── */}
         <section className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="it grows with you" title="Personalized by your cycle." />
-          <div className="bloom-pearl-card animate-card-pop-in relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-[2rem] p-4 sm:p-7">
+          <div
+            className="bloom-pearl-card animate-card-pop-in relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-[2rem] p-4 sm:p-7"
+            style={{ background: "linear-gradient(135deg, oklch(0.94 0.06 350 / 0.55) 0%, oklch(0.88 0.1 340 / 0.35) 100%)" }}
+          >
             <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.35)_0%,transparent_70%)]" aria-hidden />
             <img
               src="/images/landing-cycle-personalized.webp"
@@ -367,7 +370,10 @@ export default function Landing() {
               loading="lazy"
               className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30"
             />
-            <div className="relative z-10 mt-5 flex justify-center">
+            <p className="relative z-10 mt-4 text-center text-sm font-medium text-magenta/80 sm:text-base">
+              Your tools, meals and movement gently shift with every phase — so you're always supported, never fighting your body.
+            </p>
+            <div className="relative z-10 mt-4 flex justify-center">
               <a
                 href="/app/tools/cycle"
                 className="bloom-luxury-btn hover-scale inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
@@ -411,12 +417,14 @@ export default function Landing() {
               <article
                 key={s.days}
                 className="animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl p-3 text-center text-white shadow-xl sm:rounded-[1.75rem] sm:p-6"
-                style={{ animationDelay: `${i * 120}ms`, background: s.bg }}
+                style={{ animationDelay: `${i * 120}ms` }}
               >
-                <img src="/images/landing-stat-flower.webp" alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -right-3 -top-3 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:h-24 sm:w-24" style={{ transform: `rotate(${i * 18}deg)` }} />
-                <p className="font-script text-3xl leading-none drop-shadow sm:text-6xl">{s.days}</p>
-                <p className="text-[10px] font-bold uppercase tracking-wide sm:text-sm">days</p>
-                <p className="mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm">{s.text}</p>
+                <img src={s.image} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full object-cover animate-card-breathe" />
+                <div className="absolute inset-0" style={{ background: s.bg, opacity: 0.7 }} />
+                <img src="/images/landing-stat-flower.webp" alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -right-3 -top-3 z-10 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:h-24 sm:w-24" style={{ transform: `rotate(${i * 18}deg)` }} />
+                <p className="relative z-10 font-script text-3xl leading-none drop-shadow sm:text-6xl">{s.days}</p>
+                <p className="relative z-10 text-[10px] font-bold uppercase tracking-wide sm:text-sm">days</p>
+                <p className="relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm">{s.text}</p>
               </article>
             ))}
           </div>
@@ -598,9 +606,9 @@ const DASHBOARD = [
 ];
 
 const STATS = [
-  { days: "7", text: "softer mornings & a calmer first week", bg: "linear-gradient(145deg, oklch(0.72 0.27 350), oklch(0.6 0.3 0))" },
-  { days: "30", text: "your cycle, mood & money start to rhyme", bg: "linear-gradient(145deg, oklch(0.68 0.28 330), oklch(0.58 0.31 350))" },
-  { days: "90", text: "a whole new soft era, fully bloomed", bg: "linear-gradient(145deg, oklch(0.72 0.27 10), oklch(0.6 0.3 350))" },
+  { days: "7", text: "softer mornings & a calmer first week", bg: "linear-gradient(145deg, oklch(0.72 0.27 350), oklch(0.6 0.3 0))", image: "/images/landing-stat-bg-1.webp" },
+  { days: "30", text: "your cycle, mood & money start to rhyme", bg: "linear-gradient(145deg, oklch(0.68 0.28 330), oklch(0.58 0.31 350))", image: "/images/landing-stat-bg-2.webp" },
+  { days: "90", text: "a whole new soft era, fully bloomed", bg: "linear-gradient(145deg, oklch(0.72 0.27 10), oklch(0.6 0.3 350))", image: "/images/landing-stat-bg-3.webp" },
 ];
 
 const QUOTES = [
