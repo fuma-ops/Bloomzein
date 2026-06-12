@@ -191,27 +191,26 @@ export default function Landing() {
 
           <div className="relative z-10 mx-auto grid h-full max-w-7xl items-center gap-1 px-6 pb-10 pt-7 sm:gap-6 sm:px-10 sm:py-16 lg:gap-10 lg:pb-20 lg:pt-20 2xl:max-w-[96rem]">
             <div className="text-left sm:max-w-sm lg:max-w-xl" style={{ textShadow: "0 1px 16px oklch(0.97 0.025 350 / 0.9), 0 1px 3px oklch(0.97 0.025 350 / 0.9)" }}>
-              <h1 className="font-script text-4xl leading-[1.05] text-bloom-gradient sm:text-7xl lg:text-8xl">
+              <h1 className="font-script text-4xl leading-[1.05] text-hotpink sm:text-7xl lg:text-8xl">
                 Bloom<br />&amp; Zein
               </h1>
               <p className="mt-2 font-script text-lg leading-tight text-hotpink sm:text-3xl lg:text-4xl">
                 Your softest era<br />starts here.
               </p>
-              <p className="mt-2 max-w-[15rem] text-xs font-semibold text-magenta sm:mt-4 sm:max-w-sm sm:text-base">
-                The all-in-one app for your body, mind and life. Designed for you, guided by your cycle.
+              <p className="mt-2 max-w-[15rem] font-script text-[11px] italic leading-snug font-semibold text-magenta sm:mt-4 sm:max-w-sm sm:text-lg">
+                The all-in-one app for your<br />body, mind and life. Designed<br />for you, guided by your cycle.
               </p>
               <div className="mt-3 flex flex-row items-center gap-2 sm:mt-6 sm:gap-3">
                 <a
                   href="/app/today"
-                  className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white shadow-lg transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  className="bloom-luxury-btn hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
-                  <span className="relative z-10 inline-flex items-center gap-1.5 whitespace-nowrap">Start Blooming <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" /></span>
-                  <span className="bloom-cta-shine" aria-hidden />
+                  Start Blooming <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                 </a>
                 <button
                   onClick={handleDownload}
                   disabled={installing}
-                  className="hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white bg-white px-3.5 py-2 text-[11px] font-semibold text-hotpink shadow-lg transition hover:bg-petal disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  className="bloom-luxury-btn-white hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-hotpink transition disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
                   {installing ? (
                     <span className="h-3 w-3 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
@@ -277,6 +276,38 @@ export default function Landing() {
             0%   { left: -40%; }
             55%  { left: 130%; }
             100% { left: 130%; }
+          }
+          /* Same glossy 3D capsule as .bloom-luxury-btn, but a soft translucent white body */
+          .bloom-luxury-btn-white {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            border-radius: 26px;
+            border: none;
+            background: linear-gradient(180deg, oklch(1 0 0 / 0.92) 0%, oklch(0.98 0 0 / 0.8) 100%);
+            transform: translateY(-2px);
+            box-shadow:
+              0 2px 5px -1px oklch(0.32 0.18 340 / 0.2),
+              0 13px 22px -13px oklch(0.6 0.22 345 / 0.25),
+              inset 0 0 0 1px oklch(1 0 0 / 0.6),
+              inset 0 1px 0 oklch(1 0 0 / 0.9),
+              inset 0 -5px 9px oklch(0.85 0.1 345 / 0.25);
+            transition: transform 0.25s cubic-bezier(0.22, 0.9, 0.32, 1.1), box-shadow 0.3s ease, filter 0.2s ease;
+          }
+          .bloom-luxury-btn-white::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(120% 75% at 50% -20%, oklch(1 0 0 / 0.6), transparent 62%);
+          }
+          .bloom-luxury-btn-white:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.02);
+          }
+          .bloom-luxury-btn-white:active {
+            transform: translateY(0px) scale(0.99);
+            filter: brightness(0.985);
           }
         `}</style>
 
