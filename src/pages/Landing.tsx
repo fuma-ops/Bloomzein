@@ -152,7 +152,7 @@ export default function Landing() {
 
         {/* ───────────────────────── HERO ───────────────────────── */}
         {/* full-bleed banner — escapes the page's side padding to span edge-to-edge like the reference */}
-        <section className="relative -mx-4 -mt-4 min-h-[560px] overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:min-h-[620px] sm:rounded-b-[3rem] lg:min-h-[680px]">
+        <section className="relative -mx-4 -mt-4 aspect-[4/3] overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:aspect-square sm:rounded-b-[3rem] lg:aspect-[6/5]">
           {/* hero photo — fills the entire banner, text sits on top of it */}
           <img
             src="/images/landing-hero.png"
