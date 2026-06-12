@@ -263,7 +263,7 @@ export default function Landing() {
         `}</style>
 
         {/* ──────────────── THREE UNIVERSES. ONE YOU. ──────────────── */}
-        <section id="universes" className="relative -mx-4 mt-6 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-10 sm:rounded-[3rem]">
+        <section id="universes" className="relative -mx-4 mt-6 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-10 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
           {/* shared background photo for the whole section, faded so the cards stay readable */}
           <img
             src="/images/landing-universes-bg.png"
@@ -271,7 +271,8 @@ export default function Landing() {
             aria-hidden
             className="absolute inset-0 h-full w-full object-cover animate-card-breathe"
           />
-          <div className="absolute inset-0" style={{ background: "oklch(0.98 0.02 350 / 0.7)" }} />
+          {/* radial fade — keeps the center of the photo soft while letting the edges melt into the page background */}
+          <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.55) 0%, oklch(0.98 0.015 350 / 0.6) 60%, oklch(0.98 0.015 350) 100%)" }} />
 
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
             <div className="text-center">
