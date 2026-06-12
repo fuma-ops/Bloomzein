@@ -300,11 +300,10 @@ export default function Landing() {
           {/* 3 columns on every screen — phone & tablet included, per spec */}
           <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
             {UNIVERSES.map((u, i) => {
-              const Badge = u.badgeIcon;
               return (
                 <article
                   key={u.key}
-                  className="animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 shadow-lg sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                  className="pearl-frame animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 shadow-lg sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                   style={{ animationDelay: `${i * 120}ms`, background: u.cardBg }}
                 >
                   {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
@@ -315,10 +314,9 @@ export default function Landing() {
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                     className="pointer-events-none absolute inset-0 h-full w-full object-cover"
                   />
-                  {/* gradient wash over the photo so the title/labels stay readable */}
-                  <div className="pointer-events-none absolute inset-0" style={{ background: `linear-gradient(160deg, ${u.cardBg.match(/oklch\([^)]+\)/g)?.[0] ?? "transparent"} 0%, transparent 60%)` }} />
+                  {/* white glow behind the text so it stays readable over busy photo backgrounds */}
+                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(115% 85% at 12% 28%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.55) 45%, transparent 78%)" }} />
 
-                  <Badge className="relative z-10 ml-auto h-4 w-4 sm:h-6 sm:w-6" style={{ color: u.badgeColor }} aria-hidden />
                   <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
                   <ul className="relative z-10 mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2.5">
                     {u.items.map((it) => {
