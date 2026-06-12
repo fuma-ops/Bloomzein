@@ -263,7 +263,13 @@ export default function Landing() {
         `}</style>
 
         {/* ──────────────── THREE UNIVERSES. ONE YOU. ──────────────── */}
-        <section id="universes" className="relative -mx-4 mt-6 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-10 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
+        <div className="mt-6 text-center sm:mt-10">
+          <h2 className="mx-auto inline-flex max-w-2xl items-center gap-2 whitespace-nowrap font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">
+            Three Universes. One You. <Sparkles className="h-5 w-5 text-hotpink sm:h-7 sm:w-7" aria-hidden />
+          </h2>
+          <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">Everything you need, beautifully organized.</p>
+        </div>
+        <section id="universes" className="relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
           {/* shared background photo for the whole section, faded so the cards stay readable */}
           <img
             src="/images/landing-universes-bg.png"
@@ -275,14 +281,8 @@ export default function Landing() {
           <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.55) 0%, oklch(0.98 0.015 350 / 0.6) 60%, oklch(0.98 0.015 350) 100%)" }} />
 
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
-            <div className="text-center">
-              <h2 className="mx-auto inline-flex max-w-2xl items-center gap-2 whitespace-nowrap font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">
-                Three Universes. One You. <Sparkles className="h-5 w-5 text-hotpink sm:h-7 sm:w-7" aria-hidden />
-              </h2>
-              <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">Everything you need, beautifully organized.</p>
-            </div>
             {/* 3 columns on every screen — phone & tablet included, per spec */}
-            <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
               {UNIVERSES.map((u, i) => {
                 return (
                   <article
