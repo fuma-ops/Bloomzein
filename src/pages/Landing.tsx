@@ -159,7 +159,7 @@ export default function Landing() {
             }}
           />
 
-          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-4 pt-7 sm:gap-6 sm:px-10 sm:pb-4 sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
+          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-[23px] pt-7 sm:gap-6 sm:px-10 sm:pb-[23px] sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
             <div className="text-left sm:max-w-md lg:max-w-xl" style={{ textShadow: "0 1px 16px oklch(0.97 0.025 350 / 0.9), 0 1px 3px oklch(0.97 0.025 350 / 0.9)" }}>
               <h1 className="font-script text-5xl leading-tight text-hotpink sm:text-6xl lg:text-7xl">
                 Bloom<br className="sm:hidden" /> &amp; Zein
@@ -175,14 +175,14 @@ export default function Landing() {
               <div className="mt-4 flex flex-row items-center gap-2 sm:mt-8 sm:gap-3 lg:mt-10">
                 <a
                   href="/app/today"
-                  className="bloom-luxury-btn animate-cta-glow hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  className="bloom-luxury-btn hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
                   Start Blooming <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                 </a>
                 <button
                   onClick={handleDownload}
                   disabled={installing}
-                  className="bloom-luxury-btn-white animate-cta-glow hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-hotpink transition disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  className="bloom-luxury-btn-white hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-hotpink transition disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
                   {installing ? (
                     <span className="h-3 w-3 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
@@ -295,7 +295,7 @@ export default function Landing() {
                       lg:bg-[radial-gradient(60%_75%_at_50%_40%,oklch(1_0_0_/_0.95)_0%,oklch(1_0_0_/_0.55)_55%,transparent_85%)]"
                   />
 
-                  <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleAccent }}>{u.title}</h3>
+                  <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
                   <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
                     {u.items.map((it) => {
                       const Icon = it.icon;
