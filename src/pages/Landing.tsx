@@ -313,9 +313,11 @@ export default function Landing() {
                     <a
                       href={u.href}
                       aria-label={`Explore ${u.title}`}
-                      className="hover-scale relative z-10 mt-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm sm:mt-3 sm:h-8 sm:w-8"
+                      className="hover-scale relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-[10px] font-bold backdrop-blur-sm sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+                      style={{ color: u.titleColor }}
                     >
-                      <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" style={{ color: u.titleColor }} />
+                      Discover
+                      <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" />
                     </a>
                   </article>
                 );
