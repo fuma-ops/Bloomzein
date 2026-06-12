@@ -312,10 +312,10 @@ export default function Landing() {
                     alt=""
                     aria-hidden
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover animate-card-breathe"
                   />
-                  {/* soft white glow radiating from the card's center, fading toward the edges, for readability */}
-                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(75% 80% at 50% 45%, oklch(1 0 0 / 0.95) 0%, oklch(1 0 0 / 0.55) 55%, transparent 90%)" }} />
+                  {/* soft white glow hugging just the title/list area, leaving the photo visible around it */}
+                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(45% 65% at 50% 42%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.45) 50%, transparent 75%)" }} />
 
                   <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
                   <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
@@ -334,9 +334,9 @@ export default function Landing() {
                   <a
                     href={u.href}
                     aria-label={`Explore ${u.title}`}
-                    className="hover-scale relative z-10 mt-auto grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow-md sm:h-10 sm:w-10"
+                    className="hover-scale relative z-10 mt-2 inline-flex items-center justify-center sm:mt-3"
                   >
-                    <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <ArrowRight className="animate-chevron-glow h-4 w-4 sm:h-5 sm:w-5" />
                   </a>
                 </article>
               );
