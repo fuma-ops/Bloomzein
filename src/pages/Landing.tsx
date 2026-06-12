@@ -293,7 +293,7 @@ export default function Landing() {
                 return (
                   <article
                     key={u.key}
-                    className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                     style={{ animationDelay: `${i * 120}ms`, background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)", "--card-glow": u.glowColor } as CSSProperties}
                   >
                     <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
@@ -313,9 +313,9 @@ export default function Landing() {
                     <a
                       href={u.href}
                       aria-label={`Explore ${u.title}`}
-                      className="hover-scale relative z-10 mt-2 inline-flex items-center justify-center sm:mt-3"
+                      className="hover-scale relative z-10 mt-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/40 backdrop-blur-sm sm:mt-3 sm:h-8 sm:w-8"
                     >
-                      <ArrowRight className="animate-arrow-nudge h-4 w-4 sm:h-5 sm:w-5" style={{ color: u.titleColor }} />
+                      <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" style={{ color: u.titleColor }} />
                     </a>
                   </article>
                 );
