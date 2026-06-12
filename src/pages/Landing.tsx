@@ -307,9 +307,20 @@ export default function Landing() {
                   className="animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 shadow-lg sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                   style={{ animationDelay: `${i * 120}ms`, background: u.cardBg }}
                 >
-                  <Badge className="absolute right-2.5 top-2.5 h-4 w-4 sm:right-4 sm:top-4 sm:h-6 sm:w-6" style={{ color: u.badgeColor }} aria-hidden />
-                  <h3 className="font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
-                  <ul className="mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2.5">
+                  {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
+                  <img
+                    src={u.cardImage}
+                    alt=""
+                    aria-hidden
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                  />
+                  {/* gradient wash over the photo so the title/labels stay readable */}
+                  <div className="pointer-events-none absolute inset-0" style={{ background: `linear-gradient(160deg, ${u.cardBg.match(/oklch\([^)]+\)/g)?.[0] ?? "transparent"} 0%, transparent 60%)` }} />
+
+                  <Badge className="relative z-10 ml-auto h-4 w-4 sm:h-6 sm:w-6" style={{ color: u.badgeColor }} aria-hidden />
+                  <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
+                  <ul className="relative z-10 mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2.5">
                     {u.items.map((it) => {
                       const Icon = it.icon;
                       return (
@@ -322,14 +333,6 @@ export default function Landing() {
                       );
                     })}
                   </ul>
-                  {/* decorative card art — placeholder, drop the generated image into /public/images/ (hidden until it exists) */}
-                  <img
-                    src={u.cardImage}
-                    alt=""
-                    aria-hidden
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:-bottom-4 sm:-right-4 sm:h-32 sm:w-32 lg:h-36 lg:w-36"
-                  />
                   <a
                     href={u.href}
                     aria-label={`Explore ${u.title}`}
