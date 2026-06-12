@@ -170,50 +170,50 @@ export default function Landing() {
             style={{ animationDelay: "1.2s", transform: `translateY(${scrollY * -0.03}px)` }}
           />
 
-          <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-6 py-10 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-10 lg:py-20 2xl:max-w-[96rem]">
-            <div className="relative z-10 text-center lg:text-left">
-              <h1 className="font-script text-5xl leading-[1.05] text-bloom-gradient sm:text-7xl lg:text-8xl">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-1 px-6 pb-0 pt-7 sm:gap-6 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-10 lg:pb-20 lg:pt-20 2xl:max-w-[96rem]">
+            <div className="relative z-10 text-left">
+              <h1 className="font-script text-4xl leading-[1.05] text-bloom-gradient sm:text-7xl lg:text-8xl">
                 Bloom<br />&amp; Zein
               </h1>
-              <p className="mt-3 font-script text-2xl leading-tight text-hotpink sm:text-3xl lg:text-4xl">
+              <p className="mt-2 font-script text-lg leading-tight text-hotpink sm:text-3xl lg:text-4xl">
                 Your softest era<br />starts here.
               </p>
-              <p className="mx-auto mt-4 max-w-sm text-sm font-medium text-magenta/80 sm:text-base lg:mx-0">
+              <p className="mt-2 max-w-[15rem] text-xs font-medium text-magenta/80 sm:mt-4 sm:max-w-sm sm:text-base">
                 The all-in-one app for your body, mind and life. Designed for you, guided by your cycle.
               </p>
-              <div className="mt-6 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
+              <div className="mt-3 flex flex-row flex-wrap items-center gap-2 sm:mt-6 sm:gap-3">
                 <a
                   href="/app/today"
-                  className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
-                  <span className="relative z-10 inline-flex items-center gap-1.5 whitespace-nowrap">Start Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
+                  <span className="relative z-10 inline-flex items-center gap-1.5 whitespace-nowrap">Start Blooming <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" /></span>
                   <span className="bloom-cta-shine" aria-hidden />
                 </a>
                 <button
                   onClick={handleDownload}
                   disabled={installing}
-                  className="hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white bg-white/90 px-4 py-2.5 text-xs font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                  className="hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white bg-white/90 px-3.5 py-2 text-[11px] font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
                   {installing ? (
-                    <span className="h-3.5 w-3.5 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
+                    <span className="h-3 w-3 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
                   ) : (
-                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
                   {installing ? "Préparation…" : "Download App"}
                 </button>
               </div>
             </div>
 
-            {/* hero photo — masked on the left edge so it dissolves into the pink banner instead of sitting in a hard box */}
-            <div className="relative mx-auto aspect-square w-full max-w-sm lg:max-w-none lg:aspect-[6/5]">
+            {/* hero photo — full-bleed on mobile (fades into the pink at the top edge), framed in its own column on desktop (fades on the left edge) */}
+            <div className="relative -mx-6 mt-3 aspect-[4/3] w-[calc(100%+3rem)] sm:mx-0 sm:mt-6 sm:aspect-square sm:w-full lg:aspect-[6/5]">
               <img
                 src="/images/landing-hero.png"
                 alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
-                className="absolute inset-0 h-full w-full rounded-[2rem] object-cover object-[60%_center] animate-card-breathe [mask-image:none] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_28%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_28%)]"
+                className="absolute inset-0 h-full w-full object-cover object-[center_22%] animate-card-breathe [mask-image:linear-gradient(to_bottom,transparent_0%,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent_0%,black_14%)] sm:rounded-[2rem] sm:object-[60%_center] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_28%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_28%)]"
                 referrerPolicy="no-referrer"
               />
-              <Sparkles className="absolute left-[8%] top-[12%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
-              <Sparkles className="absolute right-[14%] top-[20%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
+              <Sparkles className="absolute left-[8%] top-[28%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
+              <Sparkles className="absolute right-[14%] top-[34%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
               <Star className="absolute left-[10%] bottom-[18%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
             </div>
           </div>
