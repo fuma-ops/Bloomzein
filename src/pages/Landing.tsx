@@ -277,8 +277,8 @@ export default function Landing() {
             aria-hidden
             className="absolute inset-0 h-full w-full object-cover object-top animate-card-breathe"
           />
-          {/* radial fade — keeps the center of the photo soft while letting the edges melt into the page background */}
-          <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.7) 0%, oklch(0.98 0.015 350 / 0.75) 60%, oklch(0.98 0.015 350) 100%)" }} />
+          {/* radial fade — keeps the photo mostly visible while letting the edges melt into the page background */}
+          <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.25) 0%, oklch(0.98 0.015 350 / 0.4) 60%, oklch(0.98 0.015 350) 100%)" }} />
 
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
             {/* 3 columns on every screen — phone & tablet included, per spec */}
@@ -288,22 +288,8 @@ export default function Landing() {
                   <article
                     key={u.key}
                     className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
-                    style={{ animationDelay: `${i * 120}ms`, background: u.cardImage ? "transparent" : "oklch(1 0 0 / 0.55)", backdropFilter: "blur(6px)", "--card-glow": u.glowColor } as CSSProperties}
+                    style={{ animationDelay: `${i * 120}ms`, background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)", "--card-glow": u.glowColor } as CSSProperties}
                   >
-                    {u.cardImage && (
-                      <>
-                        <img
-                          src={u.cardImage}
-                          alt=""
-                          aria-hidden
-                          className="absolute inset-0 h-full w-full object-cover animate-card-breathe"
-                        />
-                        <div
-                          className="absolute inset-0"
-                          style={{ background: "radial-gradient(circle at 50% 55%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.6) 55%, oklch(1 0 0 / 0.3) 100%)" }}
-                        />
-                      </>
-                    )}
                     <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
                     <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
                       {u.items.map((it) => {
@@ -600,7 +586,7 @@ function PhoneMock() {
 interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
   key: string; title: string; href: string;
-  titleColor: string; titleAccent: string; itemBg: string; glowColor: string; cardImage?: string;
+  titleColor: string; titleAccent: string; itemBg: string; glowColor: string;
   items: UniverseItem[];
 }
 
@@ -608,7 +594,6 @@ const UNIVERSES: Universe[] = [
   {
     key: "body", title: "Body", href: "/app/tools/cycle",
     titleColor: "#db2777", titleAccent: "#e60076", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)",
-    cardImage: "/images/landing-card-body.png",
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
       { icon: Utensils, label: "Meals & Recipes" },
