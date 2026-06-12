@@ -278,7 +278,7 @@ export default function Landing() {
             className="absolute inset-0 h-full w-full object-cover animate-card-breathe"
           />
           {/* radial fade — keeps the center of the photo soft while letting the edges melt into the page background */}
-          <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.55) 0%, oklch(0.98 0.015 350 / 0.6) 60%, oklch(0.98 0.015 350) 100%)" }} />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.7) 0%, oklch(0.98 0.015 350 / 0.75) 60%, oklch(0.98 0.015 350) 100%)" }} />
 
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
             {/* 3 columns on every screen — phone & tablet included, per spec */}
