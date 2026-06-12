@@ -298,11 +298,11 @@ export default function Landing() {
                   >
                     <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
                     <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
-                      {u.items.map((it) => {
+                      {u.items.map((it, ii) => {
                         const Icon = it.icon;
                         return (
                           <li key={it.label} className="flex items-center gap-1 sm:gap-2">
-                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg }}>
+                            <span className="animate-icon-wiggle grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg, animationDelay: `${ii * 220}ms` }}>
                               <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
                             </span>
                             <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
@@ -313,8 +313,8 @@ export default function Landing() {
                     <a
                       href={u.href}
                       aria-label={`Explore ${u.title}`}
-                      className="hover-scale relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-[10px] font-bold backdrop-blur-sm sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
-                      style={{ color: u.titleColor }}
+                      className="hover-scale animate-cta-bounce relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-[10px] font-bold backdrop-blur-sm sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+                      style={{ color: u.titleColor, animationDelay: `${i * 200}ms` }}
                     >
                       Discover
                       <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" />

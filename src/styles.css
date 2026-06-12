@@ -574,6 +574,29 @@
   animation: arrow-nudge 2.4s ease-in-out infinite;
 }
 
+/* Playful wiggle for the little item icons inside the universe cards */
+@keyframes icon-wiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20%      { transform: rotate(-14deg) scale(1.08); }
+  40%      { transform: rotate(10deg) scale(1.08); }
+  60%      { transform: rotate(-6deg) scale(1); }
+  80%      { transform: rotate(4deg) scale(1); }
+}
+
+@utility animate-icon-wiggle {
+  animation: icon-wiggle 3.6s ease-in-out infinite;
+}
+
+/* Friendly little bounce to keep CTA buttons feeling alive */
+@keyframes cta-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@utility animate-cta-bounce {
+  animation: cta-bounce 1.8s ease-in-out infinite;
+}
+
 @keyframes icon-breathe {
   0%, 100% { transform: scale(1) rotate(0deg); }
   50% { transform: scale(1.08) rotate(-2deg); }
