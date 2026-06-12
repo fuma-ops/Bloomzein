@@ -1,6 +1,6 @@
 import {
   ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
-  Moon, Sun, Droplet, Smile, PenLine, BookOpen, Dumbbell, Salad, Wallet, Calendar as CalendarIcon,
+  Moon, Droplet, Smile, PenLine, BookOpen, Wallet, Calendar as CalendarIcon,
   Target, TrendingUp, Quote, Utensils, Footprints, StickyNote, ClipboardList, NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
@@ -359,38 +359,22 @@ export default function Landing() {
         {/* ──────────────── PERSONALIZED BY YOUR CYCLE ──────────────── */}
         <section className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="it grows with you" title="Personalized by your cycle." />
-          {/* 4-phase timeline — stays a single row on every screen */}
-          <div className="relative mx-auto mt-8 max-w-4xl">
-            <div className="pointer-events-none absolute left-[12%] right-[12%] top-6 h-1 rounded-full sm:top-8" style={{ background: "linear-gradient(90deg, oklch(0.72 0.27 10), oklch(0.78 0.18 60), oklch(0.72 0.27 350), oklch(0.62 0.28 330))" }} aria-hidden />
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-4">
-              {CYCLE_PHASES.map((p, i) => {
-                const Icon = p.icon;
-                return (
-                  <div key={p.label} className="animate-card-pop-in flex flex-col items-center text-center" style={{ animationDelay: `${i * 110}ms` }}>
-                    <span className="grid h-12 w-12 place-items-center rounded-full text-white shadow-lg ring-4 ring-white sm:h-16 sm:w-16" style={{ background: p.color }}>
-                      <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
-                    </span>
-                    <p className="mt-1.5 text-[10px] font-bold leading-tight text-magenta sm:text-sm">{p.label}</p>
-                    <p className="text-[8px] leading-tight text-magenta/60 sm:text-xs">{p.sub}</p>
-                  </div>
-                );
-              })}
+          <div className="bloom-pearl-card animate-card-pop-in relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-[2rem] p-4 sm:p-7">
+            <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.35)_0%,transparent_70%)]" aria-hidden />
+            <img
+              src="/images/landing-cycle-personalized.webp"
+              alt="Bloom & Zein cycle phases — Period, Follicular, Ovulation, Luteal — with workouts, yoga, meals and articles that adapt to you"
+              loading="lazy"
+              className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30"
+            />
+            <div className="relative z-10 mt-5 flex justify-center">
+              <a
+                href="/app/tools/cycle"
+                className="bloom-luxury-btn hover-scale inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+              >
+                Track My Cycle <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </a>
             </div>
-          </div>
-          {/* adapts-to-you cards: 2 cols on phone, 4 on desktop */}
-          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {ADAPTS.map((a, i) => {
-              const Icon = a.icon;
-              return (
-                <article key={a.title} className="bloom-pearl-card animate-card-pop-in flex flex-col items-center rounded-2xl p-3 text-center sm:p-4" style={{ animationDelay: `${i * 90}ms` }}>
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl text-white shadow-md sm:h-12 sm:w-12" style={{ background: a.accent }}>
-                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </span>
-                  <p className="mt-2 text-sm font-bold text-magenta">{a.title}</p>
-                  <p className="mt-0.5 text-[11px] leading-snug text-magenta/70 sm:text-xs">{a.blurb}</p>
-                </article>
-              );
-            })}
           </div>
         </section>
 
@@ -603,20 +587,6 @@ const UNIVERSES: Universe[] = [
   },
 ];
 
-
-const CYCLE_PHASES = [
-  { label: "Period", sub: "rest & restore", icon: Droplet, color: "linear-gradient(135deg, #fb7185, #e11d48)" },
-  { label: "Follicular", sub: "rising energy", icon: Flower2, color: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
-  { label: "Ovulation", sub: "peak & glow", icon: Sun, color: "linear-gradient(135deg, #f472b6, #ec4899)" },
-  { label: "Luteal", sub: "soften & slow", icon: Moon, color: "linear-gradient(135deg, #c084fc, #9333ea)" },
-];
-
-const ADAPTS = [
-  { title: "Workouts", blurb: "lighter on low days", icon: Dumbbell, accent: "linear-gradient(135deg, #fb7185, #f43f5e)" },
-  { title: "Yoga", blurb: "flows for your phase", icon: Flower2, accent: "linear-gradient(135deg, #f472b6, #ec4899)" },
-  { title: "Meals", blurb: "match your energy", icon: Salad, accent: "linear-gradient(135deg, #34d399, #10b981)" },
-  { title: "Articles", blurb: "made for today", icon: BookOpen, accent: "linear-gradient(135deg, #c084fc, #9333ea)" },
-];
 
 const DASHBOARD = [
   { title: "Mood", value: "😊", icon: Smile, accent: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
