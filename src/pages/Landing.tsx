@@ -303,8 +303,8 @@ export default function Landing() {
               return (
                 <article
                   key={u.key}
-                  className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
-                  style={{ animationDelay: `${i * 120}ms`, background: u.cardBg, borderWidth: "2px", borderColor: u.borderColor, "--card-glow": u.glowColor } as CSSProperties}
+                  className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                  style={{ animationDelay: `${i * 120}ms`, background: u.cardBg, "--card-glow": u.glowColor } as CSSProperties}
                 >
                   {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
                   <img
@@ -314,8 +314,13 @@ export default function Landing() {
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
                     className="pointer-events-none absolute inset-0 h-full w-full object-cover animate-card-breathe"
                   />
-                  {/* soft white glow hugging just the title/list area, leaving the photo visible around it */}
-                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(45% 65% at 50% 42%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.45) 50%, transparent 75%)" }} />
+                  {/* soft white glow hugging just the title/list area, leaving the photo visible around it — sized per breakpoint so text stays readable on every screen */}
+                  <div
+                    className="pointer-events-none absolute inset-0
+                      bg-[radial-gradient(58%_72%_at_50%_42%,oklch(1_0_0_/_0.92)_0%,oklch(1_0_0_/_0.45)_50%,transparent_75%)]
+                      sm:bg-[radial-gradient(50%_68%_at_50%_42%,oklch(1_0_0_/_0.92)_0%,oklch(1_0_0_/_0.45)_50%,transparent_75%)]
+                      lg:bg-[radial-gradient(42%_60%_at_50%_40%,oklch(1_0_0_/_0.92)_0%,oklch(1_0_0_/_0.45)_50%,transparent_75%)]"
+                  />
 
                   <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
                   <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
