@@ -304,7 +304,7 @@ export default function Landing() {
                 <article
                   key={u.key}
                   className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
-                  style={{ animationDelay: `${i * 120}ms`, background: u.cardBg, "--card-glow": u.glowColor } as CSSProperties}
+                  style={{ animationDelay: `${i * 120}ms`, background: u.cardBg, borderWidth: "2px", borderColor: u.borderColor, "--card-glow": u.glowColor } as CSSProperties}
                 >
                   {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
                   <img
@@ -613,7 +613,7 @@ interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
   key: string; title: string; href: string;
   badgeIcon: LucideIcon; badgeColor: string;
-  cardBg: string; titleColor: string; itemBg: string; glowColor: string;
+  cardBg: string; titleColor: string; itemBg: string; glowColor: string; borderColor: string;
   cardImage: string;
   items: UniverseItem[];
 }
@@ -623,7 +623,7 @@ const UNIVERSES: Universe[] = [
     key: "body", title: "Body", href: "/app/tools/cycle",
     badgeIcon: Flower2, badgeColor: "#ec4899",
     cardBg: "linear-gradient(160deg, oklch(0.96 0.035 350) 0%, oklch(0.9 0.08 350) 100%)",
-    titleColor: "#db2777", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)",
+    titleColor: "#db2777", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)", borderColor: "oklch(0.62 0.14 350 / 0.5)",
     cardImage: "/images/landing-card-body.png",
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
@@ -636,7 +636,7 @@ const UNIVERSES: Universe[] = [
     key: "mind", title: "Mind", href: "/app/tools/diary",
     badgeIcon: Moon, badgeColor: "#9333ea",
     cardBg: "linear-gradient(160deg, oklch(0.95 0.03 300) 0%, oklch(0.87 0.09 300) 100%)",
-    titleColor: "#7c3aed", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)",
+    titleColor: "#7c3aed", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)", borderColor: "oklch(0.56 0.15 300 / 0.5)",
     cardImage: "/images/landing-card-mind.png",
     items: [
       { icon: NotebookPen, label: "Journal" },
@@ -649,7 +649,7 @@ const UNIVERSES: Universe[] = [
     key: "life", title: "Life", href: "/app/calendar",
     badgeIcon: Star, badgeColor: "#f43f5e",
     cardBg: "linear-gradient(160deg, oklch(0.96 0.03 20) 0%, oklch(0.89 0.08 15) 100%)",
-    titleColor: "#e11d48", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)",
+    titleColor: "#e11d48", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)", borderColor: "oklch(0.6 0.14 18 / 0.5)",
     cardImage: "/images/landing-card-life.png",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
