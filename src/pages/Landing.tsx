@@ -303,7 +303,7 @@ export default function Landing() {
               return (
                 <article
                   key={u.key}
-                  className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                  className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center opacity-90 sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                   style={{ animationDelay: `${i * 120}ms`, background: u.cardBg, "--card-glow": u.glowColor } as CSSProperties}
                 >
                   {/* full-bleed card art — placeholder, drop the generated image into /public/images/ (falls back to the gradient above until it exists) */}
@@ -341,7 +341,7 @@ export default function Landing() {
                     aria-label={`Explore ${u.title}`}
                     className="hover-scale relative z-10 mt-2 inline-flex items-center justify-center sm:mt-3"
                   >
-                    <ArrowRight className="animate-chevron-glow h-4 w-4 sm:h-5 sm:w-5" />
+                    <ArrowRight className="animate-arrow-nudge h-4 w-4 sm:h-5 sm:w-5" style={{ color: u.titleColor }} />
                   </a>
                 </article>
               );
