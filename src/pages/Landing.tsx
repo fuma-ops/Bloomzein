@@ -315,7 +315,7 @@ export default function Landing() {
                     className="pointer-events-none absolute inset-0 h-full w-full object-cover"
                   />
                   {/* soft white glow radiating from the card's center, fading toward the edges, for readability */}
-                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(65% 60% at 50% 50%, oklch(1 0 0 / 0.75) 0%, oklch(1 0 0 / 0.3) 55%, transparent 85%)" }} />
+                  <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(75% 80% at 50% 45%, oklch(1 0 0 / 0.95) 0%, oklch(1 0 0 / 0.55) 55%, transparent 90%)" }} />
 
                   <h3 className="relative z-10 font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
                   <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
