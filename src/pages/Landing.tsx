@@ -152,7 +152,7 @@ export default function Landing() {
 
         {/* ───────────────────────── HERO ───────────────────────── */}
         {/* full-bleed banner — escapes the page's side padding to span edge-to-edge like the reference */}
-        <section className="relative -mx-4 -mt-4 aspect-[4/3] overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:aspect-[16/10] sm:rounded-b-[3rem] lg:aspect-auto lg:h-[520px] xl:h-[580px]">
+        <section className="relative -mx-4 -mt-4 aspect-[4/3] overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:aspect-[16/10] sm:rounded-b-[3rem] lg:aspect-auto lg:h-[420px] xl:h-[460px]">
           {/* hero photo — fills the entire banner, text sits on top of it */}
           <img
             src="/images/landing-hero.png"
@@ -189,7 +189,7 @@ export default function Landing() {
           <Sparkles className="pointer-events-none absolute right-[14%] top-[40%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
           <Star className="pointer-events-none absolute left-[10%] bottom-[24%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
 
-          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-center gap-1 px-6 pb-10 pt-7 sm:gap-6 sm:px-10 sm:py-16 lg:gap-10 lg:pb-20 lg:pt-20 2xl:max-w-[96rem]">
+          <div className="relative z-10 mx-auto grid h-full max-w-7xl items-start gap-1 px-6 pb-10 pt-7 sm:gap-6 sm:px-10 sm:pt-12 lg:gap-10 lg:pt-14 2xl:max-w-[96rem]">
             <div className="text-left sm:max-w-md lg:max-w-xl" style={{ textShadow: "0 1px 16px oklch(0.97 0.025 350 / 0.9), 0 1px 3px oklch(0.97 0.025 350 / 0.9)" }}>
               <h1 className="font-script text-5xl leading-tight text-hotpink sm:text-6xl lg:text-7xl">
                 Bloom<br className="sm:hidden" /> &amp; Zein
