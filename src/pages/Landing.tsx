@@ -340,19 +340,17 @@ export default function Landing() {
                 loading="lazy"
                 className="animate-card-pop-in animate-card-breathe w-full self-center rounded-2xl object-contain shadow-lg"
               />
-              <div className="flex flex-col justify-center">
+              <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
                 <p className="font-script text-2xl text-hotpink sm:text-3xl">all your worlds, one calendar</p>
                 <p className="mt-1.5 text-sm font-medium text-magenta/80">
                   Your cycle, workouts, journaling, money and little reminders all land on the same gentle calendar — so your whole life finally rhymes.
                 </p>
-                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2">
-                  {CALENDAR_LEGEND.map((l) => (
-                    <span key={l.label} className="flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-magenta shadow-sm sm:text-xs">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: l.color }} />
-                      {l.label}
-                    </span>
-                  ))}
-                </div>
+                <a
+                  href="/app/calendar"
+                  className="bloom-luxury-btn hover-scale mt-4 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                >
+                  Open Calendar <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </a>
               </div>
             </div>
           </div>
@@ -605,14 +603,6 @@ const UNIVERSES: Universe[] = [
   },
 ];
 
-const CALENDAR_LEGEND = [
-  { label: "Cycle", color: "#f43f5e" },
-  { label: "Yoga", color: "#ec4899" },
-  { label: "Workout", color: "#a855f7" },
-  { label: "Journal", color: "#22c55e" },
-  { label: "Reminders", color: "#f59e0b" },
-  { label: "Budget", color: "#0ea5e9" },
-];
 
 const CYCLE_PHASES = [
   { label: "Period", sub: "rest & restore", icon: Droplet, color: "linear-gradient(135deg, #fb7185, #e11d48)" },
