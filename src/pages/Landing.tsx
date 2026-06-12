@@ -312,7 +312,7 @@ export default function Landing() {
                     alt=""
                     aria-hidden
                     onError={(e) => { e.currentTarget.style.display = "none"; }}
-                    className="pointer-events-none absolute inset-0 h-full w-full object-cover animate-card-breathe"
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover animate-card-breathe saturate-[0.75] brightness-[1.05] opacity-90"
                   />
                   {/* soft white glow hugging just the title/list area, leaving the photo visible around it — sized per breakpoint so text stays readable on every screen */}
                   <div
