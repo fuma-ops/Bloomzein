@@ -275,7 +275,7 @@ export default function Landing() {
             src="/images/landing-universes-bg.png"
             alt=""
             aria-hidden
-            className="absolute inset-0 h-full w-full object-contain animate-card-breathe"
+            className="absolute inset-0 h-full w-full object-cover object-top animate-card-breathe"
           />
           {/* radial fade — keeps the center of the photo soft while letting the edges melt into the page background */}
           <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.7) 0%, oklch(0.98 0.015 350 / 0.75) 60%, oklch(0.98 0.015 350) 100%)" }} />
