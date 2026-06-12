@@ -1,7 +1,7 @@
 import {
   ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
-  Moon, Sun, Droplet, Smile, PenLine, BookOpen, Dumbbell, Salad, Wallet, Bell, Calendar as CalendarIcon,
-  Target, TrendingUp, Quote, type LucideIcon,
+  Moon, Sun, Droplet, Smile, PenLine, BookOpen, Dumbbell, Salad, Wallet, Calendar as CalendarIcon,
+  Target, TrendingUp, Quote, Utensils, Footprints, StickyNote, ClipboardList, NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -57,9 +57,11 @@ export default function Landing() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 2xl:max-w-[96rem]">
           <BloomLogo />
           <nav className="hidden items-center gap-7 text-sm font-semibold text-rose md:flex">
-            <a href="#universes" className="hover:text-hotpink transition">Universes</a>
-            <a href="#features" className="hover:text-hotpink transition">Features</a>
-            <a href="#stories" className="hover:text-hotpink transition">Stories</a>
+            <a href="/" className="hover:text-hotpink transition">Home</a>
+            <a href="#universes" className="hover:text-hotpink transition">Features</a>
+            <a href="#features" className="hover:text-hotpink transition">About</a>
+            <a href="/app/read" className="hover:text-hotpink transition">Blog</a>
+            <a href="#contact" className="hover:text-hotpink transition">Contact</a>
             <button
               onClick={handleDownload}
               disabled={installing}
@@ -107,9 +109,11 @@ export default function Landing() {
               </div>
               <div className="mt-8 flex flex-col gap-3">
                 {[
-                  { href: "#universes", label: "Universes" },
-                  { href: "#features", label: "Features" },
-                  { href: "#stories", label: "Stories" },
+                  { href: "/", label: "Home" },
+                  { href: "#universes", label: "Features" },
+                  { href: "#features", label: "About" },
+                  { href: "/app/read", label: "Blog" },
+                  { href: "#contact", label: "Contact" },
                 ].map((l) => (
                   <a
                     key={l.href}
@@ -147,67 +151,71 @@ export default function Landing() {
       <main className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6 2xl:max-w-[96rem]">
 
         {/* ───────────────────────── HERO ───────────────────────── */}
-        <section className="relative mx-auto max-w-6xl">
-          <div className="pearl-frame relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] aspect-[4/5] sm:aspect-[16/10] lg:aspect-[21/9]">
-            <img
-              src="/images/landing-hero.png"
-              alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
-              className="absolute inset-0 h-full w-full object-cover object-[68%_center] animate-card-breathe"
-              referrerPolicy="no-referrer"
-            />
-            {/* legibility scrim: strong pink at bottom-left, clearing toward the girl on the right */}
-            <div className="absolute inset-0" aria-hidden style={{
-              background: "linear-gradient(105deg, oklch(0.45 0.27 350 / 0.82) 0%, oklch(0.55 0.27 350 / 0.55) 32%, oklch(0.7 0.2 350 / 0.18) 55%, transparent 75%)",
-            }} />
-            {/* drifting sparkles */}
-            <Sparkles className="absolute left-[10%] top-[16%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
-            <Sparkles className="absolute left-[30%] top-[60%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
-            <Star className="absolute left-[8%] top-[42%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
+        {/* full-bleed banner — escapes the page's side padding to span edge-to-edge like the reference */}
+        <section className="relative -mx-4 -mt-4 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]"
+          style={{ background: "linear-gradient(135deg, oklch(0.97 0.025 350) 0%, oklch(0.93 0.07 350) 55%, oklch(0.88 0.1 345) 100%)" }}>
+          {/* decorative glass orbs */}
+          <img
+            src="/images/landing-orb-flower.png"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -left-8 bottom-0 h-28 w-28 object-contain opacity-90 animate-bloom-float sm:h-40 sm:w-40 lg:-left-10 lg:h-52 lg:w-52"
+            style={{ transform: `translateY(${scrollY * -0.04}px)` }}
+          />
+          <img
+            src="/images/landing-orb-life.png"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -right-10 top-[55%] h-24 w-24 object-contain opacity-90 animate-bloom-float sm:h-36 sm:w-36 lg:h-52 lg:w-52"
+            style={{ animationDelay: "1.2s", transform: `translateY(${scrollY * -0.03}px)` }}
+          />
 
-            {/* text block — anchored bottom-left, always inside the dark scrim so nothing is unreadable */}
-            <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 lg:p-12">
-              <div className="max-w-[78%] sm:max-w-[60%] lg:max-w-[52%]">
-                <h1 className="relative font-script text-4xl leading-[0.95] text-white drop-shadow-[0_3px_14px_oklch(0.4_0.2_350/0.7)] sm:text-6xl lg:text-7xl bloom-title-shimmer">
-                  Bloom &amp; Zein
-                </h1>
-                <p className="mt-2 font-script text-xl text-white/95 drop-shadow sm:text-2xl lg:text-3xl">
-                  your softest era starts here ✿
-                </p>
-                <p className="mt-2 hidden max-w-md text-sm font-medium text-white/90 drop-shadow sm:block lg:text-base">
-                  One gentle little app for your cycle, your mind and your life — everything you are, blooming in one soft place.
-                </p>
-                <div className="mt-4 flex flex-row flex-wrap items-center gap-2 sm:gap-3">
-                  <a
-                    href="/app/today"
-                    className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
-                  >
-                    <span className="relative z-10 inline-flex items-center gap-1.5 whitespace-nowrap">Start Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
-                    <span className="bloom-cta-shine" aria-hidden />
-                  </a>
-                  <button
-                    onClick={handleDownload}
-                    disabled={installing}
-                    className="hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white/80 bg-white/90 px-4 py-2.5 text-xs font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
-                  >
-                    {installing ? (
-                      <span className="h-3.5 w-3.5 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
-                    ) : (
-                      <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    )}
-                    {installing ? "Préparation…" : "Download App"}
-                  </button>
-                </div>
+          <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-6 py-10 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-10 lg:py-20 2xl:max-w-[96rem]">
+            <div className="relative z-10 text-center lg:text-left">
+              <h1 className="font-script text-5xl leading-[1.05] text-bloom-gradient sm:text-7xl lg:text-8xl">
+                Bloom<br />&amp; Zein
+              </h1>
+              <p className="mt-3 font-script text-2xl leading-tight text-hotpink sm:text-3xl lg:text-4xl">
+                Your softest era<br />starts here.
+              </p>
+              <p className="mx-auto mt-4 max-w-sm text-sm font-medium text-magenta/80 sm:text-base lg:mx-0">
+                The all-in-one app for your body, mind and life. Designed for you, guided by your cycle.
+              </p>
+              <div className="mt-6 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3 lg:justify-start">
+                <a
+                  href="/app/today"
+                  className="bloom-cta relative overflow-hidden hover-scale inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                >
+                  <span className="relative z-10 inline-flex items-center gap-1.5 whitespace-nowrap">Start Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
+                  <span className="bloom-cta-shine" aria-hidden />
+                </a>
+                <button
+                  onClick={handleDownload}
+                  disabled={installing}
+                  className="hover-scale inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-2 border-white bg-white/90 px-4 py-2.5 text-xs font-semibold text-hotpink transition hover:bg-white disabled:opacity-70 sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
+                >
+                  {installing ? (
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-hotpink border-t-transparent animate-spin sm:h-4 sm:w-4" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  )}
+                  {installing ? "Préparation…" : "Download App"}
+                </button>
               </div>
             </div>
 
-            {/* floating transparent orb overlapping the bottom-left corner */}
-            <img
-              src="/images/landing-orb-flower.png"
-              alt=""
-              aria-hidden
-              className="pointer-events-none absolute -bottom-4 right-3 h-20 w-20 object-contain drop-shadow-[0_10px_24px_oklch(0.6_0.27_350/0.5)] animate-bloom-float sm:right-6 sm:h-28 sm:w-28 lg:h-36 lg:w-36"
-              style={{ transform: `translateY(${scrollY * -0.04}px)` }}
-            />
+            {/* hero photo — masked on the left edge so it dissolves into the pink banner instead of sitting in a hard box */}
+            <div className="relative mx-auto aspect-square w-full max-w-sm lg:max-w-none lg:aspect-[6/5]">
+              <img
+                src="/images/landing-hero.png"
+                alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
+                className="absolute inset-0 h-full w-full rounded-[2rem] object-cover object-[60%_center] animate-card-breathe [mask-image:none] lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_28%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_28%)]"
+                referrerPolicy="no-referrer"
+              />
+              <Sparkles className="absolute left-[8%] top-[12%] h-4 w-4 animate-sparkle-drift text-white/90" aria-hidden />
+              <Sparkles className="absolute right-[14%] top-[20%] h-3 w-3 animate-sparkle-drift text-white/80" style={{ animationDelay: "1.6s" }} aria-hidden />
+              <Star className="absolute left-[10%] bottom-[18%] h-3.5 w-3.5 animate-sparkle-drift fill-white/80 text-white/80" style={{ animationDelay: "2.4s" }} aria-hidden />
+            </div>
           </div>
         </section>
 
@@ -268,44 +276,55 @@ export default function Landing() {
 
         {/* ──────────────── THREE UNIVERSES. ONE YOU. ──────────────── */}
         <section id="universes" className="mt-16 scroll-mt-24 sm:mt-24">
-          <SectionHeading kicker="your bloom & zein kit" title="Three universes. One you." />
+          <div className="text-center">
+            <h2 className="mx-auto inline-flex max-w-2xl items-center gap-2 whitespace-nowrap font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">
+              Three Universes. One You. <Sparkles className="h-5 w-5 text-hotpink sm:h-7 sm:w-7" aria-hidden />
+            </h2>
+            <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">Everything you need, beautifully organized.</p>
+          </div>
           {/* 3 columns on every screen — phone & tablet included, per spec */}
           <div className="mt-8 grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
-            {UNIVERSES.map((u, i) => (
-              <article
-                key={u.key}
-                className="bloom-pearl-card animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 sm:rounded-[1.75rem] sm:p-5 lg:p-6"
-                style={{ animationDelay: `${i * 120}ms`, boxShadow: `0 18px 40px -22px ${u.ring}, inset 0 0 0 1px oklch(1 0 0 / 0.6)` }}
-              >
-                {/* colored top glow strip */}
-                <span className="pointer-events-none absolute inset-x-0 top-0 h-1.5 rounded-t-2xl" style={{ background: u.accent }} aria-hidden />
-                {/* themed orb emblem — circular crop hides the square art background cleanly */}
-                <div className="relative mx-auto mt-1 h-12 w-12 overflow-hidden rounded-full ring-2 ring-white/70 shadow-md sm:h-16 sm:w-16 lg:h-20 lg:w-20">
-                  <img src={u.orb} alt="" aria-hidden className="h-full w-full scale-110 object-cover" />
-                </div>
-                <h3 className="mt-2 text-center font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.text }}>{u.title}</h3>
-                <p className="mt-0.5 text-center text-[8px] font-semibold leading-tight text-magenta/70 sm:text-xs">{u.subtitle}</p>
-                <ul className="mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2">
-                  {u.items.map((it) => {
-                    const Icon = it.icon;
-                    return (
-                      <li key={it.label}>
-                        <a
-                          href={it.href}
-                          className="group flex items-center gap-1 rounded-lg bg-white/60 px-1 py-1 transition hover:-translate-y-0.5 hover:shadow-md sm:gap-2 sm:rounded-xl sm:px-2 sm:py-1.5"
-                        >
-                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white shadow-sm sm:h-8 sm:w-8" style={{ background: u.accent }}>
-                            <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+            {UNIVERSES.map((u, i) => {
+              const Badge = u.badgeIcon;
+              return (
+                <article
+                  key={u.key}
+                  className="animate-card-pop-in relative flex flex-col overflow-hidden rounded-2xl p-2.5 shadow-lg sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                  style={{ animationDelay: `${i * 120}ms`, background: u.cardBg }}
+                >
+                  <Badge className="absolute right-2.5 top-2.5 h-4 w-4 sm:right-4 sm:top-4 sm:h-6 sm:w-6" style={{ color: u.badgeColor }} aria-hidden />
+                  <h3 className="font-script text-xl leading-none sm:text-3xl lg:text-4xl" style={{ color: u.titleColor }}>{u.title}</h3>
+                  <ul className="mt-2 flex flex-col gap-1 sm:mt-4 sm:gap-2.5">
+                    {u.items.map((it) => {
+                      const Icon = it.icon;
+                      return (
+                        <li key={it.label} className="flex items-center gap-1 sm:gap-2">
+                          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg }}>
+                            <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
                           </span>
-                          <span className="min-w-0 flex-1 text-[9px] font-bold leading-tight text-magenta sm:text-sm" style={{ color: u.text }}>{it.label}</span>
-                          <ArrowRight className="hidden h-3 w-3 shrink-0 text-magenta/40 transition group-hover:translate-x-0.5 group-hover:text-magenta sm:block" aria-hidden />
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </article>
-            ))}
+                          <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {/* decorative card art — placeholder, drop the generated image into /public/images/ (hidden until it exists) */}
+                  <img
+                    src={u.cardImage}
+                    alt=""
+                    aria-hidden
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                    className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:-bottom-4 sm:-right-4 sm:h-32 sm:w-32 lg:h-36 lg:w-36"
+                  />
+                  <a
+                    href={u.href}
+                    aria-label={`Explore ${u.title}`}
+                    className="hover-scale relative z-10 mt-auto grid h-7 w-7 place-items-center self-end justify-self-end rounded-full bg-white text-hotpink shadow-md sm:h-10 sm:w-10"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  </a>
+                </article>
+              );
+            })}
           </div>
         </section>
 
@@ -476,7 +495,7 @@ export default function Landing() {
         <div className="mt-10 h-3 rounded-full bloom-stripes opacity-70" aria-hidden />
       </main>
 
-      <footer className="relative z-10 border-t border-petal/60 bg-white/70 py-8 text-center backdrop-blur">
+      <footer id="contact" className="relative z-10 border-t border-petal/60 bg-white/70 py-8 text-center backdrop-blur">
         <p className="font-script text-2xl text-bloom-gradient">stay soft, bloom on 🌸</p>
         <div className="mt-3 flex items-center justify-center gap-2">
           <a href="#" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
@@ -574,44 +593,53 @@ function PhoneMock() {
 
 /* ────────────────────────── data ────────────────────────── */
 
-interface UniverseItem { icon: LucideIcon; label: string; href: string; }
+interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
-  key: string; title: string; subtitle: string; orb: string;
-  accent: string; text: string; ring: string; items: UniverseItem[];
+  key: string; title: string; href: string;
+  badgeIcon: LucideIcon; badgeColor: string;
+  cardBg: string; titleColor: string; itemBg: string;
+  cardImage: string;
+  items: UniverseItem[];
 }
 
 const UNIVERSES: Universe[] = [
   {
-    key: "body", title: "Body", subtitle: "cycle · meals · movement",
-    orb: "/images/landing-orb-flower.png",
-    accent: "linear-gradient(135deg, #ff8fc7, #ff1493)", text: "#be185d", ring: "oklch(0.7 0.27 350 / 0.5)",
+    key: "body", title: "Body", href: "/app/tools/cycle",
+    badgeIcon: Flower2, badgeColor: "#ec4899",
+    cardBg: "linear-gradient(160deg, oklch(0.96 0.035 350) 0%, oklch(0.9 0.08 350) 100%)",
+    titleColor: "#db2777", itemBg: "oklch(1 0 0 / 0.6)",
+    cardImage: "/images/landing-card-body.png",
     items: [
-      { icon: Moon, label: "Cycle", href: "/app/tools/cycle" },
-      { icon: Salad, label: "Meals", href: "/app/tools/meals" },
-      { icon: Flower2, label: "Yoga", href: "/app/tools/yoga" },
-      { icon: Dumbbell, label: "Workouts", href: "/app/tools/workout" },
+      { icon: Droplet, label: "Cycle Tracking" },
+      { icon: Utensils, label: "Meals & Recipes" },
+      { icon: Flower2, label: "Yoga & Workouts" },
+      { icon: Footprints, label: "Movement" },
     ],
   },
   {
-    key: "mind", title: "Mind", subtitle: "moods · thoughts · softness",
-    orb: "/images/landing-orb-mind.png",
-    accent: "linear-gradient(135deg, #c084fc, #9333ea)", text: "#7c3aed", ring: "oklch(0.65 0.27 300 / 0.5)",
+    key: "mind", title: "Mind", href: "/app/tools/diary",
+    badgeIcon: Moon, badgeColor: "#9333ea",
+    cardBg: "linear-gradient(160deg, oklch(0.95 0.03 300) 0%, oklch(0.87 0.09 300) 100%)",
+    titleColor: "#7c3aed", itemBg: "oklch(1 0 0 / 0.6)",
+    cardImage: "/images/landing-card-mind.png",
     items: [
-      { icon: Smile, label: "Mood", href: "/app/today" },
-      { icon: PenLine, label: "Diary", href: "/app/tools/diary" },
-      { icon: Heart, label: "Affirmations", href: "/app/today" },
-      { icon: BookOpen, label: "Reading", href: "/app/read" },
+      { icon: NotebookPen, label: "Journal" },
+      { icon: StickyNote, label: "Notes" },
+      { icon: Moon, label: "Reflection" },
+      { icon: Heart, label: "Affirmations" },
     ],
   },
   {
-    key: "life", title: "Life", subtitle: "money · moments · memory",
-    orb: "/images/landing-orb-life.png",
-    accent: "linear-gradient(135deg, #fb7185, #f43f5e)", text: "#e11d48", ring: "oklch(0.68 0.27 15 / 0.5)",
+    key: "life", title: "Life", href: "/app/calendar",
+    badgeIcon: Star, badgeColor: "#f43f5e",
+    cardBg: "linear-gradient(160deg, oklch(0.96 0.03 20) 0%, oklch(0.89 0.08 15) 100%)",
+    titleColor: "#e11d48", itemBg: "oklch(1 0 0 / 0.6)",
+    cardImage: "/images/landing-card-life.png",
     items: [
-      { icon: Wallet, label: "Budget", href: "/app/tools/budget" },
-      { icon: Bell, label: "Reminders", href: "/app/tools/notes" },
-      { icon: CalendarIcon, label: "Calendar", href: "/app/calendar" },
-      { icon: Target, label: "Goals", href: "/app/today" },
+      { icon: CalendarIcon, label: "Calendar" },
+      { icon: Wallet, label: "Budget" },
+      { icon: ClipboardList, label: "Planning" },
+      { icon: Target, label: "Goals" },
     ],
   },
 ];
