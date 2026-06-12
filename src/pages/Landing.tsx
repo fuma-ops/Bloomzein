@@ -142,7 +142,7 @@ export default function Landing() {
 
         {/* ───────────────────────── HERO ───────────────────────── */}
         {/* full-bleed banner — escapes the page's side padding to span edge-to-edge like the reference */}
-        <section className="relative -mx-4 -mt-4 min-h-0 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]">
+        <section className="section-pink-shadow relative -mx-4 -mt-4 min-h-0 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]">
           {/* hero photo — fills the entire banner, text sits on top of it */}
           <img
             src="/images/landing-hero.png"
@@ -267,9 +267,13 @@ export default function Landing() {
           <h2 className="mx-auto inline-flex max-w-2xl items-center gap-2 whitespace-nowrap font-script text-3xl leading-tight text-bloom-gradient sm:text-5xl lg:text-6xl">
             Three Universes. One You. <Sparkles className="h-5 w-5 text-hotpink sm:h-7 sm:w-7" aria-hidden />
           </h2>
-          <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">Everything you need, beautifully organized.</p>
+          <p className="mt-1.5 text-xs font-semibold text-magenta/70 sm:text-sm">
+            Everything you need, beautifully organized.
+            <br />
+            All in one App
+          </p>
         </div>
-        <section id="universes" className="relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
+        <section id="universes" className="section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
           {/* shared background photo for the whole section, faded so the cards stay readable */}
           <img
             src="/images/landing-universes-bg.png"
@@ -319,7 +323,7 @@ export default function Landing() {
         </section>
 
         {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR ──────────────── */}
-        <section id="features" className="mt-16 scroll-mt-24 sm:mt-24">
+        <section id="features" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
           <div className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7">
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
@@ -343,7 +347,7 @@ export default function Landing() {
         </section>
 
         {/* ──────────────── PERSONALIZED BY YOUR CYCLE ──────────────── */}
-        <section className="mt-16 scroll-mt-24 sm:mt-24">
+        <section className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="it grows with you" title="Personalized by your cycle." />
           {/* 4-phase timeline — stays a single row on every screen */}
           <div className="relative mx-auto mt-8 max-w-4xl">
@@ -381,7 +385,7 @@ export default function Landing() {
         </section>
 
         {/* ──────────────── DAILY SOFT GIRL DASHBOARD ──────────────── */}
-        <section className="mt-16 scroll-mt-24 sm:mt-24">
+        <section className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="every little day" title="Your daily soft girl dashboard." />
           {/* 3 columns × 2 rows on every screen */}
           <div className="mx-auto mt-8 grid max-w-4xl grid-cols-3 gap-2.5 sm:gap-4">
@@ -406,7 +410,7 @@ export default function Landing() {
         </section>
 
         {/* ──────────────── REAL TRANSFORMATION — STATS ──────────────── */}
-        <section id="stories" className="mt-16 scroll-mt-24 sm:mt-24">
+        <section id="stories" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="real blooming" title="Real blooming. Real transformation." />
           <div className="mx-auto mt-8 grid max-w-4xl grid-cols-3 gap-2.5 sm:gap-5">
             {STATS.map((s, i) => (
@@ -425,7 +429,7 @@ export default function Landing() {
         </section>
 
         {/* ──────────────── STORIES / SOCIAL PROOF ──────────────── */}
-        <section className="mt-16 sm:mt-24">
+        <section className="section-pink-shadow mt-16 sm:mt-24">
           <div className="mt-8 grid gap-4 sm:gap-6 md:grid-cols-3">
             {QUOTES.map((q, i) => (
               <div key={q.name} className="bloom-pearl-card animate-card-pop-in rounded-[1.75rem] p-5 sm:p-6" style={{ animationDelay: `${i * 110}ms` }}>

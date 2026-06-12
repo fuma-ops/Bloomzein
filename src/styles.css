@@ -481,6 +481,11 @@
     inset 0 -1px 6px oklch(0.85 0.05 345 / 0.15);
 }
 
+/* Light pink ambient shadow used to ground each landing-page section on the page */
+@utility section-pink-shadow {
+  box-shadow: 0 24px 48px -30px oklch(0.65 0.22 345 / 0.3);
+}
+
 /* Glassy pearl frame overlay — adds a 3D glass border/sheen on top of flat hero images */
 @utility pearl-frame {
   position: relative;
