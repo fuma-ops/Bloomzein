@@ -197,7 +197,7 @@ export default function Landing() {
               <p className="mt-2 font-script text-lg leading-tight text-hotpink sm:text-3xl lg:text-4xl">
                 Your softest era<br />starts here.
               </p>
-              <p className="mt-2 max-w-[15rem] font-script text-[11px] italic leading-snug font-semibold text-magenta sm:mt-4 sm:max-w-sm sm:text-lg">
+              <p className="mt-2 max-w-[15rem] text-sm font-semibold text-magenta sm:mt-4 sm:max-w-sm sm:text-lg">
                 The all-in-one app for your<br />body, mind and life. Designed<br />for you, guided by your cycle.
               </p>
               <div className="mt-3 flex flex-row items-center gap-2 sm:mt-6 sm:gap-3">
