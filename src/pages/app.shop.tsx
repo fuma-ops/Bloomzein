@@ -4,6 +4,7 @@ import {
   Flower2, Gift, Percent, Crown,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { scrollToTopOf } from "@/lib/scrollToTopOf";
 
 /* ---------- data ---------- */
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "bestsellers";
@@ -64,11 +65,10 @@ export default function ShopPage() {
   const [open, setOpen] = useState(false);
   const [bumped, setBumped] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
-  const headerRef = useRef<HTMLDivElement>(null);
+  const categoriesRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const h = headerRef.current?.getBoundingClientRect().height ?? 0;
-    if (h > 0) window.scrollTo({ top: h });
+    scrollToTopOf(categoriesRef.current);
   }, []);
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function ShopPage() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      <div ref={headerRef}>
+      <div>
         {/* HERO */}
         <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
           <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
@@ -168,7 +168,7 @@ export default function ShopPage() {
       </div>
 
       {/* CATEGORIES */}
-      <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
+      <section ref={categoriesRef} className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
         <SectionTitle hint={active === "all" ? "browse" : "filtering"}>Shop by category</SectionTitle>
         <div className="flex items-start gap-2.5 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
           <CategoryTile
@@ -228,7 +228,7 @@ export default function ShopPage() {
       {/* BLOOM MEMBERSHIP */}
       <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "240ms" }}>
         <div
-          className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] p-5 sm:p-9"
+          className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] p-5 sm:p-9"
           style={{ background: "linear-gradient(135deg, #ff8ed1 0%, #ec4899 50%, #c2186e 100%)" }}
         >
           <div className="relative z-[2] flex items-center justify-between gap-4">

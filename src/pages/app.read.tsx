@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { scrollToTopOf } from "@/lib/scrollToTopOf";
 
 /* ---------- data ---------- */
 const TOPICS = ["All", "Cycle & Body", "Self-care", "Money", "Movement", "Mindset", "Recipes"] as const;
@@ -143,12 +144,11 @@ export default function ReadPage() {
   const [topic, setTopic] = useState<Topic>("All");
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [openId, setOpenId] = useState<string | null>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
+  const chipsRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     if (openId) return;
-    const h = headerRef.current?.getBoundingClientRect().height ?? 0;
-    if (h > 0) window.scrollTo({ top: h });
+    scrollToTopOf(chipsRef.current);
   }, [openId]);
 
   const toggleSave = (id: string) => setSaved((s) => ({ ...s, [id]: !s[id] }));
@@ -199,7 +199,7 @@ export default function ReadPage() {
       <BloomBubbles count={10} />
 
       {/* HEADER */}
-      <header ref={headerRef}>
+      <header>
         <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none">Read</h1>
         <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-rose/80">soft reads for your softest era ✿</p>
         <div className="mt-2 sm:mt-4 relative max-w-xl">
@@ -215,7 +215,7 @@ export default function ReadPage() {
       </header>
 
       {/* TOPIC CHIPS */}
-      <nav className="relative mt-3 sm:mt-6 -mx-3 px-3 sm:mx-0 sm:px-0">
+      <nav ref={chipsRef} className="relative mt-3 sm:mt-6 -mx-3 px-3 sm:mx-0 sm:px-0">
         <div className="flex gap-2 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
           {TOPICS.map((t) => {
             const active = topic === t;

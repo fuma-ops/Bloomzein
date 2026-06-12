@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent 
 import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { scrollToTopOf } from "@/lib/scrollToTopOf";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 
 const LAST_KEY = "bloom:last-tool";
@@ -17,11 +18,10 @@ function linkPropsFor(t: Tool) {
 export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
   const [query, setQuery] = useState("");
-  const headerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const h = headerRef.current?.getBoundingClientRect().height ?? 0;
-    if (h > 0) window.scrollTo({ top: h });
+    scrollToTopOf(heroRef.current);
   }, []);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function ToolsIndex() {
       <BloomBubbles count={10} />
 
       {/* HEADER */}
-      <header ref={headerRef} className="mb-5 sm:mb-7">
+      <header className="mb-5 sm:mb-7">
         <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2">
           Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
         </h1>
@@ -77,7 +77,7 @@ export default function ToolsIndex() {
       </header>
 
       {/* HERO — Continue your bloom journey */}
-      <section className="mt-4 sm:mt-6">
+      <section ref={heroRef} className="mt-4 sm:mt-6">
         <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
           <img src="/images/tools-hero-journey.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
           <div className="absolute inset-0 z-[2] bg-gradient-to-l from-white/90 via-white/55 to-transparent" />
@@ -179,8 +179,8 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
     <a
       {...linkPropsFor(tool)}
       onClick={handleClick}
-      style={{ animationDelay: `${index * 0.06}s` }}
-      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-pop-in"
+      style={{ animationDelay: `${index * 0.06}s, ${(index % 6) * 1.4}s` }}
+      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-vibrate"
     >
       <div
         className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
