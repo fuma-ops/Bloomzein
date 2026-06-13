@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, Flower2, Heart, ArrowRight, Flame, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
-  BookHeart, Check, Plus, Minus,
+  BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
+  Leaf, Cookie, Bone, CircleDot, Meh,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,18 +44,18 @@ const MOOD_LABEL: Record<string, string> = {
 
 // ── Symptoms data ────────────────────────────────────────────────────────────
 const SYMPTOMS = [
-  { key: "cramps",    label: "Cramps",      emoji: "😣" },
-  { key: "bloated",   label: "Bloated",     emoji: "🫧" },
-  { key: "headache",  label: "Headache",    emoji: "🤕" },
-  { key: "fatigue",   label: "Fatigue",     emoji: "😪" },
-  { key: "tender",    label: "Tender",      emoji: "💗" },
-  { key: "moody",     label: "Moody",       emoji: "🌊" },
-  { key: "nausea",    label: "Nausea",      emoji: "🌿" },
-  { key: "cravings",  label: "Cravings",    emoji: "🍫" },
-  { key: "backpain",  label: "Back pain",   emoji: "🦴" },
-  { key: "spotting",  label: "Spotting",    emoji: "🩸" },
-  { key: "lowenergy", label: "Low energy",  emoji: "🔋" },
-  { key: "acne",      label: "Acne",        emoji: "😔" },
+  { key: "cramps",    label: "Cramps",      Icon: Zap },
+  { key: "bloated",   label: "Bloated",     Icon: Wind },
+  { key: "headache",  label: "Headache",    Icon: Frown },
+  { key: "fatigue",   label: "Fatigue",     Icon: BatteryLow },
+  { key: "tender",    label: "Tender",      Icon: Heart },
+  { key: "moody",     label: "Moody",       Icon: Waves },
+  { key: "nausea",    label: "Nausea",      Icon: Leaf },
+  { key: "cravings",  label: "Cravings",    Icon: Cookie },
+  { key: "backpain",  label: "Back pain",   Icon: Bone },
+  { key: "spotting",  label: "Spotting",    Icon: Droplet },
+  { key: "lowenergy", label: "Low energy",  Icon: CircleDot },
+  { key: "acne",      label: "Acne",        Icon: Meh },
 ] as const;
 
 // ── Cycle-phase content ─────────────────────────────────────────────────────
@@ -273,7 +274,7 @@ export default function TodayPage() {
         <img src="/images/today-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/35 to-transparent" />
 
-        <div className="relative z-[2] px-4 py-5 sm:px-12 sm:py-14 max-w-xl">
+        <div className="relative z-[2] px-4 py-5 pb-16 sm:px-12 sm:py-14 sm:pb-16 max-w-xl">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
@@ -300,7 +301,7 @@ export default function TodayPage() {
           </a>
         </div>
 
-        <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-[2] rounded-2xl bg-white/85 backdrop-blur px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-center border border-petal/60 shadow-md">
+        <div className="absolute bottom-3 right-3 sm:bottom-6 sm:right-6 z-[2] rounded-2xl bg-white/55 backdrop-blur px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-center border border-petal/40 shadow-md">
           <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">{streak}</p>
           <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">days blooming</p>
         </div>
@@ -308,12 +309,15 @@ export default function TodayPage() {
 
       {/* ── YOUR BLOOM ───────────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 flex items-center gap-3 sm:gap-5">
+        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 flex items-center gap-3 sm:gap-5 bg-gradient-to-br from-petal/30 via-white/0 to-blush/40">
           <div className="relative shrink-0 h-16 w-16 sm:h-24 sm:w-24 rounded-full overflow-hidden ring-2 ring-white/80 shadow-md">
             <img src="/images/landing-orb-flower.png" alt="" className="animate-hero-breathe h-full w-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">Your Bloom ✿</p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">Your Bloom ✿</p>
+              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none shrink-0">{bloomPercent}%</p>
+            </div>
             <p className="mt-1 text-[11px] sm:text-sm text-rose/70">Level {bloomLevel}</p>
             <div className="mt-1.5 h-2 sm:h-2.5 rounded-full bg-blush overflow-hidden">
               <div
@@ -342,8 +346,8 @@ export default function TodayPage() {
       {/* ── MOOD CHECK-IN ─────────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
         <SectionTitle>How are you feeling?</SectionTitle>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-3.5 sm:p-4">
-          <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
+        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-2.5 sm:p-3">
+          <div className="grid grid-cols-6 gap-1 sm:gap-1.5">
             {MOODS.map((m, i) => {
               const active = mood === m.key;
               const bouncing = justPicked === m.key;
@@ -352,7 +356,7 @@ export default function TodayPage() {
                   key={m.key}
                   onClick={() => pickMood(m.key)}
                   className={[
-                    "group flex flex-col items-center gap-1 rounded-2xl py-2 px-1 transition border",
+                    "group flex flex-col items-center gap-0.5 rounded-2xl py-1.5 px-0.5 transition border",
                     active ? "bg-hotpink/10 border-hotpink/30" : "bg-transparent border-transparent hover:bg-blush/60",
                     bouncing ? "animate-bloom-bounce" : "",
                   ].join(" ")}
@@ -360,29 +364,29 @@ export default function TodayPage() {
                 >
                   <span
                     className={[
-                      "clay-blob grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full text-white transition",
+                      "clay-blob grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full text-white transition",
                       active ? "animate-icon-breathe" : "opacity-90 group-hover:opacity-100",
                     ].join(" ")}
                     style={!mood ? { animationDelay: `${i * 0.3}s` } : {}}
                   >
-                    <m.Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={1.8} />
+                    <m.Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.8} />
                   </span>
-                  <span className={["text-[10px] font-semibold", active ? "text-hotpink" : "text-rose"].join(" ")}>{m.label}</span>
+                  <span className={["text-[9px] sm:text-[10px] font-semibold", active ? "text-hotpink" : "text-rose"].join(" ")}>{m.label}</span>
                 </button>
               );
             })}
           </div>
           {mood && (
-            <p className="mt-2.5 text-center text-xs text-rose/70 animate-fade-in">
-              Love that energy! This is a great day for movement and planning.
+            <p className="mt-2 text-center font-script text-sm sm:text-base text-rose/80 animate-fade-in">
+              "Love that energy! This is a great day for movement and planning."
             </p>
           )}
         </div>
 
         {/* Symptoms row — compact pill picker */}
-        <div className="mt-2.5">
-          <p className="mb-1.5 text-[11px] font-semibold text-rose/70 px-1">Any symptoms today?</p>
-          <div className="flex flex-wrap gap-1.5">
+        <div className="mt-2">
+          <p className="mb-1 text-[11px] font-semibold text-rose/70 px-1">Any symptoms today?</p>
+          <div className="flex flex-wrap gap-1">
             {SYMPTOMS.map((s) => {
               const active = symptoms.includes(s.key);
               return (
@@ -390,13 +394,16 @@ export default function TodayPage() {
                   key={s.key}
                   onClick={() => toggleSymptom(s.key)}
                   className={[
-                    "shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all duration-200",
+                    "shrink-0 inline-flex items-center gap-1 rounded-full pl-0.5 pr-2 py-0.5 text-[10px] sm:text-[11px] font-semibold border transition-all duration-200",
                     active
                       ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30 scale-105"
                       : "bg-white/80 border-petal/40 text-rose/70 hover:bg-blush/60",
                   ].join(" ")}
                 >
-                  <span>{s.emoji}</span> {s.label}
+                  <span className="clay-blob grid h-5 w-5 place-items-center rounded-full text-white shrink-0">
+                    <s.Icon className="h-2.5 w-2.5" strokeWidth={2} />
+                  </span>
+                  {s.label}
                 </button>
               );
             })}
