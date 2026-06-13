@@ -31,6 +31,8 @@ import {
   KID_DAYS,
   STORAGE_TABLE,
   SEASONAL,
+  passesMyRules,
+  readDietProfile,
   type Recipe,
   type Intention,
   type CyclePhase,
@@ -122,6 +124,7 @@ function pickForSlot(
 }
 
 function buildWeek(
+  pool: Recipe[],
   intention: Intention,
   phase: CyclePhase,
   owned: Set<string>,
@@ -132,17 +135,17 @@ function buildWeek(
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     (["breakfast", "lunch", "dinner"] as MealType[]).forEach((type) => {
-      const r = pickForSlot(RECIPES, type, intention, phase, owned, used, ratings);
+      const r = pickForSlot(pool, type, intention, phase, owned, used, ratings);
       if (r) { plan[d][type] = r.id; used.add(r.id); }
     });
   });
   return plan;
 }
 
-function buildKidWeek(owned: Set<string>) {
+function buildKidWeek(recipes: Recipe[], owned: Set<string>) {
   const used = new Set<string>();
   const plan: Record<string, string | null> = {};
-  const pool = RECIPES.filter((r) => r.mealType === "lunchbox" && r.packable);
+  const pool = recipes.filter((r) => r.mealType === "lunchbox" && r.packable);
   KID_DAYS.forEach((d) => {
     const ranked = [...pool].sort(
       (a, b) => scoreRecipe(b, owned) + (used.has(b.id) ? -0.6 : 0) -
@@ -229,13 +232,21 @@ export default function MealsPage() {
   const owned = useMemo(() => pantrySet(pantry), [pantry]);
   const planEmpty = Object.keys(plan).length === 0;
 
+  // Diet tool's "My Rules" (allergies + diet type) silently filter the pool
+  // every recipe is picked from, so the weekly plan never recommends a recipe
+  // the user has ruled out in the Diet tool.
+  const myRulesPool = useMemo(() => {
+    const profile = readDietProfile();
+    return RECIPES.filter((r) => passesMyRules(r, profile));
+  }, []);
+
   const generateWeek = () => {
-    const p = buildWeek(intention, phase, owned, ratings);
+    const p = buildWeek(myRulesPool, intention, phase, owned, ratings);
     setPlan(p);
     setStep(3);
     setTab("week");
   };
-  const generateKids = () => setKidPlan(buildKidWeek(owned));
+  const generateKids = () => setKidPlan(buildKidWeek(myRulesPool, owned));
 
   const togglePantry = (cat: PantryCategoryKey, item: string) => {
     setPantry((p) => {
@@ -252,7 +263,7 @@ export default function MealsPage() {
     const cur = plan[day]?.[type];
     if (cur) used.delete(cur);
     used.add(cur || "");
-    const r = pickForSlot(RECIPES, type, intention, phase, owned, used, ratings);
+    const r = pickForSlot(myRulesPool, type, intention, phase, owned, used, ratings);
     if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
   };
 
@@ -261,7 +272,7 @@ export default function MealsPage() {
     const slots: MealType[] = ["breakfast", "lunch", "dinner"];
     const dayPlan: Record<MealType, string | null> = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     slots.forEach((type) => {
-      const r = pickForSlot(RECIPES, type, intention, phase, owned, used, ratings);
+      const r = pickForSlot(myRulesPool, type, intention, phase, owned, used, ratings);
       if (r) { dayPlan[type] = r.id; used.add(r.id); }
     });
     setPlan({ ...plan, [day]: dayPlan });
