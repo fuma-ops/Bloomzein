@@ -281,7 +281,6 @@ export default function Landing() {
             src="/images/landing-universes-bg.webp"
             alt=""
             aria-hidden
-            loading="lazy"
             decoding="async"
             className="absolute inset-0 h-full w-full object-cover object-top animate-card-breathe"
           />
@@ -346,7 +345,8 @@ export default function Landing() {
               <img
                 src="/images/landing-calendar.webp"
                 alt="Bloom & Zein calendar for May 2025 showing cycle, yoga, workout, journal, reminder, budget and goal events"
-                loading="lazy"
+                width={1100}
+                height={1100}
                 decoding="async"
                 className="animate-card-pop-in animate-card-breathe w-full self-center rounded-2xl object-contain shadow-lg"
               />
@@ -377,7 +377,8 @@ export default function Landing() {
             <img
               src="/images/landing-cycle-personalized.webp"
               alt="Bloom & Zein cycle phases — Period, Follicular, Ovulation, Luteal — with workouts, yoga, meals and articles that adapt to you"
-              loading="lazy"
+              width={1683}
+              height={935}
               decoding="async"
               className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30"
             />
@@ -407,7 +408,7 @@ export default function Landing() {
                 className="animate-card-pop-in hover-scale group ring-1 ring-white/40 relative flex aspect-[4/5] flex-col items-center justify-end overflow-hidden rounded-2xl p-3 text-center text-white shadow-[0_20px_45px_-18px_oklch(0.45_0.2_340/0.55)] transition sm:aspect-[16/11] sm:rounded-[1.75rem] sm:p-6"
                 style={{ animationDelay: `${i * 120}ms`, background: "linear-gradient(135deg, oklch(0.92 0.08 350), oklch(0.85 0.12 340))" }}
               >
-                <img src={s.image} alt="" aria-hidden loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover animate-card-breathe transition-transform duration-500 group-hover:scale-105" />
+                <img src={s.image} alt="" aria-hidden decoding="async" className="absolute inset-0 h-full w-full object-cover animate-card-breathe transition-transform duration-500 group-hover:scale-105" />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden />
                 <p className="relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 10px oklch(0 0 0 / 0.5)" }}>{s.days}</p>
                 <p className="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)" }}>days</p>
@@ -452,7 +453,7 @@ export default function Landing() {
             {/* glass heart — framed so its art background reads as intentional */}
             <div className="order-2 flex items-center justify-center gap-4 lg:order-1">
               <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] animate-card-breathe sm:w-52 lg:w-60">
-                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" loading="lazy" decoding="async" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" decoding="async" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <PhoneMock />
             </div>
