@@ -200,22 +200,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* How it Connects — circular web diagram showing how every tool talks to the others */}
-        <section className="section-pink-shadow relative mt-4 overflow-hidden rounded-[2rem] bg-white/80 p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12">
-          <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">how it all connects</p>
-            <h2 className="mx-auto max-w-2xl font-script text-4xl leading-tight text-bloom-gradient sm:text-6xl">
-              Every tool knows what the others know
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-magenta/80 sm:text-base">
-              Tap a tool and watch your Bloom Calendar light up.
-            </p>
-          </div>
-          <div className="mt-6 sm:mt-10">
-            <ConnectionsDiagram />
-          </div>
-        </section>
-
         {/* Inline keyframes reused from the old hero (background breathe, CTA, title shimmer) */}
         <style>{`
           @keyframes bloom-breathe-bg {
@@ -352,6 +336,22 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* How it Connects — circular web diagram showing how every tool talks to the others */}
+        <section className="bloom-connections-bg relative mt-4 overflow-hidden rounded-[2rem] p-5 sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12">
+          <div className="text-center">
+            <p className="font-script text-2xl text-hotpink">how it all connects</p>
+            <h2 className="mx-auto max-w-2xl font-script text-4xl leading-tight text-bloom-gradient sm:text-6xl">
+              Every tool knows what the others know
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-magenta/80 sm:text-base">
+              Tap a tool and watch your Bloom Calendar light up.
+            </p>
+          </div>
+          <div className="mt-6 sm:mt-10">
+            <ConnectionsDiagram />
+          </div>
+        </section>
+
         {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR ──────────────── */}
         <section id="features" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
@@ -428,9 +428,9 @@ export default function Landing() {
               >
                 <img src={s.image} alt="" aria-hidden width={700} height={700} decoding="async" className="animate-card-bg-breathe absolute inset-0 h-full w-full object-cover" style={{ animationDelay: `${i * 0.6}s` }} />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" aria-hidden />
-                <p className="animate-float-soft relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 4px oklch(0 0 0 / 0.85), 0 4px 14px oklch(0 0 0 / 0.6)" }}>{s.days}</p>
-                <p className="animate-float-soft relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 4px oklch(0 0 0 / 0.85), 0 3px 10px oklch(0 0 0 / 0.6)", animationDelay: "0.3s" }}>days</p>
-                <p className="animate-float-soft relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm" style={{ textShadow: "0 1px 4px oklch(0 0 0 / 0.85), 0 3px 10px oklch(0 0 0 / 0.6)", animationDelay: "0.6s" }}>{s.text}</p>
+                <p className="animate-float-soft relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 0 12px oklch(0.75 0.28 350 / 0.95), 0 0 28px oklch(0.65 0.28 0 / 0.7)" }}>{s.days}</p>
+                <p className="animate-float-soft relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 0 8px oklch(0.75 0.28 350 / 0.95), 0 0 18px oklch(0.65 0.28 0 / 0.7)", animationDelay: "0.3s" }}>days</p>
+                <p className="animate-float-soft relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm" style={{ textShadow: "0 0 8px oklch(0.75 0.28 350 / 0.95), 0 0 18px oklch(0.65 0.28 0 / 0.7)", animationDelay: "0.6s" }}>{s.text}</p>
               </a>
             ))}
           </div>
