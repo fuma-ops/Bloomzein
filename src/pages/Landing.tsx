@@ -146,11 +146,11 @@ export default function Landing() {
         <section className="section-pink-shadow relative -mx-4 -mt-4 min-h-0 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]">
           {/* hero photo — fills the entire banner, text sits on top of it */}
           <img
-            src="/images/landing-hero.webp"
+            src="/images/landing-hero.png"
             alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
             fetchPriority="high"
             decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-[center_18%] sm:object-[65%_12%]"
+            className="absolute inset-0 h-full w-full object-cover object-[center_22%] sm:object-[65%_30%]"
             referrerPolicy="no-referrer"
           />
           {/* gradient so the text stays readable on the left, while the right side stays clear and glowy */}
