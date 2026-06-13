@@ -149,7 +149,7 @@ export default function Landing() {
             alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
             fetchPriority="high"
             decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-[center_18%] animate-card-breathe sm:object-[65%_12%]"
+            className="absolute inset-0 h-full w-full object-cover object-[center_18%] sm:object-[65%_12%]"
             referrerPolicy="no-referrer"
           />
           {/* gradient so the text stays readable on the left, while the right side stays clear and glowy */}
@@ -282,8 +282,7 @@ export default function Landing() {
             alt=""
             aria-hidden
             decoding="async"
-            onLoad={(e) => e.currentTarget.classList.remove("opacity-0")}
-            className="absolute inset-0 h-full w-full object-cover object-top opacity-0 transition-opacity duration-700 animate-card-breathe"
+            className="absolute inset-0 h-full w-full object-cover object-top"
           />
           {/* radial fade — keeps the photo mostly visible while letting the edges melt into the page background */}
           <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.25) 0%, oklch(0.98 0.015 350 / 0.4) 60%, oklch(0.98 0.015 350) 100%)" }} />
@@ -349,8 +348,7 @@ export default function Landing() {
                 width={1100}
                 height={1100}
                 decoding="async"
-                onLoad={(e) => e.currentTarget.classList.remove("opacity-0")}
-                className="animate-card-pop-in animate-card-breathe w-full self-center rounded-2xl object-contain shadow-lg opacity-0 transition-opacity duration-700"
+                className="animate-card-pop-in w-full self-center rounded-2xl object-contain shadow-lg"
               />
               <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
                 <p className="font-script text-2xl text-hotpink sm:text-3xl">all your worlds, one calendar</p>
@@ -379,11 +377,10 @@ export default function Landing() {
             <img
               src="/images/landing-cycle-personalized.webp"
               alt="Bloom & Zein cycle phases — Period, Follicular, Ovulation, Luteal — with workouts, yoga, meals and articles that adapt to you"
-              width={1683}
-              height={935}
+              width={1400}
+              height={778}
               decoding="async"
-              onLoad={(e) => e.currentTarget.classList.remove("opacity-0")}
-              className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30 opacity-0 transition-opacity duration-700"
+              className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30"
             />
             <p className="relative z-10 mt-4 text-center text-sm font-medium text-magenta/80 sm:text-base">
               Your tools, meals and movement gently shift with every phase — so you're always supported, never fighting your body.
@@ -411,7 +408,7 @@ export default function Landing() {
                 className="animate-card-pop-in animate-cta-glow hover-scale group ring-1 ring-white/40 relative flex aspect-[4/5] flex-col items-center justify-end overflow-hidden rounded-2xl p-3 text-center text-white transition sm:aspect-[16/11] sm:rounded-[1.75rem] sm:p-6"
                 style={{ animationDelay: `${i * 120}ms`, background: "linear-gradient(135deg, oklch(0.92 0.08 350), oklch(0.85 0.12 340))" }}
               >
-                <img src={s.image} alt="" aria-hidden decoding="async" onLoad={(e) => e.currentTarget.classList.remove("opacity-0")} className="absolute inset-0 h-full w-full object-cover opacity-0 transition-[opacity,transform] duration-700 animate-card-breathe group-hover:scale-105" />
+                <img src={s.image} alt="" aria-hidden width={700} height={700} decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden />
                 <p className="relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 10px oklch(0 0 0 / 0.5)" }}>{s.days}</p>
                 <p className="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)" }}>days</p>
@@ -448,8 +445,8 @@ export default function Landing() {
           <div className="grid items-center gap-6 lg:grid-cols-2">
             {/* glass heart — framed so its art background reads as intentional */}
             <div className="order-2 flex items-center justify-center gap-4 lg:order-1">
-              <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] animate-card-breathe sm:w-52 lg:w-60">
-                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" decoding="async" onLoad={(e) => e.currentTarget.classList.remove("opacity-0")} className="h-full w-full object-cover opacity-0 transition-opacity duration-700" referrerPolicy="no-referrer" />
+              <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] sm:w-52 lg:w-60">
+                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" width={520} height={780} decoding="async" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <PhoneMock />
             </div>
