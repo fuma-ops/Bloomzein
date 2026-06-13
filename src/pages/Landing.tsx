@@ -1,7 +1,7 @@
 import {
   ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
-  Moon, Droplet, Smile, PenLine, BookOpen, Wallet, Calendar as CalendarIcon,
-  Target, TrendingUp, Quote, Utensils, Footprints, StickyNote, ClipboardList, NotebookPen, type LucideIcon,
+  Moon, Droplet, Wallet, Calendar as CalendarIcon,
+  Target, Quote, Utensils, Footprints, StickyNote, ClipboardList, NotebookPen, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -293,8 +293,15 @@ export default function Landing() {
                 return (
                   <article
                     key={u.key}
-                    className="pearl-frame animate-card-pop-in animate-card-shadow-breathe relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6"
-                    style={{ animationDelay: `${i * 120}ms`, background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)", "--card-glow": u.glowColor } as CSSProperties}
+                    className="pearl-frame animate-card-pop-in relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    style={{
+                      animationDelay: `${i * 120}ms`,
+                      background: "oklch(1 0 0 / 0.16)",
+                      backdropFilter: "blur(6px)",
+                      "--card-glow": u.glowColor,
+                      boxShadow:
+                        "inset 0 1px 0 oklch(1 0 0 / 0.75), inset 1px 0 0 oklch(1 0 0 / 0.25), inset -1px 0 0 oklch(1 0 0 / 0.12), inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18), 0 -10px 26px -10px oklch(1 0 0 / 0.7), 0 10px 28px -12px var(--card-glow, oklch(0.65 0.22 350 / 0.5))",
+                    } as CSSProperties}
                   >
                     <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
                     <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
@@ -384,31 +391,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* ──────────────── DAILY SOFT GIRL DASHBOARD ──────────────── */}
-        <section className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
-          <SectionHeading kicker="every little day" title="Your daily soft girl dashboard." />
-          {/* 3 columns × 2 rows on every screen */}
-          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-3 gap-2.5 sm:gap-4">
-            {DASHBOARD.map((d, i) => {
-              const Icon = d.icon;
-              return (
-                <article
-                  key={d.title}
-                  className="bloom-pearl-card animate-card-pop-in relative flex flex-col items-center justify-center overflow-hidden rounded-2xl p-2.5 text-center sm:rounded-[1.5rem] sm:p-5"
-                  style={{ animationDelay: `${i * 90}ms` }}
-                >
-                  <span className="pointer-events-none absolute -right-5 -top-5 h-16 w-16 rounded-full opacity-50 blur-2xl" style={{ background: d.accent }} aria-hidden />
-                  <span className="grid h-10 w-10 place-items-center rounded-2xl text-white shadow-md sm:h-12 sm:w-12" style={{ background: d.accent }}>
-                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </span>
-                  <p className="mt-1.5 text-[10px] font-bold leading-tight text-magenta sm:text-sm">{d.title}</p>
-                  <p className="font-script text-base leading-none text-hotpink sm:text-2xl">{d.value}</p>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-
         {/* ──────────────── REAL TRANSFORMATION — STATS ──────────────── */}
         <section id="stories" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="real blooming" title="Real blooming. Real transformation." />
@@ -420,11 +402,9 @@ export default function Landing() {
                 style={{ animationDelay: `${i * 120}ms` }}
               >
                 <img src={s.image} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full object-cover animate-card-breathe" />
-                <div className="absolute inset-0" style={{ background: s.bg, opacity: 0.7 }} />
-                <img src="/images/landing-stat-flower.webp" alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -right-3 -top-3 z-10 h-16 w-16 object-contain opacity-90 animate-bloom-float sm:h-24 sm:w-24" style={{ transform: `rotate(${i * 18}deg)` }} />
-                <p className="relative z-10 font-script text-3xl leading-none drop-shadow sm:text-6xl">{s.days}</p>
-                <p className="relative z-10 text-[10px] font-bold uppercase tracking-wide sm:text-sm">days</p>
-                <p className="relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm">{s.text}</p>
+                <p className="relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 1px 6px oklch(1 0 0 / 0.9), 0 1px 16px oklch(1 0 0 / 0.6)" }}>{s.days}</p>
+                <p className="relative z-10 text-[10px] font-bold uppercase tracking-wide sm:text-sm" style={{ textShadow: "0 1px 6px oklch(1 0 0 / 0.9), 0 1px 16px oklch(1 0 0 / 0.6)" }}>days</p>
+                <p className="relative z-10 mt-1.5 text-[10px] font-medium leading-snug sm:text-sm" style={{ textShadow: "0 1px 6px oklch(1 0 0 / 0.9), 0 1px 16px oklch(1 0 0 / 0.6)" }}>{s.text}</p>
               </article>
             ))}
           </div>
@@ -596,19 +576,10 @@ const UNIVERSES: Universe[] = [
 ];
 
 
-const DASHBOARD = [
-  { title: "Mood", value: "😊", icon: Smile, accent: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
-  { title: "Hydration", value: "6/8", icon: Droplet, accent: "linear-gradient(135deg, #38bdf8, #0ea5e9)" },
-  { title: "Affirmation", value: "♡", icon: Heart, accent: "linear-gradient(135deg, #fb7185, #f43f5e)" },
-  { title: "Reading", value: "12m", icon: BookOpen, accent: "linear-gradient(135deg, #c084fc, #9333ea)" },
-  { title: "Diary", value: "✎", icon: PenLine, accent: "linear-gradient(135deg, #34d399, #10b981)" },
-  { title: "Progress", value: "78%", icon: TrendingUp, accent: "linear-gradient(135deg, #f472b6, #ec4899)" },
-];
-
 const STATS = [
-  { days: "7", text: "softer mornings & a calmer first week", bg: "linear-gradient(145deg, oklch(0.72 0.27 350), oklch(0.6 0.3 0))", image: "/images/landing-stat-bg-1.webp" },
-  { days: "30", text: "your cycle, mood & money start to rhyme", bg: "linear-gradient(145deg, oklch(0.68 0.28 330), oklch(0.58 0.31 350))", image: "/images/landing-stat-bg-2.webp" },
-  { days: "90", text: "a whole new soft era, fully bloomed", bg: "linear-gradient(145deg, oklch(0.72 0.27 10), oklch(0.6 0.3 350))", image: "/images/landing-stat-bg-3.webp" },
+  { days: "7", text: "softer mornings & a calmer first week", image: "/images/landing-stat-bg-1.webp" },
+  { days: "30", text: "your cycle, mood & money start to rhyme", image: "/images/landing-stat-bg-2.webp" },
+  { days: "90", text: "a whole new soft era, fully bloomed", image: "/images/landing-stat-bg-3.webp" },
 ];
 
 const QUOTES = [
