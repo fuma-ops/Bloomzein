@@ -403,6 +403,54 @@
   animation: bloom-fall 25s linear infinite;
 }
 
+/* ===================== Onboarding reveal animation (Screen 4) ===================== */
+
+@keyframes onboarding-shape {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@utility animate-onboarding-shape {
+  animation: onboarding-shape 0.6s ease-out forwards;
+}
+
+/* Tool icons fly outward from the center shape to their orbit position, staggered via animation-delay */
+@keyframes onboarding-icon {
+  0% { opacity: 0; transform: translate(var(--fly-x), var(--fly-y)) scale(0.3); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+@utility animate-onboarding-icon {
+  animation: onboarding-icon 0.5s ease-out both;
+  animation-delay: 0.6s;
+}
+
+/* Connection lines draw outward from the center via stroke-dashoffset */
+@keyframes onboarding-line {
+  0% { stroke-dashoffset: 200; opacity: 0; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@utility animate-onboarding-line {
+  animation: onboarding-line 0.6s ease-out both;
+  animation-delay: 1.8s;
+}
+
+@keyframes onboarding-badge {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@utility animate-onboarding-badge {
+  animation: onboarding-badge 0.4s ease-out both;
+  animation-delay: 2.4s;
+}
+
+@keyframes onboarding-text {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@utility animate-onboarding-text {
+  animation: onboarding-text 0.4s ease-out both;
+  animation-delay: 2.8s;
+}
+
 /* ===================== Premium scroll & shine helpers ===================== */
 
 @utility no-scrollbar {

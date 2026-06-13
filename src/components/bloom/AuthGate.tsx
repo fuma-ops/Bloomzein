@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext"
 import { AuthModal } from "./AuthModal"
-import { ProfileSetup } from "./ProfileSetup"
+import { OnboardingFlow } from "./onboarding/OnboardingFlow"
 import { AppIcon } from "./AppIcon"
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -24,12 +24,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!profile?.setup_done) {
-    return (
-      <>
-        <div className="pointer-events-none select-none blur-sm">{children}</div>
-        <ProfileSetup />
-      </>
-    )
+    return <OnboardingFlow />
   }
 
   return <>{children}</>
