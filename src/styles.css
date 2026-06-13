@@ -244,6 +244,17 @@
   50% { box-shadow: 0 0 0 8px oklch(0.7 0.27 350 / 0), 0 0 22px 6px oklch(0.75 0.27 350 / 0.7); transform: scale(1.06); }
 }
 
+/* Bottom sheet spring entrance — soft elastic overshoot, settles cleanly */
+@keyframes bloom-sheet-rise {
+  0% { transform: translateY(100%); }
+  60% { transform: translateY(-3%); }
+  80% { transform: translateY(1.5%); }
+  100% { transform: translateY(0); }
+}
+@utility animate-bloom-sheet-rise {
+  animation: bloom-sheet-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 @utility animate-bloom-float {
   animation: bloom-float 6s ease-in-out infinite;
 }
