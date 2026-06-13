@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
+import { estimateWeeklyGroceryCost } from "./mealsBudget";
 
 /* ============================================================
    TOKENS / CONSTANTS
@@ -162,7 +163,9 @@ function PrimaryBtn({ children, ...rest }: React.ButtonHTMLAttributes<HTMLButton
     <button
       {...rest}
       className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-[#EC4899] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-pink-400/30 transition hover:scale-[1.03] hover:bg-[#DB2777] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${rest.className ?? ""}`}
-    />
+    >
+      {children}
+    </button>
   );
 }
 
@@ -171,7 +174,9 @@ function GhostBtn({ children, ...rest }: React.ButtonHTMLAttributes<HTMLButtonEl
     <button
       {...rest}
       className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-[#FCE7F3] px-4 py-2 text-sm font-semibold text-[#9D5C7E] border-[0.5px] border-pink-400/30 transition hover:bg-pink-200 active:scale-95 ${rest.className ?? ""}`}
-    />
+    >
+      {children}
+    </button>
   );
 }
 
@@ -892,9 +897,32 @@ function BudgetSetupTab(props: {
 
   const hasAmounts = selectedCats.length > 0 && Object.values(budget).some(v => v > 0);
 
+  const mealEstimate = useMemo(() => estimateWeeklyGroceryCost(), []);
+
+  function useMealEstimate() {
+    if (!mealEstimate) return;
+    setSelectedCats(prev => prev.includes("food") ? prev : [...prev, "food"]);
+    setBudget(prev => ({ ...prev, food: mealEstimate.monthly }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1600);
+  }
+
   return (
     <div className="space-y-5">
       <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
+
+      {mealEstimate && (
+        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
+          <div>
+            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">FROM YOUR MEAL PLAN</p>
+            <p className="font-script text-2xl text-[#831843] leading-tight">
+              Your {mealEstimate.mealCount}-meal weekly plan is about {fmt(mealEstimate.weekly, currency)}/week in groceries
+            </p>
+            <p className="text-xs text-[#9D5C7E] mt-1">≈ {fmt(mealEstimate.monthly, currency)}/month — a rough estimate based on each recipe's cost level.</p>
+          </div>
+          <GhostBtn onClick={useMealEstimate}><UtensilsCrossed className="h-4 w-4" /> Use for Food budget</GhostBtn>
+        </Card>
+      )}
 
       <Card>
         <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
