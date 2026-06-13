@@ -8,6 +8,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { RECIPES } from "@/components/bloom/recipes/data";
 import {
   getCurrentUserId,
   doseConfirmToken,
@@ -391,6 +392,14 @@ export default function TodayPage() {
   const quote = PHASE_QUOTES[phase];
   const plan = PHASE_PLAN[phase];
 
+  // Cycle → Reminders: surface an iron-rich recipe during period/luteal
+  // (when iron needs peak per PHASE_MICROS) to nudge a visit to Diet.
+  const ironRecipe = useMemo(() => {
+    return RECIPES
+      .filter((r) => r.phases.includes("menstrual") && r.micros.iron)
+      .sort((a, b) => (b.micros.iron ?? 0) - (a.micros.iron ?? 0))[0];
+  }, []);
+
   // "Your Bloom" progress — mood logged, water goal met, workout/yoga done, journal done
   const checklist = useMemo(() => {
     const yogaItem = plan.items.find((i) => i.id === "yoga" || i.id === "workout");
@@ -506,6 +515,47 @@ export default function TodayPage() {
         </div>
       </section>
 
+      {/* ── CYCLE-AWARE TIP ──────────────────────────────────────────────── */}
+      {(phase === "period" || phase === "luteal") && ironRecipe && (
+        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "90ms" }}>
+          <a
+            href="/app/tools/diet"
+            className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 transition hover:-translate-y-0.5"
+          >
+            <span className="clay-blob pearl-sheen animate-icon-breathe grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full text-white">
+              <Heart className="h-5 w-5" strokeWidth={1.8} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-script text-lg sm:text-xl text-hotpink leading-tight">Iron boost today ✿</p>
+              <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">
+                Your iron needs rise during this phase — try "{ironRecipe.name}" from Diet.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
+          </a>
+        </section>
+      )}
+
+      {(phase === "fertile" || phase === "ovulation") && (
+        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "90ms" }}>
+          <a
+            href="#hydration"
+            className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 transition hover:-translate-y-0.5"
+          >
+            <span className="clay-blob pearl-sheen animate-icon-breathe grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full text-white">
+              <Droplet className="h-5 w-5" strokeWidth={1.8} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-script text-lg sm:text-xl text-hotpink leading-tight">Hydration boost ✿</p>
+              <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">
+                Ovulation can raise your fluid needs — try for 1-2 extra glasses today.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
+          </a>
+        </section>
+      )}
+
       {/* ── MOOD CHECK-IN ─────────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
         <SectionTitle>How are you feeling?</SectionTitle>
@@ -579,7 +629,7 @@ export default function TodayPage() {
       {/* ── HYDRATION + BLOOM PLAN ───────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Daily hydration */}
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
+        <div id="hydration" className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
           <div className="flex items-center justify-between">
             <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">Daily Hydration ✿</p>
             <div className="flex items-center gap-1.5">
