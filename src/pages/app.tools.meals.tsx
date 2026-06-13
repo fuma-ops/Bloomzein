@@ -129,17 +129,35 @@ function buildWeek(
   phase: CyclePhase,
   owned: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
+  proteinBoostDay?: string,
 ) {
   const used = new Set<string>();
   const plan: Record<string, Record<MealType, string | null>> = {};
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     (["breakfast", "lunch", "dinner"] as MealType[]).forEach((type) => {
-      const r = pickForSlot(pool, type, intention, phase, owned, used, ratings);
+      const slotIntention: Intention = d === proteinBoostDay && type === "dinner" ? "protein" : intention;
+      const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings);
       if (r) { plan[d][type] = r.id; used.add(r.id); }
     });
   });
   return plan;
+}
+
+// Workout → Meals: after a strength/tonify session today, bias tonight's
+// dinner toward a high-protein recipe for recovery.
+const WORKOUT_LOG_KEY = "bloom:workout-history";
+
+function didStrengthWorkoutToday(): boolean {
+  try {
+    const history: { date: string; intention: string }[] = JSON.parse(localStorage.getItem(WORKOUT_LOG_KEY) || "[]");
+    const todayISO = new Date().toISOString().slice(0, 10);
+    return history.some((h) => h.date === todayISO && (h.intention === "strengthen" || h.intention === "tonify"));
+  } catch { return false; }
+}
+
+function todayDayName(): string {
+  return DAYS[(new Date().getDay() + 6) % 7];
 }
 
 function buildKidWeek(recipes: Recipe[], owned: Set<string>) {
@@ -240,8 +258,13 @@ export default function MealsPage() {
     return RECIPES.filter((r) => passesMyRules(r, profile));
   }, []);
 
+  const proteinBoostDay = useMemo(
+    () => (didStrengthWorkoutToday() ? todayDayName() : null),
+    [],
+  );
+
   const generateWeek = () => {
-    const p = buildWeek(myRulesPool, intention, phase, owned, ratings);
+    const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDay ?? undefined);
     setPlan(p);
     setStep(3);
     setTab("week");
@@ -263,7 +286,8 @@ export default function MealsPage() {
     const cur = plan[day]?.[type];
     if (cur) used.delete(cur);
     used.add(cur || "");
-    const r = pickForSlot(myRulesPool, type, intention, phase, owned, used, ratings);
+    const slotIntention: Intention = day === proteinBoostDay && type === "dinner" ? "protein" : intention;
+    const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
     if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
   };
 
@@ -272,7 +296,8 @@ export default function MealsPage() {
     const slots: MealType[] = ["breakfast", "lunch", "dinner"];
     const dayPlan: Record<MealType, string | null> = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     slots.forEach((type) => {
-      const r = pickForSlot(myRulesPool, type, intention, phase, owned, used, ratings);
+      const slotIntention: Intention = day === proteinBoostDay && type === "dinner" ? "protein" : intention;
+      const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
       if (r) { dayPlan[type] = r.id; used.add(r.id); }
     });
     setPlan({ ...plan, [day]: dayPlan });
@@ -349,6 +374,7 @@ export default function MealsPage() {
             onSwap={swapMeal}
             onRegen={regenDay}
             owned={owned}
+            proteinBoostDay={proteinBoostDay}
             goPantry={() => { setStep(1); setTab("pantry"); }}
           />
         )}
@@ -447,7 +473,7 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate,
-  onOpen, onSwap, onRegen, owned, goPantry,
+  onOpen, onSwap, onRegen, owned, goPantry, proteinBoostDay,
 }: any) {
   const hasPantry = owned.size > 0;
   return (
@@ -519,6 +545,7 @@ function WeekTab({
                 {(["breakfast","lunch","dinner"] as MealType[]).map((slot) => {
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
+                  const proteinBoosted = d === proteinBoostDay && slot === "dinner";
                   return (
                     <div key={slot} className="flex items-center gap-2 rounded-xl bg-blush/60 px-2 py-1.5">
                       <span className="text-[10px] uppercase font-bold text-hotpink w-14 shrink-0">{slot}</span>
@@ -528,6 +555,11 @@ function WeekTab({
                         </button>
                       ) : (
                         <span className="flex-1 text-xs text-rose/50">—</span>
+                      )}
+                      {proteinBoosted && (
+                        <span title="Post-workout protein boost" className="shrink-0 text-[9px] font-bold uppercase rounded-full bg-hotpink/10 text-hotpink px-1.5 py-0.5">
+                          Protein ✿
+                        </span>
                       )}
                       <button onClick={() => onSwap(d, slot)} title="Swap" className="text-rose hover:text-hotpink">
                         <Shuffle className="h-3.5 w-3.5" />
