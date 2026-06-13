@@ -5,8 +5,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
-import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { DEFAULT_SETTINGS } from "@/components/bloom/CycleTracker";
+import { readCyclePhase, readCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, calculateDailyTargets, passesMyRules,
@@ -64,11 +63,12 @@ function mapCyclePhase(p: CyclePhase | null): DietPhase {
   }
 }
 
-/** Approximate cycle day from the shared default settings (read-only). */
+/** Cycle day computed from the user's saved Cycle Tracker settings. */
 function getCycleDay(): number {
+  const s = readCycleSettings();
   const ms = 1000 * 60 * 60 * 24;
-  const diff = Math.floor((Date.now() - DEFAULT_SETTINGS.lastPeriodStart.getTime()) / ms);
-  const day = ((diff % DEFAULT_SETTINGS.cycleLength) + DEFAULT_SETTINGS.cycleLength) % DEFAULT_SETTINGS.cycleLength;
+  const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / ms);
+  const day = ((diff % s.cycleLength) + s.cycleLength) % s.cycleLength;
   return day + 1;
 }
 

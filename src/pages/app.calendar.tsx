@@ -8,8 +8,9 @@ import {
 import { PageHeader } from "@/components/bloom/PageHeader";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import {
-  DEFAULT_SETTINGS, phaseForDay, PHASE_META, type Phase,
+  PHASE_META, type Phase,
 } from "@/components/bloom/CycleTracker";
+import { phaseForDay, readCycleSettings } from "@/components/bloom/cyclePhase";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
 import {
   STORAGE_KEYS as REMINDER_STORAGE_KEYS, type Reminder,
@@ -100,7 +101,7 @@ function eventCategoryToCal(cat: string): string {
 }
 
 function phaseItemsForDate(date: Date): PlanningItem[] {
-  const phase = phaseForDay(date, DEFAULT_SETTINGS);
+  const phase = phaseForDay(date, readCycleSettings());
   const dateStr = fmtLocalDate(date);
   if (phase === "period") {
     return [{ id: `phase:${dateStr}`, emoji: "🩸", label: "Period", category: "period", sourceLabel: "Open Cycle Tracker →", sourceHref: "/app/tools/cycle" }];
@@ -317,8 +318,8 @@ export default function CalendarPage() {
         }
       }
     }
-    const phase = phaseForDay(today, DEFAULT_SETTINGS);
-    const cycleDay = cycleDayForDate(today, DEFAULT_SETTINGS);
+    const phase = phaseForDay(today, readCycleSettings());
+    const cycleDay = cycleDayForDate(today, readCycleSettings());
     return { workouts, yogaCount, journalCount, reminderCount, vacation, phase, cycleDay };
   }, [cursor, planningFor, reminders, today]);
 
@@ -519,7 +520,7 @@ function WeekView({
     <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
       <div className="space-y-2.5">
         {days.map((day, i) => {
-          const phase = phaseForDay(day, DEFAULT_SETTINGS);
+          const phase = phaseForDay(day, readCycleSettings());
           const allItems = planningFor(day).filter((it) => !hiddenCats.has(it.category));
           const matches = !activeFilter || allItems.some((it) => it.category === activeFilter);
           const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
@@ -580,7 +581,7 @@ function MonthGrid({
       </div>
       <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
-          const phase = phaseForDay(cell.date, DEFAULT_SETTINGS);
+          const phase = phaseForDay(cell.date, readCycleSettings());
           const allItems = planningFor(cell.date).filter((it) => !hiddenCats.has(it.category));
           const isToday = sameDay(cell.date, today);
           const isVacation = allItems.some((it) => it.category === "vacation");
@@ -731,7 +732,7 @@ function DayDrawer({
   mood: ReturnType<typeof moodMeta> | null;
   onClose: () => void;
 }) {
-  const phase = phaseForDay(date, DEFAULT_SETTINGS);
+  const phase = phaseForDay(date, readCycleSettings());
   const meta = phase ? PHASE_META[phase] : null;
 
   return (

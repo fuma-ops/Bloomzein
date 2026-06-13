@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
+import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
 
@@ -326,10 +328,19 @@ const STEP_KEY = "bloom:yoga-step"; // 1 learn, 2 visual, 3 audio
 const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
 export const REMINDER_KEY = "bloom:yoga-reminder";
-const DIARY_KEY = "bloom:diary-entries";
-const CYCLE_PHASE_KEY = "bloom:cycle-phase"; // optional, read-only
-
 interface Streak { count: number; lastISO: string | null; }
+
+/** Maps the app-wide 5-phase cycle to Yoga's 4-phase model. */
+function mapToYogaPhase(p: CyclePhase | null): Phase {
+  switch (p) {
+    case "period": return "menstrual";
+    case "fertile": return "follicular";
+    case "ovulation": return "ovulation";
+    case "luteal": return "luteal";
+    case "follicular": return "follicular";
+    default: return "follicular";
+  }
+}
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function fmtLocalDate(d: Date) {
@@ -623,10 +634,7 @@ function YogaHome({
       const raw = localStorage.getItem(STREAK_KEY);
       if (raw) setStreak(JSON.parse(raw));
     } catch {}
-    try {
-      const p = localStorage.getItem(CYCLE_PHASE_KEY);
-      if (p === "menstrual" || p === "follicular" || p === "ovulation" || p === "luteal") setPhase(p);
-    } catch {}
+    setPhase(mapToYogaPhase(readCyclePhase()));
   }, []);
 
   const phaseSuggestion = useMemo(() => {
@@ -955,10 +963,7 @@ function Setup({
   const [phase, setPhase] = useState<Phase>("follicular");
 
   useEffect(() => {
-    try {
-      const p = localStorage.getItem(CYCLE_PHASE_KEY);
-      if (p === "menstrual" || p === "follicular" || p === "ovulation" || p === "luteal") setPhase(p);
-    } catch {}
+    setPhase(mapToYogaPhase(readCyclePhase()));
   }, []);
 
   useEffect(() => {
@@ -1312,14 +1317,22 @@ function Summary({
   const saveDiaryNote = () => {
     if (!note.trim()) return;
     try {
-      const raw = localStorage.getItem(DIARY_KEY);
-      const arr = raw ? JSON.parse(raw) : [];
-      arr.unshift({
-        id: Date.now(),
-        date: new Date().toISOString(),
-        text: `🧘🏻‍♀️ ${note.trim()} (yoga · ${INTENTIONS.find(i=>i.id===intention)?.label} · ${durationMin}m)`,
+      const raw = localStorage.getItem(DIARY_STORAGE_KEY);
+      const entries: DiaryEntry[] = raw ? JSON.parse(raw) : [];
+      const now = new Date();
+      const moodMap: Record<string, string> = { tense: "sensitive", tired: "tired", ok: "calm", calm: "calm", light: "energetic" };
+      entries.unshift({
+        id: String(Date.now()),
+        date: now.toISOString().slice(0, 10),
+        mood: moodMap[after ?? ""] ?? "calm",
+        title: `Yoga · ${INTENTIONS.find(i => i.id === intention)?.label ?? "Practice"}`,
+        html: `<p>🧘🏻‍♀️ ${note.trim()} (${durationMin}m)</p>`,
+        theme: "sakura",
+        font: "quicksand",
+        createdAt: now.toISOString(),
       });
-      localStorage.setItem(DIARY_KEY, JSON.stringify(arr));
+      localStorage.setItem(DIARY_STORAGE_KEY, JSON.stringify(entries));
+      window.dispatchEvent(new Event("bloom:diary-updated"));
       setSaved(true);
     } catch {}
   };

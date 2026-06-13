@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -23,19 +23,10 @@ import {
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
 import { BloomBubbles } from "./BloomBubbles";
 import { KawaiiBackground } from "./KawaiiBackground";
-import { type CyclePhase, phaseForDay } from "./cyclePhase";
+import { type CyclePhase, phaseForDay, DEFAULT_CYCLE_SETTINGS, readCycleSettings, writeCycleSettings, broadcastCyclePhase } from "./cyclePhase";
 
-/* ---------- Default cycle settings (easy to edit) ---------- */
-export const DEFAULT_SETTINGS: CycleSettings = {
-  lastPeriodStart: new Date(2026, 5, 1), // Jun 1, 2026
-  periodLength: 5,
-  cycleLength: 28,
-  trackerMode: "protection",
-  contraceptiveReminder: true,
-  contraceptiveMethod: "pill",
-  reminderHour: "21:00",
-  deviceNotifications: true,
-};
+/** @deprecated use DEFAULT_CYCLE_SETTINGS / readCycleSettings from "./cyclePhase" — kept for existing imports */
+export const DEFAULT_SETTINGS: CycleSettings = DEFAULT_CYCLE_SETTINGS;
 
 /** @deprecated use CyclePhase from "./cyclePhase" — kept for existing imports */
 export type Phase = Exclude<CyclePhase, "any"> | null;
@@ -70,8 +61,15 @@ function sameDay(a: Date, b: Date) {
 
 export function CycleTracker() {
   const today = new Date(2026, 5, 4); // demo "today"
-  const [settings, setSettings] = useState<CycleSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<CycleSettings>(() => readCycleSettings());
   const [setupOpen, setSetupOpen] = useState(false);
+
+  // Broadcast the current phase on mount so other tools (Today, Calendar, Yoga,
+  // Meals, Workout, Diet...) stay in sync even before the user re-saves settings.
+  useEffect(() => {
+    broadcastCyclePhase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [cursor, setCursor] = useState(new Date(2026, 5, 1));
   const [selected, setSelected] = useState<Date>(today);
   const [pillTaken, setPillTaken] = useState(true);
@@ -344,7 +342,7 @@ export function CycleTracker() {
         open={setupOpen}
         onClose={() => setSetupOpen(false)}
         initial={settings}
-        onSave={(s) => setSettings(s)}
+        onSave={(s) => { setSettings(s); writeCycleSettings(s); }}
       />
     </div>
   );

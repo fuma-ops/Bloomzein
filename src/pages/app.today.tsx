@@ -7,8 +7,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
-import { DEFAULT_SETTINGS, phaseForDay } from "@/components/bloom/CycleTracker";
-import { PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import {
   getCurrentUserId,
   doseConfirmToken,
@@ -214,9 +213,10 @@ function fmtDate() {
 }
 
 function cycleDayNumber() {
+  const s = readCycleSettings();
   const ms = 1000 * 60 * 60 * 24;
-  const diff = Math.floor((new Date().getTime() - DEFAULT_SETTINGS.lastPeriodStart.getTime()) / ms);
-  return ((diff % DEFAULT_SETTINGS.cycleLength) + DEFAULT_SETTINGS.cycleLength) % DEFAULT_SETTINGS.cycleLength + 1;
+  const diff = Math.floor((new Date().getTime() - s.lastPeriodStart.getTime()) / ms);
+  return ((diff % s.cycleLength) + s.cycleLength) % s.cycleLength + 1;
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
@@ -224,7 +224,7 @@ export default function TodayPage() {
   const { profile } = useAuth();
   const { text: hello, Icon: HelloIcon } = useMemo(greeting, []);
   const today = useMemo(fmtDate, []);
-  const phase = useMemo(() => phaseForDay(new Date(), DEFAULT_SETTINGS), []);
+  const phase = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
   const cycleDay = useMemo(cycleDayNumber, []);
 
   const displayName = profile?.name?.split(" ")[0] || "Beautiful";
@@ -240,6 +240,7 @@ export default function TodayPage() {
   const [affirmIdx, setAffirmIdx] = useState(0);
   const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
   const [reminderBusy, setReminderBusy] = useState(false);
+  const [showCycleSetupBanner, setShowCycleSetupBanner] = useState(false);
 
   useEffect(() => {
     const iso = todayISO();
@@ -266,6 +267,11 @@ export default function TodayPage() {
 
     try { setAffirmIdx(Number(localStorage.getItem(KEYS.affirmIdx)) || 0); } catch {}
     try { setWaterRemindersEnabled(localStorage.getItem(KEYS.waterReminders) === "true"); } catch {}
+
+    // Re-broadcast today's cycle phase so Yoga/Meals/Workout/Diet stay in sync
+    // even if the user hasn't opened Cycle Tracker since their last visit.
+    setShowCycleSetupBanner(!hasCycleSettings());
+    broadcastCyclePhase();
   }, []);
 
   // Pull in "J'ai bu ✓" confirmations tapped directly on a closed-app push
@@ -444,6 +450,25 @@ export default function TodayPage() {
           <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">days blooming</p>
         </div>
       </section>
+
+      {/* ── NEW USER: CYCLE SETUP NUDGE ─────────────────────────────────────── */}
+      {showCycleSetupBanner && (
+        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
+          <a
+            href="/app/tools/cycle"
+            className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 transition hover:-translate-y-0.5"
+          >
+            <span className="clay-blob pearl-sheen animate-icon-breathe grid h-11 w-11 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-full text-white">
+              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-script text-lg sm:text-2xl text-hotpink leading-tight">Personalize your Bloom ✿</p>
+              <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">Set up your cycle dates so Today, Calendar, Yoga & Diet sync to your real phase.</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
+          </a>
+        </section>
+      )}
 
       {/* ── YOUR BLOOM ───────────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
