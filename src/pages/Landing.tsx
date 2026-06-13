@@ -148,6 +148,7 @@ export default function Landing() {
             src="/images/landing-hero.webp"
             alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
             fetchPriority="high"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover object-[center_18%] animate-card-breathe sm:object-[65%_12%]"
             referrerPolicy="no-referrer"
           />
@@ -281,6 +282,7 @@ export default function Landing() {
             alt=""
             aria-hidden
             loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover object-top animate-card-breathe"
           />
           {/* radial fade — keeps the photo mostly visible while letting the edges melt into the page background */}
@@ -345,6 +347,7 @@ export default function Landing() {
                 src="/images/landing-calendar.webp"
                 alt="Bloom & Zein calendar for May 2025 showing cycle, yoga, workout, journal, reminder, budget and goal events"
                 loading="lazy"
+                decoding="async"
                 className="animate-card-pop-in animate-card-breathe w-full self-center rounded-2xl object-contain shadow-lg"
               />
               <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
@@ -375,6 +378,7 @@ export default function Landing() {
               src="/images/landing-cycle-personalized.webp"
               alt="Bloom & Zein cycle phases — Period, Follicular, Ovulation, Luteal — with workouts, yoga, meals and articles that adapt to you"
               loading="lazy"
+              decoding="async"
               className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30"
             />
             <p className="relative z-10 mt-4 text-center text-sm font-medium text-magenta/80 sm:text-base">
@@ -396,17 +400,26 @@ export default function Landing() {
           <SectionHeading kicker="real blooming" title="Real blooming. Real transformation." />
           <div className="mx-auto mt-8 grid max-w-4xl grid-cols-3 gap-2.5 sm:gap-5">
             {STATS.map((s, i) => (
-              <article
+              <a
                 key={s.days}
-                className="animate-card-pop-in ring-1 ring-white/40 relative flex aspect-[3/4] flex-col items-center justify-end overflow-hidden rounded-2xl p-3 text-center text-white shadow-[0_20px_45px_-18px_oklch(0.45_0.2_340/0.55)] sm:rounded-[1.75rem] sm:p-6"
-                style={{ animationDelay: `${i * 120}ms` }}
+                href="/app/tools"
+                aria-label={`${s.days} days — ${s.text}`}
+                className="animate-card-pop-in hover-scale group ring-1 ring-white/40 relative flex aspect-[4/5] flex-col items-center justify-end overflow-hidden rounded-2xl p-3 text-center text-white shadow-[0_20px_45px_-18px_oklch(0.45_0.2_340/0.55)] transition sm:aspect-[16/11] sm:rounded-[1.75rem] sm:p-6"
+                style={{ animationDelay: `${i * 120}ms`, background: "linear-gradient(135deg, oklch(0.92 0.08 350), oklch(0.85 0.12 340))" }}
               >
-                <img src={s.image} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full object-cover animate-card-breathe" />
+                <img src={s.image} alt="" aria-hidden loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover animate-card-breathe transition-transform duration-500 group-hover:scale-105" />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden />
                 <p className="relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 10px oklch(0 0 0 / 0.5)" }}>{s.days}</p>
                 <p className="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)" }}>days</p>
                 <p className="relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)" }}>{s.text}</p>
-              </article>
+                <span
+                  className="hover-scale animate-cta-bounce relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-[10px] font-bold text-white backdrop-blur-sm sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+                  style={{ animationDelay: `${i * 200}ms` }}
+                >
+                  Discover
+                  <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" />
+                </span>
+              </a>
             ))}
           </div>
         </section>
@@ -439,7 +452,7 @@ export default function Landing() {
             {/* glass heart — framed so its art background reads as intentional */}
             <div className="order-2 flex items-center justify-center gap-4 lg:order-1">
               <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] animate-card-breathe sm:w-52 lg:w-60">
-                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" loading="lazy" decoding="async" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <PhoneMock />
             </div>
