@@ -101,6 +101,24 @@ export async function getPushSubscriptionStatus(): Promise<"subscribed" | "unsub
   return subscription ? "subscribed" : "unsubscribed";
 }
 
+/**
+ * Fetches "drank" confirmations recorded server-side — e.g. from a user tapping
+ * "J'ai bu ✓" directly on a hydration push notification while the app was closed.
+ * Returns dose keys (`water:YYYY-MM-DD:N`) so the caller can add them to today's
+ * water count once and mark them as reconciled.
+ */
+export async function fetchWaterAcks(): Promise<Set<string>> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return new Set();
+
+  const { data, error } = await supabase.from("water_acks").select("dose_key").eq("user_id", user.id);
+  if (error || !data) return new Set();
+
+  return new Set(data.map((row) => row.dose_key as string));
+}
+
 export type ScheduledNotificationInput = {
   /** Stable id for this notification within the tool — e.g. `${reminderId}:${occurrenceDate}`. Used to replace stale entries on resync without duplicating. */
   dedupeKey: string;

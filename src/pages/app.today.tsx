@@ -3,22 +3,33 @@ import {
   Sparkles, Flower2, Heart, ArrowRight, Flame, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
-  Leaf, Cookie, Bone, CircleDot, Meh,
+  Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_SETTINGS, phaseForDay } from "@/components/bloom/CycleTracker";
 import { PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import {
+  getCurrentUserId,
+  doseConfirmToken,
+  isPushSupported,
+  subscribeToPush,
+  syncScheduledNotifications,
+  cancelScheduledNotifications,
+  fetchWaterAcks,
+} from "@/lib/push";
 
 // ── Storage keys ────────────────────────────────────────────────────────────
 const KEYS = {
-  mood:       "bloom:today-mood",
-  symptoms:   "bloom:today-symptoms",
-  water:      "bloom:today-water",
-  waterGoal:  "bloom:today-water-goal",
-  plan:       "bloom:today-plan",
-  affirmIdx:  "bloom:today-affirm-idx",
-  streak:     "bloom:streak-days",
+  mood:           "bloom:today-mood",
+  symptoms:       "bloom:today-symptoms",
+  water:          "bloom:today-water",
+  waterGoal:      "bloom:today-water-goal",
+  waterReminders: "bloom:today-water-reminders",
+  waterAcksSeen:  "bloom:today-water-acks-seen",
+  plan:           "bloom:today-plan",
+  affirmIdx:      "bloom:today-affirm-idx",
+  streak:         "bloom:streak-days",
 } as const;
 
 export const TODAY_WATER_KEY = KEYS.water;
@@ -27,6 +38,61 @@ function readJSON<T>(key: string, fallback: T): T {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
+function localDateStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// ── Hydration reminders ──────────────────────────────────────────────────────
+// Only nudge during waking hours — never at night.
+const WATER_WAKE_START_HOUR = 8;
+const WATER_WAKE_END_HOUR = 21;
+const WATER_SYNC_DAYS = 5;
+
+type WaterFire = { dedupeKey: string; fireAt: Date; body: string; data?: Record<string, unknown> };
+
+/**
+ * Spreads the remaining glasses for today (and a full goal's worth for the next
+ * few days) evenly across the waking window, so reminders pace themselves to
+ * your actual goal instead of firing all at once or after bedtime.
+ */
+function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, userId: string | null): WaterFire[] {
+  const out: WaterFire[] = [];
+  for (let d = 0; d < WATER_SYNC_DAYS; d++) {
+    const day = new Date(from.getFullYear(), from.getMonth(), from.getDate() + d);
+    const dayStr = localDateStr(day);
+    const windowStart = new Date(day.getFullYear(), day.getMonth(), day.getDate(), WATER_WAKE_START_HOUR, 0, 0, 0);
+    const windowEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), WATER_WAKE_END_HOUR, 0, 0, 0);
+    const remaining = d === 0 ? Math.max(0, waterGoal - waterCount) : waterGoal;
+    if (remaining <= 0) continue;
+
+    const start = d === 0 ? new Date(Math.max(from.getTime() + 15 * 60000, windowStart.getTime())) : windowStart;
+    if (start >= windowEnd) continue;
+
+    const step = (windowEnd.getTime() - start.getTime()) / (remaining + 1);
+    for (let i = 0; i < remaining; i++) {
+      const fireAt = new Date(start.getTime() + step * (i + 1));
+      const doseKey = `water:${dayStr}:${i}`;
+      const left = remaining - i;
+      const data = userId
+        ? {
+            url: "/app/today",
+            kind: "water" as const,
+            reminderId: "water",
+            doseKey,
+            dedupePrefix: doseKey,
+            confirmToken: doseConfirmToken(userId, "water", doseKey),
+          }
+        : undefined;
+      out.push({
+        dedupeKey: doseKey,
+        fireAt,
+        body: `Encore ${left} verre${left > 1 ? "s" : ""} pour atteindre tes ${waterGoal} verres aujourd'hui 💧`,
+        data,
+      });
+    }
+  }
+  return out;
+}
 
 // ── Mood data ────────────────────────────────────────────────────────────────
 const MOODS = [
@@ -172,6 +238,8 @@ export default function TodayPage() {
   const [streak, setStreak] = useState(7);
   const [planDone, setPlanDone] = useState<string[]>([]);
   const [affirmIdx, setAffirmIdx] = useState(0);
+  const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
+  const [reminderBusy, setReminderBusy] = useState(false);
 
   useEffect(() => {
     const iso = todayISO();
@@ -197,7 +265,77 @@ export default function TodayPage() {
     } catch {}
 
     try { setAffirmIdx(Number(localStorage.getItem(KEYS.affirmIdx)) || 0); } catch {}
+    try { setWaterRemindersEnabled(localStorage.getItem(KEYS.waterReminders) === "true"); } catch {}
   }, []);
+
+  // Pull in "J'ai bu ✓" confirmations tapped directly on a closed-app push
+  // notification, adding each one to today's count exactly once.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const acks = await fetchWaterAcks();
+      if (cancelled || acks.size === 0) return;
+      const iso = todayISO();
+      let seen: string[] = [];
+      try { seen = readJSON<string[]>(KEYS.waterAcksSeen, []); } catch {}
+      const todaysAcks = [...acks].filter((k) => k.startsWith(`water:${iso}:`) && !seen.includes(k));
+      if (todaysAcks.length === 0) return;
+      setWaterCount((prev) => {
+        const next = prev + todaysAcks.length;
+        try { localStorage.setItem(KEYS.water, JSON.stringify({ date: iso, count: next })); } catch {}
+        return next;
+      });
+      try { localStorage.setItem(KEYS.waterAcksSeen, JSON.stringify([...seen, ...todaysAcks])); } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Keep the backend's hydration reminder schedule in sync with the goal/progress —
+  // spreads the remaining glasses across the rest of today's waking hours, plus a
+  // full goal's worth for the next few days. No-ops silently when signed out or off.
+  useEffect(() => {
+    if (!waterRemindersEnabled) return;
+    let cancelled = false;
+    (async () => {
+      const userId = await getCurrentUserId();
+      if (cancelled || !userId) return;
+      const items = upcomingWaterFires(waterCount, waterGoal, new Date(), userId).map((fire) => ({
+        dedupeKey: fire.dedupeKey,
+        fireAt: fire.fireAt.toISOString(),
+        title: "Bloomzein — Hydratation 💧",
+        body: fire.body,
+        data: fire.data ?? { url: "/app/today" },
+      }));
+      syncScheduledNotifications("hydration", items);
+    })();
+    return () => { cancelled = true; };
+  }, [waterRemindersEnabled, waterCount, waterGoal]);
+
+  const toggleWaterReminders = async () => {
+    if (reminderBusy) return;
+    setReminderBusy(true);
+    try {
+      if (waterRemindersEnabled) {
+        setWaterRemindersEnabled(false);
+        try { localStorage.setItem(KEYS.waterReminders, "false"); } catch {}
+        await cancelScheduledNotifications("hydration", "water:");
+      } else {
+        if (!isPushSupported()) {
+          alert("Les notifications ne sont pas disponibles sur cet appareil/navigateur.");
+          return;
+        }
+        const { error } = await subscribeToPush();
+        if (error) {
+          alert(error);
+          return;
+        }
+        setWaterRemindersEnabled(true);
+        try { localStorage.setItem(KEYS.waterReminders, "true"); } catch {}
+      }
+    } finally {
+      setReminderBusy(false);
+    }
+  };
 
   const pickMood = (key: string) => {
     setMood(key);
@@ -419,14 +557,33 @@ export default function TodayPage() {
         <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
           <div className="flex items-center justify-between">
             <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">Daily Hydration ✿</p>
-            <button
-              onClick={() => setWaterModalOpen(true)}
-              aria-label="Set hydration goal"
-              className="clay-blob grid h-7 w-7 place-items-center rounded-full text-white"
-            >
-              <Settings2 className="h-3.5 w-3.5" strokeWidth={2} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={toggleWaterReminders}
+                disabled={reminderBusy}
+                aria-label={waterRemindersEnabled ? "Disable hydration reminders" : "Enable hydration reminders"}
+                title={waterRemindersEnabled ? "Reminders on — tap to turn off" : "Get gentle water reminders"}
+                className={[
+                  "clay-blob grid h-7 w-7 place-items-center rounded-full text-white transition disabled:opacity-60",
+                  waterRemindersEnabled ? "animate-icon-breathe" : "opacity-70",
+                ].join(" ")}
+              >
+                {waterRemindersEnabled ? <Bell className="h-3.5 w-3.5" strokeWidth={2} /> : <BellOff className="h-3.5 w-3.5" strokeWidth={2} />}
+              </button>
+              <button
+                onClick={() => setWaterModalOpen(true)}
+                aria-label="Set hydration goal"
+                className="clay-blob grid h-7 w-7 place-items-center rounded-full text-white"
+              >
+                <Settings2 className="h-3.5 w-3.5" strokeWidth={2} />
+              </button>
+            </div>
           </div>
+          {waterRemindersEnabled && (
+            <p className="mt-1.5 text-[10px] text-rose/60 animate-fade-in">
+              Reminders on — gentle pink nudges, only between {WATER_WAKE_START_HOUR}am and {WATER_WAKE_END_HOUR > 12 ? WATER_WAKE_END_HOUR - 12 : WATER_WAKE_END_HOUR}pm ✿
+            </p>
+          )}
           <div className="mt-3 flex items-end justify-between gap-2">
             <div className="flex flex-wrap items-end gap-1.5 sm:gap-2">
               {Array.from({ length: waterGoal }).map((_, i) => (

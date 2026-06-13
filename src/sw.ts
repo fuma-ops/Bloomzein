@@ -40,6 +40,7 @@ interface PushPayload {
 }
 
 const CONFIRM_DOSE_URL = "https://yyplvnshfcizxocjrlsu.supabase.co/functions/v1/confirm-medication-dose";
+const CONFIRM_WATER_URL = "https://yyplvnshfcizxocjrlsu.supabase.co/functions/v1/confirm-water-dose";
 
 self.addEventListener("push", (event: PushEvent) => {
   let payload: PushPayload = {};
@@ -82,6 +83,19 @@ self.addEventListener("push", (event: PushEvent) => {
     ];
   }
 
+  // Hydration nudges — soft pink Bloomzein branding (flower logo on the left),
+  // with one tap to log the glass without opening the app.
+  if (data.kind === "water") {
+    options.icon = "/pwa-192x192.png";
+    options.badge = "/brand-badge-96.png";
+    options.tag = `water-${data.doseKey ?? "reminder"}`;
+    options.vibrate = [120, 80, 120];
+    options.actions = [
+      { action: "drank", title: "✅ J'ai bu" },
+      { action: "later", title: "⏰ Plus tard" },
+    ];
+  }
+
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
@@ -107,6 +121,28 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
   }
 
   if (event.action === "snooze") {
+    event.notification.close();
+    return;
+  }
+
+  if (event.action === "drank" && data?.confirmToken && data?.dedupePrefix && data?.userId && data?.doseKey) {
+    event.notification.close();
+    event.waitUntil(
+      fetch(CONFIRM_WATER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: data.confirmToken,
+          dedupePrefix: data.dedupePrefix,
+          userId: data.userId,
+          doseKey: data.doseKey,
+        }),
+      }).catch((err) => console.error("Failed to confirm water dose:", err))
+    );
+    return;
+  }
+
+  if (event.action === "later") {
     event.notification.close();
     return;
   }
