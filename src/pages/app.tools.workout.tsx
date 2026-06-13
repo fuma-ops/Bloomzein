@@ -493,6 +493,23 @@ function loadHistory(): HistoryEntry[] {
   } catch { return []; }
 }
 
+// Diary → Workout: cramps/tired/bloated logged today or yesterday suggest a
+// gentler Recovery session over the default recommendation.
+const DIARY_KEY = "bloom:diary";
+const RECOVERY_MOODS = new Set(["cramps", "tired", "bloated"]);
+
+function recentDiaryDistress(days = 2): boolean {
+  try {
+    const raw = localStorage.getItem(DIARY_KEY);
+    if (!raw) return false;
+    const entries = JSON.parse(raw) as { date?: string; mood?: string }[];
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - (days - 1));
+    const cutoffISO = cutoff.toISOString().slice(0, 10);
+    return entries.some((e) => !!e.date && e.date >= cutoffISO && RECOVERY_MOODS.has(e.mood ?? ""));
+  } catch { return false; }
+}
+
 function unlockedBadges(history: HistoryEntry[], streak: { count: number }): Set<string> {
   const ids = new Set<string>();
   if (history.length >= 1) ids.add("first-session");
@@ -519,12 +536,21 @@ function Discover({ profile, onStartSession, onBestShape }: {
   const [intention, setIntention] = useState<WorkoutIntention | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [suggestRecover, setSuggestRecover] = useState(false);
+  const [recoveryReason, setRecoveryReason] = useState<"energy" | "diary" | null>(null);
   const [challenge, setChallenge] = useLS<{ phase: CyclePhase | "any"; weekStart: string; done: number }>(CHALLENGE_KEY, { phase: "any", weekStart: "", done: 0 });
   const intentionSectionRef = useRef<HTMLDivElement>(null);
   const sessionListRef = useRef<HTMLDivElement>(null);
+  const zoneSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPhase(readCyclePhase() ?? "any");
+  }, []);
+
+  useEffect(() => {
+    if (recentDiaryDistress()) {
+      setSuggestRecover(true);
+      setRecoveryReason("diary");
+    }
   }, []);
 
   useEffect(() => {
@@ -545,8 +571,10 @@ function Discover({ profile, onStartSession, onBestShape }: {
     setEnergy({ date: todayISO(), level });
     if (level === "exhausted" && (phase === "luteal" || phase === "period")) {
       setSuggestRecover(true);
+      setRecoveryReason("energy");
     } else {
       setSuggestRecover(false);
+      setRecoveryReason(null);
     }
   };
 
@@ -619,9 +647,18 @@ function Discover({ profile, onStartSession, onBestShape }: {
         </div>
         {suggestRecover && (
           <div className="mt-3 rounded-2xl bg-blush/60 border border-petal/50 p-3">
-            <p className="text-sm text-rose/85">Sounds like your body wants rest today — switch to a Recovery session?</p>
+            <p className="text-sm text-rose/85">
+              {recoveryReason === "diary"
+                ? "We noticed you logged cramps, fatigue or bloating recently — want a gentler Recovery session today?"
+                : "Sounds like your body wants rest today — switch to a Recovery session?"}
+            </p>
             <div className="mt-2 flex gap-2">
-              <button onClick={() => setSuggestRecover(false)} className="bloom-luxury-btn px-4 py-1.5 text-xs font-bold text-white">Yes, show recovery</button>
+              <button
+                onClick={() => zoneSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="bloom-luxury-btn px-4 py-1.5 text-xs font-bold text-white"
+              >
+                Yes, show recovery
+              </button>
               <button onClick={() => setSuggestRecover(false)} className="rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">No, keep my plan</button>
             </div>
           </div>
@@ -629,7 +666,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
       </section>
 
       {/* Body Focus */}
-      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+      <section ref={zoneSectionRef} className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6 scroll-mt-20">
         <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 grid-flow-row-dense">
           {ZONES.map((z, i) => {
