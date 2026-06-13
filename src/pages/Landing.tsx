@@ -398,13 +398,14 @@ export default function Landing() {
             {STATS.map((s, i) => (
               <article
                 key={s.days}
-                className="animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl p-3 text-center text-white shadow-xl sm:rounded-[1.75rem] sm:p-6"
+                className="animate-card-pop-in ring-1 ring-white/40 relative flex aspect-[3/4] flex-col items-center justify-end overflow-hidden rounded-2xl p-3 text-center text-white shadow-[0_20px_45px_-18px_oklch(0.45_0.2_340/0.55)] sm:rounded-[1.75rem] sm:p-6"
                 style={{ animationDelay: `${i * 120}ms` }}
               >
                 <img src={s.image} alt="" aria-hidden loading="lazy" className="absolute inset-0 h-full w-full object-cover animate-card-breathe" />
-                <p className="relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 1px 6px oklch(1 0 0 / 0.9), 0 1px 16px oklch(1 0 0 / 0.6)" }}>{s.days}</p>
-                <p className="relative z-10 text-[10px] font-bold uppercase tracking-wide sm:text-sm" style={{ textShadow: "0 1px 6px oklch(1 0 0 / 0.9), 0 1px 16px oklch(1 0 0 / 0.6)" }}>days</p>
-                <p className="relative z-10 mt-1.5 text-[10px] font-medium leading-snug sm:text-sm" style={{ textShadow: "0 1px 6px oklch(1 0 0 / 0.9), 0 1px 16px oklch(1 0 0 / 0.6)" }}>{s.text}</p>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden />
+                <p className="relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 10px oklch(0 0 0 / 0.5)" }}>{s.days}</p>
+                <p className="relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)" }}>days</p>
+                <p className="relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)" }}>{s.text}</p>
               </article>
             ))}
           </div>
