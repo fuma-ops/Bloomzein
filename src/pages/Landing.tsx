@@ -6,6 +6,7 @@ import {
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
+import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
@@ -196,6 +197,22 @@ export default function Landing() {
                 </button>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* How it Connects — circular web diagram showing how every tool talks to the others */}
+        <section className="section-pink-shadow relative mt-4 overflow-hidden rounded-[2rem] bg-white/80 p-5 shadow-[0_25px_60px_-25px_oklch(0.55_0.28_0/0.35),0_0_0_1px_oklch(1_0_0/0.6)_inset] backdrop-blur sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12">
+          <div className="text-center">
+            <p className="font-script text-2xl text-hotpink">how it all connects</p>
+            <h2 className="mx-auto max-w-2xl font-script text-4xl leading-tight text-bloom-gradient sm:text-6xl">
+              Every tool knows what the others know
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-magenta/80 sm:text-base">
+              Tap a tool and watch your Bloom Calendar light up.
+            </p>
+          </div>
+          <div className="mt-6 sm:mt-10">
+            <ConnectionsDiagram />
           </div>
         </section>
 
@@ -409,11 +426,11 @@ export default function Landing() {
                 className="animate-card-pop-in hover-scale group ring-1 ring-white/40 relative flex aspect-[4/5] flex-col items-center justify-end overflow-hidden rounded-2xl p-3 text-center text-white transition sm:aspect-[16/11] sm:rounded-[1.75rem] sm:p-6"
                 style={{ animationDelay: `${i * 120}ms`, background: "linear-gradient(135deg, oklch(0.92 0.08 350), oklch(0.85 0.12 340))" }}
               >
-                <img src={s.image} alt="" aria-hidden width={700} height={700} decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <img src={s.image} alt="" aria-hidden width={700} height={700} decoding="async" className="animate-card-bg-breathe absolute inset-0 h-full w-full object-cover" style={{ animationDelay: `${i * 0.6}s` }} />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" aria-hidden />
-                <p className="animate-float-soft relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 10px oklch(0 0 0 / 0.5)" }}>{s.days}</p>
-                <p className="animate-float-soft relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)", animationDelay: "0.3s" }}>days</p>
-                <p className="animate-float-soft relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm" style={{ textShadow: "0 1px 6px oklch(0 0 0 / 0.5)", animationDelay: "0.6s" }}>{s.text}</p>
+                <p className="animate-float-soft relative z-10 font-script text-3xl leading-none sm:text-6xl" style={{ textShadow: "0 2px 4px oklch(0 0 0 / 0.85), 0 4px 14px oklch(0 0 0 / 0.6)" }}>{s.days}</p>
+                <p className="animate-float-soft relative z-10 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85 sm:text-sm" style={{ textShadow: "0 1px 4px oklch(0 0 0 / 0.85), 0 3px 10px oklch(0 0 0 / 0.6)", animationDelay: "0.3s" }}>days</p>
+                <p className="animate-float-soft relative z-10 mt-1.5 text-[10px] font-medium leading-snug text-white/90 sm:text-sm" style={{ textShadow: "0 1px 4px oklch(0 0 0 / 0.85), 0 3px 10px oklch(0 0 0 / 0.6)", animationDelay: "0.6s" }}>{s.text}</p>
               </a>
             ))}
           </div>

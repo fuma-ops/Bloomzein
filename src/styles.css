@@ -259,6 +259,14 @@
 @utility animate-float-soft {
   animation: float-soft 4s ease-in-out infinite;
 }
+/* Slow breathing zoom — for card background photos */
+@keyframes card-bg-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@utility animate-card-bg-breathe {
+  animation: card-bg-breathe 8s ease-in-out infinite;
+}
 @utility animate-bloom-orbit {
   animation: bloom-orbit 14s linear infinite;
 }
