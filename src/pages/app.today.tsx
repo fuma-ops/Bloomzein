@@ -382,10 +382,12 @@ export default function TodayPage() {
             </p>
           )}
         </div>
+      </section>
 
-        {/* Symptoms row — compact pill picker */}
-        <div className="mt-2">
-          <p className="mb-1 text-[11px] font-semibold text-rose/70 px-1">Any symptoms today?</p>
+      {/* ── SYMPTOMS ─────────────────────────────────────────────────────── */}
+      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "150ms" }}>
+        <SectionTitle>Any symptoms today?</SectionTitle>
+        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-2.5 sm:p-3">
           <div className="flex flex-wrap gap-1">
             {SYMPTOMS.map((s) => {
               const active = symptoms.includes(s.key);
