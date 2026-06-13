@@ -250,6 +250,15 @@
 @utility animate-bloom-sparkle {
   animation: bloom-sparkle 2.4s ease-in-out infinite;
 }
+
+/* Gentle vertical float, no rotation — for text and buttons */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@utility animate-float-soft {
+  animation: float-soft 4s ease-in-out infinite;
+}
 @utility animate-bloom-orbit {
   animation: bloom-orbit 14s linear infinite;
 }
