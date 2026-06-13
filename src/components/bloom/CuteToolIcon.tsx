@@ -420,6 +420,52 @@ export function CuteToolIcon({ slug, className = "h-8 w-8" }: Props) {
         </svg>
       );
 
+    case "diet":
+      /* Glossy pink skeuomorphic apple with a fresh leaf — nutrition / diet tool */
+      return (
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.74 0.24 350)" />
+              <stop offset="55%" stopColor="oklch(0.62 0.28 0)" />
+              <stop offset="100%" stopColor="oklch(0.46 0.24 0)" />
+            </linearGradient>
+            <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.86 0.18 145)" />
+              <stop offset="100%" stopColor="oklch(0.62 0.18 145)" />
+            </linearGradient>
+            <linearGradient id="appleStemGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.7 0.1 90)" />
+              <stop offset="100%" stopColor="oklch(0.45 0.1 60)" />
+            </linearGradient>
+          </defs>
+          {/* Shadow layer for 3D look */}
+          <ellipse cx="50" cy="60" rx="32" ry="29" fill="oklch(0.40 0.20 350 / 0.15)" />
+          {/* Main glossy apple body */}
+          <path d="M 50,30 C 76,28 86,50 80,68 C 75,84 62,90 50,90 C 38,90 25,84 20,68 C 14,50 24,28 50,30 Z" fill="url(#appleGrad)" stroke="#ffffff" strokeWidth="2.5" />
+          {/* Apple top dimple */}
+          <path d="M 42,30 C 46,24 54,24 58,30" stroke="oklch(0.45 0.22 0)" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.5" />
+          {/* Stem */}
+          <rect x="47" y="14" width="6" height="18" rx="3" fill="url(#appleStemGrad)" stroke="#ffffff" strokeWidth="1" />
+          {/* Leaf */}
+          <path d="M 53,20 C 66,12 78,18 76,28 C 66,32 56,28 53,20 Z" fill="url(#leafGrad)" stroke="#ffffff" strokeWidth="1.5" />
+          <path d="M 56,21 C 64,19 70,21 73,26" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
+          {/* Cute closed sparkle eyes */}
+          <path d="M 36,56 Q 41,61 46,56" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+          <path d="M 56,56 Q 61,61 66,56" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+          {/* Blush cheeks */}
+          <circle cx="33" cy="66" r="4" fill="oklch(0.92 0.1 350)" opacity="0.6" />
+          <circle cx="69" cy="66" r="4" fill="oklch(0.92 0.1 350)" opacity="0.6" />
+          {/* Happy smile */}
+          <path d="M 42,72 Q 50,80 58,72" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" fill="none" />
+          {/* High-gloss sheen */}
+          <path d="M 26,46 C 24,58 30,72 42,78" stroke="#ffffff" strokeWidth="5" strokeLinecap="round" opacity="0.7" />
+          {/* Sparkles */}
+          <circle cx="74" cy="44" r="2" fill="#ffffff" opacity="0.9" />
+          <circle cx="18" cy="62" r="1.6" fill="#ffffff" opacity="0.8" />
+        </svg>
+      );
+
     default:
       return null;
   }
