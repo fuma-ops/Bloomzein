@@ -388,7 +388,7 @@ export default function WorkoutPage() {
         <BestShapeCalculator
           onBack={() => setView({ kind: "discover" })}
           onStartWith={(zone, intention) => {
-            setView({ kind: "session-start", session: buildSession(zone, intention, durationForLevel(profile.level), profile.level) });
+            setView({ kind: "session-start", session: buildSession(zone, intention, durationForLevel(profile.level), profile.level, readCyclePhase() ?? "any") });
           }}
         />
       )}
@@ -615,8 +615,8 @@ function Discover({ profile, onStartSession, onBestShape }: {
   // sessions sorted with phase-optimal intention durations first
   const intentionList = useMemo(() => {
     if (!intention) return [];
-    return ([10, 20, 30] as const).map((d) => buildSession(zone!, intention, d, profile.level));
-  }, [zone, intention, profile.level]);
+    return ([10, 20, 30] as const).map((d) => buildSession(zone!, intention, d, profile.level, phase));
+  }, [zone, intention, profile.level, phase]);
 
   return (
     <div className="space-y-4">
@@ -756,10 +756,14 @@ function Discover({ profile, onStartSession, onBestShape }: {
               >
                 <p className="font-bold text-rose">{session.name}</p>
                 <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
+                <p className="mt-0.5 text-[11px] text-rose/60">{session.workSec}s work / {session.restSec}s rest</p>
                 {phase !== "any" && session.phaseOptimal.includes(phase) && (
                   <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
                     Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
                   </p>
+                )}
+                {session.intensityNote && (
+                  <p className="mt-1.5 text-[11px] leading-snug text-rose/70">{session.intensityNote}</p>
                 )}
               </button>
               );
@@ -1036,7 +1040,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
                     <div className="flex-1 grid place-items-center text-[11px] text-rose/40">Filtered</div>
                   ) : (
                     <button
-                      onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level))}
+                      onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level, phase))}
                       className="flex-1 rounded-xl bg-white/90 border border-petal/60 p-2 text-left shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-hotpink/40 active:scale-95 transition"
                     >
                       <p className="text-xs font-bold text-rose">{ZONES.find((z) => z.key === plan.zone)?.label}</p>

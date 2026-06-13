@@ -273,6 +273,7 @@ export interface WorkoutSession {
   workSec: number;
   restSec: number;
   phaseOptimal: CyclePhase[];
+  intensityNote: string | null;
 }
 
 const TIMING: Record<WorkoutIntention, { workSec: number; restSec: number }> = {
@@ -282,10 +283,25 @@ const TIMING: Record<WorkoutIntention, { workSec: number; restSec: number }> = {
   recover: { workSec: 45, restSec: 10 },
 };
 
-export function buildSession(zone: Zone, intention: WorkoutIntention, durationMin: 10 | 20 | 30, level: Level): WorkoutSession {
+// Phase-aware intensity: longer work / shorter rest when energy is naturally
+// higher (follicular, ovulation), gentler pacing with longer rests during
+// period and luteal. "any"/"fertile" stay at baseline.
+export const PHASE_INTENSITY: Record<CyclePhase, { workMult: number; restMult: number; note: string | null }> = {
+  period: { workMult: 0.85, restMult: 1.3, note: "Paced gently for your period — shorter work sets, longer rests" },
+  follicular: { workMult: 1.05, restMult: 0.9, note: "Tuned up for your follicular phase — push a little harder" },
+  fertile: { workMult: 1, restMult: 1, note: null },
+  ovulation: { workMult: 1.15, restMult: 0.85, note: "Peak intensity for your ovulation phase — make it count" },
+  luteal: { workMult: 0.9, restMult: 1.15, note: "Slightly softer for your luteal phase — extra rest between sets" },
+  any: { workMult: 1, restMult: 1, note: null },
+};
+
+export function buildSession(zone: Zone, intention: WorkoutIntention, durationMin: 10 | 20 | 30, level: Level, phase: CyclePhase = "any"): WorkoutSession {
   const key = `${zone}-${intention}`;
   const slugs = ZONE_INTENTION_EXERCISES[key] ?? [];
-  const { workSec, restSec } = TIMING[intention];
+  const base = TIMING[intention];
+  const { workMult, restMult, note } = PHASE_INTENSITY[phase];
+  const workSec = Math.round((base.workSec * workMult) / 5) * 5;
+  const restSec = Math.round((base.restSec * restMult) / 5) * 5;
   const cycleSec = workSec + restSec;
   const count = Math.max(3, Math.min(slugs.length, Math.round((durationMin * 60) / cycleSec)));
   // round-robin so short sessions still get variety across the available pool
@@ -293,11 +309,12 @@ export function buildSession(zone: Zone, intention: WorkoutIntention, durationMi
   for (let i = 0; i < count; i++) exercises.push(EXERCISES[slugs[i % slugs.length]]);
 
   return {
-    id: `${key}-${durationMin}`,
+    id: `${key}-${durationMin}-${phase}`,
     zone, intention, level, durationMin,
     name: SESSION_NAMES[key] ?? `${zone} · ${intention}`,
     exercises, workSec, restSec,
     phaseOptimal: PHASE_OPTIMAL[intention],
+    intensityNote: note,
   };
 }
 
