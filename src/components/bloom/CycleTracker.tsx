@@ -230,14 +230,6 @@ export function CycleTracker() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-white/20" />
         <div className="relative z-10 flex items-center justify-between gap-2 p-3 sm:p-5">
           <h2 className="font-script text-3xl text-hotpink sm:text-5xl">Cycle 🌸</h2>
-          <button
-            onClick={() => setSetupOpen(true)}
-            className="bloom-luxury-btn hover-scale group relative inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-white sm:gap-1.5 sm:px-5 sm:py-2.5 sm:text-sm"
-          >
-            <Sparkles className="h-3 w-3 animate-bloom-sparkle sm:h-4 sm:w-4" />
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>Log &amp; Settings</span>
-          </button>
         </div>
         <div className="relative z-10 px-3 pb-3 sm:max-w-md sm:px-5 sm:pb-5">
           <p className="inline-flex items-center gap-1 text-[8px] font-bold tracking-widest text-rose sm:gap-1.5 sm:text-[10px]">
@@ -255,7 +247,7 @@ export function CycleTracker() {
       {/* ============= Calendar — same compact, glassy pearl effect as "Everything blooms in one place" ============= */}
       <div className="pearl-frame animate-scale-in relative mt-5 overflow-hidden rounded-[1.75rem] p-3 sm:rounded-[2.5rem] sm:p-5" style={{ animationDelay: "60ms", background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)" }}>
         <div className="pearl-frame relative overflow-hidden rounded-2xl border-none bg-white/55 p-3 backdrop-blur-md sm:rounded-3xl sm:p-5">
-          {/* Month nav */}
+          {/* Month nav + Log & Settings */}
           <div className="mb-2 flex items-center justify-between gap-2 sm:mb-3">
             <h3 className="font-script text-lg text-hotpink sm:text-2xl">
               {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
@@ -266,6 +258,14 @@ export function CycleTracker() {
               </button>
               <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md sm:h-7 sm:w-7">
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
+              <button
+                onClick={() => setSetupOpen(true)}
+                className="bloom-luxury-btn hover-scale group relative inline-flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold text-white sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+              >
+                <Sparkles className="h-3 w-3 animate-bloom-sparkle sm:h-3.5 sm:w-3.5" />
+                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span>Log &amp; Settings</span>
               </button>
             </div>
           </div>
