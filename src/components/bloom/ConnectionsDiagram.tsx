@@ -80,6 +80,11 @@ function archPath(x1: number, y1: number, x2: number, y2: number, bow: number, r
 const TOOL_RADIUS = 5.5;
 const CENTER_RADIUS = 8;
 
+// viewBox is 100 x 50, but each node's HTML button is positioned with CSS percentages
+// relative to the container's own height — so y (0-50) must be rescaled to 0-100.
+const VIEW_H = 50;
+const topPct = (y: number) => `${(y / VIEW_H) * 100}%`;
+
 export function ConnectionsDiagram() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -246,7 +251,7 @@ export function ConnectionsDiagram() {
           className="absolute z-10 flex flex-col items-center gap-1"
           style={{
             left: `${CENTER.x}%`,
-            top: `${CENTER.y}%`,
+            top: topPct(CENTER.y),
             opacity: visible ? 1 : 0,
             transform: `translate(-50%, -50%) scale(${visible ? 1 : 0.5})`,
             transition: "opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.56,0.64,1)",
@@ -281,7 +286,7 @@ export function ConnectionsDiagram() {
             className="absolute z-10 flex flex-col items-center gap-1 focus:outline-none"
             style={{
               left: `${n.x}%`,
-              top: `${n.y}%`,
+              top: topPct(n.y),
               opacity: visible ? 1 : 0,
               transform: `translate(-50%, -50%) translateY(${visible ? 0 : 14}px)`,
               transition: `opacity 0.5s ease ${0.35 + i * 0.1}s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1) ${visible ? `${0.35 + i * 0.1}s` : "0s"}`,
