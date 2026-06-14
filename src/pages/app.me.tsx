@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Pencil, Sparkles, Droplet, Flame, Wallet,
   Heart, BookOpen, Flower2, Target, ChevronRight,
-  User, Crown, Bell, Settings as SettingsIcon, Shield, LifeBuoy, LogOut,
+  User, Crown, Bell, Settings as SettingsIcon, Shield, LifeBuoy, LogOut, RotateCcw,
   ArrowRight, Moon, Star, Smile, Dumbbell, PenLine, Check, Sprout, Wind,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
@@ -68,15 +68,26 @@ const settingsGroups: { items: { Icon: typeof User; label: string; href?: string
       { Icon: SettingsIcon, label: "Preferences" },
       { Icon: Shield, label: "Privacy & data" },
       { Icon: LifeBuoy, label: "Help & support" },
+      { Icon: RotateCcw, label: "Replay welcome tour" },
     ],
   },
   { items: [{ Icon: LogOut, label: "Log out" }], danger: true },
 ];
 
 export default function MePage() {
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, updateProfile } = useAuth();
   const displayName = profile?.name || user?.email?.split("@")[0] || "Bloom girl";
   const snapshots = useToolSnapshots();
+
+  // Lets you re-trigger the new-user onboarding popup at any time, for testing.
+  async function replayOnboarding() {
+    try {
+      localStorage.removeItem("bloomzein_onboarding");
+      localStorage.removeItem("bloomzein_visited_tools");
+    } catch {}
+    await updateProfile({ setup_done: false });
+    window.location.href = "/app/today";
+  }
 
   const [goal, setGoal] = useState<MeGoal>("maintain");
   useEffect(() => {
@@ -308,7 +319,13 @@ export default function MePage() {
               {group.items.map((item, i) => (
                 <button
                   key={item.label}
-                  onClick={item.label === "Log out" ? () => signOut() : undefined}
+                  onClick={
+                    item.label === "Log out"
+                      ? () => signOut()
+                      : item.label === "Replay welcome tour"
+                      ? () => replayOnboarding()
+                      : undefined
+                  }
                   className={[
                     "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-blush/60",
                     i > 0 ? "border-t border-petal/40" : "",
