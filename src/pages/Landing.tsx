@@ -574,9 +574,9 @@ const UNIVERSES: Universe[] = [
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
       { icon: Utensils, label: "Meals & Recipes" },
-      { icon: Apple, label: "Diet" },
-      { icon: Dumbbell, label: "Workout" },
       { icon: Footprints, label: "Movement" },
+      { icon: Dumbbell, label: "Workout" },
+      { icon: Apple, label: "Diet" },
     ],
   },
   {
