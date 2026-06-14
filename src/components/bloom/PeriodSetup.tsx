@@ -78,7 +78,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-[22rem] flex-col overflow-hidden rounded-[1.75rem] bg-white/55 shadow-2xl shadow-hotpink/20 backdrop-blur-xl animate-scale-in sm:max-w-sm"
+        className="relative flex w-full max-w-[22rem] flex-col overflow-hidden rounded-[1.75rem] bg-white/95 shadow-2xl shadow-hotpink/20 backdrop-blur-xl animate-scale-in sm:max-w-sm"
         style={{ maxHeight: "82vh" }}
       >
         <button onClick={onClose} className="absolute right-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
@@ -94,7 +94,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           {/* Calendar — simplified: only period range, ovulation day & today */}
-          <div className="animate-scale-in mt-2 rounded-xl bg-white/70 p-1.5 shadow-inner ring-1 ring-petal/60" style={{ animationDelay: "80ms" }}>
+          <div className="animate-scale-in mt-2 rounded-xl bg-white/90 p-1.5 shadow-inner ring-1 ring-petal/60" style={{ animationDelay: "80ms" }}>
             <div className="flex items-center justify-between px-1">
               <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="hover-scale grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
                 <ChevronLeft className="h-3 w-3" />
@@ -120,13 +120,13 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                     className={[
                       "relative flex aspect-square items-center justify-center rounded-full text-[10px] font-semibold transition-all duration-200 active:scale-90",
                       isPeriod
-                        ? "animate-scale-in bg-hotpink text-white shadow-sm"
+                        ? "animate-scale-in bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm"
                         : isOvulation
-                          ? "bg-pink-100 text-hotpink ring-2 ring-hotpink/50"
+                          ? "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200"
                           : c.outside
                             ? "text-rose/30 hover:bg-blush"
                             : "text-rose hover:bg-blush",
-                      isToday ? "ring-2 ring-magenta ring-offset-1" : "",
+                      isToday ? "ring-2 ring-amber-300 ring-offset-1" : "",
                     ].join(" ")}
                   >
                     {c.date.getDate()}
@@ -136,9 +136,9 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             </div>
             {/* Tiny legend — only what matters */}
             <div className="mt-2 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80">
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-hotpink" /> Period</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-pink-100 ring-2 ring-hotpink/50" /> Ovulation</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-magenta" /> Today</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200" /> Ovulation</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-amber-300" /> Today</span>
             </div>
           </div>
 
@@ -230,7 +230,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
         {/* Smart scroll guide — gently bounces while there's more to see */}
         {showScrollHint && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent pb-1 pt-6">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-white/95 to-transparent pb-1 pt-6">
             <ChevronDown className="h-4 w-4 animate-bounce text-hotpink" />
           </div>
         )}

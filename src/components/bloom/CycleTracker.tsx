@@ -287,12 +287,12 @@ export function CycleTracker() {
                     "relative aspect-square rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200 sm:text-xs",
                     "hover:scale-110 active:scale-95",
                     isPeriod
-                      ? "bg-hotpink text-white shadow-sm"
+                      ? "bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm"
                       : isOvulation
-                        ? "bg-pink-100 text-hotpink ring-2 ring-hotpink/50"
+                        ? "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200"
                         : "text-rose hover:bg-blush",
                     isSelected ? "scale-110 shadow-md animate-bloom-bounce" : "",
-                    isToday ? "ring-2 ring-magenta ring-offset-1" : "",
+                    isToday ? "ring-2 ring-amber-300 ring-offset-1" : "",
                   ].join(" ")}
                 >
                   {d.getDate()}
@@ -303,9 +303,9 @@ export function CycleTracker() {
 
           {/* Legend — only what matters */}
           <div className="mt-3 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80 sm:mt-4 sm:gap-4 sm:text-[10px]">
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-hotpink sm:h-3 sm:w-3" /> Period</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-pink-100 ring-2 ring-hotpink/50 sm:h-3 sm:w-3" /> Ovulation</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-magenta sm:h-3 sm:w-3" /> Today</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] sm:h-3 sm:w-3" /> Period</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200 sm:h-3 sm:w-3" /> Ovulation</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-amber-300 sm:h-3 sm:w-3" /> Today</span>
           </div>
         </div>
       </div>
