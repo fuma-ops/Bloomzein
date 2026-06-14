@@ -6,6 +6,7 @@ import {
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
+import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { ToolboxPreview } from "@/components/bloom/ToolboxPreview";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
@@ -379,13 +380,10 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Toolbox preview — glassy calendar + sidebar of tools, lights up & adapts to your cycle */}
-        <section
-          className="section-pink-shadow relative mt-4 overflow-hidden rounded-[2rem] bg-cover bg-center p-5 sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12"
-          style={{ backgroundImage: "url(/images/toolbox-bg.webp)" }}
-        >
+        {/* How it Connects — circular web diagram showing how every tool talks to the others */}
+        <section className="bloom-connections-bg relative mt-4 overflow-hidden rounded-[2rem] p-5 sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12">
           <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">your magic toolbox</p>
+            <p className="font-script text-2xl text-hotpink">how it all connects</p>
             <h2 className="mx-auto max-w-2xl font-script text-4xl leading-tight text-bloom-gradient sm:text-6xl">
               Every tool knows what the others know
             </h2>
@@ -394,39 +392,22 @@ export default function Landing() {
             </p>
           </div>
           <div className="mt-6 sm:mt-10">
-            <ToolboxPreview />
+            <ConnectionsDiagram />
           </div>
         </section>
 
-        {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR ──────────────── */}
-        <section id="features" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
+        {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR + TOOLBOX ──────────────── */}
+        <section
+          id="features"
+          className="section-pink-shadow relative mt-16 scroll-mt-24 overflow-hidden rounded-[2rem] bg-cover bg-center p-5 sm:mt-24 sm:rounded-[3rem] sm:p-8 md:p-12"
+          style={{ backgroundImage: "url(/images/toolbox-bg.webp)" }}
+        >
           <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
-          <div
-            className="bloom-pearl-card animate-card-pop-in mx-auto mt-8 max-w-4xl rounded-[2rem] p-4 sm:p-7"
-            style={{ background: "linear-gradient(135deg, oklch(0.94 0.06 350 / 0.55) 0%, oklch(0.88 0.1 340 / 0.35) 100%)" }}
-          >
-            <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-              <img
-                src="/images/landing-calendar.webp"
-                alt="Bloom & Zein calendar for May 2025 showing cycle, yoga, workout, journal, reminder, budget and goal events"
-                width={1100}
-                height={1100}
-                decoding="async"
-                className="animate-card-pop-in w-full self-center rounded-2xl object-contain shadow-lg"
-              />
-              <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-                <p className="font-script text-2xl text-hotpink sm:text-3xl">all your worlds, one calendar</p>
-                <p className="mt-1.5 text-sm font-medium text-magenta/80">
-                  Your cycle, workouts, journaling, money and little reminders all land on the same gentle calendar — so your whole life finally rhymes.
-                </p>
-                <a
-                  href="/app/calendar"
-                  className="bloom-luxury-btn hover-scale mt-4 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
-                >
-                  Open Calendar <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </a>
-              </div>
-            </div>
+          <p className="mx-auto mt-3 max-w-xl text-center text-sm font-medium text-magenta/80 sm:text-base">
+            Your cycle, workouts, journaling, money and little reminders all land on the same gentle calendar — tap a tool to see it bloom.
+          </p>
+          <div className="mt-6 sm:mt-10">
+            <ToolboxPreview />
           </div>
         </section>
 

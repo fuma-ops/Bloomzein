@@ -112,57 +112,121 @@ export function ToolboxPreview() {
     });
   };
 
+  // The calendar stays put for "cycle" (its whole purpose is to light it up).
+  // Picking any other tool swaps the calendar out for that tool's preview.
+  const showCalendar = activeTool === null || activeTool === "cycle";
+
   return (
     <div className="mx-auto w-full max-w-4xl">
       <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] border-none p-3 sm:rounded-[2.5rem] sm:p-5" style={{ background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)" }}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:gap-5">
-          {/* Calendar card */}
-          <div className="pearl-frame relative flex-1 rounded-2xl border-none bg-white/55 p-3 backdrop-blur-md sm:rounded-3xl sm:p-5">
-            <div className="relative z-10 mb-3 flex items-center justify-between">
-              <h3 className="font-script text-xl text-hotpink sm:text-2xl">{monthLabel}</h3>
-              <div className="flex items-center gap-1.5">
-                <button type="button" aria-label="Previous month" onClick={() => setMonthOffset((m) => m - 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button type="button" aria-label="Next month" onClick={() => setMonthOffset((m) => m + 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                {monthOffset !== 0 && (
-                  <button type="button" onClick={() => setMonthOffset(0)} className="rounded-full bg-white/60 px-2.5 py-1 text-[10px] font-bold text-rose shadow-sm backdrop-blur-md sm:text-xs">
-                    Today
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="relative z-10 grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-magenta/60 sm:text-xs">
-              {WEEKDAYS.map((d) => (
-                <div key={d} className="py-1">{d}</div>
-              ))}
-              {cells.map((date, i) => {
-                if (!date) return <div key={i} />;
-                const phase = activeTool === "cycle" ? phaseForDay(date, previewSettings) : null;
-                const colorClass = phase ? PHASE_CELL[phase] : "bg-white/40 text-magenta";
-                return (
-                  <div
-                    key={i}
-                    className={`flex aspect-square items-center justify-center rounded-lg text-[10px] font-bold transition-colors duration-500 sm:text-sm ${colorClass} ${isToday(date) ? "ring-2 ring-hotpink" : ""}`}
-                  >
-                    {date.getDate()}
+        {/* Sidebar above the content on phones (horizontal scroll), to its right on larger screens */}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:gap-5">
+          {/* Main content — either the calendar, or the active tool's feature preview */}
+          <div className="pearl-frame relative flex min-h-[19rem] flex-1 flex-col rounded-2xl border-none bg-white/55 p-3 backdrop-blur-md sm:min-h-[21rem] sm:rounded-3xl sm:p-5">
+            {showCalendar ? (
+              <div className="animate-fade-in relative z-10 flex flex-1 flex-col">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-script text-xl text-hotpink sm:text-2xl">{monthLabel}</h3>
+                  <div className="flex items-center gap-1.5">
+                    <button type="button" aria-label="Previous month" onClick={() => setMonthOffset((m) => m - 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button type="button" aria-label="Next month" onClick={() => setMonthOffset((m) => m + 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                    {monthOffset !== 0 && (
+                      <button type="button" onClick={() => setMonthOffset(0)} className="rounded-full bg-white/60 px-2.5 py-1 text-[10px] font-bold text-rose shadow-sm backdrop-blur-md sm:text-xs">
+                        Today
+                      </button>
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
 
-            {activeTool === "cycle" && cycleSettings && (
-              <div className="relative z-10 mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                {(Object.keys(PHASE_LABEL_SHORT) as Phase[]).map((p) => (
-                  <span key={p} className="flex items-center gap-1 text-[9px] font-bold text-magenta/70 sm:text-[11px]">
-                    <span className={`h-2 w-2 rounded-full ${PHASE_DOT[p]}`} aria-hidden />
-                    {PHASE_LABEL_SHORT[p]}
-                  </span>
-                ))}
+                <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-magenta/60 sm:text-xs">
+                  {WEEKDAYS.map((d) => (
+                    <div key={d} className="py-1">{d}</div>
+                  ))}
+                  {cells.map((date, i) => {
+                    if (!date) return <div key={i} />;
+                    const phase = activeTool === "cycle" ? phaseForDay(date, previewSettings) : null;
+                    const colorClass = phase ? PHASE_CELL[phase] : "bg-white/40 text-magenta";
+                    return (
+                      <div
+                        key={i}
+                        className={`flex aspect-square items-center justify-center rounded-lg text-[10px] font-bold transition-colors duration-500 sm:text-sm ${colorClass} ${isToday(date) ? "ring-2 ring-hotpink" : ""}`}
+                      >
+                        {date.getDate()}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {activeTool === "cycle" && cycleSettings && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                    {(Object.keys(PHASE_LABEL_SHORT) as Phase[]).map((p) => (
+                      <span key={p} className="flex items-center gap-1 text-[9px] font-bold text-magenta/70 sm:text-[11px]">
+                        <span className={`h-2 w-2 rounded-full ${PHASE_DOT[p]}`} aria-hidden />
+                        {PHASE_LABEL_SHORT[p]}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-3 flex-1">
+                  {!activeTool && (
+                    <p className="flex items-center justify-center gap-1.5 rounded-2xl bg-white/40 px-3 py-2.5 text-center text-xs font-semibold text-magenta/70 backdrop-blur-md sm:text-sm">
+                      <Sparkles className="h-3.5 w-3.5 text-hotpink" aria-hidden />
+                      Tap a tool to see your Bloom Calendar light up
+                    </p>
+                  )}
+
+                  {activeTool === "cycle" && !cycleSettings && (
+                    <div className="flex flex-col items-center gap-2 rounded-2xl bg-white/85 px-3 py-3 text-center shadow-lg backdrop-blur-md sm:flex-row sm:justify-center sm:gap-3">
+                      <p className="text-xs font-bold text-[#831843] sm:text-sm">When did your last period start?</p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          value={periodDateInput}
+                          onChange={(e) => setPeriodDateInput(e.target.value)}
+                          className="rounded-full border border-petal/60 bg-white px-2.5 py-1 text-xs font-semibold text-[#831843] outline-none"
+                        />
+                        <input
+                          type="number"
+                          min={20}
+                          max={40}
+                          value={cycleLengthInput}
+                          onChange={(e) => setCycleLengthInput(e.target.value)}
+                          className="w-14 rounded-full border border-petal/60 bg-white px-2.5 py-1 text-xs font-semibold text-[#831843] outline-none"
+                          aria-label="Cycle length in days"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCycleApply}
+                          disabled={!periodDateInput}
+                          className="rounded-full bg-hotpink px-3 py-1 text-xs font-bold text-white shadow-md disabled:opacity-40"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTool === "cycle" && cycleSettings && (
+                    <div className="flex flex-col items-center gap-2 rounded-2xl bg-white/85 px-3 py-2.5 text-center shadow-lg backdrop-blur-md sm:flex-row sm:justify-between sm:gap-3">
+                      <p className="text-xs font-bold text-[#831843] sm:text-sm">
+                        Your Bloom Calendar just colored itself — today is your <span className="text-hotpink">{PHASE_LABEL_SHORT[phaseForDay(today, cycleSettings)]}</span> phase.
+                      </p>
+                      <DiscoverButton href="/app/tools/cycle" />
+                    </div>
+                  )}
+                </div>
               </div>
+            ) : activeTool === "yoga" ? (
+              <YogaPreview phase={previewPhase} />
+            ) : activeTool === "workout" ? (
+              <WorkoutPreview phase={previewPhase} />
+            ) : (
+              <TeaserPreview slug={activeTool!} href={SIDEBAR_TOOLS.find((t) => t.slug === activeTool)!.href} />
             )}
           </div>
 
@@ -187,68 +251,6 @@ export function ToolboxPreview() {
             <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-petal/40 to-transparent sm:hidden" aria-hidden />
           </div>
         </div>
-
-        {/* Reserved preview slot — swaps content per active tool without overlapping the calendar */}
-        <div className="relative z-10 mt-3 min-h-[3rem] sm:mt-4">
-          {!activeTool && (
-            <p className="animate-fade-in flex items-center justify-center gap-1.5 rounded-2xl bg-white/40 px-3 py-2.5 text-center text-xs font-semibold text-magenta/70 backdrop-blur-md sm:text-sm">
-              <Sparkles className="h-3.5 w-3.5 text-hotpink" aria-hidden />
-              Tap a tool to see your Bloom Calendar light up
-            </p>
-          )}
-
-          {activeTool === "cycle" && !cycleSettings && (
-            <div className="animate-fade-in flex flex-col items-center gap-2 rounded-2xl bg-white/85 px-3 py-3 text-center shadow-lg backdrop-blur-md sm:flex-row sm:justify-center sm:gap-3">
-              <p className="text-xs font-bold text-[#831843] sm:text-sm">When did your last period start?</p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={periodDateInput}
-                  onChange={(e) => setPeriodDateInput(e.target.value)}
-                  className="rounded-full border border-petal/60 bg-white px-2.5 py-1 text-xs font-semibold text-[#831843] outline-none"
-                />
-                <input
-                  type="number"
-                  min={20}
-                  max={40}
-                  value={cycleLengthInput}
-                  onChange={(e) => setCycleLengthInput(e.target.value)}
-                  className="w-14 rounded-full border border-petal/60 bg-white px-2.5 py-1 text-xs font-semibold text-[#831843] outline-none"
-                  aria-label="Cycle length in days"
-                />
-                <button
-                  type="button"
-                  onClick={handleCycleApply}
-                  disabled={!periodDateInput}
-                  className="rounded-full bg-hotpink px-3 py-1 text-xs font-bold text-white shadow-md disabled:opacity-40"
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTool === "cycle" && cycleSettings && (
-            <div className="animate-fade-in flex flex-col items-center gap-2 rounded-2xl bg-white/85 px-3 py-2.5 text-center shadow-lg backdrop-blur-md sm:flex-row sm:justify-between sm:gap-3">
-              <p className="text-xs font-bold text-[#831843] sm:text-sm">
-                Your Bloom Calendar just colored itself — today is your <span className="text-hotpink">{PHASE_LABEL_SHORT[phaseForDay(today, cycleSettings)]}</span> phase.
-              </p>
-              <DiscoverButton href="/app/tools/cycle" />
-            </div>
-          )}
-
-          {activeTool === "yoga" && (
-            <YogaPreview phase={previewPhase} />
-          )}
-
-          {activeTool === "workout" && (
-            <WorkoutPreview phase={previewPhase} />
-          )}
-
-          {activeTool && TEASERS[activeTool] && (
-            <TeaserPreview slug={activeTool} href={SIDEBAR_TOOLS.find((t) => t.slug === activeTool)!.href} />
-          )}
-        </div>
       </div>
     </div>
   );
@@ -269,17 +271,17 @@ function DiscoverButton({ href }: { href: string }) {
 function YogaPreview({ phase }: { phase: Phase }) {
   const data = PHASE_YOGA[phase];
   return (
-    <div className="animate-fade-in flex flex-col items-center gap-3 rounded-2xl bg-white/85 p-3 shadow-lg backdrop-blur-md sm:flex-row sm:gap-4">
-      <div className="flex shrink-0 gap-2">
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left">
+      <div className="flex shrink-0 gap-3">
         {data.poses.map((slug) => (
-          <img key={slug} src={`/images/${slug}.webp`} alt="" loading="lazy" className="h-16 w-16 rounded-xl object-cover shadow-sm sm:h-20 sm:w-20" />
+          <img key={slug} src={`/images/${slug}.webp`} alt="" loading="lazy" className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-32 sm:w-32" />
         ))}
       </div>
-      <div className="flex flex-1 flex-col items-center gap-1 text-center sm:items-start sm:text-left">
-        <p className="text-xs font-bold text-hotpink sm:text-sm">{data.title}</p>
-        <p className="text-[11px] font-medium text-magenta/70 sm:text-xs">{data.blurb}</p>
+      <div className="flex flex-col items-center gap-2 sm:items-start">
+        <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
+        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm">{data.blurb}</p>
+        <DiscoverButton href="/app/tools/yoga" />
       </div>
-      <DiscoverButton href="/app/tools/yoga" />
     </div>
   );
 }
@@ -287,13 +289,13 @@ function YogaPreview({ phase }: { phase: Phase }) {
 function WorkoutPreview({ phase }: { phase: Phase }) {
   const data = PHASE_WORKOUT[phase];
   return (
-    <div className="animate-fade-in flex flex-col items-center gap-3 rounded-2xl bg-white/85 p-3 shadow-lg backdrop-blur-md sm:flex-row sm:gap-4">
-      <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-16 w-28 shrink-0 rounded-xl object-cover shadow-sm sm:h-20 sm:w-32" />
-      <div className="flex flex-1 flex-col items-center gap-1 text-center sm:items-start sm:text-left">
-        <p className="text-xs font-bold text-hotpink sm:text-sm">{data.title}</p>
-        <p className="text-[11px] font-medium text-magenta/70 sm:text-xs">{data.blurb}</p>
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left">
+      <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 shrink-0 rounded-2xl object-cover shadow-md sm:h-36 sm:w-56" />
+      <div className="flex flex-col items-center gap-2 sm:items-start">
+        <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
+        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm">{data.blurb}</p>
+        <DiscoverButton href="/app/tools/workout" />
       </div>
-      <DiscoverButton href="/app/tools/workout" />
     </div>
   );
 }
@@ -301,11 +303,12 @@ function WorkoutPreview({ phase }: { phase: Phase }) {
 function TeaserPreview({ slug, href }: { slug: string; href: string }) {
   const data = TEASERS[slug];
   return (
-    <div className="animate-fade-in flex flex-col items-center gap-3 rounded-2xl bg-white/85 p-3 text-center shadow-lg backdrop-blur-md sm:flex-row sm:justify-between sm:text-left">
-      <div>
-        <p className="text-xs font-bold text-hotpink sm:text-sm">{data.title}</p>
-        <p className="text-[11px] font-medium text-magenta/70 sm:text-xs">{data.text}</p>
-      </div>
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center">
+      <span className="grid h-16 w-16 place-items-center rounded-full text-white shadow-md" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
+        <CuteToolIcon slug={slug} className="h-9 w-9" />
+      </span>
+      <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
+      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm">{data.text}</p>
       <DiscoverButton href={href} />
     </div>
   );
