@@ -217,7 +217,7 @@ export function CycleTracker() {
           decoding="async"
           className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-white/20" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/80 via-white/45 to-white/10" />
         <div className="relative z-10 flex items-center justify-between gap-2 p-3 sm:p-5">
           <h2 className="font-script text-3xl text-hotpink sm:text-5xl">Cycle 🌸</h2>
         </div>
@@ -228,7 +228,7 @@ export function CycleTracker() {
           <h3 className="mt-1 font-script text-base leading-tight text-hotpink sm:text-3xl">
             Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
           </h3>
-          <p className="mt-1.5 font-script text-base leading-snug text-hotpink drop-shadow-[0_0_8px_rgba(236,72,153,0.35)] sm:mt-2 sm:text-2xl">
+          <p className="mt-1.5 font-script text-base font-semibold leading-snug text-magenta drop-shadow-[0_0_8px_rgba(236,72,153,0.4)] sm:mt-2 sm:text-2xl">
             {PHASE_INSIGHT[currentPhase]}
           </p>
         </div>
@@ -294,8 +294,16 @@ export function CycleTracker() {
                   ].join(" ")}
                 >
                   {d.getDate()}
-                  {isPeriod && <Droplet className="absolute bottom-0.5 right-0.5 h-2 w-2 text-white/80 sm:h-2.5 sm:w-2.5" />}
-                  {isOvulation && <Sparkles className="absolute bottom-0.5 right-0.5 h-2 w-2 text-violet-400/80 sm:h-2.5 sm:w-2.5" />}
+                  {isPeriod && (
+                    <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm sm:h-4 sm:w-4">
+                      <Droplet className="h-2 w-2 fill-red-500 text-red-500 sm:h-2.5 sm:w-2.5" />
+                    </span>
+                  )}
+                  {isOvulation && (
+                    <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm sm:h-4 sm:w-4">
+                      <Sparkles className="h-2 w-2 fill-violet-400 text-violet-400 sm:h-2.5 sm:w-2.5" />
+                    </span>
+                  )}
                 </button>
               );
             })}

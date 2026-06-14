@@ -135,8 +135,16 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                     ].join(" ")}
                   >
                     {c.date.getDate()}
-                    {isPeriod && <Droplet className="absolute bottom-0.5 right-0.5 h-2 w-2 text-white/80" />}
-                    {isOvulation && <Sparkles className="absolute bottom-0.5 right-0.5 h-2 w-2 text-violet-400/80" />}
+                    {isPeriod && (
+                      <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm">
+                        <Droplet className="h-2 w-2 fill-red-500 text-red-500" />
+                      </span>
+                    )}
+                    {isOvulation && (
+                      <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm">
+                        <Sparkles className="h-2 w-2 fill-violet-400 text-violet-400" />
+                      </span>
+                    )}
                   </button>
                 );
               })}
