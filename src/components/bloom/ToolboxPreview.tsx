@@ -373,16 +373,16 @@ function DiscoverButton({ href, className = "" }: { href: string; className?: st
 function YogaPreview({ phase }: { phase: Phase }) {
   const data = PHASE_YOGA[phase];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left">
-      <div className="flex shrink-0 gap-3">
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-8 sm:text-left lg:gap-14">
+      <div className="flex shrink-0 gap-3 lg:gap-5">
         {data.poses.map((slug) => (
-          <img key={slug} src={`/images/${slug}.webp`} alt="" loading="lazy" className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-32 sm:w-32" />
+          <img key={slug} src={`/images/${slug}.webp`} alt="" loading="lazy" className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-32 sm:w-32 lg:h-48 lg:w-48" />
         ))}
       </div>
-      <div className="flex flex-col items-center gap-2 sm:items-start">
-        <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
-        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm">{data.blurb}</p>
-        <DiscoverButton href="/app/tools/yoga" />
+      <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
+        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">{data.title}</p>
+        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
+        <DiscoverButton href="/app/tools/yoga" className="lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
     </div>
   );
@@ -391,12 +391,12 @@ function YogaPreview({ phase }: { phase: Phase }) {
 function WorkoutPreview({ phase }: { phase: Phase }) {
   const data = PHASE_WORKOUT[phase];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left">
-      <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 shrink-0 rounded-2xl object-cover shadow-md sm:h-36 sm:w-56" />
-      <div className="flex flex-col items-center gap-2 sm:items-start">
-        <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
-        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm">{data.blurb}</p>
-        <DiscoverButton href="/app/tools/workout" />
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-8 sm:text-left lg:gap-14">
+      <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 shrink-0 rounded-2xl object-cover shadow-md sm:h-36 sm:w-56 lg:h-56 lg:w-80" />
+      <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
+        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">{data.title}</p>
+        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
+        <DiscoverButton href="/app/tools/workout" className="lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
     </div>
   );
@@ -404,18 +404,18 @@ function WorkoutPreview({ phase }: { phase: Phase }) {
 
 function MealsPreview() {
   return (
-    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center">
-      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center lg:gap-6">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-8">
         {MEAL_PREVIEWS.map((meal) => (
-          <div key={meal.src} className="flex flex-col items-center gap-1">
-            <img src={meal.src} alt="" loading="lazy" className="h-14 w-14 rounded-2xl object-cover shadow-md sm:h-20 sm:w-20" />
-            <span className="text-[9px] font-bold text-magenta/70 sm:text-[11px]">{meal.label}</span>
+          <div key={meal.src} className="flex flex-col items-center gap-1 lg:gap-2">
+            <img src={meal.src} alt="" loading="lazy" className="h-14 w-14 rounded-2xl object-cover shadow-md sm:h-20 sm:w-20 lg:h-32 lg:w-32" />
+            <span className="text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:text-sm">{meal.label}</span>
           </div>
         ))}
       </div>
-      <p className="text-sm font-bold text-hotpink sm:text-lg">Meal Planner</p>
-      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm">Recipes and meal plans that adapt to your cycle, your cravings, and your goals.</p>
-      <DiscoverButton href="/app/tools/meals" />
+      <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">Meal Planner</p>
+      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-lg lg:text-base">Recipes and meal plans that adapt to your cycle, your cravings, and your goals.</p>
+      <DiscoverButton href="/app/tools/meals" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </div>
   );
 }
@@ -432,26 +432,26 @@ function BudgetPreview() {
   })();
 
   return (
-    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-6 sm:text-left">
-      <div className="flex shrink-0 items-center gap-3">
-        <div className="animate-bloom-pulse relative grid h-24 w-24 place-items-center rounded-full shadow-md sm:h-28 sm:w-28" style={{ background: gradient }}>
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[10px] font-bold text-hotpink shadow-inner sm:h-14 sm:w-14 sm:text-xs">
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-8 sm:text-left lg:gap-14">
+      <div className="flex shrink-0 items-center gap-3 lg:gap-6">
+        <div className="animate-bloom-pulse relative grid h-24 w-24 place-items-center rounded-full shadow-md sm:h-28 sm:w-28 lg:h-44 lg:w-44" style={{ background: gradient }}>
+          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[10px] font-bold text-hotpink shadow-inner sm:h-14 sm:w-14 sm:text-xs lg:h-24 lg:w-24 lg:text-sm">
             Budget
           </div>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 lg:gap-2.5">
           {BUDGET_SEGMENTS.map((seg) => (
-            <span key={seg.label} className="flex items-center gap-1.5 text-[9px] font-bold text-magenta/70 sm:text-[11px]">
-              <span className="h-2 w-2 rounded-full" style={{ background: seg.color }} aria-hidden />
+            <span key={seg.label} className="flex items-center gap-1.5 text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:gap-2 lg:text-sm">
+              <span className="h-2 w-2 rounded-full lg:h-3 lg:w-3" style={{ background: seg.color }} aria-hidden />
               {seg.label}
             </span>
           ))}
         </div>
       </div>
-      <div className="flex flex-col items-center gap-2 sm:items-start">
-        <p className="text-sm font-bold text-hotpink sm:text-lg">Budget Planner</p>
-        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm">See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.</p>
-        <DiscoverButton href="/app/tools/budget" />
+      <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
+        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">Budget Planner</p>
+        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.</p>
+        <DiscoverButton href="/app/tools/budget" className="lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
     </div>
   );
@@ -460,15 +460,15 @@ function BudgetPreview() {
 function TeaserPreview({ slug, href }: { slug: string; href: string }) {
   const data = TEASERS[slug];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 text-center">
-      <span className="animate-icon-wiggle grid h-24 w-24 place-items-center rounded-full text-white shadow-md sm:h-28 sm:w-28" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
-        <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16" />
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 text-center sm:flex-row sm:gap-8 sm:text-left lg:gap-14">
+      <span className="animate-icon-wiggle grid h-24 w-24 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-28 sm:w-28 lg:h-44 lg:w-44" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
+        <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16 lg:h-24 lg:w-24" />
       </span>
-      <div className="flex flex-col items-center gap-1.5">
-        <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
-        <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm">{data.text}</p>
+      <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
+        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">{data.title}</p>
+        <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{data.text}</p>
+        <DiscoverButton href={href} className="w-full max-w-xs justify-center sm:w-auto sm:max-w-none lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
-      <DiscoverButton href={href} className="w-full max-w-xs justify-center sm:max-w-sm" />
     </div>
   );
 }
