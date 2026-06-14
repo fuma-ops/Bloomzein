@@ -296,7 +296,7 @@ export default function Landing() {
                 return (
                   <article
                     key={u.key}
-                    className="pearl-frame animate-card-pop-in relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    className="pearl-frame animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                     style={{
                       animationDelay: `${i * 120}ms`,
                       background: "oklch(1 0 0 / 0.16)",
@@ -306,23 +306,22 @@ export default function Landing() {
                         "inset 0 1px 0 oklch(1 0 0 / 0.75), inset 1px 0 0 oklch(1 0 0 / 0.25), inset -1px 0 0 oklch(1 0 0 / 0.12), inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18), 0 -10px 26px -10px oklch(1 0 0 / 0.7), 0 10px 28px -12px var(--card-glow, oklch(0.65 0.22 350 / 0.5))",
                     } as CSSProperties}
                   >
-                    {/* per-card photo, faded into a soft pink wash so the text on top stays readable */}
+                    {/* per-card photo, shown at full strength */}
                     <img
                       src={u.image}
                       alt=""
                       aria-hidden
                       loading="lazy"
                       decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover opacity-35 sm:opacity-40"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, oklch(1 0 0 / 0.55) 0%, oklch(1 0 0 / 0.35) 45%, oklch(1 0 0 / 0.75) 100%)" }} />
-                    <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
-                    <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
+                    <h3 className="relative z-10 animate-bloom-float font-script text-2xl leading-none drop-shadow-[0_2px_6px_oklch(1_0_0_/_0.8)] sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent, animationDelay: `${i * 300}ms` }}>{u.title}</h3>
+                    <ul className="relative z-10 mt-2 flex flex-col items-center gap-1 sm:mt-4 sm:gap-2.5">
                       {u.items.map((it, ii) => {
                         const Icon = it.icon;
                         return (
-                          <li key={it.label} className="flex items-center gap-1 sm:gap-2">
-                            <span className="animate-icon-wiggle grid h-5 w-5 shrink-0 place-items-center rounded-full shadow-sm sm:h-7 sm:w-7" style={{ background: u.itemBg, animationDelay: `${ii * 220}ms` }}>
+                          <li key={it.label} className="flex items-center gap-1 rounded-full bg-white/30 px-2 py-1 backdrop-blur-md shadow-sm sm:gap-2 sm:px-3 sm:py-1.5">
+                            <span className="animate-icon-wiggle grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/40 shadow-sm backdrop-blur-md sm:h-7 sm:w-7" style={{ animationDelay: `${ii * 220}ms` }}>
                               <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
                             </span>
                             <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
@@ -333,7 +332,7 @@ export default function Landing() {
                     <a
                       href={u.href}
                       aria-label={`Explore ${u.title}`}
-                      className="hover-scale animate-cta-bounce relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/40 px-3 py-1.5 text-[10px] font-bold backdrop-blur-sm sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+                      className="hover-scale animate-cta-bounce relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/30 px-3 py-1.5 text-[10px] font-bold backdrop-blur-md sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
                       style={{ color: u.titleColor, animationDelay: `${i * 200}ms` }}
                     >
                       Discover
@@ -574,14 +573,14 @@ function PhoneMock() {
 interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
   key: string; title: string; href: string;
-  titleColor: string; titleAccent: string; itemBg: string; glowColor: string; image: string;
+  titleColor: string; titleAccent: string; glowColor: string; image: string;
   items: UniverseItem[];
 }
 
 const UNIVERSES: Universe[] = [
   {
     key: "body", title: "Body", href: "/app/tools/cycle",
-    titleColor: "#db2777", titleAccent: "#e60076", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)",
+    titleColor: "#db2777", titleAccent: "#e60076", glowColor: "oklch(0.68 0.24 350 / 0.55)",
     image: "/images/landing-card-body.webp",
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
@@ -592,7 +591,7 @@ const UNIVERSES: Universe[] = [
   },
   {
     key: "mind", title: "Mind", href: "/app/tools/diary",
-    titleColor: "#7c3aed", titleAccent: "#7c0cf2", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)",
+    titleColor: "#7c3aed", titleAccent: "#7c0cf2", glowColor: "oklch(0.6 0.22 300 / 0.55)",
     image: "/images/landing-card-mind.webp",
     items: [
       { icon: NotebookPen, label: "Journal" },
@@ -603,7 +602,7 @@ const UNIVERSES: Universe[] = [
   },
   {
     key: "life", title: "Life", href: "/app/calendar",
-    titleColor: "#e11d48", titleAccent: "#ff0a47", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)",
+    titleColor: "#e11d48", titleAccent: "#ff0a47", glowColor: "oklch(0.66 0.22 20 / 0.55)",
     image: "/images/landing-card-life.webp",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
