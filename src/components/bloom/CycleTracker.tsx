@@ -65,6 +65,48 @@ const PHASE_FLOW: Record<Exclude<Phase, null>, { title: string; blurb: string }>
   luteal: { title: "15-Minute Wind-Down Flow", blurb: "Slow things down and soothe tension as your body prepares to rest." },
 };
 
+// Same soft pink palette as the home page's "Everything blooms in one place" calendar preview.
+const PHASE_CELL_SOFT: Record<Exclude<Phase, null>, string> = {
+  period: "bg-hotpink/55 text-[#831843]",
+  follicular: "bg-petal/60 text-rose",
+  fertile: "bg-pink-100 text-hotpink",
+  ovulation: "bg-rose-200/70 text-magenta",
+  luteal: "bg-blush text-magenta/70",
+};
+
+// Phase-aware "For You" picks, paired with real photos from the app.
+const PHASE_RECOMMEND: Record<Exclude<Phase, null>, {
+  yoga: { title: string; img: string };
+  workout: { title: string; img: string };
+  meal: { title: string; img: string };
+}> = {
+  period: {
+    yoga: { title: "Soft yoga for cramps", img: "/images/pose-childs-pose.webp" },
+    workout: { title: "Light mobility & core", img: "/images/zone-core.png" },
+    meal: { title: "Iron-rich warm stew", img: "/images/meal-stew.jpg" },
+  },
+  follicular: {
+    yoga: { title: "Energising morning flow", img: "/images/pose-warrior-1.webp" },
+    workout: { title: "Full-body strength", img: "/images/zone-full-body.png" },
+    meal: { title: "Protein buddha bowl", img: "/images/meal-buddha.jpg" },
+  },
+  fertile: {
+    yoga: { title: "Power & balance flow", img: "/images/pose-tree.webp" },
+    workout: { title: "Glutes & legs burn", img: "/images/zone-glutes.png" },
+    meal: { title: "Fresh cute lunchbox", img: "/images/meal-lunchbox.jpg" },
+  },
+  ovulation: {
+    yoga: { title: "Dynamic energy flow", img: "/images/pose-warrior-2.webp" },
+    workout: { title: "High-intensity session", img: "/images/zone-arms.png" },
+    meal: { title: "Cozy energising oats", img: "/images/meal-oats.jpg" },
+  },
+  luteal: {
+    yoga: { title: "Calming wind-down flow", img: "/images/pose-cat-cow.webp" },
+    workout: { title: "Gentle toning", img: "/images/zone-back.png" },
+    meal: { title: "Comforting warm stew", img: "/images/meal-stew.jpg" },
+  },
+};
+
 const MOODS = [
   { key: "calm",      label: "Calm",      Icon: Leaf },
   { key: "happy",     label: "Happy",     Icon: Smile },
@@ -190,6 +232,7 @@ export function CycleTracker() {
   const MoodIconToday = MOODS.find((m) => m.key === mood)?.Icon ?? Smile;
   const moodLabelToday = MOODS.find((m) => m.key === mood)?.label ?? "Happy";
   const flow = PHASE_FLOW[currentPhase];
+  const recommend = PHASE_RECOMMEND[currentPhase];
 
   return (
     <div className="relative">
@@ -211,9 +254,9 @@ export function CycleTracker() {
       </div>
 
       {/* ============= Hero row: Today's Insight + Bloom progress ============= */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
         {/* Today's Insight */}
-        <div className="pearl-frame animate-scale-in relative flex min-h-[16rem] flex-1 flex-col justify-end overflow-hidden rounded-[2rem] lg:col-span-2 lg:min-h-[20rem]">
+        <div className="pearl-frame animate-scale-in relative col-span-1 flex min-h-[11rem] flex-1 flex-col justify-end overflow-hidden rounded-2xl sm:min-h-[16rem] sm:rounded-[2rem] lg:col-span-2 lg:min-h-[20rem]">
           <img
             src="/images/cycle-insight-hero.webp"
             alt=""
@@ -223,48 +266,48 @@ export function CycleTracker() {
             className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
           />
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/70 sm:to-white/10" />
-          <div className="relative z-10 p-5 sm:max-w-md sm:p-8">
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-rose">
-              <Sparkles className="h-3 w-3 animate-bloom-sparkle text-hotpink" /> TODAY'S INSIGHT
+          <div className="relative z-10 p-3 sm:max-w-md sm:p-8">
+            <p className="inline-flex items-center gap-1 text-[8px] font-bold tracking-widest text-rose sm:gap-1.5 sm:text-[10px]">
+              <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle text-hotpink sm:h-3 sm:w-3" /> TODAY'S INSIGHT
             </p>
-            <h3 className="mt-1 font-script text-3xl text-hotpink sm:text-4xl lg:text-5xl">
+            <h3 className="mt-1 font-script text-lg leading-tight text-hotpink sm:text-4xl lg:text-5xl">
               Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
             </h3>
-            <p className="mt-2 text-sm font-medium text-magenta/80 sm:text-base">
+            <p className="mt-1.5 text-[11px] font-medium leading-snug text-magenta/80 sm:mt-2 sm:text-base">
               {PHASE_INSIGHT[currentPhase]}
             </p>
           </div>
         </div>
 
         {/* Bloom progress + checklist */}
-        <div className="pearl-frame bloom-pearl-card animate-scale-in flex flex-col items-center gap-4 rounded-[2rem] p-5 sm:p-6" style={{ animationDelay: "60ms" }}>
+        <div className="pearl-frame bloom-pearl-card animate-scale-in col-span-1 flex flex-col items-center gap-2 rounded-2xl p-3 sm:gap-4 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "60ms" }}>
           <div
-            className="animate-bloom-pulse relative grid h-28 w-28 shrink-0 place-items-center rounded-full shadow-md sm:h-32 sm:w-32"
+            className="animate-bloom-pulse relative grid h-16 w-16 shrink-0 place-items-center rounded-full shadow-md sm:h-28 sm:w-28 lg:h-32 lg:w-32"
             style={{ background: `conic-gradient(var(--hotpink) 0% ${percent}%, var(--petal) ${percent}% 100%)` }}
           >
-            <div className="grid h-[5.25rem] w-[5.25rem] place-items-center rounded-full bg-white/95 text-center shadow-inner sm:h-[6rem] sm:w-[6rem]">
-              <span className="font-script text-3xl text-hotpink sm:text-4xl">{percent}%</span>
+            <div className="grid h-[3rem] w-[3rem] place-items-center rounded-full bg-white/95 text-center shadow-inner sm:h-[5.25rem] sm:w-[5.25rem] lg:h-[6rem] lg:w-[6rem]">
+              <span className="font-script text-base text-hotpink sm:text-3xl lg:text-4xl">{percent}%</span>
             </div>
           </div>
-          <p className="text-center font-script text-2xl text-hotpink">{bloomMessage(percent)}</p>
+          <p className="text-center font-script text-sm text-hotpink sm:text-2xl">{bloomMessage(percent)}</p>
 
-          <div className="mt-1 flex w-full flex-col gap-2">
+          <div className="mt-0.5 flex w-full flex-col gap-1 sm:mt-1 sm:gap-2">
             {checklistItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => toggleChecklist(item.key)}
                 className={[
-                  "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left text-xs font-semibold transition-all duration-200 active:scale-95",
+                  "flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-[9px] font-semibold transition-all duration-200 active:scale-95 sm:gap-2.5 sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs",
                   item.checked ? "bg-hotpink/10 text-hotpink" : "bg-blush/60 text-rose hover:bg-petal/60",
                 ].join(" ")}
               >
                 {item.checked ? (
-                  <CheckCircle2 className="animate-scale-in h-4 w-4 shrink-0 text-hotpink" />
+                  <CheckCircle2 className="animate-scale-in h-3 w-3 shrink-0 text-hotpink sm:h-4 sm:w-4" />
                 ) : (
-                  <Circle className="h-4 w-4 shrink-0 text-rose/40" />
+                  <Circle className="h-3 w-3 shrink-0 text-rose/40 sm:h-4 sm:w-4" />
                 )}
-                <item.Icon className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                <span className="flex-1">{item.label}</span>
+                <item.Icon className="hidden h-3.5 w-3.5 shrink-0 opacity-70 sm:block" />
+                <span className="flex-1 truncate">{item.label}</span>
               </button>
             ))}
           </div>
@@ -272,7 +315,7 @@ export function CycleTracker() {
       </div>
 
       {/* ============= Your Cycle Journey ============= */}
-      <div className="bloom-pearl-card animate-scale-in mt-5 rounded-[2rem] p-5 sm:p-7" style={{ animationDelay: "100ms" }}>
+      <div className="pearl-frame bloom-pearl-card animate-scale-in relative mt-5 overflow-hidden rounded-[2rem] p-5 sm:p-7" style={{ animationDelay: "100ms" }}>
         <h3 className="mb-8 font-script text-3xl text-hotpink sm:text-4xl">Your Cycle Journey</h3>
         <div className="relative px-2 pt-7">
           {/* connecting line */}
@@ -315,51 +358,51 @@ export function CycleTracker() {
       </div>
 
       {/* ============= Flow card + Calendar ============= */}
-      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
         {/* 15-Minute Flow */}
-        <div className="bloom-pearl-card animate-scale-in flex flex-col items-center gap-4 rounded-[2rem] p-5 text-center sm:p-6 lg:col-span-1" style={{ animationDelay: "140ms" }}>
+        <div className="bloom-pearl-card animate-scale-in col-span-1 flex flex-col items-center gap-2 rounded-2xl p-3 text-center sm:gap-4 sm:rounded-[2rem] sm:p-6 lg:col-span-1" style={{ animationDelay: "140ms" }}>
           <span
-            className="animate-icon-wiggle grid h-20 w-20 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-24 sm:w-24"
+            className="animate-icon-wiggle grid h-10 w-10 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-20 sm:w-20 lg:h-24 lg:w-24"
             style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}
           >
-            <Flower2 className="h-10 w-10 sm:h-12 sm:w-12" />
+            <Flower2 className="h-5 w-5 sm:h-10 sm:w-10 lg:h-12 lg:w-12" />
           </span>
           <div>
-            <p className="font-script text-2xl text-hotpink sm:text-3xl">{flow.title}</p>
-            <p className="mt-1 text-xs font-medium text-magenta/70 sm:text-sm">{flow.blurb}</p>
+            <p className="font-script text-sm leading-tight text-hotpink sm:text-2xl lg:text-3xl">{flow.title}</p>
+            <p className="mt-0.5 hidden text-xs font-medium text-magenta/70 sm:block sm:text-sm">{flow.blurb}</p>
           </div>
           <a
             href="/app/tools/yoga"
-            className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"
+            className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-bold text-white sm:px-5 sm:py-2.5 sm:text-sm"
           >
             Start Now
           </a>
         </div>
 
-        {/* Calendar card — same glassy pearl effect as "Everything blooms in one place" */}
-        <div className="pearl-frame bloom-pearl-card animate-scale-in relative overflow-hidden rounded-[2rem] p-5 sm:p-7 lg:col-span-2" style={{ animationDelay: "180ms" }}>
+        {/* Calendar card — same compact, glassy pearl effect as "Everything blooms in one place" */}
+        <div className="pearl-frame bloom-pearl-card animate-scale-in relative col-span-1 overflow-hidden rounded-2xl p-3 sm:rounded-[2rem] sm:p-5 lg:col-span-2" style={{ animationDelay: "180ms" }}>
           {/* Month nav */}
-          <div className="mb-4 flex items-center justify-center gap-4">
-            <button onClick={() => shift(-1)} className="hover-scale grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal">
-              <ChevronLeft className="h-4 w-4" />
+          <div className="mb-2 flex items-center justify-between gap-2 sm:mb-3">
+            <button onClick={() => shift(-1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal sm:h-7 sm:w-7">
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
-            <div className="min-w-[140px] text-center font-script text-3xl text-hotpink">
+            <div className="text-center font-script text-base text-hotpink sm:text-xl">
               {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
             </div>
-            <button onClick={() => shift(1)} className="hover-scale grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal">
-              <ChevronRight className="h-4 w-4" />
+            <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal sm:h-7 sm:w-7">
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
 
           {/* Weekday header */}
-          <div className="mb-2 grid grid-cols-7 text-center text-[11px] font-bold tracking-widest text-rose/70">
+          <div className="mb-1 grid grid-cols-7 text-center text-[8px] font-bold tracking-widest text-rose/70 sm:text-[10px]">
             {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
           </div>
 
           {/* Calendar grid (animated slide on month change via key) */}
           <div
             key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
-            className="grid grid-cols-7 gap-1.5 sm:gap-2 animate-fade-in"
+            className="grid grid-cols-7 gap-1 animate-fade-in"
           >
             {days.map((d, i) => {
               if (!d) return <div key={i} />;
@@ -368,8 +411,7 @@ export function CycleTracker() {
               const isSelected = sameDay(d, selected);
               const isToday = sameDay(d, today);
               const emphasizeFertile = settings.trackerMode === "conception" && (phase === "fertile" || phase === "ovulation");
-              const meta = phase ? PHASE_META[phase] : null;
-              const Icon = meta?.Icon;
+              const Icon = PHASE_META[phase].Icon;
               const isPeak = phase === "ovulation";
 
               return (
@@ -377,24 +419,25 @@ export function CycleTracker() {
                   key={i}
                   onClick={() => setSelected(d)}
                   className={[
-                    "relative aspect-square rounded-2xl flex flex-col items-center justify-center text-xs font-semibold transition-all duration-200",
+                    "relative aspect-square rounded-lg flex flex-col items-center justify-center text-[9px] font-bold transition-all duration-200 sm:text-xs",
                     "hover:scale-110 active:scale-95",
                     isSelected ? "scale-110 ring-2 ring-hotpink shadow-md animate-bloom-bounce" : "",
                     isFuture && phase === "period"
-                      ? "border-2 border-dashed border-hotpink/70 bg-pink-50 text-hotpink"
+                      ? "border border-dashed border-hotpink/70 bg-pink-50 text-hotpink"
                       : isFuture
                         ? "border border-dashed border-rose/40 text-rose bg-white/60"
-                        : meta?.color ?? "bg-white text-rose",
+                        : PHASE_CELL_SOFT[phase],
                     isPeak ? "animate-bloom-peak" : "",
                     emphasizeFertile ? "ring-2 ring-magenta/60" : "",
                     isToday ? "shadow-[0_0_0_2px_oklch(1_0_0/0.9),0_2px_8px_-1px_oklch(0.62_0.24_0/0.45)]" : "",
                   ].join(" ")}
                 >
+                  {Icon && <Icon className={`absolute right-0.5 top-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 ${isFuture ? "opacity-40" : "opacity-60"}`} aria-hidden />}
                   <span className="leading-none">{d.getDate()}</span>
-                  {Icon && <Icon className={`h-3 w-3 mt-0.5 ${isFuture ? "opacity-50" : "opacity-95"}`} />}
                   {isPeak && (
-                    <span className="absolute -top-2 inline-flex items-center gap-0.5 rounded-full bg-magenta px-1.5 py-0.5 text-[8px] font-bold text-white shadow">
-                      <Sparkles className="h-2 w-2" /> PEAK
+                    <span className="absolute -top-1.5 inline-flex h-3 w-3 items-center justify-center rounded-full bg-magenta text-white shadow sm:-top-2 sm:h-auto sm:w-auto sm:gap-0.5 sm:px-1.5 sm:py-0.5 sm:text-[8px] sm:font-bold">
+                      <Sparkles className="h-2 w-2" />
+                      <span className="hidden sm:inline">PEAK</span>
                     </span>
                   )}
                 </button>
@@ -403,10 +446,10 @@ export function CycleTracker() {
           </div>
 
           {/* Legend */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] font-bold tracking-wider text-rose/80">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[8px] font-bold tracking-wider text-rose/80 sm:mt-5 sm:gap-x-4 sm:gap-y-2 sm:text-[10px]">
             {(Object.entries(PHASE_META) as [Exclude<Phase, null>, typeof PHASE_META[Exclude<Phase, null>]][]).map(([k, v]) => (
-              <span key={k} className="inline-flex items-center gap-1.5">
-                <span className={`h-3 w-3 rounded-full ${v.color}`} />
+              <span key={k} className="inline-flex items-center gap-1 sm:gap-1.5">
+                <span className={`h-2 w-2 rounded-full sm:h-3 sm:w-3 ${v.color}`} />
                 {v.label}
               </span>
             ))}
@@ -415,93 +458,93 @@ export function CycleTracker() {
       </div>
 
       {/* ============= Pills & Contraceptive + Space Stats ============= */}
-      <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5">
         {/* Daily pill / contraceptive */}
-        <div className="bloom-pearl-card animate-scale-in rounded-[2rem] p-5 sm:p-6" style={{ animationDelay: "220ms" }}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={`grid h-11 w-11 place-items-center rounded-full transition-all duration-300 ${pillTaken ? "bg-hotpink text-white scale-100" : "bg-blush text-hotpink"}`}>
-                <Pill className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-script text-2xl text-hotpink leading-none">Daily {pillLabel}</p>
-                <p className="text-xs text-rose mt-0.5">
-                  {settings.contraceptiveReminder ? `Reminder · ${settings.reminderHour}` : "Reminder off"}
-                </p>
-              </div>
+        <div className="bloom-pearl-card animate-scale-in rounded-2xl p-3 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "220ms" }}>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-all duration-300 sm:h-11 sm:w-11 ${pillTaken ? "bg-hotpink text-white scale-100" : "bg-blush text-hotpink"}`}>
+              <Pill className="h-4 w-4 sm:h-5 sm:w-5" />
+            </span>
+            <div>
+              <p className="font-script text-base leading-none text-hotpink sm:text-2xl">Daily {pillLabel}</p>
+              <p className="mt-0.5 hidden text-xs text-rose sm:block">
+                {settings.contraceptiveReminder ? `Reminder · ${settings.reminderHour}` : "Reminder off"}
+              </p>
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:mt-4 sm:justify-between sm:gap-0">
             <span
               key={String(pillTaken)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold transition-all sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs ${
                 pillTaken ? "bg-green-100 text-green-600 animate-scale-in" : "bg-blush text-rose"
               }`}
             >
-              <Heart className="h-3 w-3" />
+              <Heart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               {pillTaken ? "Taken today" : "Not taken yet"}
             </span>
             <button
               onClick={() => setPillTaken((v) => !v)}
-              className="hover-scale inline-flex items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-xs font-semibold text-hotpink transition hover:bg-petal"
+              className="hover-scale inline-flex items-center gap-1 rounded-full bg-blush px-2 py-0.5 text-[9px] font-semibold text-hotpink transition hover:bg-petal sm:px-3 sm:py-1.5 sm:text-xs"
             >
-              <Undo2 className="h-3 w-3" />
-              {pillTaken ? "Undo Take" : "Mark Taken"}
+              <Undo2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              {pillTaken ? "Undo" : "Mark Taken"}
             </button>
           </div>
         </div>
 
         {/* Space Stats */}
-        <div className="bloom-pearl-card animate-scale-in rounded-[2rem] p-5 sm:p-6" style={{ animationDelay: "260ms" }}>
-          <p className="mb-3 font-script text-2xl text-hotpink">Space Stats ✿</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
-                <CalendarDays className="h-4 w-4" />
+        <div className="bloom-pearl-card animate-scale-in rounded-2xl p-3 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "260ms" }}>
+          <p className="mb-2 font-script text-base text-hotpink sm:mb-3 sm:text-2xl">Space Stats ✿</p>
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
+            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-9 sm:w-9">
+                <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
               </span>
               <div>
-                <p className="text-[10px] font-bold tracking-wider text-rose">CYCLE DAY</p>
-                <p className="font-script text-xl text-hotpink leading-none">{cycleDay} / {settings.cycleLength}</p>
+                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">CYCLE DAY</p>
+                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{cycleDay}/{settings.cycleLength}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-bloom-pulse">
-                <Droplet className="h-4 w-4 fill-hotpink/30" />
+            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-bloom-pulse sm:h-9 sm:w-9">
+                <Droplet className="h-3 w-3 fill-hotpink/30 sm:h-4 sm:w-4" />
               </span>
               <div>
-                <p className="text-[10px] font-bold tracking-wider text-rose">NEXT PERIOD</p>
-                <p className="font-script text-xl text-hotpink leading-none">{daysToPeriod}d</p>
+                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">NEXT PERIOD</p>
+                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{daysToPeriod}d</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-magenta/10 text-magenta">
-                <Flower2 className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-magenta/10 text-magenta sm:h-9 sm:w-9">
+                <Flower2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </span>
               <div>
-                <p className="text-[10px] font-bold tracking-wider text-rose">PHASE</p>
-                <p className="font-script text-xl text-hotpink leading-none">{PHASE_LABEL[currentPhase]}</p>
+                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">PHASE</p>
+                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{PHASE_LABEL[currentPhase]}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
-                <MoodIconToday className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-9 sm:w-9">
+                <MoodIconToday className="h-3 w-3 sm:h-4 sm:w-4" />
               </span>
               <div>
-                <p className="text-[10px] font-bold tracking-wider text-rose">MOOD</p>
-                <p className="font-script text-xl text-hotpink leading-none">{moodLabelToday}</p>
+                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">MOOD</p>
+                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{moodLabelToday}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ============= Mood ============= */}
-      <div className="bloom-pearl-card animate-scale-in mt-5 rounded-[2rem] p-5 sm:p-7" style={{ animationDelay: "300ms" }}>
-        <p className="text-[10px] font-bold tracking-widest text-rose">
-          {today.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}
-        </p>
-        <p className="font-script text-3xl text-hotpink mt-1">how is your mood today?</p>
-        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-8">
+      {/* ============= Mood — compact single line ============= */}
+      <div className="bloom-pearl-card animate-scale-in mt-5 rounded-2xl p-3 sm:rounded-[2rem] sm:p-5" style={{ animationDelay: "300ms" }}>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="font-script text-lg text-hotpink sm:text-2xl">How's your mood today?</p>
+          <p className="hidden text-[9px] font-bold tracking-widest text-rose/60 sm:block">
+            {today.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:gap-2">
           {MOODS.map((m) => {
             const active = mood === m.key;
             const MoodIcon = m.Icon;
@@ -510,19 +553,12 @@ export function CycleTracker() {
                 key={m.key}
                 onClick={() => setMood(m.key)}
                 className={[
-                  "group flex flex-col items-center gap-1 rounded-2xl p-2 transition-all duration-200 active:scale-95",
-                  active ? "bg-hotpink/10 ring-2 ring-hotpink animate-bloom-bounce" : "bg-blush/60 hover:bg-petal/70 hover:scale-105",
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-95 sm:px-3.5 sm:text-xs",
+                  active ? "bg-hotpink text-white animate-bloom-bounce" : "bg-blush/60 text-rose hover:bg-petal/70",
                 ].join(" ")}
               >
-                <span
-                  className={[
-                    "grid h-9 w-9 place-items-center rounded-full transition-transform",
-                    active ? "bg-hotpink text-white scale-110" : "bg-white text-hotpink ring-1 ring-petal group-hover:scale-110",
-                  ].join(" ")}
-                >
-                  <MoodIcon className="h-4 w-4" />
-                </span>
-                <span className={`text-[10px] font-semibold ${active ? "text-hotpink" : "text-rose"}`}>{m.label}</span>
+                <MoodIcon className="h-3.5 w-3.5" />
+                {m.label}
               </button>
             );
           })}
@@ -560,28 +596,34 @@ export function CycleTracker() {
       {/* For You */}
       <div className="mt-8">
         <h3 className="font-script text-4xl text-hotpink mb-3">For You ✿</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {[
-            { t: "Soft yoga for cramps", d: "10-min gentle flow to ease your body.", Icon: Flower2 },
-            { t: "Iron-rich snacks",     d: "Cute recipes for your period week.",   Icon: Leaf },
-            { t: "Why you feel extra today", d: "A gentle hormone explainer.",      Icon: Sparkles },
+            { tag: "YOGA", t: recommend.yoga.title, img: recommend.yoga.img, href: "/app/tools/yoga" },
+            { tag: "WORKOUT", t: recommend.workout.title, img: recommend.workout.img, href: "/app/tools/workout" },
+            { tag: "MEALS", t: recommend.meal.title, img: recommend.meal.img, href: "/app/tools/meals" },
           ].map((p, i) => (
-            <div
+            <a
               key={p.t}
-              className="rounded-[1.75rem] bg-white/85 p-5 shadow-xl shadow-rose/10 backdrop-blur transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-hotpink/20 animate-fade-in"
+              href={p.href}
+              className="pearl-frame animate-fade-in group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl shadow-lg shadow-rose/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-hotpink/20 sm:aspect-square lg:aspect-[4/5]"
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <div className="mb-3 flex items-center gap-2">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-hotpink/10 text-hotpink">
-                  <p.Icon className="h-5 w-5" />
+              <img
+                src={p.img}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+              <div className="relative z-10 p-2.5 sm:p-4">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[8px] font-bold tracking-wider text-hotpink sm:text-[10px]">
+                  <Sparkles className="h-2.5 w-2.5" /> {p.tag}
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blush px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-hotpink">
-                  <Sparkles className="h-3 w-3" /> FOR YOU
-                </span>
+                <p className="mt-1 font-script text-sm leading-tight text-white sm:mt-1.5 sm:text-xl">{p.t}</p>
               </div>
-              <p className="font-script text-2xl text-hotpink">{p.t}</p>
-              <p className="text-sm text-rose mt-1">{p.d}</p>
-            </div>
+            </a>
           ))}
         </div>
       </div>
