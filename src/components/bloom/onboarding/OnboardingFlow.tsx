@@ -26,17 +26,18 @@ function todayISO() {
 }
 
 // Glassmorphism bottom sheet — rises over a blurred view of the app behind it,
-// frosted glass surface with a soft top sheen and a drag handle.
+// frosted glass surface with a soft top sheen, drifting bubbles and a drag handle.
 function OnboardingSheet({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-[100]">
       <div className="absolute inset-0 bg-[#831843]/25 backdrop-blur-sm" />
-      <div className="absolute inset-x-0 bottom-0 mx-auto flex h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[2rem] border-t border-white/60 bg-white/75 shadow-2xl shadow-hotpink/30 backdrop-blur-xl animate-bloom-sheet-rise">
+      <div className="absolute inset-x-0 bottom-0 mx-auto flex h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[2rem] border-t border-white/60 bg-white/75 shadow-[0_-20px_60px_-15px_oklch(0.62_0.24_0_/_0.45)] backdrop-blur-xl animate-bloom-sheet-rise">
+        <BloomBubbles count={6} className="opacity-60" />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
         <div className="flex shrink-0 justify-center pt-3 pb-1">
           <div className="h-1.5 w-10 rounded-full bg-hotpink/25" />
         </div>
-        <div className="relative flex-1 overflow-hidden">{children}</div>
+        <div className="relative min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
     </div>
   );
@@ -70,6 +71,21 @@ function BloomMedallion({ size = 88, flowerSize, spin = false }: { size?: number
         className={`text-hotpink ${spin ? "animate-bloom-flower-spin" : ""}`}
       />
     </div>
+  );
+}
+
+// Cycle Tracker as the "brain" of the reveal — the other tools orbit around it,
+// pulsing gently to show it's the one organising everything else.
+function CycleBrainMedallion({ size = 104 }: { size?: number }) {
+  return (
+    <span className="relative grid place-items-center" style={{ width: size, height: size }}>
+      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-[1.75rem] border-2 border-hotpink/50" />
+      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-[1.75rem] border-2 border-hotpink/50" style={{ animationDelay: "1.2s" }} />
+      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-[1.75rem] border-2 border-hotpink/50" style={{ animationDelay: "2.4s" }} />
+      <span className="clay-blob relative grid h-full w-full place-items-center rounded-[1.75rem] text-white shadow-xl shadow-hotpink/40">
+        <CuteToolIcon slug="cycle" className="h-12 w-12" />
+      </span>
+    </span>
   );
 }
 
@@ -135,7 +151,7 @@ function Screen1({ onNext }: { onNext: () => void }) {
       <button
         type="button"
         onClick={onNext}
-        className="bloom-luxury-btn mt-10 w-full max-w-xs px-8 py-3.5 text-base font-medium text-white"
+        className="bloom-luxury-btn animate-cta-glow mt-10 w-full max-w-xs px-8 py-3.5 text-base font-medium text-white"
       >
         Get started
       </button>
@@ -203,7 +219,7 @@ function Screen2({
         type="button"
         onClick={onNext}
         disabled={!cycleData.lastPeriod}
-        className="bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40"
+        className={`bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${cycleData.lastPeriod ? "animate-cta-glow" : ""}`}
       >
         Continue
       </button>
@@ -260,7 +276,7 @@ function Screen3({
         type="button"
         onClick={onNext}
         disabled={!goal}
-        className="bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40"
+        className={`bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${goal ? "animate-cta-glow" : ""}`}
       >
         Let's go
       </button>
@@ -271,7 +287,7 @@ function Screen3({
 // ── Screen 4 — The reveal ───────────────────────────────────────────
 const ORBIT_SIZE = 260;
 const ORBIT_RADIUS = 100;
-const ORBIT_ORDER = ["workout", "diet", "meals", "calendar", "reminders", "diaries", "yoga", "budget"];
+const ORBIT_ORDER = ["workout", "diet", "meals", "reminders", "diaries", "yoga", "budget"];
 const ORBIT_POSITIONS = ORBIT_ORDER.map((_, i) => {
   const angle = (Math.PI * 2 * i) / ORBIT_ORDER.length; // 0 = top, clockwise
   return { x: Math.round(Math.sin(angle) * ORBIT_RADIUS), y: Math.round(-Math.cos(angle) * ORBIT_RADIUS) };
@@ -289,12 +305,12 @@ function Screen4({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       <div className="relative" style={{ width: ORBIT_SIZE, height: ORBIT_SIZE }}>
-        {/* The flower spins in place at the center */}
+        {/* The Cycle Tracker sits at the center as the brain organising every tool */}
         <div className="absolute inset-0 flex items-center justify-center animate-onboarding-icon-pop">
-          <BloomMedallion size={104} spin />
+          <CycleBrainMedallion size={104} />
         </div>
 
-        {/* Tools and their connector lines slowly revolve around the flower together */}
+        {/* Tools and their connector lines slowly revolve around the cycle tracker together */}
         <div className="absolute inset-0 animate-orbit-spin">
           <svg viewBox={`0 0 ${ORBIT_SIZE} ${ORBIT_SIZE}`} className="absolute inset-0 h-full w-full">
             {ORBIT_POSITIONS.map((pos, i) => (
@@ -335,15 +351,15 @@ function Screen4({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="mt-2 animate-onboarding-text">
-        <p className="font-script text-2xl text-hotpink">Bloomzein is ready.</p>
-        <p className="mt-1 text-sm font-light text-rose/70">Everything adapts to you automatically.</p>
+        <p className="font-script text-2xl text-hotpink">Your cycle is the brain.</p>
+        <p className="mt-1 text-sm font-light text-rose/70">Bloomzein is setting up the right plan for your phase, everywhere.</p>
       </div>
 
       {ctaVisible && (
         <button
           type="button"
           onClick={onNext}
-          className="bloom-luxury-btn mt-8 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
+          className="bloom-luxury-btn animate-cta-glow mt-8 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
         >
           Discover my space
         </button>

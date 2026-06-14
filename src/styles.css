@@ -415,6 +415,16 @@
   transform-origin: 50% 50%;
 }
 
+/* Soft pulsing rings radiating outward — used to give the "brain" of the reveal some life */
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); opacity: 0.55; }
+  70% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@utility animate-pulse-ring {
+  animation: pulse-ring 3.6s ease-out infinite;
+}
+
 /* Tool icons pop in, staggered via animation-delay */
 @keyframes onboarding-icon-pop {
   0% { opacity: 0; transform: scale(0.3); }
