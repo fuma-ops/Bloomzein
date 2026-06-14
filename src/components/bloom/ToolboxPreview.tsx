@@ -22,12 +22,12 @@ const SIDEBAR_TOOLS: SidebarTool[] = [
   { slug: "meals", label: "Meals", href: "/app/tools/meals" },
 ];
 
-// Same pink/rose/magenta palette + icons as the real Cycle tracker (CycleTracker.tsx PHASE_META) — no extra hues.
+// Same pink/rose/magenta palette + icons as the real Cycle tracker (CycleTracker.tsx PHASE_META) — no extra hues, softened for the calendar grid.
 const PHASE_CELL: Record<Phase, string> = {
-  period: "bg-hotpink text-white",
-  follicular: "bg-petal/70 text-rose",
+  period: "bg-hotpink/55 text-[#831843]",
+  follicular: "bg-petal/60 text-rose",
   fertile: "bg-pink-100 text-hotpink",
-  ovulation: "bg-rose-200 text-magenta",
+  ovulation: "bg-rose-200/70 text-magenta",
   luteal: "bg-blush text-magenta/70",
 };
 
@@ -147,7 +147,7 @@ export function ToolboxPreview() {
         {/* Sidebar above the content on phones (wrapping, centered), to its right on larger screens */}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:gap-5">
           {/* Main content — either the calendar, or the active tool's feature preview */}
-          <div className="pearl-frame relative flex min-h-[19rem] flex-1 flex-col rounded-2xl border-none bg-white/55 p-3 backdrop-blur-md sm:min-h-[21rem] sm:rounded-3xl sm:p-5">
+          <div className="pearl-frame relative flex min-h-[19rem] flex-1 flex-col overflow-hidden rounded-2xl border-none bg-white/55 p-3 backdrop-blur-md sm:min-h-[21rem] sm:rounded-3xl sm:p-5">
             {showCalendar ? (
               <div className="animate-fade-in relative z-10 flex flex-1 flex-col">
                 <div className="mb-3 flex items-center justify-between">
@@ -175,11 +175,13 @@ export function ToolboxPreview() {
                     if (!date) return <div key={i} />;
                     const phase = activeTool === "cycle" ? phaseForDay(date, previewSettings) : null;
                     const colorClass = phase ? PHASE_CELL[phase] : "bg-white/40 text-magenta";
+                    const PhaseIcon = phase ? PHASE_ICON[phase] : null;
                     return (
                       <div
                         key={i}
-                        className={`flex aspect-square items-center justify-center rounded-lg text-[10px] font-bold transition-colors duration-500 sm:text-sm ${colorClass} ${isToday(date) ? "ring-2 ring-hotpink" : ""}`}
+                        className={`relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-bold transition-all duration-500 sm:text-sm ${colorClass} ${isToday(date) ? "shadow-[0_0_0_2px_oklch(1_0_0/0.9),0_2px_8px_-1px_oklch(0.62_0.24_0/0.45)]" : ""}`}
                       >
+                        {PhaseIcon && <PhaseIcon className="absolute right-0.5 top-0.5 h-2 w-2 opacity-60 sm:h-2.5 sm:w-2.5" aria-hidden />}
                         {date.getDate()}
                       </div>
                     );
@@ -356,11 +358,11 @@ function DatePickerPopover({ value, onSelect, onClose }: { value: Date | null; o
   );
 }
 
-function DiscoverButton({ href }: { href: string }) {
+function DiscoverButton({ href, className = "" }: { href: string; className?: string }) {
   return (
     <a
       href={href}
-      className="hover-scale animate-cta-bounce inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md sm:text-sm"
+      className={`hover-scale animate-cta-bounce inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md sm:text-sm ${className}`}
     >
       Discover more
       <ArrowRight className="animate-arrow-nudge h-3.5 w-3.5" />
@@ -458,13 +460,15 @@ function BudgetPreview() {
 function TeaserPreview({ slug, href }: { slug: string; href: string }) {
   const data = TEASERS[slug];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center">
-      <span className="animate-icon-wiggle grid h-16 w-16 place-items-center rounded-full text-white shadow-md" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
-        <CuteToolIcon slug={slug} className="h-9 w-9" />
+    <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 text-center">
+      <span className="animate-icon-wiggle grid h-24 w-24 place-items-center rounded-full text-white shadow-md sm:h-28 sm:w-28" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
+        <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16" />
       </span>
-      <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
-      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm">{data.text}</p>
-      <DiscoverButton href={href} />
+      <div className="flex flex-col items-center gap-1.5">
+        <p className="text-sm font-bold text-hotpink sm:text-lg">{data.title}</p>
+        <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm">{data.text}</p>
+      </div>
+      <DiscoverButton href={href} className="w-full max-w-xs justify-center sm:max-w-sm" />
     </div>
   );
 }
