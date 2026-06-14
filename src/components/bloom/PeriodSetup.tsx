@@ -62,39 +62,39 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-rose/30 backdrop-blur-sm p-0 sm:items-center sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-rose/15 backdrop-blur-[2px] p-0 sm:items-center sm:p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-md max-h-[95vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
+        className="relative w-full sm:max-w-sm max-h-[94vh] overflow-y-auto rounded-t-[1.5rem] sm:rounded-[1.5rem] bg-white/55 backdrop-blur-xl p-3.5 shadow-2xl shadow-hotpink/20 animate-scale-in"
       >
-        <button onClick={onClose} className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-blush text-rose hover:bg-petal">
-          <X className="h-4 w-4" />
+        <button onClick={onClose} className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
+          <X className="h-3.5 w-3.5" />
         </button>
 
-        <h3 className="text-center font-script text-3xl text-hotpink">Period Setup ✿</h3>
+        <h3 className="text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
-        <div className="mt-4 rounded-2xl bg-blush/60 p-3 text-center text-sm text-rose">
-          <Flower2 className="inline h-4 w-4 text-hotpink mr-1" />
-          Select the day your <span className="font-semibold text-hotpink">last period started</span> on the calendar below:
+        <div className="mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose">
+          <Flower2 className="inline h-3.5 w-3.5 text-hotpink mr-1" />
+          Select your <span className="font-semibold text-hotpink">last period start</span> date:
         </div>
 
         {/* Calendar */}
-        <div className="mt-4 rounded-2xl bg-white p-3 shadow-inner ring-1 ring-petal/60">
+        <div className="mt-2 rounded-xl bg-white/70 p-1.5 shadow-inner ring-1 ring-petal/60">
           <div className="flex items-center justify-between px-1">
-            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="grid h-7 w-7 place-items-center rounded-full text-rose hover:bg-blush">
-              <ChevronLeft className="h-4 w-4" />
+            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
+              <ChevronLeft className="h-3 w-3" />
             </button>
-            <div className="font-script text-2xl text-hotpink">{MONTHS[cursor.getMonth()]} {cursor.getFullYear()}</div>
-            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="grid h-7 w-7 place-items-center rounded-full text-rose hover:bg-blush">
-              <ChevronRight className="h-4 w-4" />
+            <div className="font-script text-sm text-hotpink">{MONTHS[cursor.getMonth()]} {cursor.getFullYear()}</div>
+            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
+              <ChevronRight className="h-3 w-3" />
             </button>
           </div>
-          <div className="mt-2 grid grid-cols-7 text-center text-[11px] font-bold text-rose">
+          <div className="mt-0.5 grid grid-cols-7 text-center text-[8px] font-bold text-rose">
             {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
           </div>
-          <div className="mt-1 grid grid-cols-7 gap-1">
+          <div className="mt-0.5 grid grid-cols-7 gap-0.5">
             {cells.map((c, i) => {
               const selected = sameDay(c.date, draft.lastPeriodStart);
               return (
@@ -102,8 +102,8 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                   key={i}
                   onClick={() => update("lastPeriodStart", c.date)}
                   className={[
-                    "aspect-square rounded-full text-sm font-semibold transition",
-                    selected ? "bg-hotpink text-white shadow-md scale-105" : c.outside ? "text-rose/50 hover:bg-blush" : "text-rose hover:bg-blush",
+                    "aspect-square rounded-full text-[10px] font-semibold transition",
+                    selected ? "bg-hotpink text-white shadow-md scale-105" : c.outside ? "text-rose/40 hover:bg-blush" : "text-rose hover:bg-blush",
                   ].join(" ")}
                 >
                   {c.date.getDate()}
@@ -113,34 +113,45 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
         </div>
 
-        <button
-          onClick={() => { onSave(draft); onClose(); }}
-          className="bloom-luxury-btn mt-5 w-full py-3 font-semibold text-white"
-        >
-          Save Period
-        </button>
-
-        {/* Cycle length slider */}
-        <Section label="Cycle Length">
-          <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
-        </Section>
-
-        <Section label="Period Length">
-          <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
-        </Section>
+        {/* Cycle length + Period length side by side */}
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Section label="Cycle Length">
+            <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
+          </Section>
+          <Section label="Period Length">
+            <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
+          </Section>
+        </div>
 
         <Section label="Tracker Mode">
-          <div className="grid grid-cols-2 gap-2 rounded-full bg-blush p-1">
+          <div className="grid grid-cols-2 gap-1.5 rounded-full bg-blush/70 p-1">
             {(["protection","conception"] as TrackerMode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => update("trackerMode", m)}
                 className={[
-                  "rounded-full py-2 text-sm font-semibold transition",
+                  "rounded-full py-1.5 text-[11px] font-semibold transition",
                   draft.trackerMode === m ? "bg-hotpink text-white shadow" : "text-rose",
                 ].join(" ")}
               >
                 {m === "protection" ? "Protection 🛡️" : "Conception 🌷"}
+              </button>
+            ))}
+          </div>
+        </Section>
+
+        <Section label="Contraceptive Method">
+          <div className="grid grid-cols-3 gap-1.5">
+            {(["pill","patch","ring"] as ContraceptiveMethod[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => update("contraceptiveMethod", m)}
+                className={[
+                  "rounded-xl py-1.5 text-[11px] font-semibold capitalize transition",
+                  draft.contraceptiveMethod === m ? "bg-hotpink text-white shadow" : "bg-blush/70 text-rose",
+                ].join(" ")}
+              >
+                {m}
               </button>
             ))}
           </div>
@@ -154,26 +165,9 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           />
         </Section>
 
-        <Section label="Contraceptive Method">
-          <div className="grid grid-cols-3 gap-2">
-            {(["pill","patch","ring"] as ContraceptiveMethod[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => update("contraceptiveMethod", m)}
-                className={[
-                  "rounded-2xl py-2 text-sm font-semibold capitalize transition",
-                  draft.contraceptiveMethod === m ? "bg-hotpink text-white shadow" : "bg-blush text-rose",
-                ].join(" ")}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </Section>
-
         <Section label="Reminder Hour">
-          <div className="flex items-center justify-between rounded-2xl bg-blush px-4 py-3">
-            <span className="inline-flex items-center gap-2 text-rose"><Bell className="h-4 w-4" /> Daily hour to notify you</span>
+          <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
             <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
           </div>
         </Section>
@@ -185,6 +179,13 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             onChange={(v) => update("deviceNotifications", v)}
           />
         </Section>
+
+        <button
+          onClick={() => { onSave(draft); onClose(); }}
+          className="bloom-luxury-btn mt-3 w-full py-2.5 text-sm font-semibold text-white"
+        >
+          Save Period
+        </button>
       </div>
     </div>
   );
@@ -192,8 +193,8 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="mt-5">
-      <p className="mb-2 text-[11px] font-bold tracking-widest text-rose">{label.toUpperCase()}</p>
+    <div className="mt-2">
+      <p className="mb-1 text-[9px] font-bold tracking-widest text-rose">{label.toUpperCase()}</p>
       {children}
     </div>
   );
@@ -201,17 +202,17 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 
 function Slider({ min, max, value, onChange, suffix }: { min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <input
         type="range"
         min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-blush accent-hotpink"
+        className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-blush accent-hotpink"
       />
-      <span className="min-w-[56px] rounded-full bg-blush px-3 py-1 text-center text-sm font-bold text-hotpink">
-        {value} {suffix}
+      <span className="min-w-[40px] rounded-full bg-blush px-2 py-0.5 text-center text-[11px] font-bold text-hotpink">
+        {value}{suffix}
       </span>
     </div>
   );
@@ -219,19 +220,19 @@ function Slider({ min, max, value, onChange, suffix }: { min: number; max: numbe
 
 function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-blush px-4 py-3">
-      <span className="text-sm font-semibold text-rose">{label}</span>
+    <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
+      <span className="text-[11px] font-semibold text-rose">{label}</span>
       <button
         onClick={() => onChange(!checked)}
         className={[
-          "relative h-6 w-11 rounded-full transition",
+          "relative h-5 w-9 shrink-0 rounded-full transition",
           checked ? "bg-hotpink" : "bg-petal",
         ].join(" ")}
       >
         <span
           className={[
-            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all",
-            checked ? "left-[22px]" : "left-0.5",
+            "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
+            checked ? "left-[18px]" : "left-0.5",
           ].join(" ")}
         />
       </button>
