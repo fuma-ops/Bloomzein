@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, X, Flower2, Bell } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, X, Flower2, Bell, Sparkles, ChevronDown } from "lucide-react";
 import { CuteTimePicker } from "./CutePicker";
+import { phaseForDay } from "./cyclePhase";
 
 export type TrackerMode = "protection" | "conception";
 export type ContraceptiveMethod = "pill" | "patch" | "ring";
@@ -25,6 +26,7 @@ interface Props {
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const TODAY = new Date(2026, 5, 4); // demo "today", matches CycleTracker
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -33,11 +35,14 @@ function sameDay(a: Date, b: Date) {
 export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   const [draft, setDraft] = useState<CycleSettings>(initial);
   const [cursor, setCursor] = useState(new Date(initial.lastPeriodStart.getFullYear(), initial.lastPeriodStart.getMonth(), 1));
+  const [showScrollHint, setShowScrollHint] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
       setDraft(initial);
       setCursor(new Date(initial.lastPeriodStart.getFullYear(), initial.lastPeriodStart.getMonth(), 1));
+      setShowScrollHint(true);
     }
   }, [open, initial]);
 
@@ -60,132 +65,175 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
     setDraft((d) => ({ ...d, [k]: v }));
   }
 
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    setShowScrollHint(el.scrollTop + el.clientHeight < el.scrollHeight - 12);
+  }
+
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-rose/15 backdrop-blur-[2px] p-0 sm:items-center sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-rose/15 p-3 backdrop-blur-[2px] animate-fade-in sm:p-4"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-sm max-h-[94vh] overflow-y-auto rounded-t-[1.5rem] sm:rounded-[1.5rem] bg-white/55 backdrop-blur-xl p-3.5 shadow-2xl shadow-hotpink/20 animate-scale-in"
+        className="relative flex w-full max-w-[22rem] flex-col overflow-hidden rounded-[1.75rem] bg-white/55 shadow-2xl shadow-hotpink/20 backdrop-blur-xl animate-scale-in sm:max-w-sm"
+        style={{ maxHeight: "82vh" }}
       >
-        <button onClick={onClose} className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
+        <button onClick={onClose} className="absolute right-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
           <X className="h-3.5 w-3.5" />
         </button>
 
-        <h3 className="text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
+        <div ref={scrollRef} onScroll={handleScroll} className="scroll-smooth overflow-y-auto p-3.5">
+          <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
-        <div className="mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose">
-          <Flower2 className="inline h-3.5 w-3.5 text-hotpink mr-1" />
-          Select your <span className="font-semibold text-hotpink">last period start</span> date:
-        </div>
-
-        {/* Calendar */}
-        <div className="mt-2 rounded-xl bg-white/70 p-1.5 shadow-inner ring-1 ring-petal/60">
-          <div className="flex items-center justify-between px-1">
-            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
-              <ChevronLeft className="h-3 w-3" />
-            </button>
-            <div className="font-script text-sm text-hotpink">{MONTHS[cursor.getMonth()]} {cursor.getFullYear()}</div>
-            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
-              <ChevronRight className="h-3 w-3" />
-            </button>
+          <div className="animate-scale-in mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose" style={{ animationDelay: "40ms" }}>
+            <Flower2 className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />
+            Tap your <span className="font-semibold text-hotpink">last period start</span> date:
           </div>
-          <div className="mt-0.5 grid grid-cols-7 text-center text-[8px] font-bold text-rose">
-            {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
-          </div>
-          <div className="mt-0.5 grid grid-cols-7 gap-0.5">
-            {cells.map((c, i) => {
-              const selected = sameDay(c.date, draft.lastPeriodStart);
-              return (
-                <button
-                  key={i}
-                  onClick={() => update("lastPeriodStart", c.date)}
-                  className={[
-                    "aspect-square rounded-full text-[10px] font-semibold transition",
-                    selected ? "bg-hotpink text-white shadow-md scale-105" : c.outside ? "text-rose/40 hover:bg-blush" : "text-rose hover:bg-blush",
-                  ].join(" ")}
-                >
-                  {c.date.getDate()}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Cycle length + Period length side by side */}
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <Section label="Cycle Length">
-            <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
-          </Section>
-          <Section label="Period Length">
-            <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
-          </Section>
-        </div>
-
-        <Section label="Tracker Mode">
-          <div className="grid grid-cols-2 gap-1.5 rounded-full bg-blush/70 p-1">
-            {(["protection","conception"] as TrackerMode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => update("trackerMode", m)}
-                className={[
-                  "rounded-full py-1.5 text-[11px] font-semibold transition",
-                  draft.trackerMode === m ? "bg-hotpink text-white shadow" : "text-rose",
-                ].join(" ")}
-              >
-                {m === "protection" ? "Protection 🛡️" : "Conception 🌷"}
+          {/* Calendar — simplified: only period range, ovulation day & today */}
+          <div className="animate-scale-in mt-2 rounded-xl bg-white/70 p-1.5 shadow-inner ring-1 ring-petal/60" style={{ animationDelay: "80ms" }}>
+            <div className="flex items-center justify-between px-1">
+              <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="hover-scale grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
+                <ChevronLeft className="h-3 w-3" />
               </button>
-            ))}
-          </div>
-        </Section>
-
-        <Section label="Contraceptive Method">
-          <div className="grid grid-cols-3 gap-1.5">
-            {(["pill","patch","ring"] as ContraceptiveMethod[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => update("contraceptiveMethod", m)}
-                className={[
-                  "rounded-xl py-1.5 text-[11px] font-semibold capitalize transition",
-                  draft.contraceptiveMethod === m ? "bg-hotpink text-white shadow" : "bg-blush/70 text-rose",
-                ].join(" ")}
-              >
-                {m}
+              <div className="font-script text-sm text-hotpink">{MONTHS[cursor.getMonth()]} {cursor.getFullYear()}</div>
+              <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="hover-scale grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
+                <ChevronRight className="h-3 w-3" />
               </button>
-            ))}
+            </div>
+            <div className="mt-0.5 grid grid-cols-7 text-center text-[8px] font-bold text-rose">
+              {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
+            </div>
+            <div className="mt-0.5 grid grid-cols-7 gap-0.5">
+              {cells.map((c, i) => {
+                const phase = phaseForDay(c.date, draft);
+                const isPeriod = phase === "period";
+                const isOvulation = phase === "ovulation";
+                const isToday = sameDay(c.date, TODAY);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => update("lastPeriodStart", c.date)}
+                    className={[
+                      "relative flex aspect-square items-center justify-center rounded-full text-[10px] font-semibold transition-all duration-200 active:scale-90",
+                      isPeriod
+                        ? "animate-scale-in bg-hotpink text-white shadow-sm"
+                        : isOvulation
+                          ? "bg-pink-100 text-hotpink ring-2 ring-hotpink/50"
+                          : c.outside
+                            ? "text-rose/30 hover:bg-blush"
+                            : "text-rose hover:bg-blush",
+                      isToday ? "ring-2 ring-magenta ring-offset-1" : "",
+                    ].join(" ")}
+                  >
+                    {c.date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Tiny legend — only what matters */}
+            <div className="mt-2 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80">
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-hotpink" /> Period</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-pink-100 ring-2 ring-hotpink/50" /> Ovulation</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-magenta" /> Today</span>
+            </div>
           </div>
-        </Section>
 
-        <Section label="Contraceptive Reminder">
-          <ToggleRow
-            label="Remind to check or take contraception"
-            checked={draft.contraceptiveReminder}
-            onChange={(v) => update("contraceptiveReminder", v)}
-          />
-        </Section>
-
-        <Section label="Reminder Hour">
-          <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
-            <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
+          {/* Cycle length + Period length side by side */}
+          <div className="animate-scale-in mt-2 grid grid-cols-2 gap-2" style={{ animationDelay: "120ms" }}>
+            <Section label="Cycle Length">
+              <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
+            </Section>
+            <Section label="Period Length">
+              <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
+            </Section>
           </div>
-        </Section>
 
-        <Section label="Device Notifications">
-          <ToggleRow
-            label="Alert on phone, tablet, laptop"
-            checked={draft.deviceNotifications}
-            onChange={(v) => update("deviceNotifications", v)}
-          />
-        </Section>
+          <div className="animate-scale-in" style={{ animationDelay: "160ms" }}>
+            <Section label="Tracker Mode">
+              <div className="grid grid-cols-2 gap-1.5 rounded-full bg-blush/70 p-1">
+                {(["protection","conception"] as TrackerMode[]).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => update("trackerMode", m)}
+                    className={[
+                      "hover-scale rounded-full py-1.5 text-[11px] font-semibold transition",
+                      draft.trackerMode === m ? "bg-hotpink text-white shadow" : "text-rose",
+                    ].join(" ")}
+                  >
+                    {m === "protection" ? "Protection 🛡️" : "Conception 🌷"}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          </div>
 
-        <button
-          onClick={() => { onSave(draft); onClose(); }}
-          className="bloom-luxury-btn mt-3 w-full py-2.5 text-sm font-semibold text-white"
-        >
-          Save Period
-        </button>
+          <div className="animate-scale-in" style={{ animationDelay: "200ms" }}>
+            <Section label="Contraceptive Method">
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["pill","patch","ring"] as ContraceptiveMethod[]).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => update("contraceptiveMethod", m)}
+                    className={[
+                      "hover-scale rounded-xl py-1.5 text-[11px] font-semibold capitalize transition",
+                      draft.contraceptiveMethod === m ? "bg-hotpink text-white shadow" : "bg-blush/70 text-rose",
+                    ].join(" ")}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          </div>
+
+          <div className="animate-scale-in" style={{ animationDelay: "240ms" }}>
+            <Section label="Contraceptive Reminder">
+              <ToggleRow
+                label="Remind to check or take contraception"
+                checked={draft.contraceptiveReminder}
+                onChange={(v) => update("contraceptiveReminder", v)}
+              />
+            </Section>
+          </div>
+
+          <div className="animate-scale-in" style={{ animationDelay: "280ms" }}>
+            <Section label="Reminder Hour">
+              <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
+                <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
+              </div>
+            </Section>
+          </div>
+
+          <div className="animate-scale-in" style={{ animationDelay: "320ms" }}>
+            <Section label="Device Notifications">
+              <ToggleRow
+                label="Alert on phone, tablet, laptop"
+                checked={draft.deviceNotifications}
+                onChange={(v) => update("deviceNotifications", v)}
+              />
+            </Section>
+          </div>
+
+          <button
+            onClick={() => { onSave(draft); onClose(); }}
+            className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 w-full py-2.5 text-sm font-semibold text-white"
+          >
+            <Sparkles className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle" />
+            Save Period
+          </button>
+        </div>
+
+        {/* Smart scroll guide — gently bounces while there's more to see */}
+        {showScrollHint && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent pb-1 pt-6">
+            <ChevronDown className="h-4 w-4 animate-bounce text-hotpink" />
+          </div>
+        )}
       </div>
     </div>
   );
