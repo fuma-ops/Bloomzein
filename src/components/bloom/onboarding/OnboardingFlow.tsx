@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronRight, Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CYCLE_SETTINGS, writeCycleSettings } from "../cyclePhase";
@@ -169,6 +169,30 @@ function Screen2({
     if (preview) setPhase(preview.phase);
   }, [preview?.phase]);
 
+  // Guides the user through the 3 questions one at a time: as soon as one is
+  // answered, we scroll to and spotlight the next one.
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const cycleLenRef = useRef<HTMLDivElement>(null);
+  const periodLenRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cycleData.lastPeriod && step === 1) {
+      const t = setTimeout(() => setStep(2), 450);
+      return () => clearTimeout(t);
+    }
+  }, [cycleData.lastPeriod, step]);
+
+  useEffect(() => {
+    if (step === 2) {
+      cycleLenRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const t = setTimeout(() => setStep(3), 1500);
+      return () => clearTimeout(t);
+    }
+    if (step === 3) {
+      periodLenRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [step]);
+
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 px-6 pt-6">
@@ -192,18 +216,24 @@ function Screen2({
           </div>
         )}
 
-        <div className="mt-5">
-          <p className="animate-question-pop text-sm font-medium text-rose" style={{ animationDelay: "0.2s" }}>How many days does your cycle usually last?</p>
+        <div
+          ref={cycleLenRef}
+          className={`mt-5 rounded-2xl p-3 -mx-3 transition-opacity duration-500 ${step >= 2 ? "opacity-100" : "opacity-30"} ${step === 2 ? "animate-question-pop" : ""}`}
+        >
+          <p className="text-sm font-medium text-rose">How many days does your cycle usually last?</p>
           <Stepper value={cycleData.cycleLength} min={21} max={35} onChange={(v) => setCycleData((c) => ({ ...c, cycleLength: v }))} />
         </div>
 
-        <div className="mt-5">
-          <p className="animate-question-pop text-sm font-medium text-rose" style={{ animationDelay: "0.3s" }}>How many days does your period last?</p>
+        <div
+          ref={periodLenRef}
+          className={`mt-5 rounded-2xl p-3 -mx-3 transition-opacity duration-500 ${step >= 3 ? "opacity-100" : "opacity-30"} ${step === 3 ? "animate-question-pop" : ""}`}
+        >
+          <p className="text-sm font-medium text-rose">How many days does your period last?</p>
           <Stepper value={cycleData.periodDuration} min={2} max={10} onChange={(v) => setCycleData((c) => ({ ...c, periodDuration: v }))} />
         </div>
       </div>
 
-      <div className="shrink-0 px-6 pb-6 pt-2">
+      <div className={`shrink-0 rounded-2xl px-6 pb-6 pt-2 ${step === 3 ? "animate-step-highlight" : ""}`}>
         <button
           type="button"
           onClick={onNext}
@@ -239,7 +269,7 @@ function Screen3({
         <h2 className="font-script mt-5 animate-question-pop text-2xl text-hotpink">What do you want to focus on first?</h2>
         <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
 
-        <div className="mt-5 flex flex-col gap-3">
+        <div className="mt-4 flex flex-col gap-2.5">
           {GOALS.map((g, i) => {
             const Icon = g.icon;
             const selected = goal === g.key;
@@ -249,16 +279,16 @@ function Screen3({
                 type="button"
                 onClick={() => setGoal(g.key)}
                 style={{ animationDelay: `${i * 0.08}s` }}
-                className={`bloom-pearl-card pearl-sheen flex min-h-[80px] animate-question-pop items-center gap-4 rounded-3xl p-4 text-left transition-all duration-300 ${
+                className={`bloom-pearl-card pearl-sheen flex min-h-[64px] animate-question-pop items-center gap-3 rounded-2xl p-3 text-left transition-all duration-300 ${
                   selected ? "border-2 border-hotpink bg-blush" : "border-2 border-transparent"
                 }`}
               >
-                <span className="clay-blob grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl text-white">
-                  <Icon className="h-6 w-6" />
+                <span className="clay-blob grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white">
+                  <Icon className="h-5 w-5" />
                 </span>
                 <span className="flex-1">
-                  <span className="block text-base font-medium text-rose">{g.title}</span>
-                  <span className="block text-[13px] font-light text-rose/60">{g.subtitle}</span>
+                  <span className="block text-sm font-medium text-rose">{g.title}</span>
+                  <span className="block text-[12px] font-light text-rose/60 leading-snug">{g.subtitle}</span>
                 </span>
                 <ChevronRight className={`h-5 w-5 shrink-0 transition ${selected ? "text-hotpink" : "text-rose/30"}`} />
               </button>
@@ -267,7 +297,7 @@ function Screen3({
         </div>
       </div>
 
-      <div className="shrink-0 px-6 pb-6 pt-2">
+      <div className={`shrink-0 rounded-2xl px-6 pb-6 pt-2 ${goal ? "animate-step-highlight" : ""}`}>
         <button
           type="button"
           onClick={onNext}
