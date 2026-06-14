@@ -279,13 +279,13 @@ export default function Landing() {
         </div>
         <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
-            {/* 3 columns on every screen — phone & tablet included, per spec */}
-            <div className="grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
+            {/* Phone: swipeable carousel with neighboring cards peeking on each side. Tablet+: 3-column grid */}
+            <div className="no-scrollbar -mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:gap-7">
               {UNIVERSES.map((u, i) => {
                 return (
                   <article
                     key={u.key}
-                    className="pearl-frame animate-card-pop-in relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    className="pearl-frame animate-card-pop-in relative flex w-[76%] shrink-0 snap-center flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:w-auto sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                     style={{
                       animationDelay: `${i * 120}ms`,
                       background: "oklch(1 0 0 / 0.16)",
