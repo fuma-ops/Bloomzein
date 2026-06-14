@@ -278,17 +278,6 @@ export default function Landing() {
           </p>
         </div>
         <section id="universes" className="section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
-          {/* shared background photo for the whole section, faded so the cards stay readable */}
-          <img
-            src="/images/landing-universes-bg.webp"
-            alt=""
-            aria-hidden
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-top"
-          />
-          {/* radial fade — keeps the photo mostly visible while letting the edges melt into the page background */}
-          <div className="absolute inset-0" style={{ background: "radial-gradient(75% 75% at 50% 50%, oklch(0.98 0.02 350 / 0.25) 0%, oklch(0.98 0.015 350 / 0.4) 60%, oklch(0.98 0.015 350) 100%)" }} />
-
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
             {/* 3 columns on every screen — phone & tablet included, per spec */}
             <div className="grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
@@ -296,7 +285,7 @@ export default function Landing() {
                 return (
                   <article
                     key={u.key}
-                    className="pearl-frame animate-card-pop-in relative flex flex-col items-center overflow-hidden rounded-2xl border-none p-2.5 text-center sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    className="pearl-frame animate-card-pop-in relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6"
                     style={{
                       animationDelay: `${i * 120}ms`,
                       background: "oklch(1 0 0 / 0.16)",
@@ -315,8 +304,8 @@ export default function Landing() {
                       decoding="async"
                       className="absolute inset-0 h-full w-full object-cover"
                     />
-                    <h3 className="relative z-10 animate-bloom-float font-script text-2xl leading-none drop-shadow-[0_2px_6px_oklch(1_0_0_/_0.8)] sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent, animationDelay: `${i * 300}ms` }}>{u.title}</h3>
-                    <ul className="relative z-10 mt-2 flex flex-col items-center gap-1 sm:mt-4 sm:gap-2.5">
+                    <h3 className="relative z-10 w-full animate-bloom-float text-center font-script text-2xl leading-none drop-shadow-[0_2px_6px_oklch(1_0_0_/_0.8)] sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent, animationDelay: `${i * 300}ms` }}>{u.title}</h3>
+                    <ul className="relative z-10 mt-2 flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
                       {u.items.map((it, ii) => {
                         const Icon = it.icon;
                         return (
