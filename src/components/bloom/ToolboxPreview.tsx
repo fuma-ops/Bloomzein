@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, Droplet, Sprout, Flower2, Star, Moon, type LucideIcon } from "lucide-react";
 import { CuteToolIcon } from "./CuteToolIcon";
 import { DEFAULT_CYCLE_SETTINGS, phaseForDay, type CyclePhase } from "./cyclePhase";
@@ -92,6 +92,11 @@ const BUDGET_SEGMENTS = [
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+// Gentle auto-tour through the toolbox when the section scrolls into view —
+// stops the moment the visitor taps a tool themselves.
+const AUTOPLAY_SEQUENCE: (string | null)[] = [null, "yoga", "workout", "meals", "budget", "cycle"];
+const AUTOPLAY_INTERVAL = 3400;
+
 function buildMonthGrid(year: number, month: number): (Date | null)[] {
   const first = new Date(year, month, 1);
   const startOffset = (first.getDay() + 6) % 7; // Monday = 0
@@ -111,6 +116,30 @@ export function ToolboxPreview() {
   const [periodDate, setPeriodDate] = useState<Date | null>(null);
   const [cycleLengthInput, setCycleLengthInput] = useState("28");
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [autoplay, setAutoplay] = useState(true);
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Start the gentle auto-tour once the toolbox scrolls into view.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.35 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!autoplay || !inView) return;
+    const id = setInterval(() => {
+      setActiveTool((prev) => {
+        const idx = AUTOPLAY_SEQUENCE.indexOf(prev);
+        return AUTOPLAY_SEQUENCE[(idx + 1) % AUTOPLAY_SEQUENCE.length];
+      });
+      setPickerOpen(false);
+    }, AUTOPLAY_INTERVAL);
+    return () => clearInterval(id);
+  }, [autoplay, inView]);
 
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
   const cells = useMemo(() => buildMonthGrid(viewDate.getFullYear(), viewDate.getMonth()), [viewDate]);
@@ -123,6 +152,7 @@ export function ToolboxPreview() {
     d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
 
   const handleToggle = (slug: string) => {
+    setAutoplay(false);
     setActiveTool((prev) => (prev === slug ? null : slug));
     setPickerOpen(false);
   };
@@ -142,7 +172,7 @@ export function ToolboxPreview() {
   const showCalendar = activeTool === null || activeTool === "cycle";
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div ref={containerRef} className="mx-auto w-full max-w-4xl">
       <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] border-none p-3 sm:rounded-[2.5rem] sm:p-5" style={{ background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)" }}>
         {/* Sidebar above the content on phones (wrapping, centered), to its right on larger screens */}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:gap-5">
@@ -245,10 +275,13 @@ export function ToolboxPreview() {
                   className={`group flex shrink-0 flex-col items-center gap-1 rounded-2xl px-2.5 py-2 transition-all duration-300 sm:px-3 ${activeTool === tool.slug ? "bg-white/60 shadow-md scale-105" : "bg-white/30 hover:bg-white/45"}`}
                 >
                   <span
-                    className="animate-icon-wiggle relative grid h-9 w-9 place-items-center rounded-full text-white shadow-md sm:h-11 sm:w-11"
+                    className={`animate-icon-wiggle relative grid h-9 w-9 place-items-center rounded-full text-white shadow-md sm:h-11 sm:w-11 ${autoplay && activeTool === tool.slug ? "animate-bloom-pulse ring-4 ring-hotpink/30" : ""}`}
                     style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)", animationDelay: `${i * 220}ms` }}
                   >
                     <CuteToolIcon slug={tool.slug} className="relative z-10 h-5 w-5 sm:h-6 sm:w-6" />
+                    {autoplay && activeTool === tool.slug && (
+                      <Sparkles className="animate-icon-wiggle absolute -right-1 -top-1 h-3.5 w-3.5 text-hotpink drop-shadow" aria-hidden />
+                    )}
                   </span>
                   <span className="whitespace-nowrap text-[9px] font-bold text-rose sm:text-[11px]">{tool.label}</span>
                 </button>
