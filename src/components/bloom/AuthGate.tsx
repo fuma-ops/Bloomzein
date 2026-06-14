@@ -23,7 +23,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!profile?.setup_done) {
+  // TEMP: onboarding shown for everyone while we're testing the new flow.
+  // Revert to `if (!profile?.setup_done)` once testing is done.
+  if (!profile?.setup_done || true) {
     return <OnboardingFlow>{children}</OnboardingFlow>
   }
 
