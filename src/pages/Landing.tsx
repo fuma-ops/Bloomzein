@@ -6,7 +6,7 @@ import {
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
-import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
+import { ToolboxPreview } from "@/components/bloom/ToolboxPreview";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
@@ -379,10 +379,13 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* How it Connects — circular web diagram showing how every tool talks to the others */}
-        <section className="bloom-connections-bg relative mt-4 overflow-hidden rounded-[2rem] p-5 sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12">
+        {/* Toolbox preview — glassy calendar + sidebar of tools, lights up & adapts to your cycle */}
+        <section
+          className="section-pink-shadow relative mt-4 overflow-hidden rounded-[2rem] bg-cover bg-center p-5 sm:mt-6 sm:rounded-[3rem] sm:p-8 md:p-12"
+          style={{ backgroundImage: "url(/images/toolbox-bg.webp)" }}
+        >
           <div className="text-center">
-            <p className="font-script text-2xl text-hotpink">how it all connects</p>
+            <p className="font-script text-2xl text-hotpink">your magic toolbox</p>
             <h2 className="mx-auto max-w-2xl font-script text-4xl leading-tight text-bloom-gradient sm:text-6xl">
               Every tool knows what the others know
             </h2>
@@ -391,7 +394,7 @@ export default function Landing() {
             </p>
           </div>
           <div className="mt-6 sm:mt-10">
-            <ConnectionsDiagram />
+            <ToolboxPreview />
           </div>
         </section>
 

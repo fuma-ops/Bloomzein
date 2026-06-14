@@ -863,6 +863,17 @@
   animation-fill-mode: backwards;
 }
 
+/* Gentle fade + rise for swapped preview panels (toolbox section) */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.35s ease-out 1;
+  animation-fill-mode: backwards;
+}
+
 /* Hide scrollbars while keeping horizontal scroll usable */
 .scrollbar-hide {
   scrollbar-width: none;
