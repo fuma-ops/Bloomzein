@@ -19,10 +19,7 @@ import {
   CloudRain,
   Flame,
   Cloud,
-  Dumbbell,
   BookOpen,
-  CheckCircle2,
-  Circle,
   CalendarDays,
   PenLine,
 } from "lucide-react";
@@ -125,13 +122,6 @@ function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-function bloomMessage(percent: number) {
-  if (percent >= 90) return "You're fully blooming";
-  if (percent >= 60) return "You're blooming";
-  if (percent >= 30) return "Budding nicely";
-  return "Just getting started";
-}
-
 export function CycleTracker() {
   const today = new Date(2026, 5, 4); // demo "today"
   const [settings, setSettings] = useState<CycleSettings>(() => readCycleSettings());
@@ -147,8 +137,8 @@ export function CycleTracker() {
   const [selected, setSelected] = useState<Date>(today);
   const [pillTaken, setPillTaken] = useState(true);
   const [mood, setMood] = useState<string>("happy");
+  const [hasPickedMood, setHasPickedMood] = useState(false);
   const [slideDir, setSlideDir] = useState<"l" | "r">("r");
-  const [checklist, setChecklist] = useState({ workout: true, water: true, journal: false });
 
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -215,20 +205,6 @@ export function CycleTracker() {
     },
   ];
 
-  // Today's tiny "bloom checklist" — toggling these gently animates the progress ring.
-  const checklistItems = [
-    { key: "workout" as const, label: "Workout completed", Icon: Dumbbell, checked: checklist.workout },
-    { key: "water" as const, label: "Water goal met", Icon: Droplet, checked: checklist.water },
-    { key: "journal" as const, label: "Journal entry written", Icon: BookOpen, checked: checklist.journal },
-    { key: "pill" as const, label: `${pillLabel} taken`, Icon: Pill, checked: pillTaken },
-  ];
-  const doneCount = checklistItems.filter((i) => i.checked).length;
-  const percent = Math.round((doneCount / checklistItems.length) * 100);
-  function toggleChecklist(key: "workout" | "water" | "journal" | "pill") {
-    if (key === "pill") setPillTaken((v) => !v);
-    else setChecklist((c) => ({ ...c, [key]: !c[key] }));
-  }
-
   const MoodIconToday = MOODS.find((m) => m.key === mood)?.Icon ?? Smile;
   const moodLabelToday = MOODS.find((m) => m.key === mood)?.label ?? "Happy";
   const flow = PHASE_FLOW[currentPhase];
@@ -241,157 +217,57 @@ export function CycleTracker() {
       <BloomBubbles count={18} />
 
       {/* ============= Header ============= */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-script text-5xl text-hotpink">Cycle 🌸</h2>
-        <button
-          onClick={() => setSetupOpen(true)}
-          className="bloom-luxury-btn hover-scale group relative inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"
-        >
-          <Sparkles className="h-4 w-4 animate-bloom-sparkle" />
-          <Plus className="h-4 w-4" />
-          <span>Log &amp; Settings</span>
-        </button>
-      </div>
-
-      {/* ============= Hero row: Today's Insight + Bloom progress ============= */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-        {/* Today's Insight */}
-        <div className="pearl-frame animate-scale-in relative col-span-1 flex min-h-[11rem] flex-1 flex-col justify-end overflow-hidden rounded-2xl sm:min-h-[16rem] sm:rounded-[2rem] lg:col-span-2 lg:min-h-[20rem]">
-          <img
-            src="/images/cycle-insight-hero.webp"
-            alt=""
-            aria-hidden
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
-          />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/70 sm:to-white/10" />
-          <div className="relative z-10 p-3 sm:max-w-md sm:p-8">
-            <p className="inline-flex items-center gap-1 text-[8px] font-bold tracking-widest text-rose sm:gap-1.5 sm:text-[10px]">
-              <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle text-hotpink sm:h-3 sm:w-3" /> TODAY'S INSIGHT
-            </p>
-            <h3 className="mt-1 font-script text-lg leading-tight text-hotpink sm:text-4xl lg:text-5xl">
-              Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
-            </h3>
-            <p className="mt-1.5 text-[11px] font-medium leading-snug text-magenta/80 sm:mt-2 sm:text-base">
-              {PHASE_INSIGHT[currentPhase]}
-            </p>
-          </div>
-        </div>
-
-        {/* Bloom progress + checklist */}
-        <div className="pearl-frame bloom-pearl-card animate-scale-in col-span-1 flex flex-col items-center gap-2 rounded-2xl p-3 sm:gap-4 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "60ms" }}>
-          <div
-            className="animate-bloom-pulse relative grid h-16 w-16 shrink-0 place-items-center rounded-full shadow-md sm:h-28 sm:w-28 lg:h-32 lg:w-32"
-            style={{ background: `conic-gradient(var(--hotpink) 0% ${percent}%, var(--petal) ${percent}% 100%)` }}
+      {/* ============= Hero: Cycle title + Log & Settings + Today's Insight ============= */}
+      <div className="pearl-frame animate-scale-in relative flex min-h-[9rem] flex-col overflow-hidden rounded-2xl sm:min-h-[12rem] sm:rounded-[2rem]">
+        <img
+          src="/images/cycle-insight-hero.webp"
+          alt=""
+          aria-hidden
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-white/20" />
+        <div className="relative z-10 flex items-center justify-between gap-2 p-3 sm:p-5">
+          <h2 className="font-script text-3xl text-hotpink sm:text-5xl">Cycle 🌸</h2>
+          <button
+            onClick={() => setSetupOpen(true)}
+            className="bloom-luxury-btn hover-scale group relative inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-[11px] font-bold text-white sm:gap-1.5 sm:px-5 sm:py-2.5 sm:text-sm"
           >
-            <div className="grid h-[3rem] w-[3rem] place-items-center rounded-full bg-white/95 text-center shadow-inner sm:h-[5.25rem] sm:w-[5.25rem] lg:h-[6rem] lg:w-[6rem]">
-              <span className="font-script text-base text-hotpink sm:text-3xl lg:text-4xl">{percent}%</span>
-            </div>
-          </div>
-          <p className="text-center font-script text-sm text-hotpink sm:text-2xl">{bloomMessage(percent)}</p>
-
-          <div className="mt-0.5 flex w-full flex-col gap-1 sm:mt-1 sm:gap-2">
-            {checklistItems.map((item) => (
-              <button
-                key={item.key}
-                onClick={() => toggleChecklist(item.key)}
-                className={[
-                  "flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-left text-[9px] font-semibold transition-all duration-200 active:scale-95 sm:gap-2.5 sm:rounded-2xl sm:px-3 sm:py-2 sm:text-xs",
-                  item.checked ? "bg-hotpink/10 text-hotpink" : "bg-blush/60 text-rose hover:bg-petal/60",
-                ].join(" ")}
-              >
-                {item.checked ? (
-                  <CheckCircle2 className="animate-scale-in h-3 w-3 shrink-0 text-hotpink sm:h-4 sm:w-4" />
-                ) : (
-                  <Circle className="h-3 w-3 shrink-0 text-rose/40 sm:h-4 sm:w-4" />
-                )}
-                <item.Icon className="hidden h-3.5 w-3.5 shrink-0 opacity-70 sm:block" />
-                <span className="flex-1 truncate">{item.label}</span>
-              </button>
-            ))}
-          </div>
+            <Sparkles className="h-3 w-3 animate-bloom-sparkle sm:h-4 sm:w-4" />
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>Log &amp; Settings</span>
+          </button>
+        </div>
+        <div className="relative z-10 px-3 pb-3 sm:max-w-md sm:px-5 sm:pb-5">
+          <p className="inline-flex items-center gap-1 text-[8px] font-bold tracking-widest text-rose sm:gap-1.5 sm:text-[10px]">
+            <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle text-hotpink sm:h-3 sm:w-3" /> TODAY'S INSIGHT
+          </p>
+          <h3 className="mt-1 font-script text-base leading-tight text-hotpink sm:text-3xl">
+            Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
+          </h3>
+          <p className="mt-1 text-[11px] font-medium leading-snug text-magenta/80 sm:mt-1.5 sm:text-sm">
+            {PHASE_INSIGHT[currentPhase]}
+          </p>
         </div>
       </div>
 
-      {/* ============= Your Cycle Journey ============= */}
-      <div className="pearl-frame bloom-pearl-card animate-scale-in relative mt-5 overflow-hidden rounded-[2rem] p-5 sm:p-7" style={{ animationDelay: "100ms" }}>
-        <h3 className="mb-8 font-script text-3xl text-hotpink sm:text-4xl">Your Cycle Journey</h3>
-        <div className="relative px-2 pt-7">
-          {/* connecting line */}
-          <div className="absolute left-4 right-4 top-[calc(1.75rem+1.25rem)] h-1 rounded-full bg-petal sm:left-6 sm:right-6" />
-          {/* floating "Day X" pill */}
-          <div
-            className="absolute top-0 flex -translate-x-1/2 flex-col items-center"
-            style={{ left: `${journeyPercent}%` }}
-          >
-            <span className="animate-bloom-bounce whitespace-nowrap rounded-full bg-hotpink px-3 py-1 text-[11px] font-bold text-white shadow-md shadow-hotpink/30">
-              Day {cycleDay}
-            </span>
-            <span className="mt-0.5 h-2 w-0.5 rounded-full bg-hotpink/50" />
-          </div>
-
-          <div className="relative flex justify-between">
-            {journeySteps.map((step) => {
-              const Icon = PHASE_META[step.key].Icon;
-              return (
-                <div key={step.key} className="flex flex-1 flex-col items-center gap-1.5 text-center">
-                  <span
-                    className={[
-                      "grid h-10 w-10 shrink-0 place-items-center rounded-full ring-4 transition-all duration-300 sm:h-12 sm:w-12",
-                      step.active
-                        ? "animate-bloom-pulse bg-hotpink text-white ring-hotpink/30"
-                        : "bg-white text-rose ring-petal/60",
-                    ].join(" ")}
-                  >
-                    <Icon className="animate-icon-wiggle h-4 w-4 sm:h-5 sm:w-5" />
-                  </span>
-                  <span className={`text-[9px] font-bold tracking-wider sm:text-[10px] ${step.active ? "text-hotpink" : "text-rose/70"}`}>
-                    {step.label}
-                  </span>
-                  <span className="text-[8px] text-rose/50 sm:text-[9px]">{step.range}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ============= Flow card + Calendar ============= */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-        {/* 15-Minute Flow */}
-        <div className="bloom-pearl-card animate-scale-in col-span-1 flex flex-col items-center gap-2 rounded-2xl p-3 text-center sm:gap-4 sm:rounded-[2rem] sm:p-6 lg:col-span-1" style={{ animationDelay: "140ms" }}>
-          <span
-            className="animate-icon-wiggle grid h-10 w-10 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-20 sm:w-20 lg:h-24 lg:w-24"
-            style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}
-          >
-            <Flower2 className="h-5 w-5 sm:h-10 sm:w-10 lg:h-12 lg:w-12" />
-          </span>
-          <div>
-            <p className="font-script text-sm leading-tight text-hotpink sm:text-2xl lg:text-3xl">{flow.title}</p>
-            <p className="mt-0.5 hidden text-xs font-medium text-magenta/70 sm:block sm:text-sm">{flow.blurb}</p>
-          </div>
-          <a
-            href="/app/tools/yoga"
-            className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-bold text-white sm:px-5 sm:py-2.5 sm:text-sm"
-          >
-            Start Now
-          </a>
-        </div>
-
-        {/* Calendar card — same compact, glassy pearl effect as "Everything blooms in one place" */}
-        <div className="pearl-frame bloom-pearl-card animate-scale-in relative col-span-1 overflow-hidden rounded-2xl p-3 sm:rounded-[2rem] sm:p-5 lg:col-span-2" style={{ animationDelay: "180ms" }}>
+      {/* ============= Calendar — same compact, glassy pearl effect as "Everything blooms in one place" ============= */}
+      <div className="pearl-frame animate-scale-in relative mt-5 overflow-hidden rounded-[1.75rem] p-3 sm:rounded-[2.5rem] sm:p-5" style={{ animationDelay: "60ms", background: "oklch(1 0 0 / 0.16)", backdropFilter: "blur(6px)" }}>
+        <div className="pearl-frame relative overflow-hidden rounded-2xl border-none bg-white/55 p-3 backdrop-blur-md sm:rounded-3xl sm:p-5">
           {/* Month nav */}
           <div className="mb-2 flex items-center justify-between gap-2 sm:mb-3">
-            <button onClick={() => shift(-1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal sm:h-7 sm:w-7">
-              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-            </button>
-            <div className="text-center font-script text-base text-hotpink sm:text-xl">
+            <h3 className="font-script text-lg text-hotpink sm:text-2xl">
               {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
+            </h3>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => shift(-1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md sm:h-7 sm:w-7">
+                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
+              <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md sm:h-7 sm:w-7">
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
             </div>
-            <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal sm:h-7 sm:w-7">
-              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-            </button>
           </div>
 
           {/* Weekday header */}
@@ -446,7 +322,7 @@ export function CycleTracker() {
           </div>
 
           {/* Legend */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[8px] font-bold tracking-wider text-rose/80 sm:mt-5 sm:gap-x-4 sm:gap-y-2 sm:text-[10px]">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[8px] font-bold tracking-wider text-rose/80 sm:mt-4 sm:gap-x-4 sm:gap-y-2 sm:text-[10px]">
             {(Object.entries(PHASE_META) as [Exclude<Phase, null>, typeof PHASE_META[Exclude<Phase, null>]][]).map(([k, v]) => (
               <span key={k} className="inline-flex items-center gap-1 sm:gap-1.5">
                 <span className={`h-2 w-2 rounded-full sm:h-3 sm:w-3 ${v.color}`} />
@@ -457,8 +333,72 @@ export function CycleTracker() {
         </div>
       </div>
 
-      {/* ============= Pills & Contraceptive + Space Stats ============= */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5">
+      {/* ============= Your Cycle Journey ============= */}
+      <div className="bloom-pearl-card animate-scale-in relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6" style={{ animationDelay: "100ms" }}>
+        <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.35)_0%,transparent_70%)]" aria-hidden />
+        <h3 className="relative z-10 mb-5 font-script text-xl text-hotpink sm:text-2xl">Your Cycle Journey</h3>
+        <div className="relative z-10 px-1 pt-5 sm:px-2">
+          {/* connecting line */}
+          <div className="absolute left-3 right-3 top-[calc(1.25rem+1rem)] h-1 rounded-full bg-petal sm:left-5 sm:right-5" />
+          {/* floating "Day X" pill */}
+          <div
+            className="absolute top-0 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${journeyPercent}%` }}
+          >
+            <span className="animate-bloom-bounce whitespace-nowrap rounded-full bg-hotpink px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md shadow-hotpink/30">
+              Day {cycleDay}
+            </span>
+            <span className="mt-0.5 h-1.5 w-0.5 rounded-full bg-hotpink/50" />
+          </div>
+
+          <div className="relative flex justify-between">
+            {journeySteps.map((step) => {
+              const Icon = PHASE_META[step.key].Icon;
+              return (
+                <div key={step.key} className="flex flex-1 flex-col items-center gap-1 text-center">
+                  <span
+                    className={[
+                      "grid h-8 w-8 shrink-0 place-items-center rounded-full ring-[3px] transition-all duration-300 sm:h-10 sm:w-10",
+                      step.active
+                        ? "animate-bloom-pulse bg-hotpink text-white ring-hotpink/30"
+                        : "bg-white text-rose ring-petal/60",
+                    ].join(" ")}
+                  >
+                    <Icon className="animate-icon-wiggle h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  </span>
+                  <span className={`text-[8px] font-bold tracking-wider sm:text-[10px] ${step.active ? "text-hotpink" : "text-rose/70"}`}>
+                    {step.label}
+                  </span>
+                  <span className="hidden text-[8px] text-rose/50 sm:block sm:text-[9px]">{step.range}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ============= 15-Minute Flow + Pills & Contraceptive + Space Stats ============= */}
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
+        {/* 15-Minute Flow */}
+        <div className="bloom-pearl-card animate-scale-in col-span-2 flex flex-col items-center gap-2 rounded-2xl p-3 text-center sm:col-span-1 sm:gap-4 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "140ms" }}>
+          <span
+            className="animate-icon-wiggle grid h-10 w-10 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-20 sm:w-20 lg:h-24 lg:w-24"
+            style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}
+          >
+            <Flower2 className="h-5 w-5 sm:h-10 sm:w-10 lg:h-12 lg:w-12" />
+          </span>
+          <div>
+            <p className="font-script text-sm leading-tight text-hotpink sm:text-2xl lg:text-3xl">{flow.title}</p>
+            <p className="mt-0.5 hidden text-xs font-medium text-magenta/70 sm:block sm:text-sm">{flow.blurb}</p>
+          </div>
+          <a
+            href="/app/tools/yoga"
+            className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-bold text-white sm:px-5 sm:py-2.5 sm:text-sm"
+          >
+            Start Now
+          </a>
+        </div>
+
         {/* Daily pill / contraceptive */}
         <div className="bloom-pearl-card animate-scale-in rounded-2xl p-3 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "220ms" }}>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -536,22 +476,22 @@ export function CycleTracker() {
         </div>
       </div>
 
-      {/* ============= Mood — compact single line ============= */}
+      {/* ============= Mood — compact, wraps to two lines ============= */}
       <div className="bloom-pearl-card animate-scale-in mt-5 rounded-2xl p-3 sm:rounded-[2rem] sm:p-5" style={{ animationDelay: "300ms" }}>
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="font-script text-lg text-hotpink sm:text-2xl">How's your mood today?</p>
+          {!hasPickedMood && <p className="font-script text-lg text-hotpink sm:text-2xl">How's your mood today?</p>}
           <p className="hidden text-[9px] font-bold tracking-widest text-rose/60 sm:block">
             {today.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}
           </p>
         </div>
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {MOODS.map((m) => {
             const active = mood === m.key;
             const MoodIcon = m.Icon;
             return (
               <button
                 key={m.key}
-                onClick={() => setMood(m.key)}
+                onClick={() => { setMood(m.key); setHasPickedMood(true); }}
                 className={[
                   "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-all duration-200 active:scale-95 sm:px-3.5 sm:text-xs",
                   active ? "bg-hotpink text-white animate-bloom-bounce" : "bg-blush/60 text-rose hover:bg-petal/70",
