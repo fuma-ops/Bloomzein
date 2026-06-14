@@ -306,6 +306,16 @@ export default function Landing() {
                         "inset 0 1px 0 oklch(1 0 0 / 0.75), inset 1px 0 0 oklch(1 0 0 / 0.25), inset -1px 0 0 oklch(1 0 0 / 0.12), inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18), 0 -10px 26px -10px oklch(1 0 0 / 0.7), 0 10px 28px -12px var(--card-glow, oklch(0.65 0.22 350 / 0.5))",
                     } as CSSProperties}
                   >
+                    {/* per-card photo, faded into a soft pink wash so the text on top stays readable */}
+                    <img
+                      src={u.image}
+                      alt=""
+                      aria-hidden
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover opacity-35 sm:opacity-40"
+                    />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, oklch(1 0 0 / 0.55) 0%, oklch(1 0 0 / 0.35) 45%, oklch(1 0 0 / 0.75) 100%)" }} />
                     <h3 className="relative z-10 font-script text-2xl leading-none sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent }}>{u.title}</h3>
                     <ul className="relative z-10 mt-2 inline-flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
                       {u.items.map((it, ii) => {
@@ -564,7 +574,7 @@ function PhoneMock() {
 interface UniverseItem { icon: LucideIcon; label: string; }
 interface Universe {
   key: string; title: string; href: string;
-  titleColor: string; titleAccent: string; itemBg: string; glowColor: string;
+  titleColor: string; titleAccent: string; itemBg: string; glowColor: string; image: string;
   items: UniverseItem[];
 }
 
@@ -572,6 +582,7 @@ const UNIVERSES: Universe[] = [
   {
     key: "body", title: "Body", href: "/app/tools/cycle",
     titleColor: "#db2777", titleAccent: "#e60076", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.68 0.24 350 / 0.55)",
+    image: "/images/landing-card-body.webp",
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
       { icon: Utensils, label: "Meals & Recipes" },
@@ -582,6 +593,7 @@ const UNIVERSES: Universe[] = [
   {
     key: "mind", title: "Mind", href: "/app/tools/diary",
     titleColor: "#7c3aed", titleAccent: "#7c0cf2", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.6 0.22 300 / 0.55)",
+    image: "/images/landing-card-mind.webp",
     items: [
       { icon: NotebookPen, label: "Journal" },
       { icon: StickyNote, label: "Notes" },
@@ -592,6 +604,7 @@ const UNIVERSES: Universe[] = [
   {
     key: "life", title: "Life", href: "/app/calendar",
     titleColor: "#e11d48", titleAccent: "#ff0a47", itemBg: "oklch(1 0 0 / 0.6)", glowColor: "oklch(0.66 0.22 20 / 0.55)",
+    image: "/images/landing-card-life.webp",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
       { icon: Wallet, label: "Budget" },
