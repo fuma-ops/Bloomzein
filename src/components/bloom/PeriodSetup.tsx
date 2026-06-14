@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X, Flower2, Bell, Sparkles, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Flower2, Bell, Sparkles, ChevronDown, Droplet } from "lucide-react";
 import { CuteTimePicker } from "./CutePicker";
 import { phaseForDay } from "./cyclePhase";
 
@@ -131,10 +131,12 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                           : c.outside
                             ? "text-rose/30 hover:bg-blush"
                             : "text-rose hover:bg-blush",
-                      isToday ? "ring-2 ring-hotpink/60 ring-offset-1 shadow-[0_0_10px_2px_rgba(236,72,153,0.35)]" : "",
+                      isToday ? "animate-selected-glow ring-1 ring-hotpink/40" : "",
                     ].join(" ")}
                   >
                     {c.date.getDate()}
+                    {isPeriod && <Droplet className="absolute bottom-0.5 right-0.5 h-2 w-2 text-white/80" />}
+                    {isOvulation && <Sparkles className="absolute bottom-0.5 right-0.5 h-2 w-2 text-violet-400/80" />}
                   </button>
                 );
               })}

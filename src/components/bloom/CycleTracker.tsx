@@ -7,7 +7,6 @@ import {
   Flower2,
   Moon,
   Pill,
-  Plus,
   Undo2,
   Sparkles,
   Heart,
@@ -229,7 +228,7 @@ export function CycleTracker() {
           <h3 className="mt-1 font-script text-base leading-tight text-hotpink sm:text-3xl">
             Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
           </h3>
-          <p className="mt-1 text-[11px] font-medium leading-snug text-magenta/80 sm:mt-1.5 sm:text-sm">
+          <p className="mt-1.5 font-script text-base leading-snug text-hotpink drop-shadow-[0_0_8px_rgba(236,72,153,0.35)] sm:mt-2 sm:text-2xl">
             {PHASE_INSIGHT[currentPhase]}
           </p>
         </div>
@@ -252,11 +251,10 @@ export function CycleTracker() {
               </button>
               <button
                 onClick={() => setSetupOpen(true)}
-                className="bloom-luxury-btn hover-scale group relative inline-flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold text-white sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+                className="bloom-luxury-btn hover-scale animate-card-breathe group relative inline-flex shrink-0 items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold text-white sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
               >
                 <Sparkles className="h-3 w-3 animate-bloom-sparkle sm:h-3.5 sm:w-3.5" />
-                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span>Log &amp; Settings</span>
+                <span>Settings</span>
               </button>
             </div>
           </div>
@@ -285,17 +283,19 @@ export function CycleTracker() {
                   onClick={() => setSelected(d)}
                   className={[
                     "relative aspect-square rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200 sm:text-xs",
-                    "hover:scale-110 active:scale-95",
+                    "hover:scale-105 active:scale-95",
                     isPeriod
                       ? "bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm"
                       : isOvulation
                         ? "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200"
                         : "text-rose hover:bg-blush",
-                    isSelected ? "scale-110 shadow-md animate-bloom-bounce" : "",
-                    isToday ? "ring-2 ring-hotpink/60 ring-offset-1 shadow-[0_0_10px_2px_rgba(236,72,153,0.35)]" : "",
+                    isSelected && !isToday ? "ring-1 ring-hotpink/40" : "",
+                    isToday ? "animate-selected-glow ring-1 ring-hotpink/40" : "",
                   ].join(" ")}
                 >
                   {d.getDate()}
+                  {isPeriod && <Droplet className="absolute bottom-0.5 right-0.5 h-2 w-2 text-white/80 sm:h-2.5 sm:w-2.5" />}
+                  {isOvulation && <Sparkles className="absolute bottom-0.5 right-0.5 h-2 w-2 text-violet-400/80 sm:h-2.5 sm:w-2.5" />}
                 </button>
               );
             })}
