@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ChevronRight, Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CYCLE_SETTINGS, writeCycleSettings } from "../cyclePhase";
-import { AppIcon } from "../AppIcon";
 import { CuteToolIcon } from "../CuteToolIcon";
+import { isToolVisited } from "../visitedTools";
 import { BloomBubbles } from "../BloomBubbles";
 import { DatePicker } from "./DatePicker";
 import {
@@ -42,11 +42,33 @@ function OnboardingSheet({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Central app-icon medallion reused on the welcome screen and as the reveal animation's anchor.
-function BloomMedallion({ size = 88, iconSize }: { size?: number; iconSize?: number }) {
+// The bloom flower from the app logo, isolated so it can spin on its own.
+function BloomFlower({ size = 48, className = "" }: { size?: number; className?: string }) {
   return (
-    <div className="clay-blob grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size }}>
-      <AppIcon size={iconSize ?? Math.round(size * 0.68)} />
+    <svg viewBox="0 0 512 512" width={size} height={size} className={className} aria-hidden="true">
+      <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" />
+      <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" transform="rotate(60 256 256)" />
+      <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" transform="rotate(120 256 256)" />
+      <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" transform="rotate(180 256 256)" />
+      <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" transform="rotate(240 256 256)" />
+      <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" transform="rotate(300 256 256)" />
+      <circle cx="256" cy="256" r="44" fill="#FFD9EC" />
+    </svg>
+  );
+}
+
+// Central medallion reused on the welcome screen and as the reveal animation's anchor —
+// just the logo's flower, in strong pink, spinning gently inside a soft pearl circle.
+function BloomMedallion({ size = 88, flowerSize, spin = false }: { size?: number; flowerSize?: number; spin?: boolean }) {
+  return (
+    <div
+      className="grid shrink-0 place-items-center rounded-full border border-petal bg-white/90 shadow-lg shadow-hotpink/15"
+      style={{ width: size, height: size }}
+    >
+      <BloomFlower
+        size={flowerSize ?? Math.round(size * 0.62)}
+        className={`text-hotpink ${spin ? "animate-bloom-flower-spin" : ""}`}
+      />
     </div>
   );
 }
@@ -107,7 +129,7 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 function Screen1({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <BloomMedallion size={104} />
+      <BloomMedallion size={104} spin />
       <h1 className="font-script mt-5 text-4xl tracking-wide text-hotpink">Bloomzein</h1>
       <p className="mt-2 text-sm font-light text-rose/70">Your cycle. Your life. All connected.</p>
       <button
@@ -256,7 +278,7 @@ const ORBIT_POSITIONS = ORBIT_ORDER.map((_, i) => {
 });
 const ORBIT_CENTER = ORBIT_SIZE / 2;
 
-function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () => void }) {
+function Screen4({ onNext }: { onNext: () => void }) {
   const [ctaVisible, setCtaVisible] = useState(false);
 
   useEffect(() => {
@@ -264,60 +286,52 @@ function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () 
     return () => clearTimeout(t);
   }, []);
 
-  const meta = phase ? onboardingPhaseMeta(phase) : null;
-
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       <div className="relative" style={{ width: ORBIT_SIZE, height: ORBIT_SIZE }}>
-        <svg viewBox={`0 0 ${ORBIT_SIZE} ${ORBIT_SIZE}`} className="absolute inset-0 h-full w-full">
-          {ORBIT_POSITIONS.map((pos, i) => (
-            <line
-              key={i}
-              x1={ORBIT_CENTER}
-              y1={ORBIT_CENTER}
-              x2={ORBIT_CENTER + pos.x}
-              y2={ORBIT_CENTER + pos.y}
-              stroke="oklch(0.62 0.24 0 / 0.3)"
-              strokeWidth="1.5"
-              strokeDasharray="160"
-              strokeDashoffset="160"
-              className="animate-onboarding-line"
-            />
-          ))}
-        </svg>
-
-        <div className="absolute inset-0 flex items-center justify-center animate-onboarding-shape">
-          <BloomMedallion size={104} />
+        {/* The flower spins in place at the center */}
+        <div className="absolute inset-0 flex items-center justify-center animate-onboarding-icon-pop">
+          <BloomMedallion size={104} spin />
         </div>
-        {meta && phase && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`animate-onboarding-badge whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium shadow-md ${meta.color}`}>
-              {PHASE_COPY[phase].label}
-            </span>
-          </div>
-        )}
 
-        {ORBIT_ORDER.map((key, i) => {
-          const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
-          const pos = ORBIT_POSITIONS[i];
-          return (
-            <div
-              key={key}
-              className="absolute grid h-10 w-10 place-items-center rounded-full bg-white text-hotpink shadow-md animate-onboarding-icon"
-              style={
-                {
+        {/* Tools and their connector lines slowly revolve around the flower together */}
+        <div className="absolute inset-0 animate-orbit-spin">
+          <svg viewBox={`0 0 ${ORBIT_SIZE} ${ORBIT_SIZE}`} className="absolute inset-0 h-full w-full">
+            {ORBIT_POSITIONS.map((pos, i) => (
+              <line
+                key={i}
+                x1={ORBIT_CENTER}
+                y1={ORBIT_CENTER}
+                x2={ORBIT_CENTER + pos.x}
+                y2={ORBIT_CENTER + pos.y}
+                stroke="var(--hotpink)"
+                strokeOpacity="0.35"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray="2 6"
+                className="animate-flow-dash"
+              />
+            ))}
+          </svg>
+
+          {ORBIT_ORDER.map((key, i) => {
+            const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
+            const pos = ORBIT_POSITIONS[i];
+            return (
+              <div
+                key={key}
+                className="absolute grid h-10 w-10 place-items-center rounded-full bg-white text-hotpink shadow-md animate-onboarding-icon-pop animate-orbit-counter-spin"
+                style={{
                   left: `calc(50% + ${pos.x}px - 20px)`,
                   top: `calc(50% + ${pos.y}px - 20px)`,
-                  animationDelay: `${0.6 + i * 0.15}s`,
-                  "--fly-x": `${-pos.x}px`,
-                  "--fly-y": `${-pos.y}px`,
-                } as React.CSSProperties
-              }
-            >
-              <CuteToolIcon slug={tool.slug} className="h-5 w-5" />
-            </div>
-          );
-        })}
+                  animationDelay: `${0.6 + i * 0.15}s, 0s`,
+                }}
+              >
+                <CuteToolIcon slug={tool.slug} className="h-5 w-5" />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-2 animate-onboarding-text">
@@ -411,6 +425,7 @@ function Screen5({
           {ordered.map((key, i) => {
             const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
             const recommended = tool.slug === recommendedSlug;
+            const explored = isToolVisited(tool.slug);
             const teaser = phase ? TEASERS[key][phase] : "";
             return (
               <button
@@ -419,7 +434,7 @@ function Screen5({
                 onClick={() => onEnter(toolHref(tool.slug))}
                 style={{ animationDelay: `${i * 0.06}s, ${(i % 6) * 1.4}s` }}
                 className={`bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 text-left transition hover:-translate-y-0.5 animate-card-vibrate ${
-                  recommended ? "ring-2 ring-hotpink" : ""
+                  recommended ? "ring-2 ring-hotpink" : !explored ? "opacity-70" : ""
                 }`}
               >
                 <div
@@ -428,20 +443,28 @@ function Screen5({
                 />
 
                 <div className="flex items-start justify-between">
-                  <span className="clay-blob animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0">
+                  <span
+                    className={`animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0 ${
+                      explored || recommended ? "clay-blob" : "grayscale opacity-60 clay-blob"
+                    }`}
+                  >
                     <CuteToolIcon slug={tool.slug} className="h-7 w-7 sm:h-8 sm:w-8 drop-shadow-[0_2px_3px_oklch(0.4_0.22_350/0.3)]" />
                   </span>
                   <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 animate-chevron-glow" strokeWidth={2} />
                 </div>
 
                 <h3 className="mt-3 sm:mt-4 font-bold text-sm sm:text-base text-[#831843] leading-snug">{toolLabel(tool.slug)}</h3>
-                <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/70 leading-snug line-clamp-2">{teaser}</p>
+                <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm font-semibold text-hotpink leading-snug line-clamp-2">{teaser}</p>
 
-                {recommended && (
+                {recommended ? (
                   <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-hotpink/20">
                     <Sparkles className="h-2.5 w-2.5" strokeWidth={2} /> Recommended
                   </span>
-                )}
+                ) : !explored ? (
+                  <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-rose/10 text-rose/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-rose/15">
+                    Not explored yet
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -511,7 +534,7 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
             />
           )}
           {screen === 3 && <Screen3 goal={goal} setGoal={setGoal} onNext={() => goTo(4, "forward")} onBack={() => goTo(2, "back")} />}
-          {screen === 4 && <Screen4 phase={phase} onNext={() => goTo(5, "forward")} />}
+          {screen === 4 && <Screen4 onNext={() => goTo(5, "forward")} />}
         </div>
       </OnboardingSheet>
     </>

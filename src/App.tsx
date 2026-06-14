@@ -21,6 +21,7 @@ import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
 import { CycleTracker } from "./components/bloom/CycleTracker";
+import { markToolVisited } from "./components/bloom/visitedTools";
 
 function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
@@ -62,6 +63,15 @@ function AppContent() {
     if (path === "/app" || path === "/app/") {
       window.history.replaceState({}, "", "/app/today");
       setPath("/app/today");
+    }
+  }, [path]);
+
+  // Track which tools the user has opened, so the Tools page can highlight what's still unexplored
+  useEffect(() => {
+    if (path === "/budget") {
+      markToolVisited("budget");
+    } else if (path.startsWith("/app/tools/") && path !== "/app/tools/") {
+      markToolVisited(path.split("/").pop()!);
     }
   }, [path]);
 

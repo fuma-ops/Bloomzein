@@ -5,6 +5,7 @@ import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { scrollToTopOf } from "@/lib/scrollToTopOf";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
+import { isToolVisited } from "@/components/bloom/visitedTools";
 
 const LAST_KEY = "bloom:last-tool";
 const PINS_KEY = "bloom:pinned-tools";
@@ -50,7 +51,10 @@ export default function ToolsIndex() {
       : TOOLS;
     const pinned = filtered.filter((t) => pins.includes(t.slug));
     const rest = filtered.filter((t) => !pins.includes(t.slug));
-    return [...pinned, ...rest];
+    // Surface tools the user hasn't explored yet, to nudge them toward what's left to discover
+    const unexplored = rest.filter((t) => !isToolVisited(t.slug));
+    const explored = rest.filter((t) => isToolVisited(t.slug));
+    return [...pinned, ...unexplored, ...explored];
   }, [pins, query]);
 
   return (
@@ -175,12 +179,16 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
     onGo();
   };
 
+  const explored = isToolVisited(tool.slug);
+
   return (
     <a
       {...linkPropsFor(tool)}
       onClick={handleClick}
       style={{ animationDelay: `${index * 0.06}s, ${(index % 6) * 1.4}s` }}
-      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-vibrate"
+      className={`bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-vibrate ${
+        explored ? "" : "opacity-70"
+      }`}
     >
       <div
         className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
@@ -188,7 +196,11 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
       />
 
       <div className="flex items-start justify-between">
-        <span className="clay-blob animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0">
+        <span
+          className={`animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0 clay-blob ${
+            explored ? "" : "grayscale opacity-60"
+          }`}
+        >
           <CuteToolIcon slug={tool.slug} className="h-7 w-7 sm:h-8 sm:w-8 drop-shadow-[0_2px_3px_oklch(0.4_0.22_350/0.3)]" />
         </span>
         <div className="flex items-center gap-1">
@@ -213,11 +225,15 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
       <h3 className="mt-3 sm:mt-4 font-bold text-sm sm:text-base text-[#831843] leading-snug">{tool.label}</h3>
       <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/70 leading-snug line-clamp-2">{tool.blurb}</p>
 
-      {pinned && (
+      {pinned ? (
         <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-hotpink/20">
           <Pin className="h-2.5 w-2.5" strokeWidth={2} fill="currentColor" /> Pinned
         </span>
-      )}
+      ) : !explored ? (
+        <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-rose/10 text-rose/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-rose/15">
+          Not explored yet
+        </span>
+      ) : null}
     </a>
   );
 }

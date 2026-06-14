@@ -64,7 +64,7 @@ export const GOALS: { key: GoalKey; title: string; subtitle: string; icon: typeo
   { key: "yoga", title: "Feel better in my body", subtitle: "Yoga and wellness sessions adapted to your phase", icon: Heart, toolSlug: "yoga" },
   { key: "diet", title: "Eat better", subtitle: "Nutrition and meals planned around your cycle", icon: Salad, toolSlug: "diet" },
   { key: "workout", title: "Move more", subtitle: "Workout programs matched to your energy level", icon: Activity, toolSlug: "workout" },
-  { key: "all", title: "Sync everything", subtitle: "See how all your tools connect around your cycle", icon: CircleDot, toolSlug: "cycle" },
+  { key: "all", title: "Sync everything", subtitle: "See how all your tools connect around your cycle", icon: CircleDot, toolSlug: "diary" },
 ];
 
 /** Onboarding's 8 orbit/home tools, mapped onto the app's actual TOOLS slugs. */
