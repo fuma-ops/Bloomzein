@@ -280,8 +280,8 @@ export default function Landing() {
         </div>
         <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
-            {/* Phone: 3D coverflow carousel — active card centered, neighbors peek on each side */}
-            <div className="relative h-[400px] sm:hidden" style={{ perspective: "1200px" }}>
+            {/* Phone: 3D coverflow carousel — active card centered, neighbors peek on each side, cards keep their natural size */}
+            <div className="relative h-[330px] sm:hidden" style={{ perspective: "1200px" }}>
               {UNIVERSES.map((u, i) => {
                 let pos = i - activeUniverse;
                 if (pos > 1) pos -= UNIVERSES.length;
@@ -294,15 +294,15 @@ export default function Landing() {
                     role={isCenter ? undefined : "button"}
                     aria-label={isCenter ? undefined : `Show ${u.title}`}
                     onClick={() => !isCenter && setActiveUniverse(i)}
-                    className={`absolute left-1/2 top-0 h-full w-[80%] transition-all duration-500 ease-out ${isCenter ? "" : "cursor-pointer"}`}
+                    className={`absolute left-1/2 top-1/2 w-[78%] transition-all duration-500 ease-out ${isCenter ? "" : "cursor-pointer"}`}
                     style={{
-                      transform: `translateX(-50%) translateX(${pos * 92}%) scale(${isCenter ? 1 : 0.84}) rotateY(${pos * -28}deg)`,
+                      transform: `translate(-50%, -50%) translateX(${pos * 92}%) scale(${isCenter ? 1 : 0.84}) rotateY(${pos * -28}deg)`,
                       zIndex: isCenter ? 20 : 10,
                       opacity: isCenter ? 1 : 0.55,
                       transformStyle: "preserve-3d",
                     }}
                   >
-                    <UniverseCard u={u} i={i} className="h-full w-full" />
+                    <UniverseCard u={u} i={i} className="w-full" />
                   </div>
                 );
               })}
