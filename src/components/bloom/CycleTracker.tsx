@@ -114,7 +114,7 @@ function sameDay(a: Date, b: Date) {
 }
 
 export function CycleTracker() {
-  const today = new Date(2026, 5, 4); // demo "today"
+  const today = new Date(2026, 5, 14); // demo "today"
   const [settings, setSettings] = useState<CycleSettings>(() => readCycleSettings());
   const [setupOpen, setSetupOpen] = useState(false);
 
@@ -124,7 +124,7 @@ export function CycleTracker() {
     broadcastCyclePhase();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [cursor, setCursor] = useState(new Date(2026, 5, 1));
+  const [cursor, setCursor] = useState(new Date(2026, 5, 1)); // June 2026 — month containing "today"
   const [selected, setSelected] = useState<Date>(today);
   const [pillTaken, setPillTaken] = useState(true);
   const [mood, setMood] = useState<string>("happy");
@@ -292,7 +292,7 @@ export function CycleTracker() {
                         ? "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200"
                         : "text-rose hover:bg-blush",
                     isSelected ? "scale-110 shadow-md animate-bloom-bounce" : "",
-                    isToday ? "ring-2 ring-amber-300 ring-offset-1" : "",
+                    isToday ? "ring-2 ring-hotpink/60 ring-offset-1 shadow-[0_0_10px_2px_rgba(236,72,153,0.35)]" : "",
                   ].join(" ")}
                 >
                   {d.getDate()}
@@ -305,7 +305,7 @@ export function CycleTracker() {
           <div className="mt-3 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80 sm:mt-4 sm:gap-4 sm:text-[10px]">
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] sm:h-3 sm:w-3" /> Period</span>
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200 sm:h-3 sm:w-3" /> Ovulation</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-amber-300 sm:h-3 sm:w-3" /> Today</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-hotpink/60 shadow-[0_0_6px_1px_rgba(236,72,153,0.4)] sm:h-3 sm:w-3" /> Today</span>
           </div>
         </div>
       </div>

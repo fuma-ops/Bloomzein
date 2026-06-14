@@ -26,7 +26,7 @@ interface Props {
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const TODAY = new Date(2026, 5, 4); // demo "today", matches CycleTracker
+const TODAY = new Date(2026, 5, 14); // demo "today", matches CycleTracker
 
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -88,9 +88,14 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
         <div ref={scrollRef} onScroll={handleScroll} className="scroll-smooth overflow-y-auto p-3.5">
           <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
-          <div className="animate-scale-in mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose" style={{ animationDelay: "40ms" }}>
+          <div className="animate-scale-in animate-selected-glow mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose" style={{ animationDelay: "40ms" }}>
             <Flower2 className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />
             Tap your <span className="font-semibold text-hotpink">last period start</span> date:
+          </div>
+
+          {/* Bouncing pointer guiding the eye down to the calendar */}
+          <div className="flex justify-center">
+            <ChevronDown className="h-4 w-4 animate-bounce text-hotpink/70" />
           </div>
 
           {/* Calendar — simplified: only period range, ovulation day & today */}
@@ -126,7 +131,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                           : c.outside
                             ? "text-rose/30 hover:bg-blush"
                             : "text-rose hover:bg-blush",
-                      isToday ? "ring-2 ring-amber-300 ring-offset-1" : "",
+                      isToday ? "ring-2 ring-hotpink/60 ring-offset-1 shadow-[0_0_10px_2px_rgba(236,72,153,0.35)]" : "",
                     ].join(" ")}
                   >
                     {c.date.getDate()}
@@ -138,7 +143,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             <div className="mt-2 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80">
               <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
               <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200" /> Ovulation</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-amber-300" /> Today</span>
+              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-hotpink/60 shadow-[0_0_6px_1px_rgba(236,72,153,0.4)]" /> Today</span>
             </div>
           </div>
 
