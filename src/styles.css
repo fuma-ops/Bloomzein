@@ -329,6 +329,15 @@
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
+/* Slow zoom breathing for the card background photos */
+@keyframes photo-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@utility animate-photo-breathe {
+  animation: photo-breathe 10s ease-in-out infinite;
+}
+
 /* One-off horizontal nudge on the universes carousel, hinting that it's swipeable */
 @keyframes carousel-swipe-hint {
   0%, 100% { transform: translateX(0); }

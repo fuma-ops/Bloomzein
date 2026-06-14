@@ -16,6 +16,25 @@ export default function Landing() {
   const [iosHint, setIosHint] = useState(false);
   const [activeUniverse, setActiveUniverse] = useState(0);
   const universeTouchX = useRef<number | null>(null);
+  const universeCarouselRef = useRef<HTMLDivElement>(null);
+  const [carouselHintPlayed, setCarouselHintPlayed] = useState(false);
+
+  // Nudge the universes carousel sideways the moment it scrolls into view, hinting it's swipeable
+  useEffect(() => {
+    const el = universeCarouselRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCarouselHintPlayed(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Auto-hide iOS hint after 5s
   useEffect(() => {
@@ -280,10 +299,11 @@ export default function Landing() {
           </p>
         </div>
         <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-1 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
-          <div className="relative z-10 px-6 pt-2 pb-8 sm:px-10 sm:py-14 lg:py-16">
+          <div className="relative z-10 px-6 pt-[2mm] pb-8 sm:px-10 sm:py-14 lg:py-16">
             {/* Phone: 3D coverflow carousel — active card centered, neighbors peek on each side, cards keep their natural size */}
             <div
-              className="relative h-[330px] animate-carousel-hint touch-pan-y sm:hidden"
+              ref={universeCarouselRef}
+              className={`relative h-[330px] touch-pan-y sm:hidden ${carouselHintPlayed ? "animate-carousel-hint" : ""}`}
               style={{ perspective: "1200px" }}
               onTouchStart={(e) => { universeTouchX.current = e.touches[0].clientX; }}
               onTouchEnd={(e) => {
@@ -651,7 +671,8 @@ function UniverseCard({ u, i, className = "", popIn = false }: { u: Universe; i:
         aria-hidden
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full animate-photo-breathe object-cover"
+        style={{ animationDelay: `${i * 0.6}s` }}
       />
       <h3 className="relative z-10 w-full animate-bloom-float text-center font-script text-2xl leading-none drop-shadow-[0_2px_6px_oklch(1_0_0_/_0.8)] sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent, animationDelay: `${i * 300}ms` }}>{u.title}</h3>
       <ul className="relative z-10 mt-2 flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
