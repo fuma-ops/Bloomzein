@@ -58,22 +58,6 @@ function BloomFlower({ size = 48, className = "" }: { size?: number; className?:
   );
 }
 
-// Central medallion reused on the welcome screen and as the reveal animation's anchor —
-// just the logo's flower, in strong pink, spinning gently inside a soft pearl circle.
-function BloomMedallion({ size = 88, flowerSize, spin = false }: { size?: number; flowerSize?: number; spin?: boolean }) {
-  return (
-    <div
-      className="grid shrink-0 place-items-center rounded-full border border-petal bg-white/90 shadow-lg shadow-hotpink/15"
-      style={{ width: size, height: size }}
-    >
-      <BloomFlower
-        size={flowerSize ?? Math.round(size * 0.62)}
-        className={`text-hotpink ${spin ? "animate-bloom-flower-spin" : ""}`}
-      />
-    </div>
-  );
-}
-
 // Cycle Tracker as the "brain" of the reveal — the other tools orbit around it,
 // pulsing gently to show it's the one organising everything else.
 function CycleBrainMedallion({ size = 104 }: { size?: number }) {
@@ -145,13 +129,13 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 function Screen1({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <BloomMedallion size={104} spin />
+      <BloomFlower size={132} className="text-hotpink animate-bloom-flower-spin drop-shadow-[0_8px_20px_oklch(0.65_0.27_350_/_0.35)]" />
       <h1 className="font-script mt-5 text-4xl tracking-wide text-hotpink">Bloomzein</h1>
       <p className="mt-2 text-sm font-light text-rose/70">Your cycle. Your life. All connected.</p>
       <button
         type="button"
         onClick={onNext}
-        className="bloom-luxury-btn animate-cta-glow mt-10 w-full max-w-xs px-8 py-3.5 text-base font-medium text-white"
+        className="bloom-luxury-btn animate-cta-pulse mt-10 w-full max-w-xs px-8 py-3.5 text-base font-medium text-white"
       >
         Get started
       </button>
@@ -186,43 +170,49 @@ function Screen2({
   }, [preview?.phase]);
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto px-6 pt-6 pb-8">
-      <ProgressDots active={2} onBack={onBack} />
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 px-6 pt-6">
+        <ProgressDots active={2} onBack={onBack} />
+      </div>
 
-      <h2 className="font-script mt-5 text-2xl text-hotpink">Tell me about your cycle</h2>
-      <p className="mt-1 text-sm font-light text-rose/70">Just 3 things — that's all Bloomzein needs to personalise everything</p>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        <h2 className="font-script mt-5 animate-question-pop text-2xl text-hotpink">Tell me about your cycle</h2>
+        <p className="mt-1 text-sm font-light text-rose/70">Just 3 things — that's all Bloomzein needs to personalise everything</p>
 
-      <p className="mt-5 text-sm font-medium text-rose">When did your last period start?</p>
-      <DatePicker value={cycleData.lastPeriod} max={todayISO()} onChange={(iso) => setCycleData((c) => ({ ...c, lastPeriod: iso }))} />
+        <p className="mt-5 animate-question-pop text-sm font-medium text-rose" style={{ animationDelay: "0.1s" }}>When did your last period start?</p>
+        <DatePicker value={cycleData.lastPeriod} max={todayISO()} onChange={(iso) => setCycleData((c) => ({ ...c, lastPeriod: iso }))} />
 
-      {preview && (
-        <div className={`mt-4 animate-in fade-in duration-400 rounded-2xl p-4 ${onboardingPhaseMeta(preview.phase).color}`}>
-          <div className="flex items-center justify-between">
-            <span className="rounded-full bg-white/60 px-3 py-1 text-xs font-medium">{PHASE_COPY[preview.phase].label}</span>
-            <span className="text-xs font-medium">Day {preview.day} of cycle</span>
+        {preview && (
+          <div className={`mt-4 animate-in fade-in duration-400 rounded-2xl p-4 ${onboardingPhaseMeta(preview.phase).color}`}>
+            <div className="flex items-center justify-between">
+              <span className="rounded-full bg-white/60 px-3 py-1 text-xs font-medium">{PHASE_COPY[preview.phase].label}</span>
+              <span className="text-xs font-medium">Day {preview.day} of cycle</span>
+            </div>
+            <p className="mt-2 text-sm font-light">{PHASE_COPY[preview.phase].description}</p>
           </div>
-          <p className="mt-2 text-sm font-light">{PHASE_COPY[preview.phase].description}</p>
+        )}
+
+        <div className="mt-5">
+          <p className="animate-question-pop text-sm font-medium text-rose" style={{ animationDelay: "0.2s" }}>How many days does your cycle usually last?</p>
+          <Stepper value={cycleData.cycleLength} min={21} max={35} onChange={(v) => setCycleData((c) => ({ ...c, cycleLength: v }))} />
         </div>
-      )}
 
-      <div className="mt-5">
-        <p className="text-sm font-medium text-rose">How many days does your cycle usually last?</p>
-        <Stepper value={cycleData.cycleLength} min={21} max={35} onChange={(v) => setCycleData((c) => ({ ...c, cycleLength: v }))} />
+        <div className="mt-5">
+          <p className="animate-question-pop text-sm font-medium text-rose" style={{ animationDelay: "0.3s" }}>How many days does your period last?</p>
+          <Stepper value={cycleData.periodDuration} min={2} max={10} onChange={(v) => setCycleData((c) => ({ ...c, periodDuration: v }))} />
+        </div>
       </div>
 
-      <div className="mt-5">
-        <p className="text-sm font-medium text-rose">How many days does your period last?</p>
-        <Stepper value={cycleData.periodDuration} min={2} max={10} onChange={(v) => setCycleData((c) => ({ ...c, periodDuration: v }))} />
+      <div className="shrink-0 px-6 pb-6 pt-2">
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!cycleData.lastPeriod}
+          className={`bloom-luxury-btn w-full px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${cycleData.lastPeriod ? "animate-cta-pulse" : ""}`}
+        >
+          Continue
+        </button>
       </div>
-
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={!cycleData.lastPeriod}
-        className={`bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${cycleData.lastPeriod ? "animate-cta-glow" : ""}`}
-      >
-        Continue
-      </button>
     </div>
   );
 }
@@ -240,46 +230,53 @@ function Screen3({
   onBack: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col overflow-y-auto px-6 pt-6 pb-8">
-      <ProgressDots active={3} onBack={onBack} />
-
-      <h2 className="font-script mt-5 text-2xl text-hotpink">What do you want to focus on first?</h2>
-      <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
-
-      <div className="mt-5 flex flex-col gap-3">
-        {GOALS.map((g) => {
-          const Icon = g.icon;
-          const selected = goal === g.key;
-          return (
-            <button
-              key={g.key}
-              type="button"
-              onClick={() => setGoal(g.key)}
-              className={`bloom-pearl-card pearl-sheen flex min-h-[80px] items-center gap-4 rounded-3xl p-4 text-left transition-all duration-300 ${
-                selected ? "border-2 border-hotpink bg-blush" : "border-2 border-transparent"
-              }`}
-            >
-              <span className="clay-blob grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl text-white">
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="flex-1">
-                <span className="block text-base font-medium text-rose">{g.title}</span>
-                <span className="block text-[13px] font-light text-rose/60">{g.subtitle}</span>
-              </span>
-              <ChevronRight className={`h-5 w-5 shrink-0 transition ${selected ? "text-hotpink" : "text-rose/30"}`} />
-            </button>
-          );
-        })}
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 px-6 pt-6">
+        <ProgressDots active={3} onBack={onBack} />
       </div>
 
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={!goal}
-        className={`bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${goal ? "animate-cta-glow" : ""}`}
-      >
-        Let's go
-      </button>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        <h2 className="font-script mt-5 animate-question-pop text-2xl text-hotpink">What do you want to focus on first?</h2>
+        <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
+
+        <div className="mt-5 flex flex-col gap-3">
+          {GOALS.map((g, i) => {
+            const Icon = g.icon;
+            const selected = goal === g.key;
+            return (
+              <button
+                key={g.key}
+                type="button"
+                onClick={() => setGoal(g.key)}
+                style={{ animationDelay: `${i * 0.08}s` }}
+                className={`bloom-pearl-card pearl-sheen flex min-h-[80px] animate-question-pop items-center gap-4 rounded-3xl p-4 text-left transition-all duration-300 ${
+                  selected ? "border-2 border-hotpink bg-blush" : "border-2 border-transparent"
+                }`}
+              >
+                <span className="clay-blob grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl text-white">
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span className="flex-1">
+                  <span className="block text-base font-medium text-rose">{g.title}</span>
+                  <span className="block text-[13px] font-light text-rose/60">{g.subtitle}</span>
+                </span>
+                <ChevronRight className={`h-5 w-5 shrink-0 transition ${selected ? "text-hotpink" : "text-rose/30"}`} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="shrink-0 px-6 pb-6 pt-2">
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!goal}
+          className={`bloom-luxury-btn w-full px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${goal ? "animate-cta-pulse" : ""}`}
+        >
+          Let's go
+        </button>
+      </div>
     </div>
   );
 }
@@ -305,6 +302,10 @@ function Screen4({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       <div className="relative" style={{ width: ORBIT_SIZE, height: ORBIT_SIZE }}>
+        {/* Big soft pink circles drifting behind the orbit, for depth and life */}
+        <div className="pointer-events-none absolute -inset-6 -z-10 rounded-full bg-hotpink/10 animate-bloom-float" />
+        <div className="pointer-events-none absolute inset-8 -z-10 rounded-full bg-hotpink/10 animate-bloom-float" style={{ animationDelay: "1.5s" }} />
+
         {/* The Cycle Tracker sits at the center as the brain organising every tool */}
         <div className="absolute inset-0 flex items-center justify-center animate-onboarding-icon-pop">
           <CycleBrainMedallion size={104} />
@@ -336,14 +337,14 @@ function Screen4({ onNext }: { onNext: () => void }) {
             return (
               <div
                 key={key}
-                className="absolute grid h-10 w-10 place-items-center rounded-full bg-white text-hotpink shadow-md animate-onboarding-icon-pop animate-orbit-counter-spin"
+                className="absolute grid h-12 w-12 place-items-center rounded-full bg-white text-hotpink shadow-md animate-onboarding-icon-pop animate-orbit-counter-spin"
                 style={{
-                  left: `calc(50% + ${pos.x}px - 20px)`,
-                  top: `calc(50% + ${pos.y}px - 20px)`,
+                  left: `calc(50% + ${pos.x}px - 24px)`,
+                  top: `calc(50% + ${pos.y}px - 24px)`,
                   animationDelay: `${0.6 + i * 0.15}s, 0s`,
                 }}
               >
-                <CuteToolIcon slug={tool.slug} className="h-5 w-5" />
+                <CuteToolIcon slug={tool.slug} className="h-6 w-6" />
               </div>
             );
           })}
@@ -359,7 +360,7 @@ function Screen4({ onNext }: { onNext: () => void }) {
         <button
           type="button"
           onClick={onNext}
-          className="bloom-luxury-btn animate-cta-glow mt-8 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
+          className="bloom-luxury-btn animate-cta-pulse mt-8 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
         >
           Discover my space
         </button>

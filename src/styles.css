@@ -872,6 +872,27 @@
   animation: cta-glow-pulse 3s ease-in-out infinite;
 }
 
+/* Lively breathing pulse for onboarding CTAs — scales gently up and back, with a brighter glow at the peak */
+@keyframes cta-pulse {
+  0%, 100% { transform: translateY(-2px) scale(1); box-shadow: 0 8px 22px -10px oklch(0.65 0.27 350 / 0.55); }
+  50%      { transform: translateY(-2px) scale(1.045); box-shadow: 0 10px 28px -6px oklch(0.65 0.27 350 / 0.9), 0 0 0 7px oklch(0.75 0.27 350 / 0.18); }
+}
+
+@utility animate-cta-pulse {
+  animation: cta-pulse 2.2s ease-in-out infinite;
+}
+
+/* Pops a question into view with a little bounce, drawing the eye to what needs an answer */
+@keyframes question-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.92); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@utility animate-question-pop {
+  animation: question-pop 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
 /* Gentle drifting sparkle accents inside hero cards */
 @keyframes sparkle-drift {
   0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
