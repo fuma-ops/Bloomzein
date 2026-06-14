@@ -19,11 +19,17 @@ import {
   CloudRain,
   Flame,
   Cloud,
+  Dumbbell,
+  BookOpen,
+  CheckCircle2,
+  Circle,
+  CalendarDays,
+  PenLine,
 } from "lucide-react";
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
 import { BloomBubbles } from "./BloomBubbles";
 import { KawaiiBackground } from "./KawaiiBackground";
-import { type CyclePhase, phaseForDay, DEFAULT_CYCLE_SETTINGS, readCycleSettings, writeCycleSettings, broadcastCyclePhase } from "./cyclePhase";
+import { type CyclePhase, phaseForDay, PHASE_LABEL, DEFAULT_CYCLE_SETTINGS, readCycleSettings, writeCycleSettings, broadcastCyclePhase } from "./cyclePhase";
 
 /** @deprecated use DEFAULT_CYCLE_SETTINGS / readCycleSettings from "./cyclePhase" — kept for existing imports */
 export const DEFAULT_SETTINGS: CycleSettings = DEFAULT_CYCLE_SETTINGS;
@@ -39,6 +45,24 @@ export const PHASE_META: Record<Exclude<Phase, null>, { label: string; color: st
   fertile:    { label: "FERTILE",    color: "bg-pink-100 text-hotpink",             ring: "ring-pink-200",    Icon: Flower2 },
   ovulation:  { label: "OVULATION",  color: "bg-rose-200 text-magenta",             ring: "ring-rose-400",    Icon: Star },
   luteal:     { label: "LUTEAL",     color: "bg-violet-100 text-violet-500",        ring: "ring-violet-200",  Icon: Moon },
+};
+
+// Gentle phase-aware blurb for the "Today's Insight" hero card.
+const PHASE_INSIGHT: Record<Exclude<Phase, null>, string> = {
+  period: "Your body is resting and renewing. Be extra gentle with yourself — cosy comfort and light movement help today.",
+  follicular: "Your energy is naturally rising. A great day to focus on growth and new opportunities.",
+  fertile: "You're glowing with energy — a lovely day for connection, creativity and confidence.",
+  ovulation: "You're at your peak. Channel this radiant energy into your boldest ideas today.",
+  luteal: "Energy is winding down. Prioritise rest, warm food and gentle self-care.",
+};
+
+// Quick phase-aware suggestion for the "15-Minute Flow" card.
+const PHASE_FLOW: Record<Exclude<Phase, null>, { title: string; blurb: string }> = {
+  period: { title: "15-Minute Gentle Flow", blurb: "Soft, grounding stretches to ease cramps and restore energy." },
+  follicular: { title: "15-Minute Energy Flow", blurb: "Build strength and momentum as your energy starts to rise." },
+  fertile: { title: "15-Minute Power Flow", blurb: "Channel your peak energy into balance and core work." },
+  ovulation: { title: "15-Minute Dynamic Flow", blurb: "You're at your strongest — push a little further today." },
+  luteal: { title: "15-Minute Wind-Down Flow", blurb: "Slow things down and soothe tension as your body prepares to rest." },
 };
 
 const MOODS = [
@@ -59,6 +83,13 @@ function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+function bloomMessage(percent: number) {
+  if (percent >= 90) return "You're fully blooming";
+  if (percent >= 60) return "You're blooming";
+  if (percent >= 30) return "Budding nicely";
+  return "Just getting started";
+}
+
 export function CycleTracker() {
   const today = new Date(2026, 5, 4); // demo "today"
   const [settings, setSettings] = useState<CycleSettings>(() => readCycleSettings());
@@ -75,6 +106,7 @@ export function CycleTracker() {
   const [pillTaken, setPillTaken] = useState(true);
   const [mood, setMood] = useState<string>("happy");
   const [slideDir, setSlideDir] = useState<"l" | "r">("r");
+  const [checklist, setChecklist] = useState({ workout: true, water: true, journal: false });
 
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -92,24 +124,72 @@ export function CycleTracker() {
     setCursor((c) => new Date(c.getFullYear(), c.getMonth() + dir, 1));
   }
 
-  // Compute next period & ovulation dates from today
-  const { nextPeriod, daysToPeriod, ovulationDate, fertileStart, fertileEnd } = useMemo(() => {
+  // Days until the next period starts, from today
+  const daysToPeriod = useMemo(() => {
     const ms = 1000 * 60 * 60 * 24;
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / ms);
     const cyclesPassed = Math.floor(diff / settings.cycleLength) + 1;
     const np = new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * ms);
-    const dtp = Math.ceil((np.getTime() - today.getTime()) / ms);
-    const ovDayOffset = settings.cycleLength - 14;
-    // Find current/next cycle ovulation date
-    const currentCycleStart = new Date(settings.lastPeriodStart.getTime() + Math.floor(diff / settings.cycleLength) * settings.cycleLength * ms);
-    let ov = new Date(currentCycleStart.getTime() + ovDayOffset * ms);
-    if (ov.getTime() < today.getTime()) ov = new Date(np.getTime() + ovDayOffset * ms);
-    const fs = new Date(ov.getTime() - 4 * ms);
-    const fe = new Date(ov.getTime() + 2 * ms);
-    return { nextPeriod: np, daysToPeriod: dtp, ovulationDate: ov, fertileStart: fs, fertileEnd: fe };
+    return Math.ceil((np.getTime() - today.getTime()) / ms);
   }, [settings]);
 
   const pillLabel = settings.contraceptiveMethod.charAt(0).toUpperCase() + settings.contraceptiveMethod.slice(1);
+
+  // Where today sits in the cycle (1-indexed) + the broad "journey" stage for it.
+  const { cycleDay, ovulationDayOfCycle, currentPhase, journeyPercent } = useMemo(() => {
+    const ms = 1000 * 60 * 60 * 24;
+    const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / ms);
+    const cd = (((diff % settings.cycleLength) + settings.cycleLength) % settings.cycleLength) + 1;
+    const ovDay = settings.cycleLength - 14;
+    const phase = phaseForDay(today, settings);
+    const pct = Math.min(100, Math.max(0, ((cd - 1) / Math.max(1, settings.cycleLength - 1)) * 100));
+    return { cycleDay: cd, ovulationDayOfCycle: ovDay, currentPhase: phase, journeyPercent: pct };
+  }, [settings]);
+
+  const journeySteps = [
+    {
+      key: "period" as const,
+      label: PHASE_META.period.label,
+      range: `Days 1–${settings.periodLength}`,
+      active: cycleDay <= settings.periodLength,
+    },
+    {
+      key: "follicular" as const,
+      label: PHASE_META.follicular.label,
+      range: `Days ${settings.periodLength + 1}–${ovulationDayOfCycle - 1}`,
+      active: cycleDay > settings.periodLength && cycleDay < ovulationDayOfCycle,
+    },
+    {
+      key: "ovulation" as const,
+      label: PHASE_META.ovulation.label,
+      range: `Day ${ovulationDayOfCycle}`,
+      active: cycleDay === ovulationDayOfCycle,
+    },
+    {
+      key: "luteal" as const,
+      label: PHASE_META.luteal.label,
+      range: `Days ${ovulationDayOfCycle + 1}–${settings.cycleLength}`,
+      active: cycleDay > ovulationDayOfCycle,
+    },
+  ];
+
+  // Today's tiny "bloom checklist" — toggling these gently animates the progress ring.
+  const checklistItems = [
+    { key: "workout" as const, label: "Workout completed", Icon: Dumbbell, checked: checklist.workout },
+    { key: "water" as const, label: "Water goal met", Icon: Droplet, checked: checklist.water },
+    { key: "journal" as const, label: "Journal entry written", Icon: BookOpen, checked: checklist.journal },
+    { key: "pill" as const, label: `${pillLabel} taken`, Icon: Pill, checked: pillTaken },
+  ];
+  const doneCount = checklistItems.filter((i) => i.checked).length;
+  const percent = Math.round((doneCount / checklistItems.length) * 100);
+  function toggleChecklist(key: "workout" | "water" | "journal" | "pill") {
+    if (key === "pill") setPillTaken((v) => !v);
+    else setChecklist((c) => ({ ...c, [key]: !c[key] }));
+  }
+
+  const MoodIconToday = MOODS.find((m) => m.key === mood)?.Icon ?? Smile;
+  const moodLabelToday = MOODS.find((m) => m.key === mood)?.label ?? "Happy";
+  const flow = PHASE_FLOW[currentPhase];
 
   return (
     <div className="relative">
@@ -117,30 +197,156 @@ export function CycleTracker() {
       <KawaiiBackground count={16} />
       <BloomBubbles count={18} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* ============= Calendar card ============= */}
-        <div className="lg:col-span-2 rounded-[2rem] bg-white/85 p-5 sm:p-7 shadow-xl shadow-rose/10 backdrop-blur animate-scale-in">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-script text-5xl text-hotpink">Cycle ✿</h2>
-            <button
-              onClick={() => setSetupOpen(true)}
-              className="bloom-luxury-btn group relative inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"
-            >
-              <Sparkles className="h-4 w-4 animate-bloom-sparkle" />
-              <Plus className="h-4 w-4" />
-              <span>Log &amp; Settings</span>
-            </button>
+      {/* ============= Header ============= */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-script text-5xl text-hotpink">Cycle 🌸</h2>
+        <button
+          onClick={() => setSetupOpen(true)}
+          className="bloom-luxury-btn hover-scale group relative inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"
+        >
+          <Sparkles className="h-4 w-4 animate-bloom-sparkle" />
+          <Plus className="h-4 w-4" />
+          <span>Log &amp; Settings</span>
+        </button>
+      </div>
+
+      {/* ============= Hero row: Today's Insight + Bloom progress ============= */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* Today's Insight */}
+        <div className="pearl-frame animate-scale-in relative flex min-h-[16rem] flex-1 flex-col justify-end overflow-hidden rounded-[2rem] lg:col-span-2 lg:min-h-[20rem]">
+          <img
+            src="/images/cycle-insight-hero.webp"
+            alt=""
+            aria-hidden
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
+          />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/70 sm:to-white/10" />
+          <div className="relative z-10 p-5 sm:max-w-md sm:p-8">
+            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-rose">
+              <Sparkles className="h-3 w-3 animate-bloom-sparkle text-hotpink" /> TODAY'S INSIGHT
+            </p>
+            <h3 className="mt-1 font-script text-3xl text-hotpink sm:text-4xl lg:text-5xl">
+              Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
+            </h3>
+            <p className="mt-2 text-sm font-medium text-magenta/80 sm:text-base">
+              {PHASE_INSIGHT[currentPhase]}
+            </p>
+          </div>
+        </div>
+
+        {/* Bloom progress + checklist */}
+        <div className="pearl-frame bloom-pearl-card animate-scale-in flex flex-col items-center gap-4 rounded-[2rem] p-5 sm:p-6" style={{ animationDelay: "60ms" }}>
+          <div
+            className="animate-bloom-pulse relative grid h-28 w-28 shrink-0 place-items-center rounded-full shadow-md sm:h-32 sm:w-32"
+            style={{ background: `conic-gradient(var(--hotpink) 0% ${percent}%, var(--petal) ${percent}% 100%)` }}
+          >
+            <div className="grid h-[5.25rem] w-[5.25rem] place-items-center rounded-full bg-white/95 text-center shadow-inner sm:h-[6rem] sm:w-[6rem]">
+              <span className="font-script text-3xl text-hotpink sm:text-4xl">{percent}%</span>
+            </div>
+          </div>
+          <p className="text-center font-script text-2xl text-hotpink">{bloomMessage(percent)}</p>
+
+          <div className="mt-1 flex w-full flex-col gap-2">
+            {checklistItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => toggleChecklist(item.key)}
+                className={[
+                  "flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left text-xs font-semibold transition-all duration-200 active:scale-95",
+                  item.checked ? "bg-hotpink/10 text-hotpink" : "bg-blush/60 text-rose hover:bg-petal/60",
+                ].join(" ")}
+              >
+                {item.checked ? (
+                  <CheckCircle2 className="animate-scale-in h-4 w-4 shrink-0 text-hotpink" />
+                ) : (
+                  <Circle className="h-4 w-4 shrink-0 text-rose/40" />
+                )}
+                <item.Icon className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                <span className="flex-1">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ============= Your Cycle Journey ============= */}
+      <div className="bloom-pearl-card animate-scale-in mt-5 rounded-[2rem] p-5 sm:p-7" style={{ animationDelay: "100ms" }}>
+        <h3 className="mb-8 font-script text-3xl text-hotpink sm:text-4xl">Your Cycle Journey</h3>
+        <div className="relative px-2 pt-7">
+          {/* connecting line */}
+          <div className="absolute left-4 right-4 top-[calc(1.75rem+1.25rem)] h-1 rounded-full bg-petal sm:left-6 sm:right-6" />
+          {/* floating "Day X" pill */}
+          <div
+            className="absolute top-0 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${journeyPercent}%` }}
+          >
+            <span className="animate-bloom-bounce whitespace-nowrap rounded-full bg-hotpink px-3 py-1 text-[11px] font-bold text-white shadow-md shadow-hotpink/30">
+              Day {cycleDay}
+            </span>
+            <span className="mt-0.5 h-2 w-0.5 rounded-full bg-hotpink/50" />
           </div>
 
+          <div className="relative flex justify-between">
+            {journeySteps.map((step) => {
+              const Icon = PHASE_META[step.key].Icon;
+              return (
+                <div key={step.key} className="flex flex-1 flex-col items-center gap-1.5 text-center">
+                  <span
+                    className={[
+                      "grid h-10 w-10 shrink-0 place-items-center rounded-full ring-4 transition-all duration-300 sm:h-12 sm:w-12",
+                      step.active
+                        ? "animate-bloom-pulse bg-hotpink text-white ring-hotpink/30"
+                        : "bg-white text-rose ring-petal/60",
+                    ].join(" ")}
+                  >
+                    <Icon className="animate-icon-wiggle h-4 w-4 sm:h-5 sm:w-5" />
+                  </span>
+                  <span className={`text-[9px] font-bold tracking-wider sm:text-[10px] ${step.active ? "text-hotpink" : "text-rose/70"}`}>
+                    {step.label}
+                  </span>
+                  <span className="text-[8px] text-rose/50 sm:text-[9px]">{step.range}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ============= Flow card + Calendar ============= */}
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* 15-Minute Flow */}
+        <div className="bloom-pearl-card animate-scale-in flex flex-col items-center gap-4 rounded-[2rem] p-5 text-center sm:p-6 lg:col-span-1" style={{ animationDelay: "140ms" }}>
+          <span
+            className="animate-icon-wiggle grid h-20 w-20 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-24 sm:w-24"
+            style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}
+          >
+            <Flower2 className="h-10 w-10 sm:h-12 sm:w-12" />
+          </span>
+          <div>
+            <p className="font-script text-2xl text-hotpink sm:text-3xl">{flow.title}</p>
+            <p className="mt-1 text-xs font-medium text-magenta/70 sm:text-sm">{flow.blurb}</p>
+          </div>
+          <a
+            href="/app/tools/yoga"
+            className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"
+          >
+            Start Now
+          </a>
+        </div>
+
+        {/* Calendar card — same glassy pearl effect as "Everything blooms in one place" */}
+        <div className="pearl-frame bloom-pearl-card animate-scale-in relative overflow-hidden rounded-[2rem] p-5 sm:p-7 lg:col-span-2" style={{ animationDelay: "180ms" }}>
           {/* Month nav */}
           <div className="mb-4 flex items-center justify-center gap-4">
-            <button onClick={() => shift(-1)} className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal">
+            <button onClick={() => shift(-1)} className="hover-scale grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <div className="min-w-[140px] text-center font-script text-3xl text-hotpink">
               {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
             </div>
-            <button onClick={() => shift(1)} className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal">
+            <button onClick={() => shift(1)} className="hover-scale grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink transition hover:bg-petal">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -181,7 +387,7 @@ export function CycleTracker() {
                         : meta?.color ?? "bg-white text-rose",
                     isPeak ? "animate-bloom-peak" : "",
                     emphasizeFertile ? "ring-2 ring-magenta/60" : "",
-                    isToday ? "outline outline-2 outline-offset-2 outline-hotpink/60" : "",
+                    isToday ? "shadow-[0_0_0_2px_oklch(1_0_0/0.9),0_2px_8px_-1px_oklch(0.62_0.24_0/0.45)]" : "",
                   ].join(" ")}
                 >
                   <span className="leading-none">{d.getDate()}</span>
@@ -206,106 +412,148 @@ export function CycleTracker() {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* ============= Right column ============= */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1">
-          {/* Next period */}
-          <div className="rounded-[2rem] bg-white/85 p-5 shadow-xl shadow-rose/10 backdrop-blur animate-scale-in" style={{ animationDelay: "60ms" }}>
-            <div className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-bloom-pulse">
-                <Droplet className="h-4 w-4 fill-hotpink/30" />
+      {/* ============= Pills & Contraceptive + Space Stats ============= */}
+      <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        {/* Daily pill / contraceptive */}
+        <div className="bloom-pearl-card animate-scale-in rounded-[2rem] p-5 sm:p-6" style={{ animationDelay: "220ms" }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`grid h-11 w-11 place-items-center rounded-full transition-all duration-300 ${pillTaken ? "bg-hotpink text-white scale-100" : "bg-blush text-hotpink"}`}>
+                <Pill className="h-5 w-5" />
               </span>
-              <p className="text-[10px] font-bold tracking-widest text-rose">NEXT PERIOD</p>
-            </div>
-            <p className="mt-1 font-script text-4xl text-hotpink">
-              {nextPeriod.toLocaleDateString("en", { weekday: "short" })}
-            </p>
-            <p className="text-sm text-rose">In {daysToPeriod} days · {MONTHS[nextPeriod.getMonth()]} {nextPeriod.getDate()}</p>
-          </div>
-
-          {/* Ovulation */}
-          <div className="rounded-[2rem] bg-white/85 p-5 shadow-xl shadow-rose/10 backdrop-blur animate-scale-in" style={{ animationDelay: "120ms" }}>
-            <div className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-magenta/10 text-magenta">
-                <Flower2 className="h-4 w-4" />
-              </span>
-              <p className="text-[10px] font-bold tracking-widest text-rose">OVULATION</p>
-              <Sparkles className="h-3 w-3 text-magenta animate-bloom-sparkle" />
-            </div>
-            <p className="mt-1 font-script text-4xl text-hotpink">{ovulationDate.toLocaleDateString("en", { weekday: "short" })}</p>
-            <p className="text-sm text-rose">
-              Fertile window · {MONTHS[fertileStart.getMonth()].slice(0,3)} {fertileStart.getDate()}–{fertileEnd.getDate()}
-            </p>
-          </div>
-
-          {/* Daily pill */}
-          <div className="rounded-[2rem] bg-white/85 p-5 shadow-xl shadow-rose/10 backdrop-blur animate-scale-in sm:col-span-2 lg:col-span-1" style={{ animationDelay: "180ms" }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className={`grid h-11 w-11 place-items-center rounded-full transition-all duration-300 ${pillTaken ? "bg-hotpink text-white scale-100" : "bg-blush text-hotpink"}`}>
-                  <Pill className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="font-script text-2xl text-hotpink leading-none">Daily {pillLabel}</p>
-                  <p className="text-xs text-rose mt-0.5">
-                    {settings.contraceptiveReminder ? `Reminder · ${settings.reminderHour}` : "Reminder off"}
-                  </p>
-                </div>
+              <div>
+                <p className="font-script text-2xl text-hotpink leading-none">Daily {pillLabel}</p>
+                <p className="text-xs text-rose mt-0.5">
+                  {settings.contraceptiveReminder ? `Reminder · ${settings.reminderHour}` : "Reminder off"}
+                </p>
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <span
-                key={String(pillTaken)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
-                  pillTaken ? "bg-green-100 text-green-600 animate-scale-in" : "bg-blush text-rose"
-                }`}
-              >
-                <Heart className="h-3 w-3" />
-                {pillTaken ? "Taken today" : "Not taken yet"}
-              </span>
-              <button
-                onClick={() => setPillTaken((v) => !v)}
-                className="inline-flex items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-xs font-semibold text-hotpink transition hover:scale-105 hover:bg-petal"
-              >
-                <Undo2 className="h-3 w-3" />
-                {pillTaken ? "Undo Take" : "Mark Taken"}
-              </button>
-            </div>
           </div>
+          <div className="mt-4 flex items-center justify-between">
+            <span
+              key={String(pillTaken)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                pillTaken ? "bg-green-100 text-green-600 animate-scale-in" : "bg-blush text-rose"
+              }`}
+            >
+              <Heart className="h-3 w-3" />
+              {pillTaken ? "Taken today" : "Not taken yet"}
+            </span>
+            <button
+              onClick={() => setPillTaken((v) => !v)}
+              className="hover-scale inline-flex items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-xs font-semibold text-hotpink transition hover:bg-petal"
+            >
+              <Undo2 className="h-3 w-3" />
+              {pillTaken ? "Undo Take" : "Mark Taken"}
+            </button>
+          </div>
+        </div>
 
-          {/* Mood */}
-          <div className="rounded-[2rem] bg-white/85 p-5 shadow-xl shadow-rose/10 backdrop-blur animate-scale-in sm:col-span-2 lg:col-span-1" style={{ animationDelay: "240ms" }}>
-            <p className="text-[10px] font-bold tracking-widest text-rose">
-              {today.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}
-            </p>
-            <p className="font-script text-3xl text-hotpink mt-1">how is your mood today?</p>
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {MOODS.map((m) => {
-                const active = mood === m.key;
-                const MoodIcon = m.Icon;
-                return (
-                  <button
-                    key={m.key}
-                    onClick={() => setMood(m.key)}
-                    className={[
-                      "group flex flex-col items-center gap-1 rounded-2xl p-2 transition-all duration-200 active:scale-95",
-                      active ? "bg-hotpink/10 ring-2 ring-hotpink animate-bloom-bounce" : "bg-blush/60 hover:bg-petal/70 hover:scale-105",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={[
-                        "grid h-9 w-9 place-items-center rounded-full transition-transform",
-                        active ? "bg-hotpink text-white scale-110" : "bg-white text-hotpink ring-1 ring-petal group-hover:scale-110",
-                      ].join(" ")}
-                    >
-                      <MoodIcon className="h-4 w-4" />
-                    </span>
-                    <span className={`text-[10px] font-semibold ${active ? "text-hotpink" : "text-rose"}`}>{m.label}</span>
-                  </button>
-                );
-              })}
+        {/* Space Stats */}
+        <div className="bloom-pearl-card animate-scale-in rounded-[2rem] p-5 sm:p-6" style={{ animationDelay: "260ms" }}>
+          <p className="mb-3 font-script text-2xl text-hotpink">Space Stats ✿</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
+                <CalendarDays className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold tracking-wider text-rose">CYCLE DAY</p>
+                <p className="font-script text-xl text-hotpink leading-none">{cycleDay} / {settings.cycleLength}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-bloom-pulse">
+                <Droplet className="h-4 w-4 fill-hotpink/30" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold tracking-wider text-rose">NEXT PERIOD</p>
+                <p className="font-script text-xl text-hotpink leading-none">{daysToPeriod}d</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-magenta/10 text-magenta">
+                <Flower2 className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold tracking-wider text-rose">PHASE</p>
+                <p className="font-script text-xl text-hotpink leading-none">{PHASE_LABEL[currentPhase]}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-2xl bg-blush/60 p-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
+                <MoodIconToday className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold tracking-wider text-rose">MOOD</p>
+                <p className="font-script text-xl text-hotpink leading-none">{moodLabelToday}</p>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ============= Mood ============= */}
+      <div className="bloom-pearl-card animate-scale-in mt-5 rounded-[2rem] p-5 sm:p-7" style={{ animationDelay: "300ms" }}>
+        <p className="text-[10px] font-bold tracking-widest text-rose">
+          {today.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}
+        </p>
+        <p className="font-script text-3xl text-hotpink mt-1">how is your mood today?</p>
+        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-8">
+          {MOODS.map((m) => {
+            const active = mood === m.key;
+            const MoodIcon = m.Icon;
+            return (
+              <button
+                key={m.key}
+                onClick={() => setMood(m.key)}
+                className={[
+                  "group flex flex-col items-center gap-1 rounded-2xl p-2 transition-all duration-200 active:scale-95",
+                  active ? "bg-hotpink/10 ring-2 ring-hotpink animate-bloom-bounce" : "bg-blush/60 hover:bg-petal/70 hover:scale-105",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "grid h-9 w-9 place-items-center rounded-full transition-transform",
+                    active ? "bg-hotpink text-white scale-110" : "bg-white text-hotpink ring-1 ring-petal group-hover:scale-110",
+                  ].join(" ")}
+                >
+                  <MoodIcon className="h-4 w-4" />
+                </span>
+                <span className={`text-[10px] font-semibold ${active ? "text-hotpink" : "text-rose"}`}>{m.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ============= Today's Journal Prompt ============= */}
+      <div className="pearl-frame animate-scale-in relative mt-5 flex min-h-[14rem] flex-col items-start justify-center overflow-hidden rounded-[2rem] sm:min-h-[16rem]" style={{ animationDelay: "340ms" }}>
+        <img
+          src="/images/cycle-journal-hero.webp"
+          alt=""
+          aria-hidden
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/95 via-white/65 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/70 sm:to-white/10" />
+        <div className="relative z-10 max-w-md p-5 sm:p-8">
+          <p className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-rose">
+            <BookOpen className="h-3 w-3 text-hotpink" /> TODAY'S JOURNAL PROMPT
+          </p>
+          <p className="mt-1 font-script text-2xl text-hotpink sm:text-3xl lg:text-4xl">
+            "What is one small step I can take today towards my biggest goal?"
+          </p>
+          <a
+            href="/app/tools/diary"
+            className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white sm:w-auto"
+          >
+            <PenLine className="h-4 w-4" />
+            Write Entry
+          </a>
         </div>
       </div>
 
