@@ -329,6 +329,17 @@
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
+/* Soft moving rainbow wash echoing the Body/Mind/Life card glow colors */
+@utility bloom-rainbow-bg {
+  background: linear-gradient(120deg,
+    oklch(0.9 0.13 350 / 0.35),
+    oklch(0.88 0.13 300 / 0.32) 33%,
+    oklch(0.9 0.13 20 / 0.32) 66%,
+    oklch(0.9 0.13 350 / 0.35) 100%);
+  background-size: 300% 300%;
+  animation: bloom-gradient-shift 16s ease-in-out infinite;
+}
+
 @utility bloom-kawaii-bg {
   background:
     radial-gradient(60rem 40rem at 15% 10%, oklch(0.92 0.14 350 / 0.55), transparent 60%),

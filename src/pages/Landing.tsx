@@ -1,7 +1,7 @@
 import {
   ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
   Droplet, Wallet, Calendar as CalendarIcon,
-  Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, type LucideIcon,
+  Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, BookHeart, ShoppingBag, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -277,7 +277,7 @@ export default function Landing() {
             All in one App
           </p>
         </div>
-        <section id="universes" className="section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "linear-gradient(135deg, oklch(0.97 0.03 340), oklch(0.96 0.035 300) 50%, oklch(0.97 0.03 20))" }}>
+        <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
             {/* 3 columns on every screen — phone & tablet included, per spec */}
             <div className="grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
@@ -586,6 +586,7 @@ const UNIVERSES: Universe[] = [
     items: [
       { icon: Flower2, label: "Yoga" },
       { icon: NotebookPen, label: "Journal" },
+      { icon: BookHeart, label: "Gratitude Journal" },
       { icon: Heart, label: "Affirmations" },
       { icon: BookOpen, label: "Reads" },
     ],
@@ -597,6 +598,7 @@ const UNIVERSES: Universe[] = [
     items: [
       { icon: CalendarIcon, label: "Calendar" },
       { icon: Wallet, label: "Budget" },
+      { icon: ShoppingBag, label: "Shopping" },
       { icon: ClipboardList, label: "Planning" },
       { icon: Target, label: "Goals" },
     ],
