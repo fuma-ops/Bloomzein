@@ -8,13 +8,14 @@ import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
 import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const [activeUniverse, setActiveUniverse] = useState(0);
+  const universeTouchX = useRef<number | null>(null);
 
   // Auto-hide iOS hint after 5s
   useEffect(() => {
@@ -278,10 +279,24 @@ export default function Landing() {
             All in one App
           </p>
         </div>
-        <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
-          <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
+        <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-1 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
+          <div className="relative z-10 px-6 pt-2 pb-8 sm:px-10 sm:py-14 lg:py-16">
             {/* Phone: 3D coverflow carousel — active card centered, neighbors peek on each side, cards keep their natural size */}
-            <div className="relative h-[330px] sm:hidden" style={{ perspective: "1200px" }}>
+            <div
+              className="relative h-[330px] animate-carousel-hint touch-pan-y sm:hidden"
+              style={{ perspective: "1200px" }}
+              onTouchStart={(e) => { universeTouchX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (universeTouchX.current === null) return;
+                const delta = e.changedTouches[0].clientX - universeTouchX.current;
+                if (Math.abs(delta) > 40) {
+                  setActiveUniverse((p) =>
+                    delta < 0 ? (p + 1) % UNIVERSES.length : (p - 1 + UNIVERSES.length) % UNIVERSES.length
+                  );
+                }
+                universeTouchX.current = null;
+              }}
+            >
               {UNIVERSES.map((u, i) => {
                 let pos = i - activeUniverse;
                 if (pos > 1) pos -= UNIVERSES.length;
