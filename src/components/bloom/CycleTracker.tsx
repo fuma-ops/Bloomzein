@@ -62,15 +62,6 @@ const PHASE_FLOW: Record<Exclude<Phase, null>, { title: string; blurb: string }>
   luteal: { title: "15-Minute Wind-Down Flow", blurb: "Slow things down and soothe tension as your body prepares to rest." },
 };
 
-// Same soft pink palette as the home page's "Everything blooms in one place" calendar preview.
-const PHASE_CELL_SOFT: Record<Exclude<Phase, null>, string> = {
-  period: "bg-hotpink/55 text-[#831843]",
-  follicular: "bg-petal/60 text-rose",
-  fertile: "bg-pink-100 text-hotpink",
-  ovulation: "bg-rose-200/70 text-magenta",
-  luteal: "bg-blush text-magenta/70",
-};
-
 // Phase-aware "For You" picks, paired with real photos from the app.
 const PHASE_RECOMMEND: Record<Exclude<Phase, null>, {
   yoga: { title: string; img: string };
@@ -275,7 +266,7 @@ export function CycleTracker() {
             {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
           </div>
 
-          {/* Calendar grid (animated slide on month change via key) */}
+          {/* Calendar grid — simplified: only Period, Ovulation & Today (animated slide on month change via key) */}
           <div
             key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
             className="grid grid-cols-7 gap-1 animate-fade-in"
@@ -283,52 +274,38 @@ export function CycleTracker() {
             {days.map((d, i) => {
               if (!d) return <div key={i} />;
               const phase = phaseForDay(d, settings);
-              const isFuture = d.getTime() > today.getTime();
+              const isPeriod = phase === "period";
+              const isOvulation = phase === "ovulation";
               const isSelected = sameDay(d, selected);
               const isToday = sameDay(d, today);
-              const emphasizeFertile = settings.trackerMode === "conception" && (phase === "fertile" || phase === "ovulation");
-              const Icon = PHASE_META[phase].Icon;
-              const isPeak = phase === "ovulation";
 
               return (
                 <button
                   key={i}
                   onClick={() => setSelected(d)}
                   className={[
-                    "relative aspect-square rounded-lg flex flex-col items-center justify-center text-[9px] font-bold transition-all duration-200 sm:text-xs",
+                    "relative aspect-square rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200 sm:text-xs",
                     "hover:scale-110 active:scale-95",
-                    isSelected ? "scale-110 ring-2 ring-hotpink shadow-md animate-bloom-bounce" : "",
-                    isFuture && phase === "period"
-                      ? "border border-dashed border-hotpink/70 bg-pink-50 text-hotpink"
-                      : isFuture
-                        ? "border border-dashed border-rose/40 text-rose bg-white/60"
-                        : PHASE_CELL_SOFT[phase],
-                    isPeak ? "animate-bloom-peak" : "",
-                    emphasizeFertile ? "ring-2 ring-magenta/60" : "",
-                    isToday ? "shadow-[0_0_0_2px_oklch(1_0_0/0.9),0_2px_8px_-1px_oklch(0.62_0.24_0/0.45)]" : "",
+                    isPeriod
+                      ? "bg-hotpink text-white shadow-sm"
+                      : isOvulation
+                        ? "bg-pink-100 text-hotpink ring-2 ring-hotpink/50"
+                        : "text-rose hover:bg-blush",
+                    isSelected ? "scale-110 shadow-md animate-bloom-bounce" : "",
+                    isToday ? "ring-2 ring-magenta ring-offset-1" : "",
                   ].join(" ")}
                 >
-                  {Icon && <Icon className={`absolute right-0.5 top-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 ${isFuture ? "opacity-40" : "opacity-60"}`} aria-hidden />}
-                  <span className="leading-none">{d.getDate()}</span>
-                  {isPeak && (
-                    <span className="absolute -top-1.5 inline-flex h-3 w-3 items-center justify-center rounded-full bg-magenta text-white shadow sm:-top-2 sm:h-auto sm:w-auto sm:gap-0.5 sm:px-1.5 sm:py-0.5 sm:text-[8px] sm:font-bold">
-                      <Sparkles className="h-2 w-2" />
-                      <span className="hidden sm:inline">PEAK</span>
-                    </span>
-                  )}
+                  {d.getDate()}
                 </button>
               );
             })}
           </div>
 
-          {/* Legend */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[8px] font-bold tracking-wider text-rose/80 sm:mt-4 sm:gap-x-4 sm:gap-y-2 sm:text-[10px]">
-            {(Object.entries(PHASE_META) as [Exclude<Phase, null>, typeof PHASE_META[Exclude<Phase, null>]][]).map(([k, v]) => (
-              <span key={k} className="inline-flex items-center gap-1 sm:gap-1.5">
-                <span className={`h-2 w-2 rounded-full sm:h-3 sm:w-3 ${v.color}`} />
-                {v.label}
-              </span>
-            ))}
+          {/* Legend — only what matters */}
+          <div className="mt-3 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80 sm:mt-4 sm:gap-4 sm:text-[10px]">
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-hotpink sm:h-3 sm:w-3" /> Period</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-pink-100 ring-2 ring-hotpink/50 sm:h-3 sm:w-3" /> Ovulation</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-magenta sm:h-3 sm:w-3" /> Today</span>
           </div>
         </div>
       </div>
