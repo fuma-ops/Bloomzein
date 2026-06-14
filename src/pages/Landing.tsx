@@ -1,7 +1,7 @@
 import {
   ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
-  Moon, Droplet, Wallet, Calendar as CalendarIcon,
-  Target, Quote, Utensils, Footprints, StickyNote, ClipboardList, NotebookPen, type LucideIcon,
+  Droplet, Wallet, Calendar as CalendarIcon,
+  Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -277,7 +277,7 @@ export default function Landing() {
             All in one App
           </p>
         </div>
-        <section id="universes" className="section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "oklch(0.98 0.015 350)" }}>
+        <section id="universes" className="section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]" style={{ background: "linear-gradient(135deg, oklch(0.97 0.03 340), oklch(0.96 0.035 300) 50%, oklch(0.97 0.03 20))" }}>
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
             {/* 3 columns on every screen — phone & tablet included, per spec */}
             <div className="grid grid-cols-3 gap-2.5 sm:gap-5 lg:gap-7">
@@ -574,25 +574,26 @@ const UNIVERSES: Universe[] = [
     items: [
       { icon: Droplet, label: "Cycle Tracking" },
       { icon: Utensils, label: "Meals & Recipes" },
-      { icon: Flower2, label: "Yoga & Workouts" },
+      { icon: Apple, label: "Diet" },
+      { icon: Dumbbell, label: "Workout" },
       { icon: Footprints, label: "Movement" },
     ],
   },
   {
     key: "mind", title: "Mind", href: "/app/tools/diary",
     titleColor: "#7c3aed", titleAccent: "#7c0cf2", glowColor: "oklch(0.6 0.22 300 / 0.55)",
-    image: "/images/landing-card-mind.webp",
+    image: "/images/landing-card-life.webp",
     items: [
+      { icon: Flower2, label: "Yoga" },
       { icon: NotebookPen, label: "Journal" },
-      { icon: StickyNote, label: "Notes" },
-      { icon: Moon, label: "Reflection" },
       { icon: Heart, label: "Affirmations" },
+      { icon: BookOpen, label: "Reads" },
     ],
   },
   {
     key: "life", title: "Life", href: "/app/calendar",
     titleColor: "#e11d48", titleAccent: "#ff0a47", glowColor: "oklch(0.66 0.22 20 / 0.55)",
-    image: "/images/landing-card-life.webp",
+    image: "/images/landing-card-mind.webp",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
       { icon: Wallet, label: "Budget" },
