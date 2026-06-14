@@ -399,9 +399,16 @@ export default function Landing() {
         {/* ──────────────── EVERYTHING IN ONE PLACE — CALENDAR + TOOLBOX ──────────────── */}
         <section
           id="features"
-          className="section-pink-shadow relative mt-16 scroll-mt-24 overflow-hidden rounded-[2rem] bg-cover bg-center p-5 sm:mt-24 sm:rounded-[3rem] sm:p-8 md:p-12"
-          style={{ backgroundImage: "url(/images/toolbox-bg.webp)" }}
+          className="section-pink-shadow relative mt-16 scroll-mt-24 overflow-hidden rounded-[2rem] p-5 sm:mt-24 sm:rounded-[3rem] sm:p-8 md:p-12"
         >
+          <img
+            src="/images/toolbox-bg.webp"
+            alt=""
+            aria-hidden
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover"
+          />
           <SectionHeading kicker="one soft home for everything" title="Everything blooms in one place." />
           <p className="mx-auto mt-3 max-w-xl text-center text-sm font-medium text-magenta/80 sm:text-base">
             Your cycle, workouts, journaling, money and little reminders all land on the same gentle calendar — tap a tool to see it bloom.
