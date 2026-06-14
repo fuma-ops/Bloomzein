@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CYCLE_SETTINGS, writeCycleSettings } from "../cyclePhase";
+import { AppIcon } from "../AppIcon";
+import { CuteToolIcon } from "../CuteToolIcon";
+import { BloomBubbles } from "../BloomBubbles";
+import { DatePicker } from "./DatePicker";
 import {
   GOALS,
   ONBOARDING_TOOLS,
   PHASE_COPY,
   TEASERS,
-  appPhaseToOnboarding,
   calcPhasePreview,
   onboardingPhaseMeta,
   toolHref,
@@ -22,23 +25,29 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Soft organic bloom/petal shape — reused on the welcome screen and as the
-// reveal animation's central anchor (Screen 1 + Screen 4 of the onboarding doc).
-function BloomShape({ size = 220, gradId = "welcome" }: { size?: number; gradId?: string }) {
+// Glassmorphism bottom sheet — rises over a blurred view of the app behind it,
+// frosted glass surface with a soft top sheen and a drag handle.
+function OnboardingSheet({ children }: { children: React.ReactNode }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 200 200">
-      <defs>
-        <linearGradient id={`bloomShapeGrad-${gradId}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="oklch(0.92 0.08 70)" />
-          <stop offset="100%" stopColor="oklch(0.7 0.26 350)" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M100,20 C140,18 178,45 180,90 C182,135 150,178 100,180 C50,182 18,140 20,95 C22,50 60,22 100,20 Z"
-        fill={`url(#bloomShapeGrad-${gradId})`}
-        opacity="0.85"
-      />
-    </svg>
+    <div className="fixed inset-0 z-[100]">
+      <div className="absolute inset-0 bg-[#831843]/25 backdrop-blur-sm" />
+      <div className="absolute inset-x-0 bottom-0 mx-auto flex h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-t-[2rem] border-t border-white/60 bg-white/75 shadow-2xl shadow-hotpink/30 backdrop-blur-xl animate-bloom-sheet-rise">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
+        <div className="flex shrink-0 justify-center pt-3 pb-1">
+          <div className="h-1.5 w-10 rounded-full bg-hotpink/25" />
+        </div>
+        <div className="relative flex-1 overflow-hidden">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Central app-icon medallion reused on the welcome screen and as the reveal animation's anchor.
+function BloomMedallion({ size = 88, iconSize }: { size?: number; iconSize?: number }) {
+  return (
+    <div className="clay-blob grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size }}>
+      <AppIcon size={iconSize ?? Math.round(size * 0.68)} />
+    </div>
   );
 }
 
@@ -98,8 +107,8 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 function Screen1({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <BloomShape size={220} gradId="welcome" />
-      <h1 className="font-script mt-6 text-5xl tracking-wide text-hotpink">Bloomzein</h1>
+      <BloomMedallion size={104} />
+      <h1 className="font-script mt-5 text-4xl tracking-wide text-hotpink">Bloomzein</h1>
       <p className="mt-2 text-sm font-light text-rose/70">Your cycle. Your life. All connected.</p>
       <button
         type="button"
@@ -108,7 +117,9 @@ function Screen1({ onNext }: { onNext: () => void }) {
       >
         Get started
       </button>
-      <p className="mt-4 text-xs text-rose/50">No account needed to start</p>
+      <p className="mt-4 flex items-center gap-1.5 text-xs text-rose/50">
+        <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} /> Set up your space in under a minute
+      </p>
     </div>
   );
 }
@@ -140,20 +151,11 @@ function Screen2({
     <div className="flex h-full flex-col overflow-y-auto px-6 pt-6 pb-8">
       <ProgressDots active={2} onBack={onBack} />
 
-      <h2 className="font-script mt-6 text-3xl text-hotpink">Tell me about your cycle</h2>
+      <h2 className="font-script mt-5 text-2xl text-hotpink">Tell me about your cycle</h2>
       <p className="mt-1 text-sm font-light text-rose/70">Just 3 things — that's all Bloomzein needs to personalise everything</p>
 
-      <label className="mt-6 block text-sm font-medium text-rose">
-        When did your last period start?
-        <input
-          type="date"
-          required
-          max={todayISO()}
-          value={cycleData.lastPeriod ?? ""}
-          onChange={(e) => setCycleData((c) => ({ ...c, lastPeriod: e.target.value }))}
-          className="mt-2 w-full rounded-2xl border border-petal bg-white/80 px-4 py-3 text-sm font-normal text-rose outline-none transition focus:border-hotpink focus:ring-4 focus:ring-hotpink/15"
-        />
-      </label>
+      <p className="mt-5 text-sm font-medium text-rose">When did your last period start?</p>
+      <DatePicker value={cycleData.lastPeriod} max={todayISO()} onChange={(iso) => setCycleData((c) => ({ ...c, lastPeriod: iso }))} />
 
       {preview && (
         <div className={`mt-4 animate-in fade-in duration-400 rounded-2xl p-4 ${onboardingPhaseMeta(preview.phase).color}`}>
@@ -165,12 +167,12 @@ function Screen2({
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-5">
         <p className="text-sm font-medium text-rose">How many days does your cycle usually last?</p>
         <Stepper value={cycleData.cycleLength} min={21} max={35} onChange={(v) => setCycleData((c) => ({ ...c, cycleLength: v }))} />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-5">
         <p className="text-sm font-medium text-rose">How many days does your period last?</p>
         <Stepper value={cycleData.periodDuration} min={2} max={10} onChange={(v) => setCycleData((c) => ({ ...c, periodDuration: v }))} />
       </div>
@@ -179,7 +181,7 @@ function Screen2({
         type="button"
         onClick={onNext}
         disabled={!cycleData.lastPeriod}
-        className="bloom-luxury-btn mt-8 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40"
+        className="bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40"
       >
         Continue
       </button>
@@ -203,10 +205,10 @@ function Screen3({
     <div className="flex h-full flex-col overflow-y-auto px-6 pt-6 pb-8">
       <ProgressDots active={3} onBack={onBack} />
 
-      <h2 className="font-script mt-6 text-3xl text-hotpink">What do you want to focus on first?</h2>
+      <h2 className="font-script mt-5 text-2xl text-hotpink">What do you want to focus on first?</h2>
       <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-5 flex flex-col gap-3">
         {GOALS.map((g) => {
           const Icon = g.icon;
           const selected = goal === g.key;
@@ -215,11 +217,11 @@ function Screen3({
               key={g.key}
               type="button"
               onClick={() => setGoal(g.key)}
-              className={`flex min-h-[88px] items-center gap-4 rounded-3xl bg-white/85 p-4 text-left shadow-md transition-all duration-300 ${
+              className={`bloom-pearl-card pearl-sheen flex min-h-[80px] items-center gap-4 rounded-3xl p-4 text-left transition-all duration-300 ${
                 selected ? "border-2 border-hotpink bg-blush" : "border-2 border-transparent"
               }`}
             >
-              <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl bg-petal text-hotpink">
+              <span className="clay-blob grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl text-white">
                 <Icon className="h-6 w-6" />
               </span>
               <span className="flex-1">
@@ -236,7 +238,7 @@ function Screen3({
         type="button"
         onClick={onNext}
         disabled={!goal}
-        className="bloom-luxury-btn mt-8 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40"
+        className="bloom-luxury-btn mt-6 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40"
       >
         Let's go
       </button>
@@ -245,12 +247,14 @@ function Screen3({
 }
 
 // ── Screen 4 — The reveal ───────────────────────────────────────────
-const ORBIT_RADIUS = 120;
+const ORBIT_SIZE = 260;
+const ORBIT_RADIUS = 100;
 const ORBIT_ORDER = ["workout", "diet", "meals", "calendar", "reminders", "diaries", "yoga", "budget"];
 const ORBIT_POSITIONS = ORBIT_ORDER.map((_, i) => {
   const angle = (Math.PI * 2 * i) / ORBIT_ORDER.length; // 0 = top, clockwise
   return { x: Math.round(Math.sin(angle) * ORBIT_RADIUS), y: Math.round(-Math.cos(angle) * ORBIT_RADIUS) };
 });
+const ORBIT_CENTER = ORBIT_SIZE / 2;
 
 function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () => void }) {
   const [ctaVisible, setCtaVisible] = useState(false);
@@ -264,30 +268,30 @@ function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () 
 
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <div className="relative" style={{ width: 320, height: 320 }}>
-        <svg viewBox="0 0 320 320" className="absolute inset-0 h-full w-full">
+      <div className="relative" style={{ width: ORBIT_SIZE, height: ORBIT_SIZE }}>
+        <svg viewBox={`0 0 ${ORBIT_SIZE} ${ORBIT_SIZE}`} className="absolute inset-0 h-full w-full">
           {ORBIT_POSITIONS.map((pos, i) => (
             <line
               key={i}
-              x1="160"
-              y1="160"
-              x2={160 + pos.x}
-              y2={160 + pos.y}
+              x1={ORBIT_CENTER}
+              y1={ORBIT_CENTER}
+              x2={ORBIT_CENTER + pos.x}
+              y2={ORBIT_CENTER + pos.y}
               stroke="oklch(0.62 0.24 0 / 0.3)"
               strokeWidth="1.5"
-              strokeDasharray="200"
-              strokeDashoffset="200"
+              strokeDasharray="160"
+              strokeDashoffset="160"
               className="animate-onboarding-line"
             />
           ))}
         </svg>
 
         <div className="absolute inset-0 flex items-center justify-center animate-onboarding-shape">
-          <BloomShape size={120} gradId="reveal" />
+          <BloomMedallion size={104} />
         </div>
         {meta && phase && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`animate-onboarding-badge whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${meta.color}`}>
+            <span className={`animate-onboarding-badge whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium shadow-md ${meta.color}`}>
               {PHASE_COPY[phase].label}
             </span>
           </div>
@@ -296,7 +300,6 @@ function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () 
         {ORBIT_ORDER.map((key, i) => {
           const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
           const pos = ORBIT_POSITIONS[i];
-          const Icon = tool.icon;
           return (
             <div
               key={key}
@@ -311,7 +314,7 @@ function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () 
                 } as React.CSSProperties
               }
             >
-              <Icon className="h-5 w-5" />
+              <CuteToolIcon slug={tool.slug} className="h-5 w-5" />
             </div>
           );
         })}
@@ -336,6 +339,12 @@ function Screen4({ phase, onNext }: { phase: OnboardingPhase | null; onNext: () 
 }
 
 // ── Screen 5 — Tool cards home ──────────────────────────────────────
+// A personalised variant of the Tools index page (/app/tools): same hero
+// header, search bar and pearl tool cards, but blurbs are swapped for
+// phase-aware teasers and the goal-matched tool is pinned first with a
+// "Recommended" badge. Tapping any card or "Explore all tools" finishes
+// onboarding and hands off to the real Tools/tool pages, where the
+// teasers disappear and the normal blurbs return.
 const CARD_ORDER = ["workout", "diet", "meals", "yoga", "calendar", "diaries", "reminders", "budget"];
 
 function Screen5({
@@ -367,58 +376,89 @@ function Screen5({
   }, [recommendedSlug]);
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto bg-[#FFF0F6] px-5 pt-8 pb-10 animate-in fade-in duration-400">
-      <h1 className="font-script text-3xl text-hotpink">Welcome to your space 🌸</h1>
-      {phase && meta && (
-        <p className="mt-1.5 text-sm font-light text-rose/70">
-          You're in your{" "}
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta.color}`}>{PHASE_COPY[phase].label.replace(" phase", "")}</span>
-          {day ? ` — day ${day} of your cycle` : ""}
-        </p>
-      )}
+    <div className="relative min-h-screen animate-fade-in px-4 pt-6 pb-10 sm:px-6">
+      <BloomBubbles count={10} />
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {ordered.map((key) => {
-          const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
-          const Icon = tool.icon;
-          const recommended = tool.slug === recommendedSlug;
-          const teaser = phase ? TEASERS[key][phase] : "";
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onEnter(toolHref(tool.slug))}
-              className={`relative flex min-h-[88px] items-center gap-4 rounded-3xl bg-white p-5 text-left shadow-md transition active:scale-[0.98] ${
-                recommended ? "border-2 border-hotpink" : ""
-              }`}
-            >
-              {recommended && (
-                <span className="absolute right-4 top-4 rounded-full bg-hotpink/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-hotpink">
-                  Recommended
-                </span>
-              )}
-              <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-2xl bg-petal text-hotpink">
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="flex-1 pr-4">
-                <span className="block text-base font-medium text-rose">{toolLabel(tool.slug)}</span>
-                <span className="mt-0.5 block text-[13px] font-light leading-snug text-rose/60 line-clamp-2">{teaser}</span>
-              </span>
-              <ChevronRight className="h-5 w-5 shrink-0 text-rose/30" />
-            </button>
-          );
-        })}
+      <header className="relative mb-5 sm:mb-7">
+        <h1 className="font-script text-3xl sm:text-5xl text-hotpink leading-none flex items-center gap-2">
+          Welcome to your space <span aria-hidden>🌸</span>
+        </h1>
+        {phase && meta && (
+          <p className="mt-1.5 text-xs sm:text-sm text-rose/80">
+            You're in your{" "}
+            <span className={`rounded-full px-2 py-0.5 text-[11px] sm:text-xs font-medium ${meta.color}`}>
+              {PHASE_COPY[phase].label.replace(" phase", "")}
+            </span>
+            {day ? ` — day ${day} of your cycle` : ""}
+          </p>
+        )}
+
+        <div className="mt-3 sm:mt-4 relative max-w-md">
+          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={1.8} />
+          <div className="w-full rounded-full bg-white/90 backdrop-blur pl-11 pr-11 py-2 sm:py-3 text-sm text-rose/50 border border-petal/60">
+            What would help you bloom today?
+          </div>
+          <Sparkles className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink/70" strokeWidth={1.8} />
+        </div>
+      </header>
+
+      <section className="relative">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Your Bloom Tools 🌸</h2>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {ordered.map((key, i) => {
+            const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
+            const recommended = tool.slug === recommendedSlug;
+            const teaser = phase ? TEASERS[key][phase] : "";
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onEnter(toolHref(tool.slug))}
+                style={{ animationDelay: `${i * 0.06}s, ${(i % 6) * 1.4}s` }}
+                className={`bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 text-left transition hover:-translate-y-0.5 animate-card-vibrate ${
+                  recommended ? "ring-2 ring-hotpink" : ""
+                }`}
+              >
+                <div
+                  className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
+                  style={{ background: "radial-gradient(circle, oklch(0.75 0.18 350 / 0.18), transparent 70%)" }}
+                />
+
+                <div className="flex items-start justify-between">
+                  <span className="clay-blob animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0">
+                    <CuteToolIcon slug={tool.slug} className="h-7 w-7 sm:h-8 sm:w-8 drop-shadow-[0_2px_3px_oklch(0.4_0.22_350/0.3)]" />
+                  </span>
+                  <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 animate-chevron-glow" strokeWidth={2} />
+                </div>
+
+                <h3 className="mt-3 sm:mt-4 font-bold text-sm sm:text-base text-[#831843] leading-snug">{toolLabel(tool.slug)}</h3>
+                <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/70 leading-snug line-clamp-2">{teaser}</p>
+
+                {recommended && (
+                  <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-hotpink/20">
+                    <Sparkles className="h-2.5 w-2.5" strokeWidth={2} /> Recommended
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="mt-6 flex justify-center">
+        <button type="button" onClick={() => onEnter("/app/tools")} className="bloom-luxury-btn inline-flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium text-white">
+          Explore all tools <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+        </button>
       </div>
-
-      <button type="button" onClick={() => onEnter("/app/tools")} className="mt-6 text-center text-xs font-medium text-rose/50 underline-offset-2 hover:text-hotpink hover:underline">
-        Explore all tools
-      </button>
     </div>
   );
 }
 
 // ── Main flow ────────────────────────────────────────────────────────
-export function OnboardingFlow() {
+export function OnboardingFlow({ children }: { children: React.ReactNode }) {
   const { updateProfile } = useAuth();
   const [screen, setScreen] = useState(1);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
@@ -446,28 +486,34 @@ export function OnboardingFlow() {
     });
   };
 
+  if (screen === 5) {
+    return <Screen5 phase={phase} goal={goal} cycleData={cycleData} onEnter={finish} />;
+  }
+
   const transitionClass =
     direction === "forward"
       ? "animate-in fade-in slide-in-from-right-10 duration-400 ease-in-out"
       : "animate-in fade-in slide-in-from-left-10 duration-400 ease-in-out";
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#FFF0F6] overflow-hidden">
-      <div key={screen} className={`absolute inset-0 ${transitionClass}`}>
-        {screen === 1 && <Screen1 onNext={() => goTo(2, "forward")} />}
-        {screen === 2 && (
-          <Screen2
-            cycleData={cycleData}
-            setCycleData={setCycleData}
-            setPhase={setPhase}
-            onNext={() => goTo(3, "forward")}
-            onBack={() => goTo(1, "back")}
-          />
-        )}
-        {screen === 3 && <Screen3 goal={goal} setGoal={setGoal} onNext={() => goTo(4, "forward")} onBack={() => goTo(2, "back")} />}
-        {screen === 4 && <Screen4 phase={phase} onNext={() => goTo(5, "forward")} />}
-        {screen === 5 && <Screen5 phase={phase} goal={goal} cycleData={cycleData} onEnter={finish} />}
-      </div>
-    </div>
+    <>
+      <div className="pointer-events-none select-none blur-sm">{children}</div>
+      <OnboardingSheet>
+        <div key={screen} className={`absolute inset-0 ${transitionClass}`}>
+          {screen === 1 && <Screen1 onNext={() => goTo(2, "forward")} />}
+          {screen === 2 && (
+            <Screen2
+              cycleData={cycleData}
+              setCycleData={setCycleData}
+              setPhase={setPhase}
+              onNext={() => goTo(3, "forward")}
+              onBack={() => goTo(1, "back")}
+            />
+          )}
+          {screen === 3 && <Screen3 goal={goal} setGoal={setGoal} onNext={() => goTo(4, "forward")} onBack={() => goTo(2, "back")} />}
+          {screen === 4 && <Screen4 phase={phase} onNext={() => goTo(5, "forward")} />}
+        </div>
+      </OnboardingSheet>
+    </>
   );
 }

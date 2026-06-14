@@ -24,7 +24,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!profile?.setup_done) {
-    return <OnboardingFlow />
+    return <OnboardingFlow>{children}</OnboardingFlow>
   }
 
   return <>{children}</>
