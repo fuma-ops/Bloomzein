@@ -135,9 +135,9 @@ function Screen1({ onNext }: { onNext: () => void }) {
       <button
         type="button"
         onClick={onNext}
-        className="bloom-luxury-btn animate-cta-pulse mt-10 w-full max-w-xs px-8 py-3.5 text-base font-medium text-white"
+        className="bloom-luxury-btn animate-cta-pulse mt-10 inline-flex w-full max-w-xs items-center justify-center gap-1.5 px-8 py-3.5 text-base font-medium text-white"
       >
-        Get started
+        Get started <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
       </button>
       <p className="mt-4 flex items-center gap-1.5 text-xs text-rose/50">
         <Sparkles className="h-3.5 w-3.5" strokeWidth={1.8} /> Set up your space in under a minute
@@ -238,9 +238,9 @@ function Screen2({
           type="button"
           onClick={onNext}
           disabled={!cycleData.lastPeriod}
-          className={`bloom-luxury-btn w-full px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${cycleData.lastPeriod ? "animate-cta-pulse" : ""}`}
+          className={`bloom-luxury-btn inline-flex w-full items-center justify-center gap-1.5 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${cycleData.lastPeriod ? "animate-cta-pulse" : ""}`}
         >
-          Continue
+          Continue <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
         </button>
       </div>
     </div>
@@ -283,14 +283,14 @@ function Screen3({
                   selected ? "border-2 border-hotpink bg-blush" : "border-2 border-transparent"
                 }`}
               >
-                <span className="clay-blob grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white">
+                <span className={`clay-blob grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white animate-icon-breathe shadow-lg ${selected ? "shadow-hotpink/50" : "shadow-hotpink/25"}`}>
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="flex-1">
                   <span className="block text-sm font-medium text-rose">{g.title}</span>
                   <span className="block text-[12px] font-light text-rose/60 leading-snug">{g.subtitle}</span>
                 </span>
-                <ChevronRight className={`h-5 w-5 shrink-0 transition ${selected ? "text-hotpink" : "text-rose/30"}`} />
+                <ChevronRight className={`h-5 w-5 shrink-0 transition ${selected ? "text-hotpink" : "text-rose/30 animate-arrow-nudge"}`} />
               </button>
             );
           })}
@@ -302,9 +302,9 @@ function Screen3({
           type="button"
           onClick={onNext}
           disabled={!goal}
-          className={`bloom-luxury-btn w-full px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${goal ? "animate-cta-pulse" : ""}`}
+          className={`bloom-luxury-btn inline-flex w-full items-center justify-center gap-1.5 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${goal ? "animate-cta-pulse" : ""}`}
         >
-          Let's go
+          Let's go <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
         </button>
       </div>
     </div>
@@ -367,7 +367,7 @@ function Screen4({ onNext }: { onNext: () => void }) {
             return (
               <div
                 key={key}
-                className="absolute grid h-12 w-12 place-items-center rounded-full bg-white text-hotpink shadow-md animate-onboarding-icon-pop animate-orbit-counter-spin"
+                className="absolute grid h-12 w-12 place-items-center rounded-full bg-hotpink/15 text-hotpink shadow-md border border-white/50 backdrop-blur-sm animate-onboarding-icon-pop animate-orbit-counter-spin"
                 style={{
                   left: `calc(50% + ${pos.x}px - 24px)`,
                   top: `calc(50% + ${pos.y}px - 24px)`,
@@ -390,9 +390,9 @@ function Screen4({ onNext }: { onNext: () => void }) {
         <button
           type="button"
           onClick={onNext}
-          className="bloom-luxury-btn animate-cta-pulse mt-8 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
+          className="bloom-luxury-btn animate-cta-pulse mt-8 inline-flex items-center gap-1.5 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
         >
-          Discover my space
+          Discover my space <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
         </button>
       )}
     </div>
