@@ -1,5 +1,5 @@
 import {
-  ArrowRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
+  ArrowRight, ChevronLeft, ChevronRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
   Droplet, Wallet, Calendar as CalendarIcon,
   Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, BookHeart, ShoppingBag, type LucideIcon,
 } from "lucide-react";
@@ -14,6 +14,7 @@ export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
+  const [activeUniverse, setActiveUniverse] = useState(0);
 
   // Auto-hide iOS hint after 5s
   useEffect(() => {
@@ -279,57 +280,66 @@ export default function Landing() {
         </div>
         <section id="universes" className="bloom-rainbow-bg section-pink-shadow relative -mx-4 mt-4 overflow-hidden rounded-[2rem] sm:-mx-6 sm:mt-6 sm:rounded-[3rem]">
           <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-14 lg:py-16">
-            {/* Phone: swipeable carousel with neighboring cards peeking on each side. Tablet+: 3-column grid */}
-            <div className="no-scrollbar -mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:gap-7">
+            {/* Phone: 3D coverflow carousel — active card centered, neighbors peek on each side */}
+            <div className="relative h-[400px] sm:hidden" style={{ perspective: "1200px" }}>
               {UNIVERSES.map((u, i) => {
+                let pos = i - activeUniverse;
+                if (pos > 1) pos -= UNIVERSES.length;
+                if (pos < -1) pos += UNIVERSES.length;
+                if (Math.abs(pos) > 1) return null;
+                const isCenter = pos === 0;
                 return (
-                  <article
+                  <div
                     key={u.key}
-                    className="pearl-frame animate-card-pop-in relative flex w-[76%] shrink-0 snap-center flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:w-auto sm:rounded-[1.75rem] sm:p-5 lg:p-6"
+                    role={isCenter ? undefined : "button"}
+                    aria-label={isCenter ? undefined : `Show ${u.title}`}
+                    onClick={() => !isCenter && setActiveUniverse(i)}
+                    className={`absolute left-1/2 top-0 h-full w-[80%] transition-all duration-500 ease-out ${isCenter ? "" : "cursor-pointer"}`}
                     style={{
-                      animationDelay: `${i * 120}ms`,
-                      background: "oklch(1 0 0 / 0.16)",
-                      backdropFilter: "blur(6px)",
-                      "--card-glow": u.glowColor,
-                      boxShadow:
-                        "inset 0 1px 0 oklch(1 0 0 / 0.75), inset 1px 0 0 oklch(1 0 0 / 0.25), inset -1px 0 0 oklch(1 0 0 / 0.12), inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18), 0 -10px 26px -10px oklch(1 0 0 / 0.7), 0 10px 28px -12px var(--card-glow, oklch(0.65 0.22 350 / 0.5))",
-                    } as CSSProperties}
+                      transform: `translateX(-50%) translateX(${pos * 92}%) scale(${isCenter ? 1 : 0.84}) rotateY(${pos * -28}deg)`,
+                      zIndex: isCenter ? 20 : 10,
+                      opacity: isCenter ? 1 : 0.55,
+                      transformStyle: "preserve-3d",
+                    }}
                   >
-                    {/* per-card photo, shown at full strength */}
-                    <img
-                      src={u.image}
-                      alt=""
-                      aria-hidden
-                      loading="lazy"
-                      decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                    <h3 className="relative z-10 w-full animate-bloom-float text-center font-script text-2xl leading-none drop-shadow-[0_2px_6px_oklch(1_0_0_/_0.8)] sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent, animationDelay: `${i * 300}ms` }}>{u.title}</h3>
-                    <ul className="relative z-10 mt-2 flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
-                      {u.items.map((it, ii) => {
-                        const Icon = it.icon;
-                        return (
-                          <li key={it.label} className="flex items-center gap-1 rounded-full bg-white/30 px-2 py-1 backdrop-blur-md shadow-sm sm:gap-2 sm:px-3 sm:py-1.5">
-                            <span className="animate-icon-wiggle grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/40 shadow-sm backdrop-blur-md sm:h-7 sm:w-7" style={{ animationDelay: `${ii * 220}ms` }}>
-                              <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
-                            </span>
-                            <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <a
-                      href={u.href}
-                      aria-label={`Explore ${u.title}`}
-                      className="hover-scale animate-cta-bounce relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/30 px-3 py-1.5 text-[10px] font-bold backdrop-blur-md sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
-                      style={{ color: u.titleColor, animationDelay: `${i * 200}ms` }}
-                    >
-                      Discover
-                      <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" />
-                    </a>
-                  </article>
+                    <UniverseCard u={u} i={i} className="h-full w-full" />
+                  </div>
                 );
               })}
+              <button
+                type="button"
+                aria-label="Previous universe"
+                onClick={() => setActiveUniverse((p) => (p - 1 + UNIVERSES.length) % UNIVERSES.length)}
+                className="absolute left-0 top-1/2 z-30 grid h-9 w-9 -translate-x-1 -translate-y-1/2 place-items-center rounded-full bg-white/50 text-rose shadow-md backdrop-blur-md"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next universe"
+                onClick={() => setActiveUniverse((p) => (p + 1) % UNIVERSES.length)}
+                className="absolute right-0 top-1/2 z-30 grid h-9 w-9 -translate-y-1/2 translate-x-1 place-items-center rounded-full bg-white/50 text-rose shadow-md backdrop-blur-md"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+              <div className="absolute -bottom-1 left-1/2 z-30 flex -translate-x-1/2 gap-1.5">
+                {UNIVERSES.map((u, i) => (
+                  <button
+                    key={u.key}
+                    type="button"
+                    aria-label={`Go to ${u.title}`}
+                    onClick={() => setActiveUniverse(i)}
+                    className={`h-1.5 rounded-full transition-all ${i === activeUniverse ? "w-5 bg-hotpink" : "w-1.5 bg-hotpink/30"}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Tablet & up: 3-column grid */}
+            <div className="hidden sm:grid sm:grid-cols-3 sm:gap-5 lg:gap-7">
+              {UNIVERSES.map((u, i) => (
+                <UniverseCard key={u.key} u={u} i={i} popIn />
+              ))}
             </div>
           </div>
         </section>
@@ -605,6 +615,55 @@ const UNIVERSES: Universe[] = [
   },
 ];
 
+/* Card used both in the desktop 3-column grid and the mobile 3D carousel */
+function UniverseCard({ u, i, className = "", popIn = false }: { u: Universe; i: number; className?: string; popIn?: boolean }) {
+  return (
+    <article
+      className={`pearl-frame relative flex flex-col items-start overflow-hidden rounded-2xl border-none p-2.5 text-left sm:rounded-[1.75rem] sm:p-5 lg:p-6 ${popIn ? "animate-card-pop-in" : ""} ${className}`}
+      style={{
+        ...(popIn ? { animationDelay: `${i * 120}ms` } : {}),
+        background: "oklch(1 0 0 / 0.16)",
+        backdropFilter: "blur(6px)",
+        "--card-glow": u.glowColor,
+        boxShadow:
+          "inset 0 1px 0 oklch(1 0 0 / 0.75), inset 1px 0 0 oklch(1 0 0 / 0.25), inset -1px 0 0 oklch(1 0 0 / 0.12), inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18), 0 -10px 26px -10px oklch(1 0 0 / 0.7), 0 10px 28px -12px var(--card-glow, oklch(0.65 0.22 350 / 0.5))",
+      } as CSSProperties}
+    >
+      {/* per-card photo, shown at full strength */}
+      <img
+        src={u.image}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <h3 className="relative z-10 w-full animate-bloom-float text-center font-script text-2xl leading-none drop-shadow-[0_2px_6px_oklch(1_0_0_/_0.8)] sm:text-4xl lg:text-5xl" style={{ color: u.titleAccent, animationDelay: `${i * 300}ms` }}>{u.title}</h3>
+      <ul className="relative z-10 mt-2 flex flex-col items-start gap-1 sm:mt-4 sm:gap-2.5">
+        {u.items.map((it, ii) => {
+          const Icon = it.icon;
+          return (
+            <li key={it.label} className="flex items-center gap-1 rounded-full bg-white/30 px-2 py-1 backdrop-blur-md shadow-sm sm:gap-2 sm:px-3 sm:py-1.5">
+              <span className="animate-icon-wiggle grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/40 shadow-sm backdrop-blur-md sm:h-7 sm:w-7" style={{ animationDelay: `${ii * 220}ms` }}>
+                <Icon className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" style={{ color: u.titleColor }} />
+              </span>
+              <span className="text-[9px] font-bold leading-tight sm:text-sm" style={{ color: u.titleColor }}>{it.label}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <a
+        href={u.href}
+        aria-label={`Explore ${u.title}`}
+        className="hover-scale animate-cta-bounce relative z-10 mt-2 inline-flex w-full items-center justify-center gap-1 rounded-full bg-white/30 px-3 py-1.5 text-[10px] font-bold backdrop-blur-md sm:mt-3 sm:gap-1.5 sm:px-4 sm:py-2 sm:text-xs"
+        style={{ color: u.titleColor, animationDelay: `${i * 200}ms` }}
+      >
+        Discover
+        <ArrowRight className="animate-arrow-nudge h-3 w-3 sm:h-4 sm:w-4" />
+      </a>
+    </article>
+  );
+}
 
 const STATS = [
   { days: "7", text: "softer mornings & a calmer first week", image: "/images/landing-stat-bg-1.webp" },
