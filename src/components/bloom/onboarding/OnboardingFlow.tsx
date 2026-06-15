@@ -296,7 +296,7 @@ function Screen3({
         <h2 className="font-script mt-5 animate-question-pop text-2xl text-hotpink">What do you want to focus on first?</h2>
         <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
 
-        <div className="mt-4 flex flex-col gap-2.5 pb-2">
+        <div className="mt-4 grid grid-cols-2 gap-3 pb-2">
           {GOALS.map((g, i) => {
             const Icon = g.icon;
             const selected = goal === g.key;
@@ -307,22 +307,36 @@ function Screen3({
                 onClick={() => handleSelect(g.key)}
                 disabled={!!goal}
                 style={{ animationDelay: `${i * 0.08}s` }}
-                className={`bloom-pearl-card pearl-sheen flex min-h-[64px] animate-question-pop items-center gap-3 rounded-2xl p-3 text-left transition-all duration-300 ${
+                className={`group relative h-40 animate-question-pop overflow-hidden rounded-3xl text-left transition-all duration-300 ${
                   selected
-                    ? "animate-selected-glow border-2 border-hotpink bg-blush"
+                    ? "animate-selected-glow ring-2 ring-hotpink"
                     : goal
-                    ? "border-2 border-transparent opacity-40"
-                    : "animate-tap-hint border-2 border-transparent"
+                    ? "opacity-40"
+                    : "hover-scale animate-tap-hint active:scale-95"
                 }`}
               >
-                <span className={`clay-blob grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white animate-icon-breathe shadow-lg ${selected ? "shadow-hotpink/50" : "shadow-hotpink/25"}`}>
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="flex-1">
-                  <span className="block text-sm font-medium text-rose">{g.title}</span>
-                  <span className="block text-[12px] font-light text-rose/60 leading-snug">{g.subtitle}</span>
-                </span>
-                <ChevronRight className={`h-5 w-5 shrink-0 transition ${selected ? "text-hotpink" : "text-rose/30 animate-arrow-nudge"}`} />
+                <img
+                  src={g.image}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full animate-photo-breathe object-cover"
+                  style={{ animationDelay: `${i * 0.6}s` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                <div className="relative z-10 flex h-full flex-col justify-between p-3">
+                  <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center self-start rounded-xl text-white animate-icon-breathe shadow-lg shadow-hotpink/30">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold leading-snug text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">{g.title}</h3>
+                    <p className="mt-0.5 line-clamp-2 text-[11px] font-light leading-snug text-white/80">{g.subtitle}</p>
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-md">
+                      {selected ? "Selected ✓" : g.cta}
+                      {!selected && <ChevronRight className="h-3 w-3 animate-arrow-nudge" strokeWidth={2.5} />}
+                    </span>
+                  </div>
+                </div>
               </button>
             );
           })}
@@ -1020,7 +1034,10 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
               cycleData={cycleData}
               onNext={() => goTo(5, "forward")}
               onEnter={finish}
-              onBack={() => goTo(3, "back")}
+              onBack={() => {
+                setGoal(null);
+                goTo(3, "back");
+              }}
               onClose={skip}
               profile={profile ? { weight: profile.weight, weight_unit: profile.weight_unit } : null}
             />
