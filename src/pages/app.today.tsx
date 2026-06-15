@@ -3,7 +3,7 @@ import {
   Sparkles, Flower2, Heart, ArrowRight, Flame, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
-  Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff,
+  Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff, Pill, Undo2, CalendarDays,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,7 @@ const KEYS = {
   plan:           "bloom:today-plan",
   affirmIdx:      "bloom:today-affirm-idx",
   streak:         "bloom:streak-days",
+  pill:           "bloom:today-pill",
 } as const;
 
 export const TODAY_WATER_KEY = KEYS.water;
@@ -220,6 +221,16 @@ function cycleDayNumber() {
   return ((diff % s.cycleLength) + s.cycleLength) % s.cycleLength + 1;
 }
 
+function daysToPeriodNumber() {
+  const s = readCycleSettings();
+  const now = new Date();
+  const ms = 1000 * 60 * 60 * 24;
+  const diff = Math.floor((now.getTime() - s.lastPeriodStart.getTime()) / ms);
+  const cyclesPassed = Math.floor(diff / s.cycleLength) + 1;
+  const next = new Date(s.lastPeriodStart.getTime() + cyclesPassed * s.cycleLength * ms);
+  return Math.max(0, Math.ceil((next.getTime() - now.getTime()) / ms));
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
 export default function TodayPage() {
   const { profile } = useAuth();
@@ -227,6 +238,9 @@ export default function TodayPage() {
   const today = useMemo(fmtDate, []);
   const phase = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
   const cycleDay = useMemo(cycleDayNumber, []);
+  const daysToPeriod = useMemo(daysToPeriodNumber, []);
+  const cycleSettings = useMemo(readCycleSettings, []);
+  const pillLabel = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
 
   const displayName = profile?.name?.split(" ")[0] || "Beautiful";
 
@@ -242,6 +256,7 @@ export default function TodayPage() {
   const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
   const [reminderBusy, setReminderBusy] = useState(false);
   const [showCycleSetupBanner, setShowCycleSetupBanner] = useState(false);
+  const [pillTaken, setPillTaken] = useState(false);
 
   useEffect(() => {
     const iso = todayISO();
@@ -268,6 +283,11 @@ export default function TodayPage() {
 
     try { setAffirmIdx(Number(localStorage.getItem(KEYS.affirmIdx)) || 0); } catch {}
     try { setWaterRemindersEnabled(localStorage.getItem(KEYS.waterReminders) === "true"); } catch {}
+
+    try {
+      const raw = readJSON<{ date: string; taken: boolean }>(KEYS.pill, { date: "", taken: false });
+      setPillTaken(raw.date === iso ? raw.taken : false);
+    } catch {}
 
     // Re-broadcast today's cycle phase so Yoga/Meals/Workout/Diet stay in sync
     // even if the user hasn't opened Cycle Tracker since their last visit.
@@ -377,6 +397,14 @@ export default function TodayPage() {
     setPlanDone((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       try { localStorage.setItem(KEYS.plan, JSON.stringify({ date: todayISO(), done: next })); } catch {}
+      return next;
+    });
+  };
+
+  const togglePill = () => {
+    setPillTaken((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(KEYS.pill, JSON.stringify({ date: todayISO(), taken: next })); } catch {}
       return next;
     });
   };
@@ -512,6 +540,65 @@ export default function TodayPage() {
               </span>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── CYCLE SNAPSHOT + DAILY PILL ──────────────────────────────────── */}
+      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "75ms" }}>
+        <SectionTitle hint="at a glance">Your cycle today</SectionTitle>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+          {/* Cycle day */}
+          <div className="bloom-pearl-card pearl-sheen flex items-center gap-2.5 rounded-2xl p-3 sm:rounded-3xl sm:p-4">
+            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full text-white">
+              <CalendarDays className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Cycle day</p>
+              <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{cycleDay}<span className="text-xs sm:text-base text-rose/60">/{cycleSettings.cycleLength}</span></p>
+            </div>
+          </div>
+          {/* Next period */}
+          <div className="bloom-pearl-card pearl-sheen flex items-center gap-2.5 rounded-2xl p-3 sm:rounded-3xl sm:p-4">
+            <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full text-white">
+              <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Next period</p>
+              <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{daysToPeriod}<span className="text-xs sm:text-base text-rose/60"> d</span></p>
+            </div>
+          </div>
+          {/* Energy */}
+          <div className="bloom-pearl-card pearl-sheen flex items-center gap-2.5 rounded-2xl p-3 sm:rounded-3xl sm:p-4">
+            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full text-white">
+              <Flame className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Energy</p>
+              <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{PHASE_ENERGY[phase]}</p>
+            </div>
+          </div>
+          {/* Daily pill — tap to toggle taken */}
+          <button
+            onClick={togglePill}
+            aria-pressed={pillTaken}
+            className="bloom-pearl-card pearl-sheen group flex items-center gap-2.5 rounded-2xl p-3 text-left transition active:scale-95 sm:rounded-3xl sm:p-4"
+          >
+            <span className={[
+              "grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full transition",
+              pillTaken ? "clay-blob animate-icon-breathe text-white" : "bg-blush text-hotpink",
+            ].join(" ")}>
+              <Pill className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Daily {pillLabel}</p>
+              <p className={[
+                "inline-flex items-center gap-1 font-script text-base sm:text-xl leading-none",
+                pillTaken ? "text-hotpink" : "text-rose/60",
+              ].join(" ")}>
+                {pillTaken ? <><Check className="h-3.5 w-3.5" strokeWidth={3} /> Taken</> : <><Undo2 className="h-3.5 w-3.5" strokeWidth={2.5} /> Tap to log</>}
+              </p>
+            </div>
+          </button>
         </div>
       </section>
 

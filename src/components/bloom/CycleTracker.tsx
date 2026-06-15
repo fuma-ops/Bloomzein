@@ -62,37 +62,60 @@ const PHASE_FLOW: Record<Exclude<Phase, null>, { title: string; blurb: string }>
   luteal: { title: "15-Minute Wind-Down Flow", blurb: "Slow things down and soothe tension as your body prepares to rest." },
 };
 
-// Phase-aware "For You" picks, paired with real photos from the app.
+// Phase-aware "For You" picks, paired with real photos from the app —
+// covering yoga, workout, meals plus a suitable Read/blog and Shop find.
 const PHASE_RECOMMEND: Record<Exclude<Phase, null>, {
   yoga: { title: string; img: string };
   workout: { title: string; img: string };
   meal: { title: string; img: string };
+  read: { title: string; img: string };
+  shop: { title: string; img: string };
 }> = {
   period: {
     yoga: { title: "Soft yoga for cramps", img: "/images/pose-childs-pose.webp" },
     workout: { title: "Light mobility & core", img: "/images/zone-core.png" },
     meal: { title: "Iron-rich warm stew", img: "/images/meal-stew.jpg" },
+    read: { title: "Rest is productive", img: "/images/read-cycle.png" },
+    shop: { title: "Cozy Heat Wrap", img: "/images/shop-cat-cycle.jpg" },
   },
   follicular: {
     yoga: { title: "Energising morning flow", img: "/images/pose-warrior-1.webp" },
     workout: { title: "Full-body strength", img: "/images/zone-full-body.png" },
     meal: { title: "Protein buddha bowl", img: "/images/meal-buddha.jpg" },
+    read: { title: "Cycle syncing 101", img: "/images/read-cycle.png" },
+    shop: { title: "Soft Glow Leggings", img: "/images/shop-cat-active.jpg" },
   },
   fertile: {
     yoga: { title: "Power & balance flow", img: "/images/pose-tree.webp" },
     workout: { title: "Glutes & legs burn", img: "/images/zone-glutes.png" },
     meal: { title: "Fresh cute lunchbox", img: "/images/meal-lunchbox.jpg" },
+    read: { title: "Your magnetic era", img: "/images/read-selfcare.png" },
+    shop: { title: "Pillow Lip Gloss", img: "/images/shop-cat-beauty.jpg" },
   },
   ovulation: {
     yoga: { title: "Dynamic energy flow", img: "/images/pose-warrior-2.webp" },
     workout: { title: "High-intensity session", img: "/images/zone-arms.png" },
     meal: { title: "Cozy energising oats", img: "/images/meal-oats.jpg" },
+    read: { title: "Glow & confidence", img: "/images/read-mindset.png" },
+    shop: { title: "Rose Petal Serum", img: "/images/shop-cat-beauty.jpg" },
   },
   luteal: {
     yoga: { title: "Calming wind-down flow", img: "/images/pose-cat-cow.webp" },
     workout: { title: "Gentle toning", img: "/images/zone-back.png" },
     meal: { title: "Comforting warm stew", img: "/images/meal-stew.jpg" },
+    read: { title: "Luteal phase glow-up", img: "/images/read-cycle.png" },
+    shop: { title: "Silk Sleep Mask", img: "/images/shop-cat-selfcare.jpg" },
   },
+};
+
+// How each phase paints a calendar day — a soft tint + a tiny corner icon so
+// the month at a glance tells you exactly what's happening, not just periods.
+const CALENDAR_DAY_STYLE: Record<Exclude<Phase, null>, { cell: string; badge: string; Icon: any; iconClass: string }> = {
+  period:     { cell: "bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm",                 badge: "bg-white", Icon: Droplet, iconClass: "fill-red-500 text-red-500" },
+  follicular: { cell: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/70",                                badge: "bg-white", Icon: Sprout,  iconClass: "fill-amber-300 text-amber-500" },
+  fertile:    { cell: "bg-gradient-to-br from-pink-50 to-rose-100 text-hotpink ring-1 ring-pink-200",       badge: "bg-white", Icon: Flower2, iconClass: "fill-pink-300 text-hotpink" },
+  ovulation:  { cell: "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200", badge: "bg-white", Icon: Sparkles, iconClass: "fill-violet-400 text-violet-400" },
+  luteal:     { cell: "bg-violet-50 text-violet-500 ring-1 ring-violet-200/70",                             badge: "bg-white", Icon: Moon,    iconClass: "fill-violet-300 text-violet-400" },
 };
 
 const MOODS = [
@@ -237,14 +260,11 @@ export function CycleTracker() {
         </div>
         <div className="relative z-10 px-3 pb-3 sm:max-w-md sm:px-5 sm:pb-5">
           <p className="inline-flex items-center gap-1 text-[8px] font-bold tracking-widest text-rose sm:gap-1.5 sm:text-[10px]">
-            <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle text-hotpink sm:h-3 sm:w-3" /> TODAY'S INSIGHT
+            <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle text-hotpink sm:h-3 sm:w-3" /> WHERE YOU ARE TODAY
           </p>
-          <h3 className="mt-1 font-script text-base leading-tight text-hotpink sm:text-3xl">
+          <h3 className="mt-1 font-script text-2xl leading-tight text-hotpink sm:text-4xl">
             <AnimatedWords text={`Day ${cycleDay} · ${PHASE_LABEL[currentPhase]} Phase`} />
           </h3>
-          <p className="mt-1.5 font-script text-base font-semibold leading-snug text-magenta drop-shadow-[0_0_8px_rgba(236,72,153,0.4)] sm:mt-2 sm:text-2xl">
-            <AnimatedWords text={PHASE_INSIGHT[currentPhase]} delay={120} />
-          </p>
         </div>
       </div>
 
@@ -286,8 +306,8 @@ export function CycleTracker() {
             {days.map((d, i) => {
               if (!d) return <div key={i} />;
               const phase = phaseForDay(d, settings);
-              const isPeriod = phase === "period";
-              const isOvulation = phase === "ovulation";
+              const style = CALENDAR_DAY_STYLE[phase];
+              const BadgeIcon = style.Icon;
               const isSelected = sameDay(d, selected);
               const isToday = sameDay(d, today);
 
@@ -295,38 +315,31 @@ export function CycleTracker() {
                 <button
                   key={i}
                   onClick={() => setSelected(d)}
+                  title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                   className={[
                     "relative aspect-square rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-200 sm:text-xs",
                     "hover:scale-105 active:scale-95",
-                    isPeriod
-                      ? "bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm"
-                      : isOvulation
-                        ? "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200"
-                        : "text-rose hover:bg-blush",
-                    isSelected && !isToday ? "ring-1 ring-hotpink/40" : "",
-                    isToday ? "animate-selected-glow ring-1 ring-hotpink/40" : "",
+                    style.cell,
+                    isSelected && !isToday ? "ring-2 ring-hotpink/50" : "",
+                    isToday ? "animate-selected-glow ring-2 ring-hotpink/60" : "",
                   ].join(" ")}
                 >
                   {d.getDate()}
-                  {isPeriod && (
-                    <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm sm:h-4 sm:w-4">
-                      <Droplet className="h-2 w-2 fill-red-500 text-red-500 sm:h-2.5 sm:w-2.5" />
-                    </span>
-                  )}
-                  {isOvulation && (
-                    <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm sm:h-4 sm:w-4">
-                      <Sparkles className="h-2 w-2 fill-violet-400 text-violet-400 sm:h-2.5 sm:w-2.5" />
-                    </span>
-                  )}
+                  <span className={`absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full shadow-sm sm:h-4 sm:w-4 ${style.badge}`}>
+                    <BadgeIcon className={`h-2 w-2 sm:h-2.5 sm:w-2.5 ${style.iconClass}`} />
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Legend — only what matters */}
-          <div className="mt-3 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80 sm:mt-4 sm:gap-4 sm:text-[10px]">
+          {/* Legend — every phase, so the month reads at a glance */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[9px] font-bold text-rose/80 sm:mt-4 sm:gap-x-4 sm:text-[10px]">
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] sm:h-3 sm:w-3" /> Period</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-100 ring-1 ring-amber-200 sm:h-3 sm:w-3" /> Follicular</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-pink-100 to-rose-200 ring-1 ring-pink-200 sm:h-3 sm:w-3" /> Fertile</span>
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200 sm:h-3 sm:w-3" /> Ovulation</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-violet-100 ring-1 ring-violet-200 sm:h-3 sm:w-3" /> Luteal</span>
             <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-hotpink/60 shadow-[0_0_6px_1px_rgba(236,72,153,0.4)] sm:h-3 sm:w-3" /> Today</span>
           </div>
         </div>
@@ -582,12 +595,17 @@ export function CycleTracker() {
 
       {/* For You */}
       <div className="mt-8">
-        <h3 className="font-script text-4xl text-hotpink mb-3">For You ✿</h3>
+        <h3 className="font-script text-4xl text-hotpink mb-1">For You ✿</h3>
+        <p className="mb-3 text-xs font-semibold text-magenta/70 sm:text-sm">
+          Handpicked for your {PHASE_LABEL[currentPhase].toLowerCase()} phase — move, eat, read & treat yourself.
+        </p>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {[
             { tag: "YOGA", t: recommend.yoga.title, img: recommend.yoga.img, href: "/app/tools/yoga" },
             { tag: "WORKOUT", t: recommend.workout.title, img: recommend.workout.img, href: "/app/tools/workout" },
             { tag: "MEALS", t: recommend.meal.title, img: recommend.meal.img, href: "/app/tools/meals" },
+            { tag: "READ", t: recommend.read.title, img: recommend.read.img, href: "/app/read" },
+            { tag: "SHOP", t: recommend.shop.title, img: recommend.shop.img, href: "/app/shop" },
           ].map((p, i) => (
             <a
               key={p.t}
