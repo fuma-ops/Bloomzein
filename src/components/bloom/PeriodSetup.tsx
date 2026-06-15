@@ -87,21 +87,23 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             Tap your <span className="font-semibold text-hotpink">last period start</span> date:
           </div>
 
-          {/* Compact calendar — just for picking the date, kept light and airy */}
-          <DatePicker
-            value={toISO(draft.lastPeriodStart)}
-            onChange={(iso) => update("lastPeriodStart", new Date(iso + "T00:00:00"))}
-            max={toISO(new Date())}
-          />
-
-          {/* Cycle length + Period length side by side */}
-          <div className="animate-scale-in mt-4 grid grid-cols-2 gap-2" style={{ animationDelay: "120ms" }}>
-            <Section label="Cycle Length" glow={!isSet("cycleLength")}>
-              <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
-            </Section>
-            <Section label="Period Length" glow={!isSet("periodLength")}>
-              <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
-            </Section>
+          {/* Calendar left, cycle/period length sliders stacked right — saves vertical space for the rest */}
+          <div className="animate-scale-in mt-3 grid grid-cols-5 gap-2" style={{ animationDelay: "120ms" }}>
+            <div className="col-span-3">
+              <DatePicker
+                value={toISO(draft.lastPeriodStart)}
+                onChange={(iso) => update("lastPeriodStart", new Date(iso + "T00:00:00"))}
+                max={toISO(new Date())}
+              />
+            </div>
+            <div className="col-span-2 flex flex-col gap-2">
+              <Section label="Cycle Length" glow={!isSet("cycleLength")}>
+                <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" vertical />
+              </Section>
+              <Section label="Period Length" glow={!isSet("periodLength")}>
+                <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" vertical />
+              </Section>
+            </div>
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "160ms" }}>
@@ -199,11 +201,11 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 function Section({ label, children, glow }: { label: string; children: React.ReactNode; glow?: boolean }) {
   return (
     <div className="mt-2">
-      <p className="mb-1 flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-rose">
+      <p className="mb-1 flex flex-wrap items-center gap-1 text-[9px] font-bold tracking-widest text-rose">
         {label.toUpperCase()}
         {glow && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-hotpink">
-            <Sparkles className="h-2 w-2 animate-bloom-sparkle" /> SET ME UP
+          <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-full bg-hotpink/10 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-hotpink">
+            <Sparkles className="h-2 w-2 animate-bloom-sparkle" /> SET UP
           </span>
         )}
       </p>
@@ -214,18 +216,18 @@ function Section({ label, children, glow }: { label: string; children: React.Rea
   );
 }
 
-function Slider({ min, max, value, onChange, suffix }: { min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string }) {
+function Slider({ min, max, value, onChange, suffix, vertical }: { min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string; vertical?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className={vertical ? "flex flex-col gap-1.5" : "flex items-center gap-2"}>
       <input
         type="range"
         min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-blush accent-hotpink"
+        className={`h-1.5 cursor-pointer appearance-none rounded-full bg-blush accent-hotpink ${vertical ? "w-full" : "flex-1"}`}
       />
-      <span className="min-w-[40px] rounded-full bg-blush px-2 py-0.5 text-center text-[11px] font-bold text-hotpink">
+      <span className={`rounded-full bg-blush px-2 py-0.5 text-center text-[11px] font-bold text-hotpink ${vertical ? "" : "min-w-[40px]"}`}>
         {value}{suffix}
       </span>
     </div>
