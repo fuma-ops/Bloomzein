@@ -708,7 +708,7 @@ function YogaHero({
           {active === "library" && (
             <button
               onClick={onTryFlow}
-              className="hover-scale animate-soft-glow mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/20 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition active:scale-95"
+              className="hover-scale animate-soft-glow animate-card-breathe mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/20 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition active:scale-95"
             >
               <Sparkle className="h-3.5 w-3.5" /> Try a flow
             </button>
@@ -765,9 +765,9 @@ function YogaHome({
   return (
     <div className="space-y-4 sm:space-y-6 yoga-fade">
       {/* WELCOME / THREE SOFT STEPS — its own clean card, below the hero */}
-      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+      <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         {!onboarded ? (
-          <div className="rounded-2xl bg-blush/60 p-4 border border-petal/50">
+          <div className="animate-scale-in rounded-2xl bg-blush/60 p-4 border border-petal/50">
             <p className="text-sm font-semibold text-rose">New here? Welcome.</p>
             <p className="mt-1 text-xs text-rose/80">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
             <button
@@ -788,11 +788,11 @@ function YogaHome({
         </div>
 
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
-          <StepCard active={step === 1} done={step > 1} icon={BookOpen}
+          <StepCard index={0} active={step === 1} done={step > 1} icon={BookOpen}
             title="Learn the poses" cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
-          <StepCard active={step === 2} done={step > 2} icon={GraduationCap}
+          <StepCard index={1} active={step === 2} done={step > 2} icon={GraduationCap}
             title="Try a guided flow" cta="Start short flow" onClick={() => { onSetup(); }} />
-          <StepCard active={step === 3} done={false} icon={Headphones}
+          <StepCard index={2} active={step === 3} done={false} icon={Headphones}
             title="Eyes-closed audio" cta="Audio session" onClick={() => { onSetup(); }} />
         </div>
       </section>
@@ -820,7 +820,7 @@ function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; dura
       <Organizer phase={phaseSuggestion.phase} />
 
       {/* SAFETY */}
-      <p className="text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5">
+      <p className="animate-scale-in text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5" style={{ animationDelay: "640ms" }}>
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         Listen to your body, ease off if anything hurts, and check with your doctor if pregnant or injured.
       </p>
@@ -829,8 +829,8 @@ function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; dura
 }
 
 function StepCard({
-  active, done, icon: Icon, title, cta, onClick,
-}: { active: boolean; done: boolean; icon: typeof Sun; title: string; cta: string; onClick: () => void; }) {
+  index, active, done, icon: Icon, title, cta, onClick,
+}: { index: number; active: boolean; done: boolean; icon: typeof Sun; title: string; cta: string; onClick: () => void; }) {
   const [paused, setPaused] = useState(false);
   return (
     <button
@@ -839,8 +839,9 @@ function StepCard({
       onMouseLeave={() => setPaused(false)}
       onTouchStart={() => setPaused(true)}
       onTouchEnd={() => setPaused(false)}
+      style={{ animationDelay: `${index * 80}ms` }}
       className={[
-        "hover-scale flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition active:scale-95",
+        "hover-scale animate-scale-in flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition active:scale-95",
         active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15"
                : done ? "bg-white/70 border-petal/50 opacity-70"
                       : "bg-white/70 border-petal/50",
@@ -890,7 +891,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
   const sessions = tab === "moment" ? MOMENT_SESSIONS : INTENTION_SESSIONS;
 
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+    <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "160ms" }}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow sessions</p>
@@ -925,7 +926,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
 
 function StreakCard({ streak }: { streak: Streak }) {
   return (
-    <div className="pearl-frame bloom-pearl-card animate-card-breathe relative overflow-hidden rounded-3xl p-4 sm:p-5">
+    <div className="pearl-frame bloom-pearl-card animate-scale-in animate-card-breathe relative overflow-hidden rounded-3xl p-4 sm:p-5">
       <div className="relative z-10 flex items-center gap-3">
         <span className="animate-icon-wiggle grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-hotpink text-white shadow-lg shadow-hotpink/30">
           <Flame className="h-6 w-6" strokeWidth={1.8} />
@@ -949,7 +950,7 @@ const PHASE_SYNC_IMAGE: Record<Phase, string> = {
 
 function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string; onClick: () => void }) {
   return (
-    <div className="pearl-frame relative isolate flex min-h-[10rem] flex-col overflow-hidden rounded-3xl">
+    <div className="pearl-frame animate-scale-in relative isolate flex min-h-[10rem] flex-col overflow-hidden rounded-3xl" style={{ animationDelay: "80ms" }}>
       <img src={PHASE_SYNC_IMAGE[phase]} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/95 via-white/80 to-white/20" />
       <div className="relative z-10 flex h-full flex-col p-4 sm:p-5">
@@ -1055,7 +1056,7 @@ function Organizer({ phase }: { phase: Phase }) {
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength"];
 
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+    <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "160ms" }}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Organizer</p>
@@ -1068,11 +1069,11 @@ function Organizer({ phase }: { phase: Phase }) {
         </label>
       </div>
       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-        {days.map((d) => {
+        {days.map((d, i) => {
           const focus = schedule[d];
           const preview = focus ? FOCUS_PREVIEW[focus] : undefined;
           return (
-            <div key={d} className="rounded-2xl bg-blush/40 border border-petal/50 p-2">
+            <div key={d} className="animate-scale-in rounded-2xl bg-blush/40 border border-petal/50 p-2" style={{ animationDelay: `${220 + i * 60}ms` }}>
               <p className="text-[10px] font-bold uppercase tracking-wider text-rose/70 mb-1">{d}</p>
               <select
                 value={schedule[d] ?? ""}
@@ -1118,17 +1119,20 @@ function Library() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        {filtered.map((p) => <PoseCard key={p.slug} pose={p} />)}
+      <div key={active} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {filtered.map((p, i) => <PoseCard key={p.slug} pose={p} index={i} />)}
       </div>
     </div>
   );
 }
 
-function PoseCard({ pose }: { pose: Pose }) {
+function PoseCard({ pose, index }: { pose: Pose; index: number }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition">
+    <div
+      className="hover-scale animate-scale-in rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition"
+      style={{ animationDelay: `${(index % 8) * 60}ms` }}
+    >
       <button onClick={() => setOpen((v) => !v)} className="block w-full text-left">
         <div className="aspect-square bg-blush/40">
           <img src={pose.image} alt={pose.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-contain bg-[oklch(0.96_0.04_350)]" />
