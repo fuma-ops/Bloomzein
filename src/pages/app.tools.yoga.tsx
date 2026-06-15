@@ -560,6 +560,7 @@ function BreathPacer({ phase, phaseProgress, lang, dim }: {
 type View =
   | { kind: "home" }
   | { kind: "library" }
+  | { kind: "plan" }
   | { kind: "setup"; preset?: { intention: Intention; durationMin: number } }
   | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number }
   | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; moodBefore?: string; moodAfter?: string };
@@ -568,7 +569,6 @@ export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "home" });
-  const organizerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -598,15 +598,12 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {(view.kind === "home" || view.kind === "library") && (
+      {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <YogaHero
           active={view.kind}
           onDiscover={() => setView({ kind: "home" })}
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
-          onMyPlan={() => {
-            setView({ kind: "home" });
-            requestAnimationFrame(() => organizerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-          }}
+          onMyPlan={() => setView({ kind: "plan" })}
         />
       )}
 
@@ -618,12 +615,15 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onSetup={(preset) => setView({ kind: "setup", preset })}
           onStepGoTo={(s) => advanceStep(s)}
-          organizerRef={organizerRef}
         />
       )}
 
       {view.kind === "library" && (
         <Library onSetup={() => setView({ kind: "setup" })} />
+      )}
+
+      {view.kind === "plan" && (
+        <PlanPage onSetup={(preset) => setView({ kind: "setup", preset })} />
       )}
 
       {view.kind === "setup" && (
@@ -677,7 +677,7 @@ export default function YogaPage() {
 function YogaHero({
   active, onDiscover, onLibrary, onMyPlan,
 }: {
-  active: "home" | "library";
+  active: "home" | "library" | "plan";
   onDiscover: () => void;
   onLibrary: () => void;
   onMyPlan: () => void;
@@ -701,7 +701,7 @@ function YogaHero({
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
             <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
             <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
-            <button onClick={onMyPlan} className={tabClass(false)}>My Plan</button>
+            <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
           </div>
         </div>
       </div>
@@ -711,15 +711,7 @@ function YogaHero({
 
 // ===================== HOME =====================
 
-function YogaHome({
-  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo, organizerRef,
-}: {
-  onboarded: boolean; step: 1|2|3;
-  onBegin: () => void; onLibrary: () => void;
-  onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
-  onStepGoTo: (s: 1|2|3) => void;
-  organizerRef: React.RefObject<HTMLDivElement | null>;
-}) {
+function useYogaPhaseAndStreak() {
   const [streak, setStreak] = useState<Streak>({ count: 0, lastISO: null });
   const [phase, setPhase] = useState<Phase | null>(null);
 
@@ -742,6 +734,17 @@ function YogaHome({
     return { phase: p, label: labels[p] };
   }, [phase]);
 
+  return { streak, phaseSuggestion };
+}
+
+function YogaHome({
+  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo,
+}: {
+  onboarded: boolean; step: 1|2|3;
+  onBegin: () => void; onLibrary: () => void;
+  onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
+  onStepGoTo: (s: 1|2|3) => void;
+}) {
   return (
     <div className="space-y-4 sm:space-y-6 yoga-fade">
       {/* WELCOME / THREE SOFT STEPS — its own clean card, below the hero */}
@@ -779,7 +782,17 @@ function YogaHome({
 
       {/* FLOW SESSIONS — by moment / by intention carousels */}
       <FlowSessionsSection onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
+    </div>
+  );
+}
 
+// ===================== MY PLAN =====================
+
+function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; durationMin: number }) => void }) {
+  const { streak, phaseSuggestion } = useYogaPhaseAndStreak();
+
+  return (
+    <div className="space-y-4 sm:space-y-6 yoga-fade">
       {/* STREAK + CYCLE SUGGESTION */}
       <section className="grid gap-3 sm:grid-cols-2">
         <StreakCard streak={streak} />
@@ -787,9 +800,7 @@ function YogaHome({
       </section>
 
       {/* ORGANIZER */}
-      <div ref={organizerRef} className="scroll-mt-20">
-        <Organizer phase={phaseSuggestion.phase} />
-      </div>
+      <Organizer phase={phaseSuggestion.phase} />
 
       {/* SAFETY */}
       <p className="text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5">
@@ -844,8 +855,8 @@ function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index:
       className="bloom-pearl-card hover-scale group overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in"
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      <div className="relative h-24 w-full overflow-hidden sm:h-28">
-        <img src={preset.image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-110" />
+      <div className="relative h-28 w-full overflow-hidden sm:h-32">
+        <img src={preset.image} alt="" loading="lazy" className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-110" />
         <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
           {preset.duration} min
         </span>
@@ -923,13 +934,13 @@ function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string;
   return (
     <div className="pearl-frame relative isolate flex min-h-[10rem] flex-col overflow-hidden rounded-3xl">
       <img src={PHASE_SYNC_IMAGE[phase]} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/92 via-white/55 to-white/15" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/95 via-white/80 to-white/20" />
       <div className="relative z-10 flex h-full flex-col p-4 sm:p-5">
         <div className="flex items-center gap-3">
           <span className="animate-bloom-pulse grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hotpink text-white"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Cycle sync — {phase}</p>
-            <p className="text-sm font-semibold text-rose leading-snug">{label}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-hotpink">Cycle sync — {phase}</p>
+            <p className="text-sm font-bold text-rose leading-snug">{label}</p>
           </div>
         </div>
         <button
@@ -1055,8 +1066,11 @@ function Organizer({ phase }: { phase: Phase }) {
               </select>
               {preview && (
                 <div className="animate-scale-in mt-1.5 flex items-center gap-1.5 rounded-xl bg-white/80 p-1">
-                  <img src={preview.image} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
-                  <span className="text-[9px] font-semibold text-rose/70 leading-tight">{preview.duration}</span>
+                  <img src={preview.image} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover object-top" />
+                  <div className="min-w-0 leading-tight">
+                    <p className="truncate text-[10px] font-bold text-rose">{focus}</p>
+                    <p className="text-[9px] font-semibold text-rose/60">{preview.duration}</p>
+                  </div>
                 </div>
               )}
             </div>
