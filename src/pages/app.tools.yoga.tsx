@@ -251,6 +251,45 @@ const INTENTION_MAIN: Record<Exclude<Intention, "cycle">, string[]> = {
   strength: ["chair", "plank", "boat", "warrior-2", "bridge", "side-plank"],
 };
 
+// ===================== FLOW SESSION PRESETS (carousels) =====================
+
+interface SessionPreset { label: string; image: string; duration: number; intention: Intention }
+
+const MOMENT_SESSIONS: SessionPreset[] = [
+  { label: "Morning wake-up", image: "/images/pose-mountain.webp", duration: 10, intention: "morning" },
+  { label: "Pre-workout", image: "/images/pose-warrior-2.webp", duration: 15, intention: "strength" },
+  { label: "Post-workout", image: "/images/pose-pigeon.webp", duration: 15, intention: "release" },
+  { label: "Lunch break", image: "/images/pose-cat-cow.webp", duration: 10, intention: "stress" },
+  { label: "Evening wind-down", image: "/images/pose-legs-up-wall.webp", duration: 20, intention: "sleep" },
+];
+
+const INTENTION_SESSIONS: SessionPreset[] = [
+  { label: "Energise", image: "/images/pose-warrior-1.webp", duration: 20, intention: "morning" },
+  { label: "Restore", image: "/images/pose-reclined-bound-angle.webp", duration: 20, intention: "sleep" },
+  { label: "Strengthen", image: "/images/pose-plank.webp", duration: 30, intention: "strength" },
+  { label: "Release", image: "/images/pose-pigeon.webp", duration: 15, intention: "release" },
+  { label: "Ground", image: "/images/pose-mountain.webp", duration: 10, intention: "morning" },
+  { label: "Flow", image: "/images/pose-downward-dog.webp", duration: 30, intention: "stress" },
+];
+
+// Default weekly plan suggested per cycle phase — Mon..Sun, null = rest day.
+// The user can always change it; this just pre-fills the organizer sensibly.
+const PHASE_DEFAULT_PLAN: Record<Phase, (string | null)[]> = {
+  menstrual:  ["Cycle sync", "Sleep prep", null, "Cycle sync", "Sleep prep", null, "Cycle sync"],
+  follicular: ["Morning energy", "Strength", "Morning energy", null, "Strength", "Morning energy", null],
+  ovulation:  ["Strength", "Morning energy", "Strength", "Morning energy", null, "Strength", null],
+  luteal:     ["Stress relief", "Cycle sync", "Sleep prep", "Stress relief", "Cycle sync", null, "Sleep prep"],
+};
+
+// Image + duration preview shown under each organizer day once a focus is picked.
+const FOCUS_PREVIEW: Record<string, { image: string; duration: string }> = {
+  "Morning energy": { image: "/images/pose-mountain.webp", duration: "10-20 min" },
+  "Stress relief":  { image: "/images/pose-childs-pose.webp", duration: "15 min" },
+  "Sleep prep":     { image: "/images/pose-legs-up-wall.webp", duration: "10-20 min" },
+  "Cycle sync":     { image: "/images/pose-reclined-bound-angle.webp", duration: "15-20 min" },
+  "Strength":       { image: "/images/pose-plank.webp", duration: "20-30 min" },
+};
+
 function buildFlow(opts: {
   intention: Intention; level: Level; durationMin: number; phase: Phase; mode: Mode;
 }): Pose[] {
@@ -521,7 +560,7 @@ function BreathPacer({ phase, phaseProgress, lang, dim }: {
 type View =
   | { kind: "home" }
   | { kind: "library" }
-  | { kind: "setup" }
+  | { kind: "setup"; preset?: { intention: Intention; durationMin: number } }
   | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number }
   | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; moodBefore?: string; moodAfter?: string };
 
@@ -564,7 +603,7 @@ export default function YogaPage() {
           step={step}
           onBegin={beginNow}
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
-          onSetup={() => setView({ kind: "setup" })}
+          onSetup={(preset) => setView({ kind: "setup", preset })}
           onStepGoTo={(s) => advanceStep(s)}
         />
       )}
@@ -575,6 +614,7 @@ export default function YogaPage() {
 
       {view.kind === "setup" && (
         <Setup
+          preset={view.preset}
           onBack={() => setView({ kind: "home" })}
           onStart={(cfg) => {
             const flow = buildFlow(cfg);
@@ -624,7 +664,9 @@ function YogaHome({
   onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo,
 }: {
   onboarded: boolean; step: 1|2|3;
-  onBegin: () => void; onLibrary: () => void; onSetup: () => void; onStepGoTo: (s: 1|2|3) => void;
+  onBegin: () => void; onLibrary: () => void;
+  onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
+  onStepGoTo: (s: 1|2|3) => void;
 }) {
   const [streak, setStreak] = useState<Streak>({ count: 0, lastISO: null });
   const [phase, setPhase] = useState<Phase | null>(null);
@@ -650,95 +692,77 @@ function YogaHome({
 
   return (
     <div className="space-y-4 sm:space-y-6 yoga-fade">
-      {/* HEADER + HERO */}
-      <header className="grid gap-4 sm:gap-6 lg:grid-cols-[1.1fr_1fr] items-stretch">
-        <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10">
-          <h1 className="font-script text-4xl sm:text-6xl text-hotpink leading-none">Yoga Flows</h1>
-          <p className="mt-2 text-sm sm:text-base text-rose/80">guided breath, gentle movement — your softest practice.</p>
+      {/* HERO — single section: background photo, title, summary, CTA, and the 3 soft steps */}
+      <header className="pearl-frame relative isolate flex min-h-[26rem] flex-col overflow-hidden rounded-3xl shadow-xl shadow-rose/10 sm:min-h-[30rem]">
+        <img src="/images/yoga-hero.webp" alt="Soft pink yoga moment" className="absolute inset-0 -z-10 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/92 via-white/55 to-white/15" />
+
+        <div className="relative z-10 p-5 sm:p-8">
+          <h1 className="animate-fade-in font-script text-4xl text-hotpink leading-none sm:text-6xl">Yoga Flows</h1>
+          <p className="animate-fade-in mt-2 max-w-md text-sm text-rose/80 sm:text-base" style={{ animationDelay: "60ms" }}>
+            guided breath, gentle movement — your softest practice.
+          </p>
 
           {!onboarded ? (
-            <div className="mt-4 sm:mt-6 rounded-2xl bg-blush/60 p-4 border border-petal/50">
+            <div className="animate-scale-in mt-4 max-w-sm rounded-2xl border border-petal/50 bg-white/85 p-4 backdrop-blur sm:mt-6" style={{ animationDelay: "140ms" }}>
               <p className="text-sm font-semibold text-rose">New here? Welcome.</p>
-              <p className="text-xs text-rose/80 mt-1">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
+              <p className="mt-1 text-xs text-rose/80">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
               <button
                 onClick={onBegin}
-                className="bloom-luxury-btn mt-4 inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
+                className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
               >
-                <Sparkles className="h-4 w-4" /> Start Here
+                <Sparkles className="h-4 w-4 animate-bloom-sparkle" /> Start Here
               </button>
             </div>
           ) : (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button onClick={onSetup} className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white">
+            <div className="animate-scale-in mt-4 flex flex-wrap gap-2" style={{ animationDelay: "140ms" }}>
+              <button onClick={() => onSetup()} className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white">
                 <Play className="h-4 w-4" /> Start a session
               </button>
-              <button onClick={onLibrary} className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2.5 text-sm font-semibold text-rose border border-petal/60">
+              <button onClick={onLibrary} className="hover-scale inline-flex items-center gap-2 rounded-full border border-petal/60 bg-white/90 px-4 py-2.5 text-sm font-semibold text-rose">
                 <BookOpen className="h-4 w-4" /> Pose library
               </button>
             </div>
           )}
         </div>
 
-        <div className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-xl shadow-rose/10 min-h-[180px]">
-          <img src="/images/yoga-hero.webp" alt="Soft pink yoga moment" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-blush/60 via-transparent to-transparent" />
+        {/* three soft steps — sits on the image, bottom of the hero */}
+        <div className="relative z-10 mt-auto p-3 sm:p-5">
+          <div className="animate-scale-in rounded-2xl border border-petal/50 bg-white/85 p-3 backdrop-blur sm:p-4" style={{ animationDelay: "200ms" }}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your path</p>
+                <h2 className="font-script text-xl leading-none text-hotpink sm:text-2xl">three soft steps</h2>
+              </div>
+              <span className="text-xs text-rose/70">Step {step} of 3</span>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              <StepCard n={1} active={step === 1} done={step > 1} icon={BookOpen}
+                title="Learn the poses" desc="A visual library — names, breath, and how to enter each pose."
+                cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
+              <StepCard n={2} active={step === 2} done={step > 2} icon={GraduationCap}
+                title="Try a guided flow" desc="A short session with visuals + voice — pose by pose."
+                cta="Start short flow" onClick={() => { onSetup(); }} />
+              <StepCard n={3} active={step === 3} done={false} icon={Headphones}
+                title="Eyes-closed audio" desc="When poses feel familiar, close your eyes and let the voice lead."
+                cta="Audio session" onClick={() => { onSetup(); }} />
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* GUIDED STEPS */}
-      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your path</p>
-            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">three soft steps</h2>
-          </div>
-          <span className="text-xs text-rose/70">Step {step} of 3</span>
-        </div>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <StepCard n={1} active={step === 1} done={step > 1} icon={BookOpen}
-            title="Learn the poses" desc="A visual library — names, breath, and how to enter each pose."
-            cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
-          <StepCard n={2} active={step === 2} done={step > 2} icon={GraduationCap}
-            title="Try a guided flow" desc="A short session with visuals + voice — pose by pose."
-            cta="Start short flow" onClick={() => { onSetup(); }} />
-          <StepCard n={3} active={step === 3} done={false} icon={Headphones}
-            title="Eyes-closed audio" desc="When poses feel familiar, close your eyes and let the voice lead."
-            cta="Audio session" onClick={() => { onSetup(); }} />
-        </div>
-      </section>
+      {/* FLOW SESSIONS — by moment / by intention carousels */}
+      <FlowSessionsSection onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
 
       {/* STREAK + CYCLE SUGGESTION */}
       <section className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-hotpink text-white"><Flame className="h-5 w-5" strokeWidth={1.8} /></span>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Streak</p>
-              <p className="font-script text-2xl text-hotpink leading-none">{streak.count} days blooming</p>
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-rose/75">{streak.count === 0 ? "Your first session begins your streak." : "Keep the soft momentum going."}</p>
-        </div>
-        <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-hotpink text-white"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Cycle sync — {phaseSuggestion.phase}</p>
-              <p className="text-sm font-semibold text-rose leading-snug">{phaseSuggestion.label}</p>
-            </div>
-          </div>
-          <button
-            onClick={onSetup}
-            className="bloom-luxury-btn mt-3 inline-flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white"
-          >
-            Practice for today <ArrowRight className="h-3 w-3" />
-          </button>
-        </div>
+        <StreakCard streak={streak} />
+        <CycleSyncCard phase={phaseSuggestion.phase} label={phaseSuggestion.label} onClick={() => onSetup({ intention: "cycle", durationMin: 20 })} />
       </section>
 
       {/* ORGANIZER */}
-      <Organizer />
+      <Organizer phase={phaseSuggestion.phase} />
 
       {/* SAFETY */}
       <p className="text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5">
@@ -777,16 +801,160 @@ function StepCard({
   );
 }
 
-function Organizer() {
+// ===================== FLOW SESSIONS (auto-scroll carousels) =====================
+
+function AutoScrollRow({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let raf: number;
+    const tick = () => {
+      if (!pausedRef.current && el.scrollWidth > el.clientWidth) {
+        const max = el.scrollWidth - el.clientWidth;
+        if (el.scrollLeft >= max - 1) el.scrollLeft = 0;
+        else el.scrollLeft += 0.4;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
+      onTouchStart={() => { pausedRef.current = true; }}
+      onTouchEnd={() => { pausedRef.current = false; }}
+      className="flex gap-3 overflow-x-auto no-scrollbar pb-1"
+    >
+      {children}
+    </div>
+  );
+}
+
+function SessionCard({ preset, onClick }: { preset: SessionPreset; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="bloom-pearl-card hover-scale shrink-0 overflow-hidden rounded-2xl text-left transition active:scale-95"
+      style={{ width: "9rem" }}
+    >
+      <div className="h-20 w-full overflow-hidden sm:h-24">
+        <img src={preset.image} alt="" loading="lazy" className="h-full w-full object-cover" />
+      </div>
+      <div className="p-2.5">
+        <p className="text-xs font-bold leading-tight text-rose">{preset.label}</p>
+        <p className="mt-0.5 text-[10px] text-rose/60">{preset.duration} min</p>
+      </div>
+    </button>
+  );
+}
+
+function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, durationMin: number) => void }) {
+  return (
+    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6 space-y-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow sessions</p>
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">find your moment</h2>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose/60">By moment</p>
+        <AutoScrollRow>
+          {MOMENT_SESSIONS.map((s) => (
+            <SessionCard key={s.label} preset={s} onClick={() => onStart(s.intention, s.duration)} />
+          ))}
+        </AutoScrollRow>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose/60">By intention</p>
+        <AutoScrollRow>
+          {INTENTION_SESSIONS.map((s) => (
+            <SessionCard key={s.label} preset={s} onClick={() => onStart(s.intention, s.duration)} />
+          ))}
+        </AutoScrollRow>
+      </div>
+    </section>
+  );
+}
+
+// ===================== STREAK + CYCLE SYNC CARDS =====================
+
+function StreakCard({ streak }: { streak: Streak }) {
+  return (
+    <div className="pearl-frame bloom-pearl-card animate-card-breathe relative overflow-hidden rounded-3xl p-4 sm:p-5">
+      <div className="relative z-10 flex items-center gap-3">
+        <span className="animate-icon-wiggle grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-hotpink text-white shadow-lg shadow-hotpink/30">
+          <Flame className="h-6 w-6" strokeWidth={1.8} />
+        </span>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Streak</p>
+          <p className="font-script text-2xl text-hotpink leading-none">{streak.count} days blooming</p>
+        </div>
+      </div>
+      <p className="relative z-10 mt-2 text-xs text-rose/75">{streak.count === 0 ? "Your first session begins your streak." : "Keep the soft momentum going."}</p>
+    </div>
+  );
+}
+
+const PHASE_SYNC_IMAGE: Record<Phase, string> = {
+  menstrual: "/images/pose-reclined-bound-angle.webp",
+  follicular: "/images/pose-warrior-1.webp",
+  ovulation: "/images/pose-tree.webp",
+  luteal: "/images/pose-seated-forward-fold.webp",
+};
+
+function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string; onClick: () => void }) {
+  return (
+    <div className="pearl-frame relative isolate flex min-h-[10rem] flex-col overflow-hidden rounded-3xl">
+      <img src={PHASE_SYNC_IMAGE[phase]} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/92 via-white/55 to-white/15" />
+      <div className="relative z-10 flex h-full flex-col p-4 sm:p-5">
+        <div className="flex items-center gap-3">
+          <span className="animate-bloom-pulse grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hotpink text-white"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Cycle sync — {phase}</p>
+            <p className="text-sm font-semibold text-rose leading-snug">{label}</p>
+          </div>
+        </div>
+        <button
+          onClick={onClick}
+          className="bloom-luxury-btn hover-scale animate-cta-bounce mt-auto inline-flex w-fit items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white"
+        >
+          Practice for today <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Organizer({ phase }: { phase: Phase }) {
   const [schedule, setSchedule] = useState<Record<string, string | null>>({});
   const [reminder, setReminder] = useState("07:30");
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(SCHEDULE_KEY); if (raw) setSchedule(JSON.parse(raw));
+      const raw = localStorage.getItem(SCHEDULE_KEY);
+      if (raw) {
+        setSchedule(JSON.parse(raw));
+      } else {
+        // Pre-fill the week from the current cycle phase — the user can still change it.
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const plan = PHASE_DEFAULT_PLAN[phase];
+        const defaults: Record<string, string | null> = {};
+        days.forEach((d, i) => { defaults[d] = plan[i]; });
+        setSchedule(defaults);
+        localStorage.setItem(SCHEDULE_KEY, JSON.stringify(defaults));
+      }
       const r = localStorage.getItem(REMINDER_KEY); if (r) setReminder(r);
     } catch {}
-  }, []);
+  }, [phase]);
 
   // A schedule is only useful if we can actually nudge her — ask right when
   // she picks a practice day (a real user gesture), not via a banner she may dismiss.
@@ -863,18 +1031,28 @@ function Organizer() {
         </label>
       </div>
       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-        {days.map((d) => (
-          <div key={d} className="rounded-2xl bg-blush/40 border border-petal/50 p-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/70 mb-1">{d}</p>
-            <select
-              value={schedule[d] ?? ""}
-              onChange={(e) => update(d, e.target.value || null)}
-              className="w-full rounded-lg bg-white/90 border border-petal/60 px-2 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-            >
-              {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest"}</option>)}
-            </select>
-          </div>
-        ))}
+        {days.map((d) => {
+          const focus = schedule[d];
+          const preview = focus ? FOCUS_PREVIEW[focus] : undefined;
+          return (
+            <div key={d} className="rounded-2xl bg-blush/40 border border-petal/50 p-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/70 mb-1">{d}</p>
+              <select
+                value={schedule[d] ?? ""}
+                onChange={(e) => update(d, e.target.value || null)}
+                className="w-full rounded-lg bg-white/90 border border-petal/60 px-2 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+              >
+                {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest"}</option>)}
+              </select>
+              {preview && (
+                <div className="animate-scale-in mt-1.5 flex items-center gap-1.5 rounded-xl bg-white/80 p-1">
+                  <img src={preview.image} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+                  <span className="text-[9px] font-semibold text-rose/70 leading-tight">{preview.duration}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -949,13 +1127,14 @@ const LEVELS: Level[] = ["Beginner", "Intermediate", "Advanced"];
 const SOUNDS = ["Silence", "Rain", "Singing bowls", "Forest"] as const;
 
 function Setup({
-  onBack, onStart,
+  onBack, onStart, preset,
 }: {
   onBack: () => void;
   onStart: (cfg: { durationMin: number; intention: Intention; level: Level; lang: Lang; sound: typeof SOUNDS[number]; mode: Mode; phase: Phase }) => void;
+  preset?: { intention: Intention; durationMin: number };
 }) {
-  const [durationMin, setDuration] = useState(20);
-  const [intention, setIntention] = useState<Intention>("morning");
+  const [durationMin, setDuration] = useState(preset?.durationMin ?? 20);
+  const [intention, setIntention] = useState<Intention>(preset?.intention ?? "morning");
   const [level, setLevel] = useState<Level>("Beginner");
   const [lang, setLang] = useState<Lang>("en");
   const [sound, setSound] = useState<typeof SOUNDS[number]>("Silence");
