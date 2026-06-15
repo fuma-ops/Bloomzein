@@ -53,6 +53,15 @@ function HeartShape({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** Small 4-point sparkle star */
+function StarShape({ size, color }: { size: number; color: string }) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} fill="none">
+      <path d="M10 0 C10 5.5 14.5 10 20 10 C14.5 10 10 14.5 10 20 C10 14.5 5.5 10 0 10 C5.5 10 10 5.5 10 0Z" fill={color} />
+    </svg>
+  );
+}
+
 /** Dot */
 function Dot({ size, color }: { size: number; color: string }) {
   return (
@@ -104,6 +113,15 @@ const SCATTER = [
   { k:"o", t:74, l:30, sz:6, rot:0, op:0.58, dur:14, del:-2,  c:SC[1] },
   { k:"o", t:85, l:68, sz:7, rot:0, op:0.62, dur:11, del:-7,  c:SC[3] },
   { k:"o", t:95, l:55, sz:5, rot:0, op:0.55, dur:13, del:-5,  c:SC[0] },
+  // sparkle stars
+  { k:"s", t:9,  l:50, sz:16, rot:0,   op:0.55, dur:9,  del:-2,  c:SC[5] },
+  { k:"s", t:21, l:14, sz:12, rot:15,  op:0.50, dur:11, del:-5,  c:SC[1] },
+  { k:"s", t:33, l:84, sz:14, rot:-10, op:0.55, dur:10, del:-7,  c:SC[5] },
+  { k:"s", t:46, l:62, sz:10, rot:20,  op:0.48, dur:12, del:-3,  c:SC[3] },
+  { k:"s", t:58, l:38, sz:15, rot:-5,  op:0.55, dur:9,  del:-9,  c:SC[5] },
+  { k:"s", t:70, l:8,  sz:11, rot:10,  op:0.50, dur:11, del:-1,  c:SC[1] },
+  { k:"s", t:83, l:48, sz:13, rot:-15, op:0.52, dur:10, del:-6,  c:SC[5] },
+  { k:"s", t:90, l:90, sz:10, rot:8,   op:0.48, dur:12, del:-4,  c:SC[3] },
 ] as const;
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -125,8 +143,13 @@ export function KawaiiBackground({ className = "" }: Props) {
           0%,100% { transform: scale(1)    rotate(var(--bz-r)); }
           50%      { transform: scale(1.06) rotate(var(--bz-r)); }
         }
+        @keyframes bz-twinkle {
+          0%,100% { transform: scale(0.85) rotate(var(--bz-r)); opacity: var(--bz-op-lo, 0.2); }
+          50%      { transform: scale(1.25) rotate(var(--bz-r)); opacity: var(--bz-op-hi, 0.8); }
+        }
         .bz-f { animation: bz-float var(--bz-d) ease-in-out var(--bz-del) infinite; }
         .bz-p { animation: bz-pulse var(--bz-d) ease-in-out var(--bz-del) infinite; }
+        .bz-t { animation: bz-twinkle var(--bz-d) ease-in-out var(--bz-del) infinite; }
       `}</style>
 
       {/* ── BIG OUTLINE FLOWERS — left edge ─────────────────────────────── */}
@@ -174,19 +197,21 @@ export function KawaiiBackground({ className = "" }: Props) {
       {/* ── SMALL SCATTER ───────────────────────────────────────────────── */}
       {SCATTER.map((el, i) => (
         <span key={i}
-          className={el.k === "o" ? "bz-p" : "bz-f"}
+          className={el.k === "o" ? "bz-p" : el.k === "s" ? "bz-t" : "bz-f"}
           style={{
             position:"absolute",
             top:`${el.t}%`, left:`${el.l}%`,
-            opacity: el.op,
-            "--bz-r":   `${el.rot}deg`,
-            "--bz-d":   `${el.dur}s`,
-            "--bz-del": `${el.del}s`,
+            opacity: el.k === "s" ? undefined : el.op,
+            "--bz-r":     `${el.rot}deg`,
+            "--bz-d":     `${el.dur}s`,
+            "--bz-del":   `${el.del}s`,
+            "--bz-op-hi": el.op,
           } as React.CSSProperties}
         >
           {el.k === "d" && <SmallDaisy  size={el.sz} color={el.c} />}
           {el.k === "h" && <HeartShape  size={el.sz} color={el.c} />}
           {el.k === "o" && <Dot         size={el.sz} color={el.c} />}
+          {el.k === "s" && <StarShape   size={el.sz} color={el.c} />}
         </span>
       ))}
     </div>
