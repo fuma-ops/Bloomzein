@@ -205,14 +205,13 @@ export function CycleTracker() {
   const pillLabel = settings.contraceptiveMethod.charAt(0).toUpperCase() + settings.contraceptiveMethod.slice(1);
 
   // Where today sits in the cycle (1-indexed) + the broad "journey" stage for it.
-  const { cycleDay, ovulationDayOfCycle, currentPhase, journeyPercent } = useMemo(() => {
+  const { cycleDay, ovulationDayOfCycle, currentPhase } = useMemo(() => {
     const ms = 1000 * 60 * 60 * 24;
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / ms);
     const cd = (((diff % settings.cycleLength) + settings.cycleLength) % settings.cycleLength) + 1;
     const ovDay = settings.cycleLength - 14;
     const phase = phaseForDay(today, settings);
-    const pct = Math.min(100, Math.max(0, ((cd - 1) / Math.max(1, settings.cycleLength - 1)) * 100));
-    return { cycleDay: cd, ovulationDayOfCycle: ovDay, currentPhase: phase, journeyPercent: pct };
+    return { cycleDay: cd, ovulationDayOfCycle: ovDay, currentPhase: phase };
   }, [settings]);
 
   const journeySteps = [
@@ -279,7 +278,7 @@ export function CycleTracker() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/85 via-white/55 to-white/15" />
         <div className="relative z-10 flex items-center justify-between gap-2 p-3 sm:p-5">
           <h2 className="font-script text-3xl text-hotpink sm:text-5xl">
-            Cycle <span className="animate-flower-bloom">🌸</span>
+            Cycle <Flower2 className="animate-flower-bloom animate-flower-glow ml-1 inline h-7 w-7 fill-hotpink/30 text-hotpink sm:h-11 sm:w-11" />
           </h2>
         </div>
         <div className="relative z-10 px-3 pb-3 sm:max-w-md sm:px-5 sm:pb-4">
@@ -294,20 +293,10 @@ export function CycleTracker() {
         {/* ============= Your Cycle Journey — sits directly on the hero, no card ============= */}
         <div className="relative z-10 mt-auto px-3 pt-6 pb-3 sm:px-5 sm:pt-8 sm:pb-5">
           <p className="absolute left-3 top-0 font-script text-sm text-hotpink sm:left-5 sm:text-lg">Your Cycle Journey</p>
-          {/* connecting line */}
-          <div className="absolute left-5 right-5 top-[calc(1rem+0.875rem)] h-1 rounded-full bg-white/60 sm:left-7 sm:right-7 sm:top-[calc(1.25rem+1.25rem)]" />
-          {/* floating "Day X" pill */}
-          <div
-            className="absolute top-2 flex -translate-x-1/2 flex-col items-center sm:top-3"
-            style={{ left: `${journeyPercent}%` }}
-          >
-            <span className="animate-bloom-bounce whitespace-nowrap rounded-full bg-hotpink px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md shadow-hotpink/30">
-              Day {cycleDay}
-            </span>
-            <span className="mt-0.5 h-1.5 w-0.5 rounded-full bg-hotpink/50" />
-          </div>
 
           <div className="relative flex justify-between">
+            {/* connecting line — centered on the phase icons */}
+            <div className="absolute left-5 right-5 top-3.5 h-1 -translate-y-1/2 rounded-full bg-white/60 sm:left-7 sm:right-7 sm:top-5" />
             {journeySteps.map((step) => {
               const Icon = PHASE_META[step.key].Icon;
               return (

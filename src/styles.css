@@ -1024,6 +1024,15 @@
   animation: flower-bloom 3s ease-in-out infinite;
 }
 
+/* Soft pink glow pulse for the title flower icon */
+@keyframes flower-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px oklch(0.75 0.27 350 / 0.35)); }
+  50% { filter: drop-shadow(0 0 10px oklch(0.75 0.27 350 / 0.8)); }
+}
+@utility animate-flower-glow {
+  animation: flower-glow 3s ease-in-out infinite;
+}
+
 /* Soft glowing text pulse — marks copy as important/live data */
 @keyframes text-glow-pulse {
   0%, 100% { text-shadow: 0 0 4px oklch(0.75 0.27 350 / 0.3), 0 0 1px oklch(0.65 0.27 350 / 0.2); }
