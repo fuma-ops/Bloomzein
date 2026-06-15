@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X, Flower2, Bell, Sparkles, ChevronDown, Droplet } from "lucide-react";
+import { X, Flower2, Bell, Sparkles, ChevronDown } from "lucide-react";
 import { CuteTimePicker } from "./CutePicker";
-import { phaseForDay } from "./cyclePhase";
+import { DatePicker } from "./onboarding/DatePicker";
 
 export type TrackerMode = "protection" | "conception";
 export type ContraceptiveMethod = "pill" | "patch" | "ring";
@@ -24,17 +24,12 @@ interface Props {
   onSave: (s: CycleSettings) => void;
 }
 
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const TODAY = new Date(2026, 5, 14); // demo "today", matches CycleTracker
-
-function sameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function toISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   const [draft, setDraft] = useState<CycleSettings>(initial);
-  const [cursor, setCursor] = useState(new Date(initial.lastPeriodStart.getFullYear(), initial.lastPeriodStart.getMonth(), 1));
   const [showScrollHint, setShowScrollHint] = useState(true);
   // Tracks which settings the user has touched this session, so each one
   // glows ("set me up") until configured, then calms down — guiding the user.
@@ -44,26 +39,12 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   useEffect(() => {
     if (open) {
       setDraft(initial);
-      setCursor(new Date(initial.lastPeriodStart.getFullYear(), initial.lastPeriodStart.getMonth(), 1));
       setShowScrollHint(true);
       setTouched(new Set());
     }
   }, [open, initial]);
 
   if (!open) return null;
-
-  const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-  const startWeekday = first.getDay();
-  const totalDays = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-  const prevMonthDays = new Date(cursor.getFullYear(), cursor.getMonth(), 0).getDate();
-
-  const cells: { date: Date; outside: boolean }[] = [];
-  for (let i = startWeekday - 1; i >= 0; i--) {
-    cells.push({ date: new Date(cursor.getFullYear(), cursor.getMonth() - 1, prevMonthDays - i), outside: true });
-  }
-  for (let d = 1; d <= totalDays; d++) cells.push({ date: new Date(cursor.getFullYear(), cursor.getMonth(), d), outside: false });
-  let next = 1;
-  while (cells.length % 7 !== 0) cells.push({ date: new Date(cursor.getFullYear(), cursor.getMonth() + 1, next++), outside: true });
 
   function update<K extends keyof CycleSettings>(k: K, v: CycleSettings[K]) {
     setDraft((d) => ({ ...d, [k]: v }));
@@ -113,64 +94,12 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             </div>
           )}
 
-          {/* Calendar — simplified: only period range, ovulation day & today */}
-          <div className={`animate-scale-in mt-2 rounded-xl bg-white/90 p-1.5 shadow-inner ring-1 ring-petal/60 ${!isSet("lastPeriodStart") ? "animate-hint-glow" : ""}`} style={{ animationDelay: "80ms" }}>
-            <div className="flex items-center justify-between px-1">
-              <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="hover-scale grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
-                <ChevronLeft className="h-3 w-3" />
-              </button>
-              <div className="font-script text-sm text-hotpink">{MONTHS[cursor.getMonth()]} {cursor.getFullYear()}</div>
-              <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="hover-scale grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
-                <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
-            <div className="mt-0.5 grid grid-cols-7 text-center text-[8px] font-bold text-rose">
-              {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
-            </div>
-            <div className="mt-0.5 grid grid-cols-7 gap-0.5">
-              {cells.map((c, i) => {
-                const phase = phaseForDay(c.date, draft);
-                const isPeriod = phase === "period";
-                const isOvulation = phase === "ovulation";
-                const isToday = sameDay(c.date, TODAY);
-                return (
-                  <button
-                    key={i}
-                    onClick={() => update("lastPeriodStart", c.date)}
-                    className={[
-                      "relative flex aspect-square items-center justify-center rounded-full text-[10px] font-semibold transition-all duration-200 active:scale-90",
-                      isPeriod
-                        ? "animate-scale-in bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm"
-                        : isOvulation
-                          ? "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200"
-                          : c.outside
-                            ? "text-rose/30 hover:bg-blush"
-                            : "text-rose hover:bg-blush",
-                      isToday ? "animate-selected-glow ring-1 ring-hotpink/40" : "",
-                    ].join(" ")}
-                  >
-                    {c.date.getDate()}
-                    {isPeriod && (
-                      <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm">
-                        <Droplet className="h-2 w-2 fill-red-500 text-red-500" />
-                      </span>
-                    )}
-                    {isOvulation && (
-                      <span className="absolute -bottom-0.5 -right-0.5 grid h-3.5 w-3.5 place-items-center rounded-full bg-white shadow-sm">
-                        <Sparkles className="h-2 w-2 fill-violet-400 text-violet-400" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Tiny legend — only what matters */}
-            <div className="mt-2 flex items-center justify-center gap-3 text-[9px] font-bold text-rose/80">
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200" /> Ovulation</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full ring-2 ring-hotpink/60 shadow-[0_0_6px_1px_rgba(236,72,153,0.4)]" /> Today</span>
-            </div>
-          </div>
+          {/* Compact calendar — just for picking the date, kept light and airy */}
+          <DatePicker
+            value={toISO(draft.lastPeriodStart)}
+            onChange={(iso) => update("lastPeriodStart", new Date(iso + "T00:00:00"))}
+            max={toISO(new Date())}
+          />
 
           {/* Cycle length + Period length side by side */}
           <div className="animate-scale-in mt-2 grid grid-cols-2 gap-2" style={{ animationDelay: "120ms" }}>
