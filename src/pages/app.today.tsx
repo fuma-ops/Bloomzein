@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Sparkles, Flower2, Heart, ArrowRight, Flame, Sun, Moon, Smile, Cloud,
+  Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
   Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff, Pill, Undo2, CalendarDays,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { RECIPES } from "@/components/bloom/recipes/data";
@@ -419,6 +420,7 @@ export default function TodayPage() {
 
   const quote = PHASE_QUOTES[phase];
   const plan = PHASE_PLAN[phase];
+  const MoodIconStat = MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles;
 
   // Cycle → Reminders: surface an iron-rich recipe during period/luteal
   // (when iron needs peak per PHASE_MICROS) to nudge a visit to Diet.
@@ -459,7 +461,7 @@ export default function TodayPage() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
-          <h1 className="mt-2 sm:mt-3 font-script text-3xl sm:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
+          <h1 className="mt-2 sm:mt-3 animate-text-pop font-script text-4xl sm:text-7xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
 
@@ -470,8 +472,8 @@ export default function TodayPage() {
             Energy: {PHASE_ENERGY[phase]} {mood && <>· Mood: {MOOD_LABEL[mood]}</>}
           </p>
 
-          <p className="mt-2 sm:mt-4 text-xs sm:text-base text-rose italic leading-snug max-w-xs">
-            "{quote}"
+          <p className="mt-2 sm:mt-4 text-xs sm:text-base text-rose italic leading-snug max-w-xs animate-text-glow">
+            <AnimatedWords text={`"${quote}"`} />
           </p>
 
           <a
@@ -540,65 +542,6 @@ export default function TodayPage() {
               </span>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ── CYCLE SNAPSHOT + DAILY PILL ──────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "75ms" }}>
-        <SectionTitle hint="at a glance">Your cycle today</SectionTitle>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-          {/* Cycle day */}
-          <div className="bloom-pearl-card pearl-sheen flex items-center gap-2.5 rounded-2xl p-3 sm:rounded-3xl sm:p-4">
-            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full text-white">
-              <CalendarDays className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Cycle day</p>
-              <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{cycleDay}<span className="text-xs sm:text-base text-rose/60">/{cycleSettings.cycleLength}</span></p>
-            </div>
-          </div>
-          {/* Next period */}
-          <div className="bloom-pearl-card pearl-sheen flex items-center gap-2.5 rounded-2xl p-3 sm:rounded-3xl sm:p-4">
-            <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full text-white">
-              <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Next period</p>
-              <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{daysToPeriod}<span className="text-xs sm:text-base text-rose/60"> d</span></p>
-            </div>
-          </div>
-          {/* Energy */}
-          <div className="bloom-pearl-card pearl-sheen flex items-center gap-2.5 rounded-2xl p-3 sm:rounded-3xl sm:p-4">
-            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full text-white">
-              <Flame className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Energy</p>
-              <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{PHASE_ENERGY[phase]}</p>
-            </div>
-          </div>
-          {/* Daily pill — tap to toggle taken */}
-          <button
-            onClick={togglePill}
-            aria-pressed={pillTaken}
-            className="bloom-pearl-card pearl-sheen group flex items-center gap-2.5 rounded-2xl p-3 text-left transition active:scale-95 sm:rounded-3xl sm:p-4"
-          >
-            <span className={[
-              "grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full transition",
-              pillTaken ? "clay-blob animate-icon-breathe text-white" : "bg-blush text-hotpink",
-            ].join(" ")}>
-              <Pill className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Daily {pillLabel}</p>
-              <p className={[
-                "inline-flex items-center gap-1 font-script text-base sm:text-xl leading-none",
-                pillTaken ? "text-hotpink" : "text-rose/60",
-              ].join(" ")}>
-                {pillTaken ? <><Check className="h-3.5 w-3.5" strokeWidth={3} /> Taken</> : <><Undo2 className="h-3.5 w-3.5" strokeWidth={2.5} /> Tap to log</>}
-              </p>
-            </div>
-          </button>
         </div>
       </section>
 
@@ -802,6 +745,70 @@ export default function TodayPage() {
           <a href="/app/calendar" className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
             View full plan <ArrowRight className="h-3 w-3" strokeWidth={2} />
           </a>
+        </div>
+      </section>
+
+      {/* ── SPACE STATS + DAILY PILL — important data, compact & glowing ─── */}
+      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "280ms" }}>
+        <SectionTitle hint="important">
+          <span className="animate-text-glow">Space Stats ✿</span>
+        </SectionTitle>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
+          {/* Cycle day */}
+          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5">
+            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+              <CalendarDays className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Cycle day</p>
+            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{cycleDay}<span className="text-[10px] sm:text-sm text-rose/60">/{cycleSettings.cycleLength}</span></p>
+          </div>
+          {/* Next period */}
+          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5" style={{ animationDelay: "0.2s" }}>
+            <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+              <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
+            </span>
+            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Next period</p>
+            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{daysToPeriod}<span className="text-[10px] sm:text-sm text-rose/60"> d</span></p>
+          </div>
+          {/* Phase */}
+          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5" style={{ animationDelay: "0.4s" }}>
+            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+              <Flower2 className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Phase</p>
+            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{PHASE_LABEL[phase]}</p>
+          </div>
+          {/* Mood */}
+          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5" style={{ animationDelay: "0.6s" }}>
+            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+              <MoodIconStat className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Mood</p>
+            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{mood ? MOOD_LABEL[mood] : "—"}</p>
+          </div>
+          {/* Daily pill — tap to toggle taken */}
+          <button
+            onClick={togglePill}
+            aria-pressed={pillTaken}
+            className="bloom-pearl-card pearl-sheen animate-selected-glow col-span-3 flex items-center justify-center gap-2.5 rounded-2xl p-2.5 text-center transition active:scale-95 sm:col-span-1 sm:flex-col sm:gap-1 sm:rounded-3xl sm:p-3.5"
+            style={{ animationDelay: "0.8s" }}
+          >
+            <span className={[
+              "grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full transition",
+              pillTaken ? "clay-blob animate-icon-breathe text-white" : "bg-blush text-hotpink",
+            ].join(" ")}>
+              <Pill className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <div className="sm:text-center">
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Daily {pillLabel}</p>
+              <p className={[
+                "inline-flex items-center gap-1 font-script text-sm sm:text-lg leading-none",
+                pillTaken ? "text-hotpink" : "text-rose/60",
+              ].join(" ")}>
+                {pillTaken ? <><Check className="h-3 w-3" strokeWidth={3} /> Taken</> : <><Undo2 className="h-3 w-3" strokeWidth={2.5} /> Tap to log</>}
+              </p>
+            </div>
+          </button>
         </div>
       </section>
 

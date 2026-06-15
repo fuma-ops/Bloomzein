@@ -987,3 +987,23 @@
   animation-fill-mode: backwards, none;
 }
 
+/* Flower "blooms" open then closes again, on loop — for the title flower icon */
+@keyframes flower-bloom {
+  0%, 100% { transform: scale(0.85) rotate(-6deg); opacity: 0.85; }
+  50% { transform: scale(1.2) rotate(6deg); opacity: 1; }
+}
+@utility animate-flower-bloom {
+  display: inline-block;
+  transform-origin: center;
+  animation: flower-bloom 3s ease-in-out infinite;
+}
+
+/* Soft glowing text pulse — marks copy as important/live data */
+@keyframes text-glow-pulse {
+  0%, 100% { text-shadow: 0 0 4px oklch(0.75 0.27 350 / 0.3), 0 0 1px oklch(0.65 0.27 350 / 0.2); }
+  50% { text-shadow: 0 0 16px oklch(0.75 0.27 350 / 0.75), 0 0 6px oklch(0.65 0.27 350 / 0.55); }
+}
+@utility animate-text-glow {
+  animation: text-glow-pulse 2.4s ease-in-out infinite;
+}
+
