@@ -413,7 +413,7 @@ function YogaPreview({ phase }: { phase: Phase }) {
         ))}
       </div>
       <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
-        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">{data.title}</p>
+        <p className="text-base font-bold text-hotpink sm:text-xl lg:text-3xl">{data.title}</p>
         <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
         <DiscoverButton href="/app/tools/yoga" className="lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
@@ -427,7 +427,7 @@ function WorkoutPreview({ phase }: { phase: Phase }) {
     <div className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-8 sm:text-left lg:gap-14">
       <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 shrink-0 rounded-2xl object-cover shadow-md sm:h-36 sm:w-56 lg:h-56 lg:w-80" />
       <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
-        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">{data.title}</p>
+        <p className="text-base font-bold text-hotpink sm:text-xl lg:text-3xl">{data.title}</p>
         <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
         <DiscoverButton href="/app/tools/workout" className="lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
@@ -446,7 +446,7 @@ function MealsPreview() {
           </div>
         ))}
       </div>
-      <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">Meal Planner</p>
+      <p className="text-base font-bold text-hotpink sm:text-xl lg:text-3xl">Meal Planner</p>
       <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-lg lg:text-base">Recipes and meal plans that adapt to your cycle, your cravings, and your goals.</p>
       <DiscoverButton href="/app/tools/meals" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </div>
@@ -482,7 +482,7 @@ function BudgetPreview() {
         </div>
       </div>
       <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
-        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">Budget Planner</p>
+        <p className="text-base font-bold text-hotpink sm:text-xl lg:text-3xl">Budget Planner</p>
         <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.</p>
         <DiscoverButton href="/app/tools/budget" className="lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
@@ -498,7 +498,7 @@ function TeaserPreview({ slug, href }: { slug: string; href: string }) {
         <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16 lg:h-24 lg:w-24" />
       </span>
       <div className="flex flex-col items-center gap-2 sm:items-start lg:gap-4">
-        <p className="text-sm font-bold text-hotpink sm:text-lg lg:text-2xl">{data.title}</p>
+        <p className="text-base font-bold text-hotpink sm:text-xl lg:text-3xl">{data.title}</p>
         <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{data.text}</p>
         <DiscoverButton href={href} className="w-full max-w-xs justify-center sm:w-auto sm:max-w-none lg:px-6 lg:py-2.5 lg:text-base" />
       </div>
