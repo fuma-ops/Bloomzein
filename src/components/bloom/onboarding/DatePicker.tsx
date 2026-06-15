@@ -31,33 +31,33 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
     !!selected && selected.getFullYear() === year && selected.getMonth() === month && selected.getDate() === day;
 
   return (
-    <div className="mt-2 rounded-2xl border border-petal bg-white/80 p-3">
-      <div className="flex items-center justify-between px-1">
+    <div className="mt-2 rounded-2xl border border-petal bg-white/80 p-2">
+      <div className="flex items-center justify-between px-0.5">
         <button
           type="button"
           onClick={() => setViewDate(new Date(year, month - 1, 1))}
           aria-label="Previous month"
-          className="grid h-8 w-8 place-items-center rounded-full text-hotpink transition hover:bg-blush"
+          className="grid h-7 w-7 place-items-center rounded-full text-hotpink transition hover:bg-blush"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5" />
         </button>
-        <span className="text-sm font-medium text-rose">{monthLabel}</span>
+        <span className="text-xs font-medium text-rose">{monthLabel}</span>
         <button
           type="button"
           onClick={() => setViewDate(nextMonth)}
           disabled={nextMonth > maxDate}
           aria-label="Next month"
-          className="grid h-8 w-8 place-items-center rounded-full text-hotpink transition hover:bg-blush disabled:opacity-25"
+          className="grid h-7 w-7 place-items-center rounded-full text-hotpink transition hover:bg-blush disabled:opacity-25"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-rose/50">
+      <div className="mt-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-rose/50">
         {WEEKDAYS.map((d, i) => (
           <span key={i}>{d}</span>
         ))}
       </div>
-      <div className="mt-1 grid grid-cols-7 gap-1">
+      <div className="mt-0.5 grid grid-cols-7 gap-0.5">
         {cells.map((day, i) =>
           day === null ? (
             <span key={i} />
@@ -67,7 +67,7 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
               type="button"
               disabled={isFuture(day)}
               onClick={() => onChange(toISO(new Date(year, month, day)))}
-              className={`grid h-8 w-8 place-items-center rounded-full text-sm transition ${
+              className={`grid h-7 w-full place-items-center rounded-full text-[11px] transition ${
                 isSelected(day)
                   ? "bg-hotpink font-semibold text-white"
                   : !selected && isToday(day)

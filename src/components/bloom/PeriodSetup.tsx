@@ -82,17 +82,10 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
         <div ref={scrollRef} onScroll={handleScroll} className="no-scrollbar scroll-smooth h-full overflow-y-auto overscroll-contain p-3.5 sm:p-5">
           <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
-          <div className={`animate-scale-in mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-selected-glow" : ""}`} style={{ animationDelay: "40ms" }}>
+          <div className={`animate-scale-in mt-3 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-selected-glow" : ""}`} style={{ animationDelay: "40ms" }}>
             <Flower2 className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />
             Tap your <span className="font-semibold text-hotpink">last period start</span> date:
           </div>
-
-          {/* Bouncing pointer guiding the eye down to the calendar — only until a date is chosen */}
-          {!isSet("lastPeriodStart") && (
-            <div className="flex justify-center">
-              <ChevronDown className="h-4 w-4 animate-bounce text-hotpink/70" />
-            </div>
-          )}
 
           {/* Compact calendar — just for picking the date, kept light and airy */}
           <DatePicker
@@ -102,7 +95,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           />
 
           {/* Cycle length + Period length side by side */}
-          <div className="animate-scale-in mt-2 grid grid-cols-2 gap-2" style={{ animationDelay: "120ms" }}>
+          <div className="animate-scale-in mt-4 grid grid-cols-2 gap-2" style={{ animationDelay: "120ms" }}>
             <Section label="Cycle Length" glow={!isSet("cycleLength")}>
               <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
             </Section>
