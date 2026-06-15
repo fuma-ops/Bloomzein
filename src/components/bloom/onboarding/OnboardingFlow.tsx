@@ -296,7 +296,7 @@ function Screen3({
         <h2 className="font-script mt-5 animate-question-pop text-2xl text-hotpink">What do you want to focus on first?</h2>
         <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 pb-2">
+        <div className="mt-4 flex flex-col gap-2.5 pb-2">
           {GOALS.map((g, i) => {
             const Icon = g.icon;
             const selected = goal === g.key;
@@ -307,7 +307,7 @@ function Screen3({
                 onClick={() => handleSelect(g.key)}
                 disabled={!!goal}
                 style={{ animationDelay: `${i * 0.08}s` }}
-                className={`group relative h-40 animate-question-pop overflow-hidden rounded-3xl text-left transition-all duration-300 ${
+                className={`bloom-pearl-card pearl-sheen flex animate-question-pop items-center gap-3 rounded-2xl p-2.5 text-left transition-all duration-300 ${
                   selected
                     ? "animate-selected-glow ring-2 ring-hotpink"
                     : goal
@@ -315,28 +315,25 @@ function Screen3({
                     : "hover-scale animate-tap-hint active:scale-95"
                 }`}
               >
-                <img
-                  src={g.image}
-                  alt=""
-                  aria-hidden
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full animate-photo-breathe object-cover"
-                  style={{ animationDelay: `${i * 0.6}s` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
-                <div className="relative z-10 flex h-full flex-col justify-between p-3">
-                  <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center self-start rounded-xl text-white animate-icon-breathe shadow-lg shadow-hotpink/30">
-                    <Icon className="h-4 w-4" />
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                  <img
+                    src={g.image}
+                    alt=""
+                    aria-hidden
+                    loading="lazy"
+                    className="h-full w-full animate-photo-breathe object-cover"
+                    style={{ animationDelay: `${i * 0.6}s` }}
+                  />
+                  <span className="clay-blob absolute left-1 top-1 grid h-6 w-6 place-items-center rounded-lg text-white shadow-md shadow-hotpink/30">
+                    <Icon className="h-3.5 w-3.5" />
                   </span>
-                  <div>
-                    <h3 className="text-sm font-semibold leading-snug text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">{g.title}</h3>
-                    <p className="mt-0.5 line-clamp-2 text-[11px] font-light leading-snug text-white/80">{g.subtitle}</p>
-                    <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-                      {selected ? "Selected ✓" : g.cta}
-                      {!selected && <ChevronRight className="h-3 w-3 animate-arrow-nudge" strokeWidth={2.5} />}
-                    </span>
-                  </div>
                 </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-hotpink">{g.title}</h3>
+                  <p className="font-script mt-0.5 truncate text-base leading-snug text-rose/70">{g.subtitle}</p>
+                  <span className="mt-1 inline-block text-[11px] font-semibold text-hotpink/80">{selected ? "Selected ✓" : g.cta}</span>
+                </div>
+                <ChevronRight className={`h-5 w-5 shrink-0 ${selected ? "text-hotpink" : "animate-chevron-glow"}`} strokeWidth={2.5} />
               </button>
             );
           })}
