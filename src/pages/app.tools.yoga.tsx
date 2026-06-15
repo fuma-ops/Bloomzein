@@ -690,67 +690,82 @@ function YogaHome({
     return { phase: p, label: labels[p] };
   }, [phase]);
 
+  const organizerRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="space-y-4 sm:space-y-6 yoga-fade">
-      {/* HERO — single section: background photo, title, summary, CTA, and the 3 soft steps */}
-      <header className="pearl-frame relative isolate flex min-h-[26rem] flex-col overflow-hidden rounded-3xl shadow-xl shadow-rose/10 sm:min-h-[30rem]">
-        <img src="/images/yoga-hero.webp" alt="Soft pink yoga moment" className="absolute inset-0 -z-10 h-full w-full object-cover" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/92 via-white/55 to-white/15" />
-
-        <div className="relative z-10 p-5 sm:p-8">
-          <h1 className="animate-fade-in font-script text-4xl text-hotpink leading-none sm:text-6xl">Yoga Flows</h1>
-          <p className="animate-fade-in mt-2 max-w-md text-sm text-rose/80 sm:text-base" style={{ animationDelay: "60ms" }}>
-            guided breath, gentle movement — your softest practice.
-          </p>
-
-          {!onboarded ? (
-            <div className="animate-scale-in mt-4 max-w-sm rounded-2xl border border-petal/50 bg-white/85 p-4 backdrop-blur sm:mt-6" style={{ animationDelay: "140ms" }}>
-              <p className="text-sm font-semibold text-rose">New here? Welcome.</p>
-              <p className="mt-1 text-xs text-rose/80">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
+      {/* HERO — image with title/subtitle + tab nav, like Workout's Discover hero */}
+      <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
+        <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
+        <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
+          <div>
+            <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Yoga Flows</h1>
+            <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">guided breath, gentle movement — your softest practice.</p>
+          </div>
+          <div className="flex justify-center">
+            <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
+              <button className="rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-hotpink text-white shadow-md shadow-hotpink/30">
+                Discover
+              </button>
+              <button onClick={onLibrary} className="rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white transition">
+                Library
+              </button>
               <button
-                onClick={onBegin}
-                className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
+                onClick={() => organizerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white transition"
               >
-                <Sparkles className="h-4 w-4 animate-bloom-sparkle" /> Start Here
+                My Plan
               </button>
-            </div>
-          ) : (
-            <div className="animate-scale-in mt-4 flex flex-wrap gap-2" style={{ animationDelay: "140ms" }}>
-              <button onClick={() => onSetup()} className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white">
-                <Play className="h-4 w-4" /> Start a session
-              </button>
-              <button onClick={onLibrary} className="hover-scale inline-flex items-center gap-2 rounded-full border border-petal/60 bg-white/90 px-4 py-2.5 text-sm font-semibold text-rose">
-                <BookOpen className="h-4 w-4" /> Pose library
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* three soft steps — sits on the image, bottom of the hero */}
-        <div className="relative z-10 mt-auto p-3 sm:p-5">
-          <div className="animate-scale-in rounded-2xl border border-petal/50 bg-white/85 p-3 backdrop-blur sm:p-4" style={{ animationDelay: "200ms" }}>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your path</p>
-                <h2 className="font-script text-xl leading-none text-hotpink sm:text-2xl">three soft steps</h2>
-              </div>
-              <span className="text-xs text-rose/70">Step {step} of 3</span>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-3">
-              <StepCard n={1} active={step === 1} done={step > 1} icon={BookOpen}
-                title="Learn the poses" desc="A visual library — names, breath, and how to enter each pose."
-                cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
-              <StepCard n={2} active={step === 2} done={step > 2} icon={GraduationCap}
-                title="Try a guided flow" desc="A short session with visuals + voice — pose by pose."
-                cta="Start short flow" onClick={() => { onSetup(); }} />
-              <StepCard n={3} active={step === 3} done={false} icon={Headphones}
-                title="Eyes-closed audio" desc="When poses feel familiar, close your eyes and let the voice lead."
-                cta="Audio session" onClick={() => { onSetup(); }} />
             </div>
           </div>
         </div>
-      </header>
+      </div>
+
+      {/* WELCOME / THREE SOFT STEPS — its own clean card, below the hero */}
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+        {!onboarded ? (
+          <div className="rounded-2xl bg-blush/60 p-4 border border-petal/50">
+            <p className="text-sm font-semibold text-rose">New here? Welcome.</p>
+            <p className="mt-1 text-xs text-rose/80">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
+            <button
+              onClick={onBegin}
+              className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
+            >
+              <Sparkles className="h-4 w-4 animate-bloom-sparkle" /> Start Here
+            </button>
+          </div>
+        ) : (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <button onClick={() => onSetup()} className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white">
+              <Play className="h-4 w-4" /> Start a session
+            </button>
+            <button onClick={onLibrary} className="hover-scale inline-flex items-center gap-2 rounded-full border border-petal/60 bg-white/90 px-4 py-2.5 text-sm font-semibold text-rose">
+              <BookOpen className="h-4 w-4" /> Pose library
+            </button>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your path</p>
+            <h2 className="font-script text-2xl sm:text-3xl leading-none text-hotpink">three soft steps</h2>
+          </div>
+          <span className="text-xs text-rose/70">Step {step} of 3</span>
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <StepCard n={1} active={step === 1} done={step > 1} icon={BookOpen}
+            title="Learn the poses" desc="A visual library — names, breath, and how to enter each pose."
+            cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
+          <StepCard n={2} active={step === 2} done={step > 2} icon={GraduationCap}
+            title="Try a guided flow" desc="A short session with visuals + voice — pose by pose."
+            cta="Start short flow" onClick={() => { onSetup(); }} />
+          <StepCard n={3} active={step === 3} done={false} icon={Headphones}
+            title="Eyes-closed audio" desc="When poses feel familiar, close your eyes and let the voice lead."
+            cta="Audio session" onClick={() => { onSetup(); }} />
+        </div>
+      </section>
 
       {/* FLOW SESSIONS — by moment / by intention carousels */}
       <FlowSessionsSection onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
@@ -762,7 +777,9 @@ function YogaHome({
       </section>
 
       {/* ORGANIZER */}
-      <Organizer phase={phaseSuggestion.phase} />
+      <div ref={organizerRef} className="scroll-mt-20">
+        <Organizer phase={phaseSuggestion.phase} />
+      </div>
 
       {/* SAFETY */}
       <p className="text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5">
