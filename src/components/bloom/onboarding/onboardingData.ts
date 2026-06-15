@@ -281,6 +281,71 @@ export const WEEKLY_SUMMARY: Record<OnboardingPhase, string> = {
   luteal: "2 moderate sessions · 7 comfort meals · 3 deep stretches",
 };
 
+// ── Phase-matched imagery for the reveal cards — "images talk" ─────────
+export const YOGA_IMAGES: Record<OnboardingPhase, { hero: string; week: string[] }> = {
+  menstrual: {
+    hero: "/images/pose-childs-pose.webp",
+    week: ["/images/pose-childs-pose.webp", "/images/pose-cat-cow.webp", "/images/pose-pigeon.webp"],
+  },
+  follicular: {
+    hero: "/images/pose-warrior-1.webp",
+    week: ["/images/pose-warrior-1.webp", "/images/pose-boat.webp", "/images/pose-mountain.webp"],
+  },
+  ovulatory: {
+    hero: "/images/pose-warrior-2.webp",
+    week: ["/images/pose-warrior-2.webp", "/images/pose-plank.webp", "/images/pose-tree.webp"],
+  },
+  luteal: {
+    hero: "/images/pose-pigeon.webp",
+    week: ["/images/pose-pigeon.webp", "/images/pose-easy-seat.webp", "/images/pose-legs-up-wall.webp"],
+  },
+};
+
+export const DIET_IMAGES: Record<OnboardingPhase, { breakfast: string; lunch: string; dinner: string }> = {
+  menstrual: { breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-stew.jpg", dinner: "/images/meal-buddha.jpg" },
+  follicular: { breakfast: "/images/meal-lunchbox.jpg", lunch: "/images/meal-buddha.jpg", dinner: "/images/meal-stew.jpg" },
+  ovulatory: { breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-buddha.jpg", dinner: "/images/meal-stew.jpg" },
+  luteal: { breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-lunchbox.jpg", dinner: "/images/meal-stew.jpg" },
+};
+
+export const MOVEMENT_IMAGES: Record<OnboardingPhase, { workout: string; yoga: string; meal: string }> = {
+  menstrual: { workout: "/images/zone-back.png", yoga: "/images/pose-pigeon.webp", meal: "/images/meal-stew.jpg" },
+  follicular: { workout: "/images/zone-glutes.png", yoga: "/images/pose-warrior-1.webp", meal: "/images/meal-lunchbox.jpg" },
+  ovulatory: { workout: "/images/zone-legs.png", yoga: "/images/pose-warrior-2.webp", meal: "/images/meal-buddha.jpg" },
+  luteal: { workout: "/images/zone-core.png", yoga: "/images/pose-seated-twist.webp", meal: "/images/meal-stew.jpg" },
+};
+
+export const SYNC_IMAGES: Record<OnboardingPhase, { anchor: string; yoga: string; workout: string; meal: string; weekly: string }> = {
+  menstrual: {
+    anchor: "/images/cycle-insight-hero.webp",
+    yoga: "/images/pose-childs-pose.webp",
+    workout: "/images/zone-back.png",
+    meal: "/images/meal-stew.jpg",
+    weekly: "/images/cycle-journal-hero.webp",
+  },
+  follicular: {
+    anchor: "/images/cycle-insight-hero.webp",
+    yoga: "/images/pose-warrior-1.webp",
+    workout: "/images/zone-glutes.png",
+    meal: "/images/meal-lunchbox.jpg",
+    weekly: "/images/cycle-journal-hero.webp",
+  },
+  ovulatory: {
+    anchor: "/images/cycle-insight-hero.webp",
+    yoga: "/images/pose-warrior-2.webp",
+    workout: "/images/zone-legs.png",
+    meal: "/images/meal-buddha.jpg",
+    weekly: "/images/cycle-journal-hero.webp",
+  },
+  luteal: {
+    anchor: "/images/cycle-insight-hero.webp",
+    yoga: "/images/pose-seated-twist.webp",
+    workout: "/images/zone-core.png",
+    meal: "/images/meal-stew.jpg",
+    weekly: "/images/cycle-journal-hero.webp",
+  },
+};
+
 /** Silently saves a first gratitude line into the Bloom Diary, seeding it for her. */
 export function saveOnboardingGratitude(text: string): void {
   const trimmed = text.trim();

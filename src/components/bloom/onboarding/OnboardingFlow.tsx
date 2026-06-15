@@ -9,14 +9,18 @@ import { AnimatedWords } from "../AnimatedWords";
 import { DatePicker } from "./DatePicker";
 import {
   DIET_CONTENT,
+  DIET_IMAGES,
   GOALS,
   GRATITUDE_PROMPTS,
   MOVEMENT_CONTENT,
+  MOVEMENT_IMAGES,
   ONBOARDING_TOOLS,
   PHASE_COPY,
+  SYNC_IMAGES,
   TEASERS,
   WEEKLY_SUMMARY,
   YOGA_CONTENT,
+  YOGA_IMAGES,
   calcPhasePreview,
   onboardingPhaseMeta,
   proteinTarget,
@@ -390,6 +394,7 @@ function useCtaDelay(cardCount: number) {
 // CHOICE 1 — "Feel better in my body" → hero yoga session + this week's flows.
 function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
   const content = YOGA_CONTENT[phase];
+  const images = YOGA_IMAGES[phase];
   const [name, duration, tag] = splitPipe(content.session);
   const ctaVisible = useCtaDelay(1 + content.week.length);
 
@@ -400,28 +405,34 @@ function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
         <PhaseBanner phase={phase} day={day} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-4">
         <AnimatedWords text={content.headline} className="font-script mt-4 block text-2xl text-hotpink" />
 
-        <div className="bloom-luxury-btn animate-spring-center hover-scale mt-4 p-5 text-white shadow-xl active:scale-95">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-medium">{tag}</span>
-          <h3 className="mt-2 text-xl font-semibold">{name}</h3>
-          <p className="mt-0.5 text-sm font-light text-white/80">{duration}</p>
-          <PulseWaveform className="mt-5 h-10" />
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/yoga")}
-            className="animate-cta-pulse mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-hotpink active:scale-95"
-          >
-            Start this session <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/yoga")}
-            className="mt-3 block w-full text-center text-xs font-medium text-white/85 underline-offset-2 hover:underline"
-          >
-            Discover the full Yoga library →
-          </button>
+        <div className="bloom-luxury-btn animate-spring-center hover-scale mt-4 text-white shadow-xl active:scale-95">
+          <div className="relative h-36 w-full">
+            <img src={images.hero} alt={name} className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-medium backdrop-blur-sm">{tag}</span>
+          </div>
+          <div className="p-5">
+            <h3 className="text-xl font-semibold">{name}</h3>
+            <p className="mt-0.5 text-sm font-light text-white/80">{duration}</p>
+            <PulseWaveform className="mt-4 h-8" />
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/yoga")}
+              className="animate-cta-pulse mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-hotpink active:scale-95"
+            >
+              Start this session <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/yoga")}
+              className="mt-3 block w-full text-center text-xs font-medium text-white/85 underline-offset-2 hover:underline"
+            >
+              Discover the full Yoga library →
+            </button>
+          </div>
         </div>
 
         <h4 className="mt-6 text-sm font-semibold text-rose">This week</h4>
@@ -430,10 +441,11 @@ function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
             <div
               key={item}
               style={{ animationDelay: `${0.2 + i * 0.2}s` }}
-              className="bloom-pearl-card pearl-sheen animate-spring-left hover-scale flex items-center justify-between rounded-2xl p-3 active:scale-95"
+              className="bloom-pearl-card pearl-sheen animate-spring-left hover-scale flex items-center gap-3 rounded-2xl p-2.5 active:scale-95"
             >
-              <span className="text-sm text-rose">{item}</span>
-              <span className="h-2 w-2 rounded-full bg-hotpink/60" />
+              <img src={images.week[i]} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
+              <span className="flex-1 text-sm text-rose">{item}</span>
+              <span className="h-2 w-2 shrink-0 rounded-full bg-hotpink/60" />
             </div>
           ))}
         </div>
@@ -454,10 +466,11 @@ function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
 // CHOICE 2 — "Eat better" → today's nutrition insight, 3 meals, protein target.
 function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { profile: { weight: number | null; weight_unit: "kg" | "lbs" } | null }) {
   const content = DIET_CONTENT[phase];
+  const images = DIET_IMAGES[phase];
   const meals = [
-    { label: "Breakfast", spring: "animate-spring-left", data: content.breakfast, delay: 0 },
-    { label: "Lunch", spring: "animate-spring-right", data: content.lunch, delay: 0.2 },
-    { label: "Dinner", spring: "animate-spring-bottom", data: content.dinner, delay: 0.4 },
+    { label: "Breakfast", spring: "animate-spring-left", data: content.breakfast, image: images.breakfast, delay: 0 },
+    { label: "Lunch", spring: "animate-spring-right", data: content.lunch, image: images.lunch, delay: 0.2 },
+    { label: "Dinner", spring: "animate-spring-bottom", data: content.dinner, image: images.dinner, delay: 0.4 },
   ];
   const [added, setAdded] = useState([false, false, false]);
   const ctaVisible = useCtaDelay(meals.length);
@@ -470,7 +483,7 @@ function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { 
         <PhaseBanner phase={phase} day={day} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-4">
         <AnimatedWords text="Here's what your body needs today." className="font-script mt-4 block text-2xl text-hotpink" />
         <p className="mt-1.5 animate-fade-in text-sm font-light text-rose/70" style={{ animationDelay: "0.3s" }}>
           {content.insight}
@@ -483,20 +496,25 @@ function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { 
               <div
                 key={meal.label}
                 style={{ animationDelay: `${meal.delay}s` }}
-                className={`bloom-pearl-card pearl-sheen ${meal.spring} hover-scale rounded-2xl p-4`}
+                className={`bloom-pearl-card pearl-sheen ${meal.spring} hover-scale overflow-hidden rounded-2xl`}
               >
-                <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">{meal.label}</span>
-                <h3 className="mt-2 text-sm font-semibold text-rose">{recipe}</h3>
-                <p className="mt-0.5 text-xs font-light text-rose/60">{time} · {macro}</p>
-                <button
-                  type="button"
-                  onClick={() => setAdded((a) => a.map((v, idx) => (idx === i ? !v : v)))}
-                  className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition active:scale-95 ${
-                    added[i] ? "bg-hotpink/15 text-hotpink" : "animate-cta-pulse bg-hotpink text-white"
-                  }`}
-                >
-                  {added[i] ? "Added to my plan ✓" : "Add to my plan"}
-                </button>
+                <div className="relative h-28 w-full">
+                  <img src={meal.image} alt={recipe} className="h-full w-full object-cover" />
+                  <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink backdrop-blur-sm">{meal.label}</span>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-rose">{recipe}</h3>
+                  <p className="mt-0.5 text-xs font-light text-rose/60">{time} · {macro}</p>
+                  <button
+                    type="button"
+                    onClick={() => setAdded((a) => a.map((v, idx) => (idx === i ? !v : v)))}
+                    className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                      added[i] ? "bg-hotpink/15 text-hotpink" : "animate-cta-pulse bg-hotpink text-white"
+                    }`}
+                  >
+                    {added[i] ? "Added to my plan ✓" : "Add to my plan"}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -530,6 +548,7 @@ function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { 
 // CHOICE 3 — "Move more" → stacked workout / yoga complement / recovery meal.
 function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
   const content = MOVEMENT_CONTENT[phase];
+  const images = MOVEMENT_IMAGES[phase];
   const [workoutName, workoutDuration, workoutTag] = splitPipe(content.workout);
   const [yogaName, yogaDuration, yogaTag] = splitPipe(content.yoga);
   const [mealName, mealTime, mealMacro] = splitPipe(content.meal);
@@ -542,61 +561,72 @@ function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
         <PhaseBanner phase={phase} day={day} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-4">
         <AnimatedWords text="Your week, all connected." className="font-script mt-4 block text-2xl text-hotpink" />
 
-        <div className="mt-4 animate-spring-bottom bloom-luxury-btn hover-scale p-5 text-white shadow-xl active:scale-95">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-medium">{workoutTag}</span>
-          <h3 className="mt-2 text-xl font-semibold">{workoutName}</h3>
-          <p className="mt-0.5 text-sm font-light text-white/80">{workoutDuration}</p>
-          <p className="mt-2 text-xs font-light text-white/70">{content.zones}</p>
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/workout")}
-            className="animate-cta-pulse mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-hotpink active:scale-95"
-          >
-            Start today's session <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/workout")}
-            className="mt-3 block w-full text-center text-xs font-medium text-white/85 underline-offset-2 hover:underline"
-          >
-            Build my full program →
-          </button>
+        <div className="mt-4 animate-spring-bottom bloom-luxury-btn hover-scale text-white shadow-xl active:scale-95">
+          <div className="relative h-32 w-full">
+            <img src={images.workout} alt={workoutName} className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-medium backdrop-blur-sm">{workoutTag}</span>
+          </div>
+          <div className="p-5">
+            <h3 className="text-xl font-semibold">{workoutName}</h3>
+            <p className="mt-0.5 text-sm font-light text-white/80">{workoutDuration}</p>
+            <p className="mt-2 text-xs font-light text-white/70">{content.zones}</p>
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/workout")}
+              className="animate-cta-pulse mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-hotpink active:scale-95"
+            >
+              Start today's session <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/workout")}
+              className="mt-3 block w-full text-center text-xs font-medium text-white/85 underline-offset-2 hover:underline"
+            >
+              Build my full program →
+            </button>
+          </div>
         </div>
 
         <div
           style={{ animationDelay: "0.2s" }}
-          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 rounded-2xl p-4 pt-6"
+          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 flex gap-3 rounded-2xl p-4 pt-6"
         >
-          <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Yoga complement</span>
-          <h3 className="mt-2 text-sm font-semibold text-rose">{yogaName}</h3>
-          <p className="mt-0.5 text-xs font-light text-rose/60">{yogaDuration} · {yogaTag}</p>
-          <p className="mt-1.5 text-xs font-light text-rose/70">Pairs perfectly with your workout this week</p>
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/yoga")}
-            className="mt-3 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
-          >
-            Explore Yoga flows →
-          </button>
+          <img src={images.yoga} alt={yogaName} className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+          <div className="min-w-0 flex-1">
+            <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Yoga complement</span>
+            <h3 className="mt-1.5 text-sm font-semibold text-rose">{yogaName}</h3>
+            <p className="mt-0.5 text-xs font-light text-rose/60">{yogaDuration} · {yogaTag}</p>
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/yoga")}
+              className="mt-1.5 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
+            >
+              Explore Yoga flows →
+            </button>
+          </div>
         </div>
 
         <div
           style={{ animationDelay: "0.4s" }}
-          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 rounded-2xl p-4 pt-6"
+          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 flex gap-3 rounded-2xl p-4 pt-6"
         >
-          <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Post-workout nutrition ↑</span>
-          <h3 className="mt-2 text-sm font-semibold text-rose">{mealName}</h3>
-          <p className="mt-0.5 text-xs font-light text-rose/60">{mealTime} · {mealMacro}</p>
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/diet")}
-            className="mt-3 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
-          >
-            See post-workout meals →
-          </button>
+          <img src={images.meal} alt={mealName} className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+          <div className="min-w-0 flex-1">
+            <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Post-workout nutrition ↑</span>
+            <h3 className="mt-1.5 text-sm font-semibold text-rose">{mealName}</h3>
+            <p className="mt-0.5 text-xs font-light text-rose/60">{mealTime} · {mealMacro}</p>
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/diet")}
+              className="mt-1.5 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
+            >
+              See post-workout meals →
+            </button>
+          </div>
         </div>
 
         <p className="mt-5 animate-fade-in text-center text-xs font-light italic text-rose/60" style={{ animationDelay: "0.8s" }}>
@@ -615,6 +645,7 @@ function Screen4Sync({ phase, day, onNext, onEnter }: Screen4Props) {
   const yoga = YOGA_CONTENT[phase];
   const movement = MOVEMENT_CONTENT[phase];
   const diet = DIET_CONTENT[phase];
+  const images = SYNC_IMAGES[phase];
   const [yogaName] = splitPipe(yoga.session);
   const [workoutName] = splitPipe(movement.workout);
   const [mealName] = splitPipe(diet.breakfast);
@@ -631,45 +662,56 @@ function Screen4Sync({ phase, day, onNext, onEnter }: Screen4Props) {
         <PhaseBanner phase={phase} day={day} />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-4">
         <AnimatedWords text="Everything in sync with you." className="font-script mt-4 block text-2xl text-hotpink" />
 
         {/* Cycle anchor — never moves, soft continuous glow */}
-        <div className={`animate-spring-center animate-anchor-glow mt-4 rounded-3xl p-5 ${meta.color}`}>
-          <span className="rounded-full bg-white/50 px-2.5 py-0.5 text-[11px] font-medium">{PHASE_COPY[phase].label}</span>
-          {day && <p className="mt-2 text-sm font-semibold">Day {day} of your cycle</p>}
-          <p className="mt-1 text-sm font-light">{PHASE_COPY[phase].description}</p>
+        <div className={`animate-spring-center animate-anchor-glow relative mt-4 flex items-center gap-3 rounded-3xl p-5 ${meta.color}`}>
+          <img src={images.anchor} alt="" className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-2 ring-white/60" />
+          <div className="min-w-0 flex-1">
+            <span className="rounded-full bg-white/50 px-2.5 py-0.5 text-[11px] font-medium">{PHASE_COPY[phase].label}</span>
+            {day && <p className="mt-2 text-sm font-semibold">Day {day} of your cycle</p>}
+            <p className="mt-1 text-sm font-light">{PHASE_COPY[phase].description}</p>
+          </div>
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2.5">
-          <div style={{ animationDelay: "0.2s" }} className="bloom-pearl-card pearl-sheen animate-spring-left hover-scale rounded-2xl p-3 active:scale-95">
-            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Yoga</span>
-            <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{yogaName}</h3>
-            <button type="button" onClick={() => onEnter("/app/tools/yoga")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
-              Explore →
-            </button>
-          </div>
-
-          <div style={{ animationDelay: "0.4s" }} className="bloom-pearl-card pearl-sheen animate-spring-right hover-scale rounded-2xl p-3 active:scale-95">
-            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Workout</span>
-            <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{workoutName}</h3>
-            <div className="mt-1.5 flex gap-1">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <span key={i} className={`h-1.5 w-1.5 rounded-full ${i < 3 ? "bg-hotpink" : "bg-petal"}`} />
-              ))}
+          <div style={{ animationDelay: "0.2s" }} className="bloom-pearl-card pearl-sheen animate-spring-left hover-scale overflow-hidden rounded-2xl active:scale-95">
+            <img src={images.yoga} alt={yogaName} className="h-16 w-full object-cover" />
+            <div className="p-3">
+              <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Yoga</span>
+              <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{yogaName}</h3>
+              <button type="button" onClick={() => onEnter("/app/tools/yoga")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+                Explore →
+              </button>
             </div>
-            <button type="button" onClick={() => onEnter("/app/tools/workout")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
-              Explore →
-            </button>
           </div>
 
-          <div style={{ animationDelay: "0.6s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale rounded-2xl p-3 active:scale-95">
-            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Meals</span>
-            <div className="mt-1.5 h-12 w-full animate-bloom-shimmer rounded-xl bg-petal/40" />
-            <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{mealName}</h3>
-            <button type="button" onClick={() => onEnter("/app/tools/diet")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
-              Explore →
-            </button>
+          <div style={{ animationDelay: "0.4s" }} className="bloom-pearl-card pearl-sheen animate-spring-right hover-scale overflow-hidden rounded-2xl active:scale-95">
+            <img src={images.workout} alt={workoutName} className="h-16 w-full object-cover" />
+            <div className="p-3">
+              <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Workout</span>
+              <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{workoutName}</h3>
+              <div className="mt-1.5 flex gap-1">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span key={i} className={`h-1.5 w-1.5 rounded-full ${i < 3 ? "bg-hotpink" : "bg-petal"}`} />
+                ))}
+              </div>
+              <button type="button" onClick={() => onEnter("/app/tools/workout")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+                Explore →
+              </button>
+            </div>
+          </div>
+
+          <div style={{ animationDelay: "0.6s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale overflow-hidden rounded-2xl active:scale-95">
+            <img src={images.meal} alt={mealName} className="h-16 w-full object-cover" />
+            <div className="p-3">
+              <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Meals</span>
+              <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{mealName}</h3>
+              <button type="button" onClick={() => onEnter("/app/tools/diet")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+                Explore →
+              </button>
+            </div>
           </div>
 
           <div style={{ animationDelay: "0.8s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale rounded-2xl p-3 active:scale-95">
@@ -689,23 +731,26 @@ function Screen4Sync({ phase, day, onNext, onEnter }: Screen4Props) {
           </div>
         </div>
 
-        <div style={{ animationDelay: "1s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale mt-2.5 rounded-2xl p-4 active:scale-95">
-          <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Your week</span>
-          <div className="mt-2 grid grid-cols-7 gap-1">
-            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-              <span key={i} className={`grid h-6 place-items-center rounded-full text-[10px] font-medium ${i === 0 ? meta.color : "bg-petal/40 text-rose/60"}`}>
-                {d}
-              </span>
-            ))}
+        <div style={{ animationDelay: "1s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale mt-2.5 flex gap-3 overflow-hidden rounded-2xl p-4 active:scale-95">
+          <img src={images.weekly} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" />
+          <div className="min-w-0 flex-1">
+            <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Your week</span>
+            <div className="mt-2 grid grid-cols-7 gap-1">
+              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                <span key={i} className={`grid h-6 place-items-center rounded-full text-[10px] font-medium ${i === 0 ? meta.color : "bg-petal/40 text-rose/60"}`}>
+                  {d}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 text-xs font-light text-rose/70">{WEEKLY_SUMMARY[phase]}</p>
+            <button
+              type="button"
+              onClick={() => onEnter("/app/tools/cycle")}
+              className="animate-cta-pulse mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-hotpink px-6 py-2.5 text-sm font-semibold text-white active:scale-95"
+            >
+              Validate my full week
+            </button>
           </div>
-          <p className="mt-2 text-xs font-light text-rose/70">{WEEKLY_SUMMARY[phase]}</p>
-          <button
-            type="button"
-            onClick={() => onEnter("/app/tools/cycle")}
-            className="animate-cta-pulse mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-hotpink px-6 py-2.5 text-sm font-semibold text-white active:scale-95"
-          >
-            Validate my full week
-          </button>
         </div>
       </div>
 
