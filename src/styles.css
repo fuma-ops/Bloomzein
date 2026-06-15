@@ -1007,3 +1007,64 @@
   animation: text-glow-pulse 2.4s ease-in-out infinite;
 }
 
+/* ── Onboarding "seduction layer" — spring card entrances ─────────────── */
+@keyframes spring-in-left {
+  0%   { opacity: 0; transform: translateX(-60px) scale(0.96); }
+  65%  { opacity: 1; transform: translateX(8px) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes spring-in-right {
+  0%   { opacity: 0; transform: translateX(60px) scale(0.96); }
+  65%  { opacity: 1; transform: translateX(-8px) scale(1.01); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes spring-in-bottom {
+  0%   { opacity: 0; transform: translateY(60px) scale(0.96); }
+  65%  { opacity: 1; transform: translateY(-6px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes spring-in-center {
+  0%   { opacity: 0; transform: scale(0.85); }
+  65%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@utility animate-spring-left {
+  animation: spring-in-left 0.6s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+@utility animate-spring-right {
+  animation: spring-in-right 0.6s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+@utility animate-spring-bottom {
+  animation: spring-in-bottom 0.6s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+@utility animate-spring-center {
+  animation: spring-in-center 0.6s cubic-bezier(0.22, 1.6, 0.36, 1) both;
+}
+
+/* Slow ambient background tint shift — used behind the "sync everything" reveal */
+@keyframes ambient-tint-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@utility animate-ambient-tint {
+  background-size: 200% 200%;
+  animation: ambient-tint-shift 8s ease-in-out infinite;
+}
+
+/* Soft continuous glow for the cycle anchor card */
+@keyframes anchor-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.27 350 / 0.25); }
+  50%      { box-shadow: 0 0 0 10px oklch(0.75 0.27 350 / 0.12); }
+}
+@utility animate-anchor-glow {
+  animation: anchor-glow 3s ease-in-out infinite;
+}
+
+/* Scatter cards offscreen when finishing onboarding */
+@keyframes scatter-out {
+  to { opacity: 0; transform: translateY(-40px) scale(0.8); }
+}
+@utility animate-scatter-out {
+  animation: scatter-out 0.4s ease-in forwards;
+}
+

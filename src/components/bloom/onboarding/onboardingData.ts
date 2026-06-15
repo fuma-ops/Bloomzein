@@ -165,3 +165,140 @@ export function writeOnboardingState(state: OnboardingState): void {
     localStorage.setItem(ONBOARDING_KEY, JSON.stringify(state));
   } catch {}
 }
+
+// ── Post-goal-selection "seduction layer" content ──────────────────────
+// Splits "Name · 20 min · Tag" style strings into their pieces for rendering.
+export function splitPipe(s: string): string[] {
+  return s.split(" · ").map((p) => p.trim());
+}
+
+// CHOICE 1 — Yoga experience
+export const YOGA_CONTENT: Record<OnboardingPhase, { headline: string; session: string; week: string[] }> = {
+  menstrual: {
+    headline: "Rest is powerful. Your body is doing deep work.",
+    session: "Restorative Yin Flow · 20 min · Recover",
+    week: ["Today: Yin Flow", "Day+2: Gentle Stretch", "Day+4: Hip Release"],
+  },
+  follicular: {
+    headline: "Energy is rising. This is your fresh start.",
+    session: "Morning Energy Flow · 25 min · Energise",
+    week: ["Today: Energy Flow", "Day+2: Core Awakening", "Day+4: Sun Flow"],
+  },
+  ovulatory: {
+    headline: "You're at your most radiant. Move like you mean it.",
+    session: "Full Body Power Flow · 30 min · Ignite",
+    week: ["Today: Power Flow", "Day+2: Strength Flow", "Day+4: Balance Flow"],
+  },
+  luteal: {
+    headline: "Your body is asking to slow down. Listen to it.",
+    session: "Deep Mobility Flow · 25 min · Restore",
+    week: ["Today: Mobility Flow", "Day+2: Breathwork", "Day+4: Yin Restore"],
+  },
+};
+
+// CHOICE 2 — Diet experience
+export const DIET_CONTENT: Record<OnboardingPhase, { insight: string; breakfast: string; lunch: string; dinner: string }> = {
+  menstrual: {
+    insight: "Iron, magnesium, and warmth — your body needs to be nourished gently.",
+    breakfast: "Warm oat bowl with dates and almond butter · 10 min · High iron",
+    lunch: "Lentil soup with spinach and ginger · 20 min · Anti-inflammatory",
+    dinner: "Salmon with roasted sweet potato · 25 min · Omega-3 rich",
+  },
+  follicular: {
+    insight: "Protein and antioxidants fuel your rising energy.",
+    breakfast: "Greek yoghurt with berries and flaxseeds · 5 min · Probiotic",
+    lunch: "Quinoa tabbouleh with avocado · 15 min · High protein",
+    dinner: "Grilled chicken with broccoli and lemon · 20 min · Antioxidant",
+  },
+  ovulatory: {
+    insight: "Fibre, raw foods, and cruciferous vegetables support your peak phase.",
+    breakfast: "Green smoothie bowl with seeds · 10 min · High fibre",
+    lunch: "Rainbow salad with chickpeas and tahini · 10 min · Plant protein",
+    dinner: "Baked salmon with raw slaw and quinoa · 25 min · Omega-3",
+  },
+  luteal: {
+    insight: "Complex carbs, dark chocolate, and comfort — all allowed.",
+    breakfast: "Banana oat pancakes with dark chocolate · 15 min · Mood support",
+    lunch: "Sweet potato and black bean bowl · 20 min · Complex carbs",
+    dinner: "Walnut pasta with sage and parmesan · 25 min · Omega-3 comfort",
+  },
+};
+
+const PROTEIN_MULTIPLIER: Record<OnboardingPhase, number> = {
+  menstrual: 1.0,
+  follicular: 1.2,
+  ovulatory: 1.3,
+  luteal: 1.1,
+};
+
+/** Today's protein target in grams, from her weight (Me page, default 60kg) × phase multiplier. */
+export function proteinTarget(phase: OnboardingPhase, weight?: number | null, unit?: "kg" | "lbs" | null): number {
+  let kg = weight ?? 60;
+  if (unit === "lbs" && weight) kg = weight * 0.4536;
+  return Math.round(kg * PROTEIN_MULTIPLIER[phase]);
+}
+
+// CHOICE 3 — Movement experience
+export const MOVEMENT_CONTENT: Record<OnboardingPhase, { workout: string; zones: string; yoga: string; meal: string }> = {
+  menstrual: {
+    workout: "Gentle Recovery · 20 min · Rest day movement",
+    zones: "Lower back and hips glowing on map",
+    yoga: "Hip Release Flow · 20 min · Restorative",
+    meal: "Warm lentil bowl · 15 min · 22g protein · Iron rich",
+  },
+  follicular: {
+    workout: "Glutes Tonify · 25 min · Building momentum",
+    zones: "Glutes and core glowing",
+    yoga: "Morning Energise Flow · 25 min · Vinyasa",
+    meal: "Egg and avocado toast · 10 min · 28g protein",
+  },
+  ovulatory: {
+    workout: "Glutes Strengthen · 30 min · Peak intensity",
+    zones: "Full lower body glowing",
+    yoga: "Power Flow · 30 min · Dynamic",
+    meal: "Grilled chicken bowl · 15 min · 35g protein",
+  },
+  luteal: {
+    workout: "Core Mobility · 25 min · Moderate",
+    zones: "Abs and back softly glowing",
+    yoga: "Deep Stretch · 25 min · Yin",
+    meal: "Salmon and sweet potato · 20 min · 30g protein · Omega-3",
+  },
+};
+
+// CHOICE 4 — Sync everything experience
+export const GRATITUDE_PROMPTS: Record<OnboardingPhase, string> = {
+  menstrual: "What gave you comfort today?",
+  follicular: "What are you excited about right now?",
+  ovulatory: "Who or what made you feel alive today?",
+  luteal: "What did you do gently for yourself today?",
+};
+
+export const WEEKLY_SUMMARY: Record<OnboardingPhase, string> = {
+  menstrual: "2 gentle sessions · 7 nourishing meals · 3 yin flows",
+  follicular: "3 building sessions · 7 protein meals · 3 energy flows",
+  ovulatory: "4 intense sessions · 7 peak meals · 2 power flows",
+  luteal: "2 moderate sessions · 7 comfort meals · 3 deep stretches",
+};
+
+/** Silently saves a first gratitude line into the Bloom Diary, seeding it for her. */
+export function saveOnboardingGratitude(text: string): void {
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  try {
+    const raw = localStorage.getItem("bloom:diary");
+    const entries = raw ? JSON.parse(raw) : [];
+    entries.unshift({
+      id: `onboarding-${Date.now()}`,
+      date: new Date().toISOString().slice(0, 10),
+      mood: "calm",
+      title: "",
+      html: `<p>${trimmed.replace(/</g, "&lt;")}</p>`,
+      theme: "sakura",
+      font: "quicksand",
+      createdAt: new Date().toISOString(),
+    });
+    localStorage.setItem("bloom:diary", JSON.stringify(entries));
+    window.dispatchEvent(new Event("bloom:diary-updated"));
+  } catch {}
+}

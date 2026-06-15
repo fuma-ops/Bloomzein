@@ -5,14 +5,23 @@ import { DEFAULT_CYCLE_SETTINGS, writeCycleSettings } from "../cyclePhase";
 import { CuteToolIcon } from "../CuteToolIcon";
 import { isToolVisited } from "../visitedTools";
 import { BloomBubbles } from "../BloomBubbles";
+import { AnimatedWords } from "../AnimatedWords";
 import { DatePicker } from "./DatePicker";
 import {
+  DIET_CONTENT,
   GOALS,
+  GRATITUDE_PROMPTS,
+  MOVEMENT_CONTENT,
   ONBOARDING_TOOLS,
   PHASE_COPY,
   TEASERS,
+  WEEKLY_SUMMARY,
+  YOGA_CONTENT,
   calcPhasePreview,
   onboardingPhaseMeta,
+  proteinTarget,
+  saveOnboardingGratitude,
+  splitPipe,
   toolHref,
   toolLabel,
   writeOnboardingState,
@@ -55,21 +64,6 @@ function BloomFlower({ size = 48, className = "" }: { size?: number; className?:
       <ellipse cx="256" cy="161" rx="48" ry="95" fill="currentColor" transform="rotate(300 256 256)" />
       <circle cx="256" cy="256" r="44" fill="#FFD9EC" />
     </svg>
-  );
-}
-
-// Cycle Tracker as the "brain" of the reveal — the other tools orbit around it,
-// pulsing gently to show it's the one organising everything else.
-function CycleBrainMedallion({ size = 104 }: { size?: number }) {
-  return (
-    <span className="relative grid place-items-center" style={{ width: size, height: size }}>
-      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-[1.75rem] border-2 border-hotpink/50" />
-      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-[1.75rem] border-2 border-hotpink/50" style={{ animationDelay: "1.2s" }} />
-      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-[1.75rem] border-2 border-hotpink/50" style={{ animationDelay: "2.4s" }} />
-      <span className="clay-blob relative grid h-full w-full place-items-center rounded-[1.75rem] text-white shadow-xl shadow-hotpink/40">
-        <CuteToolIcon slug="cycle" className="h-12 w-12" />
-      </span>
-    </span>
   );
 }
 
@@ -311,92 +305,444 @@ function Screen3({
   );
 }
 
-// ── Screen 4 — The reveal ───────────────────────────────────────────
-const ORBIT_SIZE = 260;
-const ORBIT_RADIUS = 100;
-const ORBIT_ORDER = ["workout", "diet", "meals", "reminders", "diaries", "yoga", "budget"];
-const ORBIT_POSITIONS = ORBIT_ORDER.map((_, i) => {
-  const angle = (Math.PI * 2 * i) / ORBIT_ORDER.length; // 0 = top, clockwise
-  return { x: Math.round(Math.sin(angle) * ORBIT_RADIUS), y: Math.round(-Math.cos(angle) * ORBIT_RADIUS) };
-});
-const ORBIT_CENTER = ORBIT_SIZE / 2;
-
-function Screen4({ onNext }: { onNext: () => void }) {
-  const [ctaVisible, setCtaVisible] = useState(false);
+// ── Screen 4 — The post-choice reveal ───────────────────────────────
+// Persistent top banner shown on every reveal screen: a soft phase-coloured
+// pill whose phase name types itself out character by character.
+function PhaseBanner({ phase, day }: { phase: OnboardingPhase; day: number | null }) {
+  const meta = onboardingPhaseMeta(phase);
+  const label = PHASE_COPY[phase].label;
+  const [typed, setTyped] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setCtaVisible(true), 3200);
-    return () => clearTimeout(t);
-  }, []);
+    setTyped("");
+    setShowCursor(true);
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setTyped(label.slice(0, i));
+      if (i >= label.length) {
+        clearInterval(interval);
+        setTimeout(() => setShowCursor(false), 650);
+      }
+    }, 40);
+    return () => clearInterval(interval);
+  }, [label]);
 
   return (
-    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <div className="relative" style={{ width: ORBIT_SIZE, height: ORBIT_SIZE }}>
-        {/* Big soft pink circles drifting behind the orbit, for depth and life */}
-        <div className="pointer-events-none absolute -inset-6 -z-10 rounded-full bg-hotpink/10 animate-bloom-float" />
-        <div className="pointer-events-none absolute inset-8 -z-10 rounded-full bg-hotpink/10 animate-bloom-float" style={{ animationDelay: "1.5s" }} />
+    <div className="mt-3 flex justify-center">
+      <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium ${meta.color}`}>
+        Based on your cycle{day ? ` · Day ${day}` : ""} · {typed}
+        {showCursor && <span className="animate-pulse">|</span>}
+      </span>
+    </div>
+  );
+}
 
-        {/* The Cycle Tracker sits at the center as the brain organising every tool */}
-        <div className="absolute inset-0 flex items-center justify-center animate-onboarding-icon-pop">
-          <CycleBrainMedallion size={104} />
+// Small pulsing waveform used on session/workout cards to suggest "alive" content.
+function PulseWaveform({ className = "" }: { className?: string }) {
+  const heights = [40, 70, 100, 65, 90, 50, 80, 45, 75, 60];
+  return (
+    <div className={`flex items-end gap-1 ${className}`} aria-hidden="true">
+      {heights.map((h, i) => (
+        <span
+          key={i}
+          className="w-1.5 rounded-full bg-white/70 animate-icon-breathe"
+          style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+interface Screen4Props {
+  phase: OnboardingPhase;
+  day: number | null;
+  onNext: () => void;
+  onEnter: (href: string) => void;
+}
+
+// "Enter Bloomzein" footer — only rendered once every card has had time to land.
+function EnterBloomzeinFooter({ visible, onNext }: { visible: boolean; onNext: () => void }) {
+  if (!visible) return null;
+  return (
+    <div className="shrink-0 px-6 pb-6 pt-2 animate-in fade-in zoom-in-95 duration-400">
+      <button
+        type="button"
+        onClick={onNext}
+        className="bloom-luxury-btn animate-cta-pulse inline-flex w-full items-center justify-center gap-1.5 px-8 py-3.5 text-base font-medium text-white active:scale-95"
+      >
+        Enter Bloomzein <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
+      </button>
+    </div>
+  );
+}
+
+function useCtaDelay(cardCount: number) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), (cardCount - 1) * 200 + 600 + 400);
+    return () => clearTimeout(t);
+  }, [cardCount]);
+  return visible;
+}
+
+// CHOICE 1 — "Feel better in my body" → hero yoga session + this week's flows.
+function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
+  const content = YOGA_CONTENT[phase];
+  const [name, duration, tag] = splitPipe(content.session);
+  const ctaVisible = useCtaDelay(1 + content.week.length);
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 px-6 pt-6">
+        <ProgressDots active={4} />
+        <PhaseBanner phase={phase} day={day} />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        <AnimatedWords text={content.headline} className="font-script mt-4 block text-2xl text-hotpink" />
+
+        <div className="bloom-luxury-btn animate-spring-center hover-scale mt-4 p-5 text-white shadow-xl active:scale-95">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-medium">{tag}</span>
+          <h3 className="mt-2 text-xl font-semibold">{name}</h3>
+          <p className="mt-0.5 text-sm font-light text-white/80">{duration}</p>
+          <PulseWaveform className="mt-5 h-10" />
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/yoga")}
+            className="animate-cta-pulse mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-hotpink active:scale-95"
+          >
+            Start this session <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/yoga")}
+            className="mt-3 block w-full text-center text-xs font-medium text-white/85 underline-offset-2 hover:underline"
+          >
+            Discover the full Yoga library →
+          </button>
         </div>
 
-        {/* Tools and their connector lines slowly revolve around the cycle tracker together */}
-        <div className="absolute inset-0 animate-orbit-spin">
-          <svg viewBox={`0 0 ${ORBIT_SIZE} ${ORBIT_SIZE}`} className="absolute inset-0 h-full w-full">
-            {ORBIT_POSITIONS.map((pos, i) => (
-              <line
-                key={i}
-                x1={ORBIT_CENTER}
-                y1={ORBIT_CENTER}
-                x2={ORBIT_CENTER + pos.x}
-                y2={ORBIT_CENTER + pos.y}
-                stroke="var(--hotpink)"
-                strokeOpacity="0.35"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray="2 6"
-                className="animate-flow-dash"
-              />
-            ))}
-          </svg>
+        <h4 className="mt-6 text-sm font-semibold text-rose">This week</h4>
+        <div className="mt-2 flex flex-col gap-2">
+          {content.week.map((item, i) => (
+            <div
+              key={item}
+              style={{ animationDelay: `${0.2 + i * 0.2}s` }}
+              className="bloom-pearl-card pearl-sheen animate-spring-left hover-scale flex items-center justify-between rounded-2xl p-3 active:scale-95"
+            >
+              <span className="text-sm text-rose">{item}</span>
+              <span className="h-2 w-2 rounded-full bg-hotpink/60" />
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => onEnter("/app/tools/yoga")}
+          className="mt-3 block w-full text-center text-xs font-medium text-hotpink underline-offset-2 hover:underline"
+        >
+          See full weekly plan →
+        </button>
+      </div>
 
-          {ORBIT_ORDER.map((key, i) => {
-            const tool = ONBOARDING_TOOLS.find((t) => t.key === key)!;
-            const pos = ORBIT_POSITIONS[i];
+      <EnterBloomzeinFooter visible={ctaVisible} onNext={onNext} />
+    </div>
+  );
+}
+
+// CHOICE 2 — "Eat better" → today's nutrition insight, 3 meals, protein target.
+function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { profile: { weight: number | null; weight_unit: "kg" | "lbs" } | null }) {
+  const content = DIET_CONTENT[phase];
+  const meals = [
+    { label: "Breakfast", spring: "animate-spring-left", data: content.breakfast, delay: 0 },
+    { label: "Lunch", spring: "animate-spring-right", data: content.lunch, delay: 0.2 },
+    { label: "Dinner", spring: "animate-spring-bottom", data: content.dinner, delay: 0.4 },
+  ];
+  const [added, setAdded] = useState([false, false, false]);
+  const ctaVisible = useCtaDelay(meals.length);
+  const protein = proteinTarget(phase, profile?.weight, profile?.weight_unit);
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 px-6 pt-6">
+        <ProgressDots active={4} />
+        <PhaseBanner phase={phase} day={day} />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        <AnimatedWords text="Here's what your body needs today." className="font-script mt-4 block text-2xl text-hotpink" />
+        <p className="mt-1.5 animate-fade-in text-sm font-light text-rose/70" style={{ animationDelay: "0.3s" }}>
+          {content.insight}
+        </p>
+
+        <div className="mt-4 flex flex-col gap-2.5">
+          {meals.map((meal, i) => {
+            const [recipe, time, macro] = splitPipe(meal.data);
             return (
               <div
-                key={key}
-                className="absolute grid h-12 w-12 place-items-center rounded-full bg-hotpink/15 text-hotpink shadow-md border border-white/50 backdrop-blur-sm animate-onboarding-icon-pop animate-orbit-counter-spin"
-                style={{
-                  left: `calc(50% + ${pos.x}px - 24px)`,
-                  top: `calc(50% + ${pos.y}px - 24px)`,
-                  animationDelay: `${0.6 + i * 0.15}s, 0s`,
-                }}
+                key={meal.label}
+                style={{ animationDelay: `${meal.delay}s` }}
+                className={`bloom-pearl-card pearl-sheen ${meal.spring} hover-scale rounded-2xl p-4`}
               >
-                <CuteToolIcon slug={tool.slug} className="h-6 w-6" />
+                <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">{meal.label}</span>
+                <h3 className="mt-2 text-sm font-semibold text-rose">{recipe}</h3>
+                <p className="mt-0.5 text-xs font-light text-rose/60">{time} · {macro}</p>
+                <button
+                  type="button"
+                  onClick={() => setAdded((a) => a.map((v, idx) => (idx === i ? !v : v)))}
+                  className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                    added[i] ? "bg-hotpink/15 text-hotpink" : "animate-cta-pulse bg-hotpink text-white"
+                  }`}
+                >
+                  {added[i] ? "Added to my plan ✓" : "Add to my plan"}
+                </button>
               </div>
             );
           })}
         </div>
-      </div>
 
-      <div className="mt-2 animate-onboarding-text">
-        <p className="font-script text-2xl text-hotpink">Your cycle is the brain.</p>
-        <p className="mt-1 text-sm font-light text-rose/70">Bloomzein is setting up the right plan for your phase, everywhere.</p>
-      </div>
+        <div className="bloom-pearl-card animate-fade-in mt-4 rounded-2xl p-4" style={{ animationDelay: "0.7s" }}>
+          <p className="text-sm font-semibold text-rose">Today's protein target: {protein}g</p>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/diet")}
+            className="mt-1 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
+          >
+            See how to reach it →
+          </button>
+        </div>
 
-      {ctaVisible && (
         <button
           type="button"
-          onClick={onNext}
-          className="bloom-luxury-btn animate-cta-pulse mt-8 inline-flex items-center gap-1.5 animate-in fade-in duration-400 px-8 py-3.5 text-base font-medium text-white"
+          onClick={() => onEnter("/app/tools/diet")}
+          className="mt-3 block w-full text-center text-xs font-medium text-hotpink underline-offset-2 hover:underline"
         >
-          Discover my space <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
+          Explore my full nutrition plan →
         </button>
-      )}
+      </div>
+
+      <EnterBloomzeinFooter visible={ctaVisible} onNext={onNext} />
     </div>
   );
+}
+
+// CHOICE 3 — "Move more" → stacked workout / yoga complement / recovery meal.
+function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
+  const content = MOVEMENT_CONTENT[phase];
+  const [workoutName, workoutDuration, workoutTag] = splitPipe(content.workout);
+  const [yogaName, yogaDuration, yogaTag] = splitPipe(content.yoga);
+  const [mealName, mealTime, mealMacro] = splitPipe(content.meal);
+  const ctaVisible = useCtaDelay(3);
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 px-6 pt-6">
+        <ProgressDots active={4} />
+        <PhaseBanner phase={phase} day={day} />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        <AnimatedWords text="Your week, all connected." className="font-script mt-4 block text-2xl text-hotpink" />
+
+        <div className="mt-4 animate-spring-bottom bloom-luxury-btn hover-scale p-5 text-white shadow-xl active:scale-95">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-medium">{workoutTag}</span>
+          <h3 className="mt-2 text-xl font-semibold">{workoutName}</h3>
+          <p className="mt-0.5 text-sm font-light text-white/80">{workoutDuration}</p>
+          <p className="mt-2 text-xs font-light text-white/70">{content.zones}</p>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/workout")}
+            className="animate-cta-pulse mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-hotpink active:scale-95"
+          >
+            Start today's session <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/workout")}
+            className="mt-3 block w-full text-center text-xs font-medium text-white/85 underline-offset-2 hover:underline"
+          >
+            Build my full program →
+          </button>
+        </div>
+
+        <div
+          style={{ animationDelay: "0.2s" }}
+          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 rounded-2xl p-4 pt-6"
+        >
+          <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Yoga complement</span>
+          <h3 className="mt-2 text-sm font-semibold text-rose">{yogaName}</h3>
+          <p className="mt-0.5 text-xs font-light text-rose/60">{yogaDuration} · {yogaTag}</p>
+          <p className="mt-1.5 text-xs font-light text-rose/70">Pairs perfectly with your workout this week</p>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/yoga")}
+            className="mt-3 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
+          >
+            Explore Yoga flows →
+          </button>
+        </div>
+
+        <div
+          style={{ animationDelay: "0.4s" }}
+          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 rounded-2xl p-4 pt-6"
+        >
+          <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Post-workout nutrition ↑</span>
+          <h3 className="mt-2 text-sm font-semibold text-rose">{mealName}</h3>
+          <p className="mt-0.5 text-xs font-light text-rose/60">{mealTime} · {mealMacro}</p>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/diet")}
+            className="mt-3 text-xs font-medium text-hotpink underline-offset-2 hover:underline"
+          >
+            See post-workout meals →
+          </button>
+        </div>
+
+        <p className="mt-5 animate-fade-in text-center text-xs font-light italic text-rose/60" style={{ animationDelay: "0.8s" }}>
+          Bloomzein connects these three so you never have to.
+        </p>
+      </div>
+
+      <EnterBloomzeinFooter visible={ctaVisible} onNext={onNext} />
+    </div>
+  );
+}
+
+// CHOICE 4 — "Sync everything" → cycle anchor + every tool, gently overlapping.
+function Screen4Sync({ phase, day, onNext, onEnter }: Screen4Props) {
+  const meta = onboardingPhaseMeta(phase);
+  const yoga = YOGA_CONTENT[phase];
+  const movement = MOVEMENT_CONTENT[phase];
+  const diet = DIET_CONTENT[phase];
+  const [yogaName] = splitPipe(yoga.session);
+  const [workoutName] = splitPipe(movement.workout);
+  const [mealName] = splitPipe(diet.breakfast);
+  const [gratitude, setGratitude] = useState("");
+  const ctaVisible = useCtaDelay(6);
+
+  return (
+    <div
+      className="animate-ambient-tint flex h-full flex-col"
+      style={{ backgroundImage: "linear-gradient(135deg, oklch(0.97 0.03 350 / 0.7), oklch(0.96 0.05 280 / 0.5), oklch(0.97 0.04 30 / 0.6))" }}
+    >
+      <div className="shrink-0 px-6 pt-6">
+        <ProgressDots active={4} />
+        <PhaseBanner phase={phase} day={day} />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        <AnimatedWords text="Everything in sync with you." className="font-script mt-4 block text-2xl text-hotpink" />
+
+        {/* Cycle anchor — never moves, soft continuous glow */}
+        <div className={`animate-spring-center animate-anchor-glow mt-4 rounded-3xl p-5 ${meta.color}`}>
+          <span className="rounded-full bg-white/50 px-2.5 py-0.5 text-[11px] font-medium">{PHASE_COPY[phase].label}</span>
+          {day && <p className="mt-2 text-sm font-semibold">Day {day} of your cycle</p>}
+          <p className="mt-1 text-sm font-light">{PHASE_COPY[phase].description}</p>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          <div style={{ animationDelay: "0.2s" }} className="bloom-pearl-card pearl-sheen animate-spring-left hover-scale rounded-2xl p-3 active:scale-95">
+            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Yoga</span>
+            <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{yogaName}</h3>
+            <button type="button" onClick={() => onEnter("/app/tools/yoga")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+              Explore →
+            </button>
+          </div>
+
+          <div style={{ animationDelay: "0.4s" }} className="bloom-pearl-card pearl-sheen animate-spring-right hover-scale rounded-2xl p-3 active:scale-95">
+            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Workout</span>
+            <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{workoutName}</h3>
+            <div className="mt-1.5 flex gap-1">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <span key={i} className={`h-1.5 w-1.5 rounded-full ${i < 3 ? "bg-hotpink" : "bg-petal"}`} />
+              ))}
+            </div>
+            <button type="button" onClick={() => onEnter("/app/tools/workout")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+              Explore →
+            </button>
+          </div>
+
+          <div style={{ animationDelay: "0.6s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale rounded-2xl p-3 active:scale-95">
+            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Meals</span>
+            <div className="mt-1.5 h-12 w-full animate-bloom-shimmer rounded-xl bg-petal/40" />
+            <h3 className="mt-1.5 text-xs font-semibold text-rose leading-snug">{mealName}</h3>
+            <button type="button" onClick={() => onEnter("/app/tools/diet")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+              Explore →
+            </button>
+          </div>
+
+          <div style={{ animationDelay: "0.8s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale rounded-2xl p-3 active:scale-95">
+            <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">Gratitude</span>
+            <p className="mt-1.5 text-xs font-light text-rose/70 leading-snug">{GRATITUDE_PROMPTS[phase]}</p>
+            <textarea
+              value={gratitude}
+              onChange={(e) => setGratitude(e.target.value)}
+              onBlur={() => saveOnboardingGratitude(gratitude)}
+              placeholder="Write a few words…"
+              rows={2}
+              className="mt-2 w-full resize-none rounded-lg border border-petal/60 bg-white/70 p-1.5 text-[11px] text-rose placeholder:text-rose/40 focus:outline-none focus:ring-1 focus:ring-hotpink"
+            />
+            <button type="button" onClick={() => onEnter("/app/tools/diary")} className="mt-2 text-[11px] font-medium text-hotpink underline-offset-2 hover:underline">
+              Open your Bloom Diary →
+            </button>
+          </div>
+        </div>
+
+        <div style={{ animationDelay: "1s" }} className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale mt-2.5 rounded-2xl p-4 active:scale-95">
+          <span className="rounded-full bg-blush px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-hotpink">Your week</span>
+          <div className="mt-2 grid grid-cols-7 gap-1">
+            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+              <span key={i} className={`grid h-6 place-items-center rounded-full text-[10px] font-medium ${i === 0 ? meta.color : "bg-petal/40 text-rose/60"}`}>
+                {d}
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-xs font-light text-rose/70">{WEEKLY_SUMMARY[phase]}</p>
+          <button
+            type="button"
+            onClick={() => onEnter("/app/tools/cycle")}
+            className="animate-cta-pulse mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-hotpink px-6 py-2.5 text-sm font-semibold text-white active:scale-95"
+          >
+            Validate my full week
+          </button>
+        </div>
+      </div>
+
+      <EnterBloomzeinFooter visible={ctaVisible} onNext={onNext} />
+    </div>
+  );
+}
+
+// Dispatches to the goal-matched reveal experience selected on Screen 3.
+function Screen4({
+  goal,
+  phase,
+  cycleData,
+  onNext,
+  onEnter,
+  profile,
+}: {
+  goal: GoalKey | null;
+  phase: OnboardingPhase | null;
+  cycleData: OnboardingCycleData;
+  onNext: () => void;
+  onEnter: (href: string) => void;
+  profile: { weight: number | null; weight_unit: "kg" | "lbs" } | null;
+}) {
+  const resolvedPhase = phase ?? "follicular";
+  const day = cycleData.lastPeriod ? calcPhasePreview(cycleData.lastPeriod, cycleData.cycleLength, cycleData.periodDuration).day : null;
+
+  switch (goal) {
+    case "yoga":
+      return <Screen4Yoga phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} />;
+    case "diet":
+      return <Screen4Diet phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} profile={profile} />;
+    case "workout":
+      return <Screen4Movement phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} />;
+    default:
+      return <Screen4Sync phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} />;
+  }
 }
 
 // ── Screen 5 — Tool cards home ──────────────────────────────────────
@@ -529,7 +875,7 @@ function Screen5({
 
 // ── Main flow ────────────────────────────────────────────────────────
 export function OnboardingFlow({ children }: { children: React.ReactNode }) {
-  const { updateProfile } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const [screen, setScreen] = useState(1);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [cycleData, setCycleData] = useState<OnboardingCycleData>({ lastPeriod: null, cycleLength: 28, periodDuration: 5 });
@@ -581,7 +927,16 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
             />
           )}
           {screen === 3 && <Screen3 goal={goal} setGoal={setGoal} onNext={() => goTo(4, "forward")} onBack={() => goTo(2, "back")} />}
-          {screen === 4 && <Screen4 onNext={() => goTo(5, "forward")} />}
+          {screen === 4 && (
+            <Screen4
+              goal={goal}
+              phase={phase}
+              cycleData={cycleData}
+              onNext={() => goTo(5, "forward")}
+              onEnter={finish}
+              profile={profile ? { weight: profile.weight, weight_unit: profile.weight_unit } : null}
+            />
+          )}
         </div>
       </OnboardingSheet>
     </>
