@@ -11,6 +11,7 @@ const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 export function DatePicker({ value, onChange, max }: { value: string | null; onChange: (iso: string) => void; max: string }) {
   const selected = value ? new Date(value + "T00:00:00") : null;
   const maxDate = new Date(max + "T00:00:00");
+  const today = new Date();
   const [viewDate, setViewDate] = useState(() => selected ?? maxDate);
 
   const year = viewDate.getFullYear();
@@ -24,6 +25,8 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
   const nextMonth = new Date(year, month + 1, 1);
 
   const isFuture = (day: number) => new Date(year, month, day) > maxDate;
+  const isToday = (day: number) =>
+    today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
   const isSelected = (day: number) =>
     !!selected && selected.getFullYear() === year && selected.getMonth() === month && selected.getDate() === day;
 
@@ -65,7 +68,11 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
               disabled={isFuture(day)}
               onClick={() => onChange(toISO(new Date(year, month, day)))}
               className={`grid h-8 w-8 place-items-center rounded-full text-sm transition ${
-                isSelected(day) ? "bg-hotpink font-semibold text-white" : "text-rose hover:bg-blush"
+                isSelected(day)
+                  ? "bg-hotpink font-semibold text-white"
+                  : !selected && isToday(day)
+                  ? "animate-pick-glow bg-blush font-semibold text-hotpink"
+                  : "text-rose hover:bg-blush"
               } disabled:pointer-events-none disabled:opacity-25`}
             >
               {day}

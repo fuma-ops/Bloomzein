@@ -1068,3 +1068,21 @@
   animation: scatter-out 0.4s ease-in forwards;
 }
 
+/* Gentle, soft glow inviting the user to pick today's date — stops once a date is chosen */
+@keyframes pick-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.27 350 / 0.22); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 5px oklch(0.75 0.27 350 / 0.16); transform: scale(1.06); }
+}
+@utility animate-pick-glow {
+  animation: pick-glow 2.2s ease-in-out infinite;
+}
+
+/* Soft "tap me" hint for selectable cards before a choice is made */
+@keyframes tap-hint {
+  0%, 100% { box-shadow: 0 4px 14px -8px oklch(0.65 0.27 350 / 0.22); transform: scale(1) translateY(0); }
+  50%      { box-shadow: 0 7px 18px -6px oklch(0.65 0.27 350 / 0.38); transform: scale(1.012) translateY(-1px); }
+}
+@utility animate-tap-hint {
+  animation: tap-hint 3.2s ease-in-out infinite;
+}
+

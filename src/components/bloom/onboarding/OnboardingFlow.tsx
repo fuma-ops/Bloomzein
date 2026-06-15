@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronRight, Search, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronRight, Search, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEFAULT_CYCLE_SETTINGS, writeCycleSettings } from "../cyclePhase";
 import { CuteToolIcon } from "../CuteToolIcon";
@@ -71,7 +71,7 @@ function BloomFlower({ size = 48, className = "" }: { size?: number; className?:
   );
 }
 
-function ProgressDots({ active, onBack }: { active: number; onBack?: () => void }) {
+function ProgressDots({ active, onBack, onClose }: { active: number; onBack?: () => void; onClose?: () => void }) {
   return (
     <div className="flex items-center justify-between">
       {onBack ? (
@@ -79,7 +79,7 @@ function ProgressDots({ active, onBack }: { active: number; onBack?: () => void 
           type="button"
           onClick={onBack}
           aria-label="Back"
-          className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-rose transition hover:bg-white"
+          className="hover-scale grid h-9 w-9 place-items-center rounded-full bg-white/70 text-rose transition active:scale-95 hover:bg-white"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -94,7 +94,18 @@ function ProgressDots({ active, onBack }: { active: number; onBack?: () => void 
           />
         ))}
       </div>
-      <div className="h-9 w-9" />
+      {onClose ? (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="hover-scale grid h-9 w-9 place-items-center rounded-full bg-white/70 text-rose transition active:scale-95 hover:bg-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      ) : (
+        <div className="h-9 w-9" />
+      )}
     </div>
   );
 }
@@ -124,9 +135,17 @@ function Stepper({ value, min, max, onChange }: { value: number; min: number; ma
 }
 
 // ── Screen 1 — Welcome ──────────────────────────────────────────────
-function Screen1({ onNext }: { onNext: () => void }) {
+function Screen1({ onNext, onClose }: { onNext: () => void; onClose: () => void }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+    <div className="relative flex h-full flex-col items-center justify-center px-6 text-center">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close"
+        className="hover-scale absolute right-6 top-6 grid h-9 w-9 place-items-center rounded-full bg-white/70 text-rose transition active:scale-95 hover:bg-white"
+      >
+        <X className="h-4 w-4" />
+      </button>
       <BloomFlower size={132} className="text-hotpink animate-bloom-flower-spin drop-shadow-[0_8px_20px_oklch(0.65_0.27_350_/_0.35)]" />
       <h1 className="font-script mt-5 text-4xl tracking-wide text-hotpink">Bloomzein</h1>
       <p className="mt-2 text-sm font-light text-rose/70">Your cycle. Your life. All connected.</p>
@@ -151,12 +170,14 @@ function Screen2({
   setPhase,
   onNext,
   onBack,
+  onClose,
 }: {
   cycleData: OnboardingCycleData;
   setCycleData: (fn: (c: OnboardingCycleData) => OnboardingCycleData) => void;
   setPhase: (p: OnboardingPhase) => void;
   onNext: () => void;
   onBack: () => void;
+  onClose: () => void;
 }) {
   const preview = useMemo(
     () => (cycleData.lastPeriod ? calcPhasePreview(cycleData.lastPeriod, cycleData.cycleLength, cycleData.periodDuration) : null),
@@ -194,7 +215,7 @@ function Screen2({
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 px-6 pt-6">
-        <ProgressDots active={2} onBack={onBack} />
+        <ProgressDots active={2} onBack={onBack} onClose={onClose} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
@@ -251,23 +272,31 @@ function Screen3({
   setGoal,
   onNext,
   onBack,
+  onClose,
 }: {
   goal: GoalKey | null;
   setGoal: (g: GoalKey) => void;
   onNext: () => void;
   onBack: () => void;
+  onClose: () => void;
 }) {
+  // Selecting a goal gives the card a moment to glow before we glide to the next screen.
+  const handleSelect = (key: GoalKey) => {
+    setGoal(key);
+    setTimeout(onNext, 550);
+  };
+
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 px-6 pt-6">
-        <ProgressDots active={3} onBack={onBack} />
+        <ProgressDots active={3} onBack={onBack} onClose={onClose} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
         <h2 className="font-script mt-5 animate-question-pop text-2xl text-hotpink">What do you want to focus on first?</h2>
         <p className="mt-1 text-sm font-light text-rose/70">You'll have access to everything — this is just your starting point</p>
 
-        <div className="mt-4 flex flex-col gap-2.5">
+        <div className="mt-4 flex flex-col gap-2.5 pb-2">
           {GOALS.map((g, i) => {
             const Icon = g.icon;
             const selected = goal === g.key;
@@ -275,10 +304,15 @@ function Screen3({
               <button
                 key={g.key}
                 type="button"
-                onClick={() => setGoal(g.key)}
+                onClick={() => handleSelect(g.key)}
+                disabled={!!goal}
                 style={{ animationDelay: `${i * 0.08}s` }}
                 className={`bloom-pearl-card pearl-sheen flex min-h-[64px] animate-question-pop items-center gap-3 rounded-2xl p-3 text-left transition-all duration-300 ${
-                  selected ? "border-2 border-hotpink bg-blush" : "border-2 border-transparent"
+                  selected
+                    ? "animate-selected-glow border-2 border-hotpink bg-blush"
+                    : goal
+                    ? "border-2 border-transparent opacity-40"
+                    : "animate-tap-hint border-2 border-transparent"
                 }`}
               >
                 <span className={`clay-blob grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white animate-icon-breathe shadow-lg ${selected ? "shadow-hotpink/50" : "shadow-hotpink/25"}`}>
@@ -293,17 +327,6 @@ function Screen3({
             );
           })}
         </div>
-      </div>
-
-      <div className={`shrink-0 rounded-2xl px-6 pb-6 pt-2 ${goal ? "animate-step-highlight" : ""}`}>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!goal}
-          className={`bloom-luxury-btn inline-flex w-full items-center justify-center gap-1.5 px-8 py-3.5 text-base font-medium text-white disabled:pointer-events-none disabled:opacity-40 ${goal ? "animate-cta-pulse" : ""}`}
-        >
-          Let's go <ChevronRight className="h-4 w-4 animate-arrow-nudge" strokeWidth={2.5} />
-        </button>
       </div>
     </div>
   );
@@ -364,6 +387,8 @@ interface Screen4Props {
   day: number | null;
   onNext: () => void;
   onEnter: (href: string) => void;
+  onBack: () => void;
+  onClose: () => void;
 }
 
 // "Enter Bloomzein" footer — only rendered once every card has had time to land.
@@ -392,7 +417,7 @@ function useCtaDelay(cardCount: number) {
 }
 
 // CHOICE 1 — "Feel better in my body" → hero yoga session + this week's flows.
-function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
+function Screen4Yoga({ phase, day, onNext, onEnter, onBack, onClose }: Screen4Props) {
   const content = YOGA_CONTENT[phase];
   const images = YOGA_IMAGES[phase];
   const [name, duration, tag] = splitPipe(content.session);
@@ -401,7 +426,7 @@ function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 px-6 pt-6">
-        <ProgressDots active={4} />
+        <ProgressDots active={4} onBack={onBack} onClose={onClose} />
         <PhaseBanner phase={phase} day={day} />
       </div>
 
@@ -464,7 +489,7 @@ function Screen4Yoga({ phase, day, onNext, onEnter }: Screen4Props) {
 }
 
 // CHOICE 2 — "Eat better" → today's nutrition insight, 3 meals, protein target.
-function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { profile: { weight: number | null; weight_unit: "kg" | "lbs" } | null }) {
+function Screen4Diet({ phase, day, onNext, onEnter, onBack, onClose, profile }: Screen4Props & { profile: { weight: number | null; weight_unit: "kg" | "lbs" } | null }) {
   const content = DIET_CONTENT[phase];
   const images = DIET_IMAGES[phase];
   const meals = [
@@ -479,7 +504,7 @@ function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { 
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 px-6 pt-6">
-        <ProgressDots active={4} />
+        <ProgressDots active={4} onBack={onBack} onClose={onClose} />
         <PhaseBanner phase={phase} day={day} />
       </div>
 
@@ -546,7 +571,7 @@ function Screen4Diet({ phase, day, onNext, onEnter, profile }: Screen4Props & { 
 }
 
 // CHOICE 3 — "Move more" → stacked workout / yoga complement / recovery meal.
-function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
+function Screen4Movement({ phase, day, onNext, onEnter, onBack, onClose }: Screen4Props) {
   const content = MOVEMENT_CONTENT[phase];
   const images = MOVEMENT_IMAGES[phase];
   const [workoutName, workoutDuration, workoutTag] = splitPipe(content.workout);
@@ -557,7 +582,7 @@ function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 px-6 pt-6">
-        <ProgressDots active={4} />
+        <ProgressDots active={4} onBack={onBack} onClose={onClose} />
         <PhaseBanner phase={phase} day={day} />
       </div>
 
@@ -593,7 +618,7 @@ function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
 
         <div
           style={{ animationDelay: "0.2s" }}
-          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 flex gap-3 rounded-2xl p-4 pt-6"
+          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale mt-3 flex gap-3 rounded-2xl p-4"
         >
           <img src={images.yoga} alt={yogaName} className="h-16 w-16 shrink-0 rounded-xl object-cover" />
           <div className="min-w-0 flex-1">
@@ -612,7 +637,7 @@ function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
 
         <div
           style={{ animationDelay: "0.4s" }}
-          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale -mt-3 flex gap-3 rounded-2xl p-4 pt-6"
+          className="bloom-pearl-card pearl-sheen animate-spring-bottom hover-scale mt-3 flex gap-3 rounded-2xl p-4"
         >
           <img src={images.meal} alt={mealName} className="h-16 w-16 shrink-0 rounded-xl object-cover" />
           <div className="min-w-0 flex-1">
@@ -640,7 +665,7 @@ function Screen4Movement({ phase, day, onNext, onEnter }: Screen4Props) {
 }
 
 // CHOICE 4 — "Sync everything" → cycle anchor + every tool, gently overlapping.
-function Screen4Sync({ phase, day, onNext, onEnter }: Screen4Props) {
+function Screen4Sync({ phase, day, onNext, onEnter, onBack, onClose }: Screen4Props) {
   const meta = onboardingPhaseMeta(phase);
   const yoga = YOGA_CONTENT[phase];
   const movement = MOVEMENT_CONTENT[phase];
@@ -658,7 +683,7 @@ function Screen4Sync({ phase, day, onNext, onEnter }: Screen4Props) {
       style={{ backgroundImage: "linear-gradient(135deg, oklch(0.97 0.03 350 / 0.7), oklch(0.96 0.05 280 / 0.5), oklch(0.97 0.04 30 / 0.6))" }}
     >
       <div className="shrink-0 px-6 pt-6">
-        <ProgressDots active={4} />
+        <ProgressDots active={4} onBack={onBack} onClose={onClose} />
         <PhaseBanner phase={phase} day={day} />
       </div>
 
@@ -766,6 +791,8 @@ function Screen4({
   cycleData,
   onNext,
   onEnter,
+  onBack,
+  onClose,
   profile,
 }: {
   goal: GoalKey | null;
@@ -773,6 +800,8 @@ function Screen4({
   cycleData: OnboardingCycleData;
   onNext: () => void;
   onEnter: (href: string) => void;
+  onBack: () => void;
+  onClose: () => void;
   profile: { weight: number | null; weight_unit: "kg" | "lbs" } | null;
 }) {
   const resolvedPhase = phase ?? "follicular";
@@ -780,13 +809,13 @@ function Screen4({
 
   switch (goal) {
     case "yoga":
-      return <Screen4Yoga phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} />;
+      return <Screen4Yoga phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} onBack={onBack} onClose={onClose} />;
     case "diet":
-      return <Screen4Diet phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} profile={profile} />;
+      return <Screen4Diet phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} onBack={onBack} onClose={onClose} profile={profile} />;
     case "workout":
-      return <Screen4Movement phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} />;
+      return <Screen4Movement phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} onBack={onBack} onClose={onClose} />;
     default:
-      return <Screen4Sync phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} />;
+      return <Screen4Sync phase={resolvedPhase} day={day} onNext={onNext} onEnter={onEnter} onBack={onBack} onClose={onClose} />;
   }
 }
 
@@ -947,6 +976,9 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // Closing the onboarding sheet early skips straight to the app.
+  const skip = () => finish("/app/today");
+
   if (screen === 5) {
     return <Screen5 phase={phase} goal={goal} cycleData={cycleData} onEnter={finish} />;
   }
@@ -961,7 +993,7 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
       <div className="pointer-events-none select-none blur-sm">{children}</div>
       <OnboardingSheet>
         <div key={screen} className={`absolute inset-0 ${transitionClass}`}>
-          {screen === 1 && <Screen1 onNext={() => goTo(2, "forward")} />}
+          {screen === 1 && <Screen1 onNext={() => goTo(2, "forward")} onClose={skip} />}
           {screen === 2 && (
             <Screen2
               cycleData={cycleData}
@@ -969,9 +1001,18 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
               setPhase={setPhase}
               onNext={() => goTo(3, "forward")}
               onBack={() => goTo(1, "back")}
+              onClose={skip}
             />
           )}
-          {screen === 3 && <Screen3 goal={goal} setGoal={setGoal} onNext={() => goTo(4, "forward")} onBack={() => goTo(2, "back")} />}
+          {screen === 3 && (
+            <Screen3
+              goal={goal}
+              setGoal={setGoal}
+              onNext={() => goTo(4, "forward")}
+              onBack={() => goTo(2, "back")}
+              onClose={skip}
+            />
+          )}
           {screen === 4 && (
             <Screen4
               goal={goal}
@@ -979,6 +1020,8 @@ export function OnboardingFlow({ children }: { children: React.ReactNode }) {
               cycleData={cycleData}
               onNext={() => goTo(5, "forward")}
               onEnter={finish}
+              onBack={() => goTo(3, "back")}
+              onClose={skip}
               profile={profile ? { weight: profile.weight, weight_unit: profile.weight_unit } : null}
             />
           )}
