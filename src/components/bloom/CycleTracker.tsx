@@ -463,6 +463,43 @@ export function CycleTracker() {
             <AnimatedWords text={selectedInsight} delay={80} />
           </p>
 
+          {/* Space Stats — important data, glowing icons */}
+          <p className="mt-4 text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SPACE STATS ✿</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 sm:gap-2">
+            {[
+              { label: "CYCLE DAY", value: `${cycleDay}/${settings.cycleLength}`, Icon: CalendarDays },
+              { label: "NEXT PERIOD", value: `${daysToPeriod}d`, Icon: Droplet },
+              { label: "PHASE", value: PHASE_LABEL[currentPhase], Icon: Flower2 },
+              { label: "MOOD", value: moodLabelToday, Icon: MoodIconToday },
+            ].map((s) => (
+              <div key={s.label} className="flex items-center gap-1.5 rounded-2xl bg-white/60 p-1.5 shadow-sm backdrop-blur-md sm:gap-2.5 sm:p-2">
+                <span className="animate-selected-glow grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-8 sm:w-8">
+                  <s.Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[8px] font-bold tracking-wider text-rose/60 sm:text-[9px]">{s.label}</p>
+                  <p className="truncate font-script text-sm leading-none text-hotpink sm:text-base">{s.value}</p>
+                </div>
+              </div>
+            ))}
+            {/* Daily pill — tap to toggle taken */}
+            <button
+              onClick={() => setPillTaken((v) => !v)}
+              aria-pressed={pillTaken}
+              className="col-span-2 flex items-center gap-1.5 rounded-2xl bg-white/60 p-1.5 text-left shadow-sm backdrop-blur-md transition active:scale-95 sm:gap-2.5 sm:p-2"
+            >
+              <span className={`animate-selected-glow grid h-6 w-6 shrink-0 place-items-center rounded-full transition-all sm:h-8 sm:w-8 ${pillTaken ? "bg-hotpink text-white" : "bg-hotpink/10 text-hotpink"}`}>
+                <Pill className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[8px] font-bold tracking-wider text-rose/60 sm:text-[9px]">DAILY {pillLabel.toUpperCase()}</p>
+                <p className={`inline-flex items-center gap-1 font-script text-sm leading-none sm:text-base ${pillTaken ? "text-hotpink" : "text-rose/60"}`}>
+                  {pillTaken ? <><Heart className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Taken today</> : <><Undo2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Tap to log</>}
+                </p>
+              </div>
+            </button>
+          </div>
+
           <p className="mt-4 text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SUGGESTED FOR THIS PHASE</p>
           <div className="mt-2 space-y-2">
             {[
