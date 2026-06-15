@@ -47,7 +47,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   if (!open) return null;
 
   function update<K extends keyof CycleSettings>(k: K, v: CycleSettings[K]) {
-    setDraft((d) => ({ ...d, [k]: v }));
+    setDraft((d) => ({ ...d, [k]: v, ...(k === "reminderHour" ? { contraceptiveReminder: true } : {}) }));
     setTouched((t) => {
       if (t.has(k as string)) return t;
       const n = new Set(t);
@@ -145,21 +145,14 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "240ms" }}>
-            <Section label="Contraceptive Reminder" glow={!isSet("contraceptiveReminder")}>
-              <ToggleRow
-                label="Remind to check or take contraception"
-                checked={draft.contraceptiveReminder}
-                onChange={(v) => update("contraceptiveReminder", v)}
-              />
-            </Section>
-          </div>
-
-          <div className="animate-scale-in" style={{ animationDelay: "280ms" }}>
             <Section label="Reminder Hour" glow={!isSet("reminderHour")}>
               <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
                 <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
               </div>
+              <p className="mt-1 px-1 text-[9px] text-rose/60">
+                {draft.contraceptiveReminder ? "Reminder is on — we'll nudge you at this time." : "Set a time to turn on the contraception reminder."}
+              </p>
             </Section>
           </div>
 
