@@ -604,6 +604,7 @@ export default function YogaPage() {
           onDiscover={() => setView({ kind: "home" })}
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onMyPlan={() => setView({ kind: "plan" })}
+          onTryFlow={() => setView({ kind: "setup" })}
         />
       )}
 
@@ -618,9 +619,7 @@ export default function YogaPage() {
         />
       )}
 
-      {view.kind === "library" && (
-        <Library onSetup={() => setView({ kind: "setup" })} />
-      )}
+      {view.kind === "library" && <Library />}
 
       {view.kind === "plan" && (
         <PlanPage onSetup={(preset) => setView({ kind: "setup", preset })} />
@@ -674,13 +673,20 @@ export default function YogaPage() {
 
 // ===================== HERO (shared, stays visible across tabs) =====================
 
+const HERO_CONTENT: Record<"home" | "library" | "plan", { title: string; subtitle: string }> = {
+  home: { title: "Yoga Flows", subtitle: "guided breath, gentle movement — your softest practice." },
+  library: { title: "Learn the poses", subtitle: "Tap any pose to read how to enter it and find your breath." },
+  plan: { title: "Your soft week", subtitle: "your personalized plan, gently synced to your cycle." },
+};
+
 function YogaHero({
-  active, onDiscover, onLibrary, onMyPlan,
+  active, onDiscover, onLibrary, onMyPlan, onTryFlow,
 }: {
   active: "home" | "library" | "plan";
   onDiscover: () => void;
   onLibrary: () => void;
   onMyPlan: () => void;
+  onTryFlow: () => void;
 }) {
   const tabClass = (isActive: boolean) =>
     [
@@ -688,15 +694,25 @@ function YogaHero({
       isActive ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
     ].join(" ");
 
+  const { title, subtitle } = HERO_CONTENT[active];
+
   return (
     <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
       <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
       <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
-        <div>
-          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Yoga Flows</h1>
-          <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">guided breath, gentle movement — your softest practice.</p>
+        <div key={active} className="animate-scale-in">
+          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">{title}</h1>
+          <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+          {active === "library" && (
+            <button
+              onClick={onTryFlow}
+              className="hover-scale animate-soft-glow mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/20 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition active:scale-95"
+            >
+              <Sparkle className="h-3.5 w-3.5" /> Try a flow
+            </button>
+          )}
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
@@ -1084,21 +1100,12 @@ function Organizer({ phase }: { phase: Phase }) {
 
 // ===================== LIBRARY =====================
 
-function Library({ onSetup }: { onSetup: () => void }) {
+function Library() {
   const [active, setActive] = useState<Level>("Beginner");
   const filtered = useMemo(() => POSES.filter((p) => p.level === active), [active]);
 
   return (
     <div className="space-y-4 yoga-fade">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Step 1</p>
-          <h2 className="font-script text-3xl sm:text-5xl text-hotpink leading-none">Learn the poses</h2>
-          <p className="text-xs sm:text-sm text-rose/80 mt-1">Tap any pose to read how to enter it and find your breath.</p>
-        </div>
-        <button onClick={onSetup} className="bloom-luxury-btn px-3 py-1.5 text-xs font-semibold text-white">Next: try a flow</button>
-      </div>
-
       <div className="flex gap-2 overflow-x-auto pb-1">
         {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
           <button key={lv} onClick={() => setActive(lv)}
