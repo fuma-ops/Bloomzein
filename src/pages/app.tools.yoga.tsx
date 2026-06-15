@@ -695,7 +695,7 @@ function YogaHero({
       <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
         <div>
           <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Yoga Flows</h1>
-          <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">guided breath, gentle movement — your softest practice.</p>
+          <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">guided breath, gentle movement — your softest practice.</p>
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
