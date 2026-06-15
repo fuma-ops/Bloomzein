@@ -25,6 +25,7 @@ import {
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
 import { BloomBubbles } from "./BloomBubbles";
 import { KawaiiBackground } from "./KawaiiBackground";
+import { AnimatedWords } from "./AnimatedWords";
 import { type CyclePhase, phaseForDay, PHASE_LABEL, DEFAULT_CYCLE_SETTINGS, readCycleSettings, writeCycleSettings, broadcastCyclePhase } from "./cyclePhase";
 
 /** @deprecated use DEFAULT_CYCLE_SETTINGS / readCycleSettings from "./cyclePhase" — kept for existing imports */
@@ -200,11 +201,24 @@ export function CycleTracker() {
   const flow = PHASE_FLOW[currentPhase];
   const recommend = PHASE_RECOMMEND[currentPhase];
 
+  // The right panel always reacts to whichever day is selected on the calendar.
+  const isSelectedToday = sameDay(selected, today);
+  const selectedPhase = useMemo(() => (isSelectedToday ? currentPhase : phaseForDay(selected, settings)), [selected, settings, isSelectedToday, currentPhase]);
+  const selectedInsight = PHASE_INSIGHT[selectedPhase];
+  const selectedRecommend = PHASE_RECOMMEND[selectedPhase];
+  const selectedLabel = isSelectedToday
+    ? "TODAY"
+    : selected.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
+
   return (
     <div className="relative">
       {/* dreamy kawaii 3D pink gradient background */}
       <KawaiiBackground count={16} />
       <BloomBubbles count={18} />
+
+      {/* ============= Calendar (≤60% on desktop) + reactive right panel (40%) ============= */}
+      <div className="md:grid md:grid-cols-5 md:items-start md:gap-6">
+      <div className="md:col-span-3">
 
       {/* ============= Header ============= */}
       {/* ============= Hero: Cycle title + Log & Settings + Today's Insight ============= */}
@@ -226,10 +240,10 @@ export function CycleTracker() {
             <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle text-hotpink sm:h-3 sm:w-3" /> TODAY'S INSIGHT
           </p>
           <h3 className="mt-1 font-script text-base leading-tight text-hotpink sm:text-3xl">
-            Day {cycleDay} · {PHASE_LABEL[currentPhase]} Phase
+            <AnimatedWords text={`Day ${cycleDay} · ${PHASE_LABEL[currentPhase]} Phase`} />
           </h3>
           <p className="mt-1.5 font-script text-base font-semibold leading-snug text-magenta drop-shadow-[0_0_8px_rgba(236,72,153,0.4)] sm:mt-2 sm:text-2xl">
-            {PHASE_INSIGHT[currentPhase]}
+            <AnimatedWords text={PHASE_INSIGHT[currentPhase]} delay={120} />
           </p>
         </div>
       </div>
@@ -243,10 +257,10 @@ export function CycleTracker() {
               {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
             </h3>
             <div className="flex items-center gap-1.5">
-              <button onClick={() => shift(-1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md sm:h-7 sm:w-7">
+              <button onClick={() => shift(-1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md transition-transform duration-150 active:scale-90 sm:h-7 sm:w-7">
                 <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
-              <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md sm:h-7 sm:w-7">
+              <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md transition-transform duration-150 active:scale-90 sm:h-7 sm:w-7">
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
               <button
@@ -361,6 +375,54 @@ export function CycleTracker() {
           </div>
         </div>
       </div>
+
+      </div>{/* /lg:col-span-3 main column */}
+
+      {/* ============= Right panel — reacts to the selected calendar day ============= */}
+      <aside className="bloom-pearl-card animate-scale-in relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 md:sticky md:top-4 md:col-span-2 md:mt-0" style={{ animationDelay: "120ms" }}>
+        <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
+        <div key={selected.toDateString()} className="relative z-10 animate-fade-in">
+          <p className="inline-flex items-center gap-1 text-[9px] font-bold tracking-widest text-rose/70 sm:text-[10px]">
+            <Sparkles className="h-2.5 w-2.5 text-hotpink" /> {selectedLabel}
+          </p>
+          <h3 className="mt-1 font-script text-xl text-hotpink sm:text-2xl">
+            <AnimatedWords text={`${PHASE_LABEL[selectedPhase]} Phase`} />
+          </h3>
+          <p className="mt-1.5 text-xs font-semibold leading-snug text-magenta sm:text-sm">
+            <AnimatedWords text={selectedInsight} delay={80} />
+          </p>
+
+          <p className="mt-4 text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SUGGESTED FOR THIS PHASE</p>
+          <div className="mt-2 space-y-2">
+            {[
+              { tag: "Yoga", t: selectedRecommend.yoga.title, img: selectedRecommend.yoga.img, href: "/app/tools/yoga" },
+              { tag: "Workout", t: selectedRecommend.workout.title, img: selectedRecommend.workout.img, href: "/app/tools/workout" },
+              { tag: "Meal", t: selectedRecommend.meal.title, img: selectedRecommend.meal.img, href: "/app/tools/meals" },
+            ].map((p) => (
+              <a
+                key={p.tag}
+                href={p.href}
+                className="hover-scale group flex items-center gap-2.5 rounded-2xl bg-white/60 p-1.5 pr-3 shadow-sm backdrop-blur-md transition-all duration-200 active:scale-95 hover:shadow-md"
+              >
+                <img src={p.img} alt="" aria-hidden loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-xl object-cover sm:h-12 sm:w-12" />
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60 sm:text-[10px]">{p.tag}</p>
+                  <p className="truncate font-script text-sm text-hotpink sm:text-base">{p.t}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <a
+            href="/app/tools/yoga"
+            className="bloom-luxury-btn hover-scale animate-selected-glow mt-4 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white active:scale-95 sm:text-sm"
+          >
+            <Flower2 className="h-4 w-4" />
+            Start 15-Min Flow
+          </a>
+        </div>
+      </aside>
+      </div>{/* /lg:grid */}
 
       {/* ============= 15-Minute Flow + Pills & Contraceptive + Space Stats ============= */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
@@ -552,6 +614,15 @@ export function CycleTracker() {
           ))}
         </div>
       </div>
+
+      {/* Floating primary CTA — always visible without scrolling on mobile/tablet (desktop has it in the right panel) */}
+      <a
+        href="/app/tools/yoga"
+        className="bloom-luxury-btn hover-scale animate-selected-glow fixed bottom-24 right-4 z-30 inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-hotpink/30 active:scale-95 md:hidden"
+      >
+        <Flower2 className="h-4 w-4" />
+        Start Flow
+      </a>
 
       <PeriodSetup
         open={setupOpen}
