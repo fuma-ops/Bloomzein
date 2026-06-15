@@ -495,82 +495,66 @@ export function CycleTracker() {
       </aside>
       </div>{/* /lg:grid */}
 
-      {/* ============= Pills & Contraceptive + Space Stats ============= */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-5">
-        {/* Daily pill / contraceptive */}
-        <div className="bloom-pearl-card animate-scale-in rounded-2xl p-3 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "140ms" }}>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-all duration-300 sm:h-11 sm:w-11 ${pillTaken ? "bg-hotpink text-white scale-100" : "bg-blush text-hotpink"}`}>
-              <Pill className="h-4 w-4 sm:h-5 sm:w-5" />
+      {/* ============= Space Stats — cycle stats + daily pill merged into one ============= */}
+      <div className="bloom-pearl-card animate-scale-in mt-5 rounded-2xl p-3 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "140ms" }}>
+        <p className="mb-2 font-script text-base text-hotpink sm:mb-3 sm:text-2xl">Space Stats ✿</p>
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+          {/* Cycle day */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-9 sm:w-9">
+              <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
             </span>
             <div>
-              <p className="font-script text-base leading-none text-hotpink sm:text-2xl">Daily {pillLabel}</p>
-              <p className="mt-0.5 hidden text-xs text-rose sm:block">
-                {settings.contraceptiveReminder ? `Reminder · ${settings.reminderHour}` : "Reminder off"}
+              <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">CYCLE DAY</p>
+              <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{cycleDay}/{settings.cycleLength}</p>
+            </div>
+          </div>
+          {/* Next period */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-bloom-pulse sm:h-9 sm:w-9">
+              <Droplet className="h-3 w-3 fill-hotpink/30 sm:h-4 sm:w-4" />
+            </span>
+            <div>
+              <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">NEXT PERIOD</p>
+              <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{daysToPeriod}d</p>
+            </div>
+          </div>
+          {/* Phase */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-magenta/10 text-magenta sm:h-9 sm:w-9">
+              <Flower2 className="h-3 w-3 sm:h-4 sm:w-4" />
+            </span>
+            <div>
+              <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">PHASE</p>
+              <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{PHASE_LABEL[currentPhase]}</p>
+            </div>
+          </div>
+          {/* Mood */}
+          <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-9 sm:w-9">
+              <MoodIconToday className="h-3 w-3 sm:h-4 sm:w-4" />
+            </span>
+            <div>
+              <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">MOOD</p>
+              <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{moodLabelToday}</p>
+            </div>
+          </div>
+          {/* Daily pill — tap to toggle taken */}
+          <button
+            onClick={() => setPillTaken((v) => !v)}
+            aria-pressed={pillTaken}
+            className="col-span-2 flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 text-left transition active:scale-95 sm:col-span-1 sm:gap-2.5 sm:rounded-2xl sm:p-3"
+          >
+            <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full transition-all duration-300 sm:h-9 sm:w-9 ${pillTaken ? "bg-hotpink text-white" : "bg-hotpink/10 text-hotpink"}`}>
+              <Pill className="h-3 w-3 sm:h-4 sm:w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">DAILY {pillLabel.toUpperCase()}</p>
+              <p className={`inline-flex items-center gap-1 font-script text-xs leading-none sm:text-xl ${pillTaken ? "text-hotpink" : "text-rose/60"}`}>
+                {pillTaken ? <><Heart className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> Taken</> : <><Undo2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> Log</>}
               </p>
             </div>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:mt-4 sm:justify-between sm:gap-0">
-            <span
-              key={String(pillTaken)}
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold transition-all sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs ${
-                pillTaken ? "bg-green-100 text-green-600 animate-scale-in" : "bg-blush text-rose"
-              }`}
-            >
-              <Heart className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              {pillTaken ? "Taken today" : "Not taken yet"}
-            </span>
-            <button
-              onClick={() => setPillTaken((v) => !v)}
-              className="hover-scale inline-flex items-center gap-1 rounded-full bg-blush px-2 py-0.5 text-[9px] font-semibold text-hotpink transition hover:bg-petal sm:px-3 sm:py-1.5 sm:text-xs"
-            >
-              <Undo2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              {pillTaken ? "Undo" : "Mark Taken"}
-            </button>
-          </div>
-        </div>
-
-        {/* Space Stats */}
-        <div className="bloom-pearl-card animate-scale-in rounded-2xl p-3 sm:rounded-[2rem] sm:p-6" style={{ animationDelay: "260ms" }}>
-          <p className="mb-2 font-script text-base text-hotpink sm:mb-3 sm:text-2xl">Space Stats ✿</p>
-          <div className="grid grid-cols-2 gap-1.5 sm:gap-3">
-            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-9 sm:w-9">
-                <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
-              </span>
-              <div>
-                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">CYCLE DAY</p>
-                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{cycleDay}/{settings.cycleLength}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-bloom-pulse sm:h-9 sm:w-9">
-                <Droplet className="h-3 w-3 fill-hotpink/30 sm:h-4 sm:w-4" />
-              </span>
-              <div>
-                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">NEXT PERIOD</p>
-                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{daysToPeriod}d</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-magenta/10 text-magenta sm:h-9 sm:w-9">
-                <Flower2 className="h-3 w-3 sm:h-4 sm:w-4" />
-              </span>
-              <div>
-                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">PHASE</p>
-                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{PHASE_LABEL[currentPhase]}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-xl bg-blush/60 p-1.5 sm:gap-2.5 sm:rounded-2xl sm:p-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-9 sm:w-9">
-                <MoodIconToday className="h-3 w-3 sm:h-4 sm:w-4" />
-              </span>
-              <div>
-                <p className="hidden text-[10px] font-bold tracking-wider text-rose sm:block">MOOD</p>
-                <p className="font-script text-xs leading-none text-hotpink sm:text-xl">{moodLabelToday}</p>
-              </div>
-            </div>
-          </div>
+          </button>
         </div>
       </div>
 
