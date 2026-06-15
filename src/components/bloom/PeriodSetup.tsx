@@ -150,7 +150,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
                 <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
               </div>
-              <p className="mt-1 px-1 text-[9px] text-rose/60">
+              <p className="mt-1 px-1 text-center text-[9px] text-rose/60">
                 {draft.contraceptiveReminder ? "Reminder is on — we'll nudge you at this time." : "Set a time to turn on the contraception reminder."}
               </p>
             </Section>
@@ -196,11 +196,6 @@ function Section({ label, children, glow }: { label: string; children: React.Rea
     <div className="mt-2">
       <p className="mb-1 flex flex-wrap items-center gap-1 text-[9px] font-bold tracking-widest text-rose">
         {label.toUpperCase()}
-        {glow && (
-          <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-full bg-hotpink/10 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-hotpink">
-            <Sparkles className="h-2 w-2 animate-bloom-sparkle" /> SET UP
-          </span>
-        )}
       </p>
       <div className={`rounded-2xl border border-transparent transition-shadow ${glow ? "animate-soft-hint-glow" : ""}`}>
         {children}
