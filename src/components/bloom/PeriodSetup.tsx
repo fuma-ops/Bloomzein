@@ -36,13 +36,18 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   const [draft, setDraft] = useState<CycleSettings>(initial);
   const [cursor, setCursor] = useState(new Date(initial.lastPeriodStart.getFullYear(), initial.lastPeriodStart.getMonth(), 1));
   const [showScrollHint, setShowScrollHint] = useState(true);
+  // Tracks which settings the user has touched this session, so each one
+  // glows ("set me up") until configured, then calms down — guiding the user.
+  const [touched, setTouched] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const saveRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (open) {
       setDraft(initial);
       setCursor(new Date(initial.lastPeriodStart.getFullYear(), initial.lastPeriodStart.getMonth(), 1));
       setShowScrollHint(true);
+      setTouched(new Set());
     }
   }, [open, initial]);
 
@@ -63,6 +68,22 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
   function update<K extends keyof CycleSettings>(k: K, v: CycleSettings[K]) {
     setDraft((d) => ({ ...d, [k]: v }));
+    setTouched((t) => {
+      if (t.has(k as string)) return t;
+      const n = new Set(t);
+      n.add(k as string);
+      return n;
+    });
+  }
+
+  const isSet = (k: keyof CycleSettings) => touched.has(k as string);
+
+  // After picking the reminder hour, glide down to the Save button so it's
+  // right there to tap — no hunting for it.
+  function scrollToSave() {
+    requestAnimationFrame(() => {
+      saveRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
   }
 
   function handleScroll() {
@@ -78,28 +99,30 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-[22rem] flex-col overflow-hidden rounded-[1.75rem] bg-white/95 shadow-2xl shadow-hotpink/20 backdrop-blur-xl animate-scale-in sm:max-w-sm"
-        style={{ maxHeight: "82vh" }}
+        className="relative flex w-full max-w-[22rem] flex-col overflow-hidden rounded-[1.75rem] bg-white/95 shadow-2xl shadow-hotpink/20 backdrop-blur-xl animate-scale-in sm:max-w-md"
+        style={{ maxHeight: "min(90dvh, 760px)" }}
       >
         <button onClick={onClose} className="absolute right-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
           <X className="h-3.5 w-3.5" />
         </button>
 
-        <div ref={scrollRef} onScroll={handleScroll} className="scroll-smooth overflow-y-auto p-3.5">
+        <div ref={scrollRef} onScroll={handleScroll} className="no-scrollbar scroll-smooth overflow-y-auto overscroll-contain p-3.5 sm:p-5">
           <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
-          <div className="animate-scale-in animate-selected-glow mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose" style={{ animationDelay: "40ms" }}>
+          <div className={`animate-scale-in mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-selected-glow" : ""}`} style={{ animationDelay: "40ms" }}>
             <Flower2 className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />
             Tap your <span className="font-semibold text-hotpink">last period start</span> date:
           </div>
 
-          {/* Bouncing pointer guiding the eye down to the calendar */}
-          <div className="flex justify-center">
-            <ChevronDown className="h-4 w-4 animate-bounce text-hotpink/70" />
-          </div>
+          {/* Bouncing pointer guiding the eye down to the calendar — only until a date is chosen */}
+          {!isSet("lastPeriodStart") && (
+            <div className="flex justify-center">
+              <ChevronDown className="h-4 w-4 animate-bounce text-hotpink/70" />
+            </div>
+          )}
 
           {/* Calendar — simplified: only period range, ovulation day & today */}
-          <div className="animate-scale-in mt-2 rounded-xl bg-white/90 p-1.5 shadow-inner ring-1 ring-petal/60" style={{ animationDelay: "80ms" }}>
+          <div className={`animate-scale-in mt-2 rounded-xl bg-white/90 p-1.5 shadow-inner ring-1 ring-petal/60 ${!isSet("lastPeriodStart") ? "animate-hint-glow" : ""}`} style={{ animationDelay: "80ms" }}>
             <div className="flex items-center justify-between px-1">
               <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="hover-scale grid h-5 w-5 place-items-center rounded-full text-rose hover:bg-blush">
                 <ChevronLeft className="h-3 w-3" />
@@ -159,16 +182,16 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
           {/* Cycle length + Period length side by side */}
           <div className="animate-scale-in mt-2 grid grid-cols-2 gap-2" style={{ animationDelay: "120ms" }}>
-            <Section label="Cycle Length">
+            <Section label="Cycle Length" glow={!isSet("cycleLength")}>
               <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
             </Section>
-            <Section label="Period Length">
+            <Section label="Period Length" glow={!isSet("periodLength")}>
               <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
             </Section>
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "160ms" }}>
-            <Section label="Tracker Mode">
+            <Section label="Tracker Mode" glow={!isSet("trackerMode")}>
               <div className="grid grid-cols-2 gap-1.5 rounded-full bg-blush/70 p-1">
                 {(["protection","conception"] as TrackerMode[]).map((m) => (
                   <button
@@ -187,7 +210,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "200ms" }}>
-            <Section label="Contraceptive Method">
+            <Section label="Contraceptive Method" glow={!isSet("contraceptiveMethod")}>
               <div className="grid grid-cols-3 gap-1.5">
                 {(["pill","patch","ring"] as ContraceptiveMethod[]).map((m) => (
                   <button
@@ -206,7 +229,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "240ms" }}>
-            <Section label="Contraceptive Reminder">
+            <Section label="Contraceptive Reminder" glow={!isSet("contraceptiveReminder")}>
               <ToggleRow
                 label="Remind to check or take contraception"
                 checked={draft.contraceptiveReminder}
@@ -216,16 +239,16 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "280ms" }}>
-            <Section label="Reminder Hour">
+            <Section label="Reminder Hour" glow={!isSet("reminderHour")}>
               <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
-                <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
+                <CuteTimePicker value={draft.reminderHour} onChange={(v) => { update("reminderHour", v); scrollToSave(); }} />
               </div>
             </Section>
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "320ms" }}>
-            <Section label="Device Notifications">
+            <Section label="Device Notifications" glow={!isSet("deviceNotifications")}>
               <ToggleRow
                 label="Alert on phone, tablet, laptop"
                 checked={draft.deviceNotifications}
@@ -235,6 +258,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           <button
+            ref={saveRef}
             onClick={() => { onSave(draft); onClose(); }}
             className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 w-full py-2.5 text-sm font-semibold text-white"
           >
@@ -254,11 +278,20 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   );
 }
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({ label, children, glow }: { label: string; children: React.ReactNode; glow?: boolean }) {
   return (
     <div className="mt-2">
-      <p className="mb-1 text-[9px] font-bold tracking-widest text-rose">{label.toUpperCase()}</p>
-      {children}
+      <p className="mb-1 flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-rose">
+        {label.toUpperCase()}
+        {glow && (
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-hotpink">
+            <Sparkles className="h-2 w-2 animate-bloom-sparkle" /> SET ME UP
+          </span>
+        )}
+      </p>
+      <div className={`rounded-2xl border border-transparent transition-shadow ${glow ? "animate-hint-glow" : ""}`}>
+        {children}
+      </div>
     </div>
   );
 }
