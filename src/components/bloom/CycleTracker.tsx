@@ -276,7 +276,7 @@ export function CycleTracker() {
           decoding="async"
           className="absolute inset-0 -z-10 h-full w-full animate-photo-breathe object-cover object-[center_15%] sm:object-[center_20%]"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/80 via-white/45 to-white/10" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/85 via-white/55 to-white/15" />
         <div className="relative z-10 flex items-center justify-between gap-2 p-3 sm:p-5">
           <h2 className="font-script text-3xl text-hotpink sm:text-5xl">
             Cycle <span className="animate-flower-bloom">🌸</span>
@@ -291,46 +291,44 @@ export function CycleTracker() {
           </h3>
         </div>
 
-        {/* ============= Your Cycle Journey — folded into the hero's glass footer ============= */}
-        <div className="relative z-10 mt-auto px-3 pb-3 sm:px-5 sm:pb-5">
-          <div className="relative overflow-hidden rounded-2xl bg-white/55 px-3 pt-6 pb-3 backdrop-blur-md sm:rounded-3xl sm:px-5 sm:pt-7 sm:pb-4">
-            <p className="absolute left-3 top-2 font-script text-sm text-hotpink sm:left-5 sm:top-2.5 sm:text-lg">Your Cycle Journey</p>
-            {/* connecting line */}
-            <div className="absolute left-5 right-5 top-[calc(1.5rem+1rem)] h-1 rounded-full bg-petal sm:left-7 sm:right-7" />
-            {/* floating "Day X" pill */}
-            <div
-              className="absolute top-0 flex -translate-x-1/2 flex-col items-center"
-              style={{ left: `${journeyPercent}%` }}
-            >
-              <span className="animate-bloom-bounce whitespace-nowrap rounded-full bg-hotpink px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md shadow-hotpink/30">
-                Day {cycleDay}
-              </span>
-              <span className="mt-0.5 h-1.5 w-0.5 rounded-full bg-hotpink/50" />
-            </div>
+        {/* ============= Your Cycle Journey — sits directly on the hero, no card ============= */}
+        <div className="relative z-10 mt-auto px-3 pt-6 pb-3 sm:px-5 sm:pt-8 sm:pb-5">
+          <p className="absolute left-3 top-0 font-script text-sm text-hotpink sm:left-5 sm:text-lg">Your Cycle Journey</p>
+          {/* connecting line */}
+          <div className="absolute left-5 right-5 top-[calc(1rem+0.875rem)] h-1 rounded-full bg-white/60 sm:left-7 sm:right-7 sm:top-[calc(1.25rem+1.25rem)]" />
+          {/* floating "Day X" pill */}
+          <div
+            className="absolute top-2 flex -translate-x-1/2 flex-col items-center sm:top-3"
+            style={{ left: `${journeyPercent}%` }}
+          >
+            <span className="animate-bloom-bounce whitespace-nowrap rounded-full bg-hotpink px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md shadow-hotpink/30">
+              Day {cycleDay}
+            </span>
+            <span className="mt-0.5 h-1.5 w-0.5 rounded-full bg-hotpink/50" />
+          </div>
 
-            <div className="relative flex justify-between">
-              {journeySteps.map((step) => {
-                const Icon = PHASE_META[step.key].Icon;
-                return (
-                  <div key={step.key} className="flex flex-1 flex-col items-center gap-1 text-center">
-                    <span
-                      className={[
-                        "grid h-7 w-7 shrink-0 place-items-center rounded-full ring-[3px] transition-all duration-300 sm:h-10 sm:w-10",
-                        step.active
-                          ? "animate-bloom-pulse bg-hotpink text-white ring-hotpink/30"
-                          : "bg-white text-rose ring-petal/60",
-                      ].join(" ")}
-                    >
-                      <Icon className="animate-icon-wiggle h-3 w-3 sm:h-4 sm:w-4" />
-                    </span>
-                    <span className={`text-[7px] font-bold tracking-wider sm:text-[10px] ${step.active ? "text-hotpink" : "text-rose/70"}`}>
-                      {step.label}
-                    </span>
-                    <span className="hidden text-[8px] text-rose/50 sm:block sm:text-[9px]">{step.range}</span>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="relative flex justify-between">
+            {journeySteps.map((step) => {
+              const Icon = PHASE_META[step.key].Icon;
+              return (
+                <div key={step.key} className="flex flex-1 flex-col items-center gap-1 text-center">
+                  <span
+                    className={[
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-full ring-[3px] shadow-sm transition-all duration-300 sm:h-10 sm:w-10",
+                      step.active
+                        ? "animate-bloom-pulse bg-hotpink text-white ring-hotpink/30"
+                        : "bg-white text-rose ring-petal/60",
+                    ].join(" ")}
+                  >
+                    <Icon className="animate-icon-wiggle h-3 w-3 sm:h-4 sm:w-4" />
+                  </span>
+                  <span className={`text-[7px] font-bold tracking-wider sm:text-[10px] ${step.active ? "text-hotpink" : "text-rose/70"}`}>
+                    {step.label}
+                  </span>
+                  <span className="hidden text-[8px] text-rose/50 sm:block sm:text-[9px]">{step.range}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
