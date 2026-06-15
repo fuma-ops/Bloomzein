@@ -568,6 +568,7 @@ export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "home" });
+  const organizerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -597,6 +598,18 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
+      {(view.kind === "home" || view.kind === "library") && (
+        <YogaHero
+          active={view.kind}
+          onDiscover={() => setView({ kind: "home" })}
+          onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
+          onMyPlan={() => {
+            setView({ kind: "home" });
+            requestAnimationFrame(() => organizerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+          }}
+        />
+      )}
+
       {view.kind === "home" && (
         <YogaHome
           onboarded={onboarded}
@@ -605,11 +618,12 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onSetup={(preset) => setView({ kind: "setup", preset })}
           onStepGoTo={(s) => advanceStep(s)}
+          organizerRef={organizerRef}
         />
       )}
 
       {view.kind === "library" && (
-        <Library onBack={() => setView({ kind: "home" })} onSetup={() => setView({ kind: "setup" })} />
+        <Library onSetup={() => setView({ kind: "setup" })} />
       )}
 
       {view.kind === "setup" && (
@@ -658,15 +672,53 @@ export default function YogaPage() {
   );
 }
 
+// ===================== HERO (shared, stays visible across tabs) =====================
+
+function YogaHero({
+  active, onDiscover, onLibrary, onMyPlan,
+}: {
+  active: "home" | "library";
+  onDiscover: () => void;
+  onLibrary: () => void;
+  onMyPlan: () => void;
+}) {
+  const tabClass = (isActive: boolean) =>
+    [
+      "rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition",
+      isActive ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
+    ].join(" ");
+
+  return (
+    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
+      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
+      <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
+        <div>
+          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Yoga Flows</h1>
+          <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">guided breath, gentle movement — your softest practice.</p>
+        </div>
+        <div className="flex justify-center">
+          <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
+            <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
+            <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
+            <button onClick={onMyPlan} className={tabClass(false)}>My Plan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===================== HOME =====================
 
 function YogaHome({
-  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo,
+  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo, organizerRef,
 }: {
   onboarded: boolean; step: 1|2|3;
   onBegin: () => void; onLibrary: () => void;
   onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
   onStepGoTo: (s: 1|2|3) => void;
+  organizerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [streak, setStreak] = useState<Streak>({ count: 0, lastISO: null });
   const [phase, setPhase] = useState<Phase | null>(null);
@@ -690,38 +742,8 @@ function YogaHome({
     return { phase: p, label: labels[p] };
   }, [phase]);
 
-  const organizerRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className="space-y-4 sm:space-y-6 yoga-fade">
-      {/* HERO — image with title/subtitle + tab nav, like Workout's Discover hero */}
-      <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
-        <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
-        <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
-          <div>
-            <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">Yoga Flows</h1>
-            <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">guided breath, gentle movement — your softest practice.</p>
-          </div>
-          <div className="flex justify-center">
-            <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
-              <button className="rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-hotpink text-white shadow-md shadow-hotpink/30">
-                Discover
-              </button>
-              <button onClick={onLibrary} className="rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white transition">
-                Library
-              </button>
-              <button
-                onClick={() => organizerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                className="rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white transition"
-              >
-                My Plan
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* WELCOME / THREE SOFT STEPS — its own clean card, below the hero */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
         {!onboarded ? (
@@ -735,16 +757,7 @@ function YogaHome({
               <Sparkles className="h-4 w-4 animate-bloom-sparkle" /> Start Here
             </button>
           </div>
-        ) : (
-          <div className="mb-4 flex flex-wrap gap-2">
-            <button onClick={() => onSetup()} className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white">
-              <Play className="h-4 w-4" /> Start a session
-            </button>
-            <button onClick={onLibrary} className="hover-scale inline-flex items-center gap-2 rounded-full border border-petal/60 bg-white/90 px-4 py-2.5 text-sm font-semibold text-rose">
-              <BookOpen className="h-4 w-4" /> Pose library
-            </button>
-          </div>
-        )}
+        ) : null}
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <div>
@@ -754,16 +767,13 @@ function YogaHome({
           <span className="text-xs text-rose/70">Step {step} of 3</span>
         </div>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <StepCard n={1} active={step === 1} done={step > 1} icon={BookOpen}
-            title="Learn the poses" desc="A visual library — names, breath, and how to enter each pose."
-            cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
-          <StepCard n={2} active={step === 2} done={step > 2} icon={GraduationCap}
-            title="Try a guided flow" desc="A short session with visuals + voice — pose by pose."
-            cta="Start short flow" onClick={() => { onSetup(); }} />
-          <StepCard n={3} active={step === 3} done={false} icon={Headphones}
-            title="Eyes-closed audio" desc="When poses feel familiar, close your eyes and let the voice lead."
-            cta="Audio session" onClick={() => { onSetup(); }} />
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <StepCard active={step === 1} done={step > 1} icon={BookOpen}
+            title="Learn the poses" cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
+          <StepCard active={step === 2} done={step > 2} icon={GraduationCap}
+            title="Try a guided flow" cta="Start short flow" onClick={() => { onSetup(); }} />
+          <StepCard active={step === 3} done={false} icon={Headphones}
+            title="Eyes-closed audio" cta="Audio session" onClick={() => { onSetup(); }} />
         </div>
       </section>
 
@@ -791,111 +801,93 @@ function YogaHome({
 }
 
 function StepCard({
-  n, active, done, icon: Icon, title, desc, cta, onClick,
-}: { n: number; active: boolean; done: boolean; icon: typeof Sun; title: string; desc: string; cta: string; onClick: () => void; }) {
-  return (
-    <div className={[
-      "rounded-2xl p-3.5 sm:p-4 border transition",
-      active ? "bg-blush/70 border-hotpink/40 shadow-lg shadow-hotpink/15"
-             : done ? "bg-white/70 border-petal/50 opacity-80"
-                    : "bg-white/70 border-petal/50",
-    ].join(" ")}>
-      <div className="flex items-center gap-2">
-        <span className={["grid h-9 w-9 place-items-center rounded-full text-sm font-bold",
-          active ? "bg-hotpink text-white" : done ? "bg-petal text-rose" : "bg-white text-rose border border-petal"].join(" ")}>
-          {done ? "✓" : n}
-        </span>
-        <Icon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
-        <p className="text-sm font-bold text-rose">{title}</p>
-      </div>
-      <p className="mt-2 text-xs text-rose/75 leading-snug">{desc}</p>
-      <button onClick={onClick}
-        className={["mt-3 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold shadow",
-          active ? "bg-hotpink text-white shadow-hotpink/30" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
-        {cta} <ChevronRight className="h-3 w-3" />
-      </button>
-    </div>
-  );
-}
-
-// ===================== FLOW SESSIONS (auto-scroll carousels) =====================
-
-function AutoScrollRow({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const pausedRef = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let raf: number;
-    const tick = () => {
-      if (!pausedRef.current && el.scrollWidth > el.clientWidth) {
-        const max = el.scrollWidth - el.clientWidth;
-        if (el.scrollLeft >= max - 1) el.scrollLeft = 0;
-        else el.scrollLeft += 0.4;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      onMouseEnter={() => { pausedRef.current = true; }}
-      onMouseLeave={() => { pausedRef.current = false; }}
-      onTouchStart={() => { pausedRef.current = true; }}
-      onTouchEnd={() => { pausedRef.current = false; }}
-      className="flex gap-3 overflow-x-auto no-scrollbar pb-1"
-    >
-      {children}
-    </div>
-  );
-}
-
-function SessionCard({ preset, onClick }: { preset: SessionPreset; onClick: () => void }) {
+  active, done, icon: Icon, title, cta, onClick,
+}: { active: boolean; done: boolean; icon: typeof Sun; title: string; cta: string; onClick: () => void; }) {
+  const [paused, setPaused] = useState(false);
   return (
     <button
       onClick={onClick}
-      className="bloom-pearl-card hover-scale shrink-0 overflow-hidden rounded-2xl text-left transition active:scale-95"
-      style={{ width: "9rem" }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      className={[
+        "hover-scale flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition active:scale-95",
+        active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15"
+               : done ? "bg-white/70 border-petal/50 opacity-70"
+                      : "bg-white/70 border-petal/50",
+      ].join(" ")}
     >
-      <div className="h-20 w-full overflow-hidden sm:h-24">
-        <img src={preset.image} alt="" loading="lazy" className="h-full w-full object-cover" />
+      <span
+        className={["grid h-9 w-9 shrink-0 place-items-center rounded-full",
+          active ? "bg-hotpink text-white" : done ? "bg-petal text-rose" : "bg-white text-rose border border-petal"].join(" ")}
+        style={active ? { animation: "bloom-pulse 2.4s ease-in-out infinite", animationPlayState: paused ? "paused" : "running" } : undefined}
+      >
+        {done ? <span className="text-sm font-bold">✓</span> : <Icon className="h-4 w-4" strokeWidth={1.8} />}
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-rose leading-tight truncate">{title}</p>
+        <p className="mt-0.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-hotpink">
+          {cta} <ChevronRight className="h-3 w-3" />
+        </p>
+      </div>
+    </button>
+  );
+}
+
+// ===================== FLOW SESSIONS (grid presentation) =====================
+
+function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index: number; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="bloom-pearl-card hover-scale group overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
+      <div className="relative h-24 w-full overflow-hidden sm:h-28">
+        <img src={preset.image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-110" />
+        <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
+          {preset.duration} min
+        </span>
       </div>
       <div className="p-2.5">
         <p className="text-xs font-bold leading-tight text-rose">{preset.label}</p>
-        <p className="mt-0.5 text-[10px] text-rose/60">{preset.duration} min</p>
       </div>
     </button>
   );
 }
 
 function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, durationMin: number) => void }) {
+  const [tab, setTab] = useState<"moment" | "intention">("moment");
+  const sessions = tab === "moment" ? MOMENT_SESSIONS : INTENTION_SESSIONS;
+
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6 space-y-4">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow sessions</p>
-        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">find your moment</h2>
+    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow sessions</p>
+          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">find your moment</h2>
+        </div>
+        <div className="inline-flex rounded-full bg-blush/60 border border-petal/60 p-1">
+          {(["moment", "intention"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={[
+                "rounded-full px-3 sm:px-4 py-1.5 text-xs font-bold transition",
+                tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
+              ].join(" ")}
+            >
+              {t === "moment" ? "By moment" : "By intention"}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose/60">By moment</p>
-        <AutoScrollRow>
-          {MOMENT_SESSIONS.map((s) => (
-            <SessionCard key={s.label} preset={s} onClick={() => onStart(s.intention, s.duration)} />
-          ))}
-        </AutoScrollRow>
-      </div>
-
-      <div>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose/60">By intention</p>
-        <AutoScrollRow>
-          {INTENTION_SESSIONS.map((s) => (
-            <SessionCard key={s.label} preset={s} onClick={() => onStart(s.intention, s.duration)} />
-          ))}
-        </AutoScrollRow>
+      <div key={tab} className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {sessions.map((s, i) => (
+          <SessionCard key={s.label} preset={s} index={i} onClick={() => onStart(s.intention, s.duration)} />
+        ))}
       </div>
     </section>
   );
@@ -1077,7 +1069,7 @@ function Organizer({ phase }: { phase: Phase }) {
 
 // ===================== LIBRARY =====================
 
-function Library({ onBack, onSetup }: { onBack: () => void; onSetup: () => void }) {
+function Library({ onSetup }: { onSetup: () => void }) {
   const [active, setActive] = useState<Level>("Beginner");
   const filtered = useMemo(() => POSES.filter((p) => p.level === active), [active]);
 
@@ -1089,10 +1081,7 @@ function Library({ onBack, onSetup }: { onBack: () => void; onSetup: () => void 
           <h2 className="font-script text-3xl sm:text-5xl text-hotpink leading-none">Learn the poses</h2>
           <p className="text-xs sm:text-sm text-rose/80 mt-1">Tap any pose to read how to enter it and find your breath.</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">Home</button>
-          <button onClick={onSetup} className="bloom-luxury-btn px-3 py-1.5 text-xs font-semibold text-white">Next: try a flow</button>
-        </div>
+        <button onClick={onSetup} className="bloom-luxury-btn px-3 py-1.5 text-xs font-semibold text-white">Next: try a flow</button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
