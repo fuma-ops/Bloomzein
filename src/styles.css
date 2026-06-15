@@ -819,6 +819,22 @@
   animation: hint-glow 1.8s ease-in-out infinite;
 }
 
+/* Gentler version of hint-glow — subtle border/shadow pulse for tighter spaces */
+@keyframes soft-hint-glow {
+  0%, 100% {
+    border-color: oklch(0.85 0.1 350 / 0.3);
+    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+  }
+  50% {
+    border-color: oklch(0.75 0.15 350 / 0.5);
+    box-shadow: 0 0 6px 1px oklch(0.65 0.27 350 / 0.2);
+  }
+}
+
+@utility animate-soft-hint-glow {
+  animation: soft-hint-glow 2.4s ease-in-out infinite;
+}
+
 /* Same hint glow, but starts after the Discover tab signal has played */
 @utility animate-hint-glow-delayed {
   animation: hint-glow 1.8s ease-in-out 1.2s infinite;
@@ -849,6 +865,16 @@
 
 @utility animate-selected-glow {
   animation: selected-glow 2.4s ease-in-out infinite;
+}
+
+/* Gentler version of selected-glow — subtle shadow pulse for tighter spaces */
+@keyframes soft-glow {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0.15); }
+  50% { box-shadow: 0 0 8px 1px oklch(0.65 0.27 350 / 0.25); }
+}
+
+@utility animate-soft-glow {
+  animation: soft-glow 2.4s ease-in-out infinite;
 }
 
 /* Cute staggered "pop in" entrance for tool cards */

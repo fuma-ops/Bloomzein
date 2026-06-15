@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Flower2, Bell, Sparkles, ChevronDown } from "lucide-react";
+import { X, Flower2, Bell, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { CuteTimePicker } from "./CutePicker";
 import { DatePicker } from "./onboarding/DatePicker";
 
@@ -82,7 +82,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
         <div ref={scrollRef} onScroll={handleScroll} className="no-scrollbar scroll-smooth h-full overflow-y-auto overscroll-contain p-3.5 sm:p-5">
           <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
-          <div className={`animate-scale-in mt-3 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-selected-glow" : ""}`} style={{ animationDelay: "40ms" }}>
+          <div className={`animate-scale-in mt-3 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-soft-glow" : ""}`} style={{ animationDelay: "40ms" }}>
             <Flower2 className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />
             Tap your <span className="font-semibold text-hotpink">last period start</span> date:
           </div>
@@ -98,10 +98,10 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             </div>
             <div className="col-span-2 flex flex-col gap-2">
               <Section label="Cycle Length" glow={!isSet("cycleLength")}>
-                <Slider min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" vertical />
+                <Stepper min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
               </Section>
               <Section label="Period Length" glow={!isSet("periodLength")}>
-                <Slider min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" vertical />
+                <Stepper min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
               </Section>
             </div>
           </div>
@@ -209,27 +209,37 @@ function Section({ label, children, glow }: { label: string; children: React.Rea
           </span>
         )}
       </p>
-      <div className={`rounded-2xl border border-transparent transition-shadow ${glow ? "animate-hint-glow" : ""}`}>
+      <div className={`rounded-2xl border border-transparent transition-shadow ${glow ? "animate-soft-hint-glow" : ""}`}>
         {children}
       </div>
     </div>
   );
 }
 
-function Slider({ min, max, value, onChange, suffix, vertical }: { min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string; vertical?: boolean }) {
+function Stepper({ min, max, value, onChange, suffix }: { min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string }) {
   return (
-    <div className={vertical ? "flex flex-col gap-1.5" : "flex items-center gap-2"}>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className={`h-1.5 cursor-pointer appearance-none rounded-full bg-blush accent-hotpink ${vertical ? "w-full" : "flex-1"}`}
-      />
-      <span className={`rounded-full bg-blush px-2 py-0.5 text-center text-[11px] font-bold text-hotpink ${vertical ? "" : "min-w-[40px]"}`}>
-        {value}{suffix}
-      </span>
+    <div className="flex items-center justify-between rounded-xl bg-blush/70 px-2.5 py-1">
+      <span className="text-sm font-bold text-hotpink">{value}{suffix}</span>
+      <div className="flex flex-col">
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          aria-label="Increase"
+          className="grid h-4 w-6 place-items-center text-hotpink transition active:scale-90 disabled:opacity-30"
+        >
+          <ChevronUp className="h-3 w-3" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          aria-label="Decrease"
+          className="grid h-4 w-6 place-items-center text-hotpink transition active:scale-90 disabled:opacity-30"
+        >
+          <ChevronDown className="h-3 w-3" />
+        </button>
+      </div>
     </div>
   );
 }
