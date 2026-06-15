@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
+import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { RECIPES } from "@/components/bloom/recipes/data";
@@ -246,7 +248,6 @@ export default function TodayPage() {
   const displayName = profile?.name?.split(" ")[0] || "Beautiful";
 
   const [mood, setMood] = useState<string | null>(null);
-  const [justPicked, setJustPicked] = useState<string | null>(null);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [waterCount, setWaterCount] = useState(0);
   const [waterGoal, setWaterGoal] = useState(8);
@@ -258,6 +259,9 @@ export default function TodayPage() {
   const [reminderBusy, setReminderBusy] = useState(false);
   const [showCycleSetupBanner, setShowCycleSetupBanner] = useState(false);
   const [pillTaken, setPillTaken] = useState(false);
+  const [moodPickerOpen, setMoodPickerOpen] = useState(false);
+  const [moodHintIdx, setMoodHintIdx] = useState(0);
+  const moodTileRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const iso = todayISO();
@@ -295,6 +299,16 @@ export default function TodayPage() {
     setShowCycleSetupBanner(!hasCycleSettings());
     broadcastCyclePhase();
   }, []);
+
+  // While no mood is logged yet, gently cycle the Mood tile through sample
+  // moods ("Tired", "Happy"...) — a soft hint that this tile is tappable.
+  useEffect(() => {
+    if (mood) return;
+    const id = setInterval(() => {
+      setMoodHintIdx((i) => (i + 1) % MOODS.length);
+    }, 2200);
+    return () => clearInterval(id);
+  }, [mood]);
 
   // Pull in "J'ai bu ✓" confirmations tapped directly on a closed-app push
   // notification, adding each one to today's count exactly once.
@@ -367,9 +381,7 @@ export default function TodayPage() {
 
   const pickMood = (key: string) => {
     setMood(key);
-    setJustPicked(key);
     try { localStorage.setItem(KEYS.mood, key); } catch {}
-    setTimeout(() => setJustPicked(null), 600);
   };
 
   const toggleSymptom = (key: string) => {
@@ -420,7 +432,8 @@ export default function TodayPage() {
 
   const quote = PHASE_QUOTES[phase];
   const plan = PHASE_PLAN[phase];
-  const MoodIconStat = MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles;
+  const moodHint = MOODS[moodHintIdx];
+  const MoodIconStat = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
 
   // Cycle → Reminders: surface an iron-rich recipe during period/luteal
   // (when iron needs peak per PHASE_MICROS) to nudge a visit to Diet.
@@ -586,47 +599,6 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* ── MOOD CHECK-IN ─────────────────────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
-        <SectionTitle>How are you feeling?</SectionTitle>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-2.5 sm:p-3">
-          <div className="grid grid-cols-6 gap-1 sm:gap-1.5">
-            {MOODS.map((m, i) => {
-              const active = mood === m.key;
-              const bouncing = justPicked === m.key;
-              return (
-                <button
-                  key={m.key}
-                  onClick={() => pickMood(m.key)}
-                  className={[
-                    "group flex flex-col items-center gap-0.5 rounded-2xl py-1.5 px-0.5 transition border",
-                    active ? "bg-hotpink/10 border-hotpink/30" : "bg-transparent border-transparent hover:bg-blush/60",
-                    bouncing ? "animate-bloom-bounce" : "",
-                  ].join(" ")}
-                  style={!mood && !active ? { animationDelay: `${i * 0.25}s` } : {}}
-                >
-                  <span
-                    className={[
-                      "clay-blob grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full text-white transition",
-                      active ? "animate-icon-breathe" : "opacity-90 group-hover:opacity-100",
-                    ].join(" ")}
-                    style={!mood ? { animationDelay: `${i * 0.3}s` } : {}}
-                  >
-                    <m.Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={1.8} />
-                  </span>
-                  <span className={["text-[9px] sm:text-[10px] font-semibold", active ? "text-hotpink" : "text-rose"].join(" ")}>{m.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          {mood && (
-            <p className="mt-2 text-center font-script text-sm sm:text-base text-rose/80 animate-fade-in">
-              "Love that energy! This is a great day for movement and planning."
-            </p>
-          )}
-        </div>
-      </section>
-
       {/* ── SYMPTOMS ─────────────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "150ms" }}>
         <SectionTitle>Any symptoms today?</SectionTitle>
@@ -753,63 +725,107 @@ export default function TodayPage() {
         <SectionTitle hint="important">
           <span className="animate-text-glow">Space Stats ✿</span>
         </SectionTitle>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
-          {/* Cycle day */}
-          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5">
-            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-              <CalendarDays className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Cycle day</p>
-            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{cycleDay}<span className="text-[10px] sm:text-sm text-rose/60">/{cycleSettings.cycleLength}</span></p>
-          </div>
-          {/* Next period */}
-          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5" style={{ animationDelay: "0.2s" }}>
-            <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-              <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
-            </span>
-            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Next period</p>
-            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{daysToPeriod}<span className="text-[10px] sm:text-sm text-rose/60"> d</span></p>
-          </div>
-          {/* Phase */}
-          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5" style={{ animationDelay: "0.4s" }}>
-            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-              <Flower2 className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Phase</p>
-            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{PHASE_LABEL[phase]}</p>
-          </div>
-          {/* Mood */}
-          <div className="bloom-pearl-card pearl-sheen animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center sm:rounded-3xl sm:p-3.5" style={{ animationDelay: "0.6s" }}>
-            <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-              <MoodIconStat className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Mood</p>
-            <p className="font-script text-base sm:text-xl text-hotpink leading-none">{mood ? MOOD_LABEL[mood] : "—"}</p>
-          </div>
-          {/* Daily pill — tap to toggle taken */}
-          <button
-            onClick={togglePill}
-            aria-pressed={pillTaken}
-            className="bloom-pearl-card pearl-sheen animate-selected-glow col-span-3 flex items-center justify-center gap-2.5 rounded-2xl p-2.5 text-center transition active:scale-95 sm:col-span-1 sm:flex-col sm:gap-1 sm:rounded-3xl sm:p-3.5"
-            style={{ animationDelay: "0.8s" }}
-          >
-            <span className={[
-              "grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full transition",
-              pillTaken ? "clay-blob animate-icon-breathe text-white" : "bg-blush text-hotpink",
-            ].join(" ")}>
-              <Pill className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <div className="sm:text-center">
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Daily {pillLabel}</p>
-              <p className={[
-                "inline-flex items-center gap-1 font-script text-sm sm:text-lg leading-none",
-                pillTaken ? "text-hotpink" : "text-rose/60",
-              ].join(" ")}>
-                {pillTaken ? <><Check className="h-3 w-3" strokeWidth={3} /> Taken</> : <><Undo2 className="h-3 w-3" strokeWidth={2.5} /> Tap to log</>}
-              </p>
+        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-2.5 sm:p-4">
+          <p className="mb-2 text-center text-[10px] sm:text-xs font-semibold tracking-wide text-rose/60">
+            <AnimatedWords text="Your little universe today ✦" step={50} />
+          </p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
+            {/* Cycle day */}
+            <div
+              className="animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center shadow-sm transition-transform duration-300 hover:-rotate-1 hover:scale-[1.04] sm:rounded-3xl sm:p-3.5"
+              style={{ background: "linear-gradient(150deg, #FFE3EE, #FFD1E3)" }}
+            >
+              <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+                <CalendarDays className="h-4 w-4" strokeWidth={1.8} />
+              </span>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Cycle day</p>
+              <p className="font-script text-base sm:text-xl text-hotpink leading-none">{cycleDay}<span className="text-[10px] sm:text-sm text-rose/60">/{cycleSettings.cycleLength}</span></p>
             </div>
-          </button>
+            {/* Next period */}
+            <div
+              className="animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center shadow-sm transition-transform duration-300 hover:rotate-1 hover:scale-[1.04] sm:rounded-3xl sm:p-3.5"
+              style={{ animationDelay: "0.2s", background: "linear-gradient(150deg, #FFE8D6, #FFD6C2)" }}
+            >
+              <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+                <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
+              </span>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Next period</p>
+              <p className="font-script text-base sm:text-xl text-hotpink leading-none">{daysToPeriod}<span className="text-[10px] sm:text-sm text-rose/60"> d</span></p>
+            </div>
+            {/* Phase */}
+            <div
+              className="animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center shadow-sm transition-transform duration-300 hover:-rotate-1 hover:scale-[1.04] sm:rounded-3xl sm:p-3.5"
+              style={{ animationDelay: "0.4s", background: "linear-gradient(150deg, #E9E3FF, #D9CCFF)" }}
+            >
+              <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+                <Flower2 className="h-4 w-4 animate-flower-bloom" strokeWidth={1.8} />
+              </span>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Phase</p>
+              <p className="font-script text-base sm:text-xl text-hotpink leading-none">{PHASE_LABEL[phase]}</p>
+            </div>
+            {/* Mood — tap to pick if not chosen yet, gently hints with cycling labels */}
+            <button
+              ref={moodTileRef}
+              onClick={() => setMoodPickerOpen((v) => !v)}
+              aria-haspopup="dialog"
+              aria-expanded={moodPickerOpen}
+              className={[
+                "relative flex flex-col items-center gap-1 rounded-2xl p-2.5 text-center shadow-sm transition-transform duration-300 hover:rotate-1 hover:scale-[1.04] active:scale-95 sm:rounded-3xl sm:p-3.5",
+                !mood ? "animate-hint-glow" : "animate-selected-glow",
+              ].join(" ")}
+              style={{ animationDelay: "0.6s", background: "linear-gradient(150deg, #FFF4D6, #FFE8B8)" }}
+            >
+              <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
+                <MoodIconStat className="h-4 w-4" strokeWidth={1.8} />
+              </span>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Mood</p>
+              <p
+                key={mood ?? `hint-${moodHintIdx}`}
+                className={[
+                  "font-script text-base sm:text-xl leading-none animate-fade-in",
+                  mood ? "text-hotpink" : "italic text-rose/40",
+                ].join(" ")}
+              >
+                {mood ? MOOD_LABEL[mood] : moodHint.label}
+              </p>
+              {!mood && (
+                <span className="absolute -top-1.5 -right-1.5 grid h-4 w-4 place-items-center rounded-full bg-hotpink text-white shadow-sm">
+                  <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
+                </span>
+              )}
+            </button>
+            {/* Daily pill — tap to toggle taken */}
+            <button
+              onClick={togglePill}
+              aria-pressed={pillTaken}
+              className="animate-selected-glow col-span-3 flex items-center justify-center gap-2.5 rounded-2xl p-2.5 text-center shadow-sm transition-transform duration-300 active:scale-95 sm:col-span-1 sm:flex-col sm:gap-1 sm:rounded-3xl sm:p-3.5 sm:hover:-rotate-1 sm:hover:scale-[1.04]"
+              style={{ animationDelay: "0.8s", background: "linear-gradient(150deg, #D9F7E8, #C2F0DC)" }}
+            >
+              <span className={[
+                "grid h-8 w-8 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-full transition",
+                pillTaken ? "clay-blob animate-icon-breathe text-white" : "bg-white/70 text-hotpink",
+              ].join(" ")}>
+                <Pill className="h-4 w-4" strokeWidth={1.8} />
+              </span>
+              <div className="sm:text-center">
+                <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Daily {pillLabel}</p>
+                <p className={[
+                  "inline-flex items-center gap-1 font-script text-sm sm:text-lg leading-none",
+                  pillTaken ? "text-hotpink" : "text-rose/60",
+                ].join(" ")}>
+                  {pillTaken ? <><Check className="h-3 w-3" strokeWidth={3} /> Taken</> : <><Undo2 className="h-3 w-3" strokeWidth={2.5} /> Tap to log</>}
+                </p>
+              </div>
+            </button>
+          </div>
         </div>
+
+        <MoodPopover
+          open={moodPickerOpen}
+          onClose={() => setMoodPickerOpen(false)}
+          onPick={(key) => { pickMood(key); setMoodPickerOpen(false); }}
+          triggerRef={moodTileRef}
+        />
       </section>
 
       {/* ── RECOMMENDED FOR YOU TODAY ────────────────────────────────────── */}
@@ -920,5 +936,59 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
       <h2 className="font-script text-3xl sm:text-4xl text-hotpink">{children}</h2>
       {hint && <span className="text-xs text-rose/60 pb-1">{hint}</span>}
     </div>
+  );
+}
+
+const MOOD_POPOVER_SIZE = { width: 220, height: 196 };
+
+/** Small soft popup to pick today's mood — opens from the Mood tile in Space Stats. */
+function MoodPopover({
+  open, onClose, onPick, triggerRef,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (key: string) => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+}) {
+  const style = useSmartPopoverPosition(triggerRef, open, MOOD_POPOVER_SIZE);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (triggerRef.current?.contains(target as Node)) return;
+      if (target.closest?.("[data-mood-popover]")) return;
+      onClose();
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open, onClose, triggerRef]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      data-mood-popover
+      style={style}
+      className="rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
+    >
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">HOW ARE YOU FEELING? ✿</p>
+      <div className="grid grid-cols-3 gap-1.5">
+        {MOODS.map((m, i) => (
+          <button
+            key={m.key}
+            onClick={() => onPick(m.key)}
+            className="group flex flex-col items-center gap-1 rounded-2xl border border-transparent bg-transparent py-1.5 px-0.5 transition hover:bg-blush/60 hover:border-hotpink/20 active:scale-95"
+            style={{ animationDelay: `${i * 0.05}s` }}
+          >
+            <span className="clay-blob animate-icon-breathe grid h-8 w-8 place-items-center rounded-full text-white">
+              <m.Icon className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <span className="text-[10px] font-semibold text-rose">{m.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>,
+    document.body
   );
 }

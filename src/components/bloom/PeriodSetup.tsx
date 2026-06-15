@@ -40,7 +40,6 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
   // glows ("set me up") until configured, then calms down — guiding the user.
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
-  const saveRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -78,14 +77,6 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
 
   const isSet = (k: keyof CycleSettings) => touched.has(k as string);
 
-  // After picking the reminder hour, glide down to the Save button so it's
-  // right there to tap — no hunting for it.
-  function scrollToSave() {
-    requestAnimationFrame(() => {
-      saveRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    });
-  }
-
   function handleScroll() {
     const el = scrollRef.current;
     if (!el) return;
@@ -106,7 +97,8 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           <X className="h-3.5 w-3.5" />
         </button>
 
-        <div ref={scrollRef} onScroll={handleScroll} className="no-scrollbar scroll-smooth overflow-y-auto overscroll-contain p-3.5 sm:p-5">
+        <div className="relative min-h-0 flex-1">
+        <div ref={scrollRef} onScroll={handleScroll} className="no-scrollbar scroll-smooth h-full overflow-y-auto overscroll-contain p-3.5 sm:p-5">
           <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
 
           <div className={`animate-scale-in mt-2 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-selected-glow" : ""}`} style={{ animationDelay: "40ms" }}>
@@ -242,7 +234,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             <Section label="Reminder Hour" glow={!isSet("reminderHour")}>
               <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
-                <CuteTimePicker value={draft.reminderHour} onChange={(v) => { update("reminderHour", v); scrollToSave(); }} />
+                <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
               </div>
             </Section>
           </div>
@@ -257,14 +249,6 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             </Section>
           </div>
 
-          <button
-            ref={saveRef}
-            onClick={() => { onSave(draft); onClose(); }}
-            className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 w-full py-2.5 text-sm font-semibold text-white"
-          >
-            <Sparkles className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle" />
-            Save Period
-          </button>
         </div>
 
         {/* Smart scroll guide — gently bounces while there's more to see */}
@@ -273,6 +257,18 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             <ChevronDown className="h-4 w-4 animate-bounce text-hotpink" />
           </div>
         )}
+        </div>
+
+        {/* Save bar — always visible, no scrolling needed */}
+        <div className="shrink-0 border-t border-petal/40 bg-white/95 p-3 sm:p-4">
+          <button
+            onClick={() => { onSave(draft); onClose(); }}
+            className="bloom-luxury-btn hover-scale animate-cta-bounce w-full py-2.5 text-sm font-semibold text-white"
+          >
+            <Sparkles className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle" />
+            Save Period
+          </button>
+        </div>
       </div>
     </div>
   );
