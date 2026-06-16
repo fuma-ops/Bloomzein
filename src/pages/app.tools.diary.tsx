@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import {
   ArrowLeft, Plus, Trash2, Edit3, X, BookHeart, Sparkles,
   Cloud, Smile, Heart, CloudRain, Battery, Activity, Droplet,
   Calendar, List, LayoutGrid, BookOpen, ChevronLeft, ChevronRight, Printer,
+  Flame, Quote,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { PageHeader } from "@/components/bloom/PageHeader";
@@ -55,7 +57,6 @@ function loadEntries(): DiaryEntry[] {
     const raw = localStorage.getItem(DIARY_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    // Gracefully upgrade entries saved before rich-text/themes existed
     return (parsed as any[]).map((e) => ({
       id: e.id,
       date: e.date,
@@ -102,14 +103,63 @@ function fmtDate(iso: string) {
   });
 }
 
-type ViewMode = "list" | "grid" | "book";
+function computeStreak(entries: DiaryEntry[]): number {
+  const dates = new Set(entries.map((e) => e.date));
+  let streak = 0;
+  const d = new Date(todayISO() + "T00:00:00");
+  while (dates.has(d.toISOString().slice(0, 10))) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+const AFFIRMATIONS = [
+  "I am enough. I am worthy. I am loved.",
+  "My feelings are valid, and I honor them.",
+  "I release what no longer serves me.",
+  "I bloom where I am planted.",
+  "Softness is my strength.",
+  "I am the author of my own story.",
+  "Today I choose peace and joy.",
+  "I am worthy of love, rest, and all beautiful things.",
+  "My sensitivity is a superpower.",
+  "I flow with life's changes gracefully.",
+  "I celebrate my progress, not just my destination.",
+  "I am allowed to take up space.",
+  "With each breath, I grow stronger.",
+  "I trust the journey, even the uncertain parts.",
+  "I lead with kindness, starting with myself.",
+];
+
+const BLOOM_TIPS = [
+  "Morning pages: 3 stream-of-consciousness pages before checking your phone.",
+  "Try the gratitude sandwich: start and end each entry with something you're thankful for.",
+  "Draw your feelings today — sometimes a doodle says more than words.",
+  "Write a letter to your future self. What do you hope she knows?",
+  "Track your energy throughout the day — patterns emerge beautifully.",
+  "Light a candle and write in silence for 10 minutes. Notice what surfaces.",
+  "Re-read your entries from last month — notice how far you've come.",
+];
+
+function todayAffirmation() {
+  const d = new Date();
+  return AFFIRMATIONS[(d.getDay() + d.getDate()) % AFFIRMATIONS.length];
+}
+
+function todayBloomTip() {
+  const d = new Date();
+  return BLOOM_TIPS[(d.getDate() + d.getMonth()) % BLOOM_TIPS.length];
+}
+
+type ViewMode = "dashboard" | "list" | "grid" | "book";
 
 export default function DiaryPage() {
   const [entries, setEntries] = useState<DiaryEntry[]>(() => loadEntries());
   const [composing, setComposing] = useState(false);
   const [editing, setEditing] = useState<DiaryEntry | null>(null);
   const [view, setView] = useState<ViewMode>(() => {
-    try { return (localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode) || "list"; } catch { return "list"; }
+    try { return (localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode) || "dashboard"; } catch { return "dashboard"; }
   });
 
   useEffect(() => { saveEntries(entries); }, [entries]);
@@ -153,7 +203,14 @@ export default function DiaryPage() {
         </div>
       </PageHeader>
 
-      {sorted.length === 0 ? (
+      {view === "dashboard" ? (
+        <DiaryDashboard
+          entries={sorted}
+          onNew={() => setComposing(true)}
+          onEdit={setEditing}
+          onDelete={deleteEntry}
+        />
+      ) : sorted.length === 0 ? (
         <EmptyDiary onStart={() => setComposing(true)} />
       ) : view === "list" ? (
         <ListView entries={sorted} onEdit={setEditing} onDelete={deleteEntry} />
@@ -175,12 +232,454 @@ export default function DiaryPage() {
 }
 
 /* ============================================================
+   DASHBOARD — luxury 3-panel journal layout
+   ============================================================ */
+function DiaryDashboard({
+  entries, onNew, onEdit, onDelete,
+}: {
+  entries: DiaryEntry[];
+  onNew: () => void;
+  onEdit: (e: DiaryEntry) => void;
+  onDelete: (id: string) => void;
+}) {
+  const streak = useMemo(() => computeStreak(entries), [entries]);
+  const affirmation = todayAffirmation();
+  const bloomTip = todayBloomTip();
+  const todayEntry = entries.find((e) => e.date === todayISO());
+  const recent = entries.slice(0, 3);
+
+  return (
+    <div className="relative">
+      {/* Floating decorative orbs */}
+      <img src="/images/landing-orb-flower.png" alt="" aria-hidden
+        className="pointer-events-none select-none absolute -top-10 -right-6 w-52 opacity-[0.07] rotate-12 hidden lg:block"
+      />
+      <img src="/images/landing-orb-mind.png" alt="" aria-hidden
+        className="pointer-events-none select-none absolute top-1/2 -left-10 w-40 opacity-[0.05] hidden lg:block"
+      />
+
+      <div className="grid gap-5 lg:grid-cols-4 lg:gap-6 lg:items-start">
+
+        {/* ── Left sidebar ── */}
+        <aside className="hidden lg:flex flex-col gap-4 lg:col-span-1">
+          <TodayPhaseCard style={{ animationDelay: "60ms" }} />
+          <BloomTipCard tip={bloomTip} style={{ animationDelay: "120ms" }} />
+          <JournalGoalsCard entries={entries} style={{ animationDelay: "180ms" }} />
+        </aside>
+
+        {/* ── Center ── */}
+        <main className="flex flex-col gap-4 lg:col-span-2">
+          <OpenJournal entries={entries} todayEntry={todayEntry} onNew={onNew} style={{ animationDelay: "0ms" }} />
+          <div className="grid grid-cols-3 gap-3">
+            <StreakStatCard streak={streak} style={{ animationDelay: "200ms" }} />
+            <TodayMoodCard todayEntry={todayEntry} style={{ animationDelay: "240ms" }} />
+            <TotalEntriesCard count={entries.length} style={{ animationDelay: "280ms" }} />
+          </div>
+          <DiaryQuoteStrip />
+        </main>
+
+        {/* ── Right sidebar ── */}
+        <aside className="flex flex-col gap-4 lg:col-span-1">
+          <AffirmationCard affirmation={affirmation} style={{ animationDelay: "80ms" }} />
+          {recent.length > 0 ? (
+            <RecentMemoriesCard entries={recent} onEdit={onEdit} style={{ animationDelay: "140ms" }} />
+          ) : (
+            <MobileTipCard tip={bloomTip} style={{ animationDelay: "140ms" }} />
+          )}
+        </aside>
+
+      </div>
+    </div>
+  );
+}
+
+/* ── Open Journal ── */
+function OpenJournal({
+  entries, todayEntry, onNew, style,
+}: {
+  entries: DiaryEntry[];
+  todayEntry?: DiaryEntry;
+  onNew: () => void;
+  style?: CSSProperties;
+}) {
+  const latest = entries[0];
+  const today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  return (
+    <div
+      className="animate-scale-in overflow-hidden rounded-[1.75rem] shadow-[0_20px_40px_rgba(255,105,180,.12),_0_8px_20px_rgba(255,255,255,.8)_inset] border border-petal/40"
+      style={style}
+    >
+      {/* Hero image */}
+      <div className="relative h-40 sm:h-48 overflow-hidden">
+        <img
+          src="/images/cycle-journal-hero.webp"
+          alt="Journal"
+          className="w-full h-full object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F3] via-[#FFF8F3]/40 to-transparent" />
+        <div className="absolute bottom-4 left-5 right-5">
+          <p className="font-script text-2xl text-hotpink drop-shadow-sm">{today}</p>
+          <p className="mt-0.5 text-[11px] font-semibold text-rose/60">
+            {entries.length > 0
+              ? `${entries.length} memor${entries.length === 1 ? "y" : "ies"} written`
+              : "Begin your story ✿"}
+          </p>
+        </div>
+      </div>
+
+      {/* Two-page spread */}
+      <div className="flex min-h-[190px] bg-[#FFFCF9]">
+
+        {/* Left page */}
+        <div className="flex-1 p-5 relative overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 27px, #EC4899 27px, #EC4899 28px)",
+              backgroundPositionY: "40px",
+            }}
+          />
+          <div className="relative z-10">
+            <p className="font-script text-base text-rose/50 mb-2.5">Recent moods…</p>
+            <div className="flex gap-1.5 flex-wrap">
+              {entries.slice(0, 12).map((e, i) => {
+                const M = moodMeta(e.mood);
+                return (
+                  <span
+                    key={e.id}
+                    title={`${e.date}: ${M.label}`}
+                    className="h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: "linear-gradient(135deg, #FF2F92, #E6007A)",
+                      opacity: Math.max(0.25, 1 - i * 0.07),
+                    }}
+                  >
+                    <M.Icon className="h-3 w-3 text-white" strokeWidth={2} />
+                  </span>
+                );
+              })}
+              {entries.length === 0 && (
+                <p className="text-xs text-rose/40 italic">Write your first entry ✿</p>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-petal/30">
+              <Quote className="h-3.5 w-3.5 text-hotpink/30 mb-1.5" strokeWidth={1.5} />
+              <p className="text-[11px] text-rose/60 leading-relaxed italic">
+                "She remembered who she was,<br />and the game changed."
+              </p>
+              <p className="mt-1 text-[10px] text-rose/40">— Lalah Delia</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Spine */}
+        <div className="w-4 flex-shrink-0 bg-gradient-to-r from-[#F8C8D8]/60 via-[#F5B5C8]/90 to-[#F8C8D8]/60 shadow-[inset_2px_0_4px_rgba(255,105,180,.15),_inset_-2px_0_4px_rgba(255,105,180,.15)]" />
+
+        {/* Right page */}
+        <div className="flex-1 p-5 relative overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 27px, #EC4899 27px, #EC4899 28px)",
+              backgroundPositionY: "40px",
+            }}
+          />
+          <div className="relative z-10">
+            {latest ? (
+              <>
+                <MoodEntryHeader entry={latest} />
+                <div
+                  className="mt-2.5 text-[11px] text-rose/70 leading-relaxed line-clamp-4"
+                  style={{ fontFamily: fontFamilyFor(latest.font) }}
+                  dangerouslySetInnerHTML={{ __html: latest.html }}
+                />
+                <button
+                  onClick={onNew}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-hotpink/25 bg-hotpink/10 px-3 py-1.5 text-[11px] font-semibold text-hotpink hover:bg-hotpink hover:text-white transition animate-card-breathe"
+                >
+                  <Edit3 className="h-3 w-3" strokeWidth={2} />
+                  {todayEntry ? "Edit today's entry" : "Write today's entry"}
+                </button>
+              </>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center py-4 text-center">
+                <BookHeart className="h-7 w-7 text-hotpink/40 mb-2" strokeWidth={1.5} />
+                <p className="font-script text-xl text-hotpink">Begin your story</p>
+                <p className="mt-1 text-xs text-rose/60 max-w-[16ch] leading-relaxed">
+                  Your first entry is waiting to be written.
+                </p>
+                <button
+                  onClick={onNew}
+                  className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white animate-card-breathe"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2} /> Write first entry
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MoodEntryHeader({ entry }: { entry: DiaryEntry }) {
+  const M = moodMeta(entry.mood);
+  return (
+    <div className="flex items-center gap-2">
+      <span className="h-7 w-7 rounded-full flex items-center justify-center bg-gradient-to-br from-hotpink to-magenta text-white shadow-sm flex-shrink-0">
+        <M.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
+      </span>
+      <div className="min-w-0">
+        <h4 className="text-xs font-bold text-rose truncate">{entry.title || "Untitled"}</h4>
+        <p className="text-[10px] text-rose/50">{fmtDate(entry.date)}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Stats row ── */
+function StreakStatCard({ streak, style }: { streak: number; style?: CSSProperties }) {
+  return (
+    <div
+      className="animate-scale-in rounded-2xl bg-gradient-to-br from-[#FFF0F6] to-[#FFE0EE] border border-petal/40 p-4 text-center shadow-sm"
+      style={style}
+    >
+      <Flame className="h-5 w-5 text-hotpink mx-auto" strokeWidth={1.8} />
+      <p className="mt-1 text-2xl font-bold text-hotpink leading-none">{streak}</p>
+      <p className="mt-0.5 text-[10px] font-semibold text-rose/60">day streak</p>
+    </div>
+  );
+}
+
+function TodayMoodCard({ todayEntry, style }: { todayEntry?: DiaryEntry; style?: CSSProperties }) {
+  const M = todayEntry ? moodMeta(todayEntry.mood) : null;
+  return (
+    <div
+      className="animate-scale-in rounded-2xl bg-gradient-to-br from-[#FFF8F3] to-[#F8E4EA] border border-petal/40 p-4 text-center shadow-sm"
+      style={style}
+    >
+      {M ? (
+        <>
+          <M.Icon className="h-5 w-5 text-hotpink mx-auto" strokeWidth={1.8} />
+          <p className="mt-1 text-xs font-bold text-rose leading-none">{M.label}</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-rose/60">today</p>
+        </>
+      ) : (
+        <>
+          <Heart className="h-5 w-5 text-petal mx-auto" strokeWidth={1.8} />
+          <p className="mt-1 text-[11px] font-semibold text-rose/50 leading-snug">How do<br />you feel?</p>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TotalEntriesCard({ count, style }: { count: number; style?: CSSProperties }) {
+  return (
+    <div
+      className="animate-scale-in rounded-2xl bg-gradient-to-br from-[#F5EEFF] to-[#EAE0FB] border border-purple-100/60 p-4 text-center shadow-sm"
+      style={style}
+    >
+      <Sparkles className="h-5 w-5 text-purple-400 mx-auto" strokeWidth={1.8} />
+      <p className="mt-1 text-2xl font-bold text-purple-600 leading-none">{count}</p>
+      <p className="mt-0.5 text-[10px] font-semibold text-purple-400">entries</p>
+    </div>
+  );
+}
+
+/* ── Left panel ── */
+function TodayPhaseCard({ style }: { style?: CSSProperties }) {
+  const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
+  const phase =
+    cycleDay <= 5 ? "Menstrual" : cycleDay <= 13 ? "Follicular" : cycleDay <= 15 ? "Ovulatory" : "Luteal";
+  const phaseEmoji = { Menstrual: "🌑", Follicular: "🌱", Ovulatory: "✨", Luteal: "🌙" }[phase];
+  const phaseText = {
+    Menstrual: "Rest, reflect, and restore. Your body is renewing itself.",
+    Follicular: "Energy rises! New ideas and fresh starts feel natural now.",
+    Ovulatory: "You're radiant — perfect time to connect and express yourself.",
+    Luteal: "Slow down and turn inward. Nourish yourself gently.",
+  }[phase];
+
+  return (
+    <div className="animate-scale-in overflow-hidden rounded-2xl border border-petal/40 shadow-sm" style={style}>
+      <div className="relative h-24 overflow-hidden">
+        <img src="/images/today-hero.png" alt="" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F3]/95 via-[#FFF8F3]/40 to-transparent" />
+        <div className="absolute bottom-2 left-3">
+          <p className="text-xs font-bold text-rose">{phaseEmoji} Cycle day {cycleDay}</p>
+          <p className="text-[11px] font-semibold text-hotpink">{phase} phase</p>
+        </div>
+      </div>
+      <div className="bg-[#FFFCF9] px-3.5 py-3">
+        <p className="text-[11px] text-rose/70 leading-relaxed">{phaseText}</p>
+      </div>
+    </div>
+  );
+}
+
+function BloomTipCard({ tip, style }: { tip: string; style?: CSSProperties }) {
+  return (
+    <div
+      className="animate-scale-in rounded-2xl border border-petal/40 bg-gradient-to-br from-[#FFF8F3] to-[#F8E4EA] shadow-sm p-4"
+      style={style}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className="h-7 w-7 rounded-full bg-hotpink/10 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} />
+        </span>
+        <p className="text-xs font-bold text-rose">Bloom Tip</p>
+      </div>
+      <p className="text-[11px] text-rose/70 leading-relaxed">{tip}</p>
+    </div>
+  );
+}
+
+function JournalGoalsCard({ entries, style }: { entries: DiaryEntry[]; style?: CSSProperties }) {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const thisWeek = entries.filter((e) => new Date(e.date + "T00:00:00") >= weekStart).length;
+  const thisMonth = entries.filter((e) => e.date.slice(0, 7) === todayISO().slice(0, 7)).length;
+
+  const goals = [
+    { label: "Write 3× this week", done: thisWeek >= 3, progress: `${Math.min(thisWeek, 3)}/3` },
+    { label: "Capture a cherished memory", done: thisMonth >= 1 },
+    { label: "Track your energy levels", done: false },
+  ];
+
+  return (
+    <div
+      className="animate-scale-in rounded-2xl border border-petal/40 bg-[#FFFCF9] shadow-sm p-4"
+      style={style}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <span className="h-7 w-7 rounded-full bg-blush flex items-center justify-center flex-shrink-0">
+          <BookHeart className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} />
+        </span>
+        <p className="text-xs font-bold text-rose">Journal Goals</p>
+      </div>
+      <ul className="flex flex-col gap-2">
+        {goals.map((g, i) => (
+          <li key={i} className="flex items-center gap-2 text-[11px] text-rose/70">
+            <span
+              className={[
+                "h-4 w-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center",
+                g.done ? "border-hotpink bg-hotpink" : "border-petal/60",
+              ].join(" ")}
+            >
+              {g.done && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+            </span>
+            <span className={g.done ? "line-through opacity-60" : ""}>{g.label}</span>
+            {!g.done && "progress" in g && (
+              <span className="ml-auto text-hotpink font-semibold">{(g as { progress: string }).progress}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ── Right panel ── */
+function AffirmationCard({ affirmation, style }: { affirmation: string; style?: CSSProperties }) {
+  return (
+    <div className="animate-scale-in overflow-hidden rounded-2xl border border-petal/40 shadow-sm" style={style}>
+      <div className="relative h-28 overflow-hidden">
+        <img src="/images/tools-hero-affirmation.png" alt="" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F3]/95 via-transparent to-transparent" />
+      </div>
+      <div className="bg-[#FFFCF9] p-4">
+        <div className="flex items-start gap-2">
+          <Quote className="h-4 w-4 text-hotpink/40 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+          <p className="text-[11px] text-rose/80 leading-relaxed italic">{affirmation}</p>
+        </div>
+        <p className="mt-2 text-[10px] font-bold text-hotpink tracking-wide uppercase">Daily Affirmation</p>
+      </div>
+    </div>
+  );
+}
+
+function RecentMemoriesCard({
+  entries, onEdit, style,
+}: { entries: DiaryEntry[]; onEdit: (e: DiaryEntry) => void; style?: CSSProperties }) {
+  const memoryImages = ["/images/blog-1.png", "/images/blog-2.png", "/images/blog-3.png"];
+  return (
+    <div className="animate-scale-in rounded-2xl border border-petal/40 bg-[#FFFCF9] shadow-sm p-4" style={style}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="h-7 w-7 rounded-full bg-blush flex items-center justify-center flex-shrink-0">
+          <BookOpen className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} />
+        </span>
+        <p className="text-xs font-bold text-rose">Recent Memories</p>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {entries.map((entry, i) => {
+          const M = moodMeta(entry.mood);
+          return (
+            <button
+              key={entry.id}
+              onClick={() => onEdit(entry)}
+              className="group flex items-start gap-2.5 rounded-xl p-1.5 text-left hover:bg-blush/30 transition w-full"
+            >
+              <div className="h-9 w-9 rounded-lg overflow-hidden flex-shrink-0">
+                <img src={memoryImages[i % 3]} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-rose truncate">{entry.title || "Untitled"}</p>
+                <p className="text-[10px] text-rose/50">{fmtDate(entry.date)}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <M.Icon className="h-2.5 w-2.5 text-hotpink/60" strokeWidth={2} />
+                  <span className="text-[10px] text-rose/50">{M.label}</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MobileTipCard({ tip, style }: { tip: string; style?: CSSProperties }) {
+  return (
+    <div
+      className="animate-scale-in lg:hidden rounded-2xl border border-petal/40 bg-gradient-to-br from-[#FFF8F3] to-[#F8E4EA] shadow-sm p-4"
+      style={style}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className="h-7 w-7 rounded-full bg-hotpink/10 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} />
+        </span>
+        <p className="text-xs font-bold text-rose">Bloom Tip</p>
+      </div>
+      <p className="text-[11px] text-rose/70 leading-relaxed">{tip}</p>
+    </div>
+  );
+}
+
+function DiaryQuoteStrip() {
+  return (
+    <div className="rounded-2xl bg-gradient-to-r from-hotpink/5 via-hotpink/10 to-hotpink/5 border border-petal/40 py-3.5 px-5 text-center animate-scale-in" style={{ animationDelay: "320ms" }}>
+      <p className="font-script text-lg text-rose/70">
+        <span className="text-hotpink">"</span>
+        Every page you fill is a love letter to your future self.
+        <span className="text-hotpink">"</span>
+      </p>
+    </div>
+  );
+}
+
+/* ============================================================
    EMPTY STATE
    ============================================================ */
 function EmptyDiary({ onStart }: { onStart: () => void }) {
   return (
     <div className="rounded-[2rem] bg-white/85 backdrop-blur p-10 text-center shadow-xl shadow-rose/10 border border-petal/50">
-      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-blush text-hotpink">
+      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blush text-hotpink">
         <BookHeart className="h-6 w-6" strokeWidth={1.6} />
       </span>
       <p className="mt-3 font-script text-3xl text-hotpink">Your softest little journal</p>
@@ -200,6 +699,7 @@ function EmptyDiary({ onStart }: { onStart: () => void }) {
    ============================================================ */
 function ViewSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   const opts: { key: ViewMode; label: string; Icon: typeof List }[] = [
+    { key: "dashboard", label: "Journal", Icon: BookHeart },
     { key: "list", label: "List", Icon: List },
     { key: "grid", label: "Pinned", Icon: LayoutGrid },
     { key: "book", label: "Book", Icon: BookOpen },
@@ -245,7 +745,7 @@ function ListView({
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
                   <mood.Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
                 </span>
                 <div>
@@ -285,12 +785,12 @@ function GridView({
         const rotate = PIN_ROTATIONS[i % PIN_ROTATIONS.length];
         return (
           <div key={entry.id} className={`group relative ${rotate} hover:rotate-0 transition-transform duration-300`}>
-            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10 grid h-5 w-5 place-items-center rounded-full bg-magenta shadow-md shadow-magenta/40 ring-2 ring-white">
+            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-magenta shadow-md shadow-magenta/40 ring-2 ring-white">
               <span className="h-1.5 w-1.5 rounded-full bg-white/90" />
             </span>
             <div className={`rounded-2xl bg-gradient-to-br ${theme.page} ring-1 ${theme.ring} p-4 shadow-[0_10px_24px_-10px_oklch(0.7_0.18_350/0.4)] transition hover:shadow-[0_16px_32px_-10px_oklch(0.7_0.22_350/0.5)]`}>
               <div className="flex items-center justify-between">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/70 text-hotpink">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-hotpink">
                   <mood.Icon className="h-3.5 w-3.5" strokeWidth={1.7} />
                 </span>
                 <div className="opacity-0 group-hover:opacity-100 transition">
@@ -365,7 +865,7 @@ function BookView({
         <div className={`relative rounded-[1.75rem] bg-gradient-to-br ${theme.page} ring-1 ${theme.ring} border border-white/70 p-6 sm:p-8 shadow-[0_24px_48px_-18px_oklch(0.6_0.2_350/0.45)] min-h-[420px] flex flex-col`}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
                 <mood.Icon className="h-5 w-5" strokeWidth={1.6} />
               </span>
               <div>
@@ -397,7 +897,7 @@ function BookView({
         <button
           onClick={() => goTo(clampedIndex - 1)}
           disabled={clampedIndex === 0}
-          className="grid h-10 w-10 place-items-center rounded-full bg-white/85 border border-petal/50 text-hotpink shadow-sm transition hover:-translate-x-0.5 disabled:opacity-30 disabled:hover:translate-x-0"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 border border-petal/50 text-hotpink shadow-sm transition hover:-translate-x-0.5 disabled:opacity-30 disabled:hover:translate-x-0"
         >
           <ChevronLeft className="h-4.5 w-4.5" strokeWidth={2} />
         </button>
@@ -405,7 +905,7 @@ function BookView({
         <button
           onClick={() => goTo(clampedIndex + 1)}
           disabled={clampedIndex === entries.length - 1}
-          className="grid h-10 w-10 place-items-center rounded-full bg-white/85 border border-petal/50 text-hotpink shadow-sm transition hover:translate-x-0.5 disabled:opacity-30 disabled:hover:translate-x-0"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 border border-petal/50 text-hotpink shadow-sm transition hover:translate-x-0.5 disabled:opacity-30 disabled:hover:translate-x-0"
         >
           <ChevronRight className="h-4.5 w-4.5" strokeWidth={2} />
         </button>
@@ -451,21 +951,21 @@ function EntryActions({
       <button
         onClick={printEntry}
         title="Print or save as PDF"
-        className="grid h-8 w-8 place-items-center rounded-full text-rose/60 hover:text-hotpink hover:bg-blush transition"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-rose/60 hover:text-hotpink hover:bg-blush transition"
       >
         <Printer className="h-3.5 w-3.5" strokeWidth={1.8} />
       </button>
       <button
         onClick={() => onEdit(entry)}
         title="Edit"
-        className="grid h-8 w-8 place-items-center rounded-full text-rose/60 hover:text-hotpink hover:bg-blush transition"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-rose/60 hover:text-hotpink hover:bg-blush transition"
       >
         <Edit3 className="h-3.5 w-3.5" strokeWidth={1.8} />
       </button>
       <button
         onClick={() => onDelete(entry.id)}
         title="Delete"
-        className="grid h-8 w-8 place-items-center rounded-full text-rose/60 hover:text-magenta hover:bg-magenta/10 transition"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-rose/60 hover:text-magenta hover:bg-magenta/10 transition"
       >
         <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
       </button>
@@ -503,7 +1003,7 @@ function DiaryComposer({
       <div className="relative w-full max-w-lg rounded-[2rem] bg-white shadow-2xl shadow-[#EC4899]/30 border border-[#EC4899]/15 p-6 max-h-[92vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full text-[#9D5C7E] hover:text-[#EC4899] hover:bg-[#FBCFE8] transition"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#9D5C7E] hover:text-[#EC4899] hover:bg-[#FBCFE8] transition"
         >
           <X className="h-4 w-4" />
         </button>
@@ -550,7 +1050,7 @@ function DiaryComposer({
                     ].join(" ")}
                   >
                     <span className={[
-                      "grid h-9 w-9 place-items-center rounded-full transition",
+                      "flex h-9 w-9 items-center justify-center rounded-full transition",
                       active ? "bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/40" : "bg-blush text-hotpink",
                     ].join(" ")}>
                       <m.Icon className="h-4 w-4" strokeWidth={1.6} />
