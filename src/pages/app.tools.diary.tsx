@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import {
-  ArrowLeft, Plus, Trash2, Edit3, X, BookHeart, Sparkles,
+  Plus, Trash2, Edit3, X, BookHeart, Sparkles,
   Cloud, Smile, Heart, CloudRain, Battery, Activity, Droplet,
   Calendar, List, LayoutGrid, BookOpen, ChevronLeft, ChevronRight, Printer,
   Flame, Quote,
@@ -201,10 +201,6 @@ export default function DiaryPage() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      <a href="/app/tools" className="mb-4 inline-flex items-center gap-1 text-sm text-[#831843] hover:text-[#EC4899] font-semibold">
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
-
       <PageHeader title="Dreamy Diary" emoji="✿">
         <div className="flex items-center gap-2">
           <ViewSwitcher view={view} onChange={setView} />
@@ -279,19 +275,19 @@ function DiaryDashboard({
 
       <div className="grid gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
 
-        {/* ── Left: Today's Bloom ── */}
-        <aside className="order-1 lg:col-span-2">
+        {/* ── Left: Today's Bloom — first on desktop, below journal on mobile ── */}
+        <aside className="order-3 lg:order-1 lg:col-span-2">
           <TodaysBloomCard cycleDay={cycleDay} phase={phase} style={{ animationDelay: "60ms" }} />
         </aside>
 
-        {/* ── Center: Open Journal HERO (wider) ── */}
-        <main className="order-2 lg:col-span-8 flex flex-col gap-4">
+        {/* ── Center: Open Journal HERO (wider) — always first on mobile ── */}
+        <main className="order-1 lg:order-2 lg:col-span-8 flex flex-col gap-4">
           <OpenJournal entries={entries} onSaveEntry={onSaveEntry} style={{ animationDelay: "0ms" }} />
           <JournalStatsRow streak={streak} todayEntry={todayEntry} phase={phase} style={{ animationDelay: "220ms" }} />
         </main>
 
         {/* ── Right: Affirmation + Memories ── */}
-        <aside className="order-3 lg:col-span-2 flex flex-col gap-4">
+        <aside className="order-4 lg:order-3 lg:col-span-2 flex flex-col gap-4">
           <DailyAffirmationCard affirmation={affirmation} style={{ animationDelay: "80ms" }} />
           {recent.length > 0 && (
             <RecentMemoriesCard entries={recent} onEdit={onEdit} style={{ animationDelay: "160ms" }} />
@@ -385,11 +381,11 @@ const JOURNAL_STYLES = `
     .diary-left-page { display: none !important; }
     .diary-right-page {
       top: 9% !important;
-      left: 17% !important;
+      left: 21% !important;
       right: 5% !important;
       width: auto !important;
       height: 73% !important;
-      padding: 3% 4% 3% 4% !important;
+      padding: 2% 3% 2% 3% !important;
     }
   }
   @media (min-width: 1024px) {
