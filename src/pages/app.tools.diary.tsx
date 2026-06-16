@@ -459,8 +459,8 @@ function OpenJournal({
           {/* LEFT PAGE OVERLAY */}
           <div style={{
             position: "absolute",
-            top: "9%", left: "8%", width: "37%", height: "80%",
-            padding: "clamp(8px,4%,28px) clamp(6px,4%,22px)",
+            top: "10%", left: "12%", width: "34%", height: "78%",
+            padding: "clamp(6px,3%,20px) clamp(5px,3%,18px)",
             boxSizing: "border-box",
             display: "flex", flexDirection: "column",
             overflow: "hidden",
@@ -527,8 +527,8 @@ function OpenJournal({
             className={flipClass}
             style={{
               position: "absolute",
-              top: "9%", right: "8%", width: "37%", height: "80%",
-              padding: "clamp(8px,4%,28px) clamp(6px,4%,22px)",
+              top: "10%", right: "12%", width: "34%", height: "78%",
+              padding: "clamp(6px,3%,20px) clamp(5px,3%,18px)",
               boxSizing: "border-box",
               display: "flex", flexDirection: "column",
               overflow: "hidden",
@@ -603,7 +603,7 @@ function OpenJournal({
           {/* FLIP ARROWS */}
           {canFlipBack && (
             <button onClick={() => flip(-1)} title="Previous page" style={{
-              position: "absolute", left: "4.5%", top: "50%", transform: "translateY(-50%)",
+              position: "absolute", left: "9%", top: "50%", transform: "translateY(-50%)",
               width: "clamp(28px,4vw,36px)", height: "clamp(28px,4vw,36px)", borderRadius: "50%",
               background: "rgba(255,255,255,0.92)", border: `1px solid ${PINK}44`,
               color: PINK, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -614,7 +614,7 @@ function OpenJournal({
           )}
           {canFlipForward && (
             <button onClick={() => flip(1)} title="Next page" style={{
-              position: "absolute", right: "4.5%", top: "50%", transform: "translateY(-50%)",
+              position: "absolute", right: "9%", top: "50%", transform: "translateY(-50%)",
               width: "clamp(28px,4vw,36px)", height: "clamp(28px,4vw,36px)", borderRadius: "50%",
               background: "rgba(255,255,255,0.92)", border: `1px solid ${PINK}44`,
               color: PINK, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
