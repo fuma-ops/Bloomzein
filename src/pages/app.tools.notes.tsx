@@ -262,6 +262,17 @@ function weekdaysLabel(days: number[]) {
   return days.map((d) => WEEKDAYS[d].label.slice(0, 3)).join(", ");
 }
 
+function reminderCardStyle(rem: Reminder) {
+  if (rem.kind === "medication") return { bg: "bg-[#ECFDF5]", border: "border-[#A7F3D0]", text: "text-[#065F46]", body: "text-[#065F46]/70", bloom: "🍃" };
+  if (rem.kind === "birthday")   return { bg: "bg-[#FFF0F6]", border: "border-[#FBCFE8]", text: "text-[#831843]", body: "text-[#9D5C7E]/80", bloom: "🎂" };
+  const cat = rem.category;
+  if (cat === "appointment") return { bg: "bg-[#EFF6FF]", border: "border-[#BFDBFE]", text: "text-[#1E40AF]", body: "text-[#1E40AF]/70", bloom: "🌸" };
+  if (cat === "meeting")     return { bg: "bg-[#F3E8FF]", border: "border-[#D8B4FE]", text: "text-[#5B21B6]", body: "text-[#7C3AED]/70", bloom: "💜" };
+  if (cat === "vacation")    return { bg: "bg-[#FEFCE8]", border: "border-[#FDE047]", text: "text-[#854D0E]", body: "text-[#854D0E]/70", bloom: "✈️" };
+  if (cat === "social")      return { bg: "bg-[#FAF5FF]", border: "border-[#E9D5FF]", text: "text-[#6B21A8]", body: "text-[#7E22CE]/70", bloom: "🎉" };
+  return { bg: "bg-[#FFF5F5]", border: "border-[#FECACA]", text: "text-[#9C4221]", body: "text-[#9C4221]/70", bloom: "🌺" };
+}
+
 export const STORAGE_KEYS = {
   notes: "bloom:notes",
   reminders: "bloom:reminders",
@@ -1369,33 +1380,95 @@ export default function NotesPage() {
           {/* ── REMINDERS TAB ── */}
           {tab === "reminders" && (
             <div className="animate-fade-in space-y-4">
-              <div className="bg-white/95 backdrop-blur rounded-[2rem] border border-pink-200/50 p-4 sm:p-6 shadow-sm">
-                <h3 className="font-script text-2xl sm:text-3xl text-hotpink mb-4">Upcoming Nudges</h3>
-                {sortedReminders.length === 0 ? (
-                  <div className="py-8 text-center flex flex-col items-center justify-center">
-                    <p className="text-xs sm:text-sm text-rose italic">All clear! No upcoming reminders due.</p>
-                    <button
-                      onClick={() => setShowReminderForm(true)}
-                      className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> + New reminder
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {sortedReminders.map((rem) => (
-                      <ReminderRow
-                        key={rem.id}
-                        rem={rem}
-                        onToggleDone={() => handleToggleReminderDone(rem.id)}
-                        onEdit={() => handleEditReminder(rem)}
-                        onDelete={() => handleDeleteReminder(rem.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              {sortedReminders.length === 0 ? (
+                <div className="rounded-[2rem] bg-white/70 border border-petal/40 p-8 text-center flex flex-col items-center justify-center">
+                  <span className="text-4xl mb-2">🌸</span>
+                  <p className="text-sm text-rose italic">All clear! No upcoming nudges.</p>
+                  <button
+                    onClick={() => setShowReminderForm(true)}
+                    className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> + New reminder
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="columns-2 lg:columns-3 gap-3">
+                    {sortedReminders.map((rem, idx) => {
+                      const style = reminderCardStyle(rem);
+                      const visual = reminderVisual(rem);
+                      const age = turningAge(rem);
+                      const dateLabel = rem.kind === "medication"
+                        ? [...rem.times].sort().join(" · ")
+                        : rem.kind === "birthday"
+                          ? prettyMonthDay(rem.date)
+                          : rem.endDate
+                            ? `${prettyDate(rem.date)} → ${prettyDate(rem.endDate)}`
+                            : prettyDate(rem.date);
+                      return (
+                        <div key={rem.id} className="break-inside-avoid mb-3 group" style={{ animationDelay: `${idx * 60}ms` }}>
+                          <div className={["relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden", style.bg, style.border].join(" ")}>
+                            {/* Cherry blossom decorator */}
+                            <span className="absolute -top-2 -right-2 text-6xl opacity-10 pointer-events-none select-none rotate-12 leading-none">🌸</span>
 
+                            {/* Top: kind emoji + date */}
+                            <div className="flex items-start justify-between relative z-10">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm leading-none">{style.bloom}</span>
+                                <span className={["text-[9px] font-bold tracking-tight leading-none mt-0.5", style.body].join(" ")}>
+                                  {dateLabel}
+                                </span>
+                              </div>
+                              {rem.kind === "event" && (
+                                <button
+                                  onClick={() => handleToggleReminderDone(rem.id)}
+                                  className="h-5 w-5 shrink-0 rounded-full border-2 border-current opacity-40 hover:opacity-100 transition flex items-center justify-center"
+                                  style={{ color: "currentColor" }}
+                                  title="Mark done"
+                                />
+                              )}
+                            </div>
+
+                            {/* Title */}
+                            <h4 className={["font-script text-xl leading-tight relative z-10", style.text].join(" ")}>
+                              {rem.title}
+                              {age !== null && <span className="font-normal text-sm ml-1">· turning {age} ✿</span>}
+                            </h4>
+
+                            {/* Detail line */}
+                            <p className={["text-xs font-medium leading-relaxed relative z-10", style.body].join(" ")}>
+                              {rem.kind === "medication"
+                                ? `${weekdaysLabel(rem.weekdays)} · ${rem.times.length} dose${rem.times.length > 1 ? "s" : ""}/day`
+                                : rem.kind === "birthday"
+                                  ? "Repeats every year 🎂"
+                                  : rem.time
+                                    ? `${rem.time}${rem.leadDays > 0 ? ` · ${rem.leadDays}d heads-up` : ""}`
+                                    : rem.leadDays > 0
+                                      ? `${rem.leadDays}d heads-up`
+                                      : visual.label}
+                            </p>
+
+                            {/* Footer */}
+                            <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10 border-current/10"].join(" ")}>
+                              <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full", visual.color].join(" ")}>
+                                <visual.Icon className="h-2.5 w-2.5" /> {visual.label}
+                              </span>
+                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                <button onClick={() => handleEditReminder(rem)} className="p-1 rounded-full bg-white/60 text-rose hover:text-hotpink hover:bg-white transition" title="Edit">
+                                  <Edit3 className="h-3 w-3" />
+                                </button>
+                                <button onClick={() => handleDeleteReminder(rem.id)} className="p-1 rounded-full bg-white/60 text-rose hover:text-[#F87171] hover:bg-white transition" title="Delete">
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
               {completedReminders.length > 0 && (
                 <div className="overflow-hidden rounded-[2rem] border border-pink-100 bg-white/70 shadow-sm animate-fade-in">
                   <button
@@ -1433,7 +1506,6 @@ export default function NotesPage() {
                   )}
                 </div>
               )}
-            </div>
           )}
         </div>
 
