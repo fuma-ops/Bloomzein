@@ -375,44 +375,44 @@ const JOURNAL_STYLES = `
   .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
   .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
   .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
-  /* ── Phone: fill section, show only right cream page ── */
-  @media (max-width: 767px) {
+  /* ── Phone & Tablet: image as background, floating cream paper on top ── */
+  @media (max-width: 1023px) {
+    .diary-book-desktop { display: none !important; }
+    .diary-book-mobile  { display: none !important; }
     .diary-book-wrap {
-      overflow: hidden;
-      aspect-ratio: 9 / 16;
-    }
-    .diary-book-desktop { display: none !important; }
-    .diary-book-mobile {
-      display: block !important;
-      position: absolute;
-      right: 0; top: 0;
-      width: 125%;
-      height: 100%;
-      object-fit: cover;
-      object-position: right top;
+      background-image: url('/images/diary-bg-floral.png');
+      background-size: cover;
+      background-position: center top;
+      overflow: visible;
+      aspect-ratio: 3 / 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
     .diary-left-page { display: none !important; }
     .diary-right-page {
-      top: 14% !important;
-      left: 14% !important;
-      right: 12% !important;
-      width: auto !important;
-      height: 72% !important;
-      padding: 2% 3% 2% 3% !important;
-    }
-  }
-  /* ── Tablet: same image, full display ── */
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .diary-book-desktop { display: none !important; }
-    .diary-book-mobile  { display: block !important; }
-    .diary-left-page { display: none !important; }
-    .diary-right-page {
-      top: 14% !important;
-      left: 22% !important;
-      right: 12% !important;
-      width: auto !important;
-      height: 71% !important;
-      padding: 2% 3% 2% 3% !important;
+      position: relative !important;
+      top: auto !important; left: auto !important; right: auto !important;
+      width: 84% !important;
+      height: auto !important;
+      min-height: 420px;
+      padding: 22px 24px 18px !important;
+      background:
+        repeating-linear-gradient(
+          transparent,
+          transparent 27px,
+          rgba(200,140,160,0.13) 27px,
+          rgba(200,140,160,0.13) 28px
+        ),
+        #FFF9F2 !important;
+      border-radius: 4px 12px 12px 4px !important;
+      box-shadow:
+        -4px 0 8px rgba(200,88,122,0.08),
+        0 12px 48px rgba(0,0,0,0.18),
+        0 3px 16px rgba(200,88,122,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.9) !important;
+      overflow: visible !important;
     }
   }
   @media (min-width: 1024px) {
