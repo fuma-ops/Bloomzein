@@ -186,13 +186,13 @@ function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone
 function HeroBanner({ src, title, subtitle }: { src: string; title: string; subtitle?: string }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[16/9] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-md shadow-rose/10 mb-4">
+    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-md shadow-rose/10 mb-4">
       {broken ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
         </div>
       ) : (
-        <img src={src} alt={title} className="absolute inset-0 h-full w-full object-cover" onError={() => setBroken(true)} />
+        <img src={src} alt={title} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 p-3 sm:p-5">
@@ -232,7 +232,7 @@ function HeroHeader({
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
         </div>
       ) : (
-        <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover" onError={() => setBroken(true)} />
+        <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
       <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
@@ -348,7 +348,7 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {view.kind === "discover" || view.kind === "program" || view.kind === "library" ? (
+      {(view.kind === "discover" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={HERO_IMAGES[view.kind]}
           tab={tab}
@@ -356,25 +356,6 @@ export default function WorkoutPage() {
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
         />
-      ) : (
-        <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10 mb-4">
-          <h1 className="font-script text-4xl sm:text-6xl text-hotpink leading-none">Workout Programs</h1>
-          <p className="mt-2 text-sm text-rose/80">Move with strength, on your terms.</p>
-          <div className="mt-4 inline-flex flex-wrap rounded-full bg-blush/60 border border-petal/60 p-1">
-            {(["discover", "program", "library"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => { setTab(t); setView({ kind: t }); }}
-                className={[
-                  "rounded-full px-4 py-2 text-sm font-bold transition",
-                  tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
-                ].join(" ")}
-              >
-                {t === "discover" ? "Discover" : t === "program" ? "My Program" : "Library"}
-              </button>
-            ))}
-          </div>
-        </div>
       )}
 
       {view.kind === "discover" && (
