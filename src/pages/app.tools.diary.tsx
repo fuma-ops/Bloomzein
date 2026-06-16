@@ -425,21 +425,35 @@ const JOURNAL_STYLES = `
       padding: 22px 22px 16px;
       box-sizing: border-box;
       overflow: hidden;
+      background:
+        repeating-linear-gradient(
+          transparent, transparent 27px,
+          rgba(200,140,160,0.12) 27px, rgba(200,140,160,0.12) 28px
+        ),
+        linear-gradient(160deg, #FFFDF8 0%, #FFF5EE 55%, #FFF0EC 100%);
+      box-shadow:
+        -8px 0 22px rgba(160,50,75,0.2),
+        8px 0 22px rgba(255,255,255,0.45),
+        0 16px 52px rgba(0,0,0,0.2),
+        0 3px 16px rgba(200,88,122,0.14),
+        inset 0 2px 0 rgba(255,255,255,0.95);
+      mask-image: radial-gradient(ellipse 92% 90% at 50% 48%, black 52%, rgba(0,0,0,0.72) 70%, rgba(0,0,0,0.18) 87%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 92% 90% at 50% 48%, black 52%, rgba(0,0,0,0.72) 70%, rgba(0,0,0,0.18) 87%, transparent 100%);
     }
     .diary-nav-mini {
       width: 30px; height: 30px; border-radius: 50%;
-      background: rgba(255,255,255,0.18);
+      background: rgba(255,210,225,0.75);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.32);
+      border: 1px solid rgba(200,88,122,0.35);
       display: inline-flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,0.92);
+      color: #C8587A;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.15s;
       flex-shrink: 0;
       padding: 0;
     }
-    .diary-nav-mini:disabled { opacity: 0.18; cursor: default; pointer-events: none; }
+    .diary-nav-mini:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
     .diary-nav-mini:not(:disabled):active { transform: scale(0.88); }
   }
   @media (min-width: 1024px) {
@@ -819,7 +833,7 @@ function OpenJournal({
                 >
                   <ChevronLeft style={{ width: 14, height: 14 }} strokeWidth={2.5} />
                 </button>
-                <p style={{ fontFamily: HW, fontSize: "clamp(16px,4.5vw,21px)", color: "rgba(255,255,255,0.97)", fontWeight: 700, textShadow: "0 2px 14px rgba(130,20,60,0.6)", lineHeight: 1.2, textAlign: "center", flex: 1, padding: "0 10px" }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(16px,4.5vw,21px)", color: "#C8587A", fontWeight: 700, textShadow: "0 1px 4px rgba(200,88,122,0.15)", lineHeight: 1.2, textAlign: "center", flex: 1, padding: "0 10px" }}>
                   {rightDateLabel}
                 </p>
                 <button
@@ -834,21 +848,21 @@ function OpenJournal({
 
               {/* Phase row: cycleDay | PHASE ✿ bloom */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexShrink: 0 }}>
-                <span style={{ fontSize: 20, fontWeight: 800, color: "rgba(255,255,255,0.96)", textShadow: "0 1px 10px rgba(130,20,60,0.5)", lineHeight: 1 }}>{cycleDay}</span>
-                <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 18, lineHeight: 1 }}>|</span>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.85)", textShadow: "0 1px 4px rgba(130,20,60,0.3)" }}>{phase}</span>
-                <span style={{ fontFamily: HW, fontSize: 15, color: "#FFB6CC", textShadow: "0 1px 8px rgba(130,20,60,0.45)", marginLeft: 2 }}>✿ bloom</span>
+                <span style={{ fontSize: 20, fontWeight: 800, color: "#C8587A", lineHeight: 1 }}>{cycleDay}</span>
+                <span style={{ color: "rgba(200,88,122,0.35)", fontSize: 18, lineHeight: 1 }}>|</span>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7A1835" }}>{phase}</span>
+                <span style={{ fontFamily: HW, fontSize: 15, color: "#C8587A", marginLeft: 2 }}>✿ bloom</span>
               </div>
 
-              <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent)", marginBottom: 12, flexShrink: 0 }} />
+              <div style={{ height: 1, background: `linear-gradient(to right, transparent, rgba(200,88,122,0.4), transparent)`, marginBottom: 12, flexShrink: 0 }} />
 
               {/* Reflection prompt */}
-              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "rgba(255,185,210,0.85)", marginBottom: 5, flexShrink: 0 }}>Reflection ✦</p>
-              <p style={{ fontFamily: HW, fontSize: "clamp(14px,3.8vw,18px)", color: "rgba(255,252,255,0.96)", lineHeight: 1.5, marginBottom: 14, flexShrink: 0, textShadow: "0 1px 8px rgba(130,20,60,0.3)" }}>
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#C8587A", marginBottom: 5, flexShrink: 0 }}>Reflection ✦</p>
+              <p style={{ fontFamily: HW, fontSize: "clamp(14px,3.8vw,18px)", color: "#5A2030", lineHeight: 1.5, marginBottom: 14, flexShrink: 0 }}>
                 {REFLECTION_PROMPTS[phase] ?? "What does your heart need today?"}
               </p>
 
-              <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(255,255,255,0.22), transparent)", marginBottom: 14, flexShrink: 0 }} />
+              <div style={{ height: 1, background: `linear-gradient(to right, rgba(200,88,122,0.12), rgba(200,88,122,0.3), rgba(200,88,122,0.12))`, marginBottom: 14, flexShrink: 0 }} />
 
               {/* Entry title */}
               {isToday ? (
@@ -857,18 +871,17 @@ function OpenJournal({
                   contentEditable
                   suppressContentEditableWarning
                   onInput={handleInput}
-                  data-ph="Title…"
+                  data-ph="Give this page a title…"
                   style={{
                     fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)",
-                    color: "rgba(255,255,255,0.98)", lineHeight: 1.25,
+                    color: "#7A1835", lineHeight: 1.25,
                     outline: "none", cursor: "text",
                     marginBottom: 10, flexShrink: 0,
                     minHeight: "1.3em", wordBreak: "break-word",
-                    textShadow: "0 1px 10px rgba(130,20,60,0.45)",
                   }}
                 />
               ) : (
-                <p style={{ fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)", color: "rgba(255,255,255,0.98)", lineHeight: 1.25, marginBottom: 10, flexShrink: 0, textShadow: "0 1px 10px rgba(130,20,60,0.45)" }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)", color: "#7A1835", lineHeight: 1.25, marginBottom: 10, flexShrink: 0 }}>
                   {currentEntry?.title || ""}
                 </p>
               )}
@@ -880,16 +893,15 @@ function OpenJournal({
                   contentEditable
                   suppressContentEditableWarning
                   onInput={handleInput}
-                  data-ph="Let your thoughts flow…"
+                  data-ph="Start writing here… let your thoughts flow ✨"
                   className="diary-overlay"
                   style={{
                     flex: 1,
                     fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)",
-                    lineHeight: 1.75, color: "rgba(255,250,255,0.92)",
+                    lineHeight: 1.75, color: "#5A2030",
                     outline: "none", cursor: "text",
                     wordBreak: "break-word",
                     overflow: "hidden",
-                    textShadow: "0 1px 5px rgba(130,20,60,0.25)",
                   }}
                 />
               ) : (
@@ -898,15 +910,14 @@ function OpenJournal({
                   style={{
                     flex: 1,
                     fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)",
-                    lineHeight: 1.75, color: "rgba(255,250,255,0.92)",
+                    lineHeight: 1.75, color: "#5A2030",
                     overflow: "hidden",
-                    textShadow: "0 1px 5px rgba(130,20,60,0.25)",
                   }}
-                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="opacity:0.35">…</em>` }}
+                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:rgba(180,100,130,0.45)">Blank page…</em>` }}
                 />
               )}
 
-              {/* Mood icons — selected glows white, others nearly invisible */}
+              {/* Mood icons — selected full pink, others nearly invisible */}
               {isToday && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 12, flexShrink: 0 }}>
                   {DIARY_MOODS.map((m) => {
@@ -919,17 +930,16 @@ function OpenJournal({
                         title={m.label}
                         style={{
                           width: 30, height: 30, borderRadius: "50%",
-                          background: active ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.1)",
-                          backdropFilter: "blur(6px)",
-                          border: active ? "1.5px solid rgba(255,255,255,0.75)" : "1px solid rgba(255,255,255,0.2)",
+                          background: active ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.08)",
+                          border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.18)",
                           cursor: "pointer",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          color: active ? "#C8587A" : "rgba(255,255,255,0.85)",
-                          opacity: active ? 1 : 0.28,
+                          color: active ? "white" : "#C8587A",
+                          opacity: active ? 1 : 0.22,
                           transition: "all 0.18s ease",
                           transform: active ? "scale(1.18)" : "scale(1)",
                           flexShrink: 0, padding: 0,
-                          boxShadow: active ? "0 3px 14px rgba(255,255,255,0.35)" : "none",
+                          boxShadow: active ? "0 3px 14px rgba(200,88,122,0.4)" : "none",
                         }}
                       >
                         <m.Icon style={{ width: 14, height: 14 }} strokeWidth={active ? 2.2 : 1.8} />
@@ -940,7 +950,7 @@ function OpenJournal({
               )}
 
               {/* Page number */}
-              <p style={{ fontFamily: HW, textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
+              <p style={{ fontFamily: HW, textAlign: "center", fontSize: 11, color: "rgba(200,88,122,0.35)", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
                 ~ {pageIndex * 2 + 2} ~
               </p>
 
