@@ -66,7 +66,7 @@ export const WORKOUT_INTENTIONS: { key: WorkoutIntention; label: string; desc: s
    Real photography, clean & bright, works cropped to 16:9 and square. */
 
 const E = (slug: string, name: string, muscles: string): Exercise => ({
-  slug, name, muscles, image: `/images/workout-${slug}.jpg`,
+  slug, name, muscles, image: `/images/workout-${slug}.webp`,
 });
 
 export const EXERCISES: Record<string, Exercise> = {
