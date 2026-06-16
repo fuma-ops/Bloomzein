@@ -375,7 +375,8 @@ const JOURNAL_STYLES = `
   .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
   .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
   .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
-  /* ── Phone & Tablet: image as background, floating cream paper on top ── */
+  /* ── Phone & Tablet: image as background, full-bleed cream paper on top ── */
+  .diary-mood-row-inline { display: none; }
   @media (max-width: 1023px) {
     .diary-book-desktop { display: none !important; }
     .diary-book-mobile  { display: none !important; }
@@ -383,21 +384,21 @@ const JOURNAL_STYLES = `
       background-image: url('/images/diary-bg-floral.png');
       background-size: cover;
       background-position: center top;
-      overflow: visible;
+      overflow: hidden;
       aspect-ratio: 3 / 4;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
       padding: 20px;
+      border-radius: 12px;
     }
     .diary-left-page { display: none !important; }
     .diary-right-page {
       position: relative !important;
       top: auto !important; left: auto !important; right: auto !important;
-      width: 84% !important;
+      width: 100% !important;
       height: auto !important;
-      min-height: 420px;
-      padding: 22px 24px 18px !important;
+      padding: 24px 26px 20px !important;
       background:
         repeating-linear-gradient(
           transparent,
@@ -405,15 +406,21 @@ const JOURNAL_STYLES = `
           rgba(200,140,160,0.13) 27px,
           rgba(200,140,160,0.13) 28px
         ),
-        #FFF9F2 !important;
-      border-radius: 4px 12px 12px 4px !important;
+        linear-gradient(160deg, #FFFDF8 0%, #FFF5EE 60%, #FFF0EC 100%) !important;
+      border-radius: 8px !important;
       box-shadow:
-        -4px 0 8px rgba(200,88,122,0.08),
-        0 12px 48px rgba(0,0,0,0.18),
-        0 3px 16px rgba(200,88,122,0.14),
-        inset 0 1px 0 rgba(255,255,255,0.9) !important;
+        -8px 0 18px rgba(160,50,75,0.22),
+        8px 0 18px rgba(255,255,255,0.5),
+        0 18px 56px rgba(0,0,0,0.22),
+        0 4px 18px rgba(200,88,122,0.18),
+        inset 0 2px 0 rgba(255,255,255,0.95),
+        inset 2px 0 8px rgba(255,255,255,0.6) !important;
+      mask-image: radial-gradient(ellipse 94% 93% at 50% 47%, black 60%, rgba(0,0,0,0.7) 76%, rgba(0,0,0,0.2) 90%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 94% 93% at 50% 47%, black 60%, rgba(0,0,0,0.7) 76%, rgba(0,0,0,0.2) 90%, transparent 100%);
       overflow: visible !important;
     }
+    .diary-mood-selector-external { display: none !important; }
+    .diary-mood-row-inline { display: flex !important; }
   }
   @media (min-width: 1024px) {
     .diary-book-desktop { display: block !important; }
@@ -711,6 +718,40 @@ function OpenJournal({
               </div>
               <div style={{ height: 1, background: `linear-gradient(to right, transparent, ${PINK}66, transparent)`, marginBottom: "3%", flexShrink: 0 }} />
 
+              {/* Inline mood row — mobile only (shown via CSS on small screens) */}
+              {isToday && (
+                <div
+                  className="diary-mood-row-inline"
+                  style={{ flexWrap: "wrap", gap: 5, marginBottom: "3%", flexShrink: 0 }}
+                >
+                  {DIARY_MOODS.map((m) => {
+                    const active = selectedMood === m.key;
+                    return (
+                      <button
+                        key={m.key}
+                        onClick={() => handleMoodChange(m.key)}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        title={m.label}
+                        style={{
+                          width: 28, height: 28, borderRadius: "50%",
+                          background: active ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.08)",
+                          border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.2)",
+                          cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: active ? "white" : "#C8587A",
+                          opacity: active ? 1 : 0.22,
+                          transition: "all 0.18s ease",
+                          transform: active ? "scale(1.15)" : "scale(1)",
+                          flexShrink: 0, padding: 0,
+                        }}
+                      >
+                        <m.Icon style={{ width: 13, height: 13 }} strokeWidth={active ? 2 : 1.7} />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Title */}
               {isToday ? (
                 <div
@@ -773,7 +814,7 @@ function OpenJournal({
 
         {/* ── Mood selector — pink glassmorphism circles, just below the book ── */}
         {isToday && (
-          <div style={{
+          <div className="diary-mood-selector-external" style={{
             display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 8,
             marginTop: 14, padding: "10px 16px",
             borderRadius: 16,
