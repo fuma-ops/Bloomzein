@@ -394,8 +394,8 @@ const JOURNAL_STYLES = `
     .diary-left-page { display: none !important; }
     .diary-right-page {
       top: 14% !important;
-      left: 5% !important;
-      right: 13% !important;
+      left: 14% !important;
+      right: 12% !important;
       width: auto !important;
       height: 72% !important;
       padding: 2% 3% 2% 3% !important;
@@ -408,7 +408,7 @@ const JOURNAL_STYLES = `
     .diary-left-page { display: none !important; }
     .diary-right-page {
       top: 14% !important;
-      left: 18% !important;
+      left: 22% !important;
       right: 12% !important;
       width: auto !important;
       height: 71% !important;
