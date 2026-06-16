@@ -352,9 +352,14 @@ const JOURNAL_STYLES = `
   .diary-book-wrap:active { cursor: grabbing; }
   .diary-book-img { width: 100%; display: block; pointer-events: none; }
   @media (max-width: 767px) {
-    .diary-book-img { width: 200%; margin-left: -100%; }
     .diary-left-page { display: none !important; }
-    .diary-right-page { right: 4% !important; width: 88% !important; left: auto !important; }
+    .diary-right-page {
+      left: 50% !important;
+      right: 2% !important;
+      width: auto !important;
+      top: 8% !important;
+      height: 82% !important;
+    }
   }
 `;
 
@@ -465,7 +470,11 @@ function OpenJournal({
   const onPointerDown = (e: React.PointerEvent) => {
     pointerStartX.current = e.clientX;
     pointerHasDragged.current = false;
-    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+    // Only capture when NOT on a text-editing area so contenteditable still works
+    const tgt = e.target as HTMLElement;
+    if (!tgt.isContentEditable && !tgt.closest?.('[contenteditable]')) {
+      try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (pointerStartX.current === null) return;
