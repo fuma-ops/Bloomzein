@@ -207,6 +207,7 @@ export default function DiaryPage() {
         <DiaryDashboard
           entries={sorted}
           onNew={() => setComposing(true)}
+          onSaveEntry={upsertEntry}
           onEdit={setEditing}
           onDelete={deleteEntry}
         />
@@ -243,10 +244,11 @@ const REFLECTION_PROMPTS: Record<string, string> = {
 };
 
 function DiaryDashboard({
-  entries, onNew, onEdit,
+  entries, onNew, onSaveEntry, onEdit,
 }: {
   entries: DiaryEntry[];
   onNew: () => void;
+  onSaveEntry: (entry: DiaryEntry) => void;
   onEdit: (e: DiaryEntry) => void;
   onDelete: (id: string) => void;
 }) {
@@ -263,19 +265,19 @@ function DiaryDashboard({
 
       <div className="grid gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
 
-        {/* ── Left: Today's Bloom (single card) ── */}
-        <aside className="order-1 lg:col-span-3">
+        {/* ── Left: Today's Bloom ── */}
+        <aside className="order-1 lg:col-span-2">
           <TodaysBloomCard cycleDay={cycleDay} phase={phase} style={{ animationDelay: "60ms" }} />
         </aside>
 
-        {/* ── Center: Open Journal HERO ── */}
-        <main className="order-2 lg:col-span-6 flex flex-col gap-4">
-          <OpenJournal entries={entries} todayEntry={todayEntry} onNew={onNew} style={{ animationDelay: "0ms" }} />
+        {/* ── Center: Open Journal HERO (wider) ── */}
+        <main className="order-2 lg:col-span-8 flex flex-col gap-4">
+          <OpenJournal entries={entries} onSaveEntry={onSaveEntry} style={{ animationDelay: "0ms" }} />
           <JournalStatsRow streak={streak} todayEntry={todayEntry} phase={phase} style={{ animationDelay: "220ms" }} />
         </main>
 
         {/* ── Right: Affirmation + Memories ── */}
-        <aside className="order-3 lg:col-span-3 flex flex-col gap-4">
+        <aside className="order-3 lg:col-span-2 flex flex-col gap-4">
           <DailyAffirmationCard affirmation={affirmation} style={{ animationDelay: "80ms" }} />
           {recent.length > 0 && (
             <RecentMemoriesCard entries={recent} onEdit={onEdit} style={{ animationDelay: "160ms" }} />
@@ -320,194 +322,330 @@ function FloatingAtmosphere() {
   );
 }
 
-/* ── Open Journal (HERO — luxury book spread) ── */
+/* ── Open Journal (HERO — luxury 3D flipbook) ── */
+const JOURNAL_STYLES = `
+  @keyframes bk-flip-out {
+    0%   { transform: rotateY(0deg);   opacity: 1; }
+    100% { transform: rotateY(-88deg); opacity: 0; }
+  }
+  @keyframes bk-flip-in {
+    0%   { transform: rotateY(88deg);  opacity: 0; }
+    100% { transform: rotateY(0deg);   opacity: 1; }
+  }
+  .bk-flip-out {
+    animation: bk-flip-out 0.28s cubic-bezier(0.4,0,1,1) forwards;
+    transform-origin: left center;
+  }
+  .bk-flip-in {
+    animation: bk-flip-in 0.28s cubic-bezier(0,0,0.6,1) forwards;
+    transform-origin: left center;
+  }
+  [contenteditable][data-ph]:empty::before {
+    content: attr(data-ph);
+    color: rgba(139,104,64,0.38);
+    pointer-events: none;
+    font-style: italic;
+  }
+`;
+
 function OpenJournal({
-  entries, todayEntry, onNew, style,
+  entries, onSaveEntry, style,
 }: {
   entries: DiaryEntry[];
-  todayEntry?: DiaryEntry;
-  onNew: () => void;
+  onSaveEntry: (entry: DiaryEntry) => void;
   style?: CSSProperties;
 }) {
-  const latest = entries[0];
-  const today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const [pageIndex, setPageIndex] = useState(0);
+  const [flipClass, setFlipClass] = useState("");
+  const contentRef = useRef<HTMLDivElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const pageIndexRef = useRef(0);
+  const todayEntryRef = useRef<DiaryEntry | undefined>(undefined);
+  const touchStartX = useRef<number | null>(null);
+
+  const todayISO_ = todayISO();
+  const todayEntry = entries.find((e) => e.date === todayISO_);
+  const isToday = pageIndex === 0;
+  const maxPage = entries.length;
+  const canFlipForward = pageIndex < maxPage;
+  const canFlipBack = pageIndex > 0;
+
+  pageIndexRef.current = pageIndex;
+  todayEntryRef.current = todayEntry;
+
+  const currentEntry = pageIndex === 0 ? todayEntry : entries[pageIndex - 1];
+  const leftEntry = pageIndex === 0 ? undefined : (pageIndex === 1 ? todayEntry : entries[pageIndex - 2]);
+
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  const rightDateLabel = currentEntry
+    ? new Date(currentEntry.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+    : todayLabel;
+  const leftDateLabel = leftEntry
+    ? new Date(leftEntry.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+    : todayLabel;
+
+  // Sync contenteditable only when page changes (not on every auto-save re-render)
+  useEffect(() => {
+    if (!contentRef.current) return;
+    const e = pageIndexRef.current === 0 ? todayEntryRef.current : entries[pageIndexRef.current - 1];
+    contentRef.current.innerHTML = e?.html ?? "";
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageIndex]);
+
+  const saveCurrentContent = () => {
+    if (!contentRef.current || pageIndexRef.current !== 0) return;
+    const te = todayEntryRef.current;
+    const label = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+    onSaveEntry({
+      id: te?.id ?? crypto.randomUUID(),
+      date: todayISO(),
+      mood: te?.mood ?? "calm",
+      title: te?.title || label,
+      html: contentRef.current.innerHTML,
+      theme: te?.theme ?? "sakura",
+      font: te?.font ?? "caveat",
+      createdAt: te?.createdAt ?? new Date().toISOString(),
+    });
+  };
+
+  const handleInput = () => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveCurrentContent, 1200);
+  };
+
+  const flip = (dir: 1 | -1) => {
+    const next = pageIndexRef.current + dir;
+    if (next < 0 || next > entries.length) return;
+    setFlipClass("bk-flip-out");
+    setTimeout(() => {
+      setPageIndex(next);
+      setFlipClass("bk-flip-in");
+      setTimeout(() => setFlipClass(""), 280);
+    }, 280);
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (dx < -60) flip(1);
+    else if (dx > 60) flip(-1);
+  };
+
+  const pageStyle = (side: "left" | "right"): React.CSSProperties => ({
+    flex: 1,
+    position: "relative",
+    padding: "32px 28px 28px",
+    background: side === "left"
+      ? "linear-gradient(160deg, #FEFCF6 0%, #F8F4E8 60%, #FAF6EC 100%)"
+      : "linear-gradient(160deg, #F8F4E8 0%, #FEFCF6 60%, #FAF8F0 100%)",
+    boxShadow: side === "left"
+      ? "inset -18px 0 44px rgba(0,0,0,0.058), inset 0 0 80px rgba(200,168,120,0.03)"
+      : "inset 18px 0 44px rgba(0,0,0,0.058), inset 0 0 80px rgba(200,168,120,0.03)",
+    overflow: "hidden",
+  });
+
+  const ruledLines: React.CSSProperties = {
+    position: "absolute", inset: 0, opacity: 0.038, pointerEvents: "none",
+    backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 31px, #8B6840 31px, #8B6840 32px)",
+    backgroundPositionY: "68px",
+  };
 
   return (
-    <div className="animate-scale-in" style={style}>
-      {/* Stacked page shadows — depth effect */}
-      <div className="absolute inset-x-5 top-4 h-full rounded-2xl -z-10"
-        style={{ background: "#D4B896", opacity: 0.18, filter: "blur(2px)" }}
-      />
-      <div className="absolute inset-x-3 top-2 h-full rounded-2xl -z-20"
-        style={{ background: "#E8D5B4", opacity: 0.12, filter: "blur(1px)" }}
-      />
+    <>
+      <style dangerouslySetInnerHTML={{ __html: JOURNAL_STYLES }} />
+      <div className="animate-scale-in" style={style}>
+        <div style={{ position: "relative" }}>
+          {/* Stacked page depth shadows */}
+          <div style={{ position: "absolute", left: 22, right: 22, top: 10, bottom: -6, borderRadius: 18, background: "#CDB488", opacity: 0.2, filter: "blur(5px)", zIndex: -2 }} />
+          <div style={{ position: "absolute", left: 14, right: 14, top: 5, bottom: -3, borderRadius: 16, background: "#DEC8A0", opacity: 0.14, filter: "blur(2px)", zIndex: -1 }} />
 
-      {/* Book cover wrapper */}
-      <div
-        className="relative rounded-r-2xl rounded-l overflow-hidden"
-        style={{
-          background: "linear-gradient(to bottom, #B8906A 0%, #C9A07A 25%, #D4B090 50%, #C9A07A 75%, #B8906A 100%)",
-          padding: "6px 8px 6px 0",
-          boxShadow: "-4px 6px 24px rgba(0,0,0,0.18), 6px 8px 40px rgba(0,0,0,0.10), 0 40px 80px rgba(255,105,180,0.08)",
-        }}
-      >
-        {/* Left spine — leather binding */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-5 z-10"
-          style={{
-            background: "linear-gradient(to right, #6A4020, #9A7048, #C0906A, #9A7048, #6A4020)",
-            boxShadow: "3px 0 10px rgba(0,0,0,0.22)",
-          }}
-        />
-
-        {/* Two pages */}
-        <div className="ml-5 flex overflow-hidden rounded-r-xl" style={{ minHeight: "480px" }}>
-
-          {/* LEFT PAGE */}
-          <div
-            className="flex-1 relative p-5 sm:p-7 overflow-hidden"
-            style={{
-              background: "linear-gradient(155deg, #FEFCF7 0%, #FAF7EC 100%)",
-              boxShadow: "inset -10px 0 28px rgba(0,0,0,0.055)",
-            }}
-          >
-            {/* Paper ruled lines */}
-            <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{
-              backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 31px, #8B6840 31px, #8B6840 32px)",
-              backgroundPositionY: "60px",
-            }} />
-
-            {/* Floral corners */}
-            <img src="/images/landing-orb-flower.png" alt="" aria-hidden
-              className="pointer-events-none select-none absolute -top-4 -left-4 w-20 h-20 opacity-[0.13] rotate-12 object-contain"
-            />
-            <img src="/images/landing-orb-flower.png" alt="" aria-hidden
-              className="pointer-events-none select-none absolute -bottom-4 right-0 w-16 h-16 opacity-[0.09] rotate-[195deg] object-contain"
-            />
-
-            <div className="relative z-10 flex flex-col h-full">
-              {/* Date header */}
-              <p className="font-script text-xl text-[#8B6840] leading-snug">{today}</p>
-              <div className="mt-1.5 mb-4 h-px" style={{ background: "linear-gradient(to right, rgba(139,104,64,0.35), rgba(200,168,122,0.4), transparent)" }} />
-
-              {/* Quote */}
-              <div className="mb-5 flex-shrink-0">
-                <Quote className="h-4 w-4 mb-1.5" style={{ color: "rgba(255,47,146,0.28)" }} strokeWidth={1.5} />
-                <p className="font-script text-[15px] leading-relaxed italic" style={{ color: "#7A5530" }}>
-                  "She remembered who she was,<br />and the game changed."
-                </p>
-                <p className="mt-1 text-[10px]" style={{ color: "#A08060" }}>— Lalah Delia</p>
+          {/* 3D book container */}
+          <div style={{ perspective: "2400px", perspectiveOrigin: "50% 40%" }}>
+            <div
+              style={{
+                transform: "rotateX(3deg) rotateY(-5deg)",
+                transformStyle: "preserve-3d",
+                transition: "transform 0.4s ease",
+                background: "linear-gradient(to bottom, #7A5025 0%, #A87840 18%, #CC9860 36%, #D8A870 50%, #C09050 64%, #A07030 82%, #7A5025 100%)",
+                borderRadius: "3px 20px 20px 3px",
+                padding: "10px 14px 10px 0",
+                boxShadow: [
+                  "-8px 12px 44px rgba(0,0,0,0.28)",
+                  "10px 16px 60px rgba(0,0,0,0.16)",
+                  "0 48px 88px rgba(255,105,180,0.07)",
+                  "inset 0 1px 0 rgba(255,255,255,0.07)",
+                ].join(", "),
+              }}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
+              {/* Left leather spine */}
+              <div style={{
+                position: "absolute", left: 0, top: 0, bottom: 0, width: 30,
+                background: "linear-gradient(to right, #2E1200, #5A2C08, #8A5020, #6A3810, #2E1200)",
+                boxShadow: "6px 0 16px rgba(0,0,0,0.32), inset 4px 0 8px rgba(255,200,100,0.05), inset -2px 0 4px rgba(0,0,0,0.35)",
+                borderRadius: "3px 0 0 3px",
+                zIndex: 10,
+              }}>
+                <div style={{ position: "absolute", top: "12%", left: "50%", transform: "translateX(-50%)", width: 1, height: "76%", background: "linear-gradient(to bottom, transparent, rgba(255,210,90,0.22), transparent)" }} />
               </div>
 
-              {/* Recent moods */}
-              <div className="flex-1">
-                {entries.length > 0 ? (
-                  <>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#A08060" }}>Recent moods</p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {entries.slice(0, 10).map((e, i) => {
-                        const M = moodMeta(e.mood);
-                        return (
-                          <span key={e.id} title={`${e.date}: ${M.label}`}
-                            className="h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: "linear-gradient(135deg,#FF2F92,#E6007A)", opacity: Math.max(0.22, 1 - i * 0.09) }}
-                          >
-                            <M.Icon className="h-3 w-3 text-white" strokeWidth={2} />
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </>
-                ) : (
-                  <p className="font-script text-base" style={{ color: "#A08060" }}>Begin your story here ✿</p>
-                )}
-              </div>
+              {/* Pages spread */}
+              <div style={{ marginLeft: 30, display: "flex", minHeight: 560 }}>
 
-              {/* Page number */}
-              <p className="mt-4 text-center text-[10px] font-semibold" style={{ color: "#C8A87A" }}>~ 1 ~</p>
+                {/* ── LEFT PAGE ── */}
+                <div style={pageStyle("left")}>
+                  <div style={ruledLines} />
+                  <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 28, background: "linear-gradient(to left, rgba(0,0,0,0.055), transparent)", pointerEvents: "none" }} />
+                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", top: -20, left: -20, width: 88, height: 88, opacity: 0.1, transform: "rotate(12deg)", objectFit: "contain", pointerEvents: "none" }} />
+                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", bottom: -16, right: -8, width: 68, height: 68, opacity: 0.07, transform: "rotate(200deg)", objectFit: "contain", pointerEvents: "none" }} />
+
+                  <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column" }}>
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: 20, color: "#8B6840", lineHeight: 1.3, marginBottom: 4 }}>{leftDateLabel}</p>
+                    <div style={{ height: 1, background: "linear-gradient(to right, rgba(139,104,64,0.32), rgba(200,168,122,0.44), transparent)", marginBottom: 16 }} />
+
+                    {leftEntry ? (
+                      <div style={{ flex: 1, fontFamily: "'Caveat', cursive", fontSize: 19, lineHeight: "32px", color: "#7A5530", overflow: "hidden" }}
+                        dangerouslySetInnerHTML={{ __html: leftEntry.html || "<em style='color:rgba(139,104,64,0.38)'>Blank page…</em>" }} />
+                    ) : (
+                      <div style={{ flex: 1 }}>
+                        <div style={{ marginBottom: 20 }}>
+                          <span style={{ fontSize: 32, color: "rgba(255,47,146,0.2)", lineHeight: 1, display: "block", marginBottom: 4 }}>"</span>
+                          <p style={{ fontFamily: "'Caveat', cursive", fontSize: 17, lineHeight: 1.65, color: "#7A5530", fontStyle: "italic", margin: 0 }}>
+                            She remembered who she was,<br />and the game changed.
+                          </p>
+                          <p style={{ fontSize: 11, color: "#A08060", marginTop: 6 }}>— Lalah Delia</p>
+                        </div>
+                        {entries.length > 0 && (
+                          <>
+                            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#A08060", marginBottom: 8 }}>Recent moods</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {entries.slice(0, 12).map((e, i) => {
+                                const M = moodMeta(e.mood);
+                                return (
+                                  <span key={e.id} title={`${e.date}: ${M.label}`}
+                                    style={{ width: 26, height: 26, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#FF2F92,#E6007A)", opacity: Math.max(0.2, 1 - i * 0.08) }}>
+                                    <M.Icon style={{ width: 12, height: 12, color: "white" }} strokeWidth={2} />
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                        {entries.length === 0 && (
+                          <p style={{ fontFamily: "'Caveat', cursive", fontSize: 17, color: "#A08060" }}>Begin your story here ✿</p>
+                        )}
+                      </div>
+                    )}
+
+                    <p style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "#C8A87A", marginTop: 12 }}>~ {pageIndex * 2 + 1} ~</p>
+                  </div>
+                </div>
+
+                {/* ── CENTER SPINE FOLD ── */}
+                <div style={{
+                  flexShrink: 0, width: 26,
+                  background: "linear-gradient(to right, #C0A880, #E4D0A4, #F2E4BC, #E4D0A4, #C0A880)",
+                  boxShadow: "inset 4px 0 14px rgba(0,0,0,0.13), inset -4px 0 14px rgba(0,0,0,0.10)",
+                }} />
+
+                {/* ── RIGHT PAGE ── writing area */}
+                <div
+                  className={flipClass}
+                  style={{
+                    ...pageStyle("right"),
+                    transformStyle: "preserve-3d",
+                  }}
+                >
+                  <div style={ruledLines} />
+                  <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 28, background: "linear-gradient(to right, rgba(0,0,0,0.055), transparent)", pointerEvents: "none" }} />
+                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", top: -20, right: -20, width: 88, height: 88, opacity: 0.1, transform: "rotate(-12deg)", objectFit: "contain", pointerEvents: "none" }} />
+                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", bottom: -16, left: -8, width: 68, height: 68, opacity: 0.07, transform: "rotate(15deg)", objectFit: "contain", pointerEvents: "none" }} />
+
+                  <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column" }}>
+                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: 22, color: "#8B6840", lineHeight: 1.3, marginBottom: 4 }}>{rightDateLabel}</p>
+                    <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(200,168,122,0.44), transparent)", marginBottom: 12 }} />
+
+                    {isToday ? (
+                      <div
+                        ref={contentRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onInput={handleInput}
+                        data-ph="Click here and start writing... let your thoughts flow ✿"
+                        style={{
+                          flex: 1,
+                          fontFamily: "'Caveat', cursive",
+                          fontSize: 21,
+                          lineHeight: "32px",
+                          color: "#3E2008",
+                          outline: "none",
+                          cursor: "text",
+                          minHeight: 420,
+                          wordBreak: "break-word",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          flex: 1,
+                          fontFamily: "'Caveat', cursive",
+                          fontSize: 21,
+                          lineHeight: "32px",
+                          color: "#3E2008",
+                          overflow: "hidden",
+                          minHeight: 420,
+                        }}
+                        dangerouslySetInnerHTML={{ __html: currentEntry?.html || "<em style='color:rgba(139,104,64,0.38)'>Blank page…</em>" }}
+                      />
+                    )}
+
+                    <p style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "#C8A87A", marginTop: 8 }}>~ {pageIndex * 2 + 2} ~</p>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
 
-          {/* CENTER SPINE */}
-          <div className="flex-shrink-0 w-5" style={{
-            background: "linear-gradient(to right, #DFCCA0, #EDD9A8, #F5E6BC, #EDD9A8, #DFCCA0)",
-            boxShadow: "inset 2px 0 8px rgba(0,0,0,0.10), inset -2px 0 8px rgba(0,0,0,0.10)",
-          }} />
-
-          {/* RIGHT PAGE */}
-          <div
-            className="flex-1 relative p-5 sm:p-7 overflow-hidden"
-            style={{
-              background: "linear-gradient(155deg, #FAF7EC 0%, #FEFCF7 100%)",
-              boxShadow: "inset 10px 0 28px rgba(0,0,0,0.055)",
-            }}
-          >
-            {/* Paper ruled lines */}
-            <div className="pointer-events-none absolute inset-0 opacity-[0.035]" style={{
-              backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 31px, #8B6840 31px, #8B6840 32px)",
-              backgroundPositionY: "60px",
-            }} />
-
-            {/* Floral corners */}
-            <img src="/images/landing-orb-flower.png" alt="" aria-hidden
-              className="pointer-events-none select-none absolute -top-4 -right-4 w-20 h-20 opacity-[0.13] -rotate-12 object-contain"
-            />
-            <img src="/images/landing-orb-flower.png" alt="" aria-hidden
-              className="pointer-events-none select-none absolute -bottom-4 left-0 w-16 h-16 opacity-[0.09] rotate-[15deg] object-contain"
-            />
-
-            <div className="relative z-10 flex flex-col h-full" style={{ minHeight: "420px" }}>
-              {latest ? (
-                <>
-                  <h3 className="font-script text-xl leading-snug" style={{ color: "#8B6840" }}>
-                    {latest.title || "Untitled"}
-                  </h3>
-                  <MoodChip moodKey={latest.mood} date={latest.date} />
-                  <div className="mt-3 mb-3 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(200,168,122,0.35), transparent)" }} />
-                  <div
-                    className="flex-1 text-[13px] leading-relaxed overflow-hidden"
-                    style={{ color: "#7A5530", fontFamily: fontFamilyFor(latest.font),
-                      display: "-webkit-box", WebkitLineClamp: 9, WebkitBoxOrient: "vertical" }}
-                    dangerouslySetInnerHTML={{ __html: latest.html }}
-                  />
-                  <div className="mt-4 flex-shrink-0">
-                    <button
-                      onClick={onNew}
-                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition animate-card-breathe"
-                      style={{ border: "1px solid rgba(255,47,146,0.22)", background: "rgba(255,47,146,0.07)", color: "#FF2F92" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#FF2F92"; (e.currentTarget as HTMLElement).style.color = "white"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,47,146,0.07)"; (e.currentTarget as HTMLElement).style.color = "#FF2F92"; }}
-                    >
-                      <Edit3 className="h-3.5 w-3.5" strokeWidth={2} />
-                      {todayEntry ? "Edit today's entry" : "Write today's entry ✿"}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center flex-1 text-center">
-                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden
-                    className="w-16 h-16 opacity-[0.18] mb-4 object-contain"
-                  />
-                  <p className="font-script text-2xl mb-2" style={{ color: "#8B6840" }}>Begin your story</p>
-                  <p className="text-sm mb-5 max-w-[17ch] leading-relaxed" style={{ color: "#A08060" }}>
-                    Your first entry is waiting to be written.
-                  </p>
-                  <button
-                    onClick={onNew}
-                    className="bloom-luxury-btn inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white animate-card-breathe"
-                  >
-                    <Plus className="h-4 w-4" strokeWidth={2} /> Write first entry
-                  </button>
-                </div>
-              )}
-
-              {/* Page number */}
-              <p className="mt-4 text-center text-[10px] font-semibold" style={{ color: "#C8A87A" }}>~ 2 ~</p>
-            </div>
+          {/* Page navigation */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 18, marginTop: 22 }}>
+            <button
+              onClick={() => flip(-1)}
+              disabled={!canFlipBack}
+              style={{
+                width: 42, height: 42, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(255,255,255,0.9)", border: "1px solid rgba(232,213,180,0.7)",
+                color: canFlipBack ? "#FF2F92" : "rgba(160,128,96,0.25)",
+                boxShadow: canFlipBack ? "0 2px 12px rgba(0,0,0,0.1)" : "none",
+                cursor: canFlipBack ? "pointer" : "not-allowed", transition: "all 0.2s",
+              }}
+            >
+              <ChevronLeft style={{ width: 18, height: 18 }} strokeWidth={2.5} />
+            </button>
+            <span style={{ fontFamily: "'Caveat', cursive", fontSize: 17, color: "rgba(139,104,64,0.6)" }}>
+              {pageIndex === 0 ? "today ✿" : `page ${pageIndex} of ${entries.length}`}
+            </span>
+            <button
+              onClick={() => flip(1)}
+              disabled={!canFlipForward}
+              style={{
+                width: 42, height: 42, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(255,255,255,0.9)", border: "1px solid rgba(232,213,180,0.7)",
+                color: canFlipForward ? "#FF2F92" : "rgba(160,128,96,0.25)",
+                boxShadow: canFlipForward ? "0 2px 12px rgba(0,0,0,0.1)" : "none",
+                cursor: canFlipForward ? "pointer" : "not-allowed", transition: "all 0.2s",
+              }}
+            >
+              <ChevronRight style={{ width: 18, height: 18 }} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
