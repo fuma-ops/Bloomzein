@@ -348,8 +348,14 @@ const JOURNAL_STYLES = `
   }
   .diary-overlay::-webkit-scrollbar { width: 3px; }
   .diary-overlay::-webkit-scrollbar-thumb { background: rgba(200,100,140,0.25); border-radius: 2px; }
-  .diary-book-wrap { cursor: grab; }
+  .diary-book-wrap { cursor: grab; touch-action: pan-y; }
   .diary-book-wrap:active { cursor: grabbing; }
+  .diary-book-img { width: 100%; display: block; pointer-events: none; }
+  @media (max-width: 767px) {
+    .diary-book-img { width: 200%; margin-left: -100%; }
+    .diary-left-page { display: none !important; }
+    .diary-right-page { right: 4% !important; width: 88% !important; left: auto !important; }
+  }
 `;
 
 function OpenJournal({
@@ -372,9 +378,8 @@ function OpenJournal({
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
   const pageIndexRef = useRef(0);
   const todayEntryRef = useRef<DiaryEntry | undefined>(undefined);
-  const touchStartX = useRef<number | null>(null);
-  const mouseStartX = useRef<number | null>(null);
-  const hasDragged = useRef(false);
+  const pointerStartX = useRef<number | null>(null);
+  const pointerHasDragged = useRef(false);
 
   selectedMoodRef.current = selectedMood;
   const todayISO_ = todayISO();
@@ -456,32 +461,27 @@ function OpenJournal({
     }, 280);
   };
 
-  // Touch
-  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    touchStartX.current = null;
+  // Unified pointer events — works for both mouse and touch
+  const onPointerDown = (e: React.PointerEvent) => {
+    pointerStartX.current = e.clientX;
+    pointerHasDragged.current = false;
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (pointerStartX.current === null) return;
+    if (Math.abs(e.clientX - pointerStartX.current) > 8) pointerHasDragged.current = true;
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (pointerStartX.current === null) return;
+    const dx = e.clientX - pointerStartX.current;
+    const dragged = pointerHasDragged.current;
+    pointerStartX.current = null;
+    pointerHasDragged.current = false;
+    if (!dragged) return;
     if (dx < -60) flip(1);
     else if (dx > 60) flip(-1);
   };
-
-  // Mouse drag (>70px = flip; less = normal click for editing)
-  const onMouseDown = (e: React.MouseEvent) => { mouseStartX.current = e.clientX; hasDragged.current = false; };
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (mouseStartX.current !== null && Math.abs(e.clientX - mouseStartX.current) > 8)
-      hasDragged.current = true;
-  };
-  const onMouseUp = (e: React.MouseEvent) => {
-    if (mouseStartX.current === null) return;
-    const dx = e.clientX - mouseStartX.current;
-    const dragged = hasDragged.current;
-    mouseStartX.current = null; hasDragged.current = false;
-    if (!dragged) return;
-    if (dx < -70) flip(1);
-    else if (dx > 70) flip(-1);
-  };
-  const onMouseLeave = () => { mouseStartX.current = null; hasDragged.current = false; };
+  const onPointerCancel = () => { pointerStartX.current = null; pointerHasDragged.current = false; };
 
   const HW    = "'Caveat', cursive";
   const PINK  = "#C8587A";
@@ -489,7 +489,7 @@ function OpenJournal({
   const BODY  = "#5A2030";
   const MUTED = "#B08090";
 
-  const rightPageClass = [flipClass, !hintDone ? "bk-hint" : ""].filter(Boolean).join(" ");
+  const rightPageClass = ["diary-right-page", flipClass, !hintDone ? "bk-hint" : ""].filter(Boolean).join(" ");
 
   const CurrentMoodIcon = (moodMeta(isToday ? selectedMood : (currentEntry?.mood ?? "calm"))).Icon;
   const LeftMoodIcon = leftEntry ? (moodMeta(leftEntry.mood)).Icon : null;
@@ -508,23 +508,21 @@ function OpenJournal({
           <div
             className="diary-book-wrap"
             style={{ position: "relative" }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseLeave}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerCancel}
           >
             <img
               src="/images/dreamy-book.png"
               alt=""
               aria-hidden
               draggable={false}
-              style={{ width: "100%", display: "block", pointerEvents: "none" }}
+              className="diary-book-img"
             />
 
             {/* LEFT PAGE — text starts close to spine (small right padding) */}
-            <div style={{
+            <div className="diary-left-page" style={{
               position: "absolute",
               top: "10%", left: "10%", width: "38%", height: "78%",
               padding: "3% 2% 3% 3%",
@@ -805,54 +803,34 @@ function JournalStatsRow({
 /* ── Today's Bloom (single left card) ── */
 function TodaysBloomCard({ cycleDay, phase, style }: { cycleDay: number; phase: string; style?: CSSProperties }) {
   const prompt = REFLECTION_PROMPTS[phase] ?? "What does your heart need today?";
-  const phaseDesc: Record<string, string> = {
-    Menstrual: "Rest, reflect, and restore. Your body is renewing itself.",
-    Follicular: "Energy rises! New ideas and fresh starts feel natural now.",
-    Ovulatory: "You're radiant — perfect time to connect and express yourself.",
-    Luteal: "Slow down and turn inward. Nourish yourself gently.",
-  };
 
   return (
     <div
-      className="animate-scale-in overflow-hidden rounded-2xl shadow-sm"
-      style={{ border: "1px solid rgba(232,213,180,0.65)", animationDelay: style?.animationDelay as string }}
+      className="animate-scale-in rounded-2xl shadow-sm"
+      style={{ border: "1px solid rgba(232,213,180,0.65)", background: "#FEFCF7", animationDelay: style?.animationDelay as string }}
     >
-      {/* Hero image */}
-      <div className="relative h-36 overflow-hidden">
-        <img src="/images/tools-hero-journey.png" alt="" className="w-full h-full object-cover object-center" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #FEFCF7 0%, rgba(254,252,247,0.5) 50%, transparent 100%)" }} />
-      </div>
-
-      {/* Content */}
-      <div className="p-5" style={{ background: "#FEFCF7" }}>
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-hotpink text-lg">✿</span>
-          <h3 className="font-script text-xl" style={{ color: "#8B6840" }}>Today's Bloom</h3>
+      <div className="p-3">
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <span className="text-hotpink text-base">✿</span>
+          <h3 className="font-script text-lg" style={{ color: "#8B6840" }}>Today's Bloom</h3>
         </div>
 
-        {/* Cycle stats */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-2.5">
           <div className="text-center">
-            <p className="text-3xl font-bold leading-none" style={{ color: "#FF2F92" }}>{cycleDay}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "#A08060" }}>Cycle Day</p>
+            <p className="text-2xl font-bold leading-none" style={{ color: "#FF2F92" }}>{cycleDay}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "#A08060" }}>Cycle Day</p>
           </div>
-          <div className="h-10 w-px" style={{ background: "rgba(232,213,180,0.8)" }} />
+          <div className="h-7 w-px" style={{ background: "rgba(232,213,180,0.8)" }} />
           <div>
-            <p className="text-sm font-bold leading-none" style={{ color: "#6B4C30" }}>{phase}</p>
-            <p className="text-[11px] mt-0.5" style={{ color: "#A08060" }}>phase</p>
+            <p className="text-xs font-bold leading-none" style={{ color: "#6B4C30" }}>{phase}</p>
+            <p className="text-[9px] mt-0.5" style={{ color: "#A08060" }}>phase</p>
           </div>
         </div>
 
-        <p className="text-[11px] leading-relaxed mb-4" style={{ color: "#8B6840" }}>{phaseDesc[phase]}</p>
+        <div className="h-px mb-2.5" style={{ background: "linear-gradient(to right, transparent, rgba(232,213,180,0.8), transparent)" }} />
 
-        {/* Divider */}
-        <div className="h-px mb-4" style={{ background: "linear-gradient(to right, transparent, rgba(232,213,180,0.8), transparent)" }} />
-
-        {/* Reflection prompt */}
-        <div>
-          <p className="text-[9px] font-bold uppercase tracking-wider mb-2" style={{ color: "#FF2F92" }}>Reflection Prompt</p>
-          <p className="font-script text-[15px] leading-relaxed" style={{ color: "#6B4C30" }}>{prompt}</p>
-        </div>
+        <p className="text-[8px] font-bold uppercase tracking-wider mb-1" style={{ color: "#FF2F92" }}>Reflection</p>
+        <p className="font-script text-[13px] leading-snug" style={{ color: "#6B4C30" }}>{prompt}</p>
       </div>
     </div>
   );
