@@ -375,13 +375,40 @@ const JOURNAL_STYLES = `
   .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
   .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
   .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
-  @media (max-width: 1023px) {
+  /* ── Phone: crop to right page, fill container edge-to-edge ── */
+  @media (max-width: 767px) {
+    .diary-book-wrap {
+      overflow: hidden;
+      aspect-ratio: 9 / 14;
+    }
+    .diary-book-desktop { display: none !important; }
+    .diary-book-mobile {
+      display: block !important;
+      position: absolute;
+      right: 0; top: 0;
+      width: 145%;
+      height: 100%;
+      object-fit: cover;
+      object-position: right top;
+    }
+    .diary-left-page { display: none !important; }
+    .diary-right-page {
+      top: 9% !important;
+      left: 4% !important;
+      right: 15% !important;
+      width: auto !important;
+      height: 82% !important;
+      padding: 3% 3% 2% 3% !important;
+    }
+  }
+  /* ── Tablet: show full mobile image without cropping ── */
+  @media (min-width: 768px) and (max-width: 1023px) {
     .diary-book-desktop { display: none !important; }
     .diary-book-mobile  { display: block !important; }
     .diary-left-page { display: none !important; }
     .diary-right-page {
       top: 9% !important;
-      left: 21% !important;
+      left: 22% !important;
       right: 5% !important;
       width: auto !important;
       height: 73% !important;
