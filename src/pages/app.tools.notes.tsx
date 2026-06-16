@@ -52,12 +52,21 @@ export interface Reminder {
 }
 
 const NOTE_COLORS = [
-  { key: "sakura", label: "Sakura Blush", bg: "bg-[#FFF0F6]/95", border: "border-[#FBCFE8]", text: "text-[#831843]", accent: "#EC4899" },
-  { key: "lavender", label: "Lavender Glow", bg: "bg-[#F3E8FF]/95", border: "border-[#D8B4FE]", text: "text-[#5B21B6]", accent: "#8B5CF6" },
-  { key: "mint", label: "Mint Whisper", bg: "bg-[#ECFDF5]/95", border: "border-[#A7F3D0]", text: "text-[#065F46]", accent: "#10B981" },
-  { key: "lemon", label: "Lemon Custard", bg: "bg-[#FEFCE8]/95", border: "border-[#FDE047]", text: "text-[#854D0E]", accent: "#EAB308" },
-  { key: "peach", label: "Peach Cream", bg: "bg-[#FFF5F5]/95", border: "border-[#FECACA]", text: "text-[#9C4221]", accent: "#F97316" },
+  { key: "sakura",   label: "Sakura Blush",   bg: "bg-[#FFF0F6]",   border: "border-[#FBCFE8]", text: "text-[#831843]", body: "text-[#9D5C7E]/80", accent: "#EC4899", dark: false, bloom: "🌸" },
+  { key: "lavender", label: "Lavender Glow",  bg: "bg-[#F3E8FF]",   border: "border-[#D8B4FE]", text: "text-[#5B21B6]", body: "text-[#7C3AED]/70", accent: "#8B5CF6", dark: false, bloom: "💜" },
+  { key: "mint",     label: "Mint Whisper",   bg: "bg-[#ECFDF5]",   border: "border-[#A7F3D0]", text: "text-[#065F46]", body: "text-[#065F46]/70", accent: "#10B981", dark: false, bloom: "🍃" },
+  { key: "lemon",    label: "Lemon Custard",  bg: "bg-[#FEFCE8]",   border: "border-[#FDE047]", text: "text-[#854D0E]", body: "text-[#854D0E]/70", accent: "#EAB308", dark: false, bloom: "✨" },
+  { key: "peach",    label: "Peach Cream",    bg: "bg-[#FFF5F5]",   border: "border-[#FECACA]", text: "text-[#9C4221]", body: "text-[#9C4221]/70", accent: "#F97316", dark: false, bloom: "🌺" },
+  { key: "midnight", label: "Midnight Bloom", bg: "bg-gradient-to-br from-[#9D174D] to-[#6D28D9]", border: "border-[#BE185D]", text: "text-white", body: "text-white/75", accent: "#EC4899", dark: true, bloom: "🌙" },
 ];
+
+const TAG_EMOJI: Record<string, string> = {
+  "Self-care": "🌸",
+  "Ideas":     "💡",
+  "To-do":     "✅",
+  "Love":      "💕",
+  "Other":     "✨",
+};
 
 const NOTE_TAGS = ["Self-care", "Ideas", "To-do", "Love", "Other"];
 
@@ -1261,9 +1270,10 @@ export default function NotesPage() {
                 </div>
               ) : (
                 <>
-                  <div className="columns-2 gap-3">
+                  <div className="columns-2 lg:columns-3 gap-3">
                     {filteredNotes.map((note, idx) => {
                       const shade = NOTE_COLORS.find((col) => col.key === note.color) || NOTE_COLORS[0];
+                      const tagEmoji = TAG_EMOJI[note.tag] || "✨";
                       return (
                         <div
                           key={note.id}
@@ -1272,25 +1282,34 @@ export default function NotesPage() {
                         >
                           <div
                             className={[
-                              "relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-md hover:-translate-y-0.5 duration-200 animate-scale-in",
+                              "relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden",
                               shade.bg,
                               shade.border,
                             ].join(" ")}
                           >
-                            {/* Date + pin row */}
-                            <div className="flex items-center justify-between">
-                              <span className="text-[9px] font-bold text-rose/50 tracking-tight leading-none">
-                                {new Date(note.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                                {" · "}
-                                {new Date(note.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                              </span>
+                            {/* Cherry blossom corner decorator */}
+                            <span className="absolute -top-2 -right-2 text-6xl pointer-events-none select-none rotate-12 leading-none"
+                              style={{ opacity: shade.dark ? 0.18 : 0.13 }}>
+                              🌸
+                            </span>
+
+                            {/* Top row: emoji + date + pin */}
+                            <div className="flex items-start justify-between relative z-10">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm leading-none">{tagEmoji}</span>
+                                <span className={["text-[9px] font-bold tracking-tight leading-none mt-0.5", shade.dark ? "text-white/50" : "text-rose/50"].join(" ")}>
+                                  {new Date(note.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                  {" · "}
+                                  {new Date(note.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              </div>
                               <button
                                 onClick={() => handleTogglePin(note.id)}
-                                className="p-1 rounded-full text-rose/30 hover:text-hotpink transition hover:bg-white/60"
+                                className={["p-1 rounded-full transition shrink-0", shade.dark ? "text-white/30 hover:text-white" : "text-rose/30 hover:text-hotpink hover:bg-white/60"].join(" ")}
                                 title={note.pinned ? "Unpin" : "Pin"}
                               >
                                 {note.pinned ? (
-                                  <Pin className="h-3 w-3 text-hotpink" fill="currentColor" />
+                                  <Pin className={["h-3 w-3", shade.dark ? "text-white" : "text-hotpink"].join(" ")} fill="currentColor" />
                                 ) : (
                                   <PinOff className="h-3 w-3 opacity-0 group-hover:opacity-100 transition" />
                                 )}
@@ -1298,31 +1317,31 @@ export default function NotesPage() {
                             </div>
 
                             {/* Title */}
-                            <h4 className={["font-script text-xl leading-tight", shade.text].join(" ")}>
+                            <h4 className={["font-script text-xl leading-tight relative z-10", shade.text].join(" ")}>
                               {note.title}
                             </h4>
 
                             {/* Body */}
-                            <p className="text-xs text-rose/80 font-medium whitespace-pre-wrap leading-relaxed line-clamp-6">
+                            <p className={["text-xs font-medium whitespace-pre-wrap leading-relaxed line-clamp-5 relative z-10", shade.body].join(" ")}>
                               {note.text}
                             </p>
 
                             {/* Footer */}
-                            <div className="flex items-center justify-between mt-1 pt-2 border-t border-pink-200/20">
-                              <span className="inline-block text-[9px] font-bold uppercase tracking-wider text-rose/50 bg-white/70 px-2 py-0.5 rounded-full border border-pink-100">
-                                {note.tag}
+                            <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10", shade.dark ? "border-white/10" : "border-pink-200/25"].join(" ")}>
+                              <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", shade.dark ? "text-white/60 bg-white/10 border-white/10" : "text-rose/50 bg-white/70 border-pink-100"].join(" ")}>
+                                {tagEmoji} {note.tag}
                               </span>
                               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                                 <button
                                   onClick={() => handleEditNote(note)}
-                                  className="p-1 rounded-full bg-white/60 text-rose hover:text-hotpink hover:bg-white transition"
+                                  className={["p-1 rounded-full transition", shade.dark ? "bg-white/10 text-white hover:bg-white/25" : "bg-white/60 text-rose hover:text-hotpink hover:bg-white"].join(" ")}
                                   title="Edit"
                                 >
                                   <Edit3 className="h-3 w-3" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteNote(note.id)}
-                                  className="p-1 rounded-full bg-white/60 text-rose hover:text-[#F87171] hover:bg-white transition"
+                                  className={["p-1 rounded-full transition", shade.dark ? "bg-white/10 text-white hover:bg-red-400/30" : "bg-white/60 text-rose hover:text-[#F87171] hover:bg-white"].join(" ")}
                                   title="Delete"
                                 >
                                   <Trash2 className="h-3 w-3" />
@@ -1529,28 +1548,33 @@ export default function NotesPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {sortedReminders.slice(0, 3).map((rem) => {
+              <div className="grid grid-cols-2 gap-2">
+                {sortedReminders.slice(0, 4).map((rem) => {
                   const visual = reminderVisual(rem);
+                  const gradients = [
+                    "from-[#FCE7F3] to-[#FFF0F6]",
+                    "from-[#EDE9FE] to-[#F3E8FF]",
+                    "from-[#D1FAE5] to-[#ECFDF5]",
+                    "from-[#FEF3C7] to-[#FEFCE8]",
+                  ];
+                  const gi = sortedReminders.indexOf(rem) % gradients.length;
                   return (
                     <div
                       key={rem.id}
-                      className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#FFF0F6]/50 border border-pink-100 transition hover:bg-[#FFF0F6] hover:border-pink-200"
+                      className={["rounded-2xl bg-gradient-to-br p-3 border border-pink-100/80 flex flex-col gap-1.5 relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-sm", gradients[gi]].join(" ")}
                     >
-                      <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-xl", visual.color].join(" ")}>
+                      <span className="absolute top-1 right-1 text-2xl opacity-15 pointer-events-none select-none">🌸</span>
+                      <span className={["grid h-7 w-7 place-items-center rounded-xl text-xs shrink-0", visual.color].join(" ")}>
                         <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-[#831843] truncate">{rem.title}</p>
-                        <p className="text-[9px] text-rose/60 truncate font-semibold">
-                          {rem.kind === "medication"
-                            ? [...rem.times].sort().join(" · ")
-                            : rem.kind === "birthday"
-                              ? prettyMonthDay(rem.date)
-                              : prettyDate(rem.date)}
-                        </p>
-                      </div>
-                      <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-hotpink animate-pulse" />
+                      <p className="text-[10px] font-bold text-[#831843] leading-tight line-clamp-2 pr-2">{rem.title}</p>
+                      <p className="text-[9px] text-rose/60 font-semibold truncate">
+                        {rem.kind === "medication"
+                          ? [...rem.times].sort()[0]
+                          : rem.kind === "birthday"
+                            ? prettyMonthDay(rem.date)
+                            : prettyDate(rem.date)}
+                      </p>
                     </div>
                   );
                 })}
@@ -1559,17 +1583,18 @@ export default function NotesPage() {
           </div>
 
           {/* YOUR THOUGHTS */}
-          <div className="rounded-3xl bg-gradient-to-br from-[#FCE7F3] via-[#FFF0F6] to-[#FFE4EF] border border-pink-200/60 p-5 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 text-5xl opacity-15 pointer-events-none select-none leading-none pr-2 pt-1">🌸</div>
-            <p className="text-[10px] font-bold text-rose/50 uppercase tracking-widest mb-1">Your Thoughts</p>
-            <p className="text-xs font-semibold text-[#831843] leading-relaxed">
+          <div className="rounded-3xl bg-gradient-to-br from-[#F9A8D4] via-[#FCE7F3] to-[#DDD6FE] border border-pink-200/60 p-5 shadow-sm relative overflow-hidden">
+            <div className="absolute -bottom-3 -right-3 text-8xl opacity-20 pointer-events-none select-none rotate-[-20deg] leading-none">🌸</div>
+            <div className="absolute top-2 right-2 text-3xl opacity-25 pointer-events-none select-none">🌷</div>
+            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-1 relative z-10">Your Thoughts</p>
+            <p className="text-sm font-bold text-white leading-snug relative z-10">
               Your thoughts shape the world you live in.
             </p>
-            <p className="text-[11px] text-rose/70 mt-0.5 leading-relaxed">Choose the beautiful life ✨</p>
+            <p className="text-[11px] text-white/80 mt-1 leading-relaxed relative z-10">Choose the beautiful life ✨</p>
             {notes.length > 0 && (
-              <div className="mt-3 p-2.5 rounded-2xl bg-white/60 border border-pink-200/40">
-                <p className="text-[10px] text-rose/60 line-clamp-2 italic">"{notes[0].text}"</p>
-                <p className="text-[9px] text-hotpink font-bold mt-1">{notes[0].title}</p>
+              <div className="mt-3 p-2.5 rounded-2xl bg-white/25 border border-white/30 relative z-10">
+                <p className="text-[10px] text-white/80 line-clamp-2 italic">"{notes[0].text}"</p>
+                <p className="text-[9px] text-white font-bold mt-1 opacity-90">{notes[0].title}</p>
               </div>
             )}
             <button
@@ -1582,7 +1607,7 @@ export default function NotesPage() {
                 setShowNoteForm(true);
                 setTab("notes");
               }}
-              className="mt-3 bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white"
+              className="mt-3 bg-white/30 hover:bg-white/50 transition border border-white/40 text-white px-3 py-1.5 text-[10px] font-bold rounded-full relative z-10"
             >
               + Add thought
             </button>
