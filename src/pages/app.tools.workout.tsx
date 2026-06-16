@@ -194,10 +194,10 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
       ) : (
         <img src={src} alt={title} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
       <div className="absolute bottom-0 left-0 p-3 sm:p-5">
-        <h2 className="font-script text-2xl sm:text-4xl text-white leading-none drop-shadow-md">{title}</h2>
-        {subtitle && <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">{subtitle}</p>}
+        <h2 className="font-script text-2xl sm:text-4xl text-white leading-tight drop-shadow-md max-w-[7rem] sm:max-w-[10rem]">{title}</h2>
+        {subtitle && <p className="mt-1 text-xs italic leading-snug text-white/90 max-w-[8rem] sm:max-w-[11rem] drop-shadow">{subtitle}</p>}
       </div>
     </div>
   );
@@ -234,11 +234,11 @@ function HeroHeader({
       ) : (
         <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
       <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
         <div>
-          <h2 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">{sectionTitle}</h2>
-          <p className="mt-1 text-xs sm:text-sm text-white/90 max-w-md drop-shadow">{sectionSubtitle}</p>
+          <h2 className="font-script text-3xl sm:text-5xl text-white leading-tight drop-shadow-md max-w-[8rem] sm:max-w-[12rem]">{sectionTitle}</h2>
+          <p className="mt-1 text-xs italic leading-snug text-white/90 max-w-[8rem] sm:max-w-[11rem] drop-shadow">{sectionSubtitle}</p>
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
