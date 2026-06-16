@@ -350,16 +350,36 @@ const JOURNAL_STYLES = `
   .diary-overlay::-webkit-scrollbar-thumb { background: rgba(200,100,140,0.25); border-radius: 2px; }
   .diary-book-wrap { cursor: grab; touch-action: pan-y; }
   .diary-book-wrap:active { cursor: grabbing; }
-  .diary-book-img { width: 100%; display: block; pointer-events: none; }
-  @media (max-width: 767px) {
+  .diary-book-desktop { width: 100%; display: block; pointer-events: none; }
+  .diary-book-mobile  { width: 100%; display: none;  pointer-events: none; }
+  .diary-flip-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,210,225,0.75); backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(200,88,122,0.45);
+    display: flex; align-items: center; justify-content: center;
+    color: #C8587A; cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s, background 0.15s;
+    box-shadow: 0 2px 12px rgba(200,88,122,0.18);
+  }
+  .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
+  .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
+  .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
+  @media (max-width: 1023px) {
+    .diary-book-desktop { display: none !important; }
+    .diary-book-mobile  { display: block !important; }
     .diary-left-page { display: none !important; }
     .diary-right-page {
-      left: 50% !important;
-      right: 2% !important;
+      top: 7% !important;
+      left: 9% !important;
+      right: 5% !important;
       width: auto !important;
-      top: 8% !important;
-      height: 82% !important;
+      height: 80% !important;
     }
+  }
+  @media (min-width: 1024px) {
+    .diary-book-desktop { display: block !important; }
+    .diary-book-mobile  { display: none  !important; }
   }
 `;
 
@@ -522,13 +542,30 @@ function OpenJournal({
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerCancel}
           >
-            <img
-              src="/images/dreamy-book.png"
-              alt=""
-              aria-hidden
-              draggable={false}
-              className="diary-book-img"
-            />
+            {/* Desktop: two-page open book */}
+            <img src="/images/dreamy-book.png"        alt="" aria-hidden draggable={false} className="diary-book-desktop" />
+            {/* Phone/tablet: single-page portrait notebook */}
+            <img src="/images/dreamy-book-mobile.png" alt="" aria-hidden draggable={false} className="diary-book-mobile" />
+
+            {/* Flip arrows */}
+            <button
+              className="diary-flip-arrow"
+              style={{ left: "2%" }}
+              disabled={!canFlipBack}
+              onClick={() => flip(-1)}
+              onPointerDown={e => e.stopPropagation()}
+            >
+              <ChevronLeft style={{ width: 18, height: 18 }} strokeWidth={2.5} />
+            </button>
+            <button
+              className="diary-flip-arrow"
+              style={{ right: "2%" }}
+              disabled={!canFlipForward}
+              onClick={() => flip(1)}
+              onPointerDown={e => e.stopPropagation()}
+            >
+              <ChevronRight style={{ width: 18, height: 18 }} strokeWidth={2.5} />
+            </button>
 
             {/* LEFT PAGE — text starts close to spine (small right padding) */}
             <div className="diary-left-page" style={{
