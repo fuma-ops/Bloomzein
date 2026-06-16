@@ -333,9 +333,9 @@ const JOURNAL_STYLES = `
     100% { transform: rotateY(0deg);   opacity: 1; }
   }
   @keyframes bk-hint {
-    0%   { transform: rotateY(0deg);   }
+    0%   { transform: rotateY(0deg); }
     45%  { transform: rotateY(-24deg); opacity: 0.88; }
-    100% { transform: rotateY(0deg);   opacity: 1; }
+    100% { transform: rotateY(0deg); opacity: 1; }
   }
   .bk-flip-out { animation: bk-flip-out 0.28s cubic-bezier(0.4,0,1,1) forwards; transform-origin: left center; }
   .bk-flip-in  { animation: bk-flip-in  0.28s cubic-bezier(0,0,0.6,1) forwards; transform-origin: left center; }
@@ -348,7 +348,7 @@ const JOURNAL_STYLES = `
   }
   .diary-overlay::-webkit-scrollbar { width: 3px; }
   .diary-overlay::-webkit-scrollbar-thumb { background: rgba(200,100,140,0.25); border-radius: 2px; }
-  .diary-book-wrap { cursor: grab; user-select: none; }
+  .diary-book-wrap { cursor: grab; }
   .diary-book-wrap:active { cursor: grabbing; }
 `;
 
@@ -362,6 +362,11 @@ function OpenJournal({
   const [pageIndex, setPageIndex] = useState(0);
   const [flipClass, setFlipClass] = useState("");
   const [hintDone, setHintDone] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string>(() => {
+    const todayEntry = entries.find((e) => e.date === todayISO());
+    return todayEntry?.mood ?? "calm";
+  });
+  const selectedMoodRef = useRef(selectedMood);
   const titleRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -371,6 +376,7 @@ function OpenJournal({
   const mouseStartX = useRef<number | null>(null);
   const hasDragged = useRef(false);
 
+  selectedMoodRef.current = selectedMood;
   const todayISO_ = todayISO();
   const todayEntry = entries.find((e) => e.date === todayISO_);
   const pastEntries = entries.filter((e) => e.date !== todayISO_);
@@ -382,38 +388,42 @@ function OpenJournal({
   pageIndexRef.current = pageIndex;
   todayEntryRef.current = todayEntry;
 
-  const currentEntry: DiaryEntry | undefined = pageIndex === 0 ? todayEntry : pastEntries[pageIndex - 1];
+  const currentEntry: DiaryEntry | undefined = isToday ? todayEntry : pastEntries[pageIndex - 1];
   const leftEntry: DiaryEntry | undefined = pageIndex === 0 ? undefined : (pageIndex === 1 ? todayEntry : pastEntries[pageIndex - 2]);
 
+  // Always English dates
   const fmtLong = (iso: string) =>
-    new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
-  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
+  const todayLabel = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
 
-  const rightDateLabel = pageIndex === 0 ? todayLabel : (currentEntry ? fmtLong(currentEntry.date) : todayLabel);
-  const leftDateLabel  = pageIndex === 0 ? todayLabel : (leftEntry  ? fmtLong(leftEntry.date)  : todayLabel);
+  const rightDateLabel = isToday ? todayLabel : (currentEntry ? fmtLong(currentEntry.date) : todayLabel);
+  const leftDateLabel  = pageIndex === 0 ? todayLabel : (leftEntry ? fmtLong(leftEntry.date) : todayLabel);
 
-  // Clear hint after animation completes
+  // Clear hint animation once
   useEffect(() => {
     const t = setTimeout(() => setHintDone(true), 2400);
     return () => clearTimeout(t);
   }, []);
 
-  // Sync editable fields only when navigating
+  // Sync editable fields + mood when navigating pages
   useEffect(() => {
     if (pageIndex !== 0) return;
     if (titleRef.current) titleRef.current.textContent = todayEntryRef.current?.title || "";
     if (bodyRef.current)  bodyRef.current.innerHTML   = todayEntryRef.current?.html  ?? "";
+    const m = todayEntryRef.current?.mood ?? "calm";
+    setSelectedMood(m);
+    selectedMoodRef.current = m;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageIndex]);
 
   const saveCurrentContent = () => {
     if (pageIndexRef.current !== 0) return;
     const te = todayEntryRef.current;
-    const label = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+    const label = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
     onSaveEntry({
       id: te?.id ?? crypto.randomUUID(),
       date: todayISO(),
-      mood: te?.mood ?? "calm",
+      mood: selectedMoodRef.current,
       title: titleRef.current?.textContent?.trim() || label,
       html: bodyRef.current?.innerHTML ?? "",
       theme: te?.theme ?? "sakura",
@@ -425,6 +435,13 @@ function OpenJournal({
   const handleInput = () => {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(saveCurrentContent, 1200);
+  };
+
+  const handleMoodChange = (key: string) => {
+    setSelectedMood(key);
+    selectedMoodRef.current = key;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveCurrentContent, 400);
   };
 
   const flip = (dir: 1 | -1) => {
@@ -439,7 +456,7 @@ function OpenJournal({
     }, 280);
   };
 
-  // Touch handlers
+  // Touch
   const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
@@ -449,11 +466,8 @@ function OpenJournal({
     else if (dx > 60) flip(-1);
   };
 
-  // Mouse drag handlers (drag > 70px triggers flip; smaller = normal click for editing)
-  const onMouseDown = (e: React.MouseEvent) => {
-    mouseStartX.current = e.clientX;
-    hasDragged.current = false;
-  };
+  // Mouse drag (>70px = flip; less = normal click for editing)
+  const onMouseDown = (e: React.MouseEvent) => { mouseStartX.current = e.clientX; hasDragged.current = false; };
   const onMouseMove = (e: React.MouseEvent) => {
     if (mouseStartX.current !== null && Math.abs(e.clientX - mouseStartX.current) > 8)
       hasDragged.current = true;
@@ -462,8 +476,7 @@ function OpenJournal({
     if (mouseStartX.current === null) return;
     const dx = e.clientX - mouseStartX.current;
     const dragged = hasDragged.current;
-    mouseStartX.current = null;
-    hasDragged.current = false;
+    mouseStartX.current = null; hasDragged.current = false;
     if (!dragged) return;
     if (dx < -70) flip(1);
     else if (dx > 70) flip(-1);
@@ -476,21 +489,22 @@ function OpenJournal({
   const BODY  = "#5A2030";
   const MUTED = "#B08090";
 
-  // Class applied to right page: hint on load (until done), then flip class
   const rightPageClass = [flipClass, !hintDone ? "bk-hint" : ""].filter(Boolean).join(" ");
+
+  const CurrentMoodIcon = (moodMeta(isToday ? selectedMood : (currentEntry?.mood ?? "calm"))).Icon;
+  const LeftMoodIcon = leftEntry ? (moodMeta(leftEntry.mood)).Icon : null;
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: JOURNAL_STYLES }} />
       <div className="animate-scale-in" style={style}>
 
-        {/* Rounded card wrapper — matches other section cards */}
+        {/* Rounded card wrapper */}
         <div style={{
           borderRadius: 20,
           overflow: "hidden",
           boxShadow: "0 4px 32px rgba(200,88,122,0.1), 0 1px 4px rgba(200,88,122,0.08)",
         }}>
-          {/* Book image frame with HTML text overlaid */}
           <div
             className="diary-book-wrap"
             style={{ position: "relative" }}
@@ -501,7 +515,6 @@ function OpenJournal({
             onMouseUp={onMouseUp}
             onMouseLeave={onMouseLeave}
           >
-            {/* Dreamy pink book — purely decorative frame */}
             <img
               src="/images/dreamy-book.png"
               alt=""
@@ -510,53 +523,65 @@ function OpenJournal({
               style={{ width: "100%", display: "block", pointerEvents: "none" }}
             />
 
-            {/* LEFT PAGE OVERLAY — more right padding (away from spine) */}
+            {/* LEFT PAGE — text starts close to spine (small right padding) */}
             <div style={{
               position: "absolute",
-              top: "10%", left: "12%", width: "34%", height: "78%",
-              padding: "3% 7% 3% 2%",
+              top: "10%", left: "10%", width: "38%", height: "78%",
+              padding: "3% 2% 3% 3%",
               boxSizing: "border-box",
               display: "flex", flexDirection: "column",
               overflow: "hidden",
             }}>
-              <p style={{ fontFamily: HW, fontSize: "clamp(13px,2.5vw,20px)", color: PINK, fontWeight: 600, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0 }}>
-                {leftDateLabel}
-              </p>
+              {/* Date + mood icon */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "3%", flexShrink: 0 }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(12px,2.3vw,18px)", color: PINK, fontWeight: 600, lineHeight: 1.2 }}>
+                  {leftDateLabel}
+                </p>
+                {LeftMoodIcon && (
+                  <span style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                    background: "rgba(200,88,122,0.12)", border: `1px solid ${PINK}33`,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", color: PINK,
+                  }}>
+                    <LeftMoodIcon style={{ width: 12, height: 12 }} strokeWidth={2} />
+                  </span>
+                )}
+              </div>
               <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}44, ${PINK}66, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
 
               {leftEntry ? (
                 <div style={{ flex: 1, overflow: "hidden" }}>
                   {leftEntry.title && (
-                    <p style={{ fontFamily: HW, fontSize: "clamp(14px,2.6vw,21px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%" }}>
+                    <p style={{ fontFamily: HW, fontSize: "clamp(13px,2.4vw,19px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%" }}>
                       {leftEntry.title}
                     </p>
                   )}
                   <div
                     className="diary-overlay"
-                    style={{ fontFamily: HW, fontSize: "clamp(12px,2vw,16px)", lineHeight: 1.65, color: BODY, overflow: "hidden", maxHeight: "85%" }}
+                    style={{ fontFamily: HW, fontSize: "clamp(11px,1.9vw,15px)", lineHeight: 1.65, color: BODY, overflow: "hidden", maxHeight: "82%" }}
                     dangerouslySetInnerHTML={{ __html: leftEntry.html || `<em style="color:${MUTED}">Blank page…</em>` }}
                   />
                 </div>
               ) : (
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                   <div style={{ marginBottom: "8%" }}>
-                    <span style={{ fontFamily: HW, fontSize: "clamp(22px,3.5vw,32px)", color: `${PINK}33`, lineHeight: 1, display: "block" }}>"</span>
-                    <p style={{ fontFamily: HW, fontSize: "clamp(11px,1.9vw,15px)", lineHeight: 1.65, color: BODY, fontStyle: "italic", margin: "2px 0 4px" }}>
-                      She remembered who she was, and the game changed.
+                    <span style={{ fontFamily: HW, fontSize: "clamp(20px,3.2vw,30px)", color: `${PINK}2A`, lineHeight: 1, display: "block" }}>"</span>
+                    <p style={{ fontFamily: HW, fontSize: "clamp(10px,1.8vw,14px)", lineHeight: 1.65, color: BODY, fontStyle: "italic", margin: "2px 0 4px" }}>
+                      She remembered who she was,<br />and the game changed.
                     </p>
-                    <p style={{ fontFamily: HW, fontSize: "clamp(10px,1.5vw,12px)", color: MUTED }}>— Lalah Delia</p>
+                    <p style={{ fontFamily: HW, fontSize: "clamp(9px,1.4vw,11px)", color: MUTED }}>— Lalah Delia</p>
                   </div>
                   {entries.length > 0 && (
                     <>
-                      <p style={{ fontSize: "clamp(7px,1.1vw,9px)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, marginBottom: "4%" }}>Recent moods</p>
+                      <p style={{ fontSize: "clamp(7px,1vw,9px)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, marginBottom: "4%" }}>Recent moods</p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(3px,0.5vw,5px)" }}>
                         {entries.slice(0, 10).map((e, i) => {
                           const M = moodMeta(e.mood);
                           return (
                             <span key={e.id} title={`${e.date}: ${M.label}`} style={{
-                              width: "clamp(18px,2.6vw,22px)", height: "clamp(18px,2.6vw,22px)",
+                              width: "clamp(17px,2.4vw,21px)", height: "clamp(17px,2.4vw,21px)",
                               borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                              background: `rgba(200,88,122,${Math.max(0.18, 0.85 - i * 0.08)})`,
+                              background: `rgba(200,88,122,${Math.max(0.18, 0.82 - i * 0.08)})`,
                             }}>
                               <M.Icon style={{ width: "55%", height: "55%", color: "white" }} strokeWidth={2} />
                             </span>
@@ -566,33 +591,41 @@ function OpenJournal({
                     </>
                   )}
                   {entries.length === 0 && (
-                    <p style={{ fontFamily: HW, fontSize: "clamp(13px,2vw,16px)", color: MUTED }}>Begin your story here ✨</p>
+                    <p style={{ fontFamily: HW, fontSize: "clamp(12px,1.9vw,15px)", color: MUTED }}>Begin your story here ✨</p>
                   )}
                 </div>
               )}
-
-              <p style={{ fontFamily: HW, fontSize: "clamp(9px,1.2vw,11px)", textAlign: "center", color: `${PINK}66`, marginTop: "auto", paddingTop: "2%", flexShrink: 0 }}>
+              <p style={{ fontFamily: HW, fontSize: "clamp(8px,1.1vw,10px)", textAlign: "center", color: `${PINK}55`, marginTop: "auto", paddingTop: "2%", flexShrink: 0 }}>
                 ~ {pageIndex * 2 + 1} ~
               </p>
             </div>
 
-            {/* RIGHT PAGE OVERLAY — more left padding (away from spine) */}
+            {/* RIGHT PAGE — text starts close to spine (small left padding) */}
             <div
               className={rightPageClass}
               style={{
                 position: "absolute",
-                top: "10%", right: "12%", width: "34%", height: "78%",
-                padding: "3% 2% 3% 7%",
+                top: "10%", right: "10%", width: "38%", height: "78%",
+                padding: "3% 3% 3% 2%",
                 boxSizing: "border-box",
                 display: "flex", flexDirection: "column",
                 overflow: "hidden",
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Date — always auto-filled */}
-              <p style={{ fontFamily: HW, fontSize: "clamp(13px,2.5vw,20px)", color: PINK, fontWeight: 600, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0 }}>
-                {rightDateLabel}
-              </p>
+              {/* Date + selected mood icon */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "3%", flexShrink: 0 }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(12px,2.3vw,18px)", color: PINK, fontWeight: 600, lineHeight: 1.2 }}>
+                  {rightDateLabel}
+                </p>
+                <span style={{
+                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                  background: "rgba(200,88,122,0.15)", border: `1px solid ${PINK}44`,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center", color: PINK,
+                }}>
+                  <CurrentMoodIcon style={{ width: 12, height: 12 }} strokeWidth={2} />
+                </span>
+              </div>
               <div style={{ height: 1, background: `linear-gradient(to right, transparent, ${PINK}66, transparent)`, marginBottom: "3%", flexShrink: 0 }} />
 
               {/* Title */}
@@ -604,7 +637,7 @@ function OpenJournal({
                   onInput={handleInput}
                   data-ph="Give this page a title…"
                   style={{
-                    fontFamily: HW, fontSize: "clamp(15px,2.8vw,23px)",
+                    fontFamily: HW, fontSize: "clamp(14px,2.6vw,21px)",
                     color: DEEP, lineHeight: 1.2,
                     outline: "none", cursor: "text",
                     marginBottom: "3%", flexShrink: 0,
@@ -612,12 +645,12 @@ function OpenJournal({
                   }}
                 />
               ) : (
-                <p style={{ fontFamily: HW, fontSize: "clamp(15px,2.8vw,23px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0, minHeight: "1.3em" }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(14px,2.6vw,21px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0, minHeight: "1.3em" }}>
                   {currentEntry?.title || ""}
                 </p>
               )}
 
-              <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}22, ${PINK}44, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
+              <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}1A, ${PINK}33, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
 
               {/* Body */}
               {isToday ? (
@@ -630,7 +663,7 @@ function OpenJournal({
                   className="diary-overlay"
                   style={{
                     flex: 1,
-                    fontFamily: HW, fontSize: "clamp(13px,2.1vw,18px)",
+                    fontFamily: HW, fontSize: "clamp(12px,2vw,17px)",
                     lineHeight: 1.65, color: BODY,
                     outline: "none", cursor: "text",
                     wordBreak: "break-word", overflowY: "auto",
@@ -641,24 +674,67 @@ function OpenJournal({
                   className="diary-overlay"
                   style={{
                     flex: 1,
-                    fontFamily: HW, fontSize: "clamp(13px,2.1vw,18px)",
-                    lineHeight: 1.65, color: BODY,
-                    overflowY: "auto",
+                    fontFamily: HW, fontSize: "clamp(12px,2vw,17px)",
+                    lineHeight: 1.65, color: BODY, overflowY: "auto",
                   }}
                   dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:${MUTED}">Blank page…</em>` }}
                 />
               )}
 
-              <p style={{ fontFamily: HW, fontSize: "clamp(9px,1.2vw,11px)", textAlign: "center", color: `${PINK}66`, marginTop: "3%", flexShrink: 0 }}>
+              <p style={{ fontFamily: HW, fontSize: "clamp(8px,1.1vw,10px)", textAlign: "center", color: `${PINK}55`, marginTop: "3%", flexShrink: 0 }}>
                 ~ {pageIndex * 2 + 2} ~
               </p>
             </div>
-
           </div>
         </div>
 
+        {/* ── Mood selector — pink glassmorphism circles, just below the book ── */}
+        {isToday && (
+          <div style={{
+            display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 8,
+            marginTop: 14, padding: "10px 16px",
+            borderRadius: 16,
+            background: "rgba(255,182,206,0.18)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255,150,180,0.22)",
+            boxShadow: "0 2px 16px rgba(200,88,122,0.06), inset 0 1px 0 rgba(255,255,255,0.6)",
+          }}>
+            {DIARY_MOODS.map((m) => {
+              const active = selectedMood === m.key;
+              return (
+                <button
+                  key={m.key}
+                  onClick={() => handleMoodChange(m.key)}
+                  title={m.label}
+                  style={{
+                    width: 42, height: 42, borderRadius: "50%",
+                    background: active
+                      ? "linear-gradient(135deg, #D4618A, #C8587A)"
+                      : "rgba(255,210,225,0.55)",
+                    backdropFilter: "blur(12px)",
+                    border: active
+                      ? "2px solid #C8587A"
+                      : "1px solid rgba(255,150,180,0.45)",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: active ? "white" : "#C8587A",
+                    boxShadow: active
+                      ? "0 4px 16px rgba(200,88,122,0.4), inset 0 1px 0 rgba(255,255,255,0.25)"
+                      : "0 2px 8px rgba(200,88,122,0.08), inset 0 1px 0 rgba(255,255,255,0.7)",
+                    transition: "all 0.18s ease",
+                    transform: active ? "scale(1.12)" : "scale(1)",
+                    flexShrink: 0,
+                  }}
+                >
+                  <m.Icon style={{ width: 18, height: 18 }} strokeWidth={active ? 2 : 1.7} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Page label */}
-        <p style={{ textAlign: "center", fontFamily: HW, fontSize: "clamp(14px,2vw,17px)", color: `${PINK}99`, marginTop: 10 }}>
+        <p style={{ textAlign: "center", fontFamily: HW, fontSize: "clamp(13px,1.9vw,16px)", color: `${PINK}88`, marginTop: 10 }}>
           {pageIndex === 0 ? "today ✨" : `page ${pageIndex} of ${pastEntries.length}`}
         </p>
 
