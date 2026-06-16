@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Edit3, X, BookHeart, Sparkles,
   Cloud, Smile, Heart, CloudRain, Battery, Activity, Droplet,
   Calendar, List, LayoutGrid, BookOpen, ChevronLeft, ChevronRight, Printer,
-  Flame, Quote,
+  Flame, Quote, Mic, RefreshCw,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { PageHeader } from "@/components/bloom/PageHeader";
@@ -253,6 +253,21 @@ const REFLECTION_PROMPTS: Record<string, string> = {
   Luteal: "What wisdom is your inner voice whispering?",
 };
 
+const ALL_PROMPTS = [
+  "What does your body need most right now?",
+  "What new possibility is calling to you?",
+  "How do you want to share yourself with the world today?",
+  "What wisdom is your inner voice whispering?",
+  "What are you grateful for in this moment?",
+  "What would feel most nourishing today?",
+  "Where is your energy flowing naturally right now?",
+  "What do you need to release or let go of?",
+  "What's one small thing that brought you joy recently?",
+  "How are you honoring yourself today?",
+  "What emotion is asking to be seen right now?",
+  "What would your future self thank you for doing today?",
+];
+
 function DiaryDashboard({
   entries, onNew, onSaveEntry, onEdit,
 }: {
@@ -380,6 +395,18 @@ const JOURNAL_STYLES = `
     0%,100% { transform: scale(1); }
     50%      { transform: scale(1.06); }
   }
+  @keyframes corner-fold {
+    0%   { opacity: 0; transform: scale(0.4); }
+    25%  { opacity: 1; transform: scale(1.15); }
+    50%  { opacity: 0.7; transform: scale(1); }
+    75%  { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(0.4); }
+  }
+  @keyframes mic-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(200,88,122,0.45); }
+    50%      { box-shadow: 0 0 0 8px rgba(200,88,122,0); }
+  }
+  .diary-page-corner { display: none; }
   .diary-mobile-bg, .diary-vignette, .diary-mobile-layer { display: none; }
   @media (max-width: 1023px) {
     .diary-book-desktop { display: none !important; }
@@ -455,6 +482,18 @@ const JOURNAL_STYLES = `
     }
     .diary-nav-mini:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
     .diary-nav-mini:not(:disabled):active { transform: scale(0.88); }
+    .diary-page-corner {
+      display: block;
+      position: absolute;
+      bottom: 5px; right: 5px;
+      width: 0; height: 0;
+      border-left: 26px solid transparent;
+      border-bottom: 26px solid rgba(200,88,122,0.42);
+      z-index: 20;
+      pointer-events: none;
+      opacity: 0;
+      animation: corner-fold 2.2s ease-in-out 2.2s 1 forwards;
+    }
   }
   @media (min-width: 1024px) {
     .diary-book-desktop { display: block !important; }
@@ -488,6 +527,11 @@ function OpenJournal({
   const todayEntryRef = useRef<DiaryEntry | undefined>(undefined);
   const pointerStartX = useRef<number | null>(null);
   const pointerHasDragged = useRef(false);
+  const recognitionRef = useRef<any>(null);
+
+  const phaseIdx = ["Menstrual", "Follicular", "Ovulatory", "Luteal"].indexOf(phase);
+  const [promptIndex, setPromptIndex] = useState(Math.max(0, phaseIdx));
+  const [isListening, setIsListening] = useState(false);
 
   selectedMoodRef.current = selectedMood;
   const todayISO_ = todayISO();
@@ -560,6 +604,38 @@ function OpenJournal({
     selectedMoodRef.current = key;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(saveCurrentContent, 400);
+  };
+
+  const startListening = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.lang = navigator.language || "en-US";
+    rec.onresult = (e: any) => {
+      const text = Array.from(e.results as any[])
+        .slice(e.resultIndex)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      const isMob = window.innerWidth < 1024;
+      const bodyEl = isMob ? mBodyRef.current : bodyRef.current;
+      if (bodyEl) {
+        bodyEl.focus();
+        document.execCommand("insertText", false, text);
+        handleInput();
+      }
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    rec.start();
+    setIsListening(true);
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
   };
 
   const flip = (dir: 1 | -1) => {
@@ -818,53 +894,83 @@ function OpenJournal({
               </p>
             </div>
 
-            {/* ── MOBILE: animated bg + edge vignette + immersive content ── */}
+            {/* ── MOBILE: corner fold hint + animated bg + vignette + paper ── */}
+            <div className="diary-page-corner" />
             <div className="diary-mobile-bg" />
             <div className="diary-vignette" />
             <div className="diary-mobile-layer">
 
-              {/* Header: small nav arrows + handwritten date */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexShrink: 0 }}>
-                <button
-                  className="diary-nav-mini"
-                  disabled={!canFlipBack}
-                  onClick={() => flip(-1)}
-                  onPointerDown={e => e.stopPropagation()}
-                >
-                  <ChevronLeft style={{ width: 14, height: 14 }} strokeWidth={2.5} />
+              {/* HEADER: [←][→] date — left aligned, arrows hugging the title */}
+              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, flexShrink: 0 }}>
+                <button className="diary-nav-mini" disabled={!canFlipBack} onClick={() => flip(-1)} onPointerDown={e => e.stopPropagation()}>
+                  <ChevronLeft style={{ width: 13, height: 13 }} strokeWidth={2.5} />
                 </button>
-                <p style={{ fontFamily: HW, fontSize: "clamp(16px,4.5vw,21px)", color: "#C8587A", fontWeight: 700, textShadow: "0 1px 4px rgba(200,88,122,0.15)", lineHeight: 1.2, textAlign: "center", flex: 1, padding: "0 10px" }}>
+                <button className="diary-nav-mini" disabled={!canFlipForward} onClick={() => flip(1)} onPointerDown={e => e.stopPropagation()}>
+                  <ChevronRight style={{ width: 13, height: 13 }} strokeWidth={2.5} />
+                </button>
+                <p style={{ fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)", color: "#C8587A", fontWeight: 600, marginLeft: 5, lineHeight: 1 }}>
                   {rightDateLabel}
                 </p>
-                <button
-                  className="diary-nav-mini"
-                  disabled={!canFlipForward}
-                  onClick={() => flip(1)}
-                  onPointerDown={e => e.stopPropagation()}
-                >
-                  <ChevronRight style={{ width: 14, height: 14 }} strokeWidth={2.5} />
-                </button>
               </div>
 
-              {/* Phase row: cycleDay | PHASE ✿ bloom */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexShrink: 0 }}>
-                <span style={{ fontSize: 20, fontWeight: 800, color: "#C8587A", lineHeight: 1 }}>{cycleDay}</span>
-                <span style={{ color: "rgba(200,88,122,0.35)", fontSize: 18, lineHeight: 1 }}>|</span>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7A1835" }}>{phase}</span>
-                <span style={{ fontFamily: HW, fontSize: 15, color: "#C8587A", marginLeft: 2 }}>✿ bloom</span>
+              {/* DECORATIVE TITLE — centred between two flowers */}
+              <div style={{ textAlign: "center", marginBottom: 10, flexShrink: 0 }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(20px,5.5vw,26px)", color: "#C8587A", fontWeight: 700, lineHeight: 1.1, letterSpacing: "0.02em" }}>
+                  ✿&nbsp;&nbsp;Dreamy Diary&nbsp;&nbsp;✿
+                </p>
               </div>
 
-              <div style={{ height: 1, background: `linear-gradient(to right, transparent, rgba(200,88,122,0.4), transparent)`, marginBottom: 12, flexShrink: 0 }} />
+              <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(200,88,122,0.42), transparent)", marginBottom: 10, flexShrink: 0 }} />
 
-              {/* Reflection prompt */}
-              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "#C8587A", marginBottom: 5, flexShrink: 0 }}>Reflection ✦</p>
-              <p style={{ fontFamily: HW, fontSize: "clamp(14px,3.8vw,18px)", color: "#5A2030", lineHeight: 1.5, marginBottom: 14, flexShrink: 0 }}>
-                {REFLECTION_PROMPTS[phase] ?? "What does your heart need today?"}
-              </p>
+              {/* MOOD SELECTOR — immediately after title divider */}
+              {isToday && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10, flexShrink: 0 }}>
+                  {DIARY_MOODS.map((m) => {
+                    const active = selectedMood === m.key;
+                    return (
+                      <button key={m.key} onClick={() => handleMoodChange(m.key)} onPointerDown={e => e.stopPropagation()} title={m.label}
+                        style={{
+                          width: 28, height: 28, borderRadius: "50%",
+                          background: active ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.08)",
+                          border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.18)",
+                          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                          color: active ? "white" : "#C8587A",
+                          opacity: active ? 1 : 0.22, transition: "all 0.18s ease",
+                          transform: active ? "scale(1.16)" : "scale(1)",
+                          flexShrink: 0, padding: 0,
+                          boxShadow: active ? "0 3px 12px rgba(200,88,122,0.4)" : "none",
+                        }}
+                      >
+                        <m.Icon style={{ width: 13, height: 13 }} strokeWidth={active ? 2.2 : 1.8} />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
-              <div style={{ height: 1, background: `linear-gradient(to right, rgba(200,88,122,0.12), rgba(200,88,122,0.3), rgba(200,88,122,0.12))`, marginBottom: 14, flexShrink: 0 }} />
+              <div style={{ height: 1, background: "linear-gradient(to right, rgba(200,88,122,0.08), rgba(200,88,122,0.25), rgba(200,88,122,0.08))", marginBottom: 8, flexShrink: 0 }} />
 
-              {/* Entry title */}
+              {/* REFLECTION — switchable with ↻ button */}
+              <div style={{ marginBottom: 10, flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#C8587A" }}>Reflection ✦</p>
+                  <button
+                    onClick={() => setPromptIndex(i => (i + 1) % ALL_PROMPTS.length)}
+                    onPointerDown={e => e.stopPropagation()}
+                    title="Next prompt"
+                    style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(200,88,122,0.1)", border: "1px solid rgba(200,88,122,0.22)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}
+                  >
+                    <RefreshCw style={{ width: 10, height: 10 }} strokeWidth={2.2} />
+                  </button>
+                </div>
+                <p style={{ fontFamily: HW, fontSize: "clamp(12px,3.4vw,15px)", color: "#5A2030", lineHeight: 1.45 }}>
+                  {ALL_PROMPTS[promptIndex]}
+                </p>
+              </div>
+
+              <div style={{ height: 1, background: "linear-gradient(to right, rgba(200,88,122,0.08), rgba(200,88,122,0.25), rgba(200,88,122,0.08))", marginBottom: 10, flexShrink: 0 }} />
+
+              {/* ENTRY TITLE */}
               {isToday ? (
                 <div
                   ref={mTitleRef}
@@ -873,31 +979,31 @@ function OpenJournal({
                   onInput={handleInput}
                   data-ph="Give this page a title…"
                   style={{
-                    fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)",
+                    fontFamily: HW, fontSize: "clamp(16px,4.2vw,20px)",
                     color: "#7A1835", lineHeight: 1.25,
                     outline: "none", cursor: "text",
-                    marginBottom: 10, flexShrink: 0,
+                    marginBottom: 8, flexShrink: 0,
                     minHeight: "1.3em", wordBreak: "break-word",
                   }}
                 />
               ) : (
-                <p style={{ fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)", color: "#7A1835", lineHeight: 1.25, marginBottom: 10, flexShrink: 0 }}>
+                <p style={{ fontFamily: HW, fontSize: "clamp(16px,4.2vw,20px)", color: "#7A1835", lineHeight: 1.25, marginBottom: 8, flexShrink: 0 }}>
                   {currentEntry?.title || ""}
                 </p>
               )}
 
-              {/* Entry body */}
+              {/* ENTRY BODY */}
               {isToday ? (
                 <div
                   ref={mBodyRef}
                   contentEditable
                   suppressContentEditableWarning
                   onInput={handleInput}
-                  data-ph="Start writing here… let your thoughts flow ✨"
+                  data-ph="Let your thoughts flow… ✨"
                   className="diary-overlay"
                   style={{
                     flex: 1,
-                    fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)",
+                    fontFamily: HW, fontSize: "clamp(12px,3.2vw,15px)",
                     lineHeight: 1.75, color: "#5A2030",
                     outline: "none", cursor: "text",
                     wordBreak: "break-word",
@@ -909,50 +1015,41 @@ function OpenJournal({
                   className="diary-overlay"
                   style={{
                     flex: 1,
-                    fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)",
+                    fontFamily: HW, fontSize: "clamp(12px,3.2vw,15px)",
                     lineHeight: 1.75, color: "#5A2030",
                     overflow: "hidden",
                   }}
-                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:rgba(180,100,130,0.45)">Blank page…</em>` }}
+                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:rgba(180,100,130,0.4)">Blank page…</em>` }}
                 />
               )}
 
-              {/* Mood icons — selected full pink, others nearly invisible */}
-              {isToday && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 12, flexShrink: 0 }}>
-                  {DIARY_MOODS.map((m) => {
-                    const active = selectedMood === m.key;
-                    return (
-                      <button
-                        key={m.key}
-                        onClick={() => handleMoodChange(m.key)}
-                        onPointerDown={e => e.stopPropagation()}
-                        title={m.label}
-                        style={{
-                          width: 30, height: 30, borderRadius: "50%",
-                          background: active ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.08)",
-                          border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.18)",
-                          cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: active ? "white" : "#C8587A",
-                          opacity: active ? 1 : 0.22,
-                          transition: "all 0.18s ease",
-                          transform: active ? "scale(1.18)" : "scale(1)",
-                          flexShrink: 0, padding: 0,
-                          boxShadow: active ? "0 3px 14px rgba(200,88,122,0.4)" : "none",
-                        }}
-                      >
-                        <m.Icon style={{ width: 14, height: 14 }} strokeWidth={active ? 2.2 : 1.8} />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Page number */}
-              <p style={{ fontFamily: HW, textAlign: "center", fontSize: 11, color: "rgba(200,88,122,0.35)", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
-                ~ {pageIndex * 2 + 2} ~
-              </p>
+              {/* BOTTOM ROW: mic + page number */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
+                {isToday ? (
+                  <button
+                    onClick={isListening ? stopListening : startListening}
+                    onPointerDown={e => e.stopPropagation()}
+                    title={isListening ? "Stop recording" : "Dictate"}
+                    style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: isListening ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.1)",
+                      border: isListening ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.25)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", color: isListening ? "white" : "#C8587A",
+                      padding: 0,
+                      ...(isListening ? { animation: "mic-pulse 1s ease-in-out infinite" } : {}),
+                    }}
+                  >
+                    <Mic style={{ width: 14, height: 14 }} strokeWidth={2} />
+                  </button>
+                ) : (
+                  <div style={{ width: 32 }} />
+                )}
+                <p style={{ fontFamily: HW, fontSize: 11, color: "rgba(200,88,122,0.35)" }}>
+                  ~ {pageIndex * 2 + 2} ~
+                </p>
+                <div style={{ width: 32 }} />
+              </div>
 
             </div>
           </div>
