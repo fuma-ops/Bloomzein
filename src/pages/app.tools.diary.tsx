@@ -282,7 +282,7 @@ function DiaryDashboard({
 
         {/* ── Center: Open Journal HERO (wider) — always first on mobile ── */}
         <main className="order-1 lg:order-2 lg:col-span-8 flex flex-col gap-4">
-          <OpenJournal entries={entries} onSaveEntry={onSaveEntry} style={{ animationDelay: "0ms" }} />
+          <OpenJournal entries={entries} onSaveEntry={onSaveEntry} cycleDay={cycleDay} phase={phase} style={{ animationDelay: "0ms" }} />
           <JournalStatsRow streak={streak} todayEntry={todayEntry} phase={phase} style={{ animationDelay: "220ms" }} />
         </main>
 
@@ -375,52 +375,72 @@ const JOURNAL_STYLES = `
   .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
   .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
   .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
-  /* ── Phone & Tablet: image as background, full-bleed cream paper on top ── */
-  .diary-mood-row-inline { display: none; }
+  /* ── breathing bg animation ── */
+  @keyframes bg-breathe {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+  }
+  .diary-mobile-bg, .diary-vignette, .diary-mobile-layer { display: none; }
   @media (max-width: 1023px) {
     .diary-book-desktop { display: none !important; }
     .diary-book-mobile  { display: none !important; }
+    .diary-flip-arrow   { display: none !important; }
+    .diary-left-page    { display: none !important; }
+    .diary-right-page   { display: none !important; }
+    .diary-mood-selector-external { display: none !important; }
     .diary-book-wrap {
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      border-radius: 18px;
+      position: relative;
+    }
+    .diary-mobile-bg {
+      display: block;
+      position: absolute;
+      inset: -8%;
       background-image: url('/images/diary-bg-floral.png');
       background-size: cover;
       background-position: center top;
-      overflow: hidden;
-      aspect-ratio: 3 / 4;
+      animation: bg-breathe 7s ease-in-out infinite;
+      z-index: 0;
+    }
+    .diary-vignette {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 88% 82% at 50% 46%,
+        transparent 28%,
+        rgba(255,215,230,0.18) 54%,
+        rgba(210,70,120,0.38) 78%,
+        rgba(160,32,82,0.64) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .diary-mobile-layer {
       display: flex;
-      align-items: stretch;
-      justify-content: center;
-      padding: 20px;
-      border-radius: 12px;
+      flex-direction: column;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      padding: 22px 22px 16px;
+      box-sizing: border-box;
+      overflow: hidden;
     }
-    .diary-left-page { display: none !important; }
-    .diary-right-page {
-      position: relative !important;
-      top: auto !important; left: auto !important; right: auto !important;
-      width: 100% !important;
-      height: auto !important;
-      padding: 24px 26px 20px !important;
-      background:
-        repeating-linear-gradient(
-          transparent,
-          transparent 27px,
-          rgba(200,140,160,0.13) 27px,
-          rgba(200,140,160,0.13) 28px
-        ),
-        linear-gradient(160deg, #FFFDF8 0%, #FFF5EE 60%, #FFF0EC 100%) !important;
-      border-radius: 8px !important;
-      box-shadow:
-        -8px 0 18px rgba(160,50,75,0.22),
-        8px 0 18px rgba(255,255,255,0.5),
-        0 18px 56px rgba(0,0,0,0.22),
-        0 4px 18px rgba(200,88,122,0.18),
-        inset 0 2px 0 rgba(255,255,255,0.95),
-        inset 2px 0 8px rgba(255,255,255,0.6) !important;
-      mask-image: radial-gradient(ellipse 94% 93% at 50% 47%, black 60%, rgba(0,0,0,0.7) 76%, rgba(0,0,0,0.2) 90%, transparent 100%);
-      -webkit-mask-image: radial-gradient(ellipse 94% 93% at 50% 47%, black 60%, rgba(0,0,0,0.7) 76%, rgba(0,0,0,0.2) 90%, transparent 100%);
-      overflow: visible !important;
+    .diary-nav-mini {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.32);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.92);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      flex-shrink: 0;
+      padding: 0;
     }
-    .diary-mood-selector-external { display: none !important; }
-    .diary-mood-row-inline { display: flex !important; }
+    .diary-nav-mini:disabled { opacity: 0.18; cursor: default; pointer-events: none; }
+    .diary-nav-mini:not(:disabled):active { transform: scale(0.88); }
   }
   @media (min-width: 1024px) {
     .diary-book-desktop { display: block !important; }
@@ -429,11 +449,13 @@ const JOURNAL_STYLES = `
 `;
 
 function OpenJournal({
-  entries, onSaveEntry, style,
+  entries, onSaveEntry, style, cycleDay, phase,
 }: {
   entries: DiaryEntry[];
   onSaveEntry: (entry: DiaryEntry) => void;
   style?: CSSProperties;
+  cycleDay: number;
+  phase: string;
 }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [flipClass, setFlipClass] = useState("");
@@ -445,6 +467,8 @@ function OpenJournal({
   const selectedMoodRef = useRef(selectedMood);
   const titleRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const mTitleRef = useRef<HTMLDivElement>(null);
+  const mBodyRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
   const pageIndexRef = useRef(0);
   const todayEntryRef = useRef<DiaryEntry | undefined>(undefined);
@@ -484,8 +508,12 @@ function OpenJournal({
   // Sync editable fields + mood when navigating pages
   useEffect(() => {
     if (pageIndex !== 0) return;
-    if (titleRef.current) titleRef.current.textContent = todayEntryRef.current?.title || "";
-    if (bodyRef.current)  bodyRef.current.innerHTML   = todayEntryRef.current?.html  ?? "";
+    const title = todayEntryRef.current?.title || "";
+    const html = todayEntryRef.current?.html ?? "";
+    if (titleRef.current) titleRef.current.textContent = title;
+    if (bodyRef.current) bodyRef.current.innerHTML = html;
+    if (mTitleRef.current) mTitleRef.current.textContent = title;
+    if (mBodyRef.current) mBodyRef.current.innerHTML = html;
     const m = todayEntryRef.current?.mood ?? "calm";
     setSelectedMood(m);
     selectedMoodRef.current = m;
@@ -500,8 +528,8 @@ function OpenJournal({
       id: te?.id ?? crypto.randomUUID(),
       date: todayISO(),
       mood: selectedMoodRef.current,
-      title: titleRef.current?.textContent?.trim() || label,
-      html: bodyRef.current?.innerHTML ?? "",
+      title: (typeof window !== 'undefined' && window.innerWidth < 1024 ? mTitleRef.current : titleRef.current)?.textContent?.trim() || label,
+      html: (typeof window !== 'undefined' && window.innerWidth < 1024 ? mBodyRef.current : bodyRef.current)?.innerHTML ?? "",
       theme: te?.theme ?? "sakura",
       font: te?.font ?? "caveat",
       createdAt: te?.createdAt ?? new Date().toISOString(),
@@ -718,40 +746,6 @@ function OpenJournal({
               </div>
               <div style={{ height: 1, background: `linear-gradient(to right, transparent, ${PINK}66, transparent)`, marginBottom: "3%", flexShrink: 0 }} />
 
-              {/* Inline mood row — mobile only (shown via CSS on small screens) */}
-              {isToday && (
-                <div
-                  className="diary-mood-row-inline"
-                  style={{ flexWrap: "wrap", gap: 5, marginBottom: "3%", flexShrink: 0 }}
-                >
-                  {DIARY_MOODS.map((m) => {
-                    const active = selectedMood === m.key;
-                    return (
-                      <button
-                        key={m.key}
-                        onClick={() => handleMoodChange(m.key)}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        title={m.label}
-                        style={{
-                          width: 28, height: 28, borderRadius: "50%",
-                          background: active ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.08)",
-                          border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.2)",
-                          cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: active ? "white" : "#C8587A",
-                          opacity: active ? 1 : 0.22,
-                          transition: "all 0.18s ease",
-                          transform: active ? "scale(1.15)" : "scale(1)",
-                          flexShrink: 0, padding: 0,
-                        }}
-                      >
-                        <m.Icon style={{ width: 13, height: 13 }} strokeWidth={active ? 2 : 1.7} />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
               {/* Title */}
               {isToday ? (
                 <div
@@ -808,6 +802,148 @@ function OpenJournal({
               <p style={{ fontFamily: HW, fontSize: "clamp(8px,1.1vw,10px)", textAlign: "center", color: `${PINK}55`, marginTop: "3%", flexShrink: 0 }}>
                 ~ {pageIndex * 2 + 2} ~
               </p>
+            </div>
+
+            {/* ── MOBILE: animated bg + edge vignette + immersive content ── */}
+            <div className="diary-mobile-bg" />
+            <div className="diary-vignette" />
+            <div className="diary-mobile-layer">
+
+              {/* Header: small nav arrows + handwritten date */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexShrink: 0 }}>
+                <button
+                  className="diary-nav-mini"
+                  disabled={!canFlipBack}
+                  onClick={() => flip(-1)}
+                  onPointerDown={e => e.stopPropagation()}
+                >
+                  <ChevronLeft style={{ width: 14, height: 14 }} strokeWidth={2.5} />
+                </button>
+                <p style={{ fontFamily: HW, fontSize: "clamp(16px,4.5vw,21px)", color: "rgba(255,255,255,0.97)", fontWeight: 700, textShadow: "0 2px 14px rgba(130,20,60,0.6)", lineHeight: 1.2, textAlign: "center", flex: 1, padding: "0 10px" }}>
+                  {rightDateLabel}
+                </p>
+                <button
+                  className="diary-nav-mini"
+                  disabled={!canFlipForward}
+                  onClick={() => flip(1)}
+                  onPointerDown={e => e.stopPropagation()}
+                >
+                  <ChevronRight style={{ width: 14, height: 14 }} strokeWidth={2.5} />
+                </button>
+              </div>
+
+              {/* Phase row: cycleDay | PHASE ✿ bloom */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexShrink: 0 }}>
+                <span style={{ fontSize: 20, fontWeight: 800, color: "rgba(255,255,255,0.96)", textShadow: "0 1px 10px rgba(130,20,60,0.5)", lineHeight: 1 }}>{cycleDay}</span>
+                <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 18, lineHeight: 1 }}>|</span>
+                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.85)", textShadow: "0 1px 4px rgba(130,20,60,0.3)" }}>{phase}</span>
+                <span style={{ fontFamily: HW, fontSize: 15, color: "#FFB6CC", textShadow: "0 1px 8px rgba(130,20,60,0.45)", marginLeft: 2 }}>✿ bloom</span>
+              </div>
+
+              <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(255,255,255,0.35), transparent)", marginBottom: 12, flexShrink: 0 }} />
+
+              {/* Reflection prompt */}
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.13em", textTransform: "uppercase", color: "rgba(255,185,210,0.85)", marginBottom: 5, flexShrink: 0 }}>Reflection ✦</p>
+              <p style={{ fontFamily: HW, fontSize: "clamp(14px,3.8vw,18px)", color: "rgba(255,252,255,0.96)", lineHeight: 1.5, marginBottom: 14, flexShrink: 0, textShadow: "0 1px 8px rgba(130,20,60,0.3)" }}>
+                {REFLECTION_PROMPTS[phase] ?? "What does your heart need today?"}
+              </p>
+
+              <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(255,255,255,0.22), transparent)", marginBottom: 14, flexShrink: 0 }} />
+
+              {/* Entry title */}
+              {isToday ? (
+                <div
+                  ref={mTitleRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={handleInput}
+                  data-ph="Title…"
+                  style={{
+                    fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)",
+                    color: "rgba(255,255,255,0.98)", lineHeight: 1.25,
+                    outline: "none", cursor: "text",
+                    marginBottom: 10, flexShrink: 0,
+                    minHeight: "1.3em", wordBreak: "break-word",
+                    textShadow: "0 1px 10px rgba(130,20,60,0.45)",
+                  }}
+                />
+              ) : (
+                <p style={{ fontFamily: HW, fontSize: "clamp(17px,4.5vw,22px)", color: "rgba(255,255,255,0.98)", lineHeight: 1.25, marginBottom: 10, flexShrink: 0, textShadow: "0 1px 10px rgba(130,20,60,0.45)" }}>
+                  {currentEntry?.title || ""}
+                </p>
+              )}
+
+              {/* Entry body */}
+              {isToday ? (
+                <div
+                  ref={mBodyRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={handleInput}
+                  data-ph="Let your thoughts flow…"
+                  className="diary-overlay"
+                  style={{
+                    flex: 1,
+                    fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)",
+                    lineHeight: 1.75, color: "rgba(255,250,255,0.92)",
+                    outline: "none", cursor: "text",
+                    wordBreak: "break-word",
+                    overflow: "hidden",
+                    textShadow: "0 1px 5px rgba(130,20,60,0.25)",
+                  }}
+                />
+              ) : (
+                <div
+                  className="diary-overlay"
+                  style={{
+                    flex: 1,
+                    fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)",
+                    lineHeight: 1.75, color: "rgba(255,250,255,0.92)",
+                    overflow: "hidden",
+                    textShadow: "0 1px 5px rgba(130,20,60,0.25)",
+                  }}
+                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="opacity:0.35">…</em>` }}
+                />
+              )}
+
+              {/* Mood icons — selected glows white, others nearly invisible */}
+              {isToday && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 12, flexShrink: 0 }}>
+                  {DIARY_MOODS.map((m) => {
+                    const active = selectedMood === m.key;
+                    return (
+                      <button
+                        key={m.key}
+                        onClick={() => handleMoodChange(m.key)}
+                        onPointerDown={e => e.stopPropagation()}
+                        title={m.label}
+                        style={{
+                          width: 30, height: 30, borderRadius: "50%",
+                          background: active ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.1)",
+                          backdropFilter: "blur(6px)",
+                          border: active ? "1.5px solid rgba(255,255,255,0.75)" : "1px solid rgba(255,255,255,0.2)",
+                          cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: active ? "#C8587A" : "rgba(255,255,255,0.85)",
+                          opacity: active ? 1 : 0.28,
+                          transition: "all 0.18s ease",
+                          transform: active ? "scale(1.18)" : "scale(1)",
+                          flexShrink: 0, padding: 0,
+                          boxShadow: active ? "0 3px 14px rgba(255,255,255,0.35)" : "none",
+                        }}
+                      >
+                        <m.Icon style={{ width: 14, height: 14 }} strokeWidth={active ? 2.2 : 1.8} />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Page number */}
+              <p style={{ fontFamily: HW, textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
+                ~ {pageIndex * 2 + 2} ~
+              </p>
+
             </div>
           </div>
         </div>
