@@ -322,7 +322,7 @@ function FloatingAtmosphere() {
   );
 }
 
-/* ── Open Journal (HERO — luxury 3D flipbook) ── */
+/* ── Open Journal (HERO — dreamy book image frame + HTML overlay) ── */
 const JOURNAL_STYLES = `
   @keyframes bk-flip-out {
     0%   { transform: rotateY(0deg);   opacity: 1; }
@@ -332,20 +332,16 @@ const JOURNAL_STYLES = `
     0%   { transform: rotateY(88deg);  opacity: 0; }
     100% { transform: rotateY(0deg);   opacity: 1; }
   }
-  .bk-flip-out {
-    animation: bk-flip-out 0.28s cubic-bezier(0.4,0,1,1) forwards;
-    transform-origin: left center;
-  }
-  .bk-flip-in {
-    animation: bk-flip-in 0.28s cubic-bezier(0,0,0.6,1) forwards;
-    transform-origin: left center;
-  }
+  .bk-flip-out { animation: bk-flip-out 0.28s cubic-bezier(0.4,0,1,1) forwards; transform-origin: left center; }
+  .bk-flip-in  { animation: bk-flip-in  0.28s cubic-bezier(0,0,0.6,1) forwards; transform-origin: left center; }
   [contenteditable][data-ph]:empty::before {
     content: attr(data-ph);
-    color: rgba(139,104,64,0.38);
+    color: rgba(190,110,140,0.4);
     pointer-events: none;
     font-style: italic;
   }
+  .diary-overlay::-webkit-scrollbar { width: 3px; }
+  .diary-overlay::-webkit-scrollbar-thumb { background: rgba(200,100,140,0.25); border-radius: 2px; }
 `;
 
 function OpenJournal({
@@ -357,7 +353,8 @@ function OpenJournal({
 }) {
   const [pageIndex, setPageIndex] = useState(0);
   const [flipClass, setFlipClass] = useState("");
-  const contentRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
   const pageIndexRef = useRef(0);
   const todayEntryRef = useRef<DiaryEntry | undefined>(undefined);
@@ -365,44 +362,43 @@ function OpenJournal({
 
   const todayISO_ = todayISO();
   const todayEntry = entries.find((e) => e.date === todayISO_);
+  const pastEntries = entries.filter((e) => e.date !== todayISO_);
+
   const isToday = pageIndex === 0;
-  const maxPage = entries.length;
-  const canFlipForward = pageIndex < maxPage;
+  const canFlipForward = pageIndex < pastEntries.length;
   const canFlipBack = pageIndex > 0;
 
   pageIndexRef.current = pageIndex;
   todayEntryRef.current = todayEntry;
 
-  const currentEntry = pageIndex === 0 ? todayEntry : entries[pageIndex - 1];
-  const leftEntry = pageIndex === 0 ? undefined : (pageIndex === 1 ? todayEntry : entries[pageIndex - 2]);
+  const currentEntry: DiaryEntry | undefined = pageIndex === 0 ? todayEntry : pastEntries[pageIndex - 1];
+  const leftEntry: DiaryEntry | undefined = pageIndex === 0 ? undefined : (pageIndex === 1 ? todayEntry : pastEntries[pageIndex - 2]);
 
-  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const fmtLong = (iso: string) =>
+    new Date(iso + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
 
-  const rightDateLabel = currentEntry
-    ? new Date(currentEntry.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
-    : todayLabel;
-  const leftDateLabel = leftEntry
-    ? new Date(leftEntry.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
-    : todayLabel;
+  const rightDateLabel = pageIndex === 0 ? todayLabel : (currentEntry ? fmtLong(currentEntry.date) : todayLabel);
+  const leftDateLabel  = pageIndex === 0 ? todayLabel : (leftEntry  ? fmtLong(leftEntry.date)  : todayLabel);
 
-  // Sync contenteditable only when page changes (not on every auto-save re-render)
+  // Sync editable fields only when navigating (not on every auto-save re-render)
   useEffect(() => {
-    if (!contentRef.current) return;
-    const e = pageIndexRef.current === 0 ? todayEntryRef.current : entries[pageIndexRef.current - 1];
-    contentRef.current.innerHTML = e?.html ?? "";
+    if (pageIndex !== 0) return;
+    if (titleRef.current) titleRef.current.textContent = todayEntryRef.current?.title || "";
+    if (bodyRef.current)  bodyRef.current.innerHTML   = todayEntryRef.current?.html  ?? "";
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageIndex]);
 
   const saveCurrentContent = () => {
-    if (!contentRef.current || pageIndexRef.current !== 0) return;
+    if (pageIndexRef.current !== 0) return;
     const te = todayEntryRef.current;
-    const label = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+    const label = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
     onSaveEntry({
       id: te?.id ?? crypto.randomUUID(),
       date: todayISO(),
       mood: te?.mood ?? "calm",
-      title: te?.title || label,
-      html: contentRef.current.innerHTML,
+      title: titleRef.current?.textContent?.trim() || label,
+      html: bodyRef.current?.innerHTML ?? "",
       theme: te?.theme ?? "sakura",
       font: te?.font ?? "caveat",
       createdAt: te?.createdAt ?? new Date().toISOString(),
@@ -416,7 +412,7 @@ function OpenJournal({
 
   const flip = (dir: 1 | -1) => {
     const next = pageIndexRef.current + dir;
-    if (next < 0 || next > entries.length) return;
+    if (next < 0 || next > pastEntries.length) return;
     setFlipClass("bk-flip-out");
     setTimeout(() => {
       setPageIndex(next);
@@ -434,216 +430,206 @@ function OpenJournal({
     else if (dx > 60) flip(-1);
   };
 
-  const pageStyle = (side: "left" | "right"): React.CSSProperties => ({
-    flex: 1,
-    position: "relative",
-    padding: "32px 28px 28px",
-    background: side === "left"
-      ? "linear-gradient(160deg, #FEFCF6 0%, #F8F4E8 60%, #FAF6EC 100%)"
-      : "linear-gradient(160deg, #F8F4E8 0%, #FEFCF6 60%, #FAF8F0 100%)",
-    boxShadow: side === "left"
-      ? "inset -18px 0 44px rgba(0,0,0,0.058), inset 0 0 80px rgba(200,168,120,0.03)"
-      : "inset 18px 0 44px rgba(0,0,0,0.058), inset 0 0 80px rgba(200,168,120,0.03)",
-    overflow: "hidden",
-  });
-
-  const ruledLines: React.CSSProperties = {
-    position: "absolute", inset: 0, opacity: 0.038, pointerEvents: "none",
-    backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 31px, #8B6840 31px, #8B6840 32px)",
-    backgroundPositionY: "68px",
-  };
+  const HW   = "'Caveat', cursive";
+  const PINK = "#C8587A";
+  const DEEP = "#7A1835";
+  const BODY = "#5A2030";
+  const MUTED = "#B08090";
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: JOURNAL_STYLES }} />
       <div className="animate-scale-in" style={style}>
-        <div style={{ position: "relative" }}>
-          {/* Stacked page depth shadows */}
-          <div style={{ position: "absolute", left: 22, right: 22, top: 10, bottom: -6, borderRadius: 18, background: "#CDB488", opacity: 0.2, filter: "blur(5px)", zIndex: -2 }} />
-          <div style={{ position: "absolute", left: 14, right: 14, top: 5, bottom: -3, borderRadius: 16, background: "#DEC8A0", opacity: 0.14, filter: "blur(2px)", zIndex: -1 }} />
 
-          {/* 3D book container */}
-          <div style={{ perspective: "2400px", perspectiveOrigin: "50% 40%" }}>
-            <div
-              style={{
-                transform: "rotateX(3deg) rotateY(-5deg)",
-                transformStyle: "preserve-3d",
-                transition: "transform 0.4s ease",
-                background: "linear-gradient(to bottom, #7A5025 0%, #A87840 18%, #CC9860 36%, #D8A870 50%, #C09050 64%, #A07030 82%, #7A5025 100%)",
-                borderRadius: "3px 20px 20px 3px",
-                padding: "10px 14px 10px 0",
-                boxShadow: [
-                  "-8px 12px 44px rgba(0,0,0,0.28)",
-                  "10px 16px 60px rgba(0,0,0,0.16)",
-                  "0 48px 88px rgba(255,105,180,0.07)",
-                  "inset 0 1px 0 rgba(255,255,255,0.07)",
-                ].join(", "),
-              }}
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
-            >
-              {/* Left leather spine */}
-              <div style={{
-                position: "absolute", left: 0, top: 0, bottom: 0, width: 30,
-                background: "linear-gradient(to right, #2E1200, #5A2C08, #8A5020, #6A3810, #2E1200)",
-                boxShadow: "6px 0 16px rgba(0,0,0,0.32), inset 4px 0 8px rgba(255,200,100,0.05), inset -2px 0 4px rgba(0,0,0,0.35)",
-                borderRadius: "3px 0 0 3px",
-                zIndex: 10,
-              }}>
-                <div style={{ position: "absolute", top: "12%", left: "50%", transform: "translateX(-50%)", width: 1, height: "76%", background: "linear-gradient(to bottom, transparent, rgba(255,210,90,0.22), transparent)" }} />
-              </div>
+        {/* Book image frame with HTML text overlaid on top */}
+        <div
+          style={{ position: "relative", maxWidth: 900, margin: "0 auto" }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Dreamy pink book — purely decorative frame */}
+          <img
+            src="/images/dreamy-book.png"
+            alt=""
+            aria-hidden
+            draggable={false}
+            style={{ width: "100%", display: "block", userSelect: "none", pointerEvents: "none" }}
+          />
 
-              {/* Pages spread */}
-              <div style={{ marginLeft: 30, display: "flex", minHeight: 560 }}>
+          {/* LEFT PAGE OVERLAY */}
+          <div style={{
+            position: "absolute",
+            top: "9%", left: "8%", width: "37%", height: "80%",
+            padding: "clamp(8px,4%,28px) clamp(6px,4%,22px)",
+            boxSizing: "border-box",
+            display: "flex", flexDirection: "column",
+            overflow: "hidden",
+          }}>
+            <p style={{ fontFamily: HW, fontSize: "clamp(13px,2.5vw,20px)", color: PINK, fontWeight: 600, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0 }}>
+              {leftDateLabel}
+            </p>
+            <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}44, ${PINK}66, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
 
-                {/* ── LEFT PAGE ── */}
-                <div style={pageStyle("left")}>
-                  <div style={ruledLines} />
-                  <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 28, background: "linear-gradient(to left, rgba(0,0,0,0.055), transparent)", pointerEvents: "none" }} />
-                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", top: -20, left: -20, width: 88, height: 88, opacity: 0.1, transform: "rotate(12deg)", objectFit: "contain", pointerEvents: "none" }} />
-                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", bottom: -16, right: -8, width: 68, height: 68, opacity: 0.07, transform: "rotate(200deg)", objectFit: "contain", pointerEvents: "none" }} />
-
-                  <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column" }}>
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: 20, color: "#8B6840", lineHeight: 1.3, marginBottom: 4 }}>{leftDateLabel}</p>
-                    <div style={{ height: 1, background: "linear-gradient(to right, rgba(139,104,64,0.32), rgba(200,168,122,0.44), transparent)", marginBottom: 16 }} />
-
-                    {leftEntry ? (
-                      <div style={{ flex: 1, fontFamily: "'Caveat', cursive", fontSize: 19, lineHeight: "32px", color: "#7A5530", overflow: "hidden" }}
-                        dangerouslySetInnerHTML={{ __html: leftEntry.html || "<em style='color:rgba(139,104,64,0.38)'>Blank page…</em>" }} />
-                    ) : (
-                      <div style={{ flex: 1 }}>
-                        <div style={{ marginBottom: 20 }}>
-                          <span style={{ fontSize: 32, color: "rgba(255,47,146,0.2)", lineHeight: 1, display: "block", marginBottom: 4 }}>"</span>
-                          <p style={{ fontFamily: "'Caveat', cursive", fontSize: 17, lineHeight: 1.65, color: "#7A5530", fontStyle: "italic", margin: 0 }}>
-                            She remembered who she was,<br />and the game changed.
-                          </p>
-                          <p style={{ fontSize: 11, color: "#A08060", marginTop: 6 }}>— Lalah Delia</p>
-                        </div>
-                        {entries.length > 0 && (
-                          <>
-                            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#A08060", marginBottom: 8 }}>Recent moods</p>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                              {entries.slice(0, 12).map((e, i) => {
-                                const M = moodMeta(e.mood);
-                                return (
-                                  <span key={e.id} title={`${e.date}: ${M.label}`}
-                                    style={{ width: 26, height: 26, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#FF2F92,#E6007A)", opacity: Math.max(0.2, 1 - i * 0.08) }}>
-                                    <M.Icon style={{ width: 12, height: 12, color: "white" }} strokeWidth={2} />
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          </>
-                        )}
-                        {entries.length === 0 && (
-                          <p style={{ fontFamily: "'Caveat', cursive", fontSize: 17, color: "#A08060" }}>Begin your story here ✿</p>
-                        )}
-                      </div>
-                    )}
-
-                    <p style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "#C8A87A", marginTop: 12 }}>~ {pageIndex * 2 + 1} ~</p>
-                  </div>
-                </div>
-
-                {/* ── CENTER SPINE FOLD ── */}
-                <div style={{
-                  flexShrink: 0, width: 26,
-                  background: "linear-gradient(to right, #C0A880, #E4D0A4, #F2E4BC, #E4D0A4, #C0A880)",
-                  boxShadow: "inset 4px 0 14px rgba(0,0,0,0.13), inset -4px 0 14px rgba(0,0,0,0.10)",
-                }} />
-
-                {/* ── RIGHT PAGE ── writing area */}
+            {leftEntry ? (
+              <div style={{ flex: 1, overflow: "hidden" }}>
+                {leftEntry.title && (
+                  <p style={{ fontFamily: HW, fontSize: "clamp(14px,2.6vw,21px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%" }}>
+                    {leftEntry.title}
+                  </p>
+                )}
                 <div
-                  className={flipClass}
-                  style={{
-                    ...pageStyle("right"),
-                    transformStyle: "preserve-3d",
-                  }}
-                >
-                  <div style={ruledLines} />
-                  <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 28, background: "linear-gradient(to right, rgba(0,0,0,0.055), transparent)", pointerEvents: "none" }} />
-                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", top: -20, right: -20, width: 88, height: 88, opacity: 0.1, transform: "rotate(-12deg)", objectFit: "contain", pointerEvents: "none" }} />
-                  <img src="/images/landing-orb-flower.png" alt="" aria-hidden style={{ position: "absolute", bottom: -16, left: -8, width: 68, height: 68, opacity: 0.07, transform: "rotate(15deg)", objectFit: "contain", pointerEvents: "none" }} />
-
-                  <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column" }}>
-                    <p style={{ fontFamily: "'Caveat', cursive", fontSize: 22, color: "#8B6840", lineHeight: 1.3, marginBottom: 4 }}>{rightDateLabel}</p>
-                    <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(200,168,122,0.44), transparent)", marginBottom: 12 }} />
-
-                    {isToday ? (
-                      <div
-                        ref={contentRef}
-                        contentEditable
-                        suppressContentEditableWarning
-                        onInput={handleInput}
-                        data-ph="Click here and start writing... let your thoughts flow ✿"
-                        style={{
-                          flex: 1,
-                          fontFamily: "'Caveat', cursive",
-                          fontSize: 21,
-                          lineHeight: "32px",
-                          color: "#3E2008",
-                          outline: "none",
-                          cursor: "text",
-                          minHeight: 420,
-                          wordBreak: "break-word",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          flex: 1,
-                          fontFamily: "'Caveat', cursive",
-                          fontSize: 21,
-                          lineHeight: "32px",
-                          color: "#3E2008",
-                          overflow: "hidden",
-                          minHeight: 420,
-                        }}
-                        dangerouslySetInnerHTML={{ __html: currentEntry?.html || "<em style='color:rgba(139,104,64,0.38)'>Blank page…</em>" }}
-                      />
-                    )}
-
-                    <p style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: "#C8A87A", marginTop: 8 }}>~ {pageIndex * 2 + 2} ~</p>
-                  </div>
-                </div>
-
+                  className="diary-overlay"
+                  style={{ fontFamily: HW, fontSize: "clamp(12px,2vw,16px)", lineHeight: 1.65, color: BODY, overflow: "hidden", maxHeight: "85%" }}
+                  dangerouslySetInnerHTML={{ __html: leftEntry.html || `<em style="color:${MUTED}">Blank page…</em>` }}
+                />
               </div>
-            </div>
+            ) : (
+              <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ marginBottom: "8%" }}>
+                  <span style={{ fontFamily: HW, fontSize: "clamp(22px,3.5vw,32px)", color: `${PINK}33`, lineHeight: 1, display: "block" }}>"</span>
+                  <p style={{ fontFamily: HW, fontSize: "clamp(11px,1.9vw,15px)", lineHeight: 1.65, color: BODY, fontStyle: "italic", margin: "2px 0 4px" }}>
+                    She remembered who she was, and the game changed.
+                  </p>
+                  <p style={{ fontFamily: HW, fontSize: "clamp(10px,1.5vw,12px)", color: MUTED }}>— Lalah Delia</p>
+                </div>
+                {entries.length > 0 && (
+                  <>
+                    <p style={{ fontSize: "clamp(7px,1.1vw,9px)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, marginBottom: "4%" }}>Recent moods</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(3px,0.5vw,5px)" }}>
+                      {entries.slice(0, 10).map((e, i) => {
+                        const M = moodMeta(e.mood);
+                        return (
+                          <span key={e.id} title={`${e.date}: ${M.label}`} style={{
+                            width: "clamp(18px,2.6vw,22px)", height: "clamp(18px,2.6vw,22px)",
+                            borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            background: `rgba(200,88,122,${Math.max(0.18, 0.85 - i * 0.08)})`,
+                          }}>
+                            <M.Icon style={{ width: "55%", height: "55%", color: "white" }} strokeWidth={2} />
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+                {entries.length === 0 && (
+                  <p style={{ fontFamily: HW, fontSize: "clamp(13px,2vw,16px)", color: MUTED }}>Begin your story here ✨</p>
+                )}
+              </div>
+            )}
+
+            <p style={{ fontFamily: HW, fontSize: "clamp(9px,1.2vw,11px)", textAlign: "center", color: `${PINK}66`, marginTop: "auto", paddingTop: "2%", flexShrink: 0 }}>
+              ~ {pageIndex * 2 + 1} ~
+            </p>
           </div>
 
-          {/* Page navigation */}
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 18, marginTop: 22 }}>
-            <button
-              onClick={() => flip(-1)}
-              disabled={!canFlipBack}
-              style={{
-                width: 42, height: 42, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(255,255,255,0.9)", border: "1px solid rgba(232,213,180,0.7)",
-                color: canFlipBack ? "#FF2F92" : "rgba(160,128,96,0.25)",
-                boxShadow: canFlipBack ? "0 2px 12px rgba(0,0,0,0.1)" : "none",
-                cursor: canFlipBack ? "pointer" : "not-allowed", transition: "all 0.2s",
-              }}
-            >
-              <ChevronLeft style={{ width: 18, height: 18 }} strokeWidth={2.5} />
-            </button>
-            <span style={{ fontFamily: "'Caveat', cursive", fontSize: 17, color: "rgba(139,104,64,0.6)" }}>
-              {pageIndex === 0 ? "today ✿" : `page ${pageIndex} of ${entries.length}`}
-            </span>
-            <button
-              onClick={() => flip(1)}
-              disabled={!canFlipForward}
-              style={{
-                width: 42, height: 42, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(255,255,255,0.9)", border: "1px solid rgba(232,213,180,0.7)",
-                color: canFlipForward ? "#FF2F92" : "rgba(160,128,96,0.25)",
-                boxShadow: canFlipForward ? "0 2px 12px rgba(0,0,0,0.1)" : "none",
-                cursor: canFlipForward ? "pointer" : "not-allowed", transition: "all 0.2s",
-              }}
-            >
-              <ChevronRight style={{ width: 18, height: 18 }} strokeWidth={2.5} />
-            </button>
+          {/* RIGHT PAGE OVERLAY — main writing surface */}
+          <div
+            className={flipClass}
+            style={{
+              position: "absolute",
+              top: "9%", right: "8%", width: "37%", height: "80%",
+              padding: "clamp(8px,4%,28px) clamp(6px,4%,22px)",
+              boxSizing: "border-box",
+              display: "flex", flexDirection: "column",
+              overflow: "hidden",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {/* Date — always auto-filled, never editable */}
+            <p style={{ fontFamily: HW, fontSize: "clamp(13px,2.5vw,20px)", color: PINK, fontWeight: 600, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0 }}>
+              {rightDateLabel}
+            </p>
+            <div style={{ height: 1, background: `linear-gradient(to right, transparent, ${PINK}66, transparent)`, marginBottom: "3%", flexShrink: 0 }} />
+
+            {/* Title line */}
+            {isToday ? (
+              <div
+                ref={titleRef}
+                contentEditable
+                suppressContentEditableWarning
+                onInput={handleInput}
+                data-ph="Give this page a title…"
+                style={{
+                  fontFamily: HW, fontSize: "clamp(15px,2.8vw,23px)",
+                  color: DEEP, lineHeight: 1.2,
+                  outline: "none", cursor: "text",
+                  marginBottom: "3%", flexShrink: 0,
+                  minHeight: "1.3em", wordBreak: "break-word",
+                }}
+              />
+            ) : (
+              <p style={{ fontFamily: HW, fontSize: "clamp(15px,2.8vw,23px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0, minHeight: "1.3em" }}>
+                {currentEntry?.title || ""}
+              </p>
+            )}
+
+            <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}22, ${PINK}44, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
+
+            {/* Body — main writing area */}
+            {isToday ? (
+              <div
+                ref={bodyRef}
+                contentEditable
+                suppressContentEditableWarning
+                onInput={handleInput}
+                data-ph="Start writing here… let your thoughts flow ✨"
+                className="diary-overlay"
+                style={{
+                  flex: 1,
+                  fontFamily: HW, fontSize: "clamp(13px,2.1vw,18px)",
+                  lineHeight: 1.65, color: BODY,
+                  outline: "none", cursor: "text",
+                  wordBreak: "break-word", overflowY: "auto",
+                }}
+              />
+            ) : (
+              <div
+                className="diary-overlay"
+                style={{
+                  flex: 1,
+                  fontFamily: HW, fontSize: "clamp(13px,2.1vw,18px)",
+                  lineHeight: 1.65, color: BODY,
+                  overflowY: "auto",
+                }}
+                dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:${MUTED}">Blank page…</em>` }}
+              />
+            )}
+
+            <p style={{ fontFamily: HW, fontSize: "clamp(9px,1.2vw,11px)", textAlign: "center", color: `${PINK}66`, marginTop: "3%", flexShrink: 0 }}>
+              ~ {pageIndex * 2 + 2} ~
+            </p>
           </div>
+
+          {/* FLIP ARROWS */}
+          {canFlipBack && (
+            <button onClick={() => flip(-1)} title="Previous page" style={{
+              position: "absolute", left: "4.5%", top: "50%", transform: "translateY(-50%)",
+              width: "clamp(28px,4vw,36px)", height: "clamp(28px,4vw,36px)", borderRadius: "50%",
+              background: "rgba(255,255,255,0.92)", border: `1px solid ${PINK}44`,
+              color: PINK, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 14px rgba(200,88,122,0.22)", zIndex: 20,
+            }}>
+              <ChevronLeft style={{ width: "55%", height: "55%" }} strokeWidth={2.5} />
+            </button>
+          )}
+          {canFlipForward && (
+            <button onClick={() => flip(1)} title="Next page" style={{
+              position: "absolute", right: "4.5%", top: "50%", transform: "translateY(-50%)",
+              width: "clamp(28px,4vw,36px)", height: "clamp(28px,4vw,36px)", borderRadius: "50%",
+              background: "rgba(255,255,255,0.92)", border: `1px solid ${PINK}44`,
+              color: PINK, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 2px 14px rgba(200,88,122,0.22)", zIndex: 20,
+            }}>
+              <ChevronRight style={{ width: "55%", height: "55%" }} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
+
+        {/* Page label */}
+        <p style={{ textAlign: "center", fontFamily: HW, fontSize: "clamp(14px,2vw,17px)", color: `${PINK}99`, marginTop: 10 }}>
+          {pageIndex === 0 ? "today ✨" : `page ${pageIndex} of ${pastEntries.length}`}
+        </p>
+
       </div>
     </>
   );
