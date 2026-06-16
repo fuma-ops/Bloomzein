@@ -1108,7 +1108,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
       <div className="relative w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 shadow-2xl text-center overflow-hidden my-8">
-        <ExercisePhoto exercise={first} zone={session.zone} className="w-full aspect-[16/9] object-cover" />
+        <ExercisePhoto exercise={first} zone={session.zone} className="w-full aspect-square object-contain object-center bg-blush/20" />
         <button onClick={onExit} className="absolute right-3 top-3 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
         <div className="p-6 sm:p-8">
         <h1 className="font-script text-4xl text-hotpink leading-none mb-2">{session.name}</h1>
