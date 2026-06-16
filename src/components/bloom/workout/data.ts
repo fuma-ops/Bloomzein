@@ -363,29 +363,29 @@ export const BADGES: Badge[] = [
 
 export type BodyType = "pear" | "hourglass" | "rectangle" | "apple" | "inverted-triangle";
 
-export const BODY_TYPES: Record<BodyType, { label: string; image: string; strengths: string; recommended: WorkoutIntention[] }> = {
+export const BODY_TYPES: Record<BodyType, { label: string; image: string; photo: string; strengths: string; recommended: WorkoutIntention[] }> = {
   pear: {
-    label: "Pear", image: "/images/bodytype-pear.svg",
+    label: "Pear", image: "/images/bodytype-pear.svg", photo: "/images/body-pear.png",
     strengths: "Strong legs and glutes — natural power in your lower body.",
     recommended: ["strengthen", "tonify"],
   },
   hourglass: {
-    label: "Hourglass", image: "/images/bodytype-hourglass.svg",
+    label: "Hourglass", image: "/images/bodytype-hourglass.svg", photo: "/images/body-hourglass.png",
     strengths: "Balanced strength throughout — great at full-body flows.",
     recommended: ["tonify", "stretch"],
   },
   rectangle: {
-    label: "Rectangle", image: "/images/bodytype-rectangle.svg",
+    label: "Rectangle", image: "/images/bodytype-rectangle.svg", photo: "/images/body-rectangle.png",
     strengths: "Efficient, athletic build — responds fast to strength work.",
     recommended: ["strengthen", "tonify"],
   },
   apple: {
-    label: "Apple", image: "/images/bodytype-apple.svg",
+    label: "Apple", image: "/images/bodytype-apple.svg", photo: "/images/body-apple.png",
     strengths: "Strong core and upper body — a natural base for stability work.",
     recommended: ["tonify", "stretch"],
   },
   "inverted-triangle": {
-    label: "Inverted Triangle", image: "/images/bodytype-inverted-triangle.svg",
+    label: "Inverted Triangle", image: "/images/bodytype-inverted-triangle.svg", photo: "/images/body-inverted-triangle.png",
     strengths: "Strong shoulders and back — built for pulling movements.",
     recommended: ["stretch", "recover"],
   },

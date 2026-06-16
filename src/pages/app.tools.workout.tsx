@@ -893,12 +893,14 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
               key={key}
               onClick={() => setSelected(key)}
               className={[
-                "flex flex-col items-center gap-2 rounded-2xl border p-3 shadow-sm transition active:scale-95",
+                "flex flex-col items-center gap-1.5 rounded-2xl border overflow-hidden shadow-sm transition active:scale-95",
                 isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
               ].join(" ")}
             >
-              <ExercisePhoto exercise={{ slug: key, name: bt.label, image: bt.image, muscles: "" }} className="h-12 w-12 object-contain" />
-              <span className="text-[11px] font-semibold text-rose text-center leading-tight">{bt.label}</span>
+              <div className="w-full aspect-square overflow-hidden">
+                <img src={bt.photo} alt={bt.label} className="w-full h-full object-contain object-center" />
+              </div>
+              <span className="text-[11px] font-semibold text-rose text-center leading-tight pb-2 px-1">{bt.label}</span>
             </button>
           );
         })}
@@ -906,15 +908,22 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
 
       {data && (
         <div className="rounded-2xl bg-blush/60 border border-petal/50 p-4">
-          <p className="font-bold text-rose mb-1">{data.label}</p>
-          <p className="text-sm text-rose/85 mb-3">{data.strengths}</p>
-          <p className="text-xs font-bold text-rose mb-2">Recommended intentions</p>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {data.recommended.map((i) => (
-              <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-xs font-semibold text-rose">
-                {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
-              </span>
-            ))}
+          <div className="flex gap-4 mb-3">
+            <div className="w-28 sm:w-40 shrink-0 rounded-xl overflow-hidden border border-petal/50">
+              <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <p className="font-bold text-rose mb-1">{data.label}</p>
+              <p className="text-sm text-rose/85 mb-3">{data.strengths}</p>
+              <p className="text-xs font-bold text-rose mb-2">Recommended intentions</p>
+              <div className="flex flex-wrap gap-2">
+                {data.recommended.map((i) => (
+                  <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-xs font-semibold text-rose">
+                    {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
           <button
             onClick={() => onStartWith("full-body", data.recommended[0])}
