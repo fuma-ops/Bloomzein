@@ -375,43 +375,43 @@ const JOURNAL_STYLES = `
   .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
   .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
   .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
-  /* ── Phone: crop to right page, fill container edge-to-edge ── */
+  /* ── Phone: fill section, show only right cream page ── */
   @media (max-width: 767px) {
     .diary-book-wrap {
       overflow: hidden;
-      aspect-ratio: 9 / 14;
+      aspect-ratio: 9 / 16;
     }
     .diary-book-desktop { display: none !important; }
     .diary-book-mobile {
       display: block !important;
       position: absolute;
       right: 0; top: 0;
-      width: 145%;
+      width: 125%;
       height: 100%;
       object-fit: cover;
       object-position: right top;
     }
     .diary-left-page { display: none !important; }
     .diary-right-page {
-      top: 9% !important;
-      left: 4% !important;
-      right: 15% !important;
+      top: 14% !important;
+      left: 5% !important;
+      right: 13% !important;
       width: auto !important;
-      height: 82% !important;
-      padding: 3% 3% 2% 3% !important;
+      height: 72% !important;
+      padding: 2% 3% 2% 3% !important;
     }
   }
-  /* ── Tablet: show full mobile image without cropping ── */
+  /* ── Tablet: same image, full display ── */
   @media (min-width: 768px) and (max-width: 1023px) {
     .diary-book-desktop { display: none !important; }
     .diary-book-mobile  { display: block !important; }
     .diary-left-page { display: none !important; }
     .diary-right-page {
-      top: 9% !important;
-      left: 22% !important;
-      right: 5% !important;
+      top: 14% !important;
+      left: 18% !important;
+      right: 12% !important;
       width: auto !important;
-      height: 73% !important;
+      height: 71% !important;
       padding: 2% 3% 2% 3% !important;
     }
   }
@@ -449,8 +449,9 @@ function OpenJournal({
   const todayEntry = entries.find((e) => e.date === todayISO_);
   const pastEntries = entries.filter((e) => e.date !== todayISO_);
 
+  const BLANK_PAGES = 5; // extra blank pages beyond existing entries
   const isToday = pageIndex === 0;
-  const canFlipForward = pageIndex < pastEntries.length;
+  const canFlipForward = pageIndex < pastEntries.length + BLANK_PAGES;
   const canFlipBack = pageIndex > 0;
 
   pageIndexRef.current = pageIndex;
@@ -464,8 +465,8 @@ function OpenJournal({
     new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
   const todayLabel = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
 
-  const rightDateLabel = isToday ? todayLabel : (currentEntry ? fmtLong(currentEntry.date) : todayLabel);
-  const leftDateLabel  = pageIndex === 0 ? todayLabel : (leftEntry ? fmtLong(leftEntry.date) : todayLabel);
+  const rightDateLabel = isToday ? todayLabel : (currentEntry ? fmtLong(currentEntry.date) : "");
+  const leftDateLabel  = pageIndex === 0 ? todayLabel : (leftEntry ? fmtLong(leftEntry.date) : "");
 
   // Clear hint animation once
   useEffect(() => {
@@ -514,7 +515,7 @@ function OpenJournal({
 
   const flip = (dir: 1 | -1) => {
     const next = pageIndexRef.current + dir;
-    if (next < 0 || next > pastEntries.length) return;
+    if (next < 0 || next > pastEntries.length + BLANK_PAGES) return;
     setHintDone(true);
     setFlipClass("bk-flip-out");
     setTimeout(() => {
