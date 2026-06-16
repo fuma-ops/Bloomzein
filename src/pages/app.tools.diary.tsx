@@ -52,10 +52,24 @@ export function themeMeta(key: string) {
   return DIARY_THEMES.find((t) => t.key === key) ?? DIARY_THEMES[0];
 }
 
+function sampleEntry(): DiaryEntry {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    id: "bloom-sample-001",
+    date: today,
+    mood: "happy",
+    title: "A gentle morning ✿",
+    html: `<p>Today started with the softest light coming through my window. I made chamomile tea and sat quietly for a few minutes before the day began.</p><p>I feel grateful — for small things mostly. The way the cherry blossoms are blooming. A kind message from a friend. The simple fact that I woke up today.</p><p>My intention: stay present, choose softness, and do at least one thing just for me. 🌸</p>`,
+    theme: "sakura",
+    font: "caveat",
+    createdAt: new Date().toISOString(),
+  };
+}
+
 function loadEntries(): DiaryEntry[] {
   try {
     const raw = localStorage.getItem(DIARY_STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return [sampleEntry()];
     const parsed = JSON.parse(raw);
     return (parsed as any[]).map((e) => ({
       id: e.id,
@@ -370,11 +384,12 @@ const JOURNAL_STYLES = `
     .diary-book-mobile  { display: block !important; }
     .diary-left-page { display: none !important; }
     .diary-right-page {
-      top: 7% !important;
-      left: 9% !important;
+      top: 9% !important;
+      left: 17% !important;
       right: 5% !important;
       width: auto !important;
-      height: 80% !important;
+      height: 73% !important;
+      padding: 3% 4% 3% 4% !important;
     }
   }
   @media (min-width: 1024px) {
