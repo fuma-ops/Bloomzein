@@ -48,7 +48,7 @@ export const HERO_IMAGES = {
   discover: "/images/workout-hero-discover.png",
   program: "/images/workout-hero-program.png",
   library: "/images/workout-hero-library.png",
-  bestShape: "/images/workout-hero-bestshape.png",
+  bestShape: "/images/workout-hero-bestshape.webp",
   session: "/images/workout-hero-session.png",
 };
 
