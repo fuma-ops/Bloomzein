@@ -186,7 +186,7 @@ function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone
 function HeroBanner({ src, title, subtitle }: { src: string; title: string; subtitle?: string }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-md shadow-rose/10 mb-4">
+    <div className="relative w-full aspect-[16/9] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-md shadow-rose/10 mb-4">
       {broken ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
@@ -226,7 +226,7 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[16/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
+    <div className="relative w-full aspect-[16/9] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
       {broken ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
