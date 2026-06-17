@@ -1121,3 +1121,17 @@
   animation: tap-hint 3.2s ease-in-out infinite;
 }
 
+/* Beautifully animated pink gradient — used as the cycle phase-timeline card background */
+@utility bloom-pink-wave {
+  background: linear-gradient(135deg,
+    #FFF0F6 0%,
+    #FBCFE8 20%,
+    #F9A8D4 40%,
+    #FCE7F3 55%,
+    #FBCFE8 70%,
+    #FFF0F6 100%
+  );
+  background-size: 300% 300%;
+  animation: bloom-gradient-shift 5s ease-in-out infinite;
+}
+

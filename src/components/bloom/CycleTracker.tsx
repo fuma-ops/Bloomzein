@@ -280,14 +280,17 @@ export function CycleTracker() {
           {/* ── ULTRA-COMPACT HERO ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md"
-            style={{ minHeight: "80px" }}
+            style={{ minHeight: "96px" }}
           >
             <img
               src="/images/cycle-insight-hero.webp"
-              alt="" aria-hidden loading="lazy" decoding="async"
-              className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_20%] animate-photo-breathe"
+              alt="" aria-hidden loading="eager" decoding="async"
+              className="absolute inset-0 -z-10 h-full w-full object-cover object-center animate-photo-breathe"
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/78 via-white/50 to-transparent" />
+            {/* left text shield — only covers the text area */}
+            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/70 via-white/35 to-transparent" />
+            {/* bottom vignette for extra contrast on subtitle text */}
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/30 via-transparent to-transparent" />
             <div className="relative z-10 px-4 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 {/* left: day + phase — staggered entrance */}
@@ -326,7 +329,7 @@ export function CycleTracker() {
 
           {/* ── PHASE TIMELINE LINE ── */}
           <div
-            className="rounded-[1.5rem] bg-gradient-to-r from-[#FFF0F6] via-white/95 to-[#FCE7F3] backdrop-blur-md border border-pink-200/60 px-3 py-2.5 shadow-sm animate-fade-in"
+            className="rounded-[1.5rem] bloom-pink-wave border border-pink-200/50 px-3 py-3 shadow-sm animate-fade-in"
             style={{ animationDelay: "60ms" }}
           >
             <div className="relative flex items-start justify-between">
@@ -351,20 +354,20 @@ export function CycleTracker() {
                   <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1">
                     <span
                       className={[
-                        "grid h-6 w-6 shrink-0 place-items-center rounded-full shadow-sm transition-all duration-300",
+                        "grid h-7 w-7 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
                         isCurrent
-                          ? "bg-hotpink text-white ring-4 ring-hotpink/20 animate-selected-glow"
+                          ? "bg-hotpink text-white ring-4 ring-white/60 animate-selected-glow"
                           : isPast
-                          ? "bg-pink-200 text-white"
-                          : "bg-white text-rose/30 border border-pink-100",
+                          ? "bg-pink-400/80 text-white shadow-sm"
+                          : "bg-white/80 text-rose/40 border border-pink-200",
                       ].join(" ")}
                     >
-                      <StepIcon className="h-3 w-3" />
+                      <StepIcon className="h-3.5 w-3.5" />
                     </span>
                     <span
                       className={[
                         "text-[8px] font-bold tracking-wide leading-none text-center",
-                        isCurrent ? "text-hotpink" : isPast ? "text-pink-300" : "text-rose/35",
+                        isCurrent ? "text-[#BE185D] drop-shadow-sm" : isPast ? "text-pink-600/80" : "text-rose/50",
                       ].join(" ")}
                     >
                       {step.label}
