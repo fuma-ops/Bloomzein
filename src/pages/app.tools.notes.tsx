@@ -94,7 +94,7 @@ const QUICK_SUGGESTIONS: { Icon: LucideIcon; label: string; kind: ReminderKind; 
 const EXAMPLE_NOTES: Omit<Note, "id" | "createdAt">[] = [
   { title: "Morning Self-care ✿", text: "• Face wash & moisturize\n• 10 min meditation\n• Drink lemon water\n• Gratitude journal 🌸", color: "sakura",   tag: "Self-care", pinned: true },
   { title: "App Ideas 💡",        text: "• Mood tracker with music\n• Daily affirmation widget\n• Bloom journal premium\n• Sleep quality tracker", color: "lavender", tag: "Ideas",     pinned: false },
-  { title: "This Week ✅",        text: "[ ] Book dentist appointment\n[ ] Call mom on Sunday\n[x] Start new journal\n[ ] Buy face masks",      color: "mint",     tag: "To-do",    pinned: false },
+  { title: "This Week ✅",        text: "[ ] Book dentist appointment\n[ ] Call mom on Sunday\n[x] Start new journal\n[ ] Buy face masks",      color: "mint",    tag: "To-do",    pinned: false },
   { title: "Love Notes 💕",       text: "I am worthy of love and kindness.\nI choose joy every single day.\nI am becoming the best version of me.\n💕 You are enough.", color: "sakura", tag: "Love", pinned: false },
   { title: "Midnight Dreams 🌙",  text: "One day I'll travel to Japan in spring, walk under cherry blossoms, write in a little cafe by the river...", color: "midnight", tag: "Other", pinned: false },
 ];
@@ -102,15 +102,30 @@ const EXAMPLE_NOTES: Omit<Note, "id" | "createdAt">[] = [
 function parseTodoItems(text: string): { checked: boolean; label: string; lineIndex: number }[] {
   const result: { checked: boolean; label: string; lineIndex: number }[] = [];
   text.split("\n").forEach((line, i) => {
+    if (!line.trim()) return;
     if (line.startsWith("[x] ") || line.startsWith("[X] ")) result.push({ checked: true,  label: line.slice(4), lineIndex: i });
     else if (line.startsWith("[ ] "))                        result.push({ checked: false, label: line.slice(4), lineIndex: i });
+    else                                                      result.push({ checked: false, label: line,          lineIndex: i });
   });
   return result;
 }
 
 function isTodoNote(note: Note) {
-  const lines = note.text.split("\n").filter((l) => l.trim());
-  return note.tag === "To-do" && lines.length > 0 && lines.every((l) => /^\[[ xX]\] /.test(l));
+  return note.tag === "To-do" && note.text.trim().length > 0;
+}
+
+/** Convert plain lines to `[ ] line` format; preserve already-prefixed lines. */
+function toTodoText(raw: string): string {
+  return raw.split("\n").map((line) => {
+    if (!line.trim()) return line;
+    if (/^\[[ xX]\] /.test(line)) return line;
+    return "[ ] " + line;
+  }).join("\n");
+}
+
+/** Strip `[ ]` / `[x]` prefixes so user sees plain sentences in the textarea. */
+function fromTodoText(stored: string): string {
+  return stored.split("\n").map((l) => l.replace(/^\[[ xX]\] /, "")).join("\n");
 }
 
 const KIND_OPTIONS: { key: ReminderKind; label: string; emoji: string; Icon: LucideIcon; hint: string }[] = [
@@ -450,12 +465,13 @@ export default function NotesPage() {
   const handleSaveNote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!noteTitle.trim() && !noteText.trim()) return;
+    const finalText = noteTag === "To-do" ? toTodoText(noteText) : noteText;
 
     if (editingNoteId) {
       setNotes((prev) =>
         prev.map((n) =>
           n.id === editingNoteId
-            ? { ...n, title: noteTitle, text: noteText, color: noteColor, tag: noteTag }
+            ? { ...n, title: noteTitle, text: finalText, color: noteColor, tag: noteTag }
             : n
         )
       );
@@ -464,7 +480,7 @@ export default function NotesPage() {
       const newNote: Note = {
         id: Math.random().toString(36).slice(2, 10),
         title: noteTitle,
-        text: noteText,
+        text: finalText,
         color: noteColor,
         tag: noteTag,
         pinned: false,
@@ -485,7 +501,7 @@ export default function NotesPage() {
   const handleEditNote = (note: Note) => {
     setEditingNoteId(note.id);
     setNoteTitle(note.title);
-    setNoteText(note.text);
+    setNoteText(note.tag === "To-do" ? fromTodoText(note.text) : note.text);
     setNoteColor(note.color);
     setNoteTag(note.tag);
     setShowNoteForm(true);
@@ -521,6 +537,7 @@ export default function NotesPage() {
         const line = lines[lineIndex];
         if (line.startsWith("[x] ") || line.startsWith("[X] ")) lines[lineIndex] = "[ ] " + line.slice(4);
         else if (line.startsWith("[ ] "))                        lines[lineIndex] = "[x] " + line.slice(4);
+        else                                                      lines[lineIndex] = "[x] " + line;
         return { ...n, text: lines.join("\n") };
       })
     );
@@ -1130,7 +1147,7 @@ export default function NotesPage() {
                     onChange={(e) => setNoteText(e.target.value)}
                     placeholder={
                       noteTag === "To-do"
-                        ? "[ ] Do something nice\n[ ] Take a walk\n[x] Drink water today"
+                        ? "Do something nice\nTake a walk\nCall mom\nBuy face masks"
                         : noteTag === "Ideas"
                         ? "💡 What if we built...\n✦ A new approach to...\n✦ Brainstorm freely..."
                         : noteTag === "Love"
