@@ -301,10 +301,11 @@ export function CycleTracker() {
   const [slideDir,            setSlideDir]          = useState<"l"|"r">("r");
 
   // Derived today values
-  const moodChecked = todayKey in moodLog;
-  const mood        = moodLog[todayKey] ?? "happy";
-  const symptoms    = symptomsLog[todayKey] ?? [];
-  const pillTaken   = pillLog[todayKey] ?? false;
+  const moodChecked     = todayKey in moodLog;
+  const mood            = moodLog[todayKey] ?? "happy";
+  const symptoms        = symptomsLog[todayKey] ?? [];
+  const symptomsChecked = symptoms.length > 0;
+  const pillTaken       = pillLog[todayKey] ?? false;
 
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -409,6 +410,7 @@ export function CycleTracker() {
   }, [settings, currentCycleStart, cycleDay, moodLog, symptomsLog]);
 
   const toggleSymptom = (s: string) => {
+    const isAdding = !symptoms.includes(s);
     setSymptomsLog((prev) => {
       const current = prev[todayKey] ?? [];
       const updated = current.includes(s) ? current.filter((x) => x !== s) : [...current, s];
@@ -416,6 +418,9 @@ export function CycleTracker() {
       try { localStorage.setItem(SYMPTOMS_LOG_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
+    if (isAdding && symptoms.length === 0) {
+      setTimeout(() => graphRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 350);
+    }
   };
 
   const phaseTagColors: Record<Exclude<Phase, null>, string> = {
@@ -513,6 +518,12 @@ export function CycleTracker() {
 
   return (
     <div ref={containerRef} className="relative animate-fade-in">
+      {/* Poppy-pink edge vignette — frames the whole page */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        aria-hidden
+        style={{ background: "radial-gradient(ellipse 80% 75% at 50% 45%, transparent 35%, oklch(0.70 0.26 350 / 0.20) 80%, oklch(0.62 0.30 350 / 0.32) 100%)" }}
+      />
       <KawaiiBackground count={16} />
       <BloomBubbles count={18} />
 
@@ -611,9 +622,9 @@ export function CycleTracker() {
           <div className={["relative transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
             <div className="grid grid-cols-5 gap-1.5">
               {[
-                { label: "Period",    Icon: Droplet,  BgIcon: Droplet,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,              color: "text-rose-500",   bg: "from-[#FFDDE8]/60 to-[#FFB3CC]/30", border: "border-rose-100",   bgColor: "text-rose-400"   },
-                { label: "Fertile",   Icon: Flower2,  BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `→ ${fmtDate(fertileEnd)}`,         color: "text-pink-500",   bg: "from-pink-50 to-pink-100/50",       border: "border-pink-100",   bgColor: "text-pink-400"   },
-                { label: "Ovulation", Icon: Sparkles, BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle + 1}`,   color: "text-violet-500", bg: "from-violet-50 to-purple-50/60",    border: "border-violet-100", bgColor: "text-violet-400" },
+                { label: "Period",    Icon: Droplet,  BgIcon: Droplet,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,              color: "text-rose-600",   bg: "from-rose-100 to-rose-200/70",       border: "border-rose-200",   bgColor: "text-rose-400"   },
+                { label: "Fertile",   Icon: Flower2,  BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `→ ${fmtDate(fertileEnd)}`,         color: "text-pink-600",   bg: "from-pink-100 to-pink-200/70",       border: "border-pink-200",   bgColor: "text-pink-400"   },
+                { label: "Ovulation", Icon: Sparkles, BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle + 1}`,   color: "text-violet-600", bg: "from-violet-100 to-violet-200/60",   border: "border-violet-200", bgColor: "text-violet-400" },
               ].map((p, i) => (
                 <div
                   key={p.label}
@@ -641,10 +652,10 @@ export function CycleTracker() {
                 className={[
                   "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   showMoodPickerCard
-                    ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30"
+                    ? "from-pink-100 to-fuchsia-100/90 border-pink-300 ring-1 ring-hotpink/40"
                     : !moodChecked
-                      ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/20 animate-selected-glow"
-                      : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
+                      ? "from-pink-100 to-fuchsia-100/90 border-pink-200 ring-1 ring-hotpink/25 animate-selected-glow"
+                      : "from-pink-100 to-fuchsia-100/90 border-pink-200",
                 ].join(" ")}
                 style={{ animationDelay: "600ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
@@ -672,7 +683,7 @@ export function CycleTracker() {
                 aria-pressed={pillTaken}
                 className={[
                   "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
-                  pillTaken ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100" : "from-white/80 to-pink-50/50 border-pink-50",
+                  pillTaken ? "from-pink-100 to-fuchsia-100/90 border-pink-200" : "from-pink-50 to-pink-100/70 border-pink-150",
                 ].join(" ")}
                 style={{ animationDelay: "760ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
@@ -749,9 +760,21 @@ export function CycleTracker() {
           </div>
 
           {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
+          <div className="relative">
+            {/* Symptom nudge — floats above calendar, points at the symptoms column */}
+            {!symptomsChecked && isSetup && (
+              <div className="pointer-events-none absolute bottom-[calc(100%+6px)] right-6 z-20 animate-fade-in" aria-hidden>
+                <div className="relative animate-cta-bounce">
+                  <div className="flex items-center gap-1 rounded-full bg-hotpink px-2.5 py-1 shadow-lg shadow-pink-300/40 ring-2 ring-white/60">
+                    <span className="text-[9px] font-bold text-white whitespace-nowrap">log symptoms ♥</span>
+                  </div>
+                  <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-hotpink" />
+                </div>
+              </div>
+            )}
           <div
-            className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 reveal-on-scroll"
-            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
+            className="relative overflow-hidden rounded-[1.5rem] bg-rose-50/90 backdrop-blur-md border border-pink-200/80 p-2 reveal-on-scroll"
+            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.14), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {/* ── Setup overlay — shown when not configured ── */}
             {!isSetup && (
@@ -905,12 +928,13 @@ export function CycleTracker() {
 
             </div>
           </div>
+          </div>{/* /outer calendar wrapper */}
 
           {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
           <div
             ref={graphRef}
-            className={["lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
-            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
+            className={["lg:hidden rounded-[1.5rem] bg-rose-50/90 backdrop-blur-md border border-pink-200/80 p-3 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.14), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {renderWellnessGraph("mob")}
           </div>
@@ -969,8 +993,9 @@ export function CycleTracker() {
                 <a
                   key={p.tag}
                   href={p.href}
-                  className="zoom-reveal hover-scale group flex items-center gap-2.5 rounded-2xl bg-white/60 p-1.5 pr-3 shadow-sm backdrop-blur-md transition-all duration-200 active:scale-95 hover:shadow-md"
+                  className="zoom-reveal animate-suggestion-attention hover:[animation-play-state:paused] active:[animation-play-state:paused] hover-scale group flex items-center gap-2.5 rounded-2xl bg-pink-50/90 p-1.5 pr-3 border border-pink-100 backdrop-blur-md transition-all duration-200 active:scale-95 hover:shadow-lg hover:bg-pink-100/80"
                   data-reveal-delay={`${(i + 1) * 90}ms`}
+                  style={{ animationDelay: `${i * 900 + 1200}ms` }}
                 >
                   <img src={p.img} alt="" aria-hidden loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-xl object-cover sm:h-12 sm:w-12" />
                   <div className="min-w-0">
