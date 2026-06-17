@@ -112,9 +112,6 @@ function AppContent() {
   } else if (path === "/app/tools/cycle") {
     content = (
       <div className="animate-fade-in">
-        <a href="/app/tools" className="mb-4 inline-flex items-center gap-1 text-sm text-[#831843] hover:text-[#EC4899] font-semibold">
-          <ArrowLeft className="h-4 w-4" /> All tools
-        </a>
         <CycleTracker />
       </div>
     );
