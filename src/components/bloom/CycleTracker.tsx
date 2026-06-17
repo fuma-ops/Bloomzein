@@ -40,6 +40,9 @@ import {
   readCycleSettings,
   writeCycleSettings,
   broadcastCyclePhase,
+  hasCycleSettings,
+  CYCLE_SETTINGS_KEY,
+  CYCLE_PHASE_KEY,
 } from "./cyclePhase";
 
 /** @deprecated use DEFAULT_CYCLE_SETTINGS / readCycleSettings from "./cyclePhase" — kept for existing imports */
@@ -242,7 +245,26 @@ function fmtDate(d: Date) {
 export function CycleTracker() {
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const [settings, setSettings] = useState<CycleSettings>(() => readCycleSettings());
-  const [setupOpen, setSetupOpen] = useState(false);
+  const [setupOpen,      setSetupOpen]      = useState(false);
+  const [isSetup,        setIsSetup]        = useState(() => hasCycleSettings());
+  const [showResetMenu,  setShowResetMenu]  = useState(false);
+
+  function resetAllData() {
+    try {
+      localStorage.removeItem(CYCLE_SETTINGS_KEY);
+      localStorage.removeItem(CYCLE_PHASE_KEY);
+      localStorage.removeItem(MOOD_LOG_KEY);
+      localStorage.removeItem(SYMPTOMS_LOG_KEY);
+      localStorage.removeItem(PILL_LOG_KEY);
+    } catch {}
+    setIsSetup(false);
+    setSettings(DEFAULT_CYCLE_SETTINGS);
+    setMoodLog({});
+    setSymptomsLog({});
+    setPillLog({});
+    setShowResetMenu(false);
+  }
+
 
   useEffect(() => { broadcastCyclePhase(); }, []);
 
@@ -499,7 +521,7 @@ export function CycleTracker() {
 
           {/* ── HERO + PHASE TIMELINE (merged) ── */}
           <div
-            className="relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md"
+            className={["relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
           >
             <img
               src="/images/cycle-insight-hero.webp"
@@ -584,7 +606,7 @@ export function CycleTracker() {
           </div>
 
           {/* ── CYCLE PREDICTIONS + MOOD + DAILY PILL ── */}
-          <div className="relative">
+          <div className={["relative transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
             <div className="grid grid-cols-5 gap-1.5">
               {[
                 { label: "Period",    Icon: Droplet,  BgIcon: Droplet,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,              color: "text-rose-500",   bg: "from-[#FFDDE8]/60 to-[#FFB3CC]/30", border: "border-rose-100",   bgColor: "text-rose-400"   },
@@ -723,6 +745,26 @@ export function CycleTracker() {
             className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 reveal-on-scroll"
             style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
+            {/* ── Setup overlay — shown when not configured ── */}
+            {!isSetup && (
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-[1.5rem] bg-white/90 backdrop-blur-sm animate-fade-in">
+                <div className="grid h-12 w-12 place-items-center rounded-full bg-pink-50 animate-selected-glow">
+                  <CalendarDays className="h-6 w-6 text-hotpink/60" />
+                </div>
+                <div className="text-center">
+                  <p className="font-script text-2xl text-hotpink leading-none">Set me up ♥</p>
+                  <p className="mt-1 text-[10px] text-rose/50 max-w-[170px] leading-snug">
+                    Tell us when your last period was and we'll colour your whole cycle
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSetupOpen(true)}
+                  className="bloom-luxury-btn animate-cta-bounce px-5 py-2 text-[11px] font-bold text-white"
+                >
+                  Get started ♥
+                </button>
+              </div>
+            )}
             {/* month nav */}
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-0.5">
@@ -736,13 +778,34 @@ export function CycleTracker() {
                   <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
-              <button
-                onClick={() => setSetupOpen(true)}
-                title="Cycle settings"
-                className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-pink-50 text-rose/60 hover:bg-pink-100 hover:text-hotpink transition active:scale-90 shadow-sm"
-              >
-                <Settings className="h-3 w-3" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => isSetup ? setShowResetMenu((v) => !v) : setSetupOpen(true)}
+                  title="Cycle settings"
+                  className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-pink-50 text-rose/60 hover:bg-pink-100 hover:text-hotpink transition active:scale-90 shadow-sm"
+                >
+                  <Settings className="h-3 w-3" />
+                </button>
+                {showResetMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white/98 border border-pink-100 shadow-xl overflow-hidden backdrop-blur-md">
+                      <button
+                        onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
+                        className="w-full text-left px-3 py-2 text-[10px] font-semibold text-rose/70 hover:bg-pink-50 transition"
+                      >
+                        Edit settings
+                      </button>
+                      <button
+                        onClick={resetAllData}
+                        className="w-full text-left px-3 py-2 text-[10px] font-semibold text-rose-400 hover:bg-rose-50 transition border-t border-pink-50"
+                      >
+                        Reset all data
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* 2-column: calendar grid | symptoms */}
@@ -838,7 +901,7 @@ export function CycleTracker() {
           {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
           <div
             ref={graphRef}
-            className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 reveal-on-scroll"
+            className={["lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
             style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {renderWellnessGraph("mob")}
@@ -846,7 +909,7 @@ export function CycleTracker() {
 
           {/* ── AFFIRMATION CARD ── */}
           <div
-            className="relative overflow-hidden rounded-[2rem] reveal-on-scroll shadow-sm"
+            className={["relative overflow-hidden rounded-[2rem] reveal-on-scroll shadow-sm transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
             style={{ minHeight: "110px" }}
           >
             <img
@@ -879,7 +942,7 @@ export function CycleTracker() {
 
         {/* ══════════════ RIGHT PANEL (40%) — desktop sticky ══════════════ */}
         <aside
-          className="bloom-pearl-card reveal-on-scroll relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0"
+          className={["bloom-pearl-card reveal-on-scroll relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0 transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
           style={{ boxShadow: "inset 0 0 28px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
         >
           <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
@@ -934,7 +997,7 @@ export function CycleTracker() {
         open={setupOpen}
         onClose={() => setSetupOpen(false)}
         initial={settings}
-        onSave={(s) => { setSettings(s); writeCycleSettings(s); }}
+        onSave={(s) => { setSettings(s); writeCycleSettings(s); setIsSetup(true); }}
       />
     </div>
   );
