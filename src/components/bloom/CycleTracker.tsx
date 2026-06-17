@@ -480,42 +480,31 @@ export function CycleTracker() {
               alt="" aria-hidden loading="eager" decoding="async"
               className="absolute inset-0 h-full w-full object-cover object-top animate-photo-breathe"
             />
-            {/* left shield — keeps Day N text readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/50 to-white/15" />
-            {/* right shield — keeps countdown text readable */}
-            <div className="absolute inset-0 bg-gradient-to-l from-white/85 via-white/35 to-transparent" />
+            {/* minimal left shield — text readable, photo visible */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/20 to-transparent" />
             <div className="relative z-10 px-4 pt-2.5 pb-3">
-              <div className="flex items-center justify-between gap-3">
-                {/* left: day + phase — staggered entrance */}
-                <div>
-                  <h2
-                    className="font-script text-4xl text-hotpink leading-none animate-scale-in"
-                    style={{ animationDelay: "0ms" }}
-                  >
-                    Day {cycleDay}
-                  </h2>
-                  {(() => { const PhaseIcon = PHASE_META[currentPhase].Icon; return (
-                  <span
-                    className={["mt-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold animate-fade-in", phaseTagColors[currentPhase]].join(" ")}
-                    style={{ animationDelay: "120ms" }}
-                  >
-                    <PhaseIcon className="h-2.5 w-2.5" />
-                    {PHASE_LABEL[currentPhase]} Phase
-                  </span>
-                  ); })()}
-                  <p
-                    className="mt-0.5 text-[10px] font-semibold text-rose/65 max-w-[180px] leading-snug animate-fade-in"
-                    style={{ animationDelay: "200ms" }}
-                  >
-                    {PHASE_SUBTITLE[currentPhase]}
-                  </p>
-                </div>
-                {/* right: next period countdown — no button */}
-                <div className="shrink-0 text-right animate-fade-in" style={{ animationDelay: "80ms" }}>
-                  <p className="text-[8px] font-bold text-rose/45 uppercase tracking-wider">Next period</p>
-                  <p className="font-script text-2xl text-hotpink leading-none animate-scale-in" style={{ animationDelay: "40ms" }}>{daysToPeriod}d</p>
-                  <p className="text-[8px] text-rose/50 font-semibold">{fmtDate(nextPeriodDate)}</p>
-                </div>
+              <div>
+                <h2
+                  className="font-script text-4xl text-hotpink leading-none animate-scale-in"
+                  style={{ animationDelay: "0ms" }}
+                >
+                  Day {cycleDay}
+                </h2>
+                {(() => { const PhaseIcon = PHASE_META[currentPhase].Icon; return (
+                <span
+                  className={["mt-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold animate-fade-in", phaseTagColors[currentPhase]].join(" ")}
+                  style={{ animationDelay: "120ms" }}
+                >
+                  <PhaseIcon className="h-2.5 w-2.5" />
+                  {PHASE_LABEL[currentPhase]} Phase
+                </span>
+                ); })()}
+                <p
+                  className="mt-0.5 text-[10px] font-semibold text-rose/65 max-w-[180px] leading-snug animate-fade-in"
+                  style={{ animationDelay: "200ms" }}
+                >
+                  {PHASE_SUBTITLE[currentPhase]}
+                </p>
               </div>
 
               {/* Phase journey steps — part of the hero */}
