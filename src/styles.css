@@ -605,18 +605,13 @@
 @utility bloom-pearl-card {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(180deg, oklch(1 0 0 / 0.92) 0%, oklch(0.98 0.012 350 / 0.88) 100%);
+  background: linear-gradient(180deg, oklch(0.96 0.045 350 / 0.94) 0%, oklch(0.93 0.07 350 / 0.92) 100%);
   box-shadow:
-    /* extremely soft pink ambient shadow */
-    0 16px 32px -22px oklch(0.65 0.2 345 / 0.28),
-    /* a touch of contact depth */
+    0 16px 32px -22px oklch(0.62 0.26 345 / 0.38),
     0 2px 6px -3px oklch(0.4 0.06 340 / 0.12),
-    /* almost invisible inner border */
-    inset 0 0 0 1px oklch(1 0 0 / 0.6),
-    /* very subtle top highlight */
-    inset 0 1px 0 oklch(1 0 0 / 0.8),
-    /* faint base shading for depth */
-    inset 0 -1px 6px oklch(0.85 0.05 345 / 0.15);
+    inset 0 0 0 1px oklch(1 0 0 / 0.5),
+    inset 0 1px 0 oklch(1 0 0 / 0.7),
+    inset 0 -1px 8px oklch(0.80 0.12 345 / 0.22);
 }
 
 /* Light pink ambient shadow used to ground each landing-page section on the page */
@@ -1185,5 +1180,20 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .zoom-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
+/* ── Suggestion card attention pulse — glow + micro-zoom, pauses on hover/click ── */
+@keyframes suggestion-attention {
+  0%, 100% {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 0 0 0 rgba(236,72,153,0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(236,72,153,0.28), 0 0 0 2.5px rgba(236,72,153,0.22);
+    transform: scale(1.025);
+  }
+}
+@utility animate-suggestion-attention {
+  animation: suggestion-attention 2.6s ease-in-out infinite;
 }
 
