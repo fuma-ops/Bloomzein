@@ -275,12 +275,12 @@ export function CycleTracker() {
       <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
 
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-2">
 
-          {/* ── COMPACT HERO ── */}
+          {/* ── ULTRA-COMPACT HERO ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md"
-            style={{ minHeight: "156px" }}
+            style={{ minHeight: "80px" }}
           >
             <img
               src="/images/cycle-insight-hero.webp"
@@ -288,40 +288,32 @@ export function CycleTracker() {
               className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_20%] animate-photo-breathe"
             />
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/94 via-white/75 to-white/20" />
-            <div className="relative z-10 p-5 sm:p-6">
-              {/* top bar */}
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] font-bold tracking-widest text-rose/60 uppercase flex items-center gap-1">
-                  <Sparkles className="h-2.5 w-2.5 text-hotpink animate-bloom-sparkle" />
-                  Good morning ✿
-                </p>
-                <button
-                  onClick={() => setSetupOpen(true)}
-                  className="bloom-luxury-btn hover-scale inline-flex items-center gap-1 px-3 py-1 text-[10px] font-bold text-white"
-                >
-                  <Sparkles className="h-2.5 w-2.5" /> Settings
-                </button>
-              </div>
-
-              <div className="flex items-end justify-between gap-4">
+            <div className="relative z-10 px-4 py-2.5">
+              <div className="flex items-center justify-between gap-3">
                 {/* left: day + phase */}
                 <div>
-                  <h2 className="font-script text-5xl sm:text-6xl text-hotpink leading-none">Day {cycleDay}</h2>
+                  <h2 className="font-script text-4xl text-hotpink leading-none">Day {cycleDay}</h2>
                   {(() => { const PhaseIcon = PHASE_META[currentPhase].Icon; return (
-                  <span className={["mt-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold", phaseTagColors[currentPhase]].join(" ")}>
-                    <PhaseIcon className="h-3 w-3" />
+                  <span className={["mt-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold", phaseTagColors[currentPhase]].join(" ")}>
+                    <PhaseIcon className="h-2.5 w-2.5" />
                     {PHASE_LABEL[currentPhase]} Phase
                   </span>
                   ); })()}
-                  <p className="mt-1.5 text-[11px] font-semibold text-rose/65 max-w-[200px] leading-snug">
+                  <p className="mt-0.5 text-[10px] font-semibold text-rose/65 max-w-[180px] leading-snug">
                     {PHASE_SUBTITLE[currentPhase]}
                   </p>
                 </div>
-                {/* right: next period pill */}
-                <div className="shrink-0 text-right pb-1">
-                  <p className="text-[9px] font-bold text-rose/45 uppercase tracking-wider">Next period</p>
-                  <p className="font-script text-3xl text-hotpink leading-none">{daysToPeriod}d</p>
-                  <p className="text-[9px] text-rose/50 font-semibold">{fmtDate(nextPeriodDate)}</p>
+                {/* right: next period + setup link */}
+                <div className="shrink-0 text-right">
+                  <p className="text-[8px] font-bold text-rose/45 uppercase tracking-wider">Next period</p>
+                  <p className="font-script text-2xl text-hotpink leading-none">{daysToPeriod}d</p>
+                  <p className="text-[8px] text-rose/50 font-semibold">{fmtDate(nextPeriodDate)}</p>
+                  <button
+                    onClick={() => setSetupOpen(true)}
+                    className="mt-0.5 text-[8px] font-semibold text-rose/35 hover:text-hotpink transition ml-auto flex items-center gap-0.5"
+                  >
+                    <Sparkles className="h-2 w-2" /> Setup
+                  </button>
                 </div>
               </div>
             </div>
@@ -329,26 +321,24 @@ export function CycleTracker() {
 
           {/* ── PHASE TIMELINE LINE ── */}
           <div
-            className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 px-5 py-4 shadow-sm animate-fade-in"
+            className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 px-3 py-2.5 shadow-sm animate-fade-in"
             style={{ animationDelay: "60ms" }}
           >
             <div className="relative flex items-start justify-between">
-              {/* background track */}
-              <div className="absolute left-3.5 right-3.5 top-3 h-[2px] rounded-full bg-pink-100" />
-              {/* filled progress */}
+              <div className="absolute left-3 right-3 top-3 h-[2px] rounded-full bg-pink-100" />
               <div
-                className="absolute left-3.5 top-3 h-[2px] rounded-full bg-gradient-to-r from-hotpink to-pink-300 transition-all duration-700"
-                style={{ width: `calc(${progressPct}% * (100% - 1.75rem) / 100)` }}
+                className="absolute left-3 top-3 h-[2px] rounded-full bg-gradient-to-r from-hotpink to-pink-300 transition-all duration-700"
+                style={{ width: `calc(${progressPct}% * (100% - 1.5rem) / 100)` }}
               />
               {journeySteps.map((step, i) => {
                 const isPast    = i < activeIdx;
                 const isCurrent = step.active;
                 const StepIcon  = step.Icon;
                 return (
-                  <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1.5">
+                  <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1">
                     <span
                       className={[
-                        "grid h-7 w-7 shrink-0 place-items-center rounded-full shadow-sm transition-all duration-300",
+                        "grid h-6 w-6 shrink-0 place-items-center rounded-full shadow-sm transition-all duration-300",
                         isCurrent
                           ? "bg-hotpink text-white ring-4 ring-hotpink/20 animate-selected-glow"
                           : isPast
@@ -356,11 +346,11 @@ export function CycleTracker() {
                           : "bg-white text-rose/30 border border-pink-100",
                       ].join(" ")}
                     >
-                      <StepIcon className="h-3.5 w-3.5" />
+                      <StepIcon className="h-3 w-3" />
                     </span>
                     <span
                       className={[
-                        "text-[9px] font-bold tracking-wide leading-none text-center",
+                        "text-[8px] font-bold tracking-wide leading-none text-center",
                         isCurrent ? "text-hotpink" : isPast ? "text-pink-300" : "text-rose/35",
                       ].join(" ")}
                     >
@@ -372,42 +362,15 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── TODAY'S INSIGHTS ── */}
+          {/* ── CYCLE PREDICTIONS ── */}
           <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-script text-xl text-hotpink sm:text-2xl">Today's Insights</h3>
-              <a href="/app/tools/yoga" className="text-[10px] font-bold text-hotpink hover:underline transition">
-                Learn more →
-              </a>
-            </div>
-            <div className="grid grid-cols-4 gap-2 sm:gap-3">
-              {PHASE_TODAY_INSIGHTS[currentPhase].map((ins) => (
-                <div
-                  key={ins.label}
-                  className={["rounded-2xl p-3 flex flex-col items-center gap-2 text-center shadow-sm border border-white/70 backdrop-blur", ins.bg].join(" ")}
-                >
-                  <span className={["grid h-8 w-8 place-items-center rounded-xl bg-white/80 shadow-sm", ins.color].join(" ")}>
-                    <ins.Icon className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className={["text-[10px] font-bold leading-snug", ins.color].join(" ")}>{ins.value}</p>
-                    <p className="text-[9px] text-rose/50 font-semibold mt-0.5">{ins.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── CYCLE PREDICTIONS (no View All) ── */}
-          <div className="animate-fade-in" style={{ animationDelay: "140ms" }}>
-            <h3 className="font-script text-xl text-hotpink sm:text-2xl mb-3">Cycle Predictions</h3>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-1.5">
               {[
                 {
                   label: "Next Period",
                   Icon: CalendarDays,
                   value: fmtDate(nextPeriodDate),
-                  sub: `in ${daysToPeriod} days`,
+                  sub: `in ${daysToPeriod}d`,
                   color: "text-hotpink",
                   bg: "from-[#FFF0F6] to-[#FCE7F3]",
                   border: "border-pink-100",
@@ -433,62 +396,61 @@ export function CycleTracker() {
               ].map((p) => (
                 <div
                   key={p.label}
-                  className={["rounded-2xl bg-gradient-to-br border p-3 shadow-sm flex flex-col gap-2", p.bg, p.border].join(" ")}
+                  className={["rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1.5", p.bg, p.border].join(" ")}
                 >
-                  <span className={["grid h-8 w-8 place-items-center rounded-xl bg-white/80 shadow-sm", p.color].join(" ")}>
-                    <p.Icon className="h-4 w-4" />
+                  <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
+                    <p.Icon className="h-3.5 w-3.5" />
                   </span>
                   <div>
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
-                    <p className={["font-script text-sm sm:text-base leading-tight", p.color].join(" ")}>{p.value}</p>
-                    <p className="text-[9px] text-rose/50 font-semibold">{p.sub}</p>
+                    <p className="text-[7px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
+                    <p className={["font-script text-sm leading-tight", p.color].join(" ")}>{p.value}</p>
+                    <p className="text-[8px] text-rose/50 font-semibold">{p.sub}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── COMPACT CALENDAR ── */}
+          {/* ── MINI CALENDAR ── */}
           <div
-            className="rounded-[1.5rem] sm:rounded-[2rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 sm:p-5 shadow-sm animate-fade-in"
-            style={{ animationDelay: "180ms" }}
+            className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 shadow-sm animate-fade-in"
+            style={{ animationDelay: "140ms" }}
           >
             {/* month nav */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1">
-                <button onClick={() => shift(-1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-pink-50 text-rose shadow-sm transition active:scale-90">
-                  <ChevronLeft className="h-3.5 w-3.5" />
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-0.5">
+                <button onClick={() => shift(-1)} className="hover-scale grid h-5 w-5 place-items-center rounded-full bg-pink-50 text-rose shadow-sm transition active:scale-90">
+                  <ChevronLeft className="h-3 w-3" />
                 </button>
-                <h3 className="font-script text-lg text-hotpink px-1.5 sm:text-xl">
+                <h3 className="font-script text-base text-hotpink px-1">
                   {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
                 </h3>
-                <button onClick={() => shift(1)} className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-pink-50 text-rose shadow-sm transition active:scale-90">
-                  <ChevronRight className="h-3.5 w-3.5" />
+                <button onClick={() => shift(1)} className="hover-scale grid h-5 w-5 place-items-center rounded-full bg-pink-50 text-rose shadow-sm transition active:scale-90">
+                  <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
               <button
                 onClick={() => { setCursor(new Date(today.getFullYear(), today.getMonth(), 1)); setSelected(today); }}
-                className="text-[10px] font-bold text-hotpink bg-pink-50 hover:bg-pink-100 px-3 py-1 rounded-full transition"
+                className="text-[9px] font-bold text-hotpink bg-pink-50 hover:bg-pink-100 px-2 py-0.5 rounded-full transition"
               >
                 Today
               </button>
             </div>
 
             {/* weekday header */}
-            <div className="grid grid-cols-7 text-center text-[9px] sm:text-[10px] font-bold tracking-widest text-rose/50 mb-1">
+            <div className="grid grid-cols-7 text-center text-[8px] font-bold tracking-widest text-rose/50 mb-0.5">
               {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
             </div>
 
             {/* day grid */}
             <div
               key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
-              className="grid grid-cols-7 gap-0.5 sm:gap-1 animate-fade-in"
+              className="grid grid-cols-7 gap-0.5 animate-fade-in"
             >
               {days.map((d, i) => {
                 if (!d) return <div key={i} />;
                 const phase = phaseForDay(d, settings);
                 const style = CALENDAR_DAY_STYLE[phase];
-                const BadgeIcon = style.Icon;
                 const isSelected = sameDay(d, selected);
                 const isToday    = sameDay(d, today);
                 return (
@@ -497,34 +459,50 @@ export function CycleTracker() {
                     onClick={() => setSelected(d)}
                     title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                     className={[
-                      "relative aspect-square rounded-full flex items-center justify-center text-[8px] sm:text-[10px] font-bold transition-all duration-200 hover:scale-105 active:scale-95",
+                      "aspect-square rounded-full flex items-center justify-center text-[7px] font-bold transition-all duration-200 hover:scale-105 active:scale-95",
                       style.cell,
                       isSelected && !isToday ? "ring-2 ring-hotpink/50" : "",
                       isToday ? "animate-selected-glow ring-2 ring-hotpink/60" : "",
                     ].join(" ")}
                   >
                     {d.getDate()}
-                    <span className={`absolute -bottom-0.5 -right-0.5 grid h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 place-items-center rounded-full shadow-sm ${style.badge}`}>
-                      <BadgeIcon className={`h-1.5 w-1.5 sm:h-2 sm:w-2 ${style.iconClass}`} />
-                    </span>
                   </button>
                 );
               })}
             </div>
 
-            {/* legend */}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[8px] sm:text-[10px] font-bold text-rose/65">
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-100 ring-1 ring-amber-200" /> Follicular</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gradient-to-br from-pink-100 to-rose-200 ring-1 ring-pink-200" /> Fertile</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100 ring-2 ring-violet-200" /> Ovulation</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full ring-2 ring-hotpink/60 shadow-[0_0_4px_1px_rgba(236,72,153,0.4)]" /> Today</span>
+            {/* compact legend */}
+            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[7px] font-bold text-rose/65">
+              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
+              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-100 ring-1 ring-amber-200" /> Follicular</span>
+              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-pink-100 to-rose-200" /> Fertile</span>
+              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100" /> Ovulation</span>
+              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
+            </div>
+          </div>
+
+          {/* ── TODAY'S INSIGHTS ── */}
+          <div className="animate-fade-in" style={{ animationDelay: "180ms" }}>
+            <div className="grid grid-cols-4 gap-1.5">
+              {PHASE_TODAY_INSIGHTS[currentPhase].map((ins) => (
+                <div
+                  key={ins.label}
+                  className={["rounded-xl p-2 flex flex-col items-center gap-1.5 text-center shadow-sm border border-white/70 backdrop-blur", ins.bg].join(" ")}
+                >
+                  <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", ins.color].join(" ")}>
+                    <ins.Icon className="h-3 w-3" />
+                  </span>
+                  <div>
+                    <p className={["text-[9px] font-bold leading-snug", ins.color].join(" ")}>{ins.value}</p>
+                    <p className="text-[8px] text-rose/50 font-semibold">{ins.label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* ── MOOD & SYMPTOMS — two columns ── */}
-          <div className="grid grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: "220ms" }}>
+          <div className="grid grid-cols-2 gap-2 animate-fade-in" style={{ animationDelay: "220ms" }}>
 
             {/* Mood */}
             <div className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 sm:p-4 shadow-sm">
@@ -591,7 +569,7 @@ export function CycleTracker() {
           {/* ── AFFIRMATION CARD ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-fade-in shadow-sm"
-            style={{ animationDelay: "260ms", minHeight: "140px" }}
+            style={{ animationDelay: "260ms", minHeight: "100px" }}
           >
             <img
               src="/images/cycle-journal-hero.webp"
@@ -599,18 +577,18 @@ export function CycleTracker() {
               className="absolute inset-0 -z-10 h-full w-full object-cover animate-photo-breathe"
             />
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/96 via-white/80 to-white/20" />
-            <div className="relative z-10 p-5 sm:p-6 max-w-[280px]">
-              <p className="text-[9px] font-bold tracking-widest text-rose/55 uppercase flex items-center gap-1 mb-2">
-                <BookOpen className="h-2.5 w-2.5 text-hotpink" /> Daily Affirmation
+            <div className="relative z-10 px-4 py-2.5 max-w-[280px]">
+              <p className="text-[8px] font-bold tracking-widest text-rose/55 uppercase flex items-center gap-1 mb-1">
+                <BookOpen className="h-2 w-2 text-hotpink" /> Daily Affirmation
               </p>
-              <p className="font-script text-xl text-hotpink sm:text-2xl leading-snug">
+              <p className="font-script text-base text-hotpink leading-snug">
                 "{PHASE_AFFIRMATIONS[currentPhase]}"
               </p>
               <a
                 href="/app/tools/diary"
-                className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white"
+                className="bloom-luxury-btn hover-scale animate-cta-bounce mt-2 inline-flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold text-white"
               >
-                <PenLine className="h-3.5 w-3.5" />
+                <PenLine className="h-3 w-3" />
                 Write Entry
               </a>
             </div>
