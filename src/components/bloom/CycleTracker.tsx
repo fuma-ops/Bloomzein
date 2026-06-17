@@ -271,7 +271,9 @@ export function CycleTracker() {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef     = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const targets = containerRef.current?.querySelectorAll<HTMLElement>(".reveal-on-scroll") ?? [];
+    const root = containerRef.current;
+    if (!root) return;
+    const targets = root.querySelectorAll<HTMLElement>(".reveal-on-scroll, .zoom-reveal");
     if (!targets.length) return;
     const io = new IntersectionObserver(
       (entries) => {
@@ -689,12 +691,18 @@ export function CycleTracker() {
               </button>
             </div>
 
-            {/* Mood nudge — shown only when today's mood not yet logged */}
+            {/* Mood nudge — floating speech bubble above the mood card (4th col ≈ 70% from left) */}
             {!moodChecked && !showMoodPickerCard && (
-              <div className="grid grid-cols-5 gap-1.5 mt-0.5 animate-fade-in pointer-events-none" aria-hidden>
-                <div className="col-start-4 flex flex-col items-center gap-px">
-                  <span className="text-[9px] leading-none text-hotpink/50">▲</span>
-                  <span className="text-[8px] font-semibold text-hotpink/60 whitespace-nowrap">how do you feel? ♥</span>
+              <div
+                className="pointer-events-none absolute bottom-[calc(100%+6px)] left-[70%] z-10 -translate-x-1/2 animate-fade-in"
+                aria-hidden
+              >
+                <div className="relative animate-cta-bounce">
+                  <div className="flex items-center gap-1 rounded-full bg-hotpink px-2.5 py-1 shadow-lg shadow-pink-300/40 ring-2 ring-white/60">
+                    <span className="text-[9px] font-bold text-white whitespace-nowrap">how do you feel? ♥</span>
+                  </div>
+                  {/* down-pointing arrow */}
+                  <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-hotpink" />
                 </div>
               </div>
             )}
@@ -949,19 +957,20 @@ export function CycleTracker() {
           <div className="relative z-10 hidden lg:block mb-4 pb-4 border-b border-pink-100/50">
             {renderWellnessGraph("desk")}
           </div>
-          <div key={selected.toDateString()} className="relative z-10 animate-fade-in">
+          <div key={selected.toDateString()} className="relative z-10">
             {/* Suggested activities */}
-            <p className="text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SUGGESTED FOR THIS PHASE</p>
+            <p className="zoom-reveal text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]" data-reveal-delay="0ms">SUGGESTED FOR THIS PHASE</p>
             <div className="mt-2 space-y-2">
               {[
                 { tag: "Yoga",    t: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga"    },
                 { tag: "Workout", t: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout" },
                 { tag: "Meal",    t: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals"   },
-              ].map((p) => (
+              ].map((p, i) => (
                 <a
                   key={p.tag}
                   href={p.href}
-                  className="hover-scale group flex items-center gap-2.5 rounded-2xl bg-white/60 p-1.5 pr-3 shadow-sm backdrop-blur-md transition-all duration-200 active:scale-95 hover:shadow-md"
+                  className="zoom-reveal hover-scale group flex items-center gap-2.5 rounded-2xl bg-white/60 p-1.5 pr-3 shadow-sm backdrop-blur-md transition-all duration-200 active:scale-95 hover:shadow-md"
+                  data-reveal-delay={`${(i + 1) * 90}ms`}
                 >
                   <img src={p.img} alt="" aria-hidden loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-xl object-cover sm:h-12 sm:w-12" />
                   <div className="min-w-0">
@@ -974,7 +983,8 @@ export function CycleTracker() {
 
             <a
               href="/app/tools/yoga"
-              className="bloom-luxury-btn hover-scale animate-selected-glow mt-4 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white active:scale-95 sm:text-sm"
+              className="zoom-reveal bloom-luxury-btn hover-scale animate-selected-glow mt-4 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white active:scale-95 sm:text-sm"
+              data-reveal-delay="360ms"
             >
               <Flower2 className="h-4 w-4" />
               Start 15-Min Flow
