@@ -3,7 +3,8 @@ import {
   ArrowLeft, Search, Pin, PinOff, Plus, Minus, Trash2, Edit3, CheckCircle2,
   Sparkles, Bell, BellRing, Smartphone, Check, Calendar, Clock,
   Heart, Palette, Tag, AlertCircle, X, ChevronDown, ChevronUp, RotateCcw,
-  Pill, Users, Sparkle, Cake, Stethoscope, Plane, Briefcase, CalendarClock, type LucideIcon
+  Pill, Users, Sparkle, Cake, Stethoscope, Plane, Briefcase, CalendarClock,
+  Droplets, Dumbbell, Moon, type LucideIcon
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
@@ -81,13 +82,13 @@ const MOOD_OPTIONS = [
   { emoji: "😴", label: "Tired",     color: "midnight" },
 ];
 
-const QUICK_SUGGESTIONS: { emoji: string; label: string; kind: ReminderKind; title: string; times?: string[] }[] = [
-  { emoji: "💊", label: "Daily Vitamins",  kind: "medication", title: "Daily Vitamins",   times: ["09:00"] },
-  { emoji: "🎂", label: "Mom's Birthday",  kind: "birthday",   title: "Mom's Birthday" },
-  { emoji: "💧", label: "Drink Water",     kind: "medication", title: "Drink Water",      times: ["08:00", "12:00", "18:00"] },
-  { emoji: "🏃", label: "Morning Workout", kind: "medication", title: "Morning Workout",  times: ["07:00"] },
-  { emoji: "💊", label: "Evening Meds",    kind: "medication", title: "Evening Meds",     times: ["21:00"] },
-  { emoji: "🌙", label: "Bedtime Routine", kind: "medication", title: "Bedtime Routine",  times: ["22:00"] },
+const QUICK_SUGGESTIONS: { Icon: LucideIcon; label: string; kind: ReminderKind; title: string; times?: string[] }[] = [
+  { Icon: Pill,      label: "Daily Vitamins",  kind: "medication", title: "Daily Vitamins",   times: ["09:00"] },
+  { Icon: Cake,      label: "Mom's Birthday",  kind: "birthday",   title: "Mom's Birthday" },
+  { Icon: Droplets,  label: "Drink Water",     kind: "medication", title: "Drink Water",      times: ["08:00", "12:00", "18:00"] },
+  { Icon: Dumbbell,  label: "Morning Workout", kind: "medication", title: "Morning Workout",  times: ["07:00"] },
+  { Icon: Pill,      label: "Evening Meds",    kind: "medication", title: "Evening Meds",     times: ["21:00"] },
+  { Icon: Moon,      label: "Bedtime Routine", kind: "medication", title: "Bedtime Routine",  times: ["22:00"] },
 ];
 
 const EXAMPLE_NOTES: Omit<Note, "id" | "createdAt">[] = [
@@ -525,7 +526,7 @@ export default function NotesPage() {
     );
   };
 
-  const applyQuickSuggestion = (s: typeof QUICK_SUGGESTIONS[0]) => {
+  const applyQuickSuggestion = (s: (typeof QUICK_SUGGESTIONS)[0]) => {
     setTab("reminders");
     resetReminderForm();
     setRemKind(s.kind);
@@ -1208,7 +1209,7 @@ export default function NotesPage() {
                           <k.Icon className="h-4 w-4" strokeWidth={1.8} />
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-xs font-bold text-rose">{k.emoji} {k.label}</span>
+                          <span className="block text-xs font-bold text-rose">{k.label}</span>
                           <span className="block text-[10px] text-rose/50 truncate">{k.hint}</span>
                         </span>
                       </button>
@@ -1386,23 +1387,47 @@ export default function NotesPage() {
             <div className="animate-fade-in">
               {filteredNotes.length === 0 ? (
                 <div className="rounded-[2rem] bg-white/70 border border-petal/40 p-8 text-center flex flex-col items-center justify-center">
-                  <span className="text-4xl mb-2">🌸</span>
-                  <p className="text-sm text-rose">
-                    {notes.length === 0 ? "Your canvas is empty — start writing ✿" : "No notes match your filters!"}
+                  <span className="text-4xl mb-2">{selectedTag !== "All" ? (TAG_EMOJI[selectedTag] || "🌸") : "🌸"}</span>
+                  <p className="text-sm text-rose font-medium">
+                    {notes.length === 0
+                      ? "Your canvas is empty — start writing ✿"
+                      : selectedTag !== "All"
+                      ? `No ${selectedTag} notes yet`
+                      : "No notes match your filters!"}
                   </p>
+                  {selectedTag === "Love" && (
+                    <p className="text-xs text-rose/60 mt-1 max-w-[220px] leading-relaxed">
+                      Love notes are your affirmations — little reminders that you are enough 💕
+                    </p>
+                  )}
+                  {selectedTag === "Ideas" && (
+                    <p className="text-xs text-rose/60 mt-1 max-w-[220px] leading-relaxed">
+                      Dump your wildest ideas here — big dreams, random sparks, anything 💡
+                    </p>
+                  )}
                   <div className="flex gap-2 mt-4 flex-wrap justify-center">
                     <button
-                      onClick={() => setShowNoteForm(true)}
+                      onClick={() => { setNoteTag(selectedTag !== "All" ? selectedTag : "Self-care"); setShowNoteForm(true); }}
                       className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
                     >
                       <Plus className="h-3.5 w-3.5" /> New note
                     </button>
-                    {notes.length === 0 && (
+                    {notes.length === 0 ? (
                       <button
                         onClick={handleSeedExamples}
                         className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition"
                       >
-                        Try examples ✿
+                        Try all examples ✿
+                      </button>
+                    ) : selectedTag !== "All" && EXAMPLE_NOTES.find((n) => n.tag === selectedTag) && (
+                      <button
+                        onClick={() => {
+                          const ex = EXAMPLE_NOTES.find((n) => n.tag === selectedTag);
+                          if (ex) setNotes((prev) => [{ ...ex, id: Math.random().toString(36).slice(2, 10), createdAt: new Date().toISOString() }, ...prev]);
+                        }}
+                        className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition"
+                      >
+                        Add {selectedTag} example ✿
                       </button>
                     )}
                   </div>
@@ -1420,8 +1445,9 @@ export default function NotesPage() {
                           style={{ animationDelay: `${idx * 60}ms` }}
                         >
                           <div
+                            onClick={() => handleEditNote(note)}
                             className={[
-                              "relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden",
+                              "relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden cursor-pointer",
                               shade.bg,
                               shade.border,
                             ].join(" ")}
@@ -1443,7 +1469,7 @@ export default function NotesPage() {
                                 </span>
                               </div>
                               <button
-                                onClick={() => handleTogglePin(note.id)}
+                                onClick={(e) => { e.stopPropagation(); handleTogglePin(note.id); }}
                                 className={["p-1 rounded-full transition shrink-0", shade.dark ? "text-white/30 hover:text-white" : "text-rose/30 hover:text-hotpink hover:bg-white/60"].join(" ")}
                                 title={note.pinned ? "Unpin" : "Pin"}
                               >
@@ -1491,16 +1517,16 @@ export default function NotesPage() {
                               <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", shade.dark ? "text-white/60 bg-white/10 border-white/10" : "text-rose/50 bg-white/70 border-pink-100"].join(" ")}>
                                 {tagEmoji} {note.tag}
                               </span>
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                              <div className="flex gap-1">
                                 <button
-                                  onClick={() => handleEditNote(note)}
+                                  onClick={(e) => { e.stopPropagation(); handleEditNote(note); }}
                                   className={["p-1 rounded-full transition", shade.dark ? "bg-white/10 text-white hover:bg-white/25" : "bg-white/60 text-rose hover:text-hotpink hover:bg-white"].join(" ")}
                                   title="Edit"
                                 >
                                   <Edit3 className="h-3 w-3" />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteNote(note.id)}
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}
                                   className={["p-1 rounded-full transition", shade.dark ? "bg-white/10 text-white hover:bg-red-400/30" : "bg-white/60 text-rose hover:text-[#F87171] hover:bg-white"].join(" ")}
                                   title="Delete"
                                 >
@@ -1556,7 +1582,7 @@ export default function NotesPage() {
                             : prettyDate(rem.date);
                       return (
                         <div key={rem.id} className="break-inside-avoid mb-3 group" style={{ animationDelay: `${idx * 60}ms` }}>
-                          <div className={["relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden", style.bg, style.border].join(" ")}>
+                          <div onClick={() => handleEditReminder(rem)} className={["relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden cursor-pointer", style.bg, style.border].join(" ")}>
                             {/* Cherry blossom decorator */}
                             <span className="absolute -top-2 -right-2 text-6xl opacity-10 pointer-events-none select-none rotate-12 leading-none">🌸</span>
 
@@ -1570,7 +1596,7 @@ export default function NotesPage() {
                               </div>
                               {rem.kind === "event" && (
                                 <button
-                                  onClick={() => handleToggleReminderDone(rem.id)}
+                                  onClick={(e) => { e.stopPropagation(); handleToggleReminderDone(rem.id); }}
                                   className="h-5 w-5 shrink-0 rounded-full border-2 border-current opacity-40 hover:opacity-100 transition flex items-center justify-center"
                                   style={{ color: "currentColor" }}
                                   title="Mark done"
@@ -1602,11 +1628,11 @@ export default function NotesPage() {
                               <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full", visual.color].join(" ")}>
                                 <visual.Icon className="h-2.5 w-2.5" /> {visual.label}
                               </span>
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                                <button onClick={() => handleEditReminder(rem)} className="p-1 rounded-full bg-white/60 text-rose hover:text-hotpink hover:bg-white transition" title="Edit">
+                              <div className="flex gap-1">
+                                <button onClick={(e) => { e.stopPropagation(); handleEditReminder(rem); }} className="p-1 rounded-full bg-white/60 text-rose hover:text-hotpink hover:bg-white transition" title="Edit">
                                   <Edit3 className="h-3 w-3" />
                                 </button>
-                                <button onClick={() => handleDeleteReminder(rem.id)} className="p-1 rounded-full bg-white/60 text-rose hover:text-[#F87171] hover:bg-white transition" title="Delete">
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteReminder(rem.id); }} className="p-1 rounded-full bg-white/60 text-rose hover:text-[#F87171] hover:bg-white transition" title="Delete">
                                   <Trash2 className="h-3 w-3" />
                                 </button>
                               </div>
@@ -1670,30 +1696,10 @@ export default function NotesPage() {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {[
-                {
-                  icon: Edit3,
-                  label: "Note",
-                  color: "bg-pink-100 text-hotpink",
-                  onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); },
-                },
-                {
-                  icon: Bell,
-                  label: "Remind",
-                  color: "bg-purple-100 text-purple-600",
-                  onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); },
-                },
-                {
-                  icon: Heart,
-                  label: "Mood",
-                  color: "bg-rose-100 text-rose-500",
-                  onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); },
-                },
-                {
-                  icon: Sparkles,
-                  label: "Insight",
-                  color: "bg-amber-100 text-amber-500",
-                  onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); },
-                },
+                { icon: Edit3,    label: "Note",    color: "bg-[#FCE7F3] text-hotpink",      onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
+                { icon: Bell,     label: "Remind",  color: "bg-[#FBCFE8] text-[#DB2777]",    onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
+                { icon: Heart,    label: "Mood",    color: "bg-[#F9A8D4] text-[#BE185D]",    onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); } },
+                { icon: Sparkles, label: "Insight", color: "bg-[#EC4899]/20 text-[#9D174D]", onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); setShowMoodPicker(false); } },
               ].map(({ icon: Icon, label, color, onClick }) => (
                 <button
                   key={label}
@@ -1818,7 +1824,9 @@ export default function NotesPage() {
                   onClick={() => applyQuickSuggestion(s)}
                   className="w-full flex items-center gap-2.5 p-2 rounded-2xl bg-[#FFF0F6]/60 hover:bg-[#FFF0F6] border border-pink-100 hover:border-pink-200 transition active:scale-95 text-left"
                 >
-                  <span className="text-base leading-none shrink-0">{s.emoji}</span>
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
+                    <s.Icon className="h-3.5 w-3.5" />
+                  </span>
                   <span className="text-[11px] font-bold text-[#831843] truncate flex-1">{s.label}</span>
                   <Plus className="h-3 w-3 text-hotpink shrink-0" />
                 </button>
@@ -1902,10 +1910,10 @@ export default function NotesPage() {
           <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Capture</h3>
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
             {[
-              { icon: Edit3,    label: "Note",    color: "bg-pink-100 text-hotpink",    onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
-              { icon: Bell,     label: "Remind",  color: "bg-purple-100 text-purple-600", onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
-              { icon: Heart,    label: "Mood",    color: "bg-rose-100 text-rose-500",   onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); } },
-              { icon: Sparkles, label: "Insight", color: "bg-amber-100 text-amber-500", onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); setShowMoodPicker(false); } },
+              { icon: Edit3,    label: "Note",    color: "bg-[#FCE7F3] text-hotpink",      onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
+              { icon: Bell,     label: "Remind",  color: "bg-[#FBCFE8] text-[#DB2777]",    onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
+              { icon: Heart,    label: "Mood",    color: "bg-[#F9A8D4] text-[#BE185D]",    onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); } },
+              { icon: Sparkles, label: "Insight", color: "bg-[#EC4899]/20 text-[#9D174D]", onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); setShowMoodPicker(false); } },
             ].map(({ icon: Icon, label, color, onClick }) => (
               <button
                 key={label}
@@ -1931,7 +1939,9 @@ export default function NotesPage() {
                 onClick={() => applyQuickSuggestion(s)}
                 className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-[#FFF0F6]/80 border border-pink-100 hover:border-pink-200 transition active:scale-95 shrink-0"
               >
-                <span className="text-xl leading-none">{s.emoji}</span>
+                <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
+                  <s.Icon className="h-4 w-4" />
+                </span>
                 <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
               </button>
             ))}
