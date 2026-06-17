@@ -831,36 +831,55 @@ function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; dura
 function StepCard({
   index, active, done, icon: Icon, title, cta, onClick,
 }: { index: number; active: boolean; done: boolean; icon: typeof Sun; title: string; cta: string; onClick: () => void; }) {
-  const [paused, setPaused] = useState(false);
+  const [showTip, setShowTip] = useState(false);
+  const tipTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openTip  = () => { if (tipTimeout.current) clearTimeout(tipTimeout.current); setShowTip(true); };
+  const closeTip = (delay = 0) => {
+    tipTimeout.current = setTimeout(() => setShowTip(false), delay);
+  };
+
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
-      style={{ animationDelay: `${index * 80}ms` }}
-      className={[
-        "hover-scale animate-scale-in flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition active:scale-95",
-        active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15"
-               : done ? "bg-white/70 border-petal/50 opacity-70"
-                      : "bg-white/70 border-petal/50",
-      ].join(" ")}
-    >
-      <span
-        className={["grid h-9 w-9 shrink-0 place-items-center rounded-full",
-          active ? "bg-hotpink text-white" : done ? "bg-petal text-rose" : "bg-white text-rose border border-petal"].join(" ")}
-        style={active ? { animation: "bloom-pulse 2.4s ease-in-out infinite", animationPlayState: paused ? "paused" : "running" } : undefined}
+    <div className="relative">
+      <button
+        onClick={onClick}
+        onMouseEnter={openTip}
+        onMouseLeave={() => closeTip(120)}
+        onTouchStart={openTip}
+        onTouchEnd={() => closeTip(1600)}
+        style={{ animationDelay: `${index * 80}ms` }}
+        className={[
+          "hover-scale animate-scale-in w-full flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-2.5 text-center transition active:scale-95",
+          active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15"
+                 : done ? "bg-white/70 border-petal/50 opacity-70"
+                        : "bg-white/70 border-petal/50",
+        ].join(" ")}
       >
-        {done ? <span className="text-sm font-bold">✓</span> : <Icon className="h-4 w-4" strokeWidth={1.8} />}
-      </span>
-      <div className="min-w-0">
-        <p className="text-xs font-bold text-rose leading-tight truncate">{title}</p>
-        <p className="mt-0.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-hotpink">
-          {cta} <ChevronRight className="h-3 w-3" />
-        </p>
-      </div>
-    </button>
+        <span
+          className={["grid h-8 w-8 shrink-0 place-items-center rounded-full",
+            active ? "bg-hotpink text-white" : done ? "bg-petal text-rose" : "bg-white text-rose border border-petal"].join(" ")}
+          style={active ? { animation: "bloom-pulse 2.4s ease-in-out infinite", animationPlayState: showTip ? "paused" : "running" } : undefined}
+        >
+          {done ? <span className="text-sm font-bold">✓</span> : <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />}
+        </span>
+        <p className="text-[9px] font-bold text-rose leading-tight line-clamp-2 w-full">{title}</p>
+      </button>
+
+      {showTip && (
+        <div
+          className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-30 -translate-x-1/2 animate-fade-in"
+          aria-hidden
+        >
+          <div className="min-w-[110px] max-w-[160px] rounded-xl border border-pink-100 bg-white/98 px-3 py-2 text-center shadow-xl backdrop-blur-md">
+            <p className="text-[11px] font-bold leading-tight text-rose">{title}</p>
+            <p className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-semibold text-hotpink">
+              {cta} <ChevronRight className="h-3 w-3" />
+            </p>
+          </div>
+          <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-white" />
+        </div>
+      )}
+    </div>
   );
 }
 
