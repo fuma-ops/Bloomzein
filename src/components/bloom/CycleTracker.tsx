@@ -254,6 +254,8 @@ export function CycleTracker() {
   const [pillLog,             setPillLog]           = useState<Record<string, boolean>>(() => readJSON(PILL_LOG_KEY, {}));
   const [showMoodPickerCard,  setShowMoodPickerCard] = useState(false);
   const [slideDir,            setSlideDir]          = useState<"l"|"r">("r");
+  const [moodJustSelected,    setMoodJustSelected]  = useState(false);
+  const [pillJustTaken,       setPillJustTaken]     = useState(false);
 
   // Derived today values
   const mood       = moodLog[todayKey] ?? "happy";
@@ -380,7 +382,7 @@ export function CycleTracker() {
     luteal:     "bg-purple-50 text-purple-600 border-purple-200",
   };
 
-  function renderWellnessGraph(gradSuffix: string) {
+  function renderWellnessGraph(gradSuffix: string, drawDelay = 0) {
     const { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, moodEstLine, symptEstLine, todayX, VW, VH, PX, PY_TOP, chartH, cycleLen } = wellnessGraph;
     const hasData = moodPts.length + symptPts.length > 0;
     return (
@@ -443,9 +445,33 @@ export function CycleTracker() {
           {moodEstLine  && <path d={moodEstLine}  fill="none" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" strokeOpacity="0.28" />}
           {/* Real data */}
           {symptArea && <path d={symptArea} fill={`url(#bloom-sym-${gradSuffix})`} />}
-          {symptLine  && <path d={symptLine} fill="none" stroke="#FDA4AF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
+          {symptLine && (
+            <path
+              pathLength="1"
+              className="animate-svg-draw"
+              style={{ animationDelay: `${drawDelay + 150}ms` }}
+              d={symptLine}
+              fill="none"
+              stroke="#FDA4AF"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
           {moodArea && <path d={moodArea} fill={`url(#bloom-mood-${gradSuffix})`} />}
-          {moodLine  && <path d={moodLine} fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+          {moodLine && (
+            <path
+              pathLength="1"
+              className="animate-svg-draw"
+              style={{ animationDelay: `${drawDelay}ms` }}
+              d={moodLine}
+              fill="none"
+              stroke="#EC4899"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
           {moodPts.map(([x, y], i) => (
             <circle key={i} cx={x} cy={y} r="2.5" fill="#EC4899" fillOpacity="0.9" />
           ))}
@@ -477,7 +503,7 @@ export function CycleTracker() {
 
           {/* ── HERO + PHASE TIMELINE (merged) ── */}
           <div
-            className="relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md"
+            className="relative overflow-hidden rounded-[2rem] animate-scale-in animate-hero-ambient-glow"
           >
             <img
               src="/images/cycle-insight-hero.webp"
@@ -537,7 +563,7 @@ export function CycleTracker() {
                           className={[
                             "grid h-7 w-7 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
                             isCurrent
-                              ? "bg-hotpink text-white ring-4 ring-white/60 animate-selected-glow"
+                              ? "bg-hotpink text-white ring-4 ring-white/60 animate-active-phase-pulse"
                               : isPast
                               ? "bg-pink-400/80 text-white shadow-sm"
                               : "bg-white/70 text-rose/40 border border-pink-200",
@@ -571,10 +597,10 @@ export function CycleTracker() {
               ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
-                  style={{ animationDelay: `${350 + i * 55}ms`, boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
+                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 animate-card-entrance", p.bg, p.border].join(" ")}
+                  style={{ animationDelay: `${350 + i * 50}ms`, boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
                 >
-                  <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")} style={{ animationDelay: `${i * 700}ms` }}>
+                  <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-petal-float", p.bgColor].join(" ")} style={{ animationDelay: `${i * 900}ms` }}>
                     <p.BgIcon className="h-10 w-10" />
                   </span>
                   <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
@@ -593,18 +619,18 @@ export function CycleTracker() {
                 onClick={() => setShowMoodPickerCard((v) => !v)}
                 aria-pressed={showMoodPickerCard}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-entrance animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   showMoodPickerCard
                     ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30"
                     : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
                 ].join(" ")}
-                style={{ animationDelay: "465ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
+                style={{ animationDelay: "450ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
                 <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
-                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2100ms" }}>
+                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-petal-float text-hotpink" style={{ animationDelay: "2700ms" }}>
                   <MoodIconToday className="h-10 w-10" />
                 </span>
-                <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm text-hotpink">
+                <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm text-hotpink", moodJustSelected ? "animate-mood-select-bloom" : ""].join(" ")}>
                   <MoodIconToday className="h-3.5 w-3.5" />
                 </span>
                 <div>
@@ -617,22 +643,27 @@ export function CycleTracker() {
               {/* Daily Pill — 5th */}
               <button
                 onClick={() => {
+                  const wasTaken = pillTaken;
                   const next = { ...pillLog, [todayKey]: !pillTaken };
                   setPillLog(next);
+                  if (!wasTaken) {
+                    setPillJustTaken(true);
+                    setTimeout(() => setPillJustTaken(false), 450);
+                  }
                   try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); } catch {}
                 }}
                 aria-pressed={pillTaken}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-entrance animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   pillTaken ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100" : "from-white/80 to-pink-50/50 border-pink-50",
                 ].join(" ")}
-                style={{ animationDelay: "520ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
+                style={{ animationDelay: "500ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
                 <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
-                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2800ms" }}>
+                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-petal-float text-hotpink" style={{ animationDelay: "3600ms" }}>
                   <Pill className="h-10 w-10" />
                 </span>
-                <span className={["grid h-6 w-6 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
+                <span className={["grid h-6 w-6 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40", pillJustTaken ? "animate-pill-confirm-bloom" : ""].join(" ")}>
                   <Pill className="h-3.5 w-3.5" />
                 </span>
                 <div>
@@ -661,6 +692,8 @@ export function CycleTracker() {
                               const next = { ...moodLog, [todayKey]: m.key };
                               setMoodLog(next);
                               setShowMoodPickerCard(false);
+                              setMoodJustSelected(true);
+                              setTimeout(() => setMoodJustSelected(false), 350);
                               try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
                             }}
                             className={[
@@ -718,7 +751,7 @@ export function CycleTracker() {
                 </div>
                 <div
                   key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
-                  className="grid grid-cols-7 gap-[1px] animate-fade-in"
+                  className={`grid grid-cols-7 gap-[1px] ${slideDir === "r" ? "animate-slide-from-right" : "animate-slide-from-left"}`}
                 >
                   {days.map((d, i) => {
                     if (!d) return <div key={i} />;
@@ -739,10 +772,10 @@ export function CycleTracker() {
                         onClick={() => setSelected(d)}
                         title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                         className={[
-                          "relative aspect-square rounded-xl flex flex-col items-center justify-center gap-[1px] transition-all duration-200 hover:scale-105 active:scale-90",
+                          "relative aspect-square rounded-xl flex flex-col items-center justify-center gap-[1px] transition-all duration-[180ms] hover:scale-105 active:scale-[0.96]",
                           dayStyle.cell,
                           isSelected && !isToday ? "ring-1 ring-hotpink/40 scale-105" : "",
-                          isToday ? "animate-today-breathe ring-1 ring-hotpink/55 z-10" : "",
+                          isToday ? "animate-today-glow ring-1 ring-hotpink/55 z-10" : "",
                         ].join(" ")}
                       >
                         <span className="text-[8px] font-bold leading-none">{d.getDate()}</span>
@@ -803,7 +836,7 @@ export function CycleTracker() {
             className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 animate-fade-in"
             style={{ animationDelay: "580ms", boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            {renderWellnessGraph("mob")}
+            {renderWellnessGraph("mob", 700)}
           </div>
 
           {/* ── AFFIRMATION CARD ── */}
@@ -843,7 +876,7 @@ export function CycleTracker() {
         >
           <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
           <div className="relative z-10 hidden lg:block mb-4 pb-4 border-b border-pink-100/50">
-            {renderWellnessGraph("desk")}
+            {renderWellnessGraph("desk", 250)}
           </div>
           <div key={selected.toDateString()} className="relative z-10 animate-fade-in">
             {/* Suggested activities */}
@@ -870,7 +903,7 @@ export function CycleTracker() {
 
             <a
               href="/app/tools/yoga"
-              className="bloom-luxury-btn hover-scale animate-selected-glow mt-4 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white active:scale-95 sm:text-sm"
+              className="bloom-luxury-btn hover-scale animate-cta-bloom-pulse mt-4 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white active:scale-95 sm:text-sm"
             >
               <Flower2 className="h-4 w-4" />
               Start 15-Min Flow
@@ -883,7 +916,7 @@ export function CycleTracker() {
       {/* Floating CTA — mobile/tablet only */}
       <a
         href="/app/tools/yoga"
-        className="bloom-luxury-btn hover-scale animate-selected-glow fixed bottom-24 right-4 z-30 inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-hotpink/30 active:scale-95 lg:hidden"
+        className="bloom-luxury-btn hover-scale animate-cta-bloom-pulse fixed bottom-24 right-4 z-30 inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-hotpink/30 active:scale-95 lg:hidden"
       >
         <Flower2 className="h-4 w-4" />
         Start Flow
