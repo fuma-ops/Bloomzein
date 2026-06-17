@@ -831,6 +831,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
   const [height, setHeight] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
   const [selected, setSelected] = useState<BodyType | null>(null);
+  const propositionRef = useRef<HTMLDivElement>(null);
 
   const suggested = useMemo(() => {
     const w = parseFloat(weight), h = parseFloat(height);
@@ -842,6 +843,14 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
 
   const active = selected ?? (step === 2 ? suggested : null);
   const data = active ? BODY_TYPES[active] : null;
+
+  useEffect(() => {
+    if (!active) return;
+    const t = setTimeout(() => {
+      propositionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 180);
+    return () => clearTimeout(t);
+  }, [active]);
 
   return (
     <div className="space-y-3">
@@ -931,7 +940,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
                   ];
                   if (isLastInRow && row === activeRow && data) {
                     items.push(
-                      <div key={`prop-${active}`} className="col-span-2 rounded-2xl bg-blush/60 border border-petal/50 p-3 animate-scale-in">
+                      <div key={`prop-${active}`} ref={propositionRef} className="col-span-2 rounded-2xl bg-blush/60 border border-petal/50 p-3 animate-scale-in">
                         <div className="flex gap-3 mb-3">
                           <div className="w-20 shrink-0 rounded-xl overflow-hidden border border-petal/50">
                             <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
