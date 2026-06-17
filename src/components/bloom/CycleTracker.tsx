@@ -180,16 +180,15 @@ export function CycleTracker() {
   const [cursor,        setCursor]        = useState(new Date(2026, 5, 1));
   const [selected,      setSelected]      = useState<Date>(today);
   const [pillTaken,     setPillTaken]     = useState(true);
-  const [mood,          setMood]          = useState<string>("happy");
-  const [hasPickedMood, setHasPickedMood] = useState(false);
-  const [showMoodPicker,setShowMoodPicker]= useState(false);
-  const [symptoms,      setSymptoms]      = useState<string[]>(() => readJSON<string[]>(SYMPTOMS_KEY, []));
+  const [mood,                setMood]               = useState<string>("happy");
+  const [showMoodPickerCard,  setShowMoodPickerCard] = useState(false);
+  const [symptoms,            setSymptoms]           = useState<string[]>(() => readJSON<string[]>(SYMPTOMS_KEY, []));
   const [slideDir,      setSlideDir]      = useState<"l"|"r">("r");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(MOOD_KEY);
-      if (saved) { setMood(saved); setHasPickedMood(true); }
+      if (saved) setMood(saved);
     } catch {}
   }, []);
 
@@ -234,9 +233,7 @@ export function CycleTracker() {
 
   const isSelectedToday  = sameDay(selected, today);
   const selectedPhase    = useMemo(() => isSelectedToday ? currentPhase : phaseForDay(selected, settings), [selected, settings, isSelectedToday, currentPhase]);
-  const selectedInsight  = PHASE_INSIGHT[selectedPhase];
   const selectedRecommend= PHASE_RECOMMEND[selectedPhase];
-  const selectedLabel    = isSelectedToday ? "TODAY" : selected.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
 
   const pillLabel     = settings.contraceptiveMethod.charAt(0).toUpperCase() + settings.contraceptiveMethod.slice(1);
   const MoodIconToday = MOODS.find((m) => m.key === mood)?.Icon ?? Smile;
@@ -379,21 +376,23 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── CYCLE PREDICTIONS + DAILY PILL ── */}
-          <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-            <div className="grid grid-cols-4 gap-1.5">
+          {/* ── CYCLE PREDICTIONS + MOOD + DAILY PILL ── */}
+          <div className="relative animate-fade-in" style={{ animationDelay: "100ms" }}>
+            <div className="grid grid-cols-5 gap-1">
               {[
-                { label: "Period",    Icon: CalendarDays, BgIcon: Flower2,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,       color: "text-hotpink",  bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100",  bgColor: "text-hotpink"  },
-                { label: "Fertile",   Icon: Heart,        BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,   color: "text-pink-500", bg: "from-pink-50 to-rose-50",      border: "border-pink-100",  bgColor: "text-pink-400" },
-                { label: "Ovulation", Icon: Sun,          BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle}`, color: "text-amber-500",bg: "from-amber-50 to-yellow-50",   border: "border-amber-100", bgColor: "text-amber-400"},
+                { label: "Period",    Icon: CalendarDays, BgIcon: Flower2,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,        color: "text-hotpink",   bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100",  bgColor: "text-hotpink"   },
+                { label: "Fertile",   Icon: Heart,        BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,    color: "text-pink-500",  bg: "from-pink-50 to-rose-50",      border: "border-pink-100",  bgColor: "text-pink-400"  },
+                { label: "Ovulation", Icon: Sun,          BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle}`,  color: "text-amber-500", bg: "from-amber-50 to-yellow-50",   border: "border-amber-100", bgColor: "text-amber-400" },
               ].map((p, i) => (
                 <div
                   key={p.label}
                   className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 animate-fade-in", p.bg, p.border].join(" ")}
                   style={{ animationDelay: `${350 + i * 55}ms` }}
                 >
-                  {/* breathing background decoration */}
-                  <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-card-breathe", p.bgColor].join(" ")}>
+                  <span
+                    className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")}
+                    style={{ animationDelay: `${i * 700}ms` }}
+                  >
                     <p.BgIcon className="h-10 w-10" />
                   </span>
                   <span className={["grid h-5 w-5 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
@@ -406,20 +405,49 @@ export function CycleTracker() {
                   </div>
                 </div>
               ))}
-              {/* Daily Pill — toggles taken state */}
+
+              {/* Mood card — 4th, opens inline picker */}
+              <button
+                onClick={() => setShowMoodPickerCard((v) => !v)}
+                aria-pressed={showMoodPickerCard}
+                className={[
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in hover-scale transition-all duration-200 active:scale-95",
+                  showMoodPickerCard
+                    ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30 shadow-md"
+                    : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
+                ].join(" ")}
+                style={{ animationDelay: "465ms" }}
+              >
+                <span
+                  className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink"
+                  style={{ animationDelay: "2100ms" }}
+                >
+                  <MoodIconToday className="h-10 w-10" />
+                </span>
+                <span className="grid h-5 w-5 place-items-center rounded-lg bg-white/80 shadow-sm text-hotpink">
+                  <MoodIconToday className="h-3 w-3" />
+                </span>
+                <div>
+                  <p className="text-[6px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Mood</p>
+                  <p className="font-script text-xs leading-tight text-hotpink">{moodLabelToday}</p>
+                  <p className="text-[7px] text-rose/50 font-semibold">tap ♥</p>
+                </div>
+              </button>
+
+              {/* Daily Pill — 5th */}
               <button
                 onClick={() => setPillTaken((v) => !v)}
                 aria-pressed={pillTaken}
                 className={[
                   "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in hover-scale transition-all duration-200 active:scale-95",
-                  pillTaken
-                    ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100"
-                    : "from-white/80 to-pink-50/50 border-pink-50",
+                  pillTaken ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100" : "from-white/80 to-pink-50/50 border-pink-50",
                 ].join(" ")}
                 style={{ animationDelay: "520ms" }}
               >
-                {/* breathing background decoration */}
-                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-card-breathe text-hotpink">
+                <span
+                  className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink"
+                  style={{ animationDelay: "2800ms" }}
+                >
                   <Pill className="h-10 w-10" />
                 </span>
                 <span className={["grid h-5 w-5 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
@@ -434,6 +462,42 @@ export function CycleTracker() {
                 </div>
               </button>
             </div>
+
+            {/* Mood picker popup */}
+            {showMoodPickerCard && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMoodPickerCard(false)} />
+                <div className="absolute top-full left-0 right-0 z-20 mt-1 animate-scale-in">
+                  <div className="rounded-2xl bg-white/98 border border-pink-100 shadow-xl p-2.5 backdrop-blur-md">
+                    <p className="text-[7px] font-bold uppercase tracking-wider text-rose/50 text-center mb-1.5">How are you feeling? ♡</p>
+                    <div className="grid grid-cols-4 gap-1">
+                      {MOODS.map((m, i) => {
+                        const MoodIcon = m.Icon;
+                        const isActive = mood === m.key;
+                        return (
+                          <button
+                            key={m.key}
+                            onClick={() => {
+                              setMood(m.key);
+                              setShowMoodPickerCard(false);
+                              try { localStorage.setItem(MOOD_KEY, m.key); } catch {}
+                            }}
+                            className={[
+                              "flex flex-col items-center gap-0.5 rounded-xl py-1.5 px-1 text-center transition-all duration-150 active:scale-90 hover-scale animate-fade-in",
+                              isActive ? "bg-hotpink text-white shadow-sm animate-selected-glow" : "bg-pink-50 text-rose/70 hover:bg-pink-100",
+                            ].join(" ")}
+                            style={{ animationDelay: `${i * 40}ms` }}
+                          >
+                            <MoodIcon className="h-3.5 w-3.5" />
+                            <span className="text-[7px] font-semibold leading-none mt-0.5">{m.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
@@ -471,37 +535,8 @@ export function CycleTracker() {
               </div>
             </div>
 
-            {/* 3-column: mood | calendar grid | symptoms */}
-            <div className="grid grid-cols-[40px_1fr_48px] gap-1 items-stretch">
-
-              {/* ── Mood sidebar — fills full calendar height ── */}
-              <div className="flex flex-col h-full">
-                <p className="shrink-0 text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Mood</p>
-                {MOODS.map((m, i) => {
-                  const MoodIcon = m.Icon;
-                  const isActive = mood === m.key && hasPickedMood;
-                  return (
-                    <button
-                      key={m.key}
-                      onClick={() => {
-                        setMood(m.key);
-                        setHasPickedMood(true);
-                        try { localStorage.setItem(MOOD_KEY, m.key); } catch {}
-                      }}
-                      title={m.label}
-                      className={[
-                        "flex-1 animate-fade-in hover-scale grid place-items-center rounded-lg mb-0.5 transition-all duration-200 active:scale-90",
-                        isActive
-                          ? "bg-hotpink text-white shadow-sm shadow-hotpink/30"
-                          : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
-                      ].join(" ")}
-                      style={{ animationDelay: `${500 + i * 45}ms` }}
-                    >
-                      <MoodIcon className="h-3 w-3" />
-                    </button>
-                  );
-                })}
-              </div>
+            {/* 2-column: calendar grid | symptoms */}
+            <div className="grid grid-cols-[1fr_48px] gap-1 items-stretch">
 
               {/* ── Calendar center ── */}
               <div>
@@ -631,98 +666,8 @@ export function CycleTracker() {
         >
           <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
           <div key={selected.toDateString()} className="relative z-10 animate-fade-in">
-            <p className="inline-flex items-center gap-1 text-[9px] font-bold tracking-widest text-rose/70 sm:text-[10px]">
-              <Sparkles className="h-2.5 w-2.5 text-hotpink" /> {selectedLabel}
-            </p>
-            <h3 className="mt-1 font-script text-xl text-hotpink sm:text-2xl">
-              <AnimatedWords text={`${PHASE_LABEL[selectedPhase]} Phase`} />
-            </h3>
-            <p className="mt-1.5 text-xs font-semibold leading-snug text-magenta sm:text-sm">
-              <AnimatedWords text={selectedInsight} delay={80} />
-            </p>
-
-            {/* Space stats */}
-            <p className="mt-4 text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SPACE STATS ✿</p>
-            <div className="mt-2 grid grid-cols-2 gap-1.5 sm:gap-2">
-              {[
-                { label: "CYCLE DAY",   value: `${cycleDay}/${settings.cycleLength}`, Icon: CalendarDays },
-                { label: "NEXT PERIOD", value: `${daysToPeriod}d`,                   Icon: Droplet      },
-                { label: "PHASE",       value: PHASE_LABEL[currentPhase],             Icon: Flower2      },
-              ].map((s) => (
-                <div key={s.label} className="flex items-center gap-1.5 rounded-2xl bg-white/60 p-1.5 shadow-sm backdrop-blur-md sm:gap-2.5 sm:p-2">
-                  <span className="animate-soft-glow grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-8 sm:w-8">
-                    <s.Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[8px] font-bold tracking-wider text-rose/60 sm:text-[9px]">{s.label}</p>
-                    <p className="truncate font-script text-sm leading-none text-hotpink sm:text-base">{s.value}</p>
-                  </div>
-                </div>
-              ))}
-              {/* Mood tap */}
-              <button
-                onClick={() => setShowMoodPicker((v) => !v)}
-                aria-expanded={showMoodPicker}
-                className="hover-scale relative flex items-center gap-1.5 rounded-2xl bg-white/60 p-1.5 text-left shadow-sm backdrop-blur-md transition active:scale-95 sm:gap-2.5 sm:p-2"
-              >
-                <span className="animate-soft-glow grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink sm:h-8 sm:w-8">
-                  <MoodIconToday className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[8px] font-bold tracking-wider text-rose/60 sm:text-[9px]">MOOD</p>
-                  <p className="truncate font-script text-sm leading-none text-hotpink sm:text-base">{moodLabelToday}</p>
-                </div>
-                <span className="absolute -top-1.5 -right-1.5 grid h-4 w-4 place-items-center rounded-full bg-hotpink text-white shadow-sm">
-                  <Pencil className="h-2 w-2" />
-                </span>
-              </button>
-              {showMoodPicker && (
-                <div className="col-span-2 animate-scale-in flex flex-wrap items-center gap-1 rounded-2xl bg-white/60 p-1.5 shadow-sm backdrop-blur-md sm:gap-1.5 sm:p-2">
-                  {MOODS.map((m) => {
-                    const MoodIcon = m.Icon;
-                    return (
-                      <button
-                        key={m.key}
-                        onClick={() => {
-                          setMood(m.key);
-                          setHasPickedMood(true);
-                          setShowMoodPicker(false);
-                          try { localStorage.setItem(MOOD_KEY, m.key); } catch {}
-                        }}
-                        className={[
-                          "hover-scale inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold transition-all duration-200 active:scale-95",
-                          mood === m.key ? "bg-hotpink text-white" : "bg-blush/60 text-rose hover:bg-petal/70",
-                        ].join(" ")}
-                      >
-                        <MoodIcon className="h-3 w-3" />
-                        {m.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {/* Pill */}
-              <button
-                onClick={() => setPillTaken((v) => !v)}
-                aria-pressed={pillTaken}
-                className="col-span-2 flex items-center gap-1.5 rounded-2xl bg-white/60 p-1.5 text-left shadow-sm backdrop-blur-md transition active:scale-95 sm:gap-2.5 sm:p-2"
-              >
-                <span className={`animate-soft-glow grid h-6 w-6 shrink-0 place-items-center rounded-full transition-all sm:h-8 sm:w-8 ${pillTaken ? "bg-hotpink text-white" : "bg-hotpink/10 text-hotpink"}`}>
-                  <Pill className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[8px] font-bold tracking-wider text-rose/60 sm:text-[9px]">DAILY {pillLabel.toUpperCase()}</p>
-                  <p className={`inline-flex items-center gap-1 font-script text-sm leading-none sm:text-base ${pillTaken ? "text-hotpink" : "text-rose/60"}`}>
-                    {pillTaken
-                      ? <><Heart className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Taken today</>
-                      : <><Undo2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> Tap to log</>}
-                  </p>
-                </div>
-              </button>
-            </div>
-
             {/* Suggested activities */}
-            <p className="mt-4 text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SUGGESTED FOR THIS PHASE</p>
+            <p className="text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SUGGESTED FOR THIS PHASE</p>
             <div className="mt-2 space-y-2">
               {[
                 { tag: "Yoga",    t: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga"    },
