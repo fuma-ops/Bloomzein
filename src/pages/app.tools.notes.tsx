@@ -994,49 +994,35 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* PAGE HEADER */}
-      <header className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-rose/70 font-semibold mb-2">
-          <a href="/app/tools" className="hover:text-hotpink flex items-center gap-1 transition">
-            <ArrowLeft className="h-3 w-3" /> All Apps
-          </a>
-          <span>/</span>
-          <span className="text-hotpink">Notes & Reminders</span>
-        </div>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none flex items-center gap-2">
-              Notes & Reminders
-              <Sparkles className="h-6 w-6 text-amber-400 shrink-0" />
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-rose/80">Scribble thoughts, let dreams nudge ✿</p>
+      {/* HERO */}
+      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+        <img src="/images/notes-hero.png" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
+          <div className="animate-scale-in">
+            <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">Notes & Reminders</h1>
+            <p className="mt-0.5 text-[10px] italic text-white/90 drop-shadow leading-snug">Scribble thoughts, let dreams nudge ✿</p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {justSaved && (
-              <span className="flex items-center gap-1 bg-white/95 px-3 py-1.5 rounded-full text-xs font-bold text-hotpink border border-pink-200 animate-scale-in">
-                <Sparkles className="h-3.5 w-3.5 text-hotpink animate-spin" /> Saved!
-              </span>
-            )}
-            <button className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full border border-pink-200 bg-white/80 text-xs font-bold text-rose/70 hover:bg-blush transition">
-              <Palette className="h-3.5 w-3.5" /> Customize
-            </button>
-            <button
-              onClick={() => {
-                setEditingNoteId(null);
-                setNoteTitle("");
-                setNoteText("");
-                setNoteColor("sakura");
-                setNoteTag("Self-care");
-                setShowNoteForm(true);
-                setTab("notes");
-              }}
-              className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add Note
-            </button>
+          {/* Tab toggle — bottom of hero, yoga-style */}
+          <div className="flex justify-center">
+            <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
+              <button
+                onClick={() => setTab("notes")}
+                className={["rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "notes" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
+              >
+                ✿ Notes
+              </button>
+              <button
+                onClick={() => setTab("reminders")}
+                className={["rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
+              >
+                ⏰ Reminders
+              </button>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* TWO-COLUMN LAYOUT */}
       <div className="lg:grid lg:grid-cols-5 lg:gap-6 lg:items-start">
@@ -1044,47 +1030,44 @@ export default function NotesPage() {
         {/* ── LEFT COLUMN (60%) ── */}
         <div className="lg:col-span-3 space-y-4">
 
-          {/* TAB BAR + SEARCH */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="inline-flex rounded-full bg-white/90 p-1 border border-petal/60 shadow-sm">
-              <button
-                onClick={() => setTab("notes")}
-                className={[
-                  "rounded-full px-5 py-1.5 text-xs font-bold transition-all duration-200",
-                  tab === "notes" ? "bg-hotpink text-white shadow-md shadow-pink-300/30" : "text-rose/80 hover:bg-blush",
-                ].join(" ")}
-              >
-                ✿ Notes
-              </button>
-              <button
-                onClick={() => setTab("reminders")}
-                className={[
-                  "rounded-full px-5 py-1.5 text-xs font-bold transition-all duration-200",
-                  tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-pink-300/30" : "text-rose/80 hover:bg-blush",
-                ].join(" ")}
-              >
-                ⏰ Reminders
-              </button>
-            </div>
-
-            <div className="relative flex-1 min-w-[130px]">
+          {/* SEARCH + ACTION BUTTON */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose/40 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search notes..."
+                placeholder={tab === "notes" ? "Search notes..." : "Search reminders..."}
                 className="w-full bg-white/90 border border-pink-200 rounded-full pl-9 pr-4 py-2 text-xs text-[#831843] placeholder:text-[#9D5C7E]/40 outline-none focus:ring-2 focus:ring-hotpink/20 transition"
               />
             </div>
-
-            {tab === "reminders" && (
+            {tab === "notes" ? (
+              <button
+                onClick={() => {
+                  setEditingNoteId(null);
+                  setNoteTitle("");
+                  setNoteText("");
+                  setNoteColor("sakura");
+                  setNoteTag("Self-care");
+                  setShowNoteForm(true);
+                }}
+                className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add Note
+              </button>
+            ) : (
               <button
                 onClick={() => { resetReminderForm(); setShowReminderForm((v) => !v); }}
-                className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white"
+                className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white"
               >
                 <Plus className="h-3.5 w-3.5" /> New Reminder
               </button>
+            )}
+            {justSaved && (
+              <span className="shrink-0 flex items-center gap-1 bg-white/95 px-2.5 py-1.5 rounded-full text-xs font-bold text-hotpink border border-pink-200 animate-scale-in">
+                <Sparkles className="h-3 w-3 text-hotpink animate-spin" /> Saved!
+              </span>
             )}
           </div>
 
