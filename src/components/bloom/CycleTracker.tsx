@@ -287,7 +287,7 @@ export function CycleTracker() {
               alt="" aria-hidden loading="lazy" decoding="async"
               className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_20%] animate-photo-breathe"
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/94 via-white/75 to-white/20" />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/78 via-white/50 to-transparent" />
             <div className="relative z-10 px-4 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 {/* left: day + phase — staggered entrance */}
@@ -326,7 +326,7 @@ export function CycleTracker() {
 
           {/* ── PHASE TIMELINE LINE ── */}
           <div
-            className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 px-3 py-2.5 shadow-sm animate-fade-in"
+            className="rounded-[1.5rem] bg-gradient-to-r from-[#FFF0F6] via-white/95 to-[#FCE7F3] backdrop-blur-md border border-pink-200/60 px-3 py-2.5 shadow-sm animate-fade-in"
             style={{ animationDelay: "60ms" }}
           >
             <div className="relative flex items-start justify-between">
@@ -452,11 +452,11 @@ export function CycleTracker() {
             </div>
 
             {/* 3-column: mood | calendar grid | symptoms */}
-            <div className="grid grid-cols-[40px_1fr_46px] gap-1">
+            <div className="grid grid-cols-[40px_1fr_48px] gap-1 items-stretch">
 
-              {/* ── Mood sidebar ── */}
-              <div className="flex flex-col gap-0.5">
-                <p className="text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Mood</p>
+              {/* ── Mood sidebar — fills full calendar height ── */}
+              <div className="flex flex-col h-full">
+                <p className="shrink-0 text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Mood</p>
                 {MOODS.map((m, i) => {
                   const MoodIcon = m.Icon;
                   const isActive = mood === m.key && hasPickedMood;
@@ -470,7 +470,7 @@ export function CycleTracker() {
                       }}
                       title={m.label}
                       className={[
-                        "animate-fade-in hover-scale grid place-items-center rounded-lg py-0.5 transition-all duration-200 active:scale-90",
+                        "flex-1 animate-fade-in hover-scale grid place-items-center rounded-lg mb-0.5 transition-all duration-200 active:scale-90",
                         isActive
                           ? "bg-hotpink text-white shadow-sm shadow-hotpink/30"
                           : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
@@ -504,10 +504,10 @@ export function CycleTracker() {
                         onClick={() => setSelected(d)}
                         title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                         className={[
-                          "aspect-square rounded-full flex items-center justify-center text-[6px] font-bold transition-all duration-200 hover:scale-110 active:scale-90",
+                          "aspect-square rounded-lg flex items-center justify-center text-[6px] font-bold transition-all duration-200 hover:scale-105 active:scale-90",
                           style.cell,
-                          isSelected && !isToday ? "ring-2 ring-hotpink/50" : "",
-                          isToday ? "animate-selected-glow ring-2 ring-hotpink/60" : "",
+                          isSelected && !isToday ? "ring-2 ring-hotpink/50 scale-105" : "",
+                          isToday ? "animate-selected-glow ring-2 ring-hotpink/60 rounded-xl" : "",
                         ].join(" ")}
                       >
                         {d.getDate()}
@@ -516,17 +516,17 @@ export function CycleTracker() {
                   })}
                 </div>
                 <div className="mt-1 flex flex-wrap justify-center gap-x-1.5 gap-y-0 text-[5px] font-bold text-rose/60">
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-amber-100" /> Follic.</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-pink-100" /> Fertile</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-violet-100" /> Ovul.</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-amber-100" /> Follic.</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-pink-100" /> Fertile</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-violet-100" /> Ovul.</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
                 </div>
               </div>
 
-              {/* ── Symptoms sidebar ── */}
-              <div className="flex flex-col gap-0.5">
-                <p className="text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Sympt.</p>
+              {/* ── Symptoms sidebar — fills full calendar height ── */}
+              <div className="flex flex-col h-full">
+                <p className="shrink-0 text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Sympt.</p>
                 {SYMPTOM_OPTIONS.map((s, i) => {
                   const active = symptoms.includes(s);
                   return (
@@ -535,7 +535,7 @@ export function CycleTracker() {
                       onClick={() => toggleSymptom(s)}
                       title={s}
                       className={[
-                        "animate-fade-in hover-scale rounded-lg py-0.5 px-0.5 text-[6px] font-semibold leading-tight text-center transition-all duration-200 active:scale-90",
+                        "flex-1 animate-fade-in hover-scale rounded-lg mb-0.5 px-0.5 text-[6px] font-semibold leading-tight text-center transition-all duration-200 active:scale-90",
                         active
                           ? "bg-hotpink text-white shadow-sm"
                           : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
