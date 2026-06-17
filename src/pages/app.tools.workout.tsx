@@ -907,50 +907,60 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
               : "Tap the shape that feels most like you."}
           </p>
 
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(BODY_TYPES) as BodyType[]).map((key) => {
-              const bt = BODY_TYPES[key];
-              const isActive = active === key;
-              return (
-                <button key={key} onClick={() => setSelected(isActive ? null : key)}
-                  className={["flex flex-col items-center gap-1 rounded-2xl border overflow-hidden shadow-sm transition active:scale-95",
-                    isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5"].join(" ")}
-                >
-                  <div className="w-full aspect-square overflow-hidden">
-                    <img src={bt.photo} alt={bt.label} className="w-full h-full object-contain object-center" />
-                  </div>
-                  <span className="text-[10px] font-semibold text-rose text-center leading-tight pb-2 px-1">{bt.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Proposition — inline, right below the grid */}
-          {data && (
-            <div key={active} className="mt-3 rounded-2xl bg-blush/60 border border-petal/50 p-3 animate-scale-in">
-              <div className="flex gap-3 mb-3">
-                <div className="w-20 shrink-0 rounded-xl overflow-hidden border border-petal/50">
-                  <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
-                </div>
-                <div className="flex flex-col justify-center min-w-0">
-                  <p className="font-bold text-rose mb-1">{data.label}</p>
-                  <p className="text-xs text-rose/85 mb-2 leading-snug">{data.strengths}</p>
-                  <p className="text-[10px] font-bold text-rose mb-1.5">Recommended</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {data.recommended.map((i) => (
-                      <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-2.5 py-0.5 text-[10px] font-semibold text-rose">
-                        {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+          {(() => {
+            const keys = Object.keys(BODY_TYPES) as BodyType[];
+            const activeIndex = active ? keys.indexOf(active) : -1;
+            const activeRow = activeIndex >= 0 ? Math.floor(activeIndex / 2) : -1;
+            return (
+              <div className="grid grid-cols-2 gap-2">
+                {keys.flatMap((key, i) => {
+                  const bt = BODY_TYPES[key];
+                  const isActive = active === key;
+                  const row = Math.floor(i / 2);
+                  const isLastInRow = i % 2 === 1 || i === keys.length - 1;
+                  const items: React.ReactNode[] = [
+                    <button key={key} onClick={() => setSelected(isActive ? null : key)}
+                      className={["flex flex-col items-center gap-1 rounded-2xl border overflow-hidden shadow-sm transition active:scale-95",
+                        isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5"].join(" ")}
+                    >
+                      <div className="w-full aspect-square overflow-hidden">
+                        <img src={bt.photo} alt={bt.label} className="w-full h-full object-contain object-center" />
+                      </div>
+                      <span className="text-[10px] font-semibold text-rose text-center leading-tight pb-2 px-1">{bt.label}</span>
+                    </button>
+                  ];
+                  if (isLastInRow && row === activeRow && data) {
+                    items.push(
+                      <div key={`prop-${active}`} className="col-span-2 rounded-2xl bg-blush/60 border border-petal/50 p-3 animate-scale-in">
+                        <div className="flex gap-3 mb-3">
+                          <div className="w-20 shrink-0 rounded-xl overflow-hidden border border-petal/50">
+                            <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
+                          </div>
+                          <div className="flex flex-col justify-center min-w-0">
+                            <p className="font-bold text-rose mb-1">{data.label}</p>
+                            <p className="text-xs text-rose/85 mb-2 leading-snug">{data.strengths}</p>
+                            <p className="text-[10px] font-bold text-rose mb-1.5">Recommended</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {data.recommended.map((rec) => (
+                                <span key={rec} className="rounded-full bg-white/90 border border-petal/60 px-2.5 py-0.5 text-[10px] font-semibold text-rose">
+                                  {WORKOUT_INTENTIONS.find((w) => w.key === rec)?.label}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <button onClick={() => onStartWith("full-body", data.recommended[0])}
+                          className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
+                          Start with this <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    );
+                  }
+                  return items;
+                })}
               </div>
-              <button onClick={() => onStartWith("full-body", data.recommended[0])}
-                className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
-                Start with this <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>
