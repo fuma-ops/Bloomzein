@@ -130,7 +130,7 @@ function daysUntil(dateISO: string): number {
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-2xl bg-white/85 backdrop-blur p-5 shadow-[0_8px_24px_-12px_rgba(236,72,153,0.25)] border-[0.5px] border-pink-300/30 transition-all duration-200 ${className}`}
+      className={`rounded-2xl bg-white/85 backdrop-blur p-3 sm:p-5 shadow-[0_8px_24px_-12px_rgba(236,72,153,0.25)] border-[0.5px] border-pink-300/30 transition-all duration-200 ${className}`}
     >
       {children}
     </div>
@@ -307,18 +307,35 @@ export function BudgetPlanner() {
       <BudgetBubbles />
       <KawaiiBackground count={8} />
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
-        {/* Title + currency */}
-        <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-          <div>
-            <h1 className="font-script text-5xl sm:text-6xl leading-none text-[#ec4699] font-bold shadow-none">Budget</h1>
-            <p className="text-sm text-[#9D5C7E] mt-1">Soft, smart money planning — your way.</p>
+      <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
+        {/* Hero */}
+        <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-3 animate-hero-border-signal">
+          <img src="/images/budget-hero.png" alt="Budget" className="absolute inset-0 h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#EC4899]/70 via-[#EC4899]/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
+            <div className="animate-scale-in">
+              <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">Budget</h1>
+              <p className="mt-0.5 text-[10px] italic text-white/90 max-w-[10rem] drop-shadow leading-snug">Soft, smart money planning — your way.</p>
+            </div>
+            {/* Currency selector inside hero */}
+            <div className="self-end">
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as CurrencyKey)}
+                className="rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1 text-xs font-semibold text-white outline-none"
+              >
+                {(Object.keys(CURRENCIES) as CurrencyKey[]).map((k) => (
+                  <option key={k} value={k} className="text-[#831843]">{k} — {CURRENCIES[k].symbol}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 backdrop-blur bg-transparent">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="sticky top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1.5 backdrop-blur bg-transparent">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {TABS.map((t) => {
               const active = tab === t;
               return (
@@ -326,7 +343,7 @@ export function BudgetPlanner() {
                   key={t}
                   onClick={() => setTab(t)}
                   className={[
-                    "shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
+                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
                     active
                       ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/40 border-transparent scale-[1.02]"
                       : "bg-[#FCE7F3] text-[#9D5C7E] border-pink-400/30 hover:bg-pink-200",
@@ -340,7 +357,7 @@ export function BudgetPlanner() {
         </div>
 
         {/* Tab content */}
-        <div key={tab} className="mt-6 animate-fade-in">
+        <div key={tab} className="mt-3 animate-fade-in">
           {tab === "Dashboard" && (
             <DashboardTab
               currency={currency}
@@ -431,20 +448,20 @@ function StatCards({ income, expenses, savings, balance, currency }: {
     { label: "Total Balance",  v: balance,  Icon: Gem,          tone: "bg-pink-50 text-[#EC4899]" },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 animate-fade-in">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {items.map((it) => (
         <Card key={it.label} className="hover:-translate-y-1">
-          <div className={`grid h-10 w-10 place-items-center rounded-full ${it.tone}`}>
-            <it.Icon className="h-5 w-5" strokeWidth={1.6} />
+          <div className={`grid h-8 w-8 place-items-center rounded-full ${it.tone}`}>
+            <it.Icon className="h-4 w-4" strokeWidth={1.6} />
           </div>
           <div
-            className="mt-3 text-2xl sm:text-3xl font-extrabold tracking-tight font-script leading-none text-[#EC4899]"
+            className="mt-2 text-xl sm:text-2xl font-extrabold tracking-tight font-script leading-none text-[#EC4899]"
             style={{ textShadow: "0 1px 2px rgba(255,255,255,0.9)" }}
           >
             <StatNumber value={it.v} currency={currency} />
           </div>
           <div
-            className="mt-1 text-[11px] font-extrabold tracking-widest text-[#BE185D]"
+            className="mt-0.5 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-[#BE185D]"
             style={{ textShadow: "0 1px 2px rgba(255,255,255,0.8)" }}
           >
             {it.label.toUpperCase()}
