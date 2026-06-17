@@ -70,6 +70,48 @@ const TAG_EMOJI: Record<string, string> = {
 
 const NOTE_TAGS = ["Self-care", "Ideas", "To-do", "Love", "Other"];
 
+const MOOD_OPTIONS = [
+  { emoji: "😊", label: "Happy",     color: "sakura"   },
+  { emoji: "😌", label: "Calm",      color: "lavender" },
+  { emoji: "💪", label: "Energized", color: "mint"     },
+  { emoji: "😔", label: "Low",       color: "peach"    },
+  { emoji: "😤", label: "Stressed",  color: "peach"    },
+  { emoji: "💕", label: "Loved",     color: "sakura"   },
+  { emoji: "🌟", label: "Grateful",  color: "lemon"    },
+  { emoji: "😴", label: "Tired",     color: "midnight" },
+];
+
+const QUICK_SUGGESTIONS: { emoji: string; label: string; kind: ReminderKind; title: string; times?: string[] }[] = [
+  { emoji: "💊", label: "Daily Vitamins",  kind: "medication", title: "Daily Vitamins",   times: ["09:00"] },
+  { emoji: "🎂", label: "Mom's Birthday",  kind: "birthday",   title: "Mom's Birthday" },
+  { emoji: "💧", label: "Drink Water",     kind: "medication", title: "Drink Water",      times: ["08:00", "12:00", "18:00"] },
+  { emoji: "🏃", label: "Morning Workout", kind: "medication", title: "Morning Workout",  times: ["07:00"] },
+  { emoji: "💊", label: "Evening Meds",    kind: "medication", title: "Evening Meds",     times: ["21:00"] },
+  { emoji: "🌙", label: "Bedtime Routine", kind: "medication", title: "Bedtime Routine",  times: ["22:00"] },
+];
+
+const EXAMPLE_NOTES: Omit<Note, "id" | "createdAt">[] = [
+  { title: "Morning Self-care ✿", text: "• Face wash & moisturize\n• 10 min meditation\n• Drink lemon water\n• Gratitude journal 🌸", color: "sakura",   tag: "Self-care", pinned: true },
+  { title: "App Ideas 💡",        text: "• Mood tracker with music\n• Daily affirmation widget\n• Bloom journal premium\n• Sleep quality tracker", color: "lavender", tag: "Ideas",     pinned: false },
+  { title: "This Week ✅",        text: "[ ] Book dentist appointment\n[ ] Call mom on Sunday\n[x] Start new journal\n[ ] Buy face masks",      color: "mint",     tag: "To-do",    pinned: false },
+  { title: "Love Notes 💕",       text: "I am worthy of love and kindness.\nI choose joy every single day.\nI am becoming the best version of me.\n💕 You are enough.", color: "sakura", tag: "Love", pinned: false },
+  { title: "Midnight Dreams 🌙",  text: "One day I'll travel to Japan in spring, walk under cherry blossoms, write in a little cafe by the river...", color: "midnight", tag: "Other", pinned: false },
+];
+
+function parseTodoItems(text: string): { checked: boolean; label: string; lineIndex: number }[] {
+  const result: { checked: boolean; label: string; lineIndex: number }[] = [];
+  text.split("\n").forEach((line, i) => {
+    if (line.startsWith("[x] ") || line.startsWith("[X] ")) result.push({ checked: true,  label: line.slice(4), lineIndex: i });
+    else if (line.startsWith("[ ] "))                        result.push({ checked: false, label: line.slice(4), lineIndex: i });
+  });
+  return result;
+}
+
+function isTodoNote(note: Note) {
+  const lines = note.text.split("\n").filter((l) => l.trim());
+  return note.tag === "To-do" && lines.length > 0 && lines.every((l) => /^\[[ xX]\] /.test(l));
+}
+
 const KIND_OPTIONS: { key: ReminderKind; label: string; emoji: string; Icon: LucideIcon; hint: string }[] = [
   { key: "medication", label: "Medication", emoji: "💊", Icon: Pill, hint: "Pills, vitamins & daily habits" },
   { key: "event", label: "Appointment & events", emoji: "📅", Icon: CalendarClock, hint: "Meetings, doctor visits, vacations…" },
@@ -345,6 +387,7 @@ export default function NotesPage() {
 
   // Form states (Notes)
   const [showNoteForm, setShowNoteForm] = useState(false);
+  const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteTitle, setNoteTitle] = useState("");
   const [noteText, setNoteText] = useState("");
@@ -462,6 +505,33 @@ export default function NotesPage() {
     setNotes((prev) =>
       prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n))
     );
+  };
+
+  const handleSeedExamples = () => {
+    const now = new Date().toISOString();
+    setNotes(EXAMPLE_NOTES.map((n) => ({ ...n, id: Math.random().toString(36).slice(2, 10), createdAt: now })));
+  };
+
+  const handleToggleTodoItem = (noteId: string, lineIndex: number) => {
+    setNotes((prev) =>
+      prev.map((n) => {
+        if (n.id !== noteId) return n;
+        const lines = n.text.split("\n");
+        const line = lines[lineIndex];
+        if (line.startsWith("[x] ") || line.startsWith("[X] ")) lines[lineIndex] = "[ ] " + line.slice(4);
+        else if (line.startsWith("[ ] "))                        lines[lineIndex] = "[x] " + line.slice(4);
+        return { ...n, text: lines.join("\n") };
+      })
+    );
+  };
+
+  const applyQuickSuggestion = (s: typeof QUICK_SUGGESTIONS[0]) => {
+    setTab("reminders");
+    resetReminderForm();
+    setRemKind(s.kind);
+    setRemTitle(s.title);
+    if (s.kind === "medication" && s.times) setRemTimes(s.times);
+    setShowReminderForm(true);
   };
 
   const handleSaveReminder = (e: React.FormEvent) => {
@@ -1057,7 +1127,15 @@ export default function NotesPage() {
                     rows={3}
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
-                    placeholder="Scribble down your self-care routine, ideas, dreams..."
+                    placeholder={
+                      noteTag === "To-do"
+                        ? "[ ] Do something nice\n[ ] Take a walk\n[x] Drink water today"
+                        : noteTag === "Ideas"
+                        ? "💡 What if we built...\n✦ A new approach to...\n✦ Brainstorm freely..."
+                        : noteTag === "Love"
+                        ? "I am worthy of love...\nI choose joy today...\n💕 You are enough."
+                        : "Scribble down your self-care routine, ideas, dreams..."
+                    }
                     className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] placeholder:text-[#9D5C7E]/40 border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
                   />
                 </div>
@@ -1264,20 +1342,70 @@ export default function NotesPage() {
             </form>
           )}
 
+          {/* MOOD PICKER */}
+          {tab === "notes" && showMoodPicker && (
+            <div className="rounded-3xl border border-pink-200/50 bg-white/95 p-5 shadow-xl shadow-rose/10 animate-bloom-bounce">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-script text-2xl text-hotpink">How are you feeling? 💕</h3>
+                <button type="button" onClick={() => setShowMoodPicker(false)} className="p-1 text-rose/50 hover:text-rose transition">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="text-[11px] text-rose/60 mb-3">Tap a mood — we'll save it as a quick note so you can track how you feel ✿</p>
+              <div className="grid grid-cols-4 gap-2">
+                {MOOD_OPTIONS.map((m) => (
+                  <button
+                    key={m.label}
+                    onClick={() => {
+                      const newNote: Note = {
+                        id: Math.random().toString(36).slice(2, 10),
+                        title: `${m.emoji} ${m.label}`,
+                        text: `Feeling ${m.label.toLowerCase()} today 💕`,
+                        color: m.color,
+                        tag: "Self-care",
+                        pinned: false,
+                        createdAt: new Date().toISOString(),
+                      };
+                      setNotes((prev) => [newNote, ...prev]);
+                      setShowMoodPicker(false);
+                      setJustSaved(true);
+                      setTimeout(() => setJustSaved(false), 1000);
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 hover:border-pink-200 transition active:scale-95"
+                  >
+                    <span className="text-2xl leading-none">{m.emoji}</span>
+                    <span className="text-[9px] font-bold text-rose/70">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── NOTES MASONRY ── */}
           {tab === "notes" && (
             <div className="animate-fade-in">
               {filteredNotes.length === 0 ? (
                 <div className="rounded-[2rem] bg-white/70 border border-petal/40 p-8 text-center flex flex-col items-center justify-center">
+                  <span className="text-4xl mb-2">🌸</span>
                   <p className="text-sm text-rose">
-                    {notes.length === 0 ? "You don't have any sticky notes yet." : "No notes match your filters!"}
+                    {notes.length === 0 ? "Your canvas is empty — start writing ✿" : "No notes match your filters!"}
                   </p>
-                  <button
-                    onClick={() => setShowNoteForm(true)}
-                    className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> + New note
-                  </button>
+                  <div className="flex gap-2 mt-4 flex-wrap justify-center">
+                    <button
+                      onClick={() => setShowNoteForm(true)}
+                      className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> New note
+                    </button>
+                    {notes.length === 0 && (
+                      <button
+                        onClick={handleSeedExamples}
+                        className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition"
+                      >
+                        Try examples ✿
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <>
@@ -1333,9 +1461,30 @@ export default function NotesPage() {
                             </h4>
 
                             {/* Body */}
-                            <p className={["text-xs font-medium whitespace-pre-wrap leading-relaxed line-clamp-5 relative z-10", shade.body].join(" ")}>
-                              {note.text}
-                            </p>
+                            {isTodoNote(note) ? (
+                              <div className="space-y-1.5 relative z-10">
+                                {parseTodoItems(note.text).map((item) => (
+                                  <button
+                                    key={item.lineIndex}
+                                    onClick={(e) => { e.stopPropagation(); handleToggleTodoItem(note.id, item.lineIndex); }}
+                                    className="flex items-start gap-2 w-full text-left"
+                                  >
+                                    <span className={["mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-2 flex items-center justify-center transition", item.checked ? "bg-current border-current" : "border-current/40"].join(" ")} style={{ color: shade.accent ?? "#EC4899" }}>
+                                      {item.checked && <Check className="h-2 w-2 text-white" strokeWidth={3} />}
+                                    </span>
+                                    <span className={["text-xs leading-relaxed transition", shade.body, item.checked ? "line-through opacity-40" : ""].join(" ")}>
+                                      {item.label}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className={["text-xs font-medium whitespace-pre-wrap leading-relaxed line-clamp-5 relative z-10", shade.body].join(" ")}>
+                                {note.tag === "Ideas" && "💡 "}
+                                {note.tag === "Love" && "💕 "}
+                                {note.text}
+                              </p>
+                            )}
 
                             {/* Footer */}
                             <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10", shade.dark ? "border-white/10" : "border-pink-200/25"].join(" ")}>
@@ -1537,7 +1686,7 @@ export default function NotesPage() {
                   icon: Heart,
                   label: "Mood",
                   color: "bg-rose-100 text-rose-500",
-                  onClick: () => { setTab("notes"); setNoteTag("Self-care"); setShowNoteForm(true); },
+                  onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); },
                 },
                 {
                   icon: Sparkles,
@@ -1655,6 +1804,28 @@ export default function NotesPage() {
             )}
           </div>
 
+          {/* QUICK SUGGESTIONS */}
+          <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold text-[#831843]">Quick Reminder Ideas ✿</h3>
+              <Bell className="h-4 w-4 text-rose/30" />
+            </div>
+            <p className="text-[10px] text-rose/50 mb-3">Tap to instantly pre-fill a reminder</p>
+            <div className="space-y-1.5">
+              {QUICK_SUGGESTIONS.map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => applyQuickSuggestion(s)}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-2xl bg-[#FFF0F6]/60 hover:bg-[#FFF0F6] border border-pink-100 hover:border-pink-200 transition active:scale-95 text-left"
+                >
+                  <span className="text-base leading-none shrink-0">{s.emoji}</span>
+                  <span className="text-[11px] font-bold text-[#831843] truncate flex-1">{s.label}</span>
+                  <Plus className="h-3 w-3 text-hotpink shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* YOUR THOUGHTS */}
           <div className="rounded-3xl bg-gradient-to-br from-[#F9A8D4] via-[#FCE7F3] to-[#DDD6FE] border border-pink-200/60 p-5 shadow-sm relative overflow-hidden">
             <div className="absolute -bottom-3 -right-3 text-8xl opacity-20 pointer-events-none select-none rotate-[-20deg] leading-none">🌸</div>
@@ -1688,6 +1859,86 @@ export default function NotesPage() {
         </aside>
       </div>
 
+      {/* MOBILE / TABLET QUICK PANEL (hidden on desktop) */}
+      <div className="lg:hidden mt-6 space-y-4">
+        {/* Mood Picker for mobile */}
+        {showMoodPicker && (
+          <div className="rounded-3xl border border-pink-200/50 bg-white/95 p-4 shadow-xl animate-bloom-bounce">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-script text-xl text-hotpink">How are you feeling? 💕</h3>
+              <button type="button" onClick={() => setShowMoodPicker(false)} className="p-1 text-rose/50 hover:text-rose transition"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {MOOD_OPTIONS.map((m) => (
+                <button
+                  key={m.label}
+                  onClick={() => {
+                    const newNote: Note = {
+                      id: Math.random().toString(36).slice(2, 10),
+                      title: `${m.emoji} ${m.label}`,
+                      text: `Feeling ${m.label.toLowerCase()} today 💕`,
+                      color: m.color,
+                      tag: "Self-care",
+                      pinned: false,
+                      createdAt: new Date().toISOString(),
+                    };
+                    setNotes((prev) => [newNote, ...prev]);
+                    setShowMoodPicker(false);
+                    setJustSaved(true);
+                    setTimeout(() => setJustSaved(false), 1000);
+                  }}
+                  className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 transition active:scale-95"
+                >
+                  <span className="text-xl leading-none">{m.emoji}</span>
+                  <span className="text-[9px] font-bold text-rose/70">{m.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Capture strip */}
+        <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
+          <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Capture</h3>
+          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {[
+              { icon: Edit3,    label: "Note",    color: "bg-pink-100 text-hotpink",    onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
+              { icon: Bell,     label: "Remind",  color: "bg-purple-100 text-purple-600", onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
+              { icon: Heart,    label: "Mood",    color: "bg-rose-100 text-rose-500",   onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); } },
+              { icon: Sparkles, label: "Insight", color: "bg-amber-100 text-amber-500", onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); setShowMoodPicker(false); } },
+            ].map(({ icon: Icon, label, color, onClick }) => (
+              <button
+                key={label}
+                onClick={onClick}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 transition active:scale-95 shrink-0 min-w-[64px]"
+              >
+                <span className={["grid h-8 w-8 place-items-center rounded-xl", color].join(" ")}>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="text-[9px] font-bold text-rose/70">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Reminder Ideas strip */}
+        <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
+          <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Reminder Ideas ✿</h3>
+          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {QUICK_SUGGESTIONS.map((s) => (
+              <button
+                key={s.label}
+                onClick={() => applyQuickSuggestion(s)}
+                className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-[#FFF0F6]/80 border border-pink-100 hover:border-pink-200 transition active:scale-95 shrink-0"
+              >
+                <span className="text-xl leading-none">{s.emoji}</span>
+                <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <style>{`
         @keyframes bloom-bounce {
           0%, 100% { transform: translateY(0); }
@@ -1701,105 +1952,3 @@ export default function NotesPage() {
   );
 }
 
-function ReminderRow({
-  rem, onToggleDone, onEdit, onDelete,
-}: {
-  rem: Reminder;
-  onToggleDone: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const visual = reminderVisual(rem);
-  const age = turningAge(rem);
-
-  return (
-    <div className="group flex items-center justify-between rounded-2xl border border-pink-100 bg-white p-3 sm:px-4 shadow-sm transition hover:shadow duration-150 animate-scale-in">
-      <div className="flex items-center gap-3 min-w-0">
-        {rem.kind === "event" ? (
-          <button
-            type="button"
-            onClick={onToggleDone}
-            className="p-1 h-6 w-6 shrink-0 rounded-full border border-pink-200 hover:border-hotpink hover:bg-pink-50 flex items-center justify-center transition"
-            title="Mark as done"
-          >
-            <div className="h-4 w-4 rounded-full border border-transparent hover:bg-hotpink/10" />
-          </button>
-        ) : (
-          <span className={["grid h-7 w-7 shrink-0 place-items-center rounded-full", visual.color].join(" ")}>
-            <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
-          </span>
-        )}
-
-        <div className="min-w-0">
-          <h4 className="font-semibold text-rose text-xs sm:text-sm truncate">
-            {rem.title}
-            {age !== null && <span className="ml-1.5 font-bold text-hotpink">· turning {age} ✿</span>}
-          </h4>
-
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 text-[10px] text-rose/60 font-bold">
-            {rem.kind === "medication" ? (
-              <>
-                <span className="flex items-center gap-1 text-purple-600 shrink-0">
-                  <Clock className="h-3 w-3" />
-                  {[...rem.times].sort().join(" · ")}
-                </span>
-                <span className="text-emerald-600 font-extrabold shrink-0 flex items-center gap-1">
-                  <RotateCcw className="h-2.5 w-2.5" />
-                  {weekdaysLabel(rem.weekdays)}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="flex items-center gap-1 text-hotpink shrink-0">
-                  <Calendar className="h-3 w-3" />
-                  {rem.kind === "birthday"
-                    ? prettyMonthDay(rem.date)
-                    : rem.endDate
-                      ? `${prettyDate(rem.date)} → ${prettyDate(rem.endDate)}`
-                      : prettyDate(rem.date)}
-                </span>
-                {rem.time && (
-                  <span className="flex items-center gap-1 text-purple-600 shrink-0">
-                    <Clock className="h-3 w-3" />
-                    {rem.time}
-                  </span>
-                )}
-                {rem.kind === "birthday" && (
-                  <span className="text-emerald-600 font-extrabold shrink-0 flex items-center gap-1">
-                    <RotateCcw className="h-2.5 w-2.5" /> every year
-                  </span>
-                )}
-                {rem.leadDays > 0 && (
-                  <span className="text-amber-600 font-extrabold shrink-0 flex items-center gap-1">
-                    <Bell className="h-2.5 w-2.5" /> nudge {rem.leadDays}d before
-                  </span>
-                )}
-              </>
-            )}
-            <span className={["px-2 py-0.5 rounded-full uppercase text-[9px] shrink-0 flex items-center gap-1", visual.color].join(" ")}>
-              <visual.Icon className="h-2.5 w-2.5" />
-              {visual.label}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-1 shrink-0 ml-1.5 opacity-60 group-hover:opacity-100 transition">
-        <button
-          onClick={onEdit}
-          className="p-1.5 rounded-full bg-blush text-rose hover:text-hotpink hover:bg-petal transition"
-          title="Edit"
-        >
-          <Edit3 className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={onDelete}
-          className="p-1.5 rounded-full bg-blush text-rose hover:text-[#F87171] hover:bg-petal transition"
-          title="Delete"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
