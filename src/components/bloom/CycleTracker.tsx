@@ -182,6 +182,22 @@ const MOOD_SCORE: Record<string, number> = {
   bloated: 3, cramps: 2, tired: 2, sad: 1,
 };
 
+const PHASE_SVG_COLOR: Record<Exclude<Phase, null>, string> = {
+  period:     "rgba(252,162,183,0.18)",
+  follicular: "rgba(253,230,138,0.15)",
+  fertile:    "rgba(251,207,232,0.18)",
+  ovulation:  "rgba(196,181,253,0.18)",
+  luteal:     "rgba(216,180,254,0.15)",
+};
+const PHASE_SVG_LABEL: Record<Exclude<Phase, null>, string> = {
+  period: "Period", follicular: "Follic.", fertile: "Fertile",
+  ovulation: "Ovul.", luteal: "Luteal",
+};
+const PHASE_SVG_LABEL_COLOR: Record<Exclude<Phase, null>, string> = {
+  period: "#BE185D", follicular: "#D97706", fertile: "#EC4899",
+  ovulation: "#7C3AED", luteal: "#9333EA",
+};
+
 /** Builds a smooth cubic-bezier SVG path through the given [x,y] points */
 function smoothLinePath(pts: [number, number][]): string {
   if (pts.length === 0) return "";
@@ -295,6 +311,40 @@ export function CycleTracker() {
   const activeIdx    = journeySteps.findIndex((s) => s.active);
   const progressPct  = activeIdx >= 0 ? (activeIdx / (journeySteps.length - 1)) * 100 : 0;
 
+  const wellnessGraph = useMemo(() => {
+    const cycleLen = settings.cycleLength;
+    const VW = 300, PX = 4, PY_TOP = 16, chartH = 56, PY_BOT = 14;
+    const VH = PY_TOP + chartH + PY_BOT;
+    const chartW = VW - PX * 2;
+    const maxSym = SYMPTOM_OPTIONS.length;
+    const bands: { phase: Exclude<Phase, null>; x1: number; x2: number }[] = [];
+    let prev: Exclude<Phase, null> | null = null, bs = 0;
+    for (let i = 0; i <= cycleLen; i++) {
+      const ph = i < cycleLen ? (phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>) : null;
+      if (ph !== prev) {
+        if (prev !== null) bands.push({ phase: prev, x1: PX + (bs / cycleLen) * chartW, x2: PX + (i / cycleLen) * chartW });
+        prev = ph; bs = i;
+      }
+    }
+    const moodPts: [number, number][] = [];
+    const symptPts: [number, number][] = [];
+    for (let i = 0; i < cycleLen; i++) {
+      const dk = dateKey(new Date(currentCycleStart.getTime() + i * MS_DAY));
+      const m = moodLog[dk], s = symptomsLog[dk] ?? [];
+      const x = PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
+      if (m) moodPts.push([x, PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH]);
+      if (s.length) symptPts.push([x, PY_TOP + (1 - s.length / maxSym) * chartH]);
+    }
+    const moodLine  = smoothLinePath(moodPts);
+    const symptLine = smoothLinePath(symptPts);
+    const moodArea  = moodPts.length >= 2
+      ? `${moodLine} L ${moodPts[moodPts.length-1][0]} ${PY_TOP + chartH} L ${moodPts[0][0]} ${PY_TOP + chartH} Z` : "";
+    const symptArea = symptPts.length >= 2
+      ? `${symptLine} L ${symptPts[symptPts.length-1][0]} ${PY_TOP + chartH} L ${symptPts[0][0]} ${PY_TOP + chartH} Z` : "";
+    const todayX = PX + ((Math.min(cycleDay, cycleLen) - 1) / Math.max(cycleLen - 1, 1)) * chartW;
+    return { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, todayX, VW, VH, PX, PY_TOP, chartH, chartW, cycleLen };
+  }, [settings, currentCycleStart, cycleDay, moodLog, symptomsLog]);
+
   const toggleSymptom = (s: string) => {
     setSymptomsLog((prev) => {
       const current = prev[todayKey] ?? [];
@@ -312,6 +362,83 @@ export function CycleTracker() {
     ovulation:  "bg-violet-50 text-violet-600 border-violet-200",
     luteal:     "bg-purple-50 text-purple-600 border-purple-200",
   };
+
+  function renderWellnessGraph(gradSuffix: string) {
+    const { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, todayX, VW, VH, PX, PY_TOP, chartH, cycleLen } = wellnessGraph;
+    const hasData = moodPts.length + symptPts.length > 0;
+    return (
+      <>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="text-[7px] font-bold uppercase tracking-widest text-rose/45 lg:text-[8px]">Cycle Wellness</p>
+            <p className="font-script text-base leading-tight text-hotpink lg:text-lg">This Cycle</p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[7px] font-bold text-hotpink lg:text-[8px]">
+              <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              Mood
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-100 px-2 py-0.5 text-[7px] font-bold text-rose-400 lg:text-[8px]">
+              <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#FDA4AF" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              Sympt.
+            </span>
+          </div>
+        </div>
+        <svg
+          viewBox={`0 0 ${VW} ${VH}`}
+          className="w-full"
+          style={{ height: "96px", display: "block" }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient id={`bloom-mood-${gradSuffix}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#EC4899" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#EC4899" stopOpacity="0.01" />
+            </linearGradient>
+            <linearGradient id={`bloom-sym-${gradSuffix}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor="#FDA4AF" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="#FDA4AF" stopOpacity="0.01" />
+            </linearGradient>
+          </defs>
+          {bands.map((b, bi) => (
+            <rect key={bi} x={b.x1} y={PY_TOP} width={b.x2 - b.x1} height={chartH}
+              fill={PHASE_SVG_COLOR[b.phase]} rx="2" />
+          ))}
+          {bands.map((b, bi) => (
+            <text key={bi} x={(b.x1 + b.x2) / 2} y={PY_TOP + 8}
+              textAnchor="middle" fontSize="6" fontWeight="700"
+              fill={PHASE_SVG_LABEL_COLOR[b.phase]} fillOpacity="0.75">
+              {PHASE_SVG_LABEL[b.phase]}
+            </text>
+          ))}
+          {[0.25, 0.5, 0.75].map((f) => (
+            <line key={f} x1={PX} y1={PY_TOP + f * chartH} x2={VW - PX} y2={PY_TOP + f * chartH}
+              stroke="#FDE8F3" strokeWidth="0.5" />
+          ))}
+          <line x1={todayX} y1={PY_TOP} x2={todayX} y2={PY_TOP + chartH}
+            stroke="#EC4899" strokeWidth="1" strokeDasharray="2.5 2" strokeOpacity="0.6" />
+          {symptArea && <path d={symptArea} fill={`url(#bloom-sym-${gradSuffix})`} />}
+          {symptLine  && <path d={symptLine} fill="none" stroke="#FDA4AF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
+          {moodArea && <path d={moodArea} fill={`url(#bloom-mood-${gradSuffix})`} />}
+          {moodLine  && <path d={moodLine} fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+          {moodPts.map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="2.2" fill="#EC4899" fillOpacity="0.9" />
+          ))}
+          {symptPts.map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="1.8" fill="#FDA4AF" fillOpacity="0.9" />
+          ))}
+          <text x={PX} y={VH - 2} textAnchor="start" fontSize="6.5" fill="#C084A0" fillOpacity="0.7" fontWeight="600">Day 1</text>
+          <text x={todayX} y={VH - 2} textAnchor="middle" fontSize="6.5" fill="#EC4899" fillOpacity="0.9" fontWeight="700">▾{cycleDay}</text>
+          <text x={VW - PX} y={VH - 2} textAnchor="end" fontSize="6.5" fill="#C084A0" fillOpacity="0.7" fontWeight="600">Day {cycleLen}</text>
+        </svg>
+        {!hasData && (
+          <p className="mt-1 text-[6.5px] text-rose/40 text-center italic lg:text-[7.5px]">
+            Log mood &amp; symptoms daily — your cycle trends appear here ♡
+          </p>
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="relative animate-fade-in">
@@ -661,144 +788,13 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── MOOD & SYMPTOMS LINE CHART ── */}
-          {(() => {
-            const daysInMonth  = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-            const maxSymptoms  = SYMPTOM_OPTIONS.length;
-            const VW = 300; const VH = 72; const PX = 6; const PY = 6;
-            const chartW = VW - PX * 2;
-            const chartH = VH - PY * 2;
-
-            // Build (x, y) points only for days with data
-            const moodPts:    [number, number][] = [];
-            const symptomPts: [number, number][] = [];
-
-            for (let i = 0; i < daysInMonth; i++) {
-              const d  = new Date(cursor.getFullYear(), cursor.getMonth(), i + 1);
-              const dk = dateKey(d);
-              const m  = moodLog[dk];
-              const s  = symptomsLog[dk] ?? [];
-              const x  = PX + (i / Math.max(daysInMonth - 1, 1)) * chartW;
-              if (m)        moodPts.push([x, PY + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH]);
-              if (s.length) symptomPts.push([x, PY + (1 - s.length / maxSymptoms) * chartH]);
-            }
-
-            const moodLine    = smoothLinePath(moodPts);
-            const symptomLine = smoothLinePath(symptomPts);
-            const moodArea    = moodPts.length >= 2
-              ? `${moodLine} L ${moodPts[moodPts.length-1][0]} ${VH} L ${moodPts[0][0]} ${VH} Z` : "";
-            const symptomArea = symptomPts.length >= 2
-              ? `${symptomLine} L ${symptomPts[symptomPts.length-1][0]} ${VH} L ${symptomPts[0][0]} ${VH} Z` : "";
-
-            // today dashed line
-            const todayX = today.getMonth() === cursor.getMonth() && today.getFullYear() === cursor.getFullYear()
-              ? PX + ((today.getDate() - 1) / Math.max(daysInMonth - 1, 1)) * chartW : null;
-
-            const daysLogged = new Set(
-              [...Object.keys(moodLog), ...Object.keys(symptomsLog)].filter(k => {
-                const [y, mo] = k.split("-").map(Number);
-                return y === cursor.getFullYear() && mo === cursor.getMonth() + 1;
-              })
-            ).size;
-
-            const hasData = moodPts.length + symptomPts.length > 0;
-
-            return (
-              <div
-                className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 shadow-sm animate-fade-in"
-                style={{ animationDelay: "580ms" }}
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="text-[7px] font-bold uppercase tracking-widest text-rose/45">Wellness Trends</p>
-                    <p className="font-script text-base leading-tight text-hotpink">{MONTHS[cursor.getMonth()]} Overview</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[7px] font-bold text-hotpink">
-                      <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                      Mood
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-100 px-2 py-0.5 text-[7px] font-bold text-rose-400">
-                      <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#FDA4AF" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                      Sympt.
-                    </span>
-                    {daysLogged > 0 && (
-                      <span className="rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[7px] font-bold text-rose/60">
-                        {daysLogged}d
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* SVG chart */}
-                <svg
-                  viewBox={`0 0 ${VW} ${VH + 14}`}
-                  className="w-full"
-                  style={{ height: "88px", display: "block" }}
-                  aria-hidden
-                >
-                  <defs>
-                    <linearGradient id="bloom-mood-fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#EC4899" stopOpacity="0.18" />
-                      <stop offset="100%" stopColor="#EC4899" stopOpacity="0.01" />
-                    </linearGradient>
-                    <linearGradient id="bloom-sympt-fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#FDA4AF" stopOpacity="0.22" />
-                      <stop offset="100%" stopColor="#FDA4AF" stopOpacity="0.01" />
-                    </linearGradient>
-                  </defs>
-
-                  {/* grid lines */}
-                  {[0.25, 0.5, 0.75].map((f) => (
-                    <line key={f} x1={PX} y1={PY + f * chartH} x2={VW - PX} y2={PY + f * chartH}
-                      stroke="#FDE8F3" strokeWidth="0.6" />
-                  ))}
-
-                  {/* today dashed marker */}
-                  {todayX !== null && (
-                    <line x1={todayX} y1={PY} x2={todayX} y2={VH}
-                      stroke="#EC4899" strokeWidth="0.8" strokeDasharray="2.5 2" strokeOpacity="0.45" />
-                  )}
-
-                  {/* symptom area + line */}
-                  {symptomArea && <path d={symptomArea} fill="url(#bloom-sympt-fill)" />}
-                  {symptomLine  && <path d={symptomLine} fill="none" stroke="#FDA4AF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
-
-                  {/* mood area + line */}
-                  {moodArea && <path d={moodArea} fill="url(#bloom-mood-fill)" />}
-                  {moodLine  && <path d={moodLine} fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
-
-                  {/* mood dots on data points */}
-                  {moodPts.map(([x, y], i) => (
-                    <circle key={i} cx={x} cy={y} r="2.2" fill="#EC4899" fillOpacity="0.9" />
-                  ))}
-
-                  {/* symptom dots on data points */}
-                  {symptomPts.map(([x, y], i) => (
-                    <circle key={i} cx={x} cy={y} r="1.8" fill="#FDA4AF" fillOpacity="0.9" />
-                  ))}
-
-                  {/* x-axis labels */}
-                  {[1, 7, 14, 21, 28].filter(d => d <= daysInMonth).map(day => {
-                    const x = PX + ((day - 1) / Math.max(daysInMonth - 1, 1)) * chartW;
-                    return (
-                      <text key={day} x={x} y={VH + 10} textAnchor="middle"
-                        fontSize="7" fill="#C084A0" fillOpacity="0.7" fontWeight="600">
-                        {day}
-                      </text>
-                    );
-                  })}
-                </svg>
-
-                {!hasData && (
-                  <p className="mt-1 text-[6.5px] text-rose/40 text-center italic">
-                    Log your mood &amp; symptoms daily — your trends appear here ♡
-                  </p>
-                )}
-              </div>
-            );
-          })()}
+          {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
+          <div
+            className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 shadow-sm animate-fade-in"
+            style={{ animationDelay: "580ms" }}
+          >
+            {renderWellnessGraph("mob")}
+          </div>
 
           {/* ── AFFIRMATION CARD ── */}
           <div
@@ -836,6 +832,9 @@ export function CycleTracker() {
           style={{ animationDelay: "100ms" }}
         >
           <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
+          <div className="relative z-10 hidden lg:block mb-4 pb-4 border-b border-pink-100/50">
+            {renderWellnessGraph("desk")}
+          </div>
           <div key={selected.toDateString()} className="relative z-10 animate-fade-in">
             {/* Suggested activities */}
             <p className="text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]">SUGGESTED FOR THIS PHASE</p>
