@@ -152,6 +152,7 @@ const SYMPTOM_OPTIONS = ["Cramps", "Bloating", "Tender Breasts", "Fatigue", "Hea
 
 const MOOD_LOG_KEY     = "bloom:mood-log-v2";
 const SYMPTOMS_LOG_KEY = "bloom:symptoms-log-v2";
+const PILL_LOG_KEY     = "bloom:pill-log-v2";
 
 const MOOD_BG_COLOR: Record<string, string> = {
   calm:      "bg-sky-300",
@@ -162,6 +163,17 @@ const MOOD_BG_COLOR: Record<string, string> = {
   tired:     "bg-slate-300",
   cramps:    "bg-rose-400",
   bloated:   "bg-orange-300",
+};
+
+const MOOD_TEXT_COLOR: Record<string, string> = {
+  calm:      "text-sky-400",
+  happy:     "text-pink-500",
+  energetic: "text-amber-500",
+  sensitive: "text-fuchsia-400",
+  sad:       "text-blue-400",
+  tired:     "text-slate-400",
+  cramps:    "text-rose-500",
+  bloated:   "text-orange-400",
 };
 
 // Wellbeing score for the mood line (1 = lowest, 8 = highest)
@@ -214,16 +226,17 @@ export function CycleTracker() {
 
   const [cursor,        setCursor]        = useState(new Date(2026, 5, 1));
   const [selected,      setSelected]      = useState<Date>(today);
-  const [pillTaken,     setPillTaken]     = useState(true);
   const todayKey                          = dateKey(today);
   const [moodLog,             setMoodLog]           = useState<Record<string, string>>(() => readJSON(MOOD_LOG_KEY, {}));
   const [symptomsLog,         setSymptomsLog]       = useState<Record<string, string[]>>(() => readJSON(SYMPTOMS_LOG_KEY, {}));
+  const [pillLog,             setPillLog]           = useState<Record<string, boolean>>(() => readJSON(PILL_LOG_KEY, {}));
   const [showMoodPickerCard,  setShowMoodPickerCard] = useState(false);
   const [slideDir,            setSlideDir]          = useState<"l"|"r">("r");
 
   // Derived today values
-  const mood     = moodLog[todayKey] ?? "happy";
-  const symptoms = symptomsLog[todayKey] ?? [];
+  const mood       = moodLog[todayKey] ?? "happy";
+  const symptoms   = symptomsLog[todayKey] ?? [];
+  const pillTaken  = pillLog[todayKey] ?? false;
 
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -387,7 +400,7 @@ export function CycleTracker() {
                   <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1">
                     <span
                       className={[
-                        "grid h-7 w-7 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
+                        "grid h-8 w-8 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
                         isCurrent
                           ? "bg-hotpink text-white ring-4 ring-white/60 animate-selected-glow"
                           : isPast
@@ -395,11 +408,11 @@ export function CycleTracker() {
                           : "bg-white/80 text-rose/40 border border-pink-200",
                       ].join(" ")}
                     >
-                      <StepIcon className="h-3.5 w-3.5" />
+                      <StepIcon className="h-4 w-4" />
                     </span>
                     <span
                       className={[
-                        "text-[8px] font-bold tracking-wide leading-none text-center",
+                        "text-[10px] font-bold tracking-wide leading-none text-center",
                         isCurrent ? "text-[#BE185D] drop-shadow-sm" : isPast ? "text-pink-600/80" : "text-rose/50",
                       ].join(" ")}
                     >
@@ -413,7 +426,7 @@ export function CycleTracker() {
 
           {/* ── CYCLE PREDICTIONS + MOOD + DAILY PILL ── */}
           <div className="relative animate-fade-in" style={{ animationDelay: "100ms" }}>
-            <div className="grid grid-cols-5 gap-1">
+            <div className="grid grid-cols-5 gap-1.5">
               {[
                 { label: "Period",    Icon: CalendarDays, BgIcon: Flower2,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,        color: "text-hotpink",   bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100",  bgColor: "text-hotpink"   },
                 { label: "Fertile",   Icon: Heart,        BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,    color: "text-pink-500",  bg: "from-pink-50 to-rose-50",      border: "border-pink-100",  bgColor: "text-pink-400"  },
@@ -421,22 +434,19 @@ export function CycleTracker() {
               ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 animate-fade-in", p.bg, p.border].join(" ")}
+                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 shadow-sm flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
                   style={{ animationDelay: `${350 + i * 55}ms` }}
                 >
-                  <span
-                    className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")}
-                    style={{ animationDelay: `${i * 700}ms` }}
-                  >
+                  <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")} style={{ animationDelay: `${i * 700}ms` }}>
                     <p.BgIcon className="h-10 w-10" />
                   </span>
-                  <span className={["grid h-5 w-5 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
-                    <p.Icon className="h-3 w-3" />
+                  <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
+                    <p.Icon className="h-3.5 w-3.5" />
                   </span>
                   <div>
-                    <p className="text-[6px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
-                    <p className={["font-script text-xs leading-tight", p.color].join(" ")}>{p.value}</p>
-                    <p className="text-[7px] text-rose/50 font-semibold">{p.sub}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
+                    <p className={["font-script text-sm leading-tight", p.color].join(" ")}>{p.value}</p>
+                    <p className="text-[10px] text-rose/50 font-semibold">{p.sub}</p>
                   </div>
                 </div>
               ))}
@@ -446,58 +456,52 @@ export function CycleTracker() {
                 onClick={() => setShowMoodPickerCard((v) => !v)}
                 aria-pressed={showMoodPickerCard}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 shadow-sm flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   showMoodPickerCard
                     ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30 shadow-md"
                     : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
                 ].join(" ")}
                 style={{ animationDelay: "465ms" }}
               >
-                {/* pulsing tap-hint dot */}
-                <span className="pointer-events-none absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-hotpink/55 animate-bloom-pulse" />
-                <span
-                  className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink"
-                  style={{ animationDelay: "2100ms" }}
-                >
+                <span className="pointer-events-none absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-hotpink/55 animate-bloom-pulse" />
+                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2100ms" }}>
                   <MoodIconToday className="h-10 w-10" />
                 </span>
-                <span className="grid h-5 w-5 place-items-center rounded-lg bg-white/80 shadow-sm text-hotpink">
-                  <MoodIconToday className="h-3 w-3" />
+                <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm text-hotpink">
+                  <MoodIconToday className="h-3.5 w-3.5" />
                 </span>
                 <div>
-                  <p className="text-[6px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Mood</p>
-                  <p className="font-script text-xs leading-tight text-hotpink">{moodLabelToday}</p>
-                  <p className="text-[7px] text-rose/50 font-semibold animate-cta-bounce inline-block">tap ♥</p>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Mood</p>
+                  <p className="font-script text-sm leading-tight text-hotpink">{moodLabelToday}</p>
+                  <p className="text-[10px] text-rose/50 font-semibold animate-cta-bounce inline-block">tap ♥</p>
                 </div>
               </button>
 
               {/* Daily Pill — 5th */}
               <button
-                onClick={() => setPillTaken((v) => !v)}
+                onClick={() => {
+                  const next = { ...pillLog, [todayKey]: !pillTaken };
+                  setPillLog(next);
+                  try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); } catch {}
+                }}
                 aria-pressed={pillTaken}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 shadow-sm flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   pillTaken ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100" : "from-white/80 to-pink-50/50 border-pink-50",
                 ].join(" ")}
                 style={{ animationDelay: "520ms" }}
               >
-                {/* pulsing tap-hint dot */}
-                <span className={["pointer-events-none absolute top-1 right-1 h-1.5 w-1.5 rounded-full animate-bloom-pulse", pillTaken ? "bg-green-400/60" : "bg-hotpink/55"].join(" ")} />
-                <span
-                  className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink"
-                  style={{ animationDelay: "2800ms" }}
-                >
+                <span className={["pointer-events-none absolute top-1.5 right-1.5 h-2 w-2 rounded-full animate-bloom-pulse", pillTaken ? "bg-green-400/60" : "bg-hotpink/55"].join(" ")} />
+                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2800ms" }}>
                   <Pill className="h-10 w-10" />
                 </span>
-                <span className={["grid h-5 w-5 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
-                  <Pill className="h-3 w-3" />
+                <span className={["grid h-6 w-6 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
+                  <Pill className="h-3.5 w-3.5" />
                 </span>
                 <div>
-                  <p className="text-[6px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Pill</p>
-                  <p className={["font-script text-xs leading-tight", pillTaken ? "text-hotpink" : "text-rose/40"].join(" ")}>
-                    {pillTaken ? "Taken ✓" : "Log it"}
-                  </p>
-                  <p className="text-[7px] text-rose/50 font-semibold animate-cta-bounce inline-block">{pillTaken ? "done ✓" : "tap ♥"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Pill</p>
+                  <p className={["font-script text-sm leading-tight", pillTaken ? "text-hotpink" : "text-rose/40"].join(" ")}>{pillTaken ? "Taken ✓" : "Log it"}</p>
+                  <p className="text-[10px] text-rose/50 font-semibold animate-cta-bounce inline-block">{pillTaken ? "done ✓" : "tap ♥"}</p>
                 </div>
               </button>
             </div>
@@ -572,7 +576,7 @@ export function CycleTracker() {
 
               {/* ── Calendar center ── */}
               <div>
-                <div className="grid grid-cols-7 text-center text-[7px] font-bold tracking-widest text-rose/50 mb-0.5">
+                <div className="grid grid-cols-7 text-center text-[8px] font-bold tracking-widest text-rose/50 mb-0.5">
                   {WEEKDAYS.map((d) => <div key={d}>{d[0]}</div>)}
                 </div>
                 <div
@@ -589,34 +593,39 @@ export function CycleTracker() {
                     const dk             = dateKey(d);
                     const loggedMood     = moodLog[dk];
                     const loggedSymptoms = symptomsLog[dk] ?? [];
+                    const pillTakenDay   = pillLog[dk] ?? false;
+                    const MoodCellIcon   = loggedMood ? MOODS.find(m => m.key === loggedMood)?.Icon : undefined;
+                    const hasExtra       = loggedMood || pillTakenDay || loggedSymptoms.length > 0;
                     return (
                       <button
                         key={i}
                         onClick={() => setSelected(d)}
                         title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                         className={[
-                          "relative aspect-square rounded-xl flex flex-col items-center justify-center gap-0 transition-all duration-200 hover:scale-105 active:scale-90",
+                          "relative aspect-square rounded-xl flex flex-col items-center justify-center gap-[1px] transition-all duration-200 hover:scale-105 active:scale-90",
                           dayStyle.cell,
                           isSelected && !isToday ? "ring-1 ring-hotpink/40 scale-105" : "",
                           isToday ? "animate-selected-glow ring-1 ring-hotpink/55" : "",
                         ].join(" ")}
                       >
-                        <span className="text-[7px] font-bold leading-none">{d.getDate()}</span>
-                        <CellIcon className={`h-2 w-2 mt-px opacity-65 ${dayStyle.iconClass}`} />
-                        {loggedMood && (
-                          <span
-                            className={[
-                              "absolute top-0.5 right-0.5 h-1.5 w-1.5 rounded-full",
-                              MOOD_BG_COLOR[loggedMood] ?? "bg-pink-300",
-                              loggedSymptoms.length > 0 ? "ring-1 ring-white/70" : "",
-                            ].join(" ")}
-                          />
+                        <span className="text-[8px] font-bold leading-none">{d.getDate()}</span>
+                        <CellIcon className={`h-2.5 w-2.5 opacity-70 ${dayStyle.iconClass}`} />
+                        {hasExtra && (
+                          <div className="flex items-center gap-px">
+                            {MoodCellIcon && (
+                              <MoodCellIcon className={`h-[7px] w-[7px] ${MOOD_TEXT_COLOR[loggedMood!] ?? "text-pink-400"}`} />
+                            )}
+                            {pillTakenDay && <Pill className="h-[7px] w-[7px] text-violet-400" />}
+                            {loggedSymptoms.length > 0 && (
+                              <span className="h-[5px] w-[5px] rounded-full bg-rose-400/75 shrink-0" />
+                            )}
+                          </div>
                         )}
                       </button>
                     );
                   })}
                 </div>
-                <div className="mt-1 flex flex-wrap justify-center gap-x-1.5 gap-y-0 text-[5px] font-bold text-rose/60">
+                <div className="mt-1 flex flex-wrap justify-center gap-x-1.5 gap-y-0 text-[7px] font-bold text-rose/60">
                   <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
                   <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-amber-100" /> Follic.</span>
                   <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-pink-100" /> Fertile</span>
@@ -627,7 +636,7 @@ export function CycleTracker() {
 
               {/* ── Symptoms sidebar — fills full calendar height ── */}
               <div className="flex flex-col h-full">
-                <p className="shrink-0 text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Sympt.</p>
+                <p className="shrink-0 text-[8px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Sympt.</p>
                 {SYMPTOM_OPTIONS.map((s, i) => {
                   const active = symptoms.includes(s);
                   return (
@@ -636,7 +645,7 @@ export function CycleTracker() {
                       onClick={() => toggleSymptom(s)}
                       title={s}
                       className={[
-                        "flex-1 animate-fade-in hover-scale rounded-lg mb-0.5 px-0.5 text-[6px] font-semibold leading-tight text-center transition-all duration-200 active:scale-90",
+                        "flex-1 animate-fade-in hover-scale rounded-lg mb-0.5 px-0.5 text-[8px] font-semibold leading-tight text-center transition-all duration-200 active:scale-90",
                         active
                           ? "bg-hotpink text-white shadow-sm"
                           : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
