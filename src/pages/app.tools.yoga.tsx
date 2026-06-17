@@ -691,35 +691,40 @@ function YogaHero({
   const tabClass = (isActive: boolean) =>
     [
       "rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition",
-      isActive ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
+      isActive ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose/70",
     ].join(" ");
 
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
-      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
-      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-      <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
-        <div key={active} className="animate-scale-in">
-          <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
-          <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
-          {active === "library" && (
-            <button
-              onClick={onTryFlow}
-              className="hover-scale animate-soft-glow animate-card-breathe mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/20 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition active:scale-95"
-            >
-              <Sparkle className="h-3.5 w-3.5" /> Try a flow
-            </button>
-          )}
-        </div>
-        <div className="flex justify-center">
-          <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
-            <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
-            <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
-            <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
+    <div className="mb-2">
+      {/* Hero image — overflow-hidden only wraps the image, never the tabs */}
+      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 animate-hero-border-signal">
+        <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="relative h-full p-2 sm:p-4">
+          <div key={active} className="animate-scale-in">
+            <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
+            <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+            {active === "library" && (
+              <button
+                onClick={onTryFlow}
+                className="hover-scale animate-soft-glow animate-card-breathe mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/20 px-4 py-2 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition active:scale-95"
+              >
+                <Sparkle className="h-3.5 w-3.5" /> Try a flow
+              </button>
+            )}
           </div>
+        </div>
+      </div>
+
+      {/* Tabs — outside overflow-hidden so they're always fully visible */}
+      <div className="mt-2 flex justify-center">
+        <div className="inline-flex rounded-full bg-white/80 backdrop-blur-md border border-pink-200/60 p-0.5 shadow-sm">
+          <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
+          <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
+          <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
         </div>
       </div>
     </div>
