@@ -240,14 +240,14 @@ function fmtDate(d: Date) {
 }
 
 export function CycleTracker() {
-  const today = new Date(2026, 5, 14);
+  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const [settings, setSettings] = useState<CycleSettings>(() => readCycleSettings());
   const [setupOpen, setSetupOpen] = useState(false);
 
   useEffect(() => { broadcastCyclePhase(); }, []);
 
-  const [cursor,        setCursor]        = useState(new Date(2026, 5, 1));
-  const [selected,      setSelected]      = useState<Date>(today);
+  const [cursor,        setCursor]        = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selected,      setSelected]      = useState<Date>(() => today);
   const todayKey                          = dateKey(today);
   const [moodLog,             setMoodLog]           = useState<Record<string, string>>(() => readJSON(MOOD_LOG_KEY, {}));
   const [symptomsLog,         setSymptomsLog]       = useState<Record<string, string[]>>(() => readJSON(SYMPTOMS_LOG_KEY, {}));
@@ -294,10 +294,12 @@ export function CycleTracker() {
     return new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * MS_DAY);
   }, [settings]);
 
-  const daysToPeriod   = useMemo(() => Math.ceil((nextPeriodDate.getTime() - today.getTime()) / MS_DAY), [nextPeriodDate]);
-  const ovulationDate  = useMemo(() => new Date(currentCycleStart.getTime() + (ovulationDayOfCycle - 1) * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
-  const fertileStart   = useMemo(() => new Date(currentCycleStart.getTime() + (ovulationDayOfCycle - 5) * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
-  const fertileEnd     = useMemo(() => new Date(currentCycleStart.getTime() + ovulationDayOfCycle        * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
+  const daysToPeriod   = useMemo(() => Math.ceil((nextPeriodDate.getTime() - today.getTime()) / MS_DAY), [nextPeriodDate, today]);
+  // ovulationDayOfCycle is 0-indexed (e.g. 14 for a 28-day cycle = cycle day 15)
+  // Add the 0-indexed offset directly to currentCycleStart to match phaseForDay logic
+  const ovulationDate  = useMemo(() => new Date(currentCycleStart.getTime() + ovulationDayOfCycle       * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
+  const fertileStart   = useMemo(() => new Date(currentCycleStart.getTime() + (ovulationDayOfCycle - 4) * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
+  const fertileEnd     = useMemo(() => new Date(currentCycleStart.getTime() + (ovulationDayOfCycle + 2) * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
 
   const isSelectedToday  = sameDay(selected, today);
   const selectedPhase    = useMemo(() => isSelectedToday ? currentPhase : phaseForDay(selected, settings), [selected, settings, isSelectedToday, currentPhase]);
@@ -307,12 +309,14 @@ export function CycleTracker() {
   const MoodIconToday = MOODS.find((m) => m.key === mood)?.Icon ?? Smile;
   const moodLabelToday= MOODS.find((m) => m.key === mood)?.label ?? "Happy";
 
-  // Phase timeline: 4 steps, with filled progress up to active step
+  // Phase timeline: 4 steps aligned exactly with phaseForDay ranges
+  // ovulationDayOfCycle is 0-indexed; cycleDay is 1-indexed (cycleDay = 0-indexed day + 1)
+  // phaseForDay boundaries (0-indexed): period 0..pLen-1, follicular pLen..ovDay-5, fertile ovDay-4..ovDay+2, luteal ovDay+3+
   const journeySteps = [
     { key: "period"     as const, label: "Period",     Icon: Droplet,  active: cycleDay <= settings.periodLength },
-    { key: "follicular" as const, label: "Follicular", Icon: Sprout,   active: cycleDay > settings.periodLength && cycleDay < ovulationDayOfCycle - 1 },
-    { key: "ovulation"  as const, label: "Ovulation",  Icon: Sun,      active: cycleDay >= ovulationDayOfCycle - 1 && cycleDay <= ovulationDayOfCycle + 1 },
-    { key: "luteal"     as const, label: "Luteal",     Icon: Moon,     active: cycleDay > ovulationDayOfCycle + 1 },
+    { key: "follicular" as const, label: "Follicular", Icon: Sprout,   active: cycleDay > settings.periodLength && cycleDay <= ovulationDayOfCycle - 4 },
+    { key: "ovulation"  as const, label: "Ovulation",  Icon: Sun,      active: cycleDay > ovulationDayOfCycle - 4 && cycleDay <= ovulationDayOfCycle + 3 },
+    { key: "luteal"     as const, label: "Luteal",     Icon: Moon,     active: cycleDay > ovulationDayOfCycle + 3 },
   ];
   const activeIdx    = journeySteps.findIndex((s) => s.active);
   const progressPct  = activeIdx >= 0 ? (activeIdx / (journeySteps.length - 1)) * 100 : 0;
@@ -563,7 +567,7 @@ export function CycleTracker() {
               {[
                 { label: "Period",    Icon: CalendarDays, BgIcon: Flower2,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,        color: "text-hotpink",   bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100",  bgColor: "text-hotpink"   },
                 { label: "Fertile",   Icon: Heart,        BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,    color: "text-pink-500",  bg: "from-pink-50 to-rose-50",      border: "border-pink-100",  bgColor: "text-pink-400"  },
-                { label: "Ovulation", Icon: Sun,          BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle}`,  color: "text-amber-500", bg: "from-amber-50 to-yellow-50",   border: "border-amber-100", bgColor: "text-amber-400" },
+                { label: "Ovulation", Icon: Sun,          BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle + 1}`, color: "text-amber-500", bg: "from-amber-50 to-yellow-50",   border: "border-amber-100", bgColor: "text-amber-400" },
               ].map((p, i) => (
                 <div
                   key={p.label}
@@ -738,7 +742,7 @@ export function CycleTracker() {
                           "relative aspect-square rounded-xl flex flex-col items-center justify-center gap-[1px] transition-all duration-200 hover:scale-105 active:scale-90",
                           dayStyle.cell,
                           isSelected && !isToday ? "ring-1 ring-hotpink/40 scale-105" : "",
-                          isToday ? "animate-selected-glow ring-1 ring-hotpink/55" : "",
+                          isToday ? "animate-today-breathe ring-1 ring-hotpink/55 z-10" : "",
                         ].join(" ")}
                       >
                         <span className="text-[8px] font-bold leading-none">{d.getDate()}</span>
