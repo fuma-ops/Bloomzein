@@ -438,9 +438,28 @@ export function CycleTracker() {
 
           {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
           <div
-            className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 shadow-sm animate-fade-in"
+            className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 shadow-sm animate-fade-in"
             style={{ animationDelay: "140ms" }}
           >
+            {/* Bloom flower — rotating faded background */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <svg
+                viewBox="0 0 512 512"
+                className="h-56 w-56 opacity-[0.055] animate-bloom-spin-slow"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <g fill="#EC4899">
+                  <ellipse cx="256" cy="161" rx="48" ry="95" />
+                  <ellipse cx="256" cy="161" rx="48" ry="95" transform="rotate(60 256 256)" />
+                  <ellipse cx="256" cy="161" rx="48" ry="95" transform="rotate(120 256 256)" />
+                  <ellipse cx="256" cy="161" rx="48" ry="95" transform="rotate(180 256 256)" />
+                  <ellipse cx="256" cy="161" rx="48" ry="95" transform="rotate(240 256 256)" />
+                  <ellipse cx="256" cy="161" rx="48" ry="95" transform="rotate(300 256 256)" />
+                  <circle cx="256" cy="256" r="44" fill="#F9A8D4" />
+                </g>
+              </svg>
+            </div>
             {/* month nav */}
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-0.5">
