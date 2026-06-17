@@ -896,7 +896,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
         </button>
       </div>
 
-      {/* Step 2 — shape picker */}
+      {/* Step 2 — shape picker + inline proposition */}
       {step === 2 && (
         <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 animate-scale-in">
           <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Step 2</p>
@@ -906,12 +906,13 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
               ? `Based on your numbers we suggest ${BODY_TYPES[suggested].label} — tap another if it feels more like you.`
               : "Tap the shape that feels most like you."}
           </p>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+
+          <div className="grid grid-cols-2 gap-2">
             {(Object.keys(BODY_TYPES) as BodyType[]).map((key) => {
               const bt = BODY_TYPES[key];
               const isActive = active === key;
               return (
-                <button key={key} onClick={() => setSelected(key)}
+                <button key={key} onClick={() => setSelected(isActive ? null : key)}
                   className={["flex flex-col items-center gap-1 rounded-2xl border overflow-hidden shadow-sm transition active:scale-95",
                     isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5"].join(" ")}
                 >
@@ -923,33 +924,33 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
               );
             })}
           </div>
-        </div>
-      )}
 
-      {/* Proposition — appears when a shape is selected in step 2 */}
-      {data && step === 2 && (
-        <div className="rounded-3xl bg-blush/60 border border-petal/50 p-4 animate-scale-in">
-          <div className="flex gap-3 mb-3">
-            <div className="w-24 sm:w-32 shrink-0 rounded-xl overflow-hidden border border-petal/50">
-              <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
-            </div>
-            <div className="flex flex-col justify-center min-w-0">
-              <p className="font-bold text-rose mb-1">{data.label}</p>
-              <p className="text-xs text-rose/85 mb-2 leading-snug">{data.strengths}</p>
-              <p className="text-[10px] font-bold text-rose mb-1.5">Recommended</p>
-              <div className="flex flex-wrap gap-1.5">
-                {data.recommended.map((i) => (
-                  <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-2.5 py-0.5 text-[10px] font-semibold text-rose">
-                    {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
-                  </span>
-                ))}
+          {/* Proposition — inline, right below the grid */}
+          {data && (
+            <div key={active} className="mt-3 rounded-2xl bg-blush/60 border border-petal/50 p-3 animate-scale-in">
+              <div className="flex gap-3 mb-3">
+                <div className="w-20 shrink-0 rounded-xl overflow-hidden border border-petal/50">
+                  <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
+                </div>
+                <div className="flex flex-col justify-center min-w-0">
+                  <p className="font-bold text-rose mb-1">{data.label}</p>
+                  <p className="text-xs text-rose/85 mb-2 leading-snug">{data.strengths}</p>
+                  <p className="text-[10px] font-bold text-rose mb-1.5">Recommended</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.recommended.map((i) => (
+                      <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-2.5 py-0.5 text-[10px] font-semibold text-rose">
+                        {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
+              <button onClick={() => onStartWith("full-body", data.recommended[0])}
+                className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
+                Start with this <ChevronRight className="h-3.5 w-3.5" />
+              </button>
             </div>
-          </div>
-          <button onClick={() => onStartWith("full-body", data.recommended[0])}
-            className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
-            Start with this <ChevronRight className="h-3.5 w-3.5" />
-          </button>
+          )}
         </div>
       )}
     </div>
