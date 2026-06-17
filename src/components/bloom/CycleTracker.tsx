@@ -480,8 +480,10 @@ export function CycleTracker() {
               alt="" aria-hidden loading="eager" decoding="async"
               className="absolute inset-0 h-full w-full object-cover object-top animate-photo-breathe"
             />
-            {/* minimal left shield — text readable, photo visible */}
+            {/* left shield — text readable, photo visible */}
             <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/20 to-transparent" />
+            {/* bottom shield — phase labels readable */}
+            <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-white/15 to-transparent" />
             <div className="relative z-10 px-4 pt-2.5 pb-3">
               <div>
                 <h2
@@ -565,8 +567,8 @@ export function CycleTracker() {
               ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 shadow-sm flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
-                  style={{ animationDelay: `${350 + i * 55}ms` }}
+                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
+                  style={{ animationDelay: `${350 + i * 55}ms`, boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
                 >
                   <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")} style={{ animationDelay: `${i * 700}ms` }}>
                     <p.BgIcon className="h-10 w-10" />
@@ -587,14 +589,14 @@ export function CycleTracker() {
                 onClick={() => setShowMoodPickerCard((v) => !v)}
                 aria-pressed={showMoodPickerCard}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 shadow-sm flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   showMoodPickerCard
-                    ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30 shadow-md"
+                    ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30"
                     : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
                 ].join(" ")}
-                style={{ animationDelay: "465ms" }}
+                style={{ animationDelay: "465ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
-                <span className="pointer-events-none absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-hotpink/55 animate-bloom-pulse" />
+                <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
                 <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2100ms" }}>
                   <MoodIconToday className="h-10 w-10" />
                 </span>
@@ -617,12 +619,12 @@ export function CycleTracker() {
                 }}
                 aria-pressed={pillTaken}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 shadow-sm flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   pillTaken ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100" : "from-white/80 to-pink-50/50 border-pink-50",
                 ].join(" ")}
-                style={{ animationDelay: "520ms" }}
+                style={{ animationDelay: "520ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
-                <span className={["pointer-events-none absolute top-1.5 right-1.5 h-2 w-2 rounded-full animate-bloom-pulse", pillTaken ? "bg-green-400/60" : "bg-hotpink/55"].join(" ")} />
+                <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
                 <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2800ms" }}>
                   <Pill className="h-10 w-10" />
                 </span>
@@ -677,8 +679,8 @@ export function CycleTracker() {
 
           {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
           <div
-            className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 shadow-sm animate-fade-in"
-            style={{ animationDelay: "140ms" }}
+            className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 animate-fade-in"
+            style={{ animationDelay: "140ms", boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {/* month nav */}
             <div className="flex items-center justify-between mb-1.5">
@@ -794,8 +796,8 @@ export function CycleTracker() {
 
           {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
           <div
-            className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 shadow-sm animate-fade-in"
-            style={{ animationDelay: "580ms" }}
+            className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 animate-fade-in"
+            style={{ animationDelay: "580ms", boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {renderWellnessGraph("mob")}
           </div>
@@ -833,7 +835,7 @@ export function CycleTracker() {
         {/* ══════════════ RIGHT PANEL (40%) — desktop sticky ══════════════ */}
         <aside
           className="bloom-pearl-card animate-scale-in relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0"
-          style={{ animationDelay: "100ms" }}
+          style={{ animationDelay: "100ms", boxShadow: "inset 0 0 28px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
         >
           <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
           <div className="relative z-10 hidden lg:block mb-4 pb-4 border-b border-pink-100/50">
