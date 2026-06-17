@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -246,6 +246,26 @@ export function CycleTracker() {
 
   useEffect(() => { broadcastCyclePhase(); }, []);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const targets = containerRef.current?.querySelectorAll<HTMLElement>(".reveal-on-scroll") ?? [];
+    if (!targets.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            (entry.target as HTMLElement).style.transitionDelay = entry.target.getAttribute("data-reveal-delay") ?? "0ms";
+            entry.target.classList.add("revealed");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -24px 0px" },
+    );
+    targets.forEach((t) => io.observe(t));
+    return () => io.disconnect();
+  }, []);
+
   const [cursor,        setCursor]        = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected,      setSelected]      = useState<Date>(() => today);
   const todayKey                          = dateKey(today);
@@ -466,7 +486,7 @@ export function CycleTracker() {
   }
 
   return (
-    <div className="relative animate-fade-in">
+    <div ref={containerRef} className="relative animate-fade-in">
       <KawaiiBackground count={16} />
       <BloomBubbles count={18} />
 
@@ -683,8 +703,8 @@ export function CycleTracker() {
 
           {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
           <div
-            className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 animate-fade-in"
-            style={{ animationDelay: "140ms", boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
+            className="relative overflow-hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 reveal-on-scroll"
+            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {/* month nav */}
             <div className="flex items-center justify-between mb-1.5">
@@ -800,16 +820,16 @@ export function CycleTracker() {
 
           {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
           <div
-            className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 animate-fade-in"
-            style={{ animationDelay: "580ms", boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
+            className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 reveal-on-scroll"
+            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             {renderWellnessGraph("mob")}
           </div>
 
           {/* ── AFFIRMATION CARD ── */}
           <div
-            className="relative overflow-hidden rounded-[2rem] animate-fade-in shadow-sm"
-            style={{ animationDelay: "820ms", minHeight: "110px" }}
+            className="relative overflow-hidden rounded-[2rem] reveal-on-scroll shadow-sm"
+            style={{ minHeight: "110px" }}
           >
             <img
               src="/images/cycle-journal-hero.webp"
@@ -841,8 +861,8 @@ export function CycleTracker() {
 
         {/* ══════════════ RIGHT PANEL (40%) — desktop sticky ══════════════ */}
         <aside
-          className="bloom-pearl-card animate-scale-in relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0"
-          style={{ animationDelay: "100ms", boxShadow: "inset 0 0 28px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
+          className="bloom-pearl-card reveal-on-scroll relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0"
+          style={{ boxShadow: "inset 0 0 28px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
         >
           <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
           <div className="relative z-10 hidden lg:block mb-4 pb-4 border-b border-pink-100/50">
