@@ -197,6 +197,12 @@ const PHASE_SVG_LABEL_COLOR: Record<Exclude<Phase, null>, string> = {
   period: "#BE185D", follicular: "#D97706", fertile: "#EC4899",
   ovulation: "#7C3AED", luteal: "#9333EA",
 };
+const PHASE_MOOD_EST: Record<Exclude<Phase, null>, number> = {
+  period: 2, follicular: 6, fertile: 7, ovulation: 8, luteal: 4,
+};
+const PHASE_SYMPT_EST: Record<Exclude<Phase, null>, number> = {
+  period: 6, follicular: 1, fertile: 1, ovulation: 1, luteal: 3,
+};
 
 /** Builds a smooth cubic-bezier SVG path through the given [x,y] points */
 function smoothLinePath(pts: [number, number][]): string {
@@ -313,7 +319,7 @@ export function CycleTracker() {
 
   const wellnessGraph = useMemo(() => {
     const cycleLen = settings.cycleLength;
-    const VW = 300, PX = 4, PY_TOP = 16, chartH = 56, PY_BOT = 14;
+    const VW = 300, PX = 4, PY_TOP = 20, chartH = 76, PY_BOT = 16;
     const VH = PY_TOP + chartH + PY_BOT;
     const chartW = VW - PX * 2;
     const maxSym = SYMPTOM_OPTIONS.length;
@@ -328,21 +334,28 @@ export function CycleTracker() {
     }
     const moodPts: [number, number][] = [];
     const symptPts: [number, number][] = [];
+    const moodEstPts: [number, number][] = [];
+    const symptEstPts: [number, number][] = [];
     for (let i = 0; i < cycleLen; i++) {
       const dk = dateKey(new Date(currentCycleStart.getTime() + i * MS_DAY));
       const m = moodLog[dk], s = symptomsLog[dk] ?? [];
+      const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
       const x = PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
       if (m) moodPts.push([x, PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH]);
       if (s.length) symptPts.push([x, PY_TOP + (1 - s.length / maxSym) * chartH]);
+      moodEstPts.push([x, PY_TOP + (1 - (PHASE_MOOD_EST[ph] ?? 5) / 8) * chartH]);
+      symptEstPts.push([x, PY_TOP + (1 - (PHASE_SYMPT_EST[ph] ?? 2) / maxSym) * chartH]);
     }
-    const moodLine  = smoothLinePath(moodPts);
-    const symptLine = smoothLinePath(symptPts);
+    const moodLine     = smoothLinePath(moodPts);
+    const symptLine    = smoothLinePath(symptPts);
+    const moodEstLine  = smoothLinePath(moodEstPts);
+    const symptEstLine = smoothLinePath(symptEstPts);
     const moodArea  = moodPts.length >= 2
       ? `${moodLine} L ${moodPts[moodPts.length-1][0]} ${PY_TOP + chartH} L ${moodPts[0][0]} ${PY_TOP + chartH} Z` : "";
     const symptArea = symptPts.length >= 2
       ? `${symptLine} L ${symptPts[symptPts.length-1][0]} ${PY_TOP + chartH} L ${symptPts[0][0]} ${PY_TOP + chartH} Z` : "";
     const todayX = PX + ((Math.min(cycleDay, cycleLen) - 1) / Math.max(cycleLen - 1, 1)) * chartW;
-    return { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, todayX, VW, VH, PX, PY_TOP, chartH, chartW, cycleLen };
+    return { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, moodEstLine, symptEstLine, todayX, VW, VH, PX, PY_TOP, chartH, chartW, cycleLen };
   }, [settings, currentCycleStart, cycleDay, moodLog, symptomsLog]);
 
   const toggleSymptom = (s: string) => {
@@ -364,7 +377,7 @@ export function CycleTracker() {
   };
 
   function renderWellnessGraph(gradSuffix: string) {
-    const { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, todayX, VW, VH, PX, PY_TOP, chartH, cycleLen } = wellnessGraph;
+    const { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, moodEstLine, symptEstLine, todayX, VW, VH, PX, PY_TOP, chartH, cycleLen } = wellnessGraph;
     const hasData = moodPts.length + symptPts.length > 0;
     return (
       <>
@@ -373,7 +386,7 @@ export function CycleTracker() {
             <p className="text-[7px] font-bold uppercase tracking-widest text-rose/45 lg:text-[8px]">Cycle Wellness</p>
             <p className="font-script text-base leading-tight text-hotpink lg:text-lg">This Cycle</p>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
             <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[7px] font-bold text-hotpink lg:text-[8px]">
               <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round"/></svg>
               Mood
@@ -382,12 +395,16 @@ export function CycleTracker() {
               <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#FDA4AF" strokeWidth="1.5" strokeLinecap="round"/></svg>
               Sympt.
             </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-pink-50/50 border border-pink-100/60 px-2 py-0.5 text-[7px] font-bold text-rose/40 lg:text-[8px]">
+              <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#EC4899" strokeWidth="1" strokeLinecap="round" strokeDasharray="3 2" strokeOpacity="0.5"/></svg>
+              Est.
+            </span>
           </div>
         </div>
         <svg
           viewBox={`0 0 ${VW} ${VH}`}
           className="w-full"
-          style={{ height: "96px", display: "block" }}
+          style={{ width: "100%", height: "auto", display: "block" }}
           aria-hidden
         >
           <defs>
@@ -405,7 +422,7 @@ export function CycleTracker() {
               fill={PHASE_SVG_COLOR[b.phase]} rx="2" />
           ))}
           {bands.map((b, bi) => (
-            <text key={bi} x={(b.x1 + b.x2) / 2} y={PY_TOP + 8}
+            <text key={bi} x={(b.x1 + b.x2) / 2} y={PY_TOP + 9}
               textAnchor="middle" fontSize="6" fontWeight="700"
               fill={PHASE_SVG_LABEL_COLOR[b.phase]} fillOpacity="0.75">
               {PHASE_SVG_LABEL[b.phase]}
@@ -417,23 +434,27 @@ export function CycleTracker() {
           ))}
           <line x1={todayX} y1={PY_TOP} x2={todayX} y2={PY_TOP + chartH}
             stroke="#EC4899" strokeWidth="1" strokeDasharray="2.5 2" strokeOpacity="0.6" />
+          {/* Estimation lines — dashed, faint reference curve based on phase averages */}
+          {symptEstLine && <path d={symptEstLine} fill="none" stroke="#FDA4AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" strokeOpacity="0.28" />}
+          {moodEstLine  && <path d={moodEstLine}  fill="none" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" strokeOpacity="0.28" />}
+          {/* Real data */}
           {symptArea && <path d={symptArea} fill={`url(#bloom-sym-${gradSuffix})`} />}
           {symptLine  && <path d={symptLine} fill="none" stroke="#FDA4AF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
           {moodArea && <path d={moodArea} fill={`url(#bloom-mood-${gradSuffix})`} />}
           {moodLine  && <path d={moodLine} fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
           {moodPts.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="2.2" fill="#EC4899" fillOpacity="0.9" />
+            <circle key={i} cx={x} cy={y} r="2.5" fill="#EC4899" fillOpacity="0.9" />
           ))}
           {symptPts.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="1.8" fill="#FDA4AF" fillOpacity="0.9" />
+            <circle key={i} cx={x} cy={y} r="2" fill="#FDA4AF" fillOpacity="0.9" />
           ))}
           <text x={PX} y={VH - 2} textAnchor="start" fontSize="6.5" fill="#C084A0" fillOpacity="0.7" fontWeight="600">Day 1</text>
           <text x={todayX} y={VH - 2} textAnchor="middle" fontSize="6.5" fill="#EC4899" fillOpacity="0.9" fontWeight="700">▾{cycleDay}</text>
           <text x={VW - PX} y={VH - 2} textAnchor="end" fontSize="6.5" fill="#C084A0" fillOpacity="0.7" fontWeight="600">Day {cycleLen}</text>
         </svg>
         {!hasData && (
-          <p className="mt-1 text-[6.5px] text-rose/40 text-center italic lg:text-[7.5px]">
-            Log mood &amp; symptoms daily — your cycle trends appear here ♡
+          <p className="mt-0.5 text-[6.5px] text-rose/40 text-center italic lg:text-[7.5px]">
+            Dashed lines show phase estimates — log daily to see your real curve ♡
           </p>
         )}
       </>
@@ -450,10 +471,9 @@ export function CycleTracker() {
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
         <div className="lg:col-span-3 space-y-2">
 
-          {/* ── ULTRA-COMPACT HERO ── */}
+          {/* ── HERO + PHASE TIMELINE (merged) ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md"
-            style={{ minHeight: "96px" }}
           >
             <img
               src="/images/cycle-insight-hero.webp"
@@ -461,10 +481,10 @@ export function CycleTracker() {
               className="absolute inset-0 h-full w-full object-cover object-top animate-photo-breathe"
             />
             {/* left shield — keeps Day N text readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/40 to-white/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/50 to-white/15" />
             {/* right shield — keeps countdown text readable */}
-            <div className="absolute inset-0 bg-gradient-to-l from-white/80 via-white/30 to-transparent" />
-            <div className="relative z-10 px-4 py-2.5">
+            <div className="absolute inset-0 bg-gradient-to-l from-white/85 via-white/35 to-transparent" />
+            <div className="relative z-10 px-4 pt-2.5 pb-3">
               <div className="flex items-center justify-between gap-3">
                 {/* left: day + phase — staggered entrance */}
                 <div>
@@ -497,57 +517,52 @@ export function CycleTracker() {
                   <p className="text-[8px] text-rose/50 font-semibold">{fmtDate(nextPeriodDate)}</p>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* ── PHASE TIMELINE LINE ── */}
-          <div
-            className="rounded-[1.5rem] bloom-pink-wave border border-pink-200/50 px-3 py-3 shadow-sm animate-fade-in"
-            style={{ animationDelay: "60ms" }}
-          >
-            <div className="relative flex items-start justify-between">
-              {/* animated background track — cute degraded pink */}
-              <div
-                className="absolute left-3 right-3 top-3 h-[2px] rounded-full animate-card-breathe"
-                style={{ background: "linear-gradient(90deg,#FCE7F3,#FBCFE8,#FFC2D6,#FBCFE8,#FCE7F3)" }}
-              />
-              {/* animated progress fill */}
-              <div
-                className="absolute left-3 top-3 h-[2px] rounded-full transition-all duration-700 animate-bloom-pulse"
-                style={{
-                  width: `calc(${progressPct}% * (100% - 1.5rem) / 100)`,
-                  background: "linear-gradient(90deg,#BE185D,#EC4899,#F9A8D4,#EC4899)",
-                }}
-              />
-              {journeySteps.map((step, i) => {
-                const isPast    = i < activeIdx;
-                const isCurrent = step.active;
-                const StepIcon  = step.Icon;
-                return (
-                  <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1">
-                    <span
-                      className={[
-                        "grid h-8 w-8 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
-                        isCurrent
-                          ? "bg-hotpink text-white ring-4 ring-white/60 animate-selected-glow"
-                          : isPast
-                          ? "bg-pink-400/80 text-white shadow-sm"
-                          : "bg-white/80 text-rose/40 border border-pink-200",
-                      ].join(" ")}
-                    >
-                      <StepIcon className="h-4 w-4" />
-                    </span>
-                    <span
-                      className={[
-                        "text-[10px] font-bold tracking-wide leading-none text-center",
-                        isCurrent ? "text-[#BE185D] drop-shadow-sm" : isPast ? "text-pink-600/80" : "text-rose/50",
-                      ].join(" ")}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
+              {/* Phase journey steps — part of the hero */}
+              <div className="mt-3 border-t border-white/30 pt-2.5 animate-fade-in" style={{ animationDelay: "60ms" }}>
+                <div className="relative flex items-start justify-between">
+                  <div
+                    className="absolute left-0 right-0 top-3 h-[2px] rounded-full animate-card-breathe"
+                    style={{ background: "linear-gradient(90deg,#FCE7F3,#FBCFE8,#FFC2D6,#FBCFE8,#FCE7F3)" }}
+                  />
+                  <div
+                    className="absolute left-0 top-3 h-[2px] rounded-full transition-all duration-700 animate-bloom-pulse"
+                    style={{
+                      width: `calc(${progressPct}% * 100% / 100)`,
+                      background: "linear-gradient(90deg,#BE185D,#EC4899,#F9A8D4,#EC4899)",
+                    }}
+                  />
+                  {journeySteps.map((step, i) => {
+                    const isPast    = i < activeIdx;
+                    const isCurrent = step.active;
+                    const StepIcon  = step.Icon;
+                    return (
+                      <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1">
+                        <span
+                          className={[
+                            "grid h-7 w-7 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
+                            isCurrent
+                              ? "bg-hotpink text-white ring-4 ring-white/60 animate-selected-glow"
+                              : isPast
+                              ? "bg-pink-400/80 text-white shadow-sm"
+                              : "bg-white/70 text-rose/40 border border-pink-200",
+                          ].join(" ")}
+                        >
+                          <StepIcon className="h-3.5 w-3.5" />
+                        </span>
+                        <span
+                          className={[
+                            "text-[9px] font-bold tracking-wide leading-none text-center",
+                            isCurrent ? "text-[#BE185D] drop-shadow-sm" : isPast ? "text-pink-600/80" : "text-rose/50",
+                          ].join(" ")}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
