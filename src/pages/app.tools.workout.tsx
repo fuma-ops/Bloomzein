@@ -673,7 +673,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
                   {/* top edge highlight */}
                   <div className="absolute inset-x-0 top-0 h-px bg-white/60" />
-                  <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
+                  <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] sm:text-[11px] font-bold text-white drop-shadow leading-tight px-0.5 break-words hyphens-auto">{z.label}</span>
                   {active && (
                     <span className="absolute top-1.5 right-1.5 grid h-5 w-5 sm:h-6 sm:w-6 place-items-center rounded-full bg-gradient-to-br from-white to-blush text-hotpink shadow-md ring-1 ring-white/70">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={3} />
@@ -705,11 +705,11 @@ function Discover({ profile, onStartSession, onBestShape }: {
                       !intention ? "animate-hint-glow" : "",
                     ].join(" ")}
                   >
-                    <span className="flex items-center gap-1.5">
-                      <Icon className={["h-4 w-4", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
-                      <span className="text-sm font-bold">{it.label}</span>
+                    <span className="flex flex-wrap items-center gap-1 min-w-0">
+                      <Icon className={["h-3.5 w-3.5 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
+                      <span className="text-xs font-bold leading-tight">{it.label}</span>
                       {optimal && (
-                        <span className={["ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
+                        <span className={["shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
                           {PHASE_LABEL[phase]}
                         </span>
                       )}
