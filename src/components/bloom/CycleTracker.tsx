@@ -290,30 +290,35 @@ export function CycleTracker() {
             <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/94 via-white/75 to-white/20" />
             <div className="relative z-10 px-4 py-2.5">
               <div className="flex items-center justify-between gap-3">
-                {/* left: day + phase */}
+                {/* left: day + phase — staggered entrance */}
                 <div>
-                  <h2 className="font-script text-4xl text-hotpink leading-none">Day {cycleDay}</h2>
+                  <h2
+                    className="font-script text-4xl text-hotpink leading-none animate-scale-in"
+                    style={{ animationDelay: "0ms" }}
+                  >
+                    Day {cycleDay}
+                  </h2>
                   {(() => { const PhaseIcon = PHASE_META[currentPhase].Icon; return (
-                  <span className={["mt-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold", phaseTagColors[currentPhase]].join(" ")}>
+                  <span
+                    className={["mt-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold animate-fade-in", phaseTagColors[currentPhase]].join(" ")}
+                    style={{ animationDelay: "120ms" }}
+                  >
                     <PhaseIcon className="h-2.5 w-2.5" />
                     {PHASE_LABEL[currentPhase]} Phase
                   </span>
                   ); })()}
-                  <p className="mt-0.5 text-[10px] font-semibold text-rose/65 max-w-[180px] leading-snug">
+                  <p
+                    className="mt-0.5 text-[10px] font-semibold text-rose/65 max-w-[180px] leading-snug animate-fade-in"
+                    style={{ animationDelay: "200ms" }}
+                  >
                     {PHASE_SUBTITLE[currentPhase]}
                   </p>
                 </div>
-                {/* right: next period + setup link */}
-                <div className="shrink-0 text-right">
+                {/* right: next period countdown — no button */}
+                <div className="shrink-0 text-right animate-fade-in" style={{ animationDelay: "80ms" }}>
                   <p className="text-[8px] font-bold text-rose/45 uppercase tracking-wider">Next period</p>
-                  <p className="font-script text-2xl text-hotpink leading-none">{daysToPeriod}d</p>
+                  <p className="font-script text-2xl text-hotpink leading-none animate-scale-in" style={{ animationDelay: "40ms" }}>{daysToPeriod}d</p>
                   <p className="text-[8px] text-rose/50 font-semibold">{fmtDate(nextPeriodDate)}</p>
-                  <button
-                    onClick={() => setSetupOpen(true)}
-                    className="mt-0.5 text-[8px] font-semibold text-rose/35 hover:text-hotpink transition ml-auto flex items-center gap-0.5"
-                  >
-                    <Sparkles className="h-2 w-2" /> Setup
-                  </button>
                 </div>
               </div>
             </div>
@@ -325,10 +330,18 @@ export function CycleTracker() {
             style={{ animationDelay: "60ms" }}
           >
             <div className="relative flex items-start justify-between">
-              <div className="absolute left-3 right-3 top-3 h-[2px] rounded-full bg-pink-100" />
+              {/* animated background track — cute degraded pink */}
               <div
-                className="absolute left-3 top-3 h-[2px] rounded-full bg-gradient-to-r from-hotpink to-pink-300 transition-all duration-700"
-                style={{ width: `calc(${progressPct}% * (100% - 1.5rem) / 100)` }}
+                className="absolute left-3 right-3 top-3 h-[2px] rounded-full animate-card-breathe"
+                style={{ background: "linear-gradient(90deg,#FCE7F3,#FBCFE8,#FFC2D6,#FBCFE8,#FCE7F3)" }}
+              />
+              {/* animated progress fill */}
+              <div
+                className="absolute left-3 top-3 h-[2px] rounded-full transition-all duration-700 animate-bloom-pulse"
+                style={{
+                  width: `calc(${progressPct}% * (100% - 1.5rem) / 100)`,
+                  background: "linear-gradient(90deg,#BE185D,#EC4899,#F9A8D4,#EC4899)",
+                }}
               />
               {journeySteps.map((step, i) => {
                 const isPast    = i < activeIdx;
@@ -393,10 +406,11 @@ export function CycleTracker() {
                   bg: "from-amber-50 to-yellow-50",
                   border: "border-amber-100",
                 },
-              ].map((p) => (
+              ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1.5", p.bg, p.border].join(" ")}
+                  className={["rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
+                  style={{ animationDelay: `${350 + i * 60}ms` }}
                 >
                   <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
                     <p.Icon className="h-3.5 w-3.5" />
@@ -411,7 +425,7 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── MINI CALENDAR ── */}
+          {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
           <div
             className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-2 shadow-sm animate-fade-in"
             style={{ animationDelay: "140ms" }}
@@ -437,57 +451,114 @@ export function CycleTracker() {
               </button>
             </div>
 
-            {/* weekday header */}
-            <div className="grid grid-cols-7 text-center text-[8px] font-bold tracking-widest text-rose/50 mb-0.5">
-              {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
-            </div>
+            {/* 3-column: mood | calendar grid | symptoms */}
+            <div className="grid grid-cols-[40px_1fr_46px] gap-1">
 
-            {/* day grid */}
-            <div
-              key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
-              className="grid grid-cols-7 gap-0.5 animate-fade-in"
-            >
-              {days.map((d, i) => {
-                if (!d) return <div key={i} />;
-                const phase = phaseForDay(d, settings);
-                const style = CALENDAR_DAY_STYLE[phase];
-                const isSelected = sameDay(d, selected);
-                const isToday    = sameDay(d, today);
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setSelected(d)}
-                    title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
-                    className={[
-                      "aspect-square rounded-full flex items-center justify-center text-[7px] font-bold transition-all duration-200 hover:scale-105 active:scale-95",
-                      style.cell,
-                      isSelected && !isToday ? "ring-2 ring-hotpink/50" : "",
-                      isToday ? "animate-selected-glow ring-2 ring-hotpink/60" : "",
-                    ].join(" ")}
-                  >
-                    {d.getDate()}
-                  </button>
-                );
-              })}
-            </div>
+              {/* ── Mood sidebar ── */}
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Mood</p>
+                {MOODS.map((m, i) => {
+                  const MoodIcon = m.Icon;
+                  const isActive = mood === m.key && hasPickedMood;
+                  return (
+                    <button
+                      key={m.key}
+                      onClick={() => {
+                        setMood(m.key);
+                        setHasPickedMood(true);
+                        try { localStorage.setItem(MOOD_KEY, m.key); } catch {}
+                      }}
+                      title={m.label}
+                      className={[
+                        "animate-fade-in hover-scale grid place-items-center rounded-lg py-0.5 transition-all duration-200 active:scale-90",
+                        isActive
+                          ? "bg-hotpink text-white shadow-sm shadow-hotpink/30"
+                          : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
+                      ].join(" ")}
+                      style={{ animationDelay: `${500 + i * 45}ms` }}
+                    >
+                      <MoodIcon className="h-3 w-3" />
+                    </button>
+                  );
+                })}
+              </div>
 
-            {/* compact legend */}
-            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[7px] font-bold text-rose/65">
-              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
-              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-100 ring-1 ring-amber-200" /> Follicular</span>
-              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-pink-100 to-rose-200" /> Fertile</span>
-              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-violet-100 to-fuchsia-100" /> Ovulation</span>
-              <span className="inline-flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
+              {/* ── Calendar center ── */}
+              <div>
+                <div className="grid grid-cols-7 text-center text-[7px] font-bold tracking-widest text-rose/50 mb-0.5">
+                  {WEEKDAYS.map((d) => <div key={d}>{d[0]}</div>)}
+                </div>
+                <div
+                  key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
+                  className="grid grid-cols-7 gap-[1px] animate-fade-in"
+                >
+                  {days.map((d, i) => {
+                    if (!d) return <div key={i} />;
+                    const phase = phaseForDay(d, settings);
+                    const style = CALENDAR_DAY_STYLE[phase];
+                    const isSelected = sameDay(d, selected);
+                    const isToday    = sameDay(d, today);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelected(d)}
+                        title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
+                        className={[
+                          "aspect-square rounded-full flex items-center justify-center text-[6px] font-bold transition-all duration-200 hover:scale-110 active:scale-90",
+                          style.cell,
+                          isSelected && !isToday ? "ring-2 ring-hotpink/50" : "",
+                          isToday ? "animate-selected-glow ring-2 ring-hotpink/60" : "",
+                        ].join(" ")}
+                      >
+                        {d.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-1 flex flex-wrap justify-center gap-x-1.5 gap-y-0 text-[5px] font-bold text-rose/60">
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-amber-100" /> Follic.</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-pink-100" /> Fertile</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-violet-100" /> Ovul.</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-full bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
+                </div>
+              </div>
+
+              {/* ── Symptoms sidebar ── */}
+              <div className="flex flex-col gap-0.5">
+                <p className="text-[6px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Sympt.</p>
+                {SYMPTOM_OPTIONS.map((s, i) => {
+                  const active = symptoms.includes(s);
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => toggleSymptom(s)}
+                      title={s}
+                      className={[
+                        "animate-fade-in hover-scale rounded-lg py-0.5 px-0.5 text-[6px] font-semibold leading-tight text-center transition-all duration-200 active:scale-90",
+                        active
+                          ? "bg-hotpink text-white shadow-sm"
+                          : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
+                      ].join(" ")}
+                      style={{ animationDelay: `${500 + i * 45}ms` }}
+                    >
+                      {s.split(" ")[0]}
+                    </button>
+                  );
+                })}
+              </div>
+
             </div>
           </div>
 
           {/* ── TODAY'S INSIGHTS ── */}
-          <div className="animate-fade-in" style={{ animationDelay: "180ms" }}>
+          <div className="animate-fade-in" style={{ animationDelay: "580ms" }}>
             <div className="grid grid-cols-4 gap-1.5">
-              {PHASE_TODAY_INSIGHTS[currentPhase].map((ins) => (
+              {PHASE_TODAY_INSIGHTS[currentPhase].map((ins, i) => (
                 <div
                   key={ins.label}
-                  className={["rounded-xl p-2 flex flex-col items-center gap-1.5 text-center shadow-sm border border-white/70 backdrop-blur", ins.bg].join(" ")}
+                  className={["rounded-xl p-2 flex flex-col items-center gap-1.5 text-center shadow-sm border border-white/70 backdrop-blur animate-fade-in", ins.bg].join(" ")}
+                  style={{ animationDelay: `${600 + i * 55}ms` }}
                 >
                   <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", ins.color].join(" ")}>
                     <ins.Icon className="h-3 w-3" />
@@ -501,75 +572,10 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── MOOD & SYMPTOMS — two columns ── */}
-          <div className="grid grid-cols-2 gap-2 animate-fade-in" style={{ animationDelay: "220ms" }}>
-
-            {/* Mood */}
-            <div className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 sm:p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-script text-base text-hotpink sm:text-lg">Mood</h4>
-                <span className="text-[9px] font-bold text-rose/40 uppercase tracking-wider">4 Jun</span>
-              </div>
-              <p className="text-[10px] text-rose/55 font-semibold mb-2">How are you feeling?</p>
-              <div className="flex flex-wrap gap-1">
-                {MOODS.map((m) => {
-                  const MoodIcon = m.Icon;
-                  const isActive = mood === m.key && hasPickedMood;
-                  return (
-                    <button
-                      key={m.key}
-                      onClick={() => {
-                        setMood(m.key);
-                        setHasPickedMood(true);
-                        try { localStorage.setItem(MOOD_KEY, m.key); } catch {}
-                      }}
-                      className={[
-                        "hover-scale inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold transition-all duration-200 active:scale-95",
-                        isActive ? "bg-hotpink text-white" : "bg-blush/60 text-rose hover:bg-petal/70",
-                      ].join(" ")}
-                    >
-                      <MoodIcon className="h-2.5 w-2.5" />
-                      {m.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Symptoms */}
-            <div className="rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 sm:p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-script text-base text-hotpink sm:text-lg">Symptoms</h4>
-                <span className="text-[9px] font-bold text-rose/40 uppercase tracking-wider">
-                  {symptoms.length > 0 ? `${symptoms.length} logged` : "Tap to log"}
-                </span>
-              </div>
-              <p className="text-[10px] text-rose/55 font-semibold mb-2">Physical symptoms</p>
-              <div className="flex flex-wrap gap-1">
-                {SYMPTOM_OPTIONS.map((s) => {
-                  const active = symptoms.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => toggleSymptom(s)}
-                      className={[
-                        "hover-scale inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold transition-all duration-200 active:scale-95",
-                        active ? "bg-hotpink text-white" : "bg-blush/60 text-rose hover:bg-petal/70",
-                      ].join(" ")}
-                    >
-                      {active && <span className="text-[8px]">✓</span>}
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
           {/* ── AFFIRMATION CARD ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-fade-in shadow-sm"
-            style={{ animationDelay: "260ms", minHeight: "100px" }}
+            style={{ animationDelay: "820ms", minHeight: "100px" }}
           >
             <img
               src="/images/cycle-journal-hero.webp"
