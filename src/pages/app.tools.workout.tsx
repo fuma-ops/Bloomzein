@@ -226,7 +226,7 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[16/9] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
+    <div className="relative w-full aspect-[8/3] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
       {broken ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
@@ -235,19 +235,19 @@ function HeroHeader({
         <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
-      <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
+      <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
-          <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl text-white leading-tight drop-shadow-md whitespace-nowrap">{sectionTitle}</h2>
-          <p className="mt-1 text-[10px] sm:text-xs italic leading-snug text-white/90 max-w-[8rem] sm:max-w-[10rem] drop-shadow">{sectionSubtitle}</p>
+          <h2 className="font-script text-xl sm:text-3xl lg:text-4xl text-white leading-tight drop-shadow-md whitespace-nowrap">{sectionTitle}</h2>
+          <p className="mt-0.5 text-[9px] sm:text-[10px] italic leading-snug text-white/90 max-w-[7rem] sm:max-w-[9rem] drop-shadow">{sectionSubtitle}</p>
         </div>
         <div className="flex justify-center">
-          <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-1">
+          <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
             {(["discover", "program", "library"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => onPickTab(t)}
                 className={[
-                  "rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition",
+                  "rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold transition",
                   tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
                   t === "discover" && tab === "discover" ? "animate-tab-glow-hint" : "",
                 ].join(" ")}
@@ -600,12 +600,12 @@ function Discover({ profile, onStartSession, onBestShape }: {
   }, [zone, intention, profile.level, phase]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
 
       {/* Energy Check */}
-      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <h2 className="font-script text-2xl text-hotpink leading-none mb-3 animate-text-pop">How's your energy today?</h2>
-        <div className="grid grid-cols-4 gap-2">
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
+        <h2 className="font-script text-xl text-hotpink leading-none mb-2 animate-text-pop">How's your energy today?</h2>
+        <div className="grid grid-cols-4 gap-1.5">
           {ENERGY_OPTIONS.map((opt, i) => {
             const Icon = opt.icon;
             const active = todayEnergy === opt.key;
@@ -614,13 +614,13 @@ function Discover({ profile, onStartSession, onBestShape }: {
               <button
                 onClick={() => onPickEnergy(opt.key)}
                 className={[
-                  "w-full flex flex-col items-center gap-1.5 rounded-2xl border p-3 shadow-sm transition active:scale-95",
+                  "w-full flex flex-col items-center gap-1 rounded-2xl border p-2 shadow-sm transition active:scale-95",
                   active ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
                   !todayEnergy ? "animate-hint-glow-delayed" : "",
                 ].join(" ")}
               >
-                <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
-                <span className="text-[11px] font-semibold text-rose text-center leading-tight">{opt.label}</span>
+                <Icon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
+                <span className="text-[10px] font-semibold text-rose text-center leading-tight">{opt.label}</span>
               </button>
               </div>
             );
@@ -647,9 +647,9 @@ function Discover({ profile, onStartSession, onBestShape }: {
       </section>
 
       {/* Body Focus */}
-      <section ref={zoneSectionRef} className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6 scroll-mt-20">
-        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">What do you want to focus on?</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 grid-flow-row-dense">
+      <section ref={zoneSectionRef} className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4 scroll-mt-20">
+        <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none mb-2">What do you want to focus on?</h2>
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 grid-flow-row-dense">
           {ZONES.map((z, i) => {
             const active = zone === z.key;
             return (
@@ -686,9 +686,9 @@ function Discover({ profile, onStartSession, onBestShape }: {
         </div>
 
         {zone && (
-          <div ref={intentionSectionRef} className="mt-4 scroll-mt-20">
-            <p className="text-sm font-bold text-rose mb-2">Pick an intention</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div ref={intentionSectionRef} className="mt-3 scroll-mt-20">
+            <p className="text-xs font-bold text-rose mb-1.5">Pick an intention</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {WORKOUT_INTENTIONS.map((it) => {
                 const Icon = it.icon;
                 const active = intention === it.key;
@@ -698,7 +698,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
                     key={it.key}
                     onClick={() => setIntention(it.key)}
                     className={[
-                      "flex flex-col items-start gap-1 rounded-2xl border p-3 text-left shadow-sm transition active:scale-95",
+                      "flex flex-col items-start gap-0.5 rounded-2xl border p-2 text-left shadow-sm transition active:scale-95",
                       active
                         ? "bloom-shine bg-gradient-to-br from-hotpink to-magenta text-white border-transparent shadow-[0_8px_22px_-8px_oklch(0.65_0.27_350/0.6)] animate-selected-glow"
                         : "bg-white/70 border-petal/50 text-rose hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
@@ -723,7 +723,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
         )}
 
         {zone && intention && (
-          <div ref={sessionListRef} className="mt-4 grid sm:grid-cols-3 gap-3 scroll-mt-20">
+          <div ref={sessionListRef} className="mt-3 grid sm:grid-cols-3 gap-2 scroll-mt-20">
             {intentionList.map((session) => {
               const active = selectedSessionId === session.id;
               return (
@@ -754,9 +754,9 @@ function Discover({ profile, onStartSession, onBestShape }: {
       </section>
 
       {/* Streak & Badges */}
-      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-script text-2xl text-hotpink leading-none">Streak & badges</h2>
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-script text-xl text-hotpink leading-none">Streak & badges</h2>
           <p className="text-sm font-bold text-rose">{streak.count} day{streak.count === 1 ? "" : "s"} 🔥</p>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
