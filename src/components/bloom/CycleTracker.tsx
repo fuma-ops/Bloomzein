@@ -809,14 +809,17 @@ export function CycleTracker() {
           {/* ── AFFIRMATION CARD ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-fade-in shadow-sm"
-            style={{ animationDelay: "820ms", minHeight: "100px" }}
+            style={{ animationDelay: "820ms", minHeight: "110px" }}
           >
             <img
               src="/images/cycle-journal-hero.webp"
               alt="" aria-hidden loading="lazy" decoding="async"
-              className="absolute inset-0 -z-10 h-full w-full object-cover animate-photo-breathe"
+              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/96 via-white/80 to-white/20" />
+            {/* left text shield — keeps copy readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/55 to-white/10" />
+            {/* pink glow — upper-right corner */}
+            <div className="absolute inset-0 bg-gradient-to-bl from-pink-400/35 via-fuchsia-200/15 to-transparent" />
             <div className="relative z-10 px-4 py-2.5 max-w-[280px]">
               <p className="text-[8px] font-bold tracking-widest text-rose/55 uppercase flex items-center gap-1 mb-1">
                 <BookOpen className="h-2 w-2 text-hotpink" /> Daily Affirmation
