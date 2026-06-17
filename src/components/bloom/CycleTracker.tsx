@@ -565,9 +565,9 @@ export function CycleTracker() {
           <div className="relative animate-fade-in" style={{ animationDelay: "100ms" }}>
             <div className="grid grid-cols-5 gap-1.5">
               {[
-                { label: "Period",    Icon: CalendarDays, BgIcon: Flower2,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,        color: "text-hotpink",   bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100",  bgColor: "text-hotpink"   },
-                { label: "Fertile",   Icon: Heart,        BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,    color: "text-pink-500",  bg: "from-pink-50 to-rose-50",      border: "border-pink-100",  bgColor: "text-pink-400"  },
-                { label: "Ovulation", Icon: Sun,          BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle + 1}`, color: "text-amber-500", bg: "from-amber-50 to-yellow-50",   border: "border-amber-100", bgColor: "text-amber-400" },
+                { label: "Period",    Icon: Droplet,  BgIcon: Droplet,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,              color: "text-rose-500",   bg: "from-[#FFDDE8]/60 to-[#FFB3CC]/30", border: "border-rose-100",   bgColor: "text-rose-400"   },
+                { label: "Fertile",   Icon: Flower2,  BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `→ ${fmtDate(fertileEnd)}`,         color: "text-pink-500",   bg: "from-pink-50 to-pink-100/50",       border: "border-pink-100",   bgColor: "text-pink-400"   },
+                { label: "Ovulation", Icon: Sparkles, BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle + 1}`,   color: "text-violet-500", bg: "from-violet-50 to-purple-50/60",    border: "border-violet-100", bgColor: "text-violet-400" },
               ].map((p, i) => (
                 <div
                   key={p.label}
@@ -763,11 +763,11 @@ export function CycleTracker() {
                   })}
                 </div>
                 <div className="mt-1 flex flex-wrap justify-center gap-x-1.5 gap-y-0 text-[7px] font-bold text-rose/60">
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB]" /> Period</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-amber-100" /> Follic.</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-pink-100" /> Fertile</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-violet-100" /> Ovul.</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-violet-50 ring-1 ring-violet-200" /> Luteal</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-[#FFDDE8]" /> Period</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-amber-50" /> Follic.</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-pink-50" /> Fertile</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-violet-50 ring-1 ring-violet-200" /> Ovul.</span>
+                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-purple-50 ring-1 ring-purple-200" /> Luteal</span>
                 </div>
               </div>
 
@@ -809,14 +809,17 @@ export function CycleTracker() {
           {/* ── AFFIRMATION CARD ── */}
           <div
             className="relative overflow-hidden rounded-[2rem] animate-fade-in shadow-sm"
-            style={{ animationDelay: "820ms", minHeight: "100px" }}
+            style={{ animationDelay: "820ms", minHeight: "110px" }}
           >
             <img
               src="/images/cycle-journal-hero.webp"
               alt="" aria-hidden loading="lazy" decoding="async"
-              className="absolute inset-0 -z-10 h-full w-full object-cover animate-photo-breathe"
+              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/96 via-white/80 to-white/20" />
+            {/* left text shield — keeps copy readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/55 to-white/10" />
+            {/* pink glow — upper-right corner */}
+            <div className="absolute inset-0 bg-gradient-to-bl from-pink-400/35 via-fuchsia-200/15 to-transparent" />
             <div className="relative z-10 px-4 py-2.5 max-w-[280px]">
               <p className="text-[8px] font-bold tracking-widest text-rose/55 uppercase flex items-center gap-1 mb-1">
                 <BookOpen className="h-2 w-2 text-hotpink" /> Daily Affirmation
