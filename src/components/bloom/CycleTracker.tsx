@@ -582,7 +582,7 @@ export function CycleTracker() {
           </div>
 
           {/* ── CYCLE PREDICTIONS + MOOD + DAILY PILL ── */}
-          <div className="relative animate-fade-in" style={{ animationDelay: "100ms" }}>
+          <div className="relative">
             <div className="grid grid-cols-5 gap-1.5">
               {[
                 { label: "Period",    Icon: Droplet,  BgIcon: Droplet,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,              color: "text-rose-500",   bg: "from-[#FFDDE8]/60 to-[#FFB3CC]/30", border: "border-rose-100",   bgColor: "text-rose-400"   },
@@ -591,8 +591,8 @@ export function CycleTracker() {
               ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
-                  style={{ animationDelay: `${350 + i * 55}ms`, boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
+                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 animate-card-stagger-in", p.bg, p.border].join(" ")}
+                  style={{ animationDelay: `${120 + i * 160}ms`, boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
                 >
                   <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")} style={{ animationDelay: `${i * 700}ms` }}>
                     <p.BgIcon className="h-10 w-10" />
@@ -613,12 +613,12 @@ export function CycleTracker() {
                 onClick={() => setShowMoodPickerCard((v) => !v)}
                 aria-pressed={showMoodPickerCard}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   showMoodPickerCard
                     ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30"
                     : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
                 ].join(" ")}
-                style={{ animationDelay: "465ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
+                style={{ animationDelay: "600ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
                 <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
                 <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2100ms" }}>
@@ -643,10 +643,10 @@ export function CycleTracker() {
                 }}
                 aria-pressed={pillTaken}
                 className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-fade-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   pillTaken ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100" : "from-white/80 to-pink-50/50 border-pink-50",
                 ].join(" ")}
-                style={{ animationDelay: "520ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
+                style={{ animationDelay: "760ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
                 <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
                 <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2800ms" }}>

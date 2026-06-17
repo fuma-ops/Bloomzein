@@ -1144,6 +1144,15 @@
   animation: bloom-gradient-shift 5s ease-in-out infinite;
 }
 
+/* ── Card stagger-in: individual card entrance, more visible than fade-in ── */
+@keyframes card-stagger-in {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.93); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@utility animate-card-stagger-in {
+  animation: card-stagger-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* ── Scroll-reveal: sections start hidden, soft-transition into view on scroll ── */
 .reveal-on-scroll {
   opacity: 0;
