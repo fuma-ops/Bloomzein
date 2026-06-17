@@ -286,12 +286,12 @@ export function CycleTracker() {
             <img
               src="/images/cycle-insight-hero.webp"
               alt="" aria-hidden loading="eager" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
+              className="absolute inset-0 h-full w-full object-cover object-top animate-photo-breathe"
             />
-            {/* left gradient shield so text is readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/72 via-white/38 to-transparent" />
-            {/* subtle bottom vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-white/25 via-transparent to-transparent" />
+            {/* left shield — keeps Day N text readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/40 to-white/10" />
+            {/* right shield — keeps countdown text readable */}
+            <div className="absolute inset-0 bg-gradient-to-l from-white/80 via-white/30 to-transparent" />
             <div className="relative z-10 px-4 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 {/* left: day + phase — staggered entrance */}
