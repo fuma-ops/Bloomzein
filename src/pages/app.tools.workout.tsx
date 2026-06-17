@@ -673,7 +673,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
                   {/* top edge highlight */}
                   <div className="absolute inset-x-0 top-0 h-px bg-white/60" />
-                  <span className="absolute bottom-1.5 left-0 right-0 text-center text-[11px] sm:text-xs font-bold text-white drop-shadow leading-tight px-1">{z.label}</span>
+                  <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] sm:text-[11px] font-bold text-white drop-shadow leading-tight px-0.5 break-words hyphens-auto">{z.label}</span>
                   {active && (
                     <span className="absolute top-1.5 right-1.5 grid h-5 w-5 sm:h-6 sm:w-6 place-items-center rounded-full bg-gradient-to-br from-white to-blush text-hotpink shadow-md ring-1 ring-white/70">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={3} />
@@ -705,11 +705,11 @@ function Discover({ profile, onStartSession, onBestShape }: {
                       !intention ? "animate-hint-glow" : "",
                     ].join(" ")}
                   >
-                    <span className="flex items-center gap-1.5">
-                      <Icon className={["h-4 w-4", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
-                      <span className="text-sm font-bold">{it.label}</span>
+                    <span className="flex flex-wrap items-center gap-1 min-w-0">
+                      <Icon className={["h-3.5 w-3.5 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
+                      <span className="text-xs font-bold leading-tight">{it.label}</span>
                       {optimal && (
-                        <span className={["ml-auto rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
+                        <span className={["shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
                           {PHASE_LABEL[phase]}
                         </span>
                       )}
@@ -829,6 +829,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
+  const [step, setStep] = useState<1 | 2>(1);
   const [selected, setSelected] = useState<BodyType | null>(null);
 
   const suggested = useMemo(() => {
@@ -839,101 +840,119 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
     return suggestBodyType(wKg, hCm);
   }, [weight, height, unit]);
 
-  const active = selected ?? suggested;
+  const active = selected ?? (step === 2 ? suggested : null);
   const data = active ? BODY_TYPES[active] : null;
 
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Best Shape Calculator</h1>
-        <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">Back</button>
-      </div>
-
-      <HeroBanner src={HERO_IMAGES.bestShape} title="Know your strengths" subtitle="A gentle way to find the workouts that already suit your body." />
-
-      <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3 mb-4 text-sm text-rose/85">
-        <p className="font-bold text-rose mb-1">How it works</p>
-        <p>1. Enter your weight &amp; height, or simply tap the body shape that feels like yours.</p>
-        <p>2. We'll show your natural strengths and the workout intentions that complement them.</p>
-        <p>3. Tap "Start with this" to jump straight into a matching session — no numbers, no judgment.</p>
-      </div>
-
-      <div className="flex gap-2 mb-4">
-        {(["metric", "imperial"] as const).map((u) => (
-          <button
-            key={u}
-            onClick={() => setUnit(u)}
-            className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", unit === u ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}
-          >
-            {u === "metric" ? "kg / cm" : "lb / in"}
+    <div className="space-y-3">
+      {/* Hero — same aspect as workout, title inside */}
+      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 animate-hero-border-signal">
+        <img src={HERO_IMAGES.bestShape} alt="Best Shape Calculator" className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
+          <div className="animate-scale-in">
+            <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">Best Shape Calculator</h1>
+            <p className="mt-0.5 text-[10px] italic text-white/85 max-w-[10rem] drop-shadow leading-snug">Know your strengths. Find what already works for you.</p>
+          </div>
+          <button onClick={onBack} className="self-end rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1 text-xs font-semibold text-white transition active:scale-95">
+            ← Back
           </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        <div>
-          <label className="text-xs font-bold text-rose">Weight ({unit === "metric" ? "kg" : "lb"})</label>
-          <input value={weight} onChange={(e) => setWeight(e.target.value)} type="number" inputMode="decimal"
-            className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
-        </div>
-        <div>
-          <label className="text-xs font-bold text-rose">Height ({unit === "metric" ? "cm" : "in"})</label>
-          <input value={height} onChange={(e) => setHeight(e.target.value)} type="number" inputMode="decimal"
-            className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
         </div>
       </div>
 
-      <p className="text-sm font-bold text-rose mb-2">Or simply pick what feels right</p>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
-        {(Object.keys(BODY_TYPES) as BodyType[]).map((key) => {
-          const bt = BODY_TYPES[key];
-          const isActive = active === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setSelected(key)}
-              className={[
-                "flex flex-col items-center gap-1.5 rounded-2xl border overflow-hidden shadow-sm transition active:scale-95",
-                isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
-              ].join(" ")}
+      {/* Step 1 — basics */}
+      <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 animate-scale-in">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Step 1</p>
+        <h2 className="font-script text-xl text-hotpink leading-none mb-3">Your basics</h2>
+
+        <div className="flex gap-2 mb-3">
+          {(["metric", "imperial"] as const).map((u) => (
+            <button key={u} onClick={() => setUnit(u)}
+              className={["rounded-full px-3 py-1 text-xs font-semibold border transition active:scale-95",
+                unit === u ? "bg-hotpink text-white border-transparent shadow-sm" : "bg-white/85 text-rose border-petal/60"].join(" ")}
             >
-              <div className="w-full aspect-square overflow-hidden">
-                <img src={bt.photo} alt={bt.label} className="w-full h-full object-contain object-center" />
-              </div>
-              <span className="text-[11px] font-semibold text-rose text-center leading-tight pb-2 px-1">{bt.label}</span>
+              {u === "metric" ? "kg / cm" : "lb / in"}
             </button>
-          );
-        })}
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="text-xs font-bold text-rose">Weight ({unit === "metric" ? "kg" : "lb"})</label>
+            <input value={weight} onChange={(e) => setWeight(e.target.value)} type="number" inputMode="decimal"
+              className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-rose">Height ({unit === "metric" ? "cm" : "in"})</label>
+            <input value={height} onChange={(e) => setHeight(e.target.value)} type="number" inputMode="decimal"
+              className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+          </div>
+        </div>
+
+        <button onClick={() => setStep(2)}
+          className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
+          Next — pick your shape <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
 
-      {data && (
-        <div className="rounded-2xl bg-blush/60 border border-petal/50 p-4">
-          <div className="flex gap-4 mb-3">
-            <div className="w-28 sm:w-40 shrink-0 rounded-xl overflow-hidden border border-petal/50">
+      {/* Step 2 — shape picker */}
+      {step === 2 && (
+        <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 animate-scale-in">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Step 2</p>
+          <h2 className="font-script text-xl text-hotpink leading-none mb-1">Your shape</h2>
+          <p className="text-xs text-rose/70 mb-3 leading-snug">
+            {suggested
+              ? `Based on your numbers we suggest ${BODY_TYPES[suggested].label} — tap another if it feels more like you.`
+              : "Tap the shape that feels most like you."}
+          </p>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {(Object.keys(BODY_TYPES) as BodyType[]).map((key) => {
+              const bt = BODY_TYPES[key];
+              const isActive = active === key;
+              return (
+                <button key={key} onClick={() => setSelected(key)}
+                  className={["flex flex-col items-center gap-1 rounded-2xl border overflow-hidden shadow-sm transition active:scale-95",
+                    isActive ? "bg-blush/70 border-hotpink/40 shadow-md shadow-hotpink/15 animate-selected-glow" : "bg-white/70 border-petal/50 hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5"].join(" ")}
+                >
+                  <div className="w-full aspect-square overflow-hidden">
+                    <img src={bt.photo} alt={bt.label} className="w-full h-full object-contain object-center" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-rose text-center leading-tight pb-2 px-1">{bt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Proposition — appears when a shape is selected in step 2 */}
+      {data && step === 2 && (
+        <div className="rounded-3xl bg-blush/60 border border-petal/50 p-4 animate-scale-in">
+          <div className="flex gap-3 mb-3">
+            <div className="w-24 sm:w-32 shrink-0 rounded-xl overflow-hidden border border-petal/50">
               <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
             </div>
-            <div className="flex flex-col justify-center">
+            <div className="flex flex-col justify-center min-w-0">
               <p className="font-bold text-rose mb-1">{data.label}</p>
-              <p className="text-sm text-rose/85 mb-3">{data.strengths}</p>
-              <p className="text-xs font-bold text-rose mb-2">Recommended intentions</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-xs text-rose/85 mb-2 leading-snug">{data.strengths}</p>
+              <p className="text-[10px] font-bold text-rose mb-1.5">Recommended</p>
+              <div className="flex flex-wrap gap-1.5">
                 {data.recommended.map((i) => (
-                  <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-xs font-semibold text-rose">
+                  <span key={i} className="rounded-full bg-white/90 border border-petal/60 px-2.5 py-0.5 text-[10px] font-semibold text-rose">
                     {WORKOUT_INTENTIONS.find((w) => w.key === i)?.label}
                   </span>
                 ))}
               </div>
             </div>
           </div>
-          <button
-            onClick={() => onStartWith("full-body", data.recommended[0])}
-            className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white"
-          >
+          <button onClick={() => onStartWith("full-body", data.recommended[0])}
+            className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
             Start with this <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
-    </section>
+    </div>
   );
 }
 
