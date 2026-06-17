@@ -697,13 +697,13 @@ function YogaHero({
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative w-full aspect-[16/9] lg:aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-4 animate-hero-border-signal">
-      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-contain object-center" style={{ background: "oklch(0.96 0.04 350)" }} />
+    <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
+      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-      <div className="relative h-full flex flex-col justify-between p-3 sm:p-6">
+      <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div key={active} className="animate-scale-in">
-          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-md">{title}</h1>
+          <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
           <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
           {active === "library" && (
             <button
@@ -763,9 +763,9 @@ function YogaHome({
   onStepGoTo: (s: 1|2|3) => void;
 }) {
   return (
-    <div className="space-y-4 sm:space-y-6 yoga-fade">
+    <div className="space-y-2 yoga-fade">
       {/* WELCOME / THREE SOFT STEPS — its own clean card, below the hero */}
-      <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
+      <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3">
         {!onboarded ? (
           <div className="animate-scale-in rounded-2xl bg-blush/60 p-4 border border-petal/50">
             <p className="text-sm font-semibold text-rose">New here? Welcome.</p>
@@ -782,12 +782,12 @@ function YogaHome({
         <div className="mt-4 flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your path</p>
-            <h2 className="font-script text-2xl sm:text-3xl leading-none text-hotpink">three soft steps</h2>
+            <h2 className="font-script text-xl sm:text-2xl leading-none text-hotpink">three soft steps</h2>
           </div>
           <span className="text-xs text-rose/70">Step {step} of 3</span>
         </div>
 
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
           <StepCard index={0} active={step === 1} done={step > 1} icon={BookOpen}
             title="Learn the poses" cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
           <StepCard index={1} active={step === 2} done={step > 2} icon={GraduationCap}
@@ -913,7 +913,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
         </div>
       </div>
 
-      <div key={tab} className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div key={tab} className="mt-4 grid grid-cols-3 gap-2 lg:grid-cols-4">
         {sessions.map((s, i) => (
           <SessionCard key={s.label} preset={s} index={i} onClick={() => onStart(s.intention, s.duration)} />
         ))}
