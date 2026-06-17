@@ -25,6 +25,7 @@ import {
   Pencil,
   Sun,
   Dumbbell,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
@@ -128,12 +129,12 @@ const PHASE_RECOMMEND: Record<Exclude<Phase, null>, {
   luteal:     { yoga: { title: "Calming wind-down flow",     img: "/images/pose-cat-cow.webp"      }, workout: { title: "Gentle toning",           img: "/images/zone-back.png"       }, meal: { title: "Comforting warm stew", img: "/images/meal-stew.jpg"    }, read: { title: "Luteal phase glow-up",img: "/images/read-cycle.png"   }, shop: { title: "Silk Sleep Mask",     img: "/images/shop-cat-selfcare.jpg"} },
 };
 
-const CALENDAR_DAY_STYLE: Record<Exclude<Phase, null>, { cell: string; badge: string; Icon: LucideIcon; iconClass: string }> = {
-  period:     { cell: "bg-gradient-to-br from-[#FFC2D6] to-[#FF9EBB] text-white shadow-sm",                      badge: "bg-white", Icon: Droplet,   iconClass: "fill-red-500 text-red-500"       },
-  follicular: { cell: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/70",                                      badge: "bg-white", Icon: Sprout,    iconClass: "fill-amber-300 text-amber-500"   },
-  fertile:    { cell: "bg-gradient-to-br from-pink-50 to-rose-100 text-hotpink ring-1 ring-pink-200",             badge: "bg-white", Icon: Flower2,   iconClass: "fill-pink-300 text-hotpink"      },
-  ovulation:  { cell: "bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-500 ring-2 ring-violet-200", badge: "bg-white", Icon: Sparkles,  iconClass: "fill-violet-400 text-violet-400" },
-  luteal:     { cell: "bg-violet-50 text-violet-500 ring-1 ring-violet-200/70",                                   badge: "bg-white", Icon: Moon,      iconClass: "fill-violet-300 text-violet-400" },
+const CALENDAR_DAY_STYLE: Record<Exclude<Phase, null>, { cell: string; Icon: LucideIcon; iconClass: string }> = {
+  period:     { cell: "bg-[#FFDDE8]/75 text-rose-500",    Icon: Droplet,  iconClass: "text-rose-400/70"   },
+  follicular: { cell: "bg-amber-50/70 text-amber-600",    Icon: Sprout,   iconClass: "text-amber-400/70"  },
+  fertile:    { cell: "bg-pink-50/75 text-pink-500",      Icon: Flower2,  iconClass: "text-pink-400/70"   },
+  ovulation:  { cell: "bg-violet-50/65 text-violet-500",  Icon: Sparkles, iconClass: "text-violet-400/70" },
+  luteal:     { cell: "bg-purple-50/65 text-purple-500",  Icon: Moon,     iconClass: "text-purple-400/70" },
 };
 
 const MOODS = [
@@ -285,12 +286,12 @@ export function CycleTracker() {
             <img
               src="/images/cycle-insight-hero.webp"
               alt="" aria-hidden loading="eager" decoding="async"
-              className="absolute inset-0 -z-10 h-full w-full object-cover object-center animate-photo-breathe"
+              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
             />
-            {/* left text shield — only covers the text area */}
-            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white/70 via-white/35 to-transparent" />
-            {/* bottom vignette for extra contrast on subtitle text */}
-            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white/30 via-transparent to-transparent" />
+            {/* left gradient shield so text is readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/72 via-white/38 to-transparent" />
+            {/* subtle bottom vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-white/25 via-transparent to-transparent" />
             <div className="relative z-10 px-4 py-2.5">
               <div className="flex items-center justify-between gap-3">
                 {/* left: day + phase — staggered entrance */}
@@ -378,53 +379,52 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── CYCLE PREDICTIONS ── */}
+          {/* ── CYCLE PREDICTIONS + DAILY PILL ── */}
           <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5">
               {[
-                {
-                  label: "Next Period",
-                  Icon: CalendarDays,
-                  value: fmtDate(nextPeriodDate),
-                  sub: `in ${daysToPeriod}d`,
-                  color: "text-hotpink",
-                  bg: "from-[#FFF0F6] to-[#FCE7F3]",
-                  border: "border-pink-100",
-                },
-                {
-                  label: "Fertile Window",
-                  Icon: Heart,
-                  value: fmtDate(fertileStart),
-                  sub: `– ${fmtDate(fertileEnd)}`,
-                  color: "text-pink-500",
-                  bg: "from-pink-50 to-rose-50",
-                  border: "border-pink-100",
-                },
-                {
-                  label: "Ovulation",
-                  Icon: Sun,
-                  value: fmtDate(ovulationDate),
-                  sub: `day ${ovulationDayOfCycle}`,
-                  color: "text-amber-500",
-                  bg: "from-amber-50 to-yellow-50",
-                  border: "border-amber-100",
-                },
+                { label: "Period",    Icon: CalendarDays, value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,      color: "text-hotpink",   bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100"  },
+                { label: "Fertile",   Icon: Heart,        value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,  color: "text-pink-500",  bg: "from-pink-50 to-rose-50",      border: "border-pink-100"  },
+                { label: "Ovulation", Icon: Sun,          value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle}`,color:"text-amber-500", bg: "from-amber-50 to-yellow-50",   border: "border-amber-100" },
               ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1.5 animate-fade-in", p.bg, p.border].join(" ")}
-                  style={{ animationDelay: `${350 + i * 60}ms` }}
+                  className={["rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 animate-fade-in", p.bg, p.border].join(" ")}
+                  style={{ animationDelay: `${350 + i * 55}ms` }}
                 >
-                  <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
-                    <p.Icon className="h-3.5 w-3.5" />
+                  <span className={["grid h-5 w-5 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
+                    <p.Icon className="h-3 w-3" />
                   </span>
                   <div>
-                    <p className="text-[7px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
-                    <p className={["font-script text-sm leading-tight", p.color].join(" ")}>{p.value}</p>
-                    <p className="text-[8px] text-rose/50 font-semibold">{p.sub}</p>
+                    <p className="text-[6px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
+                    <p className={["font-script text-xs leading-tight", p.color].join(" ")}>{p.value}</p>
+                    <p className="text-[7px] text-rose/50 font-semibold">{p.sub}</p>
                   </div>
                 </div>
               ))}
+              {/* Daily Pill — toggles taken state */}
+              <button
+                onClick={() => setPillTaken((v) => !v)}
+                aria-pressed={pillTaken}
+                className={[
+                  "rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in hover-scale transition-all duration-200 active:scale-95",
+                  pillTaken
+                    ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100"
+                    : "from-white/80 to-pink-50/50 border-pink-50",
+                ].join(" ")}
+                style={{ animationDelay: "520ms" }}
+              >
+                <span className={["grid h-5 w-5 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
+                  <Pill className="h-3 w-3" />
+                </span>
+                <div>
+                  <p className="text-[6px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Pill</p>
+                  <p className={["font-script text-xs leading-tight", pillTaken ? "text-hotpink" : "text-rose/40"].join(" ")}>
+                    {pillTaken ? "Taken ✓" : "Log it"}
+                  </p>
+                  <p className="text-[7px] text-rose/50 font-semibold">{pillLabel}</p>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -446,12 +446,21 @@ export function CycleTracker() {
                   <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
-              <button
-                onClick={() => { setCursor(new Date(today.getFullYear(), today.getMonth(), 1)); setSelected(today); }}
-                className="text-[9px] font-bold text-hotpink bg-pink-50 hover:bg-pink-100 px-2 py-0.5 rounded-full transition"
-              >
-                Today
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => { setCursor(new Date(today.getFullYear(), today.getMonth(), 1)); setSelected(today); }}
+                  className="text-[9px] font-bold text-hotpink bg-pink-50 hover:bg-pink-100 px-2 py-0.5 rounded-full transition"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setSetupOpen(true)}
+                  title="Cycle settings"
+                  className="hover-scale grid h-5 w-5 place-items-center rounded-full bg-pink-50 text-rose/60 hover:bg-pink-100 hover:text-hotpink transition active:scale-90"
+                >
+                  <Settings className="h-2.5 w-2.5" />
+                </button>
+              </div>
             </div>
 
             {/* 3-column: mood | calendar grid | symptoms */}
@@ -497,8 +506,9 @@ export function CycleTracker() {
                 >
                   {days.map((d, i) => {
                     if (!d) return <div key={i} />;
-                    const phase = phaseForDay(d, settings);
-                    const style = CALENDAR_DAY_STYLE[phase];
+                    const phase    = phaseForDay(d, settings);
+                    const dayStyle = CALENDAR_DAY_STYLE[phase];
+                    const CellIcon = dayStyle.Icon;
                     const isSelected = sameDay(d, selected);
                     const isToday    = sameDay(d, today);
                     return (
@@ -507,13 +517,14 @@ export function CycleTracker() {
                         onClick={() => setSelected(d)}
                         title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                         className={[
-                          "aspect-square rounded-lg flex items-center justify-center text-[6px] font-bold transition-all duration-200 hover:scale-105 active:scale-90",
-                          style.cell,
-                          isSelected && !isToday ? "ring-2 ring-hotpink/50 scale-105" : "",
-                          isToday ? "animate-selected-glow ring-2 ring-hotpink/60 rounded-xl" : "",
+                          "aspect-square rounded-xl flex flex-col items-center justify-center gap-0 transition-all duration-200 hover:scale-105 active:scale-90",
+                          dayStyle.cell,
+                          isSelected && !isToday ? "ring-1 ring-hotpink/40 scale-105" : "",
+                          isToday ? "animate-selected-glow ring-1 ring-hotpink/55" : "",
                         ].join(" ")}
                       >
-                        {d.getDate()}
+                        <span className="text-[6px] font-bold leading-none">{d.getDate()}</span>
+                        <CellIcon className={`h-[5px] w-[5px] mt-px opacity-55 ${dayStyle.iconClass}`} />
                       </button>
                     );
                   })}
