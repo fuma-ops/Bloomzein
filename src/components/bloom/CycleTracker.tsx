@@ -383,15 +383,19 @@ export function CycleTracker() {
           <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
             <div className="grid grid-cols-4 gap-1.5">
               {[
-                { label: "Period",    Icon: CalendarDays, value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,      color: "text-hotpink",   bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100"  },
-                { label: "Fertile",   Icon: Heart,        value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,  color: "text-pink-500",  bg: "from-pink-50 to-rose-50",      border: "border-pink-100"  },
-                { label: "Ovulation", Icon: Sun,          value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle}`,color:"text-amber-500", bg: "from-amber-50 to-yellow-50",   border: "border-amber-100" },
+                { label: "Period",    Icon: CalendarDays, BgIcon: Flower2,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,       color: "text-hotpink",  bg: "from-[#FFF0F6] to-[#FCE7F3]", border: "border-pink-100",  bgColor: "text-hotpink"  },
+                { label: "Fertile",   Icon: Heart,        BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `–${fmtDate(fertileEnd)}`,   color: "text-pink-500", bg: "from-pink-50 to-rose-50",      border: "border-pink-100",  bgColor: "text-pink-400" },
+                { label: "Ovulation", Icon: Sun,          BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle}`, color: "text-amber-500",bg: "from-amber-50 to-yellow-50",   border: "border-amber-100", bgColor: "text-amber-400"},
               ].map((p, i) => (
                 <div
                   key={p.label}
-                  className={["rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 animate-fade-in", p.bg, p.border].join(" ")}
+                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 animate-fade-in", p.bg, p.border].join(" ")}
                   style={{ animationDelay: `${350 + i * 55}ms` }}
                 >
+                  {/* breathing background decoration */}
+                  <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-card-breathe", p.bgColor].join(" ")}>
+                    <p.BgIcon className="h-10 w-10" />
+                  </span>
                   <span className={["grid h-5 w-5 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
                     <p.Icon className="h-3 w-3" />
                   </span>
@@ -407,13 +411,17 @@ export function CycleTracker() {
                 onClick={() => setPillTaken((v) => !v)}
                 aria-pressed={pillTaken}
                 className={[
-                  "rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in hover-scale transition-all duration-200 active:scale-95",
+                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2 shadow-sm flex flex-col gap-1 text-left animate-fade-in hover-scale transition-all duration-200 active:scale-95",
                   pillTaken
                     ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-100"
                     : "from-white/80 to-pink-50/50 border-pink-50",
                 ].join(" ")}
                 style={{ animationDelay: "520ms" }}
               >
+                {/* breathing background decoration */}
+                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-card-breathe text-hotpink">
+                  <Pill className="h-10 w-10" />
+                </span>
                 <span className={["grid h-5 w-5 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
                   <Pill className="h-3 w-3" />
                 </span>
