@@ -247,6 +247,7 @@ export function CycleTracker() {
   useEffect(() => { broadcastCyclePhase(); }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const graphRef     = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const targets = containerRef.current?.querySelectorAll<HTMLElement>(".reveal-on-scroll") ?? [];
     if (!targets.length) return;
@@ -276,9 +277,10 @@ export function CycleTracker() {
   const [slideDir,            setSlideDir]          = useState<"l"|"r">("r");
 
   // Derived today values
-  const mood       = moodLog[todayKey] ?? "happy";
-  const symptoms   = symptomsLog[todayKey] ?? [];
-  const pillTaken  = pillLog[todayKey] ?? false;
+  const moodChecked = todayKey in moodLog;
+  const mood        = moodLog[todayKey] ?? "happy";
+  const symptoms    = symptomsLog[todayKey] ?? [];
+  const pillTaken   = pillLog[todayKey] ?? false;
 
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -616,11 +618,13 @@ export function CycleTracker() {
                   "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
                   showMoodPickerCard
                     ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/30"
-                    : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
+                    : !moodChecked
+                      ? "from-[#FFF0F6] to-[#FCE7F3] border-pink-200 ring-1 ring-hotpink/20 animate-selected-glow"
+                      : "from-[#FFF0F6] to-[#FCE7F3] border-pink-100",
                 ].join(" ")}
                 style={{ animationDelay: "600ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
               >
-                <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
+                <Settings className={["pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 transition-opacity", moodChecked ? "text-hotpink/35" : "text-hotpink/10"].join(" ")} />
                 <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2100ms" }}>
                   <MoodIconToday className="h-10 w-10" />
                 </span>
@@ -663,6 +667,16 @@ export function CycleTracker() {
               </button>
             </div>
 
+            {/* Mood nudge — shown only when today's mood not yet logged */}
+            {!moodChecked && !showMoodPickerCard && (
+              <div className="grid grid-cols-5 gap-1.5 mt-0.5 animate-fade-in pointer-events-none" aria-hidden>
+                <div className="col-start-4 flex flex-col items-center gap-px">
+                  <span className="text-[9px] leading-none text-hotpink/50">▲</span>
+                  <span className="text-[8px] font-semibold text-hotpink/60 whitespace-nowrap">how do you feel? ♥</span>
+                </div>
+              </div>
+            )}
+
             {/* Mood picker popup */}
             {showMoodPickerCard && (
               <>
@@ -682,6 +696,9 @@ export function CycleTracker() {
                               setMoodLog(next);
                               setShowMoodPickerCard(false);
                               try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
+                              setTimeout(() => {
+                                graphRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }, 350);
                             }}
                             className={[
                               "flex flex-col items-center gap-0.5 rounded-xl py-1.5 px-1 text-center transition-all duration-150 active:scale-90 hover-scale animate-fade-in",
@@ -820,6 +837,7 @@ export function CycleTracker() {
 
           {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
           <div
+            ref={graphRef}
             className="lg:hidden rounded-[1.5rem] bg-white/92 backdrop-blur-md border border-pink-100/80 p-3 reveal-on-scroll"
             style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
