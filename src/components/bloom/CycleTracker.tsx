@@ -455,11 +455,11 @@ export function CycleTracker() {
     const cycleLen = settings.cycleLength;
 
     const BAND_FILL: Record<string, string> = {
-      period:     'rgba(236,72,153,.12)',
-      follicular: 'rgba(251,113,133,.10)',
-      fertile:    'rgba(244,114,182,.14)',
-      ovulation:  'rgba(219,39,119,.18)',
-      luteal:     'rgba(192,132,252,.13)',
+      period:     'rgba(236,72,153,.10)',
+      follicular: 'rgba(251,113,133,.08)',
+      fertile:    'rgba(244,114,182,.12)',
+      ovulation:  'rgba(219,39,119,.15)',
+      luteal:     'rgba(192,132,252,.10)',
     };
 
     // Phase bands
@@ -475,73 +475,111 @@ export function CycleTracker() {
       }
     }
 
-    // Estimate curve: one point per cycle day using phase mood averages
-    const allPts: [number, number][] = [];
-    for (let i = 0; i < cycleLen; i++) {
-      const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
-      const x = PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
-      const y = PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH;
-      allPts.push([x, y]);
-    }
-
     const todayIdx = Math.min(cycleDay - 1, cycleLen - 1);
-    const todayPt  = allPts[todayIdx] ?? allPts[allPts.length - 1];
-    const solidPts = allPts.slice(0, todayIdx + 1);
-    const dashedPts = allPts.slice(todayIdx);
+    const xAt = (i: number) => PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
 
-    // Real mood overlay for solid segment
-    const realPts: [number, number][] = [];
+    // Build a single CONTINUOUS hybrid line (Day 0 → today):
+    // Y = real logged mood score if available, otherwise phase estimate
+    // This keeps the line attached even on days with no data.
+    type HPt = { x: number; y: number; real: boolean };
+    const hybridPts: HPt[] = [];
     for (let i = 0; i <= todayIdx; i++) {
       const dk = dateKey(new Date(currentCycleStart.getTime() + i * MS_DAY));
-      const m = moodLog[dk];
-      if (m) {
-        const x = PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
-        realPts.push([x, PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH]);
-      }
+      const m  = moodLog[dk];
+      const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
+      const x  = xAt(i);
+      const y  = m
+        ? PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH   // real logged
+        : PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH;     // phase estimate
+      hybridPts.push({ x, y, real: !!m });
     }
 
-    const solidLine  = smoothLinePath(solidPts);
-    const dashedLine = smoothLinePath(dashedPts);
-    const realLine   = smoothLinePath(realPts);
+    // Split into consecutive same-type runs.
+    // Each run starts with the previous run's last point so segments connect seamlessly.
+    type Run = { pts: [number, number][]; real: boolean };
+    const runs: Run[] = [];
+    hybridPts.forEach((pt, i) => {
+      const isNew = runs.length === 0 || runs[runs.length - 1].real !== pt.real;
+      if (isNew) {
+        const run: Run = { pts: [], real: pt.real };
+        if (i > 0) run.pts.push([hybridPts[i - 1].x, hybridPts[i - 1].y]); // bridge from prev
+        runs.push(run);
+      }
+      runs[runs.length - 1].pts.push([pt.x, pt.y]);
+    });
 
-    // Today circle: if mood is logged for today, pull the dot to the real mood score
-    const todayRealMood = moodLog[dateKey(new Date(currentCycleStart.getTime() + todayIdx * MS_DAY))];
-    const todayCircleY  = todayRealMood
-      ? PY_TOP + (1 - (MOOD_SCORE[todayRealMood] ?? 4) / 8) * chartH
-      : (todayPt ? todayPt[1] : PY_TOP + chartH / 2);
+    // Future estimate line (today → end of cycle) — always estimate/lavender
+    const futurePts: [number, number][] = [];
+    for (let i = todayIdx; i < cycleLen; i++) {
+      const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
+      futurePts.push([xAt(i), PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH]);
+    }
+    const futureLine = smoothLinePath(futurePts);
 
-    // Symptom dot: show a small red dot at today's X if any symptoms logged for today
-    const todaySymptoms = symptomsLog[dateKey(new Date(currentCycleStart.getTime() + todayIdx * MS_DAY))] ?? [];
-    const todaySymptY   = todayPt
-      ? PY_TOP + (1 - todaySymptoms.length / SYMPTOM_OPTIONS.length) * chartH
-      : PY_TOP + chartH / 2;
+    // Today dot position: real mood Y if logged, else estimate
+    const todayHpt = hybridPts[hybridPts.length - 1];
+    const todayDotX = todayHpt?.x ?? xAt(todayIdx);
+    const todayDotY = todayHpt?.y ?? PY_TOP + chartH / 2;
+
+    // Symptom dot: secondary indicator below today dot if symptoms logged
+    const todaySympKey = dateKey(new Date(currentCycleStart.getTime() + todayIdx * MS_DAY));
+    const todaySympCount = (symptomsLog[todaySympKey] ?? []).length;
+    const todaySympY = todaySympCount > 0
+      ? PY_TOP + (1 - todaySympCount / SYMPTOM_OPTIONS.length) * chartH
+      : null;
 
     return (
       <>
         <p className="font-script leading-none mb-1" style={{ fontSize: '22px', color: '#DB2777' }}>This cycle</p>
+        {/* Mini legend */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <div style={{ width: 18, height: 3, borderRadius: 2, background: '#EC4899' }} />
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#9D5C7E' }}>You logged</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <svg width="18" height="3" style={{ overflow: 'visible' }}>
+              <line x1="0" y1="1.5" x2="18" y2="1.5" stroke="#C084FC" strokeWidth="2.5" strokeDasharray="3 4" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontSize: '9px', fontWeight: 700, color: '#9D5C7E' }}>Estimate</span>
+          </div>
+        </div>
         <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden>
+          {/* Phase background bands */}
           {bands.map((b, bi) => (
             <rect key={bi} x={b.x1} y={PY_TOP} width={b.x2 - b.x1} height={chartH} rx="6" fill={BAND_FILL[b.phase]} />
           ))}
-          {/* Dashed estimate (today → end) */}
-          {dashedLine && <path d={dashedLine} fill="none" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 6" opacity=".55" />}
-          {/* Solid estimate (start → today) */}
-          {solidLine && <path d={solidLine} fill="none" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
-          {/* Real logged mood overlay */}
-          {realLine && <path d={realLine} fill="none" stroke="#DB2777" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />}
-          {/* Symptom indicator dot */}
-          {todayPt && todaySymptoms.length > 0 && (
-            <circle cx={todayPt[0]} cy={todaySymptY} r="3.5" fill="#FB7185" opacity=".85" />
+          {/* Future dashed estimate — lavender */}
+          {futureLine && (
+            <path d={futureLine} fill="none" stroke="#C084FC" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 6" opacity=".5" />
           )}
-          {/* Today circle — moves to real mood Y when logged */}
-          {todayPt && <circle cx={todayPt[0]} cy={todayCircleY} r="4.5" fill="#fff" stroke="#EC4899" strokeWidth="3" style={{ transition: 'cy 0.5s cubic-bezier(0.22,1,0.36,1)' }} />}
+          {/* Hybrid past line — multi-colored runs (estimate = lavender dashed, real = poppy solid) */}
+          {runs.map((run, ri) => {
+            const d = smoothLinePath(run.pts);
+            return d ? (
+              <path key={ri} d={d} fill="none"
+                stroke={run.real ? '#EC4899' : '#C084FC'}
+                strokeWidth={run.real ? '3.5' : '2.5'}
+                strokeDasharray={run.real ? undefined : '3 5'}
+                strokeLinecap="round" strokeLinejoin="round"
+                opacity={run.real ? 1 : 0.65}
+              />
+            ) : null;
+          })}
+          {/* Symptom dot (lavender, smaller) */}
+          {todaySympY !== null && (
+            <circle cx={todayDotX} cy={todaySympY} r="3.5" fill="#C084FC" opacity=".8" />
+          )}
+          {/* Today circle — follows real mood Y when logged, else estimate */}
+          <circle cx={todayDotX} cy={todayDotY} r="5" fill="#fff" stroke="#EC4899" strokeWidth="3" />
           {/* Labels */}
           <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#CC9999">Day 1</text>
-          {todayPt && <text x={todayPt[0]} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>}
+          <text x={todayDotX} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>
           <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#CC9999">Day {cycleLen}</text>
         </svg>
-        <p style={{ margin: '6px 0 0', fontSize: '11px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
-          Dashed lines are estimates — log daily to see your real curve bloom.
+        <p style={{ margin: '4px 0 0', fontSize: '10.5px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
+          Pink = you logged · Lavender = phase estimate · log daily to see your real curve
         </p>
       </>
     );
@@ -607,7 +645,7 @@ export function CycleTracker() {
       <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
 
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
-        <div className="lg:col-span-3 space-y-3.5">
+        <div className="lg:col-span-3 space-y-3.5 pb-32 lg:pb-0">
 
           {/* ── PHASE HERO CARD ── */}
           <div
@@ -715,32 +753,32 @@ export function CycleTracker() {
 
           {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}
           <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-[11px] md:gap-3 mt-3.5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-3 mt-3.5">
               {/* Next Period */}
-              <div style={{ ...cardStyle }}>
-                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
-                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: '#9D5C7E' }}>in {daysToPeriod} days</p>
+              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
+                <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>in {daysToPeriod} days</p>
               </div>
               {/* Fertile */}
-              <div style={{ ...cardStyle }}>
-                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Fertile</p>
-                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#F472B6' }}>{fmtDate(fertileStart)}</p>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: '#9D5C7E' }}>→ {fmtDate(fertileEnd)}</p>
+              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Fertile</p>
+                <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#F472B6' }}>{fmtDate(fertileStart)}</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>→ {fmtDate(fertileEnd)}</p>
               </div>
               {/* Ovulation */}
-              <div style={{ ...cardStyle }}>
-                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Ovulation</p>
-                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#DB2777' }}>{fmtDate(ovulationDate)}</p>
-                <p style={{ fontSize: '11px', fontWeight: 600, color: '#9D5C7E' }}>day {ovulationDayOfCycle + 1}</p>
+              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Ovulation</p>
+                <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#DB2777' }}>{fmtDate(ovulationDate)}</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>day {ovulationDayOfCycle + 1}</p>
               </div>
               {/* Daily Pill */}
-              <div style={{ ...cardStyle }}>
-                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
-                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#36A88F' }}>
+              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
+                <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#36A88F' }}>
                   {pillTaken ? "Taken ✓" : "Log it"}
                 </p>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-[5px]">
                   <button
                     onClick={() => {
                       const next = { ...pillLog, [todayKey]: !pillTaken };
@@ -750,8 +788,8 @@ export function CycleTracker() {
                     style={{
                       background: pillTaken ? '#FCE7F3' : '#36A88F',
                       color: pillTaken ? '#DB2777' : 'white',
-                      fontSize: '10px',
-                      padding: '3px 9px',
+                      fontSize: '9.5px',
+                      padding: '3px 8px',
                       borderRadius: '999px',
                       border: 'none',
                       cursor: 'pointer',
