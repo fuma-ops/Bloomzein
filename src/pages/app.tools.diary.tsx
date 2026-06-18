@@ -20,6 +20,7 @@ export interface DiaryEntry {
   theme: string;
   font: string;
   createdAt: string;
+  images?: string[]; // base64 compressed photos
 }
 
 export const DIARY_STORAGE_KEY = "bloom:diary";
@@ -80,6 +81,7 @@ function loadEntries(): DiaryEntry[] {
       theme: e.theme ?? "sakura",
       font: e.font ?? "quicksand",
       createdAt: e.createdAt,
+      images: e.images ?? [],
     }));
   } catch {
     return [];
@@ -96,6 +98,25 @@ function plainTextOf(html: string) {
   const div = document.createElement("div");
   div.innerHTML = html;
   return (div.textContent || "").trim();
+}
+
+function compressImage(file: File, maxPx = 640): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const r = Math.min(maxPx / img.width, maxPx / img.height, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * r);
+        canvas.height = Math.round(img.height * r);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.75));
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function saveEntries(entries: DiaryEntry[]) {
@@ -499,6 +520,33 @@ const JOURNAL_STYLES = `
     .diary-book-desktop { display: block !important; }
     .diary-book-mobile  { display: none  !important; }
   }
+  /* ── Torn-edge photo frames ── */
+  .diary-photo-torn {
+    display: block;
+    border-radius: 2px;
+    clip-path: polygon(
+      1% 4%, 4% 0%, 12% 3%, 24% 0%, 36% 3%, 50% 0%, 63% 2%, 76% 0%, 88% 3%, 97% 0%, 100% 5%,
+      98% 18%, 100% 32%, 99% 48%, 100% 63%, 98% 78%, 100% 92%, 97% 100%,
+      84% 97%, 72% 100%, 58% 97%, 44% 100%, 30% 97%, 17% 100%, 6% 97%, 0% 100%,
+      2% 84%, 0% 68%, 2% 52%, 0% 36%, 2% 20%, 0% 8%
+    );
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    transition: transform 0.2s;
+  }
+  .diary-photo-torn:hover { transform: scale(1.02) rotate(0.5deg); }
+  /* ── Sticker panel ── */
+  .diary-sticker-panel {
+    position: absolute; bottom: 100%; right: 0;
+    background: rgba(255,248,252,0.96);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(200,88,122,0.2);
+    border-radius: 14px;
+    padding: 10px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    width: 200px;
+    box-shadow: 0 8px 28px rgba(200,88,122,0.18);
+    z-index: 50;
+  }
 `;
 
 function OpenJournal({
@@ -520,7 +568,7 @@ function OpenJournal({
   const selectedMoodRef = useRef(selectedMood);
   const titleRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const mTitleRef = useRef<HTMLDivElement>(null);
+  const mTitleRef = useRef<HTMLDivElement>(null); // mobile: editable entry title (centered)
   const mBodyRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout>>();
   const pageIndexRef = useRef(0);
@@ -528,10 +576,14 @@ function OpenJournal({
   const pointerStartX = useRef<number | null>(null);
   const pointerHasDragged = useRef(false);
   const recognitionRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const phaseIdx = ["Menstrual", "Follicular", "Ovulatory", "Luteal"].indexOf(phase);
   const [promptIndex, setPromptIndex] = useState(Math.max(0, phaseIdx));
   const [isListening, setIsListening] = useState(false);
+  const [showMoodPicker, setShowMoodPicker] = useState(false);
+  const [showReflection, setShowReflection] = useState(true);
+  const [showStickerPanel, setShowStickerPanel] = useState(false);
 
   selectedMoodRef.current = selectedMood;
   const todayISO_ = todayISO();
@@ -591,6 +643,7 @@ function OpenJournal({
       theme: te?.theme ?? "sakura",
       font: te?.font ?? "caveat",
       createdAt: te?.createdAt ?? new Date().toISOString(),
+      images: te?.images ?? [],
     });
   };
 
@@ -636,6 +689,39 @@ function OpenJournal({
   const stopListening = () => {
     recognitionRef.current?.stop();
     setIsListening(false);
+  };
+
+  const handlePhotoImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const b64 = await compressImage(file);
+    const te = todayEntryRef.current;
+    const label = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
+    onSaveEntry({
+      id: te?.id ?? crypto.randomUUID(),
+      date: todayISO(),
+      mood: selectedMoodRef.current,
+      title: mTitleRef.current?.textContent?.trim() || titleRef.current?.textContent?.trim() || label,
+      html: mBodyRef.current?.innerHTML ?? bodyRef.current?.innerHTML ?? "",
+      theme: te?.theme ?? "sakura",
+      font: te?.font ?? "caveat",
+      createdAt: te?.createdAt ?? new Date().toISOString(),
+      images: [...(te?.images ?? []), b64],
+    });
+    e.target.value = "";
+  };
+
+  const STICKERS = ["🌸", "💕", "✨", "🌙", "🦋", "🌺", "💫", "🌷", "❤️", "⭐", "🎀", "🍓"];
+
+  const insertSticker = (s: string) => {
+    const isMob = typeof window !== "undefined" && window.innerWidth < 1024;
+    const el = isMob ? mBodyRef.current : bodyRef.current;
+    if (el) {
+      el.focus();
+      document.execCommand("insertHTML", false, `<span style="font-size:1.3em;display:inline">${s}</span>`);
+      handleInput();
+    }
+    setShowStickerPanel(false);
   };
 
   const flip = (dir: 1 | -1) => {
@@ -894,105 +980,157 @@ function OpenJournal({
               </p>
             </div>
 
-            {/* ── MOBILE: corner fold hint + animated bg + vignette + paper ── */}
+            {/* ── MOBILE: corner hint + bg + vignette + paper ── */}
             <div className="diary-page-corner" />
             <div className="diary-mobile-bg" />
             <div className="diary-vignette" />
             <div className="diary-mobile-layer">
 
-              {/* HEADER: [←][→] date — left aligned, arrows hugging the title */}
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, flexShrink: 0 }}>
-                <button className="diary-nav-mini" disabled={!canFlipBack} onClick={() => flip(-1)} onPointerDown={e => e.stopPropagation()}>
-                  <ChevronLeft style={{ width: 13, height: 13 }} strokeWidth={2.5} />
-                </button>
-                <button className="diary-nav-mini" disabled={!canFlipForward} onClick={() => flip(1)} onPointerDown={e => e.stopPropagation()}>
-                  <ChevronRight style={{ width: 13, height: 13 }} strokeWidth={2.5} />
-                </button>
-                <p style={{ fontFamily: HW, fontSize: "clamp(13px,3.5vw,16px)", color: "#C8587A", fontWeight: 600, marginLeft: 5, lineHeight: 1 }}>
-                  {rightDateLabel}
-                </p>
-              </div>
+              {/* ── ROW 1: compact date+arrows LEFT  |  mood single-icon RIGHT  |  mic RIGHT ── */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexShrink: 0 }}>
 
-              {/* DECORATIVE TITLE — centred between two flowers */}
-              <div style={{ textAlign: "center", marginBottom: 10, flexShrink: 0 }}>
-                <p style={{ fontFamily: HW, fontSize: "clamp(20px,5.5vw,26px)", color: "#C8587A", fontWeight: 700, lineHeight: 1.1, letterSpacing: "0.02em" }}>
-                  ✿&nbsp;&nbsp;Dreamy Diary&nbsp;&nbsp;✿
-                </p>
-              </div>
+                {/* Left: nav + compact date */}
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <button className="diary-nav-mini" style={{ width: 24, height: 24 }} disabled={!canFlipBack} onClick={() => flip(-1)} onPointerDown={e => e.stopPropagation()}>
+                    <ChevronLeft style={{ width: 11, height: 11 }} strokeWidth={2.5} />
+                  </button>
+                  <button className="diary-nav-mini" style={{ width: 24, height: 24 }} disabled={!canFlipForward} onClick={() => flip(1)} onPointerDown={e => e.stopPropagation()}>
+                    <ChevronRight style={{ width: 11, height: 11 }} strokeWidth={2.5} />
+                  </button>
+                  <p style={{ fontFamily: HW, fontSize: "clamp(11px,2.8vw,13px)", color: "rgba(200,88,122,0.7)", fontWeight: 600, marginLeft: 3 }}>
+                    {isToday
+                      ? new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : (currentEntry ? new Date(currentEntry.date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "")}
+                  </p>
+                </div>
 
-              <div style={{ height: 1, background: "linear-gradient(to right, transparent, rgba(200,88,122,0.42), transparent)", marginBottom: 10, flexShrink: 0 }} />
-
-              {/* MOOD SELECTOR — immediately after title divider */}
-              {isToday && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10, flexShrink: 0 }}>
-                  {DIARY_MOODS.map((m) => {
-                    const active = selectedMood === m.key;
-                    return (
-                      <button key={m.key} onClick={() => handleMoodChange(m.key)} onPointerDown={e => e.stopPropagation()} title={m.label}
+                {/* Right: mood single-icon + mic */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {/* Mood icon — tap to open picker */}
+                  {isToday && (
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={() => setShowMoodPicker(v => !v)}
+                        onPointerDown={e => e.stopPropagation()}
+                        title="Change mood"
                         style={{
-                          width: 28, height: 28, borderRadius: "50%",
-                          background: active ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.08)",
-                          border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.18)",
-                          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                          color: active ? "white" : "#C8587A",
-                          opacity: active ? 1 : 0.22, transition: "all 0.18s ease",
-                          transform: active ? "scale(1.16)" : "scale(1)",
-                          flexShrink: 0, padding: 0,
-                          boxShadow: active ? "0 3px 12px rgba(200,88,122,0.4)" : "none",
+                          width: 30, height: 30, borderRadius: "50%",
+                          background: "linear-gradient(135deg, #D4618A, #C8587A)",
+                          border: "none", cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: "white", padding: 0, position: "relative",
+                          boxShadow: "0 2px 10px rgba(200,88,122,0.35)",
                         }}
                       >
-                        <m.Icon style={{ width: 13, height: 13 }} strokeWidth={active ? 2.2 : 1.8} />
+                        <CurrentMoodIcon style={{ width: 13, height: 13 }} strokeWidth={2} />
+                        <Edit3 style={{ width: 7, height: 7, position: "absolute", bottom: 2, right: 2, opacity: 0.85 }} strokeWidth={2.5} />
                       </button>
-                    );
-                  })}
-                </div>
-              )}
+                      {showMoodPicker && (
+                        <div onPointerDown={e => e.stopPropagation()} style={{
+                          position: "absolute", top: "110%", right: 0, zIndex: 50,
+                          background: "rgba(255,248,252,0.97)", backdropFilter: "blur(14px)",
+                          border: "1px solid rgba(200,88,122,0.2)", borderRadius: 14,
+                          padding: "8px 10px", display: "flex", flexWrap: "wrap", gap: 6,
+                          width: 180, boxShadow: "0 8px 28px rgba(200,88,122,0.18)",
+                        }}>
+                          {DIARY_MOODS.map(m => {
+                            const active = selectedMood === m.key;
+                            return (
+                              <button key={m.key} onClick={() => { handleMoodChange(m.key); setShowMoodPicker(false); }} title={m.label}
+                                style={{
+                                  width: 32, height: 32, borderRadius: "50%", padding: 0,
+                                  background: active ? "linear-gradient(135deg,#D4618A,#C8587A)" : "rgba(200,88,122,0.08)",
+                                  border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.18)",
+                                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                                  color: active ? "white" : "#C8587A",
+                                  transform: active ? "scale(1.15)" : "scale(1)", transition: "all 0.15s",
+                                }}
+                              >
+                                <m.Icon style={{ width: 14, height: 14 }} strokeWidth={active ? 2.2 : 1.8} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-              <div style={{ height: 1, background: "linear-gradient(to right, rgba(200,88,122,0.08), rgba(200,88,122,0.25), rgba(200,88,122,0.08))", marginBottom: 8, flexShrink: 0 }} />
-
-              {/* REFLECTION — switchable with ↻ button */}
-              <div style={{ marginBottom: 10, flexShrink: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                  <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#C8587A" }}>Reflection ✦</p>
-                  <button
-                    onClick={() => setPromptIndex(i => (i + 1) % ALL_PROMPTS.length)}
-                    onPointerDown={e => e.stopPropagation()}
-                    title="Next prompt"
-                    style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(200,88,122,0.1)", border: "1px solid rgba(200,88,122,0.22)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}
-                  >
-                    <RefreshCw style={{ width: 10, height: 10 }} strokeWidth={2.2} />
-                  </button>
+                  {/* Mic button */}
+                  {isToday && (
+                    <button
+                      onClick={isListening ? stopListening : startListening}
+                      onPointerDown={e => e.stopPropagation()}
+                      title={isListening ? "Stop recording" : "Dictate"}
+                      style={{
+                        width: 30, height: 30, borderRadius: "50%",
+                        background: isListening ? "linear-gradient(135deg,#D4618A,#C8587A)" : "rgba(200,88,122,0.1)",
+                        border: isListening ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.25)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        cursor: "pointer", color: isListening ? "white" : "#C8587A", padding: 0,
+                        ...(isListening ? { animation: "mic-pulse 1s ease-in-out infinite" } : {}),
+                      }}
+                    >
+                      <Mic style={{ width: 13, height: 13 }} strokeWidth={2} />
+                    </button>
+                  )}
                 </div>
-                <p style={{ fontFamily: HW, fontSize: "clamp(12px,3.4vw,15px)", color: "#5A2030", lineHeight: 1.45 }}>
-                  {ALL_PROMPTS[promptIndex]}
-                </p>
               </div>
 
-              <div style={{ height: 1, background: "linear-gradient(to right, rgba(200,88,122,0.08), rgba(200,88,122,0.25), rgba(200,88,122,0.08))", marginBottom: 10, flexShrink: 0 }} />
-
-              {/* ENTRY TITLE */}
+              {/* ── EDITABLE DIARY TITLE — centred, handwritten, tap to rename ── */}
               {isToday ? (
                 <div
                   ref={mTitleRef}
                   contentEditable
                   suppressContentEditableWarning
                   onInput={handleInput}
-                  data-ph="Give this page a title…"
+                  onPointerDown={e => e.stopPropagation()}
+                  data-ph="✿  Dreamy Diary  ✿"
                   style={{
-                    fontFamily: HW, fontSize: "clamp(16px,4.2vw,20px)",
-                    color: "#7A1835", lineHeight: 1.25,
-                    outline: "none", cursor: "text",
+                    fontFamily: HW, fontSize: "clamp(19px,5.2vw,25px)",
+                    color: "#C8587A", fontWeight: 700, lineHeight: 1.15,
+                    textAlign: "center", outline: "none", cursor: "text",
                     marginBottom: 8, flexShrink: 0,
-                    minHeight: "1.3em", wordBreak: "break-word",
+                    minHeight: "1.2em", wordBreak: "break-word",
+                    borderBottom: "1.5px dashed rgba(200,88,122,0.22)",
+                    paddingBottom: 6,
                   }}
                 />
               ) : (
-                <p style={{ fontFamily: HW, fontSize: "clamp(16px,4.2vw,20px)", color: "#7A1835", lineHeight: 1.25, marginBottom: 8, flexShrink: 0 }}>
-                  {currentEntry?.title || ""}
+                <p style={{
+                  fontFamily: HW, fontSize: "clamp(19px,5.2vw,25px)",
+                  color: "#C8587A", fontWeight: 700, lineHeight: 1.15,
+                  textAlign: "center", marginBottom: 8, flexShrink: 0,
+                  borderBottom: "1.5px solid rgba(200,88,122,0.15)", paddingBottom: 6,
+                }}>
+                  {currentEntry?.title || "✿  Dreamy Diary  ✿"}
                 </p>
               )}
 
-              {/* ENTRY BODY */}
+              {/* ── REFLECTION — dismissable, switchable ── */}
+              {showReflection && (
+                <div style={{ marginBottom: 8, flexShrink: 0, background: "rgba(200,88,122,0.05)", borderRadius: 10, padding: "7px 10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                    <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#C8587A" }}>✦ Reflection</p>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button onClick={() => setPromptIndex(i => (i + 1) % ALL_PROMPTS.length)} onPointerDown={e => e.stopPropagation()} title="Next prompt"
+                        style={{ width: 18, height: 18, borderRadius: "50%", background: "transparent", border: "1px solid rgba(200,88,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}>
+                        <RefreshCw style={{ width: 9, height: 9 }} strokeWidth={2.2} />
+                      </button>
+                      <button onClick={() => setShowReflection(false)} onPointerDown={e => e.stopPropagation()} title="Dismiss"
+                        style={{ width: 18, height: 18, borderRadius: "50%", background: "transparent", border: "1px solid rgba(200,88,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}>
+                        <X style={{ width: 9, height: 9 }} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </div>
+                  <p style={{ fontFamily: HW, fontSize: "clamp(11px,3vw,14px)", color: "#5A2030", lineHeight: 1.4 }}>
+                    {ALL_PROMPTS[promptIndex]}
+                  </p>
+                </div>
+              )}
+
+              <div style={{ height: 1, background: "linear-gradient(to right, rgba(200,88,122,0.08), rgba(200,88,122,0.25), rgba(200,88,122,0.08))", marginBottom: 8, flexShrink: 0 }} />
+
+              {/* ── BODY ── */}
               {isToday ? (
                 <div
                   ref={mBodyRef}
@@ -1006,8 +1144,7 @@ function OpenJournal({
                     fontFamily: HW, fontSize: "clamp(12px,3.2vw,15px)",
                     lineHeight: 1.75, color: "#5A2030",
                     outline: "none", cursor: "text",
-                    wordBreak: "break-word",
-                    overflow: "hidden",
+                    wordBreak: "break-word", overflow: "hidden",
                   }}
                 />
               ) : (
@@ -1016,35 +1153,65 @@ function OpenJournal({
                   style={{
                     flex: 1,
                     fontFamily: HW, fontSize: "clamp(12px,3.2vw,15px)",
-                    lineHeight: 1.75, color: "#5A2030",
-                    overflow: "hidden",
+                    lineHeight: 1.75, color: "#5A2030", overflow: "hidden",
                   }}
                   dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:rgba(180,100,130,0.4)">Blank page…</em>` }}
                 />
               )}
 
-              {/* BOTTOM ROW: mic + page number */}
+              {/* ── PHOTOS ── */}
+              {(currentEntry?.images?.length ?? 0) > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10, flexShrink: 0 }}>
+                  {(currentEntry!.images!).map((src, i) => (
+                    <img key={i} src={src} alt="" className="diary-photo-torn"
+                      style={{ width: "45%", height: "auto", objectFit: "cover", cursor: "default" }} />
+                  ))}
+                </div>
+              )}
+
+              {/* ── BOTTOM TOOLBAR ── */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
-                {isToday ? (
-                  <button
-                    onClick={isListening ? stopListening : startListening}
-                    onPointerDown={e => e.stopPropagation()}
-                    title={isListening ? "Stop recording" : "Dictate"}
-                    style={{
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: isListening ? "linear-gradient(135deg, #D4618A, #C8587A)" : "rgba(200,88,122,0.1)",
-                      border: isListening ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.25)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", color: isListening ? "white" : "#C8587A",
-                      padding: 0,
-                      ...(isListening ? { animation: "mic-pulse 1s ease-in-out infinite" } : {}),
-                    }}
-                  >
-                    <Mic style={{ width: 14, height: 14 }} strokeWidth={2} />
-                  </button>
-                ) : (
-                  <div style={{ width: 32 }} />
-                )}
+                <div style={{ display: "flex", gap: 6, position: "relative" }}>
+                  {/* Photo import */}
+                  {isToday && (
+                    <>
+                      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoImport} />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        onPointerDown={e => e.stopPropagation()}
+                        title="Add photo"
+                        style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(200,88,122,0.1)", border: "1px solid rgba(200,88,122,0.22)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}
+                      >
+                        <Calendar style={{ width: 12, height: 12 }} strokeWidth={2} />
+                      </button>
+                    </>
+                  )}
+                  {/* Sticker panel */}
+                  {isToday && (
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={() => setShowStickerPanel(v => !v)}
+                        onPointerDown={e => e.stopPropagation()}
+                        title="Add sticker"
+                        style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(200,88,122,0.1)", border: "1px solid rgba(200,88,122,0.22)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0, fontSize: 13 }}
+                      >
+                        🌸
+                      </button>
+                      {showStickerPanel && (
+                        <div className="diary-sticker-panel" onPointerDown={e => e.stopPropagation()}>
+                          {STICKERS.map(s => (
+                            <button key={s} onClick={() => insertSticker(s)}
+                              style={{ fontSize: 20, background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 6, transition: "transform 0.12s" }}
+                              onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.3)")}
+                              onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+                            >{s}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <p style={{ fontFamily: HW, fontSize: 11, color: "rgba(200,88,122,0.35)" }}>
                   ~ {pageIndex * 2 + 2} ~
                 </p>
