@@ -877,7 +877,7 @@ export function CycleTracker() {
                 {showResetMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
+                    <div className="absolute right-0 bottom-full mb-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
                       <button
                         onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
                         className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
