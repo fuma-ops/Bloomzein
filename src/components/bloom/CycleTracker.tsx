@@ -504,6 +504,18 @@ export function CycleTracker() {
     const dashedLine = smoothLinePath(dashedPts);
     const realLine   = smoothLinePath(realPts);
 
+    // Today circle: if mood is logged for today, pull the dot to the real mood score
+    const todayRealMood = moodLog[dateKey(new Date(currentCycleStart.getTime() + todayIdx * MS_DAY))];
+    const todayCircleY  = todayRealMood
+      ? PY_TOP + (1 - (MOOD_SCORE[todayRealMood] ?? 4) / 8) * chartH
+      : (todayPt ? todayPt[1] : PY_TOP + chartH / 2);
+
+    // Symptom dot: show a small red dot at today's X if any symptoms logged for today
+    const todaySymptoms = symptomsLog[dateKey(new Date(currentCycleStart.getTime() + todayIdx * MS_DAY))] ?? [];
+    const todaySymptY   = todayPt
+      ? PY_TOP + (1 - todaySymptoms.length / SYMPTOM_OPTIONS.length) * chartH
+      : PY_TOP + chartH / 2;
+
     return (
       <>
         <p className="font-script leading-none mb-1" style={{ fontSize: '22px', color: '#DB2777' }}>This cycle</p>
@@ -517,8 +529,12 @@ export function CycleTracker() {
           {solidLine && <path d={solidLine} fill="none" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
           {/* Real logged mood overlay */}
           {realLine && <path d={realLine} fill="none" stroke="#DB2777" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />}
-          {/* Today circle */}
-          {todayPt && <circle cx={todayPt[0]} cy={todayPt[1]} r="4.5" fill="#fff" stroke="#EC4899" strokeWidth="3" />}
+          {/* Symptom indicator dot */}
+          {todayPt && todaySymptoms.length > 0 && (
+            <circle cx={todayPt[0]} cy={todaySymptY} r="3.5" fill="#FB7185" opacity=".85" />
+          )}
+          {/* Today circle — moves to real mood Y when logged */}
+          {todayPt && <circle cx={todayPt[0]} cy={todayCircleY} r="4.5" fill="#fff" stroke="#EC4899" strokeWidth="3" style={{ transition: 'cy 0.5s cubic-bezier(0.22,1,0.36,1)' }} />}
           {/* Labels */}
           <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#CC9999">Day 1</text>
           {todayPt && <text x={todayPt[0]} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>}
@@ -534,9 +550,9 @@ export function CycleTracker() {
   // ── Suggestions rows for both mobile card and desktop panel ──
   function renderSuggestions() {
     const items = [
-      { tag: "Yoga",    title: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899", icon: <path d="M12 4c1.5 2 1.5 4 0 6-1.5-2-1.5-4 0-6zM12 10v10M6 14c2 .5 4 2 6 6 2-4 4-5.5 6-6"/>     },
-      { tag: "Workout", title: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777", icon: <path d="M13 2L4 14h7l-1 8 9-12h-7z"/>                                                                  },
-      { tag: "Meal",    title: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals",   gradFrom: "#7ECAB9", gradTo: "#36A88F", icon: <path d="M5 12c6 0 9-3 9-8 0 0-9 0-9 8zM5 12c0 5 3 8 8 8M5 12h14"/>                                     },
+      { tag: "Yoga",    title: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899" },
+      { tag: "Workout", title: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777" },
+      { tag: "Meal",    title: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals",   gradFrom: "#7ECAB9", gradTo: "#36A88F" },
     ];
     return (
       <div className="flex flex-col gap-[9px] mt-3">
@@ -544,31 +560,29 @@ export function CycleTracker() {
           <a
             key={item.tag}
             href={item.href}
-            className="hover-scale flex items-center gap-[11px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
-            style={{ padding: '9px', background: '#FFF5F9', border: '1px solid rgba(236,72,153,.08)' }}
+            className="reveal-on-scroll hover-scale flex items-center gap-[13px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
+            data-reveal-delay={`${idx * 130}ms`}
+            style={{ padding: '10px', background: '#FFF5F9', border: '1px solid rgba(236,72,153,.08)' }}
           >
-            {/* Phase image with gradient + icon overlay — glowing */}
+            {/* Phase image — big, no icon overlay, just a soft brand tint */}
             <div
-              className="relative flex-none rounded-[12px] overflow-hidden"
+              className="relative flex-none rounded-[14px] overflow-hidden"
               style={{
-                width: 44, height: 44,
-                boxShadow: `0 0 16px ${item.gradFrom}66, 0 4px 10px rgba(0,0,0,.12)`,
+                width: 68, height: 68,
+                boxShadow: `0 0 18px ${item.gradFrom}55, 0 4px 12px rgba(0,0,0,.12)`,
                 animation: `ctaBreathe ${3 + idx * 0.4}s ease-in-out infinite`,
               }}
             >
               <img src={item.img} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              {/* Light brand tint — no icon */}
               <div
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ background: `linear-gradient(135deg,${item.gradFrom}99,${item.gradTo}99)` }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  {item.icon}
-                </svg>
-              </div>
+                className="absolute inset-0"
+                style={{ background: `linear-gradient(135deg,${item.gradFrom}28,transparent 65%)` }}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{item.tag}</p>
-              <p style={{ fontWeight: 700, fontSize: '13.5px', color: '#831843' }}>{item.title}</p>
+              <p style={{ fontWeight: 700, fontSize: '14px', color: '#831843', marginTop: '2px', lineHeight: 1.3 }}>{item.title}</p>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 6l6 6-6 6"/>
@@ -600,17 +614,16 @@ export function CycleTracker() {
             className="relative overflow-hidden rounded-[22px]"
             style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px' }}
           >
-            {/* Background photo — right side, merged with gradient */}
+            {/* Background photo — full-width, masked to fade left→right seamlessly */}
             <img
               src="/images/cycle-insight-hero.webp"
               alt="" aria-hidden loading="eager" decoding="async"
-              className="absolute right-0 top-0 h-full object-cover object-top pointer-events-none"
-              style={{ width: '52%', opacity: 0.38 }}
-            />
-            {/* Fade the photo's left edge into the gradient */}
-            <div
-              aria-hidden className="absolute right-0 top-0 h-full pointer-events-none"
-              style={{ width: '52%', background: 'linear-gradient(to right, #DB2777 0%, transparent 45%)' }}
+              className="absolute inset-0 h-full w-full object-cover object-top pointer-events-none"
+              style={{
+                opacity: 0.45,
+                maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.05) 28%, rgba(0,0,0,0.55) 52%, black 72%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.05) 28%, rgba(0,0,0,0.55) 52%, black 72%)',
+              }}
             />
             {/* Decorative blurred circle top-right */}
             <div
@@ -650,50 +663,47 @@ export function CycleTracker() {
             </p>
 
             {/* Journey stepper */}
-            <div className="flex items-start mt-4" style={{ gap: '5px' }}>
+            <div className="flex items-start mt-4" style={{ gap: '4px' }}>
               {JOURNEY_STEPS.map((step, i) => {
                 const isPast   = i < activeStepIdx;
                 const isActive = i === activeStepIdx;
                 const isFuture = i > activeStepIdx;
                 return (
-                  <div key={step.key} className="flex items-start" style={{ flex: 1, flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                    <div className="flex w-full items-center">
+                  <div key={step.key} className="flex items-start" style={{ flex: 1, flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                    <div className="flex w-full items-center" style={{ gap: 0 }}>
                       {/* Node */}
                       <div
                         className="grid place-items-center rounded-full flex-none"
                         style={{
-                          width: 28, height: 28,
-                          background: isFuture ? 'transparent' : 'white',
-                          border: isFuture ? '2px solid rgba(255,255,255,.5)' : 'none',
-                          transform: isActive ? 'scale(1.18)' : 'none',
+                          width: isActive ? 32 : 26,
+                          height: isActive ? 32 : 26,
+                          background: isFuture ? 'rgba(255,255,255,.18)' : 'white',
+                          border: isFuture ? '2px solid rgba(255,255,255,.6)' : 'none',
+                          boxShadow: isActive ? '0 0 0 3px rgba(255,255,255,.35)' : isPast ? '0 2px 6px rgba(0,0,0,.2)' : 'none',
                           animation: isActive ? 'phaseNodeGlow 2.8s ease-in-out infinite' : 'none',
+                          transition: 'all .3s ease',
                         }}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ color: isFuture ? 'rgba(255,255,255,.4)' : '#EC4899' }}>
+                        <svg width={isActive ? 16 : 13} height={isActive ? 16 : 13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ color: isFuture ? 'rgba(255,255,255,.5)' : '#EC4899' }}>
                           <path d={step.path} />
                         </svg>
                       </div>
                       {/* Connector */}
                       {i < JOURNEY_STEPS.length - 1 && (
-                        <div
-                          style={{
-                            flex: 1,
-                            height: 3,
-                            borderRadius: 2,
-                            marginTop: 0,
-                            background: isPast || isActive ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.25)',
-                          }}
-                        />
+                        <div style={{
+                          flex: 1, height: 3, borderRadius: 2,
+                          background: isPast ? 'white' : isActive ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.25)',
+                          boxShadow: isPast ? '0 0 4px rgba(255,255,255,.5)' : 'none',
+                        }} />
                       )}
                     </div>
                     {/* Label */}
                     <span style={{
-                      fontSize: '9.5px',
-                      fontWeight: isActive ? 800 : 600,
-                      color: isFuture ? 'rgba(255,255,255,.45)' : 'white',
-                      textAlign: 'center',
-                      lineHeight: 1.2,
+                      fontSize: '9px', fontWeight: isActive ? 800 : 600,
+                      color: isFuture ? 'rgba(255,255,255,.5)' : isActive ? 'white' : 'rgba(255,255,255,.9)',
+                      textAlign: 'center', lineHeight: 1.2,
+                      textShadow: isActive ? '0 1px 4px rgba(0,0,0,.2)' : 'none',
                     }}>
                       {step.label}
                     </span>
@@ -993,8 +1003,8 @@ export function CycleTracker() {
           </div>
 
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
-          <div style={{ ...cardStyle }} className="lg:hidden">
-            <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
+          <div style={{ ...cardStyle }} className="reveal-on-scroll lg:hidden">
+            <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
             {renderSuggestions()}
           </div>
 
@@ -1088,8 +1098,8 @@ export function CycleTracker() {
           </div>
 
           {/* Suggestions */}
-          <div key={selected.toDateString()} className="mb-5">
-            <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
+          <div className="mb-5">
+            <h3 className="font-script reveal-on-scroll" data-reveal-delay="0ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
             {renderSuggestions()}
             <a
               href="/app/tools/yoga"
