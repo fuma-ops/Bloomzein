@@ -700,54 +700,70 @@ export function CycleTracker() {
               {PHASE_SUBTITLE[currentPhase]}
             </p>
 
-            {/* Journey stepper */}
-            <div className="flex items-start mt-4" style={{ gap: '4px' }}>
-              {JOURNEY_STEPS.map((step, i) => {
-                const isPast   = i < activeStepIdx;
-                const isActive = i === activeStepIdx;
-                const isFuture = i > activeStepIdx;
-                return (
-                  <div key={step.key} className="flex items-start" style={{ flex: 1, flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                    <div className="flex w-full items-center" style={{ gap: 0 }}>
-                      {/* Node */}
-                      <div
-                        className="grid place-items-center rounded-full flex-none"
-                        style={{
-                          width: isActive ? 32 : 26,
-                          height: isActive ? 32 : 26,
-                          background: isFuture ? 'rgba(255,255,255,.18)' : 'white',
-                          border: isFuture ? '2px solid rgba(255,255,255,.6)' : 'none',
-                          boxShadow: isActive ? '0 0 0 3px rgba(255,255,255,.35)' : isPast ? '0 2px 6px rgba(0,0,0,.2)' : 'none',
-                          animation: isActive ? 'phaseNodeGlow 2.8s ease-in-out infinite' : 'none',
-                          transition: 'all .3s ease',
-                        }}
-                      >
-                        <svg width={isActive ? 16 : 13} height={isActive ? 16 : 13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-                          style={{ color: isFuture ? 'rgba(255,255,255,.5)' : '#EC4899' }}>
-                          <path d={step.path} />
-                        </svg>
-                      </div>
-                      {/* Connector */}
-                      {i < JOURNEY_STEPS.length - 1 && (
-                        <div style={{
-                          flex: 1, height: 3, borderRadius: 2,
-                          background: isPast ? 'white' : isActive ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.25)',
-                          boxShadow: isPast ? '0 0 4px rgba(255,255,255,.5)' : 'none',
-                        }} />
-                      )}
-                    </div>
-                    {/* Label */}
-                    <span style={{
-                      fontSize: '9px', fontWeight: isActive ? 800 : 600,
-                      color: isFuture ? 'rgba(255,255,255,.5)' : isActive ? 'white' : 'rgba(255,255,255,.9)',
-                      textAlign: 'center', lineHeight: 1.2,
-                      textShadow: isActive ? '0 1px 4px rgba(0,0,0,.2)' : 'none',
-                    }}>
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
+            {/* Journey stepper — two-row layout so labels sit exactly under their nodes */}
+            <div className="w-full mt-4" style={{ paddingBottom: '4px' }}>
+              {/* Row 1: nodes + connectors flat */}
+              <div className="flex items-center w-full">
+                {JOURNEY_STEPS.flatMap((step, i) => {
+                  const isPast   = i < activeStepIdx;
+                  const isActive = i === activeStepIdx;
+                  const isFuture = i > activeStepIdx;
+                  const sz = isActive ? 32 : 26;
+                  const elems = [
+                    <div
+                      key={`n${i}`}
+                      className="grid place-items-center rounded-full"
+                      style={{
+                        width: sz, height: sz, flexShrink: 0,
+                        background: isFuture ? 'rgba(255,255,255,.18)' : 'white',
+                        border: isFuture ? '2px solid rgba(255,255,255,.6)' : 'none',
+                        boxShadow: isActive ? '0 0 0 3px rgba(255,255,255,.35)' : isPast ? '0 2px 6px rgba(0,0,0,.2)' : 'none',
+                        animation: isActive ? 'phaseNodeGlow 2.8s ease-in-out infinite' : 'none',
+                        transition: 'all .3s ease',
+                      }}
+                    >
+                      <svg width={isActive ? 16 : 13} height={isActive ? 16 : 13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ color: isFuture ? 'rgba(255,255,255,.5)' : '#EC4899' }}>
+                        <path d={step.path} />
+                      </svg>
+                    </div>,
+                  ];
+                  if (i < JOURNEY_STEPS.length - 1) {
+                    elems.push(
+                      <div key={`c${i}`} style={{
+                        flex: 1, height: 3, borderRadius: 2,
+                        background: isPast ? 'white' : isActive ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.25)',
+                        boxShadow: isPast ? '0 0 4px rgba(255,255,255,.5)' : 'none',
+                      }} />
+                    );
+                  }
+                  return elems;
+                })}
+              </div>
+              {/* Row 2: labels — same node widths + flex-1 spacers → perfect centering under each node */}
+              <div className="flex w-full" style={{ marginTop: '6px' }}>
+                {JOURNEY_STEPS.flatMap((step, i) => {
+                  const isActive = i === activeStepIdx;
+                  const isFuture = i > activeStepIdx;
+                  const sz = isActive ? 32 : 26;
+                  const elems = [
+                    <div key={`l${i}`} style={{ width: sz, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                      <span style={{
+                        fontSize: '9px', fontWeight: isActive ? 800 : 600,
+                        color: isFuture ? 'rgba(255,255,255,.5)' : isActive ? 'white' : 'rgba(255,255,255,.9)',
+                        lineHeight: 1.2, whiteSpace: 'nowrap',
+                        textShadow: isActive ? '0 1px 4px rgba(0,0,0,.2)' : 'none',
+                      }}>
+                        {step.label}
+                      </span>
+                    </div>,
+                  ];
+                  if (i < JOURNEY_STEPS.length - 1) {
+                    elems.push(<div key={`s${i}`} style={{ flex: 1 }} />);
+                  }
+                  return elems;
+                })}
+              </div>
             </div>
           </div>
 
@@ -974,6 +990,15 @@ export function CycleTracker() {
             </div>
           </div>
 
+          {/* ── WELLNESS GRAPH — right after calendar on mobile/tablet ── */}
+          <div
+            ref={graphRef}
+            className={["lg:hidden rounded-[22px] p-4 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+            style={{ background: '#FFFFFF', border: '1px solid rgba(236,72,153,.12)', boxShadow: '0 12px 32px rgba(236,72,153,.10)' }}
+          >
+            {renderWellnessGraph("mob")}
+          </div>
+
           {/* ── MOOD CARD (mobile/tablet, lg:hidden in desktop right panel) ── */}
           <div style={{ ...cardStyle }} className="lg:hidden">
             <h3 className="font-script" style={{ fontSize: '23px', color: '#DB2777' }}>How are you feeling?</h3>
@@ -1071,15 +1096,6 @@ export function CycleTracker() {
                 <PenLine className="h-3.5 w-3.5" /> Write Entry
               </a>
             </div>
-          </div>
-
-          {/* ── WELLNESS GRAPH (mobile/tablet only) ── */}
-          <div
-            ref={graphRef}
-            className={["lg:hidden rounded-[22px] p-4 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
-            style={{ background: '#FFFFFF', border: '1px solid rgba(236,72,153,.12)', boxShadow: '0 12px 32px rgba(236,72,153,.10)' }}
-          >
-            {renderWellnessGraph("mob")}
           </div>
 
         </div>{/* /lg:col-span-3 */}
