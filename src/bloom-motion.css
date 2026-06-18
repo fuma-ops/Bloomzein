@@ -1,0 +1,208 @@
+/* =====================================================================
+   BLOOM & ZEIN — MOTION LANGUAGE
+   ---------------------------------------------------------------------
+   Soft, living micro-motion for the whole app.
+   Paste this at the BOTTOM of src/index.css (after the @tailwind lines),
+   or save as src/styles/bloom-motion.css and `import "./styles/bloom-motion.css"`.
+
+   This ONLY adds movement. It changes no content, no layout, no colors.
+   Every class name below matches what your existing components already
+   call (BloomBubbles, KawaiiBackground, SparkleRing, AppShell…), so they
+   light up the moment this file loads. New helpers are marked NEW.
+
+   Tune the whole feel with the speed token in :root (1 = soft).
+   ===================================================================== */
+
+:root {
+  /* Easing tokens — use these everywhere for consistency */
+  --bloom-ease-soft: cubic-bezier(0.22, 1, 0.36, 1);   /* entrances, hover */
+  --bloom-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* taps, feedback */
+
+  /* Global motion speed. 1 = soft (default).
+     Lower = livelier, higher = dreamier/slower. */
+  --bloom-pace: 1;
+}
+
+/* =====================================================================
+   KEYFRAMES
+   ===================================================================== */
+
+/* Petals / bubbles drifting up (BloomBubbles). Opacity is set inline
+   per-bubble in the component, so we only move here. */
+@keyframes bloom-rise {
+  0%   { transform: translateY(0) translateX(0); }
+  100% { transform: translateY(-120vh) translateX(var(--drift, 0)); }
+}
+
+/* Slowly breathing gradient orbs (KawaiiBackground) */
+@keyframes bloom-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.18); opacity: 0.9; }
+}
+
+/* Drifting glossy icons — gentle float + tilt (KawaiiBackground) */
+@keyframes bloom-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-16px) rotate(7deg); }
+}
+
+/* Tiny twinkling sparkles (KawaiiBackground, SparkleRing) */
+@keyframes bloom-sparkle {
+  0%, 100% { opacity: 0.12; transform: scale(0.45); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+
+/* Sparkles orbiting a center point (SparkleRing). Uses --r for radius;
+   inner rotate keeps each icon upright while it travels. */
+@keyframes bloom-orbit {
+  from { transform: rotate(0deg)   translateX(var(--r, 200px)) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(var(--r, 200px)) rotate(-360deg); }
+}
+
+/* Entrance: fade + scale + rise (cards, panels) */
+@keyframes bloom-scale-in {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Entrance: fade + rise (text rows, lists) */
+@keyframes bloom-fade-in {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Selected day / current item — soft pulsing halo (Calendar, Cycle) */
+@keyframes bloom-selected-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236,72,153,0),   0 6px 16px rgba(236,72,153,0.20); }
+  50%      { box-shadow: 0 0 0 7px rgba(236,72,153,0.14), 0 12px 26px rgba(236,72,153,0.45); }
+}
+
+/* Primary CTA — never static, breathing glow */
+@keyframes bloom-cta-bounce {
+  0%, 100% { transform: scale(1);     box-shadow: 0 8px 22px rgba(236,72,153,0.32); }
+  50%      { transform: scale(1.045); box-shadow: 0 16px 40px rgba(236,72,153,0.55); }
+}
+
+/* Card breathing — barely-there life on featured cards */
+@keyframes bloom-card-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
+}
+
+/* Word-by-word reveal (greetings, phase names, insights) */
+@keyframes bloom-word-fade {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* NEW — soft loading shimmer for skeleton placeholders */
+@keyframes bloom-shimmer {
+  0%   { background-position: -180% 0; }
+  100% { background-position:  180% 0; }
+}
+
+/* NEW — micro-feedback toast ("Added ✨") pop-in */
+@keyframes bloom-toast-pop {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* =====================================================================
+   UTILITY CLASSES  (wrapped so Tailwind keeps them)
+   ===================================================================== */
+@layer utilities {
+
+  /* --- Living background (your components pass duration/delay inline) --- */
+  .animate-bloom-rise    { animation: bloom-rise 20s linear infinite;
+                           animation-duration: calc(20s * var(--bloom-pace)); }
+  .animate-bloom-pulse   { animation: bloom-pulse calc(8s * var(--bloom-pace)) ease-in-out infinite; }
+  .animate-bloom-drift   { animation: bloom-drift calc(14s * var(--bloom-pace)) ease-in-out infinite; }
+  .animate-bloom-sparkle { animation: bloom-sparkle calc(2.8s * var(--bloom-pace)) ease-in-out infinite; }
+  .animate-bloom-orbit   { animation: bloom-orbit calc(22s * var(--bloom-pace)) linear infinite; }
+
+  /* Glossy bubble surface (BloomBubbles uses .bloom-bubble) */
+  .bloom-bubble {
+    background: radial-gradient(circle at 32% 28%,
+                rgba(255,255,255,0.92),
+                rgba(244,114,182,0.5) 55%,
+                rgba(219,39,119,0.22));
+    box-shadow: 0 6px 18px rgba(236,72,153,0.16);
+  }
+
+  /* Optional soft tint behind the kawaii layer */
+  .bloom-kawaii-bg {
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(251,207,232,0.6), transparent 60%),
+      linear-gradient(180deg, #FFF0F6, #FCE7F3);
+  }
+
+  /* --- Entrances --- (add inline `style={{ animationDelay: i*80+'ms' }}` to stagger) */
+  .animate-scale-in {
+    animation: bloom-scale-in calc(0.42s * var(--bloom-pace)) var(--bloom-ease-soft) both;
+  }
+  .animate-fade-in {
+    animation: bloom-fade-in calc(0.42s * var(--bloom-pace)) var(--bloom-ease-soft) both;
+  }
+
+  /* --- Selected / current item glow --- */
+  .animate-selected-glow {
+    animation: bloom-selected-glow calc(2.6s * var(--bloom-pace)) ease-in-out infinite;
+  }
+
+  /* --- Living CTA + card breathe --- */
+  .animate-cta-bounce {
+    animation: bloom-cta-bounce calc(3.2s * var(--bloom-pace)) ease-in-out infinite;
+  }
+  .animate-card-breathe {
+    animation: bloom-card-breathe calc(4s * var(--bloom-pace)) ease-in-out infinite;
+  }
+
+  /* --- Word-by-word reveal (AnimatedWords: give each word an incremental delay) --- */
+  .animate-word-fade {
+    opacity: 0;
+    animation: bloom-word-fade calc(0.5s * var(--bloom-pace)) var(--bloom-ease-soft) forwards;
+  }
+
+  /* --- Hover lift on actionable cards --- */
+  .hover-scale {
+    transition: transform 0.24s var(--bloom-ease-soft),
+                box-shadow 0.24s ease;
+  }
+  .hover-scale:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 20px 40px rgba(236,72,153,0.3);
+  }
+
+  /* --- Tap bounce --- (pair with Tailwind's active:scale-95, this adds spring) */
+  .tap-bounce {
+    transition: transform 0.15s var(--bloom-ease-spring);
+  }
+  .tap-bounce:active { transform: scale(0.92); }
+
+  /* --- NEW: soft loading skeleton --- */
+  .bloom-skeleton {
+    background: linear-gradient(90deg, #FCE7F3 25%, #FBCFE8 37%, #FCE7F3 63%);
+    background-size: 200% 100%;
+    animation: bloom-shimmer calc(1.6s * var(--bloom-pace)) linear infinite;
+    border-radius: 9px;
+  }
+
+  /* --- NEW: "Added ✨" micro-feedback toast --- */
+  .animate-toast-pop {
+    animation: bloom-toast-pop 0.3s var(--bloom-ease-spring);
+  }
+}
+
+/* =====================================================================
+   ACCESSIBILITY — honor "reduce motion"
+   All motion gracefully stills; nothing flashes or moves.
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
