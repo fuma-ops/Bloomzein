@@ -449,142 +449,130 @@ export function CycleTracker() {
     }
   };
 
-  function renderWellnessGraph(gradSuffix: string) {
-    const { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, moodEstLine, symptEstLine, todayX, VW, VH, PX, PY_TOP, chartH, cycleLen } = wellnessGraph;
-    const hasData = moodPts.length + symptPts.length > 0;
+  function renderWellnessGraph(_gradSuffix: string) {
+    const VW = 360, PX = 20, PY_TOP = 14, chartH = 98, VH = PY_TOP + chartH + 26;
+    const chartW = VW - PX * 2;
+    const cycleLen = settings.cycleLength;
+
+    const BAND_FILL: Record<string, string> = {
+      period:     'rgba(236,72,153,.12)',
+      follicular: 'rgba(251,113,133,.10)',
+      fertile:    'rgba(244,114,182,.14)',
+      ovulation:  'rgba(219,39,119,.18)',
+      luteal:     'rgba(192,132,252,.13)',
+    };
+
+    // Phase bands
+    const bands: { phase: Exclude<Phase, null>; x1: number; x2: number }[] = [];
+    let prev: Exclude<Phase, null> | null = null, bs = 0;
+    for (let i = 0; i <= cycleLen; i++) {
+      const ph = i < cycleLen
+        ? (phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>)
+        : null;
+      if (ph !== prev) {
+        if (prev !== null) bands.push({ phase: prev, x1: PX + (bs / cycleLen) * chartW, x2: PX + (i / cycleLen) * chartW });
+        prev = ph; bs = i;
+      }
+    }
+
+    // Estimate curve: one point per cycle day using phase mood averages
+    const allPts: [number, number][] = [];
+    for (let i = 0; i < cycleLen; i++) {
+      const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
+      const x = PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
+      const y = PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH;
+      allPts.push([x, y]);
+    }
+
+    const todayIdx = Math.min(cycleDay - 1, cycleLen - 1);
+    const todayPt  = allPts[todayIdx] ?? allPts[allPts.length - 1];
+    const solidPts = allPts.slice(0, todayIdx + 1);
+    const dashedPts = allPts.slice(todayIdx);
+
+    // Real mood overlay for solid segment
+    const realPts: [number, number][] = [];
+    for (let i = 0; i <= todayIdx; i++) {
+      const dk = dateKey(new Date(currentCycleStart.getTime() + i * MS_DAY));
+      const m = moodLog[dk];
+      if (m) {
+        const x = PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
+        realPts.push([x, PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH]);
+      }
+    }
+
+    const solidLine  = smoothLinePath(solidPts);
+    const dashedLine = smoothLinePath(dashedPts);
+    const realLine   = smoothLinePath(realPts);
+
     return (
       <>
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <p className="text-[7px] font-bold uppercase tracking-widest text-rose/45 lg:text-[8px]">Cycle Wellness</p>
-            <p className="font-script text-base leading-tight text-hotpink lg:text-lg">This Cycle</p>
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
-            <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[7px] font-bold text-hotpink lg:text-[8px]">
-              <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              Mood
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-100 px-2 py-0.5 text-[7px] font-bold text-rose-400 lg:text-[8px]">
-              <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#FDA4AF" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              Sympt.
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-pink-50/50 border border-pink-100/60 px-2 py-0.5 text-[7px] font-bold text-rose/40 lg:text-[8px]">
-              <svg width="10" height="4"><line x1="0" y1="2" x2="10" y2="2" stroke="#EC4899" strokeWidth="1" strokeLinecap="round" strokeDasharray="3 2" strokeOpacity="0.5"/></svg>
-              Est.
-            </span>
-          </div>
-        </div>
-        <svg
-          viewBox={`0 0 ${VW} ${VH}`}
-          className="w-full"
-          style={{ width: "100%", height: "auto", display: "block" }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient id={`bloom-mood-${gradSuffix}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#EC4899" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#EC4899" stopOpacity="0.01" />
-            </linearGradient>
-            <linearGradient id={`bloom-sym-${gradSuffix}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#FDA4AF" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#FDA4AF" stopOpacity="0.01" />
-            </linearGradient>
-          </defs>
+        <p className="font-script leading-none mb-1" style={{ fontSize: '22px', color: '#DB2777' }}>This cycle</p>
+        <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden>
           {bands.map((b, bi) => (
-            <rect key={bi} x={b.x1} y={PY_TOP} width={b.x2 - b.x1} height={chartH}
-              fill={PHASE_SVG_COLOR[b.phase]} rx="2" />
+            <rect key={bi} x={b.x1} y={PY_TOP} width={b.x2 - b.x1} height={chartH} rx="6" fill={BAND_FILL[b.phase]} />
           ))}
-          {bands.map((b, bi) => (
-            <text key={bi} x={(b.x1 + b.x2) / 2} y={PY_TOP + 9}
-              textAnchor="middle" fontSize="6" fontWeight="700"
-              fill={PHASE_SVG_LABEL_COLOR[b.phase]} fillOpacity="0.75">
-              {PHASE_SVG_LABEL[b.phase]}
-            </text>
-          ))}
-          {[0.25, 0.5, 0.75].map((f) => (
-            <line key={f} x1={PX} y1={PY_TOP + f * chartH} x2={VW - PX} y2={PY_TOP + f * chartH}
-              stroke="#FDE8F3" strokeWidth="0.5" />
-          ))}
-          <line x1={todayX} y1={PY_TOP} x2={todayX} y2={PY_TOP + chartH}
-            stroke="#EC4899" strokeWidth="1" strokeDasharray="2.5 2" strokeOpacity="0.6" />
-          {/* Estimation lines — dashed, faint reference curve based on phase averages */}
-          {symptEstLine && <path d={symptEstLine} fill="none" stroke="#FDA4AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" strokeOpacity="0.28" />}
-          {moodEstLine  && <path d={moodEstLine}  fill="none" stroke="#EC4899" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3" strokeOpacity="0.28" />}
-          {/* Real data */}
-          {symptArea && <path d={symptArea} fill={`url(#bloom-sym-${gradSuffix})`} />}
-          {symptLine  && <path d={symptLine} fill="none" stroke="#FDA4AF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />}
-          {moodArea && <path d={moodArea} fill={`url(#bloom-mood-${gradSuffix})`} />}
-          {moodLine  && <path d={moodLine} fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
-          {moodPts.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="2.5" fill="#EC4899" fillOpacity="0.9" />
-          ))}
-          {symptPts.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="2" fill="#FDA4AF" fillOpacity="0.9" />
-          ))}
-          <text x={PX} y={VH - 2} textAnchor="start" fontSize="6.5" fill="#C084A0" fillOpacity="0.7" fontWeight="600">Day 1</text>
-          <text x={todayX} y={VH - 2} textAnchor="middle" fontSize="6.5" fill="#EC4899" fillOpacity="0.9" fontWeight="700">▾{cycleDay}</text>
-          <text x={VW - PX} y={VH - 2} textAnchor="end" fontSize="6.5" fill="#C084A0" fillOpacity="0.7" fontWeight="600">Day {cycleLen}</text>
+          {/* Dashed estimate (today → end) */}
+          {dashedLine && <path d={dashedLine} fill="none" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 6" opacity=".55" />}
+          {/* Solid estimate (start → today) */}
+          {solidLine && <path d={solidLine} fill="none" stroke="#EC4899" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />}
+          {/* Real logged mood overlay */}
+          {realLine && <path d={realLine} fill="none" stroke="#DB2777" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />}
+          {/* Today circle */}
+          {todayPt && <circle cx={todayPt[0]} cy={todayPt[1]} r="4.5" fill="#fff" stroke="#EC4899" strokeWidth="3" />}
+          {/* Labels */}
+          <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#CC9999">Day 1</text>
+          {todayPt && <text x={todayPt[0]} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>}
+          <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#CC9999">Day {cycleLen}</text>
         </svg>
-        {!hasData && (
-          <p className="mt-0.5 text-[6.5px] text-rose/40 text-center italic lg:text-[7.5px]">
-            Dashed lines show phase estimates — log daily to see your real curve ♡
-          </p>
-        )}
+        <p style={{ margin: '6px 0 0', fontSize: '11px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
+          Dashed lines are estimates — log daily to see your real curve bloom.
+        </p>
       </>
     );
   }
 
   // ── Suggestions rows for both mobile card and desktop panel ──
   function renderSuggestions() {
+    const items = [
+      { tag: "Yoga",    title: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899", icon: <path d="M12 4c1.5 2 1.5 4 0 6-1.5-2-1.5-4 0-6zM12 10v10M6 14c2 .5 4 2 6 6 2-4 4-5.5 6-6"/>     },
+      { tag: "Workout", title: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777", icon: <path d="M13 2L4 14h7l-1 8 9-12h-7z"/>                                                                  },
+      { tag: "Meal",    title: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals",   gradFrom: "#7ECAB9", gradTo: "#36A88F", icon: <path d="M5 12c6 0 9-3 9-8 0 0-9 0-9 8zM5 12c0 5 3 8 8 8M5 12h14"/>                                     },
+    ];
     return (
-      <div className="flex flex-col gap-[7px] mt-3">
-        {[
-          {
-            tag: "Yoga",
-            title: selectedRecommend.yoga.title,
-            href: "/app/tools/yoga",
-            gradFrom: "#F472B6",
-            gradTo: "#EC4899",
-            icon: <path d="M12 4c1.5 2 1.5 4 0 6-1.5-2-1.5-4 0-6zM12 10v10M6 14c2 .5 4 2 6 6 2-4 4-5.5 6-6"/>,
-          },
-          {
-            tag: "Workout",
-            title: selectedRecommend.workout.title,
-            href: "/app/tools/workout",
-            gradFrom: "#FB7185",
-            gradTo: "#DB2777",
-            icon: <path d="M13 2L4 14h7l-1 8 9-12h-7z"/>,
-          },
-          {
-            tag: "Meal",
-            title: selectedRecommend.meal.title,
-            href: "/app/tools/meals",
-            gradFrom: "#7ECAB9",
-            gradTo: "#36A88F",
-            icon: <path d="M5 12c6 0 9-3 9-8 0 0-9 0-9 8zM5 12c0 5 3 8 8 8M5 12h14"/>,
-          },
-        ].map((item) => (
+      <div className="flex flex-col gap-[9px] mt-3">
+        {items.map((item, idx) => (
           <a
             key={item.tag}
             href={item.href}
-            className="flex items-center gap-[11px] rounded-[15px] cursor-pointer no-underline"
-            style={{ padding: '9px', background: '#FFF5F9' }}
+            className="hover-scale flex items-center gap-[11px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
+            style={{ padding: '9px', background: '#FFF5F9', border: '1px solid rgba(236,72,153,.08)' }}
           >
+            {/* Phase image with gradient + icon overlay — glowing */}
             <div
-              className="grid place-items-center flex-none rounded-[12px]"
+              className="relative flex-none rounded-[12px] overflow-hidden"
               style={{
-                width: 40, height: 40,
-                background: `linear-gradient(135deg,${item.gradFrom},${item.gradTo})`,
+                width: 44, height: 44,
+                boxShadow: `0 0 16px ${item.gradFrom}66, 0 4px 10px rgba(0,0,0,.12)`,
+                animation: `ctaBreathe ${3 + idx * 0.4}s ease-in-out infinite`,
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {item.icon}
-              </svg>
+              <img src={item.img} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg,${item.gradFrom}99,${item.gradTo}99)` }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {item.icon}
+                </svg>
+              </div>
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{item.tag}</p>
               <p style={{ fontWeight: 700, fontSize: '13.5px', color: '#831843' }}>{item.title}</p>
             </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 6l6 6-6 6"/>
+            </svg>
           </a>
         ))}
       </div>
@@ -607,52 +595,24 @@ export function CycleTracker() {
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
         <div className="lg:col-span-3 space-y-3.5">
 
-          {/* ── HEADER ── */}
-          <div className="flex items-start justify-between gap-2.5 pt-1 mb-3.5">
-            <div>
-              <h1 className="font-script text-[34px] leading-none" style={{ color: '#DB2777' }}>Cycle Tracker</h1>
-              <p className="mt-1 text-[12.5px] font-semibold" style={{ color: '#9D5C7E' }}>
-                Day {cycleDay} · {PHASE_LABEL[currentPhase]} phase
-              </p>
-            </div>
-            <div className="relative flex-none">
-              <button
-                onClick={() => isSetup ? setShowResetMenu(v => !v) : setSetupOpen(true)}
-                className="grid place-items-center w-10 h-10 rounded-full bg-white border flex-none"
-                style={{ color: '#DB2777', boxShadow: '0 4px 12px rgba(236,72,153,.15)', borderColor: 'rgba(236,72,153,.12)' }}
-              >
-                <Settings className="h-[18px] w-[18px]" />
-              </button>
-              {showResetMenu && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
-                    <button
-                      onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
-                      className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
-                      style={{ color: '#9D5C7E' }}
-                    >
-                      Edit settings
-                    </button>
-                    <button
-                      onClick={resetAllData}
-                      className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-rose-50 transition border-t"
-                      style={{ color: '#EC4899', borderColor: 'rgba(236,72,153,.08)' }}
-                    >
-                      Reset all data
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
           {/* ── PHASE HERO CARD ── */}
           <div
             className="relative overflow-hidden rounded-[22px]"
             style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px' }}
           >
-            {/* Decorative blurred circle */}
+            {/* Background photo — right side, merged with gradient */}
+            <img
+              src="/images/cycle-insight-hero.webp"
+              alt="" aria-hidden loading="eager" decoding="async"
+              className="absolute right-0 top-0 h-full object-cover object-top pointer-events-none"
+              style={{ width: '52%', opacity: 0.38 }}
+            />
+            {/* Fade the photo's left edge into the gradient */}
+            <div
+              aria-hidden className="absolute right-0 top-0 h-full pointer-events-none"
+              style={{ width: '52%', background: 'linear-gradient(to right, #DB2777 0%, transparent 45%)' }}
+            />
+            {/* Decorative blurred circle top-right */}
             <div
               aria-hidden
               style={{
@@ -661,6 +621,10 @@ export function CycleTracker() {
                 background: 'rgba(255,255,255,.13)', filter: 'blur(14px)',
               }}
             />
+            {/* "Cycle Tracker" title inside the hero */}
+            <h1 className="font-script animate-scale-in" style={{ fontSize: '34px', lineHeight: 1, color: 'white', marginBottom: '10px' }}>
+              Cycle Tracker
+            </h1>
 
             {/* Phase chip */}
             <div
@@ -816,7 +780,7 @@ export function CycleTracker() {
               </div>
             )}
 
-            {/* Month nav */}
+            {/* Month nav + Settings */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1">
                 <button
@@ -836,6 +800,37 @@ export function CycleTracker() {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
+              </div>
+              {/* Settings button — moved here from header */}
+              <div className="relative">
+                <button
+                  onClick={() => isSetup ? setShowResetMenu(v => !v) : setSetupOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-full font-bold animate-card-breathe"
+                  style={{ padding: '5px 11px', background: '#FCE7F3', border: 'none', cursor: 'pointer', color: '#DB2777', fontSize: '10px', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(236,72,153,.18)' }}
+                >
+                  <Settings className="h-3 w-3" /> Settings
+                </button>
+                {showResetMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
+                      <button
+                        onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
+                        className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
+                        style={{ color: '#9D5C7E' }}
+                      >
+                        Edit settings
+                      </button>
+                      <button
+                        onClick={resetAllData}
+                        className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-rose-50 transition border-t"
+                        style={{ color: '#EC4899', borderColor: 'rgba(236,72,153,.08)' }}
+                      >
+                        Reset all data
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1004,32 +999,30 @@ export function CycleTracker() {
           </div>
 
           {/* ── AFFIRMATION CARD ── */}
-          <div
-            className="rounded-[22px] overflow-hidden"
-            style={{ padding: '16px', marginTop: '14px', background: 'linear-gradient(135deg,#FCE7F3,#FBCFE8)' }}
-          >
-            <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>
-              DAILY AFFIRMATION
-            </p>
-            <p className="font-script font-bold" style={{ fontSize: '21px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>
-              {PHASE_AFFIRMATIONS[currentPhase]}
-            </p>
-            <a
-              href="/app/tools/diary"
-              className="inline-block"
-              style={{
-                background: '#DB2777',
-                color: '#fff',
-                borderRadius: '999px',
-                padding: '10px 18px',
-                fontWeight: 700,
-                fontSize: '13px',
-                marginTop: '14px',
-                textDecoration: 'none',
-              }}
-            >
-              Write Entry
-            </a>
+          <div className="relative rounded-[22px] overflow-hidden" style={{ minHeight: '120px' }}>
+            <img
+              src="/images/cycle-journal-hero.webp"
+              alt="" aria-hidden loading="lazy" decoding="async"
+              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
+            />
+            {/* Pink gradient overlay — keeps text readable */}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(252,231,243,.95) 0%, rgba(251,207,232,.88) 55%, rgba(251,207,232,.35) 100%)' }} />
+            <div className="absolute inset-0 bg-gradient-to-bl from-pink-400/25 via-transparent to-transparent" />
+            <div className="relative z-10 p-4 max-w-[260px]">
+              <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>
+                DAILY AFFIRMATION
+              </p>
+              <p className="font-script font-bold" style={{ fontSize: '21px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>
+                {PHASE_AFFIRMATIONS[currentPhase]}
+              </p>
+              <a
+                href="/app/tools/diary"
+                className="inline-flex items-center gap-1.5 animate-cta-bounce"
+                style={{ background: '#DB2777', color: '#fff', borderRadius: '999px', padding: '9px 16px', fontWeight: 700, fontSize: '12px', marginTop: '12px', textDecoration: 'none' }}
+              >
+                <PenLine className="h-3.5 w-3.5" /> Write Entry
+              </a>
+            </div>
           </div>
 
           {/* ── WELLNESS GRAPH (mobile/tablet only) ── */}
@@ -1115,13 +1108,15 @@ export function CycleTracker() {
           </div>
 
           {/* Affirmation */}
-          <div className="rounded-[22px] overflow-hidden" style={{ padding: '16px', background: 'linear-gradient(135deg,#FCE7F3,#FBCFE8)' }}>
-            <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>
-              DAILY AFFIRMATION
-            </p>
-            <p className="font-script font-bold" style={{ fontSize: '21px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>
-              {PHASE_AFFIRMATIONS[currentPhase]}
-            </p>
+          <div className="relative rounded-[22px] overflow-hidden" style={{ minHeight: '100px' }}>
+            <img src="/images/cycle-journal-hero.webp" alt="" aria-hidden loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(252,231,243,.95) 0%, rgba(251,207,232,.85) 60%, rgba(251,207,232,.3) 100%)' }} />
+            <div className="relative z-10 p-4">
+              <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>DAILY AFFIRMATION</p>
+              <p className="font-script font-bold" style={{ fontSize: '20px', lineHeight: 1.2, marginTop: '6px', color: '#9D174D' }}>
+                {PHASE_AFFIRMATIONS[currentPhase]}
+              </p>
+            </div>
           </div>
         </aside>
 
