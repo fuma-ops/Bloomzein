@@ -237,8 +237,8 @@ function HeroHeader({
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
-          <h2 className="font-script text-xl sm:text-3xl lg:text-4xl text-white leading-tight drop-shadow-md whitespace-nowrap">{sectionTitle}</h2>
-          <p className="mt-0.5 text-[9px] sm:text-[10px] italic leading-snug text-white/90 max-w-[7rem] sm:max-w-[9rem] drop-shadow">{sectionSubtitle}</p>
+          <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
+          <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow">{sectionSubtitle}</p>
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
@@ -861,8 +861,8 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div className="animate-scale-in">
-            <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">Best Shape Calculator</h1>
-            <p className="mt-0.5 text-[10px] italic text-white/85 max-w-[10rem] drop-shadow leading-snug">Know your strengths. Find what already works for you.</p>
+            <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Best Shape Calculator</h1>
+            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/85 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">Know your strengths. Find what already works for you.</p>
           </div>
           <button onClick={onBack} className="self-end rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1 text-xs font-semibold text-white transition active:scale-95">
             ← Back

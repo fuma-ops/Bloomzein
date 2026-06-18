@@ -703,8 +703,8 @@ function YogaHero({
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div key={active} className="animate-scale-in">
-          <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
-          <p className="mt-1 max-w-[8.5rem] sm:max-w-[12rem] text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+          <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">{title}</h1>
+          <p className="mt-1 max-w-[10rem] sm:max-w-xs lg:max-w-sm text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
