@@ -311,52 +311,46 @@ export default function MealsPage() {
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
       <BloomBubbles count={10} />
 
-      <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
-
-      {/* HEADER */}
-      <header className="mb-3 sm:mb-4 sticky top-0 z-30 -mx-3 px-3 pt-2 pb-2 sm:static sm:mx-0 sm:px-0 sm:pt-0 sm:pb-0 bg-blush/70 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none">
-        <div className="flex items-end justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none">Meal Planner</h1>
-            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-rose/80">cook with love, glow all week ✿</p>
+      {/* HERO */}
+      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+        <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
+          <div className="animate-scale-in">
+            <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Meal Planner</h1>
+            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">cook with love, glow all week ✿</p>
+            {phase !== "any" && (
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white">
+                ✦ {phase} phase
+              </span>
+            )}
           </div>
-          <div className="text-xs text-rose/70 hidden sm:block">phase: <b className="text-hotpink">{phase}</b></div>
+          {/* Pill tabs at bottom of hero */}
+          <div className="overflow-x-auto no-scrollbar">
+            <div className="flex gap-1.5 w-max">
+              {TABS.map((t) => {
+                const active = tab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={[
+                      "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold transition whitespace-nowrap",
+                      active
+                        ? "bg-hotpink text-white shadow shadow-hotpink/40"
+                        : "bg-white/20 backdrop-blur-md border border-white/40 text-white hover:bg-white/30",
+                    ].join(" ")}
+                  >
+                    <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-
-        {/* Pill tabs — horizontally scrollable, last pill always reachable */}
-        <nav
-          className="mt-3 -mx-3 px-3 pr-6 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth snap-x"
-          style={{ scrollPaddingRight: "1.5rem", scrollPaddingLeft: "0.75rem" }}
-        >
-          {TABS.map((t) => {
-            const active = tab === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={(e) => {
-                  setTab(t.key);
-                  (e.currentTarget as HTMLElement).scrollIntoView({
-                    behavior: "smooth", inline: "nearest", block: "nearest",
-                  });
-                }}
-                className={[
-                  "shrink-0 snap-start inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition border whitespace-nowrap",
-                  active
-                    ? "bg-hotpink text-white border-hotpink shadow shadow-hotpink/30"
-                    : "bg-white/80 text-rose border-petal/60 hover:bg-blush",
-                ].join(" ")}
-              >
-                <t.icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-                {t.label}
-              </button>
-            );
-          })}
-          {/* trailing spacer so the last pill is fully reachable */}
-          <span className="shrink-0 w-2" aria-hidden />
-        </nav>
-      </header>
+      </div>
 
       {/* Guided welcome (only on first visit) */}
       {step === 0 && (
