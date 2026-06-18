@@ -315,8 +315,8 @@ export function BudgetPlanner() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
             <div className="animate-scale-in">
-              <h1 className="font-script text-xl sm:text-3xl text-white leading-none drop-shadow-md">Budget</h1>
-              <p className="mt-0.5 text-[10px] italic text-white/90 max-w-[10rem] drop-shadow leading-snug">Soft, smart money planning — your way.</p>
+              <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Budget</h1>
+              <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">Soft, smart money planning — your way.</p>
             </div>
             {/* Currency selector inside hero */}
             <div className="self-end">
