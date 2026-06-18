@@ -26,11 +26,10 @@ import {
   Sun,
   Dumbbell,
   Settings,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
-import { BloomBubbles } from "./BloomBubbles";
-import { KawaiiBackground } from "./KawaiiBackground";
 import { AnimatedWords } from "./AnimatedWords";
 import {
   type CyclePhase,
@@ -132,14 +131,6 @@ const PHASE_RECOMMEND: Record<Exclude<Phase, null>, {
   luteal:     { yoga: { title: "Calming wind-down flow",     img: "/images/pose-cat-cow.webp"      }, workout: { title: "Gentle toning",           img: "/images/zone-back.png"       }, meal: { title: "Comforting warm stew", img: "/images/meal-stew.jpg"    }, read: { title: "Luteal phase glow-up",img: "/images/read-cycle.png"   }, shop: { title: "Silk Sleep Mask",     img: "/images/shop-cat-selfcare.jpg"} },
 };
 
-const CALENDAR_DAY_STYLE: Record<Exclude<Phase, null>, { cell: string; Icon: LucideIcon; iconClass: string }> = {
-  period:     { cell: "bg-[#FFDDE8]/75 text-rose-500",    Icon: Droplet,  iconClass: "text-rose-400/70"   },
-  follicular: { cell: "bg-amber-50/70 text-amber-600",    Icon: Sprout,   iconClass: "text-amber-400/70"  },
-  fertile:    { cell: "bg-pink-50/75 text-pink-500",      Icon: Flower2,  iconClass: "text-pink-400/70"   },
-  ovulation:  { cell: "bg-violet-50/65 text-violet-500",  Icon: Sparkles, iconClass: "text-violet-400/70" },
-  luteal:     { cell: "bg-purple-50/65 text-purple-500",  Icon: Moon,     iconClass: "text-purple-400/70" },
-};
-
 const MOODS = [
   { key: "calm",      label: "Calm",      Icon: Leaf      },
   { key: "happy",     label: "Happy",     Icon: Smile     },
@@ -151,7 +142,7 @@ const MOODS = [
   { key: "bloated",   label: "Bloated",   Icon: Cloud     },
 ] as const;
 
-const SYMPTOM_OPTIONS = ["Cramps", "Bloating", "Tender Breasts", "Fatigue", "Headache", "Mood Swings", "Nausea", "Back Pain"];
+const SYMPTOM_OPTIONS = ["Cramps", "Bloating", "Tender", "Fatigue", "Headache", "Nausea", "Backache"];
 
 const MOOD_LOG_KEY     = "bloom:mood-log-v2";
 const SYMPTOMS_LOG_KEY = "bloom:symptoms-log-v2";
@@ -241,6 +232,39 @@ function readJSON<T>(key: string, fallback: T): T {
 function fmtDate(d: Date) {
   return d.toLocaleDateString("en", { month: "short", day: "numeric" });
 }
+
+// Design system helpers
+const PHASE_HEX: Record<Exclude<Phase, null>, string> = {
+  period:     '#EC4899',
+  follicular: '#FB7185',
+  fertile:    '#F472B6',
+  ovulation:  '#DB2777',
+  luteal:     '#C084FC',
+};
+
+const PHASE_ICON_PATH: Record<Exclude<Phase, null>, string> = {
+  period:     'M12 3.5c3 3.5 5 6.2 5 8.5a5 5 0 0 1-10 0c0-2.3 2-5 5-8.5z',
+  follicular: 'M5 13c0-6 5-9 11-9 0 6-5 9-11 9zM5 13c2 .4 4 1.8 5.5 4',
+  fertile:    'M12 20S4 14.5 4 9a3.6 3.6 0 0 1 8-2 3.6 3.6 0 0 1 8 2c0 5.5-8 11-8 11Z',
+  ovulation:  'M12 3c.4 3.7 1.3 4.6 5 5-3.7.4-4.6 1.3-5 5-.4-3.7-1.3-4.6-5-5 3.7-.4 4.6-1.3 5-5Z',
+  luteal:     'M21 12.8A8.3 8.3 0 1 1 11.2 3 6.5 6.5 0 0 0 21 12.8z',
+};
+
+function hexRgba(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+
+const JOURNEY_STEPS = [
+  { key: 'period'     as const, label: 'Period',     path: PHASE_ICON_PATH.period     },
+  { key: 'follicular' as const, label: 'Follicular', path: PHASE_ICON_PATH.follicular },
+  { key: 'ovulation'  as const, label: 'Ovul.',      path: PHASE_ICON_PATH.ovulation  },
+  { key: 'luteal'     as const, label: 'Luteal',     path: PHASE_ICON_PATH.luteal     },
+];
+
+const PHASE_TO_STEP: Record<Exclude<Phase, null>, number> = {
+  period: 0, follicular: 1, fertile: 2, ovulation: 2, luteal: 3,
+};
 
 export function CycleTracker() {
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
@@ -368,6 +392,8 @@ export function CycleTracker() {
   const activeIdx    = journeySteps.findIndex((s) => s.active);
   const progressPct  = activeIdx >= 0 ? (activeIdx / (journeySteps.length - 1)) * 100 : 0;
 
+  const activeStepIdx = PHASE_TO_STEP[currentPhase];
+
   const wellnessGraph = useMemo(() => {
     const cycleLen = settings.cycleLength;
     const VW = 300, PX = 4, PY_TOP = 20, chartH = 76, PY_BOT = 16;
@@ -421,14 +447,6 @@ export function CycleTracker() {
     if (isAdding && symptoms.length === 0) {
       setTimeout(() => graphRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 350);
     }
-  };
-
-  const phaseTagColors: Record<Exclude<Phase, null>, string> = {
-    period:     "bg-[#FFF0F6] text-hotpink border-pink-200",
-    follicular: "bg-amber-50 text-amber-600 border-amber-200",
-    fertile:    "bg-pink-50 text-pink-600 border-pink-200",
-    ovulation:  "bg-violet-50 text-violet-600 border-violet-200",
-    luteal:     "bg-purple-50 text-purple-600 border-purple-200",
   };
 
   function renderWellnessGraph(gradSuffix: string) {
@@ -516,516 +534,612 @@ export function CycleTracker() {
     );
   }
 
+  // ── Suggestions rows for both mobile card and desktop panel ──
+  function renderSuggestions() {
+    return (
+      <div className="flex flex-col gap-[7px] mt-3">
+        {[
+          {
+            tag: "Yoga",
+            title: selectedRecommend.yoga.title,
+            href: "/app/tools/yoga",
+            gradFrom: "#F472B6",
+            gradTo: "#EC4899",
+            icon: <path d="M12 4c1.5 2 1.5 4 0 6-1.5-2-1.5-4 0-6zM12 10v10M6 14c2 .5 4 2 6 6 2-4 4-5.5 6-6"/>,
+          },
+          {
+            tag: "Workout",
+            title: selectedRecommend.workout.title,
+            href: "/app/tools/workout",
+            gradFrom: "#FB7185",
+            gradTo: "#DB2777",
+            icon: <path d="M13 2L4 14h7l-1 8 9-12h-7z"/>,
+          },
+          {
+            tag: "Meal",
+            title: selectedRecommend.meal.title,
+            href: "/app/tools/meals",
+            gradFrom: "#7ECAB9",
+            gradTo: "#36A88F",
+            icon: <path d="M5 12c6 0 9-3 9-8 0 0-9 0-9 8zM5 12c0 5 3 8 8 8M5 12h14"/>,
+          },
+        ].map((item) => (
+          <a
+            key={item.tag}
+            href={item.href}
+            className="flex items-center gap-[11px] rounded-[15px] cursor-pointer no-underline"
+            style={{ padding: '9px', background: '#FFF5F9' }}
+          >
+            <div
+              className="grid place-items-center flex-none rounded-[12px]"
+              style={{
+                width: 40, height: 40,
+                background: `linear-gradient(135deg,${item.gradFrom},${item.gradTo})`,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {item.icon}
+              </svg>
+            </div>
+            <div>
+              <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{item.tag}</p>
+              <p style={{ fontWeight: 700, fontSize: '13.5px', color: '#831843' }}>{item.title}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    );
+  }
+
+  const cardStyle = {
+    background: '#FFFFFF',
+    borderRadius: '22px',
+    padding: '16px',
+    boxShadow: '0 12px 32px rgba(236,72,153,0.10)',
+    border: '1px solid rgba(236,72,153,0.12)',
+  };
+
   return (
-    <div ref={containerRef} className="relative animate-fade-in">
-      {/* Poppy-pink edge vignette — frames the whole page */}
-      <div
-        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
-        aria-hidden
-        style={{ background: "radial-gradient(ellipse 80% 75% at 50% 45%, transparent 35%, oklch(0.70 0.26 350 / 0.20) 80%, oklch(0.62 0.30 350 / 0.32) 100%)" }}
-      />
-      <KawaiiBackground count={16} />
-      <BloomBubbles count={18} />
+    <div ref={containerRef} className="relative min-h-screen animate-fade-in" style={{ background: '#FFF0F6', color: '#831843' }}>
 
       <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
 
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
-        <div className="lg:col-span-3 space-y-2">
+        <div className="lg:col-span-3 space-y-3.5">
 
-          {/* ── HERO + PHASE TIMELINE (merged) ── */}
+          {/* ── HEADER ── */}
+          <div className="flex items-start justify-between gap-2.5 pt-1 mb-3.5">
+            <div>
+              <h1 className="font-script text-[34px] leading-none" style={{ color: '#DB2777' }}>Cycle Tracker</h1>
+              <p className="mt-1 text-[12.5px] font-semibold" style={{ color: '#9D5C7E' }}>
+                Day {cycleDay} · {PHASE_LABEL[currentPhase]} phase
+              </p>
+            </div>
+            <div className="relative flex-none">
+              <button
+                onClick={() => isSetup ? setShowResetMenu(v => !v) : setSetupOpen(true)}
+                className="grid place-items-center w-10 h-10 rounded-full bg-white border flex-none"
+                style={{ color: '#DB2777', boxShadow: '0 4px 12px rgba(236,72,153,.15)', borderColor: 'rgba(236,72,153,.12)' }}
+              >
+                <Settings className="h-[18px] w-[18px]" />
+              </button>
+              {showResetMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
+                    <button
+                      onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
+                      className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
+                      style={{ color: '#9D5C7E' }}
+                    >
+                      Edit settings
+                    </button>
+                    <button
+                      onClick={resetAllData}
+                      className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-rose-50 transition border-t"
+                      style={{ color: '#EC4899', borderColor: 'rgba(236,72,153,.08)' }}
+                    >
+                      Reset all data
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── PHASE HERO CARD ── */}
           <div
-            className={["relative overflow-hidden rounded-[2rem] animate-scale-in shadow-md transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+            className="relative overflow-hidden rounded-[22px]"
+            style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px' }}
           >
-            <img
-              src="/images/cycle-insight-hero.webp"
-              alt="" aria-hidden loading="eager" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover object-top animate-photo-breathe"
+            {/* Decorative blurred circle */}
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute', right: -20, top: -20,
+                width: 120, height: 120, borderRadius: '50%',
+                background: 'rgba(255,255,255,.13)', filter: 'blur(14px)',
+              }}
             />
-            {/* left shield — text readable, photo visible */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/20 to-transparent" />
-            {/* bottom shield — phase labels readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-white/15 to-transparent" />
-            <div className="relative z-10 px-4 pt-2.5 pb-3">
-              <div>
-                <h2
-                  className="font-script text-4xl text-hotpink leading-none animate-scale-in"
-                  style={{ animationDelay: "0ms" }}
-                >
-                  Day {cycleDay}
-                </h2>
-                {(() => { const PhaseIcon = PHASE_META[currentPhase].Icon; return (
-                <span
-                  className={["mt-1 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold animate-fade-in", phaseTagColors[currentPhase]].join(" ")}
-                  style={{ animationDelay: "120ms" }}
-                >
-                  <PhaseIcon className="h-2.5 w-2.5" />
-                  {PHASE_LABEL[currentPhase]} Phase
-                </span>
-                ); })()}
-                <p
-                  className="mt-0.5 text-[10px] font-semibold text-rose/65 max-w-[180px] leading-snug animate-fade-in"
-                  style={{ animationDelay: "200ms" }}
-                >
-                  {PHASE_SUBTITLE[currentPhase]}
-                </p>
-              </div>
 
-              {/* Phase journey steps — part of the hero */}
-              <div className="mt-3 border-t border-white/30 pt-2.5 animate-fade-in" style={{ animationDelay: "60ms" }}>
-                <div className="relative flex items-start justify-between">
-                  <div
-                    className="absolute left-0 right-0 top-3 h-[2px] rounded-full animate-card-breathe"
-                    style={{ background: "linear-gradient(90deg,#FCE7F3,#FBCFE8,#FFC2D6,#FBCFE8,#FCE7F3)" }}
-                  />
-                  <div
-                    className="absolute left-0 top-3 h-[2px] rounded-full transition-all duration-700 animate-bloom-pulse"
-                    style={{
-                      width: `calc(${progressPct}% * 100% / 100)`,
-                      background: "linear-gradient(90deg,#BE185D,#EC4899,#F9A8D4,#EC4899)",
-                    }}
-                  />
-                  {journeySteps.map((step, i) => {
-                    const isPast    = i < activeIdx;
-                    const isCurrent = step.active;
-                    const StepIcon  = step.Icon;
-                    return (
-                      <div key={step.key} className="relative z-10 flex flex-1 flex-col items-center gap-1">
-                        <span
-                          className={[
-                            "grid h-7 w-7 shrink-0 place-items-center rounded-full shadow-md transition-all duration-300",
-                            isCurrent
-                              ? "bg-hotpink text-white ring-4 ring-white/60 animate-selected-glow"
-                              : isPast
-                              ? "bg-pink-400/80 text-white shadow-sm"
-                              : "bg-white/70 text-rose/40 border border-pink-200",
-                          ].join(" ")}
-                        >
-                          <StepIcon className="h-3.5 w-3.5" />
-                        </span>
-                        <span
-                          className={[
-                            "text-[9px] font-bold tracking-wide leading-none text-center",
-                            isCurrent ? "text-[#BE185D] drop-shadow-sm" : isPast ? "text-pink-600/80" : "text-rose/50",
-                          ].join(" ")}
-                        >
-                          {step.label}
-                        </span>
+            {/* Phase chip */}
+            <div
+              className="inline-flex items-center gap-[7px] rounded-full px-3 py-1.5"
+              style={{ background: 'rgba(255,255,255,.22)', border: '1px solid rgba(255,255,255,.4)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'white' }}>
+                <path d={PHASE_ICON_PATH[currentPhase]} />
+              </svg>
+              <span style={{ color: 'white', fontSize: '10px', fontWeight: 800, letterSpacing: '.08em' }}>
+                {PHASE_LABEL[currentPhase].toUpperCase()} PHASE
+              </span>
+            </div>
+
+            {/* Day heading */}
+            <h2 className="font-script" style={{ fontSize: '38px', lineHeight: 1, marginTop: '11px', color: 'white' }}>
+              Day {cycleDay}
+            </h2>
+
+            {/* Phase subtitle */}
+            <p style={{ fontSize: '13px', fontWeight: 500, marginTop: '6px', color: 'rgba(255,255,255,.92)' }}>
+              {PHASE_SUBTITLE[currentPhase]}
+            </p>
+
+            {/* Journey stepper */}
+            <div className="flex items-start mt-4" style={{ gap: '5px' }}>
+              {JOURNEY_STEPS.map((step, i) => {
+                const isPast   = i < activeStepIdx;
+                const isActive = i === activeStepIdx;
+                const isFuture = i > activeStepIdx;
+                return (
+                  <div key={step.key} className="flex items-start" style={{ flex: 1, flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <div className="flex w-full items-center">
+                      {/* Node */}
+                      <div
+                        className="grid place-items-center rounded-full flex-none"
+                        style={{
+                          width: 28, height: 28,
+                          background: isFuture ? 'transparent' : 'white',
+                          border: isFuture ? '2px solid rgba(255,255,255,.5)' : 'none',
+                          transform: isActive ? 'scale(1.18)' : 'none',
+                          animation: isActive ? 'phaseNodeGlow 2.8s ease-in-out infinite' : 'none',
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                          style={{ color: isFuture ? 'rgba(255,255,255,.4)' : '#EC4899' }}>
+                          <path d={step.path} />
+                        </svg>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── CYCLE PREDICTIONS + MOOD + DAILY PILL ── */}
-          <div className={["relative transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
-            <div className="grid grid-cols-5 gap-1.5">
-              {[
-                { label: "Period",    Icon: Droplet,  BgIcon: Droplet,  value: fmtDate(nextPeriodDate), sub: `in ${daysToPeriod}d`,              color: "text-rose-600",   bg: "from-rose-100 to-rose-200/70",       border: "border-rose-200",   bgColor: "text-rose-400"   },
-                { label: "Fertile",   Icon: Flower2,  BgIcon: Flower2,  value: fmtDate(fertileStart),   sub: `→ ${fmtDate(fertileEnd)}`,         color: "text-pink-600",   bg: "from-pink-100 to-pink-200/70",       border: "border-pink-200",   bgColor: "text-pink-400"   },
-                { label: "Ovulation", Icon: Sparkles, BgIcon: Sparkles, value: fmtDate(ovulationDate),  sub: `day ${ovulationDayOfCycle + 1}`,   color: "text-violet-600", bg: "from-violet-100 to-violet-200/60",   border: "border-violet-200", bgColor: "text-violet-400" },
-              ].map((p, i) => (
-                <div
-                  key={p.label}
-                  className={["relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 animate-card-stagger-in", p.bg, p.border].join(" ")}
-                  style={{ animationDelay: `${120 + i * 160}ms`, boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
-                >
-                  <span className={["pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float", p.bgColor].join(" ")} style={{ animationDelay: `${i * 700}ms` }}>
-                    <p.BgIcon className="h-10 w-10" />
-                  </span>
-                  <span className={["grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm", p.color].join(" ")}>
-                    <p.Icon className="h-3.5 w-3.5" />
-                  </span>
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{p.label}</p>
-                    <p className={["font-script text-sm leading-tight", p.color].join(" ")}>{p.value}</p>
-                    <p className="text-[10px] text-rose/50 font-semibold">{p.sub}</p>
-                  </div>
-                </div>
-              ))}
-
-              {/* Mood card — 4th, opens inline picker */}
-              <button
-                onClick={() => setShowMoodPickerCard((v) => !v)}
-                aria-pressed={showMoodPickerCard}
-                className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
-                  showMoodPickerCard
-                    ? "from-pink-100 to-fuchsia-100/90 border-pink-300 ring-1 ring-hotpink/40"
-                    : !moodChecked
-                      ? "from-pink-100 to-fuchsia-100/90 border-pink-200 ring-1 ring-hotpink/25 animate-selected-glow"
-                      : "from-pink-100 to-fuchsia-100/90 border-pink-200",
-                ].join(" ")}
-                style={{ animationDelay: "600ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
-              >
-                <Settings className={["pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 transition-opacity", moodChecked ? "text-hotpink/35" : "text-hotpink/10"].join(" ")} />
-                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2100ms" }}>
-                  <MoodIconToday className="h-10 w-10" />
-                </span>
-                <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/80 shadow-sm text-hotpink">
-                  <MoodIconToday className="h-3.5 w-3.5" />
-                </span>
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Mood</p>
-                  <p className="font-script text-sm leading-tight text-hotpink">{moodLabelToday}</p>
-                  <p className="text-[10px] text-rose/50 font-semibold animate-cta-bounce inline-block">tap ♥</p>
-                </div>
-              </button>
-
-              {/* Daily Pill — 5th */}
-              <button
-                onClick={() => {
-                  const next = { ...pillLog, [todayKey]: !pillTaken };
-                  setPillLog(next);
-                  try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); } catch {}
-                }}
-                aria-pressed={pillTaken}
-                className={[
-                  "relative overflow-hidden rounded-xl bg-gradient-to-br border p-2.5 flex flex-col gap-1.5 text-left animate-card-stagger-in animate-tap-hint hover-scale transition-all duration-200 active:scale-95",
-                  pillTaken ? "from-pink-100 to-fuchsia-100/90 border-pink-200" : "from-pink-50 to-pink-100/70 border-pink-150",
-                ].join(" ")}
-                style={{ animationDelay: "760ms", boxShadow: "inset 0 0 12px rgba(236,72,153,0.10), 0 1px 2px rgba(0,0,0,0.04)" }}
-              >
-                <Settings className="pointer-events-none absolute top-1.5 right-1.5 h-3 w-3 text-hotpink/35" />
-                <span className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.09] animate-bloom-float text-hotpink" style={{ animationDelay: "2800ms" }}>
-                  <Pill className="h-10 w-10" />
-                </span>
-                <span className={["grid h-6 w-6 place-items-center rounded-lg shadow-sm", pillTaken ? "bg-hotpink text-white" : "bg-white/80 text-rose/40"].join(" ")}>
-                  <Pill className="h-3.5 w-3.5" />
-                </span>
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Pill</p>
-                  <p className={["font-script text-sm leading-tight", pillTaken ? "text-hotpink" : "text-rose/40"].join(" ")}>{pillTaken ? "Taken ✓" : "Log it"}</p>
-                  <p className="text-[10px] text-rose/50 font-semibold animate-cta-bounce inline-block">{pillTaken ? "done ✓" : "tap ♥"}</p>
-                </div>
-              </button>
-            </div>
-
-            {/* Mood nudge — floating speech bubble above the mood card (4th col ≈ 70% from left) */}
-            {!moodChecked && !showMoodPickerCard && (
-              <div
-                className="pointer-events-none absolute bottom-[calc(100%+6px)] left-[70%] z-10 -translate-x-1/2 animate-fade-in"
-                aria-hidden
-              >
-                <div className="relative animate-cta-bounce">
-                  <div className="flex items-center gap-1 rounded-full bg-hotpink px-2.5 py-1 shadow-lg shadow-pink-300/40 ring-2 ring-white/60">
-                    <span className="text-[9px] font-bold text-white whitespace-nowrap">how do you feel? ♥</span>
-                  </div>
-                  {/* down-pointing arrow */}
-                  <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-hotpink" />
-                </div>
-              </div>
-            )}
-
-            {/* Mood picker popup */}
-            {showMoodPickerCard && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowMoodPickerCard(false)} />
-                <div className="absolute top-full left-0 right-0 z-20 mt-1 animate-scale-in">
-                  <div className="rounded-2xl bg-white/98 border border-pink-100 shadow-xl p-2.5 backdrop-blur-md">
-                    <p className="text-[7px] font-bold uppercase tracking-wider text-rose/50 text-center mb-1.5">How are you feeling? ♡</p>
-                    <div className="grid grid-cols-4 gap-1">
-                      {MOODS.map((m, i) => {
-                        const MoodIcon = m.Icon;
-                        const isActive = mood === m.key;
-                        return (
-                          <button
-                            key={m.key}
-                            onClick={() => {
-                              const next = { ...moodLog, [todayKey]: m.key };
-                              setMoodLog(next);
-                              setShowMoodPickerCard(false);
-                              try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
-                              setTimeout(() => {
-                                graphRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                              }, 350);
-                            }}
-                            className={[
-                              "flex flex-col items-center gap-0.5 rounded-xl py-1.5 px-1 text-center transition-all duration-150 active:scale-90 hover-scale animate-fade-in",
-                              isActive ? "bg-hotpink text-white shadow-sm animate-selected-glow" : "bg-pink-50 text-rose/70 hover:bg-pink-100",
-                            ].join(" ")}
-                            style={{ animationDelay: `${i * 40}ms` }}
-                          >
-                            <MoodIcon className="h-3.5 w-3.5" />
-                            <span className="text-[7px] font-semibold leading-none mt-0.5">{m.label}</span>
-                          </button>
-                        );
-                      })}
+                      {/* Connector */}
+                      {i < JOURNEY_STEPS.length - 1 && (
+                        <div
+                          style={{
+                            flex: 1,
+                            height: 3,
+                            borderRadius: 2,
+                            marginTop: 0,
+                            background: isPast || isActive ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.25)',
+                          }}
+                        />
+                      )}
                     </div>
+                    {/* Label */}
+                    <span style={{
+                      fontSize: '9.5px',
+                      fontWeight: isActive ? 800 : 600,
+                      color: isFuture ? 'rgba(255,255,255,.45)' : 'white',
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                    }}>
+                      {step.label}
+                    </span>
                   </div>
-                </div>
-              </>
-            )}
+                );
+              })}
+            </div>
           </div>
 
-          {/* ── CALENDAR + MOOD & SYMPTOMS SIDEBARS ── */}
-          <div className="relative">
-            {/* Symptom nudge — floats above calendar, points at the symptoms column */}
-            {!symptomsChecked && isSetup && (
-              <div className="pointer-events-none absolute bottom-[calc(100%+6px)] right-6 z-20 animate-fade-in" aria-hidden>
-                <div className="relative animate-cta-bounce">
-                  <div className="flex items-center gap-1 rounded-full bg-hotpink px-2.5 py-1 shadow-lg shadow-pink-300/40 ring-2 ring-white/60">
-                    <span className="text-[9px] font-bold text-white whitespace-nowrap">log symptoms ♥</span>
-                  </div>
-                  <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-hotpink" />
+          {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}
+          <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[11px] md:gap-3 mt-3.5">
+              {/* Next Period */}
+              <div style={{ ...cardStyle }}>
+                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
+                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: '#9D5C7E' }}>in {daysToPeriod} days</p>
+              </div>
+              {/* Fertile */}
+              <div style={{ ...cardStyle }}>
+                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Fertile</p>
+                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#F472B6' }}>{fmtDate(fertileStart)}</p>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: '#9D5C7E' }}>→ {fmtDate(fertileEnd)}</p>
+              </div>
+              {/* Ovulation */}
+              <div style={{ ...cardStyle }}>
+                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Ovulation</p>
+                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#DB2777' }}>{fmtDate(ovulationDate)}</p>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: '#9D5C7E' }}>day {ovulationDayOfCycle + 1}</p>
+              </div>
+              {/* Daily Pill */}
+              <div style={{ ...cardStyle }}>
+                <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
+                <p className="font-script" style={{ fontSize: '25px', lineHeight: 1, marginTop: '3px', color: '#36A88F' }}>
+                  {pillTaken ? "Taken ✓" : "Log it"}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    onClick={() => {
+                      const next = { ...pillLog, [todayKey]: !pillTaken };
+                      setPillLog(next);
+                      try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); } catch {}
+                    }}
+                    style={{
+                      background: pillTaken ? '#FCE7F3' : '#36A88F',
+                      color: pillTaken ? '#DB2777' : 'white',
+                      fontSize: '10px',
+                      padding: '3px 9px',
+                      borderRadius: '999px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {pillTaken ? "Undo" : "Mark taken"}
+                  </button>
                 </div>
               </div>
-            )}
-          <div
-            className="relative overflow-hidden rounded-[1.5rem] bg-rose-50/90 backdrop-blur-md border border-pink-200/80 p-2 reveal-on-scroll"
-            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.14), 0 1px 3px rgba(0,0,0,0.04)" }}
-          >
-            {/* ── Setup overlay — shown when not configured ── */}
+            </div>
+          </div>
+
+          {/* ── CALENDAR CARD ── */}
+          <div style={{ ...cardStyle, position: 'relative' }}>
+            {/* Setup overlay */}
             {!isSetup && (
-              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-[1.5rem] bg-white/90 backdrop-blur-sm animate-fade-in">
-                <div className="grid h-12 w-12 place-items-center rounded-full bg-pink-50 animate-selected-glow">
-                  <CalendarDays className="h-6 w-6 text-hotpink/60" />
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-[22px] animate-fade-in" style={{ background: 'rgba(255,255,255,.92)' }}>
+                <div className="grid h-12 w-12 place-items-center rounded-full animate-selected-glow" style={{ background: '#FCE7F3' }}>
+                  <CalendarDays className="h-6 w-6" style={{ color: '#EC4899' }} />
                 </div>
                 <div className="text-center">
-                  <p className="font-script text-2xl text-hotpink leading-none">Set me up ♥</p>
-                  <p className="mt-1 text-[10px] text-rose/50 max-w-[170px] leading-snug">
+                  <p className="font-script text-2xl leading-none" style={{ color: '#EC4899' }}>Set me up ♥</p>
+                  <p className="mt-1 text-[10px] max-w-[170px] leading-snug" style={{ color: '#9D5C7E' }}>
                     Tell us when your last period was and we'll colour your whole cycle
                   </p>
                 </div>
                 <button
                   onClick={() => setSetupOpen(true)}
-                  className="bloom-luxury-btn animate-cta-bounce px-5 py-2 text-[11px] font-bold text-white"
+                  className="animate-cta-bounce px-5 py-2 text-[11px] font-bold text-white rounded-full"
+                  style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Get started ♥
                 </button>
               </div>
             )}
-            {/* month nav */}
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-0.5">
-                <button onClick={() => shift(-1)} className="hover-scale grid h-5 w-5 place-items-center rounded-full bg-pink-50 text-rose shadow-sm transition active:scale-90">
-                  <ChevronLeft className="h-3 w-3" />
+
+            {/* Month nav */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => shift(-1)}
+                  className="grid place-items-center rounded-full"
+                  style={{ width: 28, height: 28, background: '#FCE7F3', border: 'none', cursor: 'pointer', color: '#DB2777' }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-                <h3 className="font-script text-base text-hotpink px-1">
+                <h3 className="font-script px-2" style={{ fontSize: '20px', color: '#DB2777' }}>
                   {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
                 </h3>
-                <button onClick={() => shift(1)} className="hover-scale grid h-5 w-5 place-items-center rounded-full bg-pink-50 text-rose shadow-sm transition active:scale-90">
-                  <ChevronRight className="h-3 w-3" />
-                </button>
-              </div>
-              <div className="relative">
                 <button
-                  onClick={() => isSetup ? setShowResetMenu((v) => !v) : setSetupOpen(true)}
-                  title="Cycle settings"
-                  className="hover-scale grid h-6 w-6 place-items-center rounded-full bg-pink-50 text-rose/60 hover:bg-pink-100 hover:text-hotpink transition active:scale-90 shadow-sm"
+                  onClick={() => shift(1)}
+                  className="grid place-items-center rounded-full"
+                  style={{ width: 28, height: 28, background: '#FCE7F3', border: 'none', cursor: 'pointer', color: '#DB2777' }}
                 >
-                  <Settings className="h-3 w-3" />
+                  <ChevronRight className="h-4 w-4" />
                 </button>
-                {showResetMenu && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white/98 border border-pink-100 shadow-xl overflow-hidden backdrop-blur-md">
-                      <button
-                        onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
-                        className="w-full text-left px-3 py-2 text-[10px] font-semibold text-rose/70 hover:bg-pink-50 transition"
-                      >
-                        Edit settings
-                      </button>
-                      <button
-                        onClick={resetAllData}
-                        className="w-full text-left px-3 py-2 text-[10px] font-semibold text-rose-400 hover:bg-rose-50 transition border-t border-pink-50"
-                      >
-                        Reset all data
-                      </button>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
 
-            {/* 2-column: calendar grid | symptoms */}
-            <div className="grid grid-cols-[1fr_48px] gap-1 items-stretch">
+            {/* Weekday labels */}
+            <div className="grid grid-cols-7 text-center mb-1.5">
+              {["S","M","T","W","T","F","S"].map((d, i) => (
+                <div key={i} style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.06em', color: '#CC9999', textAlign: 'center' }}>{d}</div>
+              ))}
+            </div>
 
-              {/* ── Calendar center ── */}
-              <div>
-                <div className="grid grid-cols-7 text-center text-[8px] font-bold tracking-widest text-rose/50 mb-0.5">
-                  {WEEKDAYS.map((d) => <div key={d}>{d[0]}</div>)}
-                </div>
-                <div
-                  key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
-                  className="grid grid-cols-7 gap-[1px] animate-fade-in"
-                >
-                  {days.map((d, i) => {
-                    if (!d) return <div key={i} />;
-                    const phase          = phaseForDay(d, settings);
-                    const dayStyle       = CALENDAR_DAY_STYLE[phase];
-                    const CellIcon       = dayStyle.Icon;
-                    const isSelected     = sameDay(d, selected);
-                    const isToday        = sameDay(d, today);
-                    const dk             = dateKey(d);
-                    const loggedMood     = moodLog[dk];
-                    const loggedSymptoms = symptomsLog[dk] ?? [];
-                    const pillTakenDay   = pillLog[dk] ?? false;
-                    const MoodCellIcon   = loggedMood ? MOODS.find(m => m.key === loggedMood)?.Icon : undefined;
-                    const hasExtra       = loggedMood || pillTakenDay || loggedSymptoms.length > 0;
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => setSelected(d)}
-                        title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
-                        className={[
-                          "relative aspect-square rounded-xl flex flex-col items-center justify-center gap-[1px] transition-all duration-200 hover:scale-105 active:scale-90",
-                          dayStyle.cell,
-                          isSelected && !isToday ? "ring-1 ring-hotpink/40 scale-105" : "",
-                          isToday ? "animate-today-breathe ring-1 ring-hotpink/55 z-10" : "",
-                        ].join(" ")}
-                      >
-                        <span className="text-[8px] font-bold leading-none">{d.getDate()}</span>
-                        <CellIcon className={`h-2.5 w-2.5 opacity-70 ${dayStyle.iconClass}`} />
-                        {hasExtra && (
-                          <div className="flex items-center gap-px">
-                            {MoodCellIcon && (
-                              <MoodCellIcon className={`h-[7px] w-[7px] ${MOOD_TEXT_COLOR[loggedMood!] ?? "text-pink-400"}`} />
-                            )}
-                            {pillTakenDay && <Pill className="h-[7px] w-[7px] text-violet-400" />}
-                            {loggedSymptoms.length > 0 && (
-                              <span className="h-[5px] w-[5px] rounded-full bg-rose-400/75 shrink-0" />
-                            )}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="mt-1 flex flex-wrap justify-center gap-x-1.5 gap-y-0 text-[7px] font-bold text-rose/60">
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-[#FFDDE8]" /> Period</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-amber-50" /> Follic.</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-pink-50" /> Fertile</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-violet-50 ring-1 ring-violet-200" /> Ovul.</span>
-                  <span className="inline-flex items-center gap-0.5"><span className="h-1 w-1 rounded-sm bg-purple-50 ring-1 ring-purple-200" /> Luteal</span>
-                </div>
-              </div>
+            {/* Day grid */}
+            <div
+              key={`${cursor.getFullYear()}-${cursor.getMonth()}-${slideDir}`}
+              className="grid grid-cols-7 animate-fade-in"
+              style={{ gap: '5px' }}
+            >
+              {days.map((d, i) => {
+                if (!d) return <div key={i} />;
+                const phase          = phaseForDay(d, settings);
+                const isSelected     = sameDay(d, selected);
+                const isToday        = sameDay(d, today);
+                const isFutureDay    = d > today;
+                const dk             = dateKey(d);
+                const loggedMood     = moodLog[dk];
+                const loggedSymptoms = symptomsLog[dk] ?? [];
+                const pillTakenDay   = pillLog[dk] ?? false;
+                const isOvulation    = sameDay(d, ovulationDate);
+                const phaseHex       = PHASE_HEX[phase];
 
-              {/* ── Symptoms sidebar — fills full calendar height ── */}
-              <div className="flex flex-col h-full">
-                <p className="shrink-0 text-[8px] font-bold text-rose/50 text-center uppercase tracking-wider mb-0.5">Sympt.</p>
-                {SYMPTOM_OPTIONS.map((s, i) => {
-                  const active = symptoms.includes(s);
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => toggleSymptom(s)}
-                      title={s}
-                      className={[
-                        "flex-1 animate-fade-in hover-scale rounded-lg mb-0.5 px-0.5 text-[8px] font-semibold leading-tight text-center transition-all duration-200 active:scale-90",
-                        active
-                          ? "bg-hotpink text-white shadow-sm"
-                          : "bg-pink-50/80 text-rose/60 hover:bg-pink-100",
-                      ].join(" ")}
-                      style={{ animationDelay: `${500 + i * 45}ms` }}
-                    >
-                      {s.split(" ")[0]}
-                    </button>
-                  );
-                })}
-              </div>
+                const cellBg = isFutureDay
+                  ? hexRgba(phaseHex, 0.06)
+                  : hexRgba(phaseHex, 0.16);
+                const cellBorder = isFutureDay
+                  ? `1px dashed ${hexRgba(phaseHex, 0.4)}`
+                  : 'none';
 
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setSelected(d)}
+                    title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
+                    className={["relative aspect-square border-none cursor-pointer rounded-xl flex flex-col items-center justify-center gap-[2px] transition-all duration-200 hover:scale-105 active:scale-90", isToday ? "animate-selected-glow" : ""].join(" ")}
+                    style={{ background: cellBg, border: cellBorder }}
+                  >
+                    {/* PEAK badge for ovulation day */}
+                    {isOvulation && (
+                      <span style={{
+                        position: 'absolute', top: -9, left: '50%', transform: 'translateX(-50%)',
+                        background: '#DB2777', color: '#fff', fontSize: '8px', fontWeight: 800,
+                        padding: '2px 6px', borderRadius: '999px', whiteSpace: 'nowrap', zIndex: 2,
+                      }}>PEAK</span>
+                    )}
+                    {/* Selection glow ring */}
+                    {isSelected && (
+                      <span
+                        className="absolute inset-0 rounded-xl pointer-events-none"
+                        style={{ border: '2px solid #EC4899', borderRadius: '12px', animation: 'calSelGlow 2.6s ease-in-out infinite' }}
+                      />
+                    )}
+                    {/* Date number */}
+                    <span style={{ fontWeight: 700, fontSize: '12px', color: '#831843', lineHeight: 1 }}>{d.getDate()}</span>
+                    {/* Phase icon */}
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ color: isFutureDay ? hexRgba(phaseHex, 0.45) : phaseHex }}>
+                      <path d={PHASE_ICON_PATH[phase]} />
+                    </svg>
+                    {/* Logged data dots */}
+                    {(loggedMood || pillTakenDay || loggedSymptoms.length > 0) && (
+                      <div className="flex items-center gap-[2px]">
+                        {loggedMood && <span className="rounded-full" style={{ width: 4, height: 4, background: '#EC4899' }} />}
+                        {pillTakenDay && <span className="rounded-full" style={{ width: 4, height: 4, background: '#C084FC' }} />}
+                        {loggedSymptoms.length > 0 && <span className="rounded-full" style={{ width: 4, height: 4, background: '#FB7185' }} />}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div
+              className="flex flex-wrap justify-center mt-[13px] pt-[11px]"
+              style={{ gap: '9px', borderTop: '1px solid rgba(236,72,153,.1)' }}
+            >
+              {(Object.entries(PHASE_HEX) as [Exclude<Phase, null>, string][]).map(([phase, hex]) => (
+                <div key={phase} className="inline-flex items-center" style={{ gap: '5px', fontSize: '10px', fontWeight: 700, color: '#9D5C7E' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={hex} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={PHASE_ICON_PATH[phase]} />
+                  </svg>
+                  {PHASE_LABEL[phase]}
+                </div>
+              ))}
             </div>
           </div>
-          </div>{/* /outer calendar wrapper */}
 
-          {/* ── WELLNESS GRAPH (mobile/tablet — desktop shows in right panel) ── */}
-          <div
-            ref={graphRef}
-            className={["lg:hidden rounded-[1.5rem] bg-rose-50/90 backdrop-blur-md border border-pink-200/80 p-3 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
-            style={{ boxShadow: "inset 0 0 20px rgba(236,72,153,0.14), 0 1px 3px rgba(0,0,0,0.04)" }}
-          >
-            {renderWellnessGraph("mob")}
+          {/* ── MOOD CARD (mobile/tablet, lg:hidden in desktop right panel) ── */}
+          <div style={{ ...cardStyle }} className="lg:hidden">
+            <h3 className="font-script" style={{ fontSize: '23px', color: '#DB2777' }}>How are you feeling?</h3>
+            <div className="grid grid-cols-4 gap-[7px] mt-3">
+              {MOODS.map((m) => {
+                const isActive = moodLog[todayKey] === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    onClick={() => {
+                      const next = { ...moodLog, [todayKey]: m.key };
+                      setMoodLog(next);
+                      try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
+                    }}
+                    style={{
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontWeight: 700,
+                      fontSize: '10.5px',
+                      padding: '9px 3px',
+                      borderRadius: '13px',
+                      transition: 'transform .15s cubic-bezier(.34,1.56,.64,1)',
+                      background: isActive ? 'linear-gradient(135deg,#EC4899,#DB2777)' : '#FCE7F3',
+                      color: isActive ? '#fff' : '#9D5C7E',
+                      boxShadow: isActive ? '0 6px 16px rgba(236,72,153,.35)' : 'none',
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── SYMPTOMS CARD ── */}
+          <div style={{ ...cardStyle }}>
+            <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>Log symptoms</h3>
+            <div className="flex flex-wrap mt-[11px]" style={{ gap: '7px' }}>
+              {SYMPTOM_OPTIONS.map((s) => {
+                const active = symptoms.includes(s);
+                return (
+                  <button
+                    key={s}
+                    onClick={() => toggleSymptom(s)}
+                    style={{
+                      border: active ? 'none' : '1px solid rgba(236,72,153,.18)',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontWeight: 700,
+                      fontSize: '11.5px',
+                      padding: '8px 13px',
+                      borderRadius: '999px',
+                      transition: 'transform .15s cubic-bezier(.34,1.56,.64,1)',
+                      background: active ? '#EC4899' : '#FFF0F6',
+                      color: active ? '#fff' : '#9D5C7E',
+                      boxShadow: active ? '0 6px 14px rgba(236,72,153,.3)' : 'none',
+                    }}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
+          <div style={{ ...cardStyle }} className="lg:hidden">
+            <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
+            {renderSuggestions()}
           </div>
 
           {/* ── AFFIRMATION CARD ── */}
           <div
-            className={["relative overflow-hidden rounded-[2rem] reveal-on-scroll shadow-sm transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
-            style={{ minHeight: "110px" }}
+            className="rounded-[22px] overflow-hidden"
+            style={{ padding: '16px', marginTop: '14px', background: 'linear-gradient(135deg,#FCE7F3,#FBCFE8)' }}
           >
-            <img
-              src="/images/cycle-journal-hero.webp"
-              alt="" aria-hidden loading="lazy" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
-            />
-            {/* left text shield — keeps copy readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/55 to-white/10" />
-            {/* pink glow — upper-right corner */}
-            <div className="absolute inset-0 bg-gradient-to-bl from-pink-400/35 via-fuchsia-200/15 to-transparent" />
-            <div className="relative z-10 px-4 py-2.5 max-w-[280px]">
-              <p className="text-[8px] font-bold tracking-widest text-rose/55 uppercase flex items-center gap-1 mb-1">
-                <BookOpen className="h-2 w-2 text-hotpink" /> Daily Affirmation
-              </p>
-              <p className="font-script text-base text-hotpink leading-snug">
-                "{PHASE_AFFIRMATIONS[currentPhase]}"
-              </p>
-              <a
-                href="/app/tools/diary"
-                className="bloom-luxury-btn hover-scale animate-cta-bounce mt-2 inline-flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold text-white"
-              >
-                <PenLine className="h-3 w-3" />
-                Write Entry
-              </a>
-            </div>
+            <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>
+              DAILY AFFIRMATION
+            </p>
+            <p className="font-script font-bold" style={{ fontSize: '21px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>
+              {PHASE_AFFIRMATIONS[currentPhase]}
+            </p>
+            <a
+              href="/app/tools/diary"
+              className="inline-block"
+              style={{
+                background: '#DB2777',
+                color: '#fff',
+                borderRadius: '999px',
+                padding: '10px 18px',
+                fontWeight: 700,
+                fontSize: '13px',
+                marginTop: '14px',
+                textDecoration: 'none',
+              }}
+            >
+              Write Entry
+            </a>
+          </div>
+
+          {/* ── WELLNESS GRAPH (mobile/tablet only) ── */}
+          <div
+            ref={graphRef}
+            className={["lg:hidden rounded-[22px] p-4 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+            style={{ background: '#FFFFFF', border: '1px solid rgba(236,72,153,.12)', boxShadow: '0 12px 32px rgba(236,72,153,.10)' }}
+          >
+            {renderWellnessGraph("mob")}
           </div>
 
         </div>{/* /lg:col-span-3 */}
 
         {/* ══════════════ RIGHT PANEL (40%) — desktop sticky ══════════════ */}
         <aside
-          className={["bloom-pearl-card reveal-on-scroll relative mt-5 overflow-hidden rounded-[2rem] p-4 sm:p-6 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0 transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
-          style={{ boxShadow: "inset 0 0 28px rgba(236,72,153,0.09), 0 1px 3px rgba(0,0,0,0.04)" }}
+          className={["reveal-on-scroll hidden lg:block lg:col-span-2 lg:sticky lg:top-4 transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+          style={{
+            background: '#FFFFFF',
+            borderRadius: '26px',
+            padding: '20px',
+            border: '1px solid rgba(236,72,153,.12)',
+            boxShadow: '0 12px 32px rgba(236,72,153,.10)',
+          }}
         >
-          <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.25)_0%,transparent_70%)]" aria-hidden />
-          <div className="relative z-10 hidden lg:block mb-4 pb-4 border-b border-pink-100/50">
+          {/* Mood picker */}
+          <div className="mb-5">
+            <h3 className="font-script mb-3" style={{ fontSize: '21px', color: '#DB2777' }}>How are you feeling?</h3>
+            <div className="grid grid-cols-4 gap-[7px]">
+              {MOODS.map((m) => {
+                const isActive = moodLog[todayKey] === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    onClick={() => {
+                      const next = { ...moodLog, [todayKey]: m.key };
+                      setMoodLog(next);
+                      try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
+                    }}
+                    style={{
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontWeight: 700,
+                      fontSize: '10.5px',
+                      padding: '9px 3px',
+                      borderRadius: '13px',
+                      transition: 'transform .15s cubic-bezier(.34,1.56,.64,1)',
+                      background: isActive ? 'linear-gradient(135deg,#EC4899,#DB2777)' : '#FCE7F3',
+                      color: isActive ? '#fff' : '#9D5C7E',
+                      boxShadow: isActive ? '0 6px 16px rgba(236,72,153,.35)' : 'none',
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Wellness graph */}
+          <div className="mb-5 pb-5" style={{ borderBottom: '1px solid rgba(236,72,153,.1)' }}>
             {renderWellnessGraph("desk")}
           </div>
-          <div key={selected.toDateString()} className="relative z-10">
-            {/* Suggested activities */}
-            <p className="zoom-reveal text-[9px] font-bold tracking-widest text-rose/60 sm:text-[10px]" data-reveal-delay="0ms">SUGGESTED FOR THIS PHASE</p>
-            <div className="mt-2 space-y-2">
-              {[
-                { tag: "Yoga",    t: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga"    },
-                { tag: "Workout", t: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout" },
-                { tag: "Meal",    t: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals"   },
-              ].map((p, i) => (
-                <a
-                  key={p.tag}
-                  href={p.href}
-                  className="zoom-reveal animate-suggestion-attention hover:[animation-play-state:paused] active:[animation-play-state:paused] hover-scale group flex items-center gap-2.5 rounded-2xl bg-pink-50/90 p-1.5 pr-3 border border-pink-100 backdrop-blur-md transition-all duration-200 active:scale-95 hover:shadow-lg hover:bg-pink-100/80"
-                  data-reveal-delay={`${(i + 1) * 90}ms`}
-                  style={{ animationDelay: `${i * 900 + 1200}ms` }}
-                >
-                  <img src={p.img} alt="" aria-hidden loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-xl object-cover sm:h-12 sm:w-12" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60 sm:text-[10px]">{p.tag}</p>
-                    <p className="truncate font-script text-sm text-hotpink sm:text-base">{p.t}</p>
-                  </div>
-                </a>
-              ))}
-            </div>
 
+          {/* Suggestions */}
+          <div key={selected.toDateString()} className="mb-5">
+            <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
+            {renderSuggestions()}
             <a
               href="/app/tools/yoga"
-              className="zoom-reveal bloom-luxury-btn hover-scale animate-selected-glow mt-4 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white active:scale-95 sm:text-sm"
+              className="zoom-reveal inline-flex w-full items-center justify-center gap-2 rounded-full font-bold text-white mt-4"
+              style={{
+                padding: '12px 20px',
+                fontSize: '14px',
+                background: 'linear-gradient(135deg,#EC4899,#DB2777)',
+                textDecoration: 'none',
+                animation: 'ctaBreathe 3.2s ease-in-out infinite',
+              }}
               data-reveal-delay="360ms"
             >
-              <Flower2 className="h-4 w-4" />
-              Start 15-Min Flow
+              <Play className="h-4 w-4 fill-white" /> Start 15-Min Flow
             </a>
+          </div>
+
+          {/* Affirmation */}
+          <div className="rounded-[22px] overflow-hidden" style={{ padding: '16px', background: 'linear-gradient(135deg,#FCE7F3,#FBCFE8)' }}>
+            <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>
+              DAILY AFFIRMATION
+            </p>
+            <p className="font-script font-bold" style={{ fontSize: '21px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>
+              {PHASE_AFFIRMATIONS[currentPhase]}
+            </p>
           </div>
         </aside>
 
       </div>{/* /lg:grid */}
 
-      {/* Floating CTA — mobile/tablet only */}
+      {/* Sticky CTA — mobile/tablet only */}
       <a
         href="/app/tools/yoga"
-        className="bloom-luxury-btn hover-scale animate-selected-glow fixed bottom-24 right-4 z-30 inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-hotpink/30 active:scale-95 lg:hidden"
+        className="lg:hidden fixed left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-full py-3.5 font-bold text-white"
+        style={{
+          bottom: '74px',
+          fontSize: '14.5px',
+          background: 'linear-gradient(135deg,#EC4899,#DB2777)',
+          animation: 'ctaBreathe 3.2s ease-in-out infinite',
+          textDecoration: 'none',
+        }}
       >
-        <Flower2 className="h-4 w-4" />
-        Start Flow
+        <Play className="h-4 w-4 fill-white" /> Start 15-Min Flow
       </a>
 
       <PeriodSetup
