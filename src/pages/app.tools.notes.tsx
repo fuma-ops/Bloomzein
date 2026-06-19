@@ -1707,7 +1707,7 @@ export default function NotesPage() {
                 <button
                   key={label}
                   onClick={onClick}
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100/60 hover:border-pink-200 transition active:scale-95"
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100/60 hover:border-pink-200 transition active:scale-95 w-full"
                 >
                   <span className={["grid h-8 w-8 place-items-center rounded-xl", color].join(" ")}>
                     <Icon className="h-4 w-4" />
@@ -1820,20 +1820,21 @@ export default function NotesPage() {
               <Bell className="h-4 w-4 text-rose/30" />
             </div>
             <p className="text-[10px] text-rose/50 mb-3">Tap to instantly pre-fill a reminder</p>
-            <div className="space-y-1.5">
-              {QUICK_SUGGESTIONS.map((s) => (
-                <button
-                  key={s.label}
-                  onClick={() => applyQuickSuggestion(s)}
-                  className="w-full flex items-center gap-2.5 p-2 rounded-2xl bg-[#FFF0F6]/60 hover:bg-[#FFF0F6] border border-pink-100 hover:border-pink-200 transition active:scale-95 text-left"
-                >
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
-                    <s.Icon className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-[11px] font-bold text-[#831843] truncate flex-1">{s.label}</span>
-                  <Plus className="h-3 w-3 text-hotpink shrink-0" />
-                </button>
-              ))}
+            <div className="overflow-hidden">
+              <div className="flex gap-2 animate-marquee-scroll hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
+                {[...QUICK_SUGGESTIONS, ...QUICK_SUGGESTIONS].map((s, idx) => (
+                  <button
+                    key={`${s.label}-${idx}`}
+                    onClick={() => applyQuickSuggestion(s)}
+                    className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-[#FFF0F6]/80 border border-pink-100 hover:border-pink-200 hover:bg-[#FFF0F6] transition active:scale-95 shrink-0"
+                  >
+                    <span className="grid h-7 w-7 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
+                      <s.Icon className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1911,7 +1912,7 @@ export default function NotesPage() {
         {/* Quick Capture strip */}
         <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
           <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Capture</h3>
-          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+          <div className="grid grid-cols-4 gap-2">
             {[
               { icon: Edit3,    label: "Note",    color: "bg-[#FCE7F3] text-hotpink",      onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
               { icon: Bell,     label: "Remind",  color: "bg-[#FBCFE8] text-[#DB2777]",    onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
@@ -1921,7 +1922,7 @@ export default function NotesPage() {
               <button
                 key={label}
                 onClick={onClick}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 transition active:scale-95 shrink-0 min-w-[64px]"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 transition active:scale-95 w-full"
               >
                 <span className={["grid h-8 w-8 place-items-center rounded-xl", color].join(" ")}>
                   <Icon className="h-4 w-4" />
@@ -1932,22 +1933,24 @@ export default function NotesPage() {
           </div>
         </div>
 
-        {/* Quick Reminder Ideas strip */}
-        <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
+        {/* Quick Reminder Ideas strip — infinite marquee, pauses on hover */}
+        <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm overflow-hidden">
           <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Reminder Ideas ✿</h3>
-          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-            {QUICK_SUGGESTIONS.map((s) => (
-              <button
-                key={s.label}
-                onClick={() => applyQuickSuggestion(s)}
-                className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-[#FFF0F6]/80 border border-pink-100 hover:border-pink-200 transition active:scale-95 shrink-0"
-              >
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
-                  <s.Icon className="h-4 w-4" />
-                </span>
-                <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
-              </button>
-            ))}
+          <div className="overflow-hidden">
+            <div className="flex gap-2 animate-marquee-scroll hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
+              {[...QUICK_SUGGESTIONS, ...QUICK_SUGGESTIONS].map((s, idx) => (
+                <button
+                  key={`${s.label}-${idx}`}
+                  onClick={() => applyQuickSuggestion(s)}
+                  className="flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-[#FFF0F6]/80 border border-pink-100 hover:border-pink-200 hover:bg-[#FFF0F6] transition active:scale-95 shrink-0"
+                >
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
+                    <s.Icon className="h-4 w-4" />
+                  </span>
+                  <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -1959,6 +1962,13 @@ export default function NotesPage() {
         }
         .animate-bloom-bounce {
           animation: bloom-bounce 3.5s ease-in-out infinite;
+        }
+        @keyframes marquee-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee-scroll {
+          animation: marquee-scroll 18s linear infinite;
         }
       `}</style>
     </div>
