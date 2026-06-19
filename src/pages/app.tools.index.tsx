@@ -85,7 +85,7 @@ export default function ToolsIndex() {
               className="text-xs sm:text-sm text-rose/90"
               style={{ textShadow: '0 1px 6px rgba(255,255,255,0.9)' }}
             >
-              ✦ pick your bloom for today 🌸
+              ✦ pick your bloom for today
             </p>
             {/* "Play welcome tour" CTA — poppy pink with ctaBreathe animation */}
             <button
