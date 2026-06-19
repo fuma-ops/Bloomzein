@@ -952,9 +952,9 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
 
 function SundayPrepTab({ plan, planEmpty, goWeek }: any) {
   if (planEmpty) {
-    return <EmptyState icon={Sparkles} title="Prep needs a plan"
-      blurb="Once your week is planned, I'll show you the smart order to batch-cook everything."
-      cta="Go to This Week" onCta={goWeek} />;
+    return <EmptyState icon={Sparkles} title="Cook once, eat all week"
+      blurb="Sunday Prep gives you a step-by-step order to batch-cook your entire week in ~2 hours. Plan your week first and I'll build your prep guide automatically."
+      cta="Plan my week" onCta={goWeek} />;
   }
   const recipes = Object.values(plan as Record<string, Record<MealType, string | null>>)
     .flatMap((d) => Object.values(d).filter(Boolean) as string[])
@@ -964,15 +964,36 @@ function SundayPrepTab({ plan, planEmpty, goWeek }: any) {
   const stove = recipes.filter((r) => r.cookMin > 0 && r.cookMin < 15);
   const cold = recipes.filter((r) => r.cookMin === 0);
   return (
-    <Glass className="p-4 sm:p-5">
-      <p className="font-script text-2xl text-hotpink">Sunday prep — in 2 hours your week is ready</p>
-      <ol className="mt-3 space-y-3">
-        <PrepStep n={1} title="Oven first (longest cook)" items={oven.map((r) => r.name)} />
-        <PrepStep n={2} title="Stovetop while oven runs" items={stove.map((r) => r.name)} />
-        <PrepStep n={3} title="Cold prep & assembly" items={cold.map((r) => r.name)} />
-        <PrepStep n={4} title="Pack & label" items={["Portion into containers", "Label with date", "Fridge or freezer per recipe"]} />
-      </ol>
-    </Glass>
+    <div className="space-y-3">
+      {/* Explainer */}
+      <Glass className="p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <span className="text-3xl" aria-hidden>🍳</span>
+          <div>
+            <p className="font-script text-2xl text-hotpink leading-tight">Cook once, eat all week</p>
+            <p className="mt-1 text-sm text-rose/80 leading-snug">
+              Sunday Prep is your batch-cooking guide. Instead of cooking every day, you spend ~2 hours on Sunday
+              preparing everything at once — then your fridge is stocked for the whole week.
+            </p>
+            <p className="mt-2 text-xs text-rose/60">
+              The recipes from your week plan are sorted in the most efficient order:
+              start the oven first (slowest), then use the stovetop while it heats, finish with quick cold prep.
+            </p>
+          </div>
+        </div>
+      </Glass>
+
+      {/* Steps */}
+      <Glass className="p-4 sm:p-5">
+        <p className="font-script text-xl text-hotpink mb-3">Your prep order this week</p>
+        <ol className="space-y-3">
+          <PrepStep n={1} title="Start the oven — longest cook" items={oven.map((r) => r.name)} />
+          <PrepStep n={2} title="Stovetop while oven runs" items={stove.map((r) => r.name)} />
+          <PrepStep n={3} title="Cold prep & assembly" items={cold.map((r) => r.name)} />
+          <PrepStep n={4} title="Pack & label" items={["Portion into containers", "Label with day + meal", "Fridge (≤3 days) or freezer the rest"]} />
+        </ol>
+      </Glass>
+    </div>
   );
 }
 function PrepStep({ n, title, items }: { n: number; title: string; items: string[] }) {
