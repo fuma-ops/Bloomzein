@@ -238,6 +238,16 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "favs", label: "Favorites", icon: Heart },
 ];
 
+const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
+  week:     { title: "Meal Planner",    subtitle: "cook with love, glow all week ✿" },
+  kids:     { title: "Kids Lunch Box",  subtitle: "pack joy in every bite 🐣" },
+  pantry:   { title: "My Pantry",       subtitle: "know what you have, waste less 🌿" },
+  shop:     { title: "Shopping List",   subtitle: "grab only what you need ✓" },
+  prep:     { title: "Sunday Prep",     subtitle: "cook once, eat all week 🍳" },
+  conserve: { title: "Conservation",    subtitle: "keep it fresh, nothing wasted ❄️" },
+  favs:     { title: "My Favourites",   subtitle: "your most-loved recipes ♥" },
+};
+
 /* ---------- Page ---------- */
 
 export default function MealsPage() {
@@ -337,13 +347,13 @@ export default function MealsPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div>
-            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>Meal Planner</h1>
-            {phase !== "any" && (
+            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
+            {phase !== "any" && tab === "week" && (
               <p className="animate-fade-in mt-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
                 {phase} phase
               </p>
             )}
-            <p className="animate-fade-in mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>cook with love, glow all week ✿</p>
+            <p className="animate-fade-in mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
           </div>
           {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
           <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: '320ms' }}>
