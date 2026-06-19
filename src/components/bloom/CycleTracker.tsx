@@ -478,87 +478,118 @@ export function CycleTracker() {
     const todayIdx = Math.min(cycleDay - 1, cycleLen - 1);
     const xAt = (i: number) => PX + (cycleLen > 1 ? i / (cycleLen - 1) : 0) * chartW;
 
-    // Build a single CONTINUOUS hybrid line (Day 0 → today):
-    // Y = real logged mood score if available, otherwise phase estimate
-    // This keeps the line attached even on days with no data.
     type HPt = { x: number; y: number; real: boolean };
-    const hybridPts: HPt[] = [];
+    type Run = { pts: [number, number][]; real: boolean };
+
+    function buildRuns(pts: HPt[]): Run[] {
+      const result: Run[] = [];
+      pts.forEach((pt, i) => {
+        const isNew = result.length === 0 || result[result.length - 1].real !== pt.real;
+        if (isNew) {
+          const run: Run = { pts: [], real: pt.real };
+          if (i > 0) run.pts.push([pts[i - 1].x, pts[i - 1].y]);
+          result.push(run);
+        }
+        result[result.length - 1].pts.push([pt.x, pt.y]);
+      });
+      return result;
+    }
+
+    // ── MOOD hybrid line (Day 0 → today) ──
+    // High mood score → TOP of chart (low Y). Score 1–8, axis 0–8.
+    const moodHybrid: HPt[] = [];
     for (let i = 0; i <= todayIdx; i++) {
       const dk = dateKey(new Date(currentCycleStart.getTime() + i * MS_DAY));
       const m  = moodLog[dk];
       const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
       const x  = xAt(i);
       const y  = m
-        ? PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH   // real logged
-        : PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH;     // phase estimate
-      hybridPts.push({ x, y, real: !!m });
+        ? PY_TOP + (1 - (MOOD_SCORE[m] ?? 4) / 8) * chartH
+        : PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH;
+      moodHybrid.push({ x, y, real: !!m });
     }
+    const moodRuns = buildRuns(moodHybrid);
 
-    // Split into consecutive same-type runs.
-    // Each run starts with the previous run's last point so segments connect seamlessly.
-    type Run = { pts: [number, number][]; real: boolean };
-    const runs: Run[] = [];
-    hybridPts.forEach((pt, i) => {
-      const isNew = runs.length === 0 || runs[runs.length - 1].real !== pt.real;
-      if (isNew) {
-        const run: Run = { pts: [], real: pt.real };
-        if (i > 0) run.pts.push([hybridPts[i - 1].x, hybridPts[i - 1].y]); // bridge from prev
-        runs.push(run);
-      }
-      runs[runs.length - 1].pts.push([pt.x, pt.y]);
-    });
+    // ── SYMPTOM hybrid line (Day 0 → today) ──
+    // More symptoms → BOTTOM of chart (high Y). Count 0–7.
+    const maxSympt = SYMPTOM_OPTIONS.length;
+    const symptHybrid: HPt[] = [];
+    for (let i = 0; i <= todayIdx; i++) {
+      const dk   = dateKey(new Date(currentCycleStart.getTime() + i * MS_DAY));
+      const syms = symptomsLog[dk] ?? [];
+      const ph   = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
+      const x    = xAt(i);
+      const frac = syms.length > 0
+        ? syms.length / maxSympt
+        : PHASE_SYMPT_EST[ph] / maxSympt;
+      symptHybrid.push({ x, y: PY_TOP + frac * chartH, real: syms.length > 0 });
+    }
+    const symptRuns = buildRuns(symptHybrid);
 
-    // Future estimate line (today → end of cycle) — always estimate/lavender
-    const futurePts: [number, number][] = [];
+    // ── FUTURE estimate lines (today → end) ──
+    const futureMoodPts: [number, number][]  = [];
+    const futureSymptPts: [number, number][] = [];
     for (let i = todayIdx; i < cycleLen; i++) {
       const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
-      futurePts.push([xAt(i), PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH]);
+      futureMoodPts.push([xAt(i),  PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH]);
+      futureSymptPts.push([xAt(i), PY_TOP + (PHASE_SYMPT_EST[ph] / maxSympt) * chartH]);
     }
-    const futureLine = smoothLinePath(futurePts);
+    const futureMoodLine  = smoothLinePath(futureMoodPts);
+    const futureSymptLine = smoothLinePath(futureSymptPts);
 
-    // Today dot position: real mood Y if logged, else estimate
-    const todayHpt = hybridPts[hybridPts.length - 1];
-    const todayDotX = todayHpt?.x ?? xAt(todayIdx);
-    const todayDotY = todayHpt?.y ?? PY_TOP + chartH / 2;
-
-    // Symptom dot: secondary indicator below today dot if symptoms logged
-    const todaySympKey = dateKey(new Date(currentCycleStart.getTime() + todayIdx * MS_DAY));
-    const todaySympCount = (symptomsLog[todaySympKey] ?? []).length;
-    const todaySympY = todaySympCount > 0
-      ? PY_TOP + (1 - todaySympCount / SYMPTOM_OPTIONS.length) * chartH
-      : null;
+    // Today dot follows real mood if logged, else estimate
+    const todayMoodHpt = moodHybrid[moodHybrid.length - 1];
+    const todayDotX = todayMoodHpt?.x ?? xAt(todayIdx);
+    const todayDotY = todayMoodHpt?.y ?? PY_TOP + chartH / 2;
 
     return (
       <>
         <p className="font-script leading-none mb-1" style={{ fontSize: '22px', color: '#DB2777' }}>This cycle</p>
-        {/* Mini legend */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <div style={{ width: 18, height: 3, borderRadius: 2, background: '#EC4899' }} />
-            <span style={{ fontSize: '9px', fontWeight: 700, color: '#9D5C7E' }}>You logged</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <svg width="18" height="3" style={{ overflow: 'visible' }}>
-              <line x1="0" y1="1.5" x2="18" y2="1.5" stroke="#C084FC" strokeWidth="2.5" strokeDasharray="3 4" strokeLinecap="round" />
-            </svg>
-            <span style={{ fontSize: '9px', fontWeight: 700, color: '#9D5C7E' }}>Estimate</span>
-          </div>
+        {/* 2×2 legend */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px', marginBottom: '5px' }}>
+          {[
+            { color: '#EC4899', dash: false, label: 'Mood logged' },
+            { color: '#C084FC', dash: true,  label: 'Mood estimate' },
+            { color: '#FB7185', dash: false, label: 'Symptoms logged' },
+            { color: '#FECDD3', dash: true,  label: 'Symptom estimate' },
+          ].map((item) => (
+            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <svg width="16" height="4" style={{ overflow: 'visible', flexShrink: 0 }}>
+                <line x1="0" y1="2" x2="16" y2="2" stroke={item.color} strokeWidth={item.dash ? '2' : '3'}
+                  strokeDasharray={item.dash ? '3 3' : undefined} strokeLinecap="round" />
+              </svg>
+              <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#9D5C7E', lineHeight: 1 }}>{item.label}</span>
+            </div>
+          ))}
         </div>
         <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-hidden>
-          {/* Phase background bands */}
+          {/* Phase bands */}
           {bands.map((b, bi) => (
             <rect key={bi} x={b.x1} y={PY_TOP} width={b.x2 - b.x1} height={chartH} rx="6" fill={BAND_FILL[b.phase]} />
           ))}
-          {/* Future dashed estimate — lavender */}
-          {futureLine && (
-            <path d={futureLine} fill="none" stroke="#C084FC" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 6" opacity=".5" />
-          )}
-          {/* Hybrid past line — multi-colored runs (estimate = lavender dashed, real = poppy solid) */}
-          {runs.map((run, ri) => {
+          {/* Future dashed estimate lines */}
+          {futureSymptLine && <path d={futureSymptLine} fill="none" stroke="#FECDD3" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 5" opacity=".7" />}
+          {futureMoodLine && <path d={futureMoodLine} fill="none" stroke="#C084FC" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 6" opacity=".5" />}
+          {/* Symptom hybrid past runs — rose tones */}
+          {symptRuns.map((run, ri) => {
             const d = smoothLinePath(run.pts);
             return d ? (
-              <path key={ri} d={d} fill="none"
+              <path key={`sr${ri}`} d={d} fill="none"
+                stroke={run.real ? '#FB7185' : '#FECDD3'}
+                strokeWidth={run.real ? '3' : '2'}
+                strokeDasharray={run.real ? undefined : '3 5'}
+                strokeLinecap="round" strokeLinejoin="round"
+                opacity={run.real ? 0.9 : 0.65}
+              />
+            ) : null;
+          })}
+          {/* Mood hybrid past runs — pink/lavender tones (on top) */}
+          {moodRuns.map((run, ri) => {
+            const d = smoothLinePath(run.pts);
+            return d ? (
+              <path key={`mr${ri}`} d={d} fill="none"
                 stroke={run.real ? '#EC4899' : '#C084FC'}
                 strokeWidth={run.real ? '3.5' : '2.5'}
                 strokeDasharray={run.real ? undefined : '3 5'}
@@ -567,19 +598,15 @@ export function CycleTracker() {
               />
             ) : null;
           })}
-          {/* Symptom dot (lavender, smaller) */}
-          {todaySympY !== null && (
-            <circle cx={todayDotX} cy={todaySympY} r="3.5" fill="#C084FC" opacity=".8" />
-          )}
-          {/* Today circle — follows real mood Y when logged, else estimate */}
+          {/* Today circle on mood line */}
           <circle cx={todayDotX} cy={todayDotY} r="5" fill="#fff" stroke="#EC4899" strokeWidth="3" />
           {/* Labels */}
           <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#CC9999">Day 1</text>
           <text x={todayDotX} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>
           <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#CC9999">Day {cycleLen}</text>
         </svg>
-        <p style={{ margin: '4px 0 0', fontSize: '10.5px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
-          Pink = you logged · Lavender = phase estimate · log daily to see your real curve
+        <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
+          Both curves build as you log — solid lines are real, dashed are estimates.
         </p>
       </>
     );
@@ -600,7 +627,7 @@ export function CycleTracker() {
             href={item.href}
             className="reveal-on-scroll hover-scale flex items-center gap-[13px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
             data-reveal-delay={`${idx * 130}ms`}
-            style={{ padding: '10px', background: '#FFF5F9', border: '1px solid rgba(236,72,153,.08)' }}
+            style={{ padding: '10px', background: 'rgba(255,245,249,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.45)' }}
           >
             {/* Phase image — big, no icon overlay, just a soft brand tint */}
             <div
@@ -632,15 +659,22 @@ export function CycleTracker() {
   }
 
   const cardStyle = {
-    background: '#FFFFFF',
+    background: 'rgba(255,255,255,0.72)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
     borderRadius: '22px',
     padding: '16px',
-    boxShadow: '0 12px 32px rgba(236,72,153,0.10)',
-    border: '1px solid rgba(236,72,153,0.12)',
+    boxShadow: '0 8px 24px rgba(236,72,153,0.12), 0 1px 3px rgba(0,0,0,0.05)',
+    border: '1px solid rgba(255,255,255,0.55)',
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen animate-fade-in" style={{ background: '#FFF0F6', color: '#831843' }}>
+    <div ref={containerRef} className="relative min-h-screen animate-fade-in overflow-hidden"
+      style={{ background: 'linear-gradient(140deg,#FDF2F8 0%,#FCE7F3 35%,#FFF0F6 65%,#EDE9FE 100%)', color: '#831843' }}>
+      {/* Decorative background blobs — give glass cards something to blur through */}
+      <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,.22) 0%,transparent 70%)', pointerEvents: 'none' }} />
+      <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(192,132,252,.18) 0%,transparent 70%)', pointerEvents: 'none' }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: '12%', right: -50, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(251,207,232,.35) 0%,transparent 70%)', pointerEvents: 'none' }} />
 
       <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
 
@@ -771,25 +805,25 @@ export function CycleTracker() {
           <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-3 mt-3.5">
               {/* Next Period */}
-              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>in {daysToPeriod} days</p>
               </div>
               {/* Fertile */}
-              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Fertile</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#F472B6' }}>{fmtDate(fertileStart)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>→ {fmtDate(fertileEnd)}</p>
               </div>
               {/* Ovulation */}
-              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Ovulation</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#DB2777' }}>{fmtDate(ovulationDate)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>day {ovulationDayOfCycle + 1}</p>
               </div>
               {/* Daily Pill */}
-              <div style={{ background: '#fff', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 8px 20px rgba(236,72,153,.09)', border: '1px solid rgba(236,72,153,.12)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#36A88F' }}>
                   {pillTaken ? "Taken ✓" : "Log it"}
@@ -877,7 +911,7 @@ export function CycleTracker() {
                 {showResetMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
+                    <div className="absolute right-0 bottom-full mb-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
                       <button
                         onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
                         className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
@@ -994,7 +1028,7 @@ export function CycleTracker() {
           <div
             ref={graphRef}
             className={["lg:hidden rounded-[22px] p-4 reveal-on-scroll transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
-            style={{ background: '#FFFFFF', border: '1px solid rgba(236,72,153,.12)', boxShadow: '0 12px 32px rgba(236,72,153,.10)' }}
+            style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.55)', boxShadow: '0 8px 24px rgba(236,72,153,.12)' }}
           >
             {renderWellnessGraph("mob")}
           </div>
@@ -1104,11 +1138,13 @@ export function CycleTracker() {
         <aside
           className={["reveal-on-scroll hidden lg:block lg:col-span-2 lg:sticky lg:top-4 transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
           style={{
-            background: '#FFFFFF',
+            background: 'rgba(255,255,255,0.72)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '26px',
             padding: '20px',
-            border: '1px solid rgba(236,72,153,.12)',
-            boxShadow: '0 12px 32px rgba(236,72,153,.10)',
+            border: '1px solid rgba(255,255,255,0.55)',
+            boxShadow: '0 8px 24px rgba(236,72,153,.12)',
           }}
         >
           {/* Mood picker */}
