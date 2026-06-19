@@ -480,6 +480,18 @@ function WeekTab({
   onOpen, onSwap, onRegen, owned, goPantry, proteinBoostDay,
 }: any) {
   const hasPantry = owned.size > 0;
+  const [generating, setGenerating] = useState(false);
+  const planRef = useRef<HTMLDivElement>(null);
+
+  const handleGenerate = () => {
+    setGenerating(true);
+    onGenerate();
+    setTimeout(() => {
+      setGenerating(false);
+      planRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  };
+
   return (
     <>
       {/* Intention picker */}
@@ -522,12 +534,15 @@ function WeekTab({
         <div className="mt-4 flex flex-col gap-2.5">
           {/* Primary CTA — Plan my week */}
           <button
-            onClick={onGenerate}
+            onClick={handleGenerate}
+            disabled={generating}
             className="w-full relative overflow-hidden rounded-2xl text-white font-bold text-base sm:text-lg flex items-center justify-between px-5 py-3.5 active:scale-[.97] transition-transform"
             style={{
-              background: 'linear-gradient(135deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)',
+              background: generating
+                ? 'linear-gradient(135deg,#DB2777 0%,#9D174D 100%)'
+                : 'linear-gradient(135deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)',
               boxShadow: '0 8px 28px rgba(236,72,153,.45)',
-              animation: 'ctaBreathe 3s ease-in-out infinite',
+              animation: generating ? 'none' : 'ctaBreathe 3s ease-in-out infinite',
             }}
           >
             {/* shimmer overlay */}
@@ -539,12 +554,16 @@ function WeekTab({
               }}
             />
             <span className="flex items-center gap-2 relative z-10">
-              <Sparkles className="h-5 w-5 opacity-90" />
-              Plan my week
+              {generating
+                ? <RefreshCw className="h-5 w-5 animate-spin" />
+                : <Sparkles className="h-5 w-5 opacity-90" />}
+              {generating ? 'Building your week ✨' : 'Plan my week'}
             </span>
-            <span className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm">
-              <ChevronRight className="h-5 w-5" />
-            </span>
+            {!generating && (
+              <span className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm">
+                <ChevronRight className="h-5 w-5" />
+              </span>
+            )}
           </button>
 
           {/* Secondary row */}
@@ -568,7 +587,7 @@ function WeekTab({
             )}
             {!planEmpty && (
               <button
-                onClick={onGenerate}
+                onClick={handleGenerate}
                 className="flex items-center justify-center gap-2 rounded-xl border font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all"
                 style={{
                   borderColor: 'rgba(236,72,153,.4)',
@@ -593,10 +612,10 @@ function WeekTab({
           icon={Calendar}
           title="Your week is waiting"
           blurb="Pick a vibe above and tap Plan my week. I'll build it from what you already own."
-          cta="Plan my week" onCta={onGenerate}
+          cta="Plan my week" onCta={handleGenerate}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DAYS.map((d) => (
             <Glass key={d} className="p-3">
               <div className="flex items-center justify-between mb-2">
