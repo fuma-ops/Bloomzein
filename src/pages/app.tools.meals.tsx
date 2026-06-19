@@ -319,12 +319,12 @@ export default function MealsPage() {
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div className="animate-scale-in">
             <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Meal Planner</h1>
-            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">cook with love, glow all week ✿</p>
             {phase !== "any" && (
-              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white">
-                ✦ {phase} phase
-              </span>
+              <p className="mt-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none">
+                {phase} phase
+              </p>
             )}
+            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">cook with love, glow all week ✿</p>
           </div>
           {/* Pill tabs at bottom of hero */}
           <div className="overflow-x-auto no-scrollbar">
