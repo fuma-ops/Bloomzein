@@ -669,14 +669,13 @@ export function CycleTracker() {
   };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen animate-fade-in overflow-hidden"
-      style={{ background: 'linear-gradient(140deg,#FDF2F8 0%,#FCE7F3 35%,#FFF0F6 65%,#EDE9FE 100%)', color: '#831843' }}>
+    <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
       {/* Decorative background blobs — give glass cards something to blur through */}
-      <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,.22) 0%,transparent 70%)', pointerEvents: 'none' }} />
-      <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(192,132,252,.18) 0%,transparent 70%)', pointerEvents: 'none' }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: '12%', right: -50, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(251,207,232,.35) 0%,transparent 70%)', pointerEvents: 'none' }} />
+      <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(192,132,252,.14) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: '12%', right: -50, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(251,207,232,.28) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
-      <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
+      <div className="relative z-10 lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
 
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
         <div className="lg:col-span-3 space-y-3.5 pb-32 lg:pb-0">
