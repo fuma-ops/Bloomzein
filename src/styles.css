@@ -1197,3 +1197,9 @@
   animation: suggestion-attention 2.6s ease-in-out infinite;
 }
 
+/* Recipe popup slide-up (mobile bottom sheet feel, centered on desktop) */
+@keyframes recipeSlideUp {
+  0%   { opacity: 0; transform: translateY(48px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
