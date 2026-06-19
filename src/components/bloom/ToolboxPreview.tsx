@@ -403,64 +403,72 @@ function DiscoverButton({ href, className = "" }: { href: string; className?: st
   );
 }
 
+/* Shared wrapper: animated background blobs + content grouped tightly in the center */
+function PreviewShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="animate-fade-in relative flex flex-1 items-center justify-center overflow-hidden">
+      {/* Animated background blobs */}
+      <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 h-48 w-48 rounded-full"
+        style={{ background: 'radial-gradient(circle,rgba(236,72,153,.22) 0%,transparent 68%)', animation: 'ctaBreathe 5s ease-in-out infinite' }} />
+      <span aria-hidden className="pointer-events-none absolute -bottom-8 -left-12 h-44 w-44 rounded-full"
+        style={{ background: 'radial-gradient(circle,rgba(219,39,119,.16) 0%,transparent 68%)', animation: 'ctaBreathe 7s ease-in-out infinite 1.6s' }} />
+      <span aria-hidden className="pointer-events-none absolute top-1/3 left-1/3 h-28 w-28 rounded-full"
+        style={{ background: 'radial-gradient(circle,rgba(249,168,212,.18) 0%,transparent 68%)', animation: 'ctaBreathe 6s ease-in-out infinite 3.2s' }} />
+      {/* Tiny sparkle dots */}
+      <span aria-hidden className="pointer-events-none absolute top-4 left-8 h-1.5 w-1.5 rounded-full bg-hotpink/30" style={{ animation: 'ctaBreathe 3s ease-in-out infinite' }} />
+      <span aria-hidden className="pointer-events-none absolute bottom-6 right-10 h-1 w-1 rounded-full bg-rose/40" style={{ animation: 'ctaBreathe 4s ease-in-out infinite 1s' }} />
+      <span aria-hidden className="pointer-events-none absolute top-1/2 right-6 h-2 w-2 rounded-full bg-petal/50" style={{ animation: 'ctaBreathe 5s ease-in-out infinite 2s' }} />
+      {/* Tightly grouped content */}
+      <div className="relative z-10 flex w-full flex-col items-center gap-3 text-center lg:gap-4">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function YogaPreview({ phase }: { phase: Phase }) {
   const data = PHASE_YOGA[phase];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col gap-3 lg:gap-4">
-      <p className="text-center text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
-      <div className="flex flex-1 items-center justify-center gap-3 lg:gap-5">
+    <PreviewShell>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
+      <div className="flex items-center justify-center gap-3 lg:gap-5">
         {data.poses.map((slug) => (
           <img key={slug} src={`/images/${slug}.webp`} alt="" loading="lazy" className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-28 sm:w-28 lg:h-40 lg:w-40" />
         ))}
       </div>
-      <div className="flex flex-col items-center gap-2.5 text-center">
-        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
-        <DiscoverButton href="/app/tools/yoga" className="lg:px-6 lg:py-2.5 lg:text-base" />
-      </div>
-    </div>
+      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
+      <DiscoverButton href="/app/tools/yoga" className="lg:px-6 lg:py-2.5 lg:text-base" />
+    </PreviewShell>
   );
 }
 
 function WorkoutPreview({ phase }: { phase: Phase }) {
   const data = PHASE_WORKOUT[phase];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col gap-3 lg:gap-4">
-      <p className="text-center text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
-      <div className="flex flex-1 items-center justify-center">
-        <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 rounded-2xl object-cover shadow-md sm:h-32 sm:w-52 lg:h-44 lg:w-72" />
-      </div>
-      <div className="flex flex-col items-center gap-2.5 text-center">
-        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
-        <DiscoverButton href="/app/tools/workout" className="lg:px-6 lg:py-2.5 lg:text-base" />
-      </div>
-    </div>
+    <PreviewShell>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
+      <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 rounded-2xl object-cover shadow-md sm:h-32 sm:w-52 lg:h-44 lg:w-72" />
+      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
+      <DiscoverButton href="/app/tools/workout" className="lg:px-6 lg:py-2.5 lg:text-base" />
+    </PreviewShell>
   );
 }
 
 function MealsPreview() {
   return (
-    <div className="animate-fade-in flex flex-1 flex-col gap-3 lg:gap-4">
-      {/* Title — always at the top, big */}
-      <p className="text-center text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">Meal Planner</p>
-
-      {/* Images — fill the available middle space */}
-      <div className="flex flex-1 items-center justify-center">
-        <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
-          {MEAL_PREVIEWS.map((meal) => (
-            <div key={meal.src} className="flex flex-col items-center gap-1 lg:gap-2">
-              <img src={meal.src} alt="" loading="lazy" className="h-14 w-14 rounded-2xl object-cover shadow-md sm:h-20 sm:w-20 lg:h-28 lg:w-28" />
-              <span className="text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:text-sm">{meal.label}</span>
-            </div>
-          ))}
-        </div>
+    <PreviewShell>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">Meal Planner</p>
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
+        {MEAL_PREVIEWS.map((meal) => (
+          <div key={meal.src} className="flex flex-col items-center gap-1 lg:gap-2">
+            <img src={meal.src} alt="" loading="lazy" className="h-14 w-14 rounded-2xl object-cover shadow-md sm:h-20 sm:w-20 lg:h-28 lg:w-28" />
+            <span className="text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:text-sm">{meal.label}</span>
+          </div>
+        ))}
       </div>
-
-      {/* Description + CTA — anchored to the bottom */}
-      <div className="flex flex-col items-center gap-2.5 text-center">
-        <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-lg lg:text-base">Recipes and meal plans that adapt to your cycle, your cravings, and your goals.</p>
-        <DiscoverButton href="/app/tools/meals" className="lg:px-6 lg:py-2.5 lg:text-base" />
-      </div>
-    </div>
+      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-lg lg:text-base">Recipes and meal plans that adapt to your cycle, your cravings, and your goals.</p>
+      <DiscoverButton href="/app/tools/meals" className="lg:px-6 lg:py-2.5 lg:text-base" />
+    </PreviewShell>
   );
 }
 
@@ -476,11 +484,11 @@ function BudgetPreview() {
   })();
 
   return (
-    <div className="animate-fade-in flex flex-1 flex-col gap-3 lg:gap-4">
-      <p className="text-center text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">Budget Planner</p>
-      <div className="flex flex-1 items-center justify-center gap-4 lg:gap-8">
-        <div className="animate-bloom-pulse relative grid h-24 w-24 shrink-0 place-items-center rounded-full shadow-md sm:h-28 sm:w-28 lg:h-40 lg:w-40" style={{ background: gradient }}>
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[10px] font-bold text-hotpink shadow-inner sm:h-14 sm:w-14 sm:text-xs lg:h-20 lg:w-20 lg:text-sm">
+    <PreviewShell>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">Budget Planner</p>
+      <div className="flex items-center justify-center gap-4 lg:gap-8">
+        <div className="animate-bloom-pulse relative grid h-24 w-24 shrink-0 place-items-center rounded-full shadow-md sm:h-28 sm:w-28 lg:h-36 lg:w-36" style={{ background: gradient }}>
+          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[10px] font-bold text-hotpink shadow-inner sm:h-14 sm:w-14 sm:text-xs lg:h-18 lg:w-18 lg:text-sm">
             Budget
           </div>
         </div>
@@ -493,28 +501,22 @@ function BudgetPreview() {
           ))}
         </div>
       </div>
-      <div className="flex flex-col items-center gap-2.5 text-center">
-        <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.</p>
-        <DiscoverButton href="/app/tools/budget" className="lg:px-6 lg:py-2.5 lg:text-base" />
-      </div>
-    </div>
+      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.</p>
+      <DiscoverButton href="/app/tools/budget" className="lg:px-6 lg:py-2.5 lg:text-base" />
+    </PreviewShell>
   );
 }
 
 function TeaserPreview({ slug, href }: { slug: string; href: string }) {
   const data = TEASERS[slug];
   return (
-    <div className="animate-fade-in flex flex-1 flex-col gap-3 lg:gap-4">
-      <p className="text-center text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
-      <div className="flex flex-1 items-center justify-center">
-        <span className="animate-icon-wiggle grid h-24 w-24 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-32 sm:w-32 lg:h-44 lg:w-44" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
-          <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16 lg:h-24 lg:w-24" />
-        </span>
-      </div>
-      <div className="flex flex-col items-center gap-2.5 text-center">
-        <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{data.text}</p>
-        <DiscoverButton href={href} className="lg:px-6 lg:py-2.5 lg:text-base" />
-      </div>
-    </div>
+    <PreviewShell>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
+      <span className="animate-icon-wiggle grid h-24 w-24 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-32 sm:w-32 lg:h-44 lg:w-44" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
+        <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16 lg:h-24 lg:w-24" />
+      </span>
+      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{data.text}</p>
+      <DiscoverButton href={href} className="lg:px-6 lg:py-2.5 lg:text-base" />
+    </PreviewShell>
   );
 }
