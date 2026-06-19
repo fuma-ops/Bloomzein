@@ -440,36 +440,6 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* ──────────────── PERSONALIZED BY YOUR CYCLE ──────────────── */}
-        <section className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
-          <SectionHeading kicker="it grows with you" title="Personalized by your cycle." />
-          <div
-            className="bloom-pearl-card animate-card-pop-in relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-[2rem] p-4 sm:p-7"
-            style={{ background: "linear-gradient(135deg, oklch(0.94 0.06 350 / 0.55) 0%, oklch(0.88 0.1 340 / 0.35) 100%)" }}
-          >
-            <div className="pointer-events-none absolute inset-0 -z-0 animate-bloom-pulse rounded-[2rem] bg-[radial-gradient(60%_60%_at_50%_45%,oklch(0.75_0.22_350/0.35)_0%,transparent_70%)]" aria-hidden />
-            <img
-              src="/images/landing-cycle-personalized.webp"
-              alt="Bloom & Zein cycle phases — Period, Follicular, Ovulation, Luteal — with workouts, yoga, meals and articles that adapt to you"
-              width={1400}
-              height={778}
-              decoding="async"
-              className="animate-card-pop-in relative z-10 w-full rounded-2xl object-contain shadow-xl shadow-hotpink/30"
-            />
-            <p className="relative z-10 mt-4 text-center text-sm font-medium text-magenta/80 sm:text-base">
-              Your tools, meals and movement gently shift with every phase — so you're always supported, never fighting your body.
-            </p>
-            <div className="relative z-10 mt-4 flex justify-center">
-              <a
-                href="/app/tools/cycle"
-                className="bloom-luxury-btn hover-scale inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
-              >
-                Track My Cycle <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </a>
-            </div>
-          </div>
-        </section>
-
         {/* ──────────────── REAL TRANSFORMATION — STATS ──────────────── */}
         <section id="stories" className="section-pink-shadow mt-16 scroll-mt-24 sm:mt-24">
           <SectionHeading kicker="real blooming" title="Real blooming. Real transformation." />
