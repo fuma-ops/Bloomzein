@@ -642,8 +642,9 @@ function WeekTab({
                   return (
                     <div
                       key={slot}
-                      className="relative rounded-xl overflow-hidden"
+                      className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
                       style={{ aspectRatio: '3/4' }}
+                      onClick={() => r && onOpen(r.id)}
                     >
                       {/* Photo */}
                       <img
@@ -669,23 +670,18 @@ function WeekTab({
                         </div>
                       )}
 
-                      {/* Recipe name + swap — bottom overlay */}
+                      {/* Recipe name — bottom overlay */}
                       <div className="absolute bottom-0 left-0 right-0 p-1.5">
                         {r ? (
-                          <button
-                            onClick={() => onOpen(r.id)}
-                            className="w-full text-left"
-                          >
-                            <p className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{r.name}</p>
-                          </button>
+                          <p className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{r.name}</p>
                         ) : (
                           <p className="text-[9px] text-white/40 italic">not set</p>
                         )}
                       </div>
 
-                      {/* Swap button */}
+                      {/* Swap button — stops propagation so tap doesn't also open recipe */}
                       <button
-                        onClick={() => onSwap(d, slot)}
+                        onClick={(e) => { e.stopPropagation(); onSwap(d, slot); }}
                         title="Swap meal"
                         className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
                         style={{ display: proteinBoosted ? 'none' : undefined }}
@@ -1109,7 +1105,17 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
         className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl">
-        {r.image && <div className="h-40 sm:h-56 bg-cover bg-center" style={{ backgroundImage: `url(${r.image})` }} />}
+        {(r.photo || r.image) && (
+          <img
+            src={r.photo ? `/images/recipes/${r.photo}` : r.image}
+            alt={r.name}
+            className="w-full h-40 sm:h-56 object-cover"
+            onError={(e) => {
+              const fallback = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
+              (e.currentTarget as HTMLImageElement).src = fallback;
+            }}
+          />
+        )}
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
