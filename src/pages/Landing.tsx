@@ -1,7 +1,7 @@
 import {
   ArrowRight, ChevronLeft, ChevronRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
-  Droplet, Wallet, Calendar as CalendarIcon, Youtube, Mail,
-  Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, BookHeart, ShoppingBag, type LucideIcon,
+  Droplet, Wallet, Calendar as CalendarIcon, Youtube, Mail, Facebook,
+  Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, BookHeart, ShoppingBag, QrCode, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { KawaiiBackground } from "@/components/bloom/KawaiiBackground";
@@ -71,22 +71,44 @@ export default function Landing() {
       {/* Navbar */}
       <header className="sticky top-0 z-40 border-b border-petal/60 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 2xl:max-w-[96rem]">
-          <BloomLogo />
-          <nav className="hidden items-center gap-7 text-sm font-semibold text-rose md:flex">
+          {/* Logo — Bloomzein only */}
+          <a href="/" className="flex items-center gap-2 shrink-0">
+            <BloomLogo />
+            <span className="font-script text-xl text-hotpink hidden sm:block">Bloomzein</span>
+          </a>
+          <nav className="hidden items-center gap-5 text-sm font-semibold text-rose md:flex">
             <a href="/" className="hover:text-hotpink transition">Home</a>
             <a href="#universes" className="hover:text-hotpink transition">Features</a>
             <a href="#features" className="hover:text-hotpink transition">About</a>
-            <a href="/app/read" className="hover:text-hotpink transition">Blog</a>
             <a href="#contact" className="hover:text-hotpink transition">Contact</a>
-            <button
-              onClick={handleDownload}
-              disabled={installing}
-              className="bloom-luxury-btn animate-cta-glow hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition disabled:opacity-70"
-            >
-              {installing ? "Préparation…" : "Download App"} <Download className="h-3.5 w-3.5" />
-            </button>
+            {/* Start Blooming CTA */}
+            <a href="/app/today" className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-hotpink px-4 py-1.5 text-sm font-bold text-hotpink transition hover:bg-hotpink hover:text-white">
+              Start Blooming <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+            {/* Download App with QR popover */}
+            <div className="relative group">
+              <button
+                onClick={handleDownload}
+                disabled={installing}
+                className="bloom-luxury-btn animate-cta-glow hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition disabled:opacity-70"
+              >
+                {installing ? "Préparation…" : "Download App"} <Download className="h-3.5 w-3.5" />
+              </button>
+              {/* QR popover on hover */}
+              <div className="pointer-events-none absolute right-0 top-full mt-2 w-44 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0 translate-y-1">
+                <div className="rounded-2xl border border-petal/60 bg-white/95 p-3 shadow-xl shadow-hotpink/15 text-center backdrop-blur">
+                  <div className="mx-auto mb-2 grid h-28 w-28 place-items-center rounded-xl bg-blush">
+                    <QrCode className="h-20 w-20 text-hotpink" strokeWidth={1.2} />
+                  </div>
+                  <p className="text-[10px] font-bold text-hotpink leading-snug">Scan to download<br/>Bloomzein 🌸</p>
+                </div>
+              </div>
+            </div>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
+            <a href="/app/today" className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-3 py-1.5 text-xs font-bold text-white">
+              Start <ArrowRight className="h-3 w-3" />
+            </a>
             <button
               id="landing-menu-toggle"
               onClick={() => setMobileMenuOpen(true)}
@@ -490,44 +512,6 @@ export default function Landing() {
         </section>
 
         {/* ──────────────── FINAL CTA — GLASS HEART + PHONE ──────────────── */}
-        <section className="relative mt-16 overflow-hidden rounded-[2.5rem] p-5 shadow-2xl shadow-hotpink/30 sm:mt-24 sm:p-10"
-          style={{ background: "linear-gradient(135deg, oklch(0.72 0.26 350), oklch(0.58 0.3 0), oklch(0.7 0.25 20))" }}>
-          <Sparkles className="absolute left-8 top-6 h-5 w-5 animate-sparkle-drift text-white" aria-hidden />
-          <Heart className="absolute right-10 top-8 h-5 w-5 animate-bloom-float fill-white text-white" aria-hidden />
-          <div className="grid items-center gap-6 lg:grid-cols-2">
-            {/* glass heart — framed so its art background reads as intentional */}
-            <div className="order-2 flex items-center justify-center gap-4 lg:order-1">
-              <div className="pearl-frame relative w-40 overflow-hidden rounded-[1.75rem] sm:w-52 lg:w-60">
-                <img src="/images/landing-glass-heart.webp" alt="A glowing crystal heart cradling a soft pink bloom" width={520} height={780} decoding="async" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-              </div>
-              <PhoneMock />
-            </div>
-            <div className="order-1 text-center lg:order-2 lg:text-left">
-              <p className="font-script text-2xl text-white/90 sm:text-3xl">your softest era is one tap away</p>
-              <h2 className="mt-1 font-script text-4xl text-white drop-shadow sm:text-6xl">Ready to bloom at your own pace?</h2>
-              <p className="mx-auto mt-3 max-w-md text-sm text-white/90 lg:mx-0">
-                Everything connected, nothing complicated — just one gentle little app that grows with you, exactly as fast as you bloom.
-              </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
-                <a href="/app/today" className="bloom-luxury-btn inline-flex items-center gap-2 px-7 py-3.5 text-base font-bold text-white">
-                  Start Blooming <ArrowRight className="h-4 w-4" />
-                </a>
-                <button
-                  onClick={handleDownload}
-                  disabled={installing}
-                  className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-white bg-white/90 px-7 py-3.5 text-base font-bold text-hotpink transition hover:bg-white disabled:opacity-70"
-                >
-                  <Download className="h-4 w-4" /> Download App
-                </button>
-              </div>
-              <p className="mx-auto mt-5 flex max-w-md items-center justify-center gap-2 text-xs font-medium text-white/85 lg:mx-0 lg:justify-start">
-                <Lock className="h-3.5 w-3.5 shrink-0" />
-                Your softest secrets stay yours — stored safely on your device, never sold, never shared.
-              </p>
-            </div>
-          </div>
-        </section>
-
         <div className="mt-10 h-3 rounded-full bloom-stripes opacity-70" aria-hidden />
       </main>
 
@@ -546,15 +530,17 @@ export default function Landing() {
             <div className="col-span-2 sm:col-span-3 lg:col-span-1">
               <div className="flex items-center gap-2 mb-3">
                 <BloomLogo className="h-8 w-8" />
-                <span className="font-script text-2xl text-hotpink">Bloom &amp; Zein</span>
+                <span className="font-script text-2xl text-hotpink">Bloomzein</span>
               </div>
               <p className="text-sm leading-relaxed text-[#9d174d]/75 max-w-[15rem]">
                 Your all-in-one app for cycle tracking, nutrition, fitness, and self-care. Designed for your body, mind &amp; life.
               </p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {[
                   { href: "#", label: "Instagram", icon: <Instagram className="h-4 w-4" />, bg: "bg-blush text-hotpink hover:bg-petal" },
                   { href: "#", label: "TikTok",    icon: <Music2 className="h-4 w-4" />,    bg: "bg-hotpink text-white hover:bg-[#be185d]" },
+                  { href: "#", label: "Facebook",  icon: <Facebook className="h-4 w-4" />,  bg: "bg-rose-100 text-hotpink hover:bg-rose-200" },
+                  { href: "#", label: "Pinterest", icon: <Heart className="h-4 w-4" />,     bg: "bg-pink-200 text-[#be185d] hover:bg-pink-300" },
                   { href: "#", label: "YouTube",   icon: <Youtube className="h-4 w-4" />,   bg: "bg-rose-200 text-rose-600 hover:bg-rose-300" },
                   { href: "#", label: "Email",     icon: <Mail className="h-4 w-4" />,      bg: "bg-petal text-hotpink hover:bg-blush" },
                 ].map(({ href, label, icon, bg }) => (
@@ -569,7 +555,7 @@ export default function Landing() {
             <div>
               <p className="mb-3 text-sm font-bold text-hotpink">Features</p>
               <ul className="space-y-2 text-sm text-[#9d174d]/70">
-                {["Cycle Tracking","Meals & Recipes","Yoga","Workout","Journal","Budget"].map(f => (
+                {["Cycle Tracking","Meals & Recipes","Yoga","Workout","Dreamy Diary","Notes & Reminders","Diet","Budget"].map(f => (
                   <li key={f}><a href="#" className="hover:text-hotpink transition">{f}</a></li>
                 ))}
               </ul>
