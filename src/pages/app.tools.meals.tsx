@@ -566,75 +566,63 @@ function WeekTab({
             );
           })}
         </div>
-        {/* Action buttons — stacked on mobile, 3-per-row on desktop */}
-        <div className="mt-4 flex flex-col lg:flex-row lg:items-stretch gap-2.5 lg:gap-2">
-          {/* Primary CTA — Plan my week */}
+        {/* Action buttons — always 3 equal columns */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {/* Regenerate */}
+          <button
+            onClick={handleGenerate}
+            disabled={planEmpty || generating}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border py-3 px-2 font-semibold text-[11px] active:scale-[.97] transition-all disabled:opacity-35"
+            style={{
+              borderColor: 'rgba(236,72,153,.35)',
+              color: '#EC4899',
+              background: 'rgba(236,72,153,.06)',
+            }}
+          >
+            <RefreshCw className="h-4 w-4 animate-spin" style={{ animationDuration: '3s' }} />
+            Regenerate
+          </button>
+
+          {/* Build pantry — pink + bouncing Apple */}
+          <button
+            onClick={goPantry}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 py-3 px-2 font-semibold text-[11px] active:scale-[.97] transition-all"
+            style={{
+              borderColor: '#EC4899',
+              color: '#EC4899',
+              background: 'rgba(236,72,153,.08)',
+              boxShadow: '0 2px 10px rgba(236,72,153,.18)',
+            }}
+          >
+            <Apple className="h-4 w-4 animate-bounce" style={{ animationDuration: '1.2s' }} />
+            Build pantry
+          </button>
+
+          {/* Plan my week — pink gradient primary */}
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="lg:flex-1 relative overflow-hidden rounded-2xl text-white font-bold text-base flex items-center justify-between px-5 py-3 active:scale-[.97] transition-transform"
+            className="relative overflow-hidden flex flex-col items-center justify-center gap-1.5 rounded-xl py-3 px-2 font-semibold text-[11px] text-white active:scale-[.97] transition-all"
             style={{
               background: generating
-                ? 'linear-gradient(135deg,#DB2777 0%,#9D174D 100%)'
+                ? 'linear-gradient(135deg,#DB2777,#9D174D)'
                 : 'linear-gradient(135deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)',
-              boxShadow: '0 6px 22px rgba(236,72,153,.40)',
+              boxShadow: '0 4px 14px rgba(236,72,153,.35)',
               animation: generating ? 'none' : 'ctaBreathe 3s ease-in-out infinite',
             }}
           >
             <span aria-hidden className="absolute inset-0 pointer-events-none"
               style={{
-                background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.18) 50%,transparent 80%)',
+                background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.15) 50%,transparent 80%)',
                 backgroundSize: '200% 100%',
                 animation: 'bloom-shimmer 2.4s linear infinite',
               }}
             />
-            <span className="flex items-center gap-2 relative z-10">
-              {generating
-                ? <RefreshCw className="h-4 w-4 animate-spin" />
-                : <Sparkles className="h-4 w-4 opacity-90" />}
-              {generating ? 'Building your week ✨' : 'Plan my week'}
-            </span>
-            {!generating && (
-              <span className="relative z-10 flex items-center justify-center w-7 h-7 rounded-full bg-white/20">
-                <ChevronRight className="h-4 w-4" />
-              </span>
-            )}
+            {generating
+              ? <RefreshCw className="h-4 w-4 animate-spin relative z-10" />
+              : <Sparkles className="h-4 w-4 relative z-10 opacity-90" />}
+            <span className="relative z-10">{generating ? 'Building…' : 'Plan my week'}</span>
           </button>
-
-          {!hasPantry && (
-            <button
-              onClick={goPantry}
-              className="flex items-center justify-center gap-2 rounded-xl border-2 font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all hover:shadow-md lg:min-w-[10.5rem]"
-              style={{
-                borderColor: '#0d9488',
-                color: '#0d9488',
-                background: 'rgba(13,148,136,.06)',
-                transition: 'background .2s,box-shadow .2s,transform .15s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.12)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.06)'; }}
-            >
-              <Apple className="h-4 w-4 flex-shrink-0" />
-              Build pantry first
-            </button>
-          )}
-          {!planEmpty && (
-            <button
-              onClick={handleGenerate}
-              className="flex items-center justify-center gap-2 rounded-xl border font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all lg:min-w-[9rem]"
-              style={{
-                borderColor: 'rgba(236,72,153,.4)',
-                color: '#EC4899',
-                background: 'rgba(236,72,153,.06)',
-                transition: 'background .2s,box-shadow .2s,transform .15s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.12)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.06)'; }}
-            >
-              <RefreshCw className="h-4 w-4 flex-shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
-              Regenerate
-            </button>
-          )}
         </div>
       </Glass>
 
@@ -1160,7 +1148,7 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
             {/* Photo tile */}
             <div
               className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
-              style={{ aspectRatio: '3/4' }}
+              style={{ aspectRatio: '1/1' }}
               onClick={() => requestAnimationFrame(() => onOpen(r.id))}
             >
               <img
