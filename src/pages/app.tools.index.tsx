@@ -61,44 +61,39 @@ export default function ToolsIndex() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      {/* HERO — title left, flower right */}
+      {/* HERO — title left, fitness image fills */}
       <section ref={heroRef}>
-        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ minHeight: '10rem' }}>
-          {/* Image mirrored so the flower sits on the right */}
+        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ minHeight: '11rem' }}>
+          {/* New bloom fitness image */}
           <img
-            src="/images/tools-hero-journey.png" alt=""
+            src="/images/tools-hero-bloom.png" alt=""
             className="animate-hero-breathe absolute inset-0 h-full w-full object-cover"
-            style={{ transform: 'scaleX(-1)', objectPosition: 'center' }}
+            style={{ objectPosition: 'center' }}
           />
-          {/* Pink glow bloom behind left title */}
-          <div className="pointer-events-none absolute left-0 top-0 h-full w-[55%] z-[2]"
-            style={{ background: 'radial-gradient(ellipse at 18% 65%, rgba(236,72,153,0.38) 0%, transparent 62%)' }} />
           {/* Floating sparkles */}
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/60 z-[1]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-hotpink/45 z-[1]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
-          {/* Title left + glass CTA right */}
-          <div className="relative z-[3] p-5 sm:p-7 flex items-end justify-between">
-            <div>
-              <h1
-                className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2"
-                style={{ textShadow: '0 0 18px rgba(255,255,255,0.9), 0 2px 6px rgba(255,255,255,0.7)' }}
-              >
-                Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
-              </h1>
-              <p
-                className="mt-1 text-xs sm:text-sm text-rose/90"
-                style={{ textShadow: '0 1px 6px rgba(255,255,255,0.85)' }}
-              >
-                ✦ pick your bloom for today 🌸
-              </p>
-            </div>
-            {/* Glass "Play welcome tour" CTA */}
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-white/70 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-white/55 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
+          {/* Title + subtitle + CTA stacked on the left */}
+          <div className="relative z-[4] p-5 sm:p-7 flex flex-col items-start gap-2 sm:gap-3 max-w-[58%]">
+            <h1
+              className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2"
+              style={{ textShadow: '0 0 20px rgba(255,255,255,1), 0 2px 8px rgba(255,255,255,0.8)' }}
+            >
+              Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
+            </h1>
+            <p
+              className="text-xs sm:text-sm text-rose/90"
+              style={{ textShadow: '0 1px 6px rgba(255,255,255,0.9)' }}
+            >
+              ✦ pick your bloom for today 🌸
+            </p>
+            {/* Glass "Play welcome tour" CTA — left aligned below subtitle */}
             <button
-              className="inline-flex items-center gap-1.5 rounded-full font-semibold text-white text-[11px] sm:text-xs px-3 sm:px-4 py-2 sm:py-2.5 transition active:scale-95 backdrop-blur-md"
+              className="mt-0.5 inline-flex items-center gap-1.5 rounded-full font-semibold text-white text-[11px] sm:text-xs px-3 sm:px-4 py-2 sm:py-2.5 transition active:scale-95 backdrop-blur-md"
               style={{
-                background: 'rgba(236,72,153,0.22)',
-                border: '1px solid rgba(255,255,255,0.38)',
-                boxShadow: '0 4px 18px rgba(236,72,153,0.28), inset 0 1px 0 rgba(255,255,255,0.28)',
+                background: 'rgba(236,72,153,0.28)',
+                border: '1px solid rgba(255,255,255,0.45)',
+                boxShadow: '0 4px 18px rgba(236,72,153,0.32), inset 0 1px 0 rgba(255,255,255,0.35)',
               }}
             >
               <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="currentColor" strokeWidth={0} />
