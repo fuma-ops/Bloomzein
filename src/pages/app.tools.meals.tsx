@@ -465,29 +465,40 @@ export default function MealsPage() {
 function GuidedWelcome({ onStart }: { onStart: () => void }) {
   return (
     <Glass className="overflow-hidden">
-      <div className="grid sm:grid-cols-[1fr_320px] items-stretch">
-        <div className="p-5 sm:p-7">
-          <p className="text-xs uppercase tracking-wider text-rose/70 font-semibold">welcome</p>
-          <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-tight mt-1">
-            Cook your softest week ever
-          </h2>
-          <p className="mt-2 text-sm text-rose/80">
-            Three little steps and you're sorted: tell me what's in your kitchen, pick your vibe,
-            and I'll plan all 7 days from what you already have.
-          </p>
-          <ol className="mt-3 space-y-1.5 text-sm text-rose">
-            <li><b className="text-hotpink">1.</b> Build your pantry</li>
-            <li><b className="text-hotpink">2.</b> Pick this week's vibe</li>
-            <li><b className="text-hotpink">3.</b> Get your week ✨</li>
+      <div className="grid sm:grid-cols-[1fr_320px] items-stretch min-h-[280px] sm:min-h-[340px]">
+        <div className="p-5 sm:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[340px]">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-rose/70 font-semibold">welcome</p>
+            <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-tight mt-1">
+              Cook your softest week ever
+            </h2>
+            <p className="mt-3 text-sm text-rose/80 leading-relaxed">
+              Three little steps and you're sorted: tell me what's in your kitchen, pick your vibe,
+              and I'll plan all 7 days from what you already have.
+            </p>
+          </div>
+          <ol className="space-y-2.5 text-sm text-rose">
+            <li className="flex items-center gap-2">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink text-white text-[11px] font-bold shrink-0">1</span>
+              Build your pantry
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink text-white text-[11px] font-bold shrink-0">2</span>
+              Pick this week's vibe
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink text-white text-[11px] font-bold shrink-0">3</span>
+              Get your week ✨
+            </li>
           </ol>
-          <div className="mt-4">
-            <PinkBtn onClick={onStart}>
+          <div>
+            <PinkBtn onClick={onStart} className="animate-cta-bounce">
               Start here <ChevronRight className="h-4 w-4" />
             </PinkBtn>
           </div>
         </div>
         <div
-          className="hidden sm:block bg-cover bg-center min-h-[180px]"
+          className="hidden sm:block bg-cover bg-center min-h-[280px] sm:min-h-[340px]"
           style={{ backgroundImage: "url(/images/meals-hero.jpg)" }}
           aria-hidden
         />
@@ -1117,6 +1128,23 @@ function ConservationTab({ freezer, setFreezer }: any) {
 
 /* ---------- Favorites ---------- */
 
+const MEAL_EMOJI: Record<string, string> = {
+  breakfast: "🌅", lunch: "🥗", dinner: "🍽️", snack: "🍓", lunchbox: "🎀",
+};
+const CUISINE_GRADIENT: Record<string, string> = {
+  Mediterranean: "from-amber-50 to-orange-100",
+  Nordic: "from-sky-50 to-blue-100",
+  Asian: "from-green-50 to-emerald-100",
+  "Middle Eastern": "from-yellow-50 to-amber-100",
+  African: "from-orange-50 to-red-100",
+  Latin: "from-rose-50 to-pink-100",
+};
+function recipeImg(r: Recipe): string | null {
+  if (r.image) return r.image;
+  if (r.photo) return `/images/${r.photo}`;
+  return null;
+}
+
 function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
   const list = RECIPES.filter((r) => favorites.includes(r.id));
   if (!list.length) {
@@ -1125,24 +1153,58 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
       cta="Browse this week" onCta={() => {}} />;
   }
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {list.map((r) => (
-        <Glass key={r.id} className="p-3">
-          <button onClick={() => onOpen(r.id)} className="w-full text-left">
-            {r.image && <div className="aspect-[4/3] rounded-xl overflow-hidden bg-blush mb-2"><img src={r.image} loading="lazy" alt={r.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" /></div>}
-            <p className="font-semibold text-rose">{r.name}</p>
-          </button>
-          <div className="mt-2 flex items-center gap-1">
-            {(["love","ok","never"] as const).map((v) => (
-              <button key={v} onClick={() => setRatings({ ...ratings, [r.id]: v })}
-                className={`text-[11px] rounded-full px-2 py-0.5 border ${ratings[r.id] === v ? "bg-hotpink text-white border-hotpink" : "border-petal/60 text-rose"}`}>
-                {v}
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {list.map((r) => {
+        const imgSrc = recipeImg(r);
+        const gradient = CUISINE_GRADIENT[r.cuisine ?? ""] ?? "from-pink-50 to-rose-100";
+        const emoji = MEAL_EMOJI[r.mealType] ?? "🌸";
+        return (
+          <Glass key={r.id} className="overflow-hidden p-0 hover:shadow-lg transition-shadow duration-200">
+            {/* Image area — always shown */}
+            <button onClick={() => onOpen(r.id)} className="w-full text-left block">
+              <div className={`aspect-[4/3] relative overflow-hidden bg-gradient-to-br ${gradient}`}>
+                {imgSrc && (
+                  <img
+                    src={imgSrc} loading="lazy" alt={r.name}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
+                {/* Always-visible gradient overlay + emoji so even failed loads look great */}
+                <div className="absolute inset-0 flex items-end justify-start p-3 bg-gradient-to-t from-black/40 via-transparent to-transparent">
+                  <span className="text-white/80 text-3xl drop-shadow">{emoji}</span>
+                </div>
+                {/* Cuisine badge top-right */}
+                {r.cuisine && (
+                  <span className="absolute top-2 right-2 rounded-full bg-white/80 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-rose/80">
+                    {r.cuisine}
+                  </span>
+                )}
+              </div>
+              {/* Card body */}
+              <div className="p-3 pb-2">
+                <p className="font-script text-xl text-hotpink leading-tight">{r.name}</p>
+                <p className="text-[11px] text-rose/60 mt-0.5">
+                  {r.prepMin + r.cookMin} min · {r.difficulty} · {r.cost}
+                </p>
+              </div>
+            </button>
+            {/* Ratings + unfav */}
+            <div className="px-3 pb-3 flex items-center gap-1">
+              {(["love","ok","never"] as const).map((v) => (
+                <button key={v} onClick={() => setRatings({ ...ratings, [r.id]: v })}
+                  className={`text-[11px] rounded-full px-2.5 py-0.5 border transition ${ratings[r.id] === v ? "bg-hotpink text-white border-hotpink" : "border-petal/60 text-rose hover:bg-blush"}`}>
+                  {v}
+                </button>
+              ))}
+              <button onClick={() => toggleFav(r.id)} className="ml-auto text-hotpink hover:scale-110 transition-transform">
+                <Heart className="h-4 w-4 fill-hotpink" />
               </button>
-            ))}
-            <button onClick={() => toggleFav(r.id)} className="ml-auto text-hotpink"><Heart className="h-4 w-4 fill-hotpink" /></button>
-          </div>
-        </Glass>
-      ))}
+            </div>
+          </Glass>
+        );
+      })}
     </div>
   );
 }
