@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Wallet, TrendingUp, TrendingDown, PiggyBank, Gem, Plus, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, Check, Sparkles,
+  ChevronDown, ChevronLeft, ChevronRight, Check, Sparkles, X,
   Home as HomeIcon, ShoppingCart, GraduationCap, Car, Dumbbell, Zap, Droplets,
   Flame, Smartphone, Pill, Sparkle, Film, Shirt, Plane, Heart, UtensilsCrossed,
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
@@ -272,6 +272,7 @@ function HealthRing({ pct, label, tone }: { pct: number; label: string; tone: st
 export function BudgetPlanner() {
   const [tab, setTab] = useLocal<TabKey>("bp:tab", "Dashboard");
   const [currency, setCurrency] = useLocal<CurrencyKey>("bp:currency", "USD");
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [incomes, setIncomes] = useLocal<Income[]>("bp:incomes", []);
   const [customCats, setCustomCats] = useLocal<CustomCat[]>("bp:customCats", []);
   const [selectedCats, setSelectedCats] = useLocal<string[]>("bp:selectedCats", ["rent","food","transp","elec"]);
@@ -307,6 +308,71 @@ export function BudgetPlanner() {
       <BudgetBubbles />
       <KawaiiBackground count={8} />
 
+      {/* Custom pink currency picker modal */}
+      {showCurrencyPicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={() => setShowCurrencyPicker(false)}
+        >
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl shadow-pink-300/30 overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Currency</p>
+                <h3 className="font-script text-2xl text-[#831843] leading-tight">Choose your currency ✿</h3>
+              </div>
+              <button
+                onClick={() => setShowCurrencyPicker(false)}
+                className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink hover:bg-pink-100 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* Options */}
+            <div className="px-3 py-3 space-y-1">
+              {(Object.keys(CURRENCIES) as CurrencyKey[]).map((k) => {
+                const active = k === currency;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => { setCurrency(k); setShowCurrencyPicker(false); }}
+                    className={[
+                      "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition active:scale-[0.98]",
+                      active
+                        ? "bg-hotpink/10 border border-hotpink/30"
+                        : "hover:bg-pink-50 border border-transparent",
+                    ].join(" ")}
+                  >
+                    <span className={["font-semibold text-sm", active ? "text-[#831843]" : "text-[#9D5C7E]"].join(" ")}>
+                      {k} — {CURRENCIES[k].symbol}
+                      <span className="ml-2 text-xs font-normal opacity-70">{CURRENCIES[k].name}</span>
+                    </span>
+                    <span className={[
+                      "grid h-5 w-5 place-items-center rounded-full border-2 transition",
+                      active ? "border-hotpink bg-hotpink" : "border-pink-300",
+                    ].join(" ")}>
+                      {active && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="px-5 pb-5 pt-2">
+              <button
+                onClick={() => setShowCurrencyPicker(false)}
+                className="bloom-luxury-btn w-full py-2.5 text-sm font-bold text-white"
+              >
+                Done ✿
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
         {/* Hero */}
         <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-3 animate-hero-border-signal">
@@ -318,17 +384,15 @@ export function BudgetPlanner() {
               <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Budget</h1>
               <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">Soft, smart money planning — your way.</p>
             </div>
-            {/* Currency selector inside hero */}
-            <div className="self-end">
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as CurrencyKey)}
-                className="rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1 text-xs font-semibold text-white outline-none"
+            {/* Currency selector inside hero — custom pink picker */}
+            <div className="self-end relative">
+              <button
+                onClick={() => setShowCurrencyPicker(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/30 active:scale-95"
               >
-                {(Object.keys(CURRENCIES) as CurrencyKey[]).map((k) => (
-                  <option key={k} value={k} className="text-[#831843]">{k} — {CURRENCIES[k].symbol}</option>
-                ))}
-              </select>
+                {currency} — {CURRENCIES[currency].symbol}
+                <ChevronDown className="h-3.5 w-3.5 opacity-80" strokeWidth={2.5} />
+              </button>
             </div>
           </div>
         </div>
