@@ -389,6 +389,7 @@ export default function MealsPage() {
             owned={owned}
             proteinBoostDay={proteinBoostDay}
             goPantry={() => { setStep(1); setTab("pantry"); }}
+            goPrep={() => setTab("prep")}
           />
         )}
 
@@ -489,7 +490,7 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate,
-  onOpen, onSwap, onRegen, owned, goPantry, proteinBoostDay,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDay,
 }: any) {
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
@@ -702,6 +703,28 @@ function WeekTab({
             </Glass>
           ))}
         </div>
+      )}
+
+      {/* Sunday Prep CTA — only when a plan exists */}
+      {!planEmpty && (
+        <button
+          onClick={goPrep}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:scale-[.98] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg,rgba(251,207,232,.9) 0%,rgba(244,114,182,.35) 100%)',
+            border: '1px solid rgba(236,72,153,.25)',
+            boxShadow: '0 4px 16px rgba(236,72,153,.12)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🍳</span>
+            <div className="text-left">
+              <p className="font-bold text-hotpink text-sm leading-tight">Batch-cook your week</p>
+              <p className="text-xs text-rose/70 mt-0.5">Sunday Prep · ready in ~2 hours</p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-hotpink flex-shrink-0" />
+        </button>
       )}
     </>
   );
