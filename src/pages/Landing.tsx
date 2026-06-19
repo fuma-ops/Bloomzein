@@ -1,6 +1,6 @@
 import {
   ArrowRight, ChevronLeft, ChevronRight, Download, Heart, Instagram, Music2, Sparkles, Star, Menu, X, Lock, Flower2,
-  Droplet, Wallet, Calendar as CalendarIcon,
+  Droplet, Wallet, Calendar as CalendarIcon, Youtube, Mail,
   Target, Quote, Utensils, Footprints, ClipboardList, NotebookPen, Apple, Dumbbell, BookOpen, BookHeart, ShoppingBag, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
@@ -531,17 +531,98 @@ export default function Landing() {
         <div className="mt-10 h-3 rounded-full bloom-stripes opacity-70" aria-hidden />
       </main>
 
-      <footer id="contact" className="relative z-10 border-t border-petal/60 bg-white/70 py-8 text-center backdrop-blur">
-        <p className="font-script text-2xl text-bloom-gradient">stay soft, bloom on 🌸</p>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <a href="#" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
-            <Instagram className="h-4 w-4" />
-          </a>
-          <a href="#" aria-label="TikTok" className="grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white hover:bg-magenta">
-            <Music2 className="h-4 w-4" />
-          </a>
+      <footer id="contact" className="relative z-10 overflow-hidden">
+        {/* Pink gradient background */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(160deg,#fdf2f8 0%,#fce7f3 40%,#fbcfe8 72%,#f9a8d4 100%)' }} />
+        {/* Soft decorative blobs */}
+        <span aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full" style={{ background: 'radial-gradient(circle,rgba(236,72,153,.12) 0%,transparent 70%)' }} />
+        <span aria-hidden className="pointer-events-none absolute bottom-0 -left-12 h-44 w-44 rounded-full" style={{ background: 'radial-gradient(circle,rgba(219,39,119,.10) 0%,transparent 70%)' }} />
+
+        <div className="relative z-10 mx-auto max-w-6xl px-5 pt-12 pb-5 sm:px-8">
+          {/* Main columns */}
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-[2fr_1fr_1fr_1fr_1.6fr]">
+
+            {/* Brand */}
+            <div className="col-span-2 sm:col-span-3 lg:col-span-1">
+              <div className="flex items-center gap-2 mb-3">
+                <BloomLogo className="h-8 w-8" />
+                <span className="font-script text-2xl text-hotpink">Bloom &amp; Zein</span>
+              </div>
+              <p className="text-sm leading-relaxed text-[#9d174d]/75 max-w-[15rem]">
+                Your all-in-one app for cycle tracking, nutrition, fitness, and self-care. Designed for your body, mind &amp; life.
+              </p>
+              <div className="mt-4 flex gap-2">
+                {[
+                  { href: "#", label: "Instagram", icon: <Instagram className="h-4 w-4" />, bg: "bg-blush text-hotpink hover:bg-petal" },
+                  { href: "#", label: "TikTok",    icon: <Music2 className="h-4 w-4" />,    bg: "bg-hotpink text-white hover:bg-[#be185d]" },
+                  { href: "#", label: "YouTube",   icon: <Youtube className="h-4 w-4" />,   bg: "bg-rose-200 text-rose-600 hover:bg-rose-300" },
+                  { href: "#", label: "Email",     icon: <Mail className="h-4 w-4" />,      bg: "bg-petal text-hotpink hover:bg-blush" },
+                ].map(({ href, label, icon, bg }) => (
+                  <a key={label} href={href} aria-label={label} className={`grid h-9 w-9 place-items-center rounded-full transition ${bg}`}>
+                    {icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Features */}
+            <div>
+              <p className="mb-3 text-sm font-bold text-hotpink">Features</p>
+              <ul className="space-y-2 text-sm text-[#9d174d]/70">
+                {["Cycle Tracking","Meals & Recipes","Yoga","Workout","Journal","Budget"].map(f => (
+                  <li key={f}><a href="#" className="hover:text-hotpink transition">{f}</a></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <p className="mb-3 text-sm font-bold text-hotpink">Resources</p>
+              <ul className="space-y-2 text-sm text-[#9d174d]/70">
+                {["Help Center","Guides","FAQs"].map(r => (
+                  <li key={r}><a href="#" className="hover:text-hotpink transition">{r}</a></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <p className="mb-3 text-sm font-bold text-hotpink">Company</p>
+              <ul className="space-y-2 text-sm text-[#9d174d]/70">
+                {["About Us","Our Mission","Privacy Policy","Terms of Service"].map(c => (
+                  <li key={c}><a href="#" className="hover:text-hotpink transition">{c}</a></li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Support + newsletter */}
+            <div className="col-span-2 sm:col-span-1">
+              <p className="mb-3 text-sm font-bold text-hotpink">Support</p>
+              <ul className="mb-4 space-y-2 text-sm text-[#9d174d]/70">
+                <li><a href="#" className="hover:text-hotpink transition">Contact Us</a></li>
+                <li><a href="mailto:support@bloomzein.com" className="hover:text-hotpink transition">support@bloomzein.com</a></li>
+              </ul>
+              <div className="rounded-2xl border border-pink-300/50 bg-white/55 p-3 backdrop-blur">
+                <p className="font-bold text-hotpink text-sm">Stay in Bloom 🌸</p>
+                <p className="mt-1 mb-3 text-[11px] text-[#9d174d]/65 leading-snug">Get tips, updates &amp; exclusive offers straight to your inbox.</p>
+                <div className="flex gap-1.5">
+                  <input type="email" placeholder="Enter your email"
+                    className="min-w-0 flex-1 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1.5 text-xs text-[#831843] outline-none focus:border-hotpink placeholder:text-[#9d174d]/40"
+                  />
+                  <button className="flex-shrink-0 grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white hover:bg-[#be185d] transition">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="mt-10 border-t border-pink-300/40 pt-4 flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between text-xs text-[#9d174d]/55">
+            <p>© {new Date().getFullYear()} Bloom &amp; Zein. All Rights Reserved.</p>
+            <p className="flex items-center gap-1">🌸 Made with love for you <Heart className="h-3 w-3 fill-hotpink text-hotpink" /></p>
+          </div>
         </div>
-        <p className="mt-3 text-xs font-medium text-magenta/70">© {new Date().getFullYear()} Bloom & Zein — all in pink</p>
       </footer>
 
       {iosHint && (
