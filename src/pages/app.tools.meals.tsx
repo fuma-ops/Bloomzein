@@ -732,27 +732,43 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
   }
   return (
     <Glass className="p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-3">
         <p className="font-script text-2xl text-hotpink">Kids — this week</p>
         <PinkBtn variant="ghost" onClick={onGenerate}><RefreshCw className="h-4 w-4" /> Refresh</PinkBtn>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-        {KID_DAYS.map((d) => {
+        {KID_DAYS.map((d, di) => {
           const id = kidPlan[d];
           const r = id ? RECIPES.find((x) => x.id === id) : null;
+          const photo = MEAL_PHOTO_FALLBACK['lunchbox'] ?? '/images/meal-lunchbox.jpg';
           return (
-            <button
-              key={d} onClick={() => r && onOpen(r.id)}
-              className="text-left rounded-2xl bg-white/85 border border-petal/60 p-2 hover:border-hotpink transition"
+            <div
+              key={d}
+              className="relative rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-transform animate-scale-in"
+              style={{ aspectRatio: '3/4', animationDelay: `${di * 60}ms` }}
+              onClick={() => r && requestAnimationFrame(() => onOpen(r.id))}
             >
-              {r?.image && (
-                <div className="aspect-square w-full overflow-hidden rounded-xl bg-blush mb-2">
-                  <img src={r.image} alt={r.name} loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                </div>
-              )}
-              <p className="text-[11px] uppercase font-bold text-hotpink">{d}</p>
-              <p className="text-sm font-semibold text-rose leading-tight">{r?.name ?? "—"}</p>
-            </button>
+              {/* Photo */}
+              <img src={photo} alt={r?.name ?? d} className="absolute inset-0 w-full h-full object-cover" />
+              {/* Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+              {/* Day badge */}
+              <div className="absolute top-1.5 left-1.5">
+                <span className="text-[9px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">{d}</span>
+              </div>
+              {/* Swap */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onGenerate(); }}
+                title="Swap"
+                className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
+              >
+                <Shuffle className="h-2.5 w-2.5" />
+              </button>
+              {/* Name */}
+              <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                <p className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{r?.name ?? '—'}</p>
+              </div>
+            </div>
           );
         })}
       </div>
