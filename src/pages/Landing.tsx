@@ -326,7 +326,7 @@ export default function Landing() {
             {/* Phone: 3D coverflow carousel — active card centered, neighbors peek on each side, cards keep their natural size */}
             <div
               ref={universeCarouselRef}
-              className={`relative h-[330px] touch-pan-y sm:hidden ${carouselHintPlayed ? "animate-carousel-hint" : ""}`}
+              className={`relative h-[330px] touch-pan-y fold:hidden ${carouselHintPlayed ? "animate-carousel-hint" : ""}`}
               style={{ perspective: "1200px" }}
               onTouchStart={(e) => { universeTouchX.current = e.touches[0].clientX; }}
               onTouchEnd={(e) => {
@@ -394,7 +394,7 @@ export default function Landing() {
             </div>
 
             {/* Tablet & up: 3-column grid */}
-            <div className="hidden sm:grid sm:grid-cols-3 sm:gap-5 lg:gap-7">
+            <div className="hidden fold:grid fold:grid-cols-3 fold:gap-5 lg:gap-7">
               {UNIVERSES.map((u, i) => (
                 <UniverseCard key={u.key} u={u} i={i} popIn />
               ))}
@@ -654,7 +654,7 @@ const UNIVERSES: Universe[] = [
   },
   {
     key: "mind", title: "Mind", href: "/app/tools/diary",
-    titleColor: "#7c3aed", titleAccent: "#7c0cf2", glowColor: "oklch(0.6 0.22 300 / 0.55)",
+    titleColor: "#c084fc", titleAccent: "#a855f7", glowColor: "oklch(0.72 0.18 295 / 0.45)",
     image: "/images/landing-card-life.webp",
     items: [
       { icon: Flower2, label: "Yoga" },
@@ -666,7 +666,7 @@ const UNIVERSES: Universe[] = [
   },
   {
     key: "life", title: "Life", href: "/app/calendar",
-    titleColor: "#e11d48", titleAccent: "#ff0a47", glowColor: "oklch(0.66 0.22 20 / 0.55)",
+    titleColor: "#ec4899", titleAccent: "#db2777", glowColor: "oklch(0.68 0.24 350 / 0.5)",
     image: "/images/landing-card-mind.webp",
     items: [
       { icon: CalendarIcon, label: "Calendar" },
