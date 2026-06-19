@@ -644,7 +644,7 @@ function WeekTab({
                       key={slot}
                       className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
                       style={{ aspectRatio: '3/4' }}
-                      onClick={() => r && setTimeout(() => onOpen(r.id), 0)}
+                      onClick={() => r && requestAnimationFrame(() => onOpen(r.id))}
                     >
                       {/* Photo */}
                       <img
@@ -1108,22 +1108,22 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
   // opening tap doesn't immediately close the modal via event propagation.
   const [canClose, setCanClose] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setCanClose(true), 80);
+    const t = setTimeout(() => setCanClose(true), 200);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    /* Backdrop — no backdrop-blur (causes green glitch on Android) */
+    /* Backdrop */
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.55)' }}
       onClick={() => canClose && onClose()}
     >
-      {/* Sheet */}
+      {/* Sheet — no animation class, render immediately fully visible */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl animate-scale-in"
-        style={{ background: '#fff' }}
+        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl"
+        style={{ background: '#ffffff' }}
       >
         {/* Hero photo */}
         <div className="relative h-52 sm:h-64 overflow-hidden rounded-t-[2rem] sm:rounded-t-[2rem]">
