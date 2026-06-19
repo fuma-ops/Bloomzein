@@ -70,17 +70,17 @@ export default function ToolsIndex() {
             className="animate-hero-breathe absolute inset-0 h-full w-full object-cover"
             style={{ transform: 'scaleX(-1)', objectPosition: 'center' }}
           />
-          {/* Left-to-right gradient so title on the left is readable */}
-          <div className="absolute inset-0 z-[2] bg-gradient-to-r from-white/92 via-white/60 to-transparent" />
           {/* Floating sparkles */}
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/50 z-[1]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-hotpink/35 z-[1]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
-          {/* Title anchored to the left */}
-          <div className="relative z-[3] px-5 py-5 sm:px-8 sm:py-7 max-w-xs">
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2">
-              Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-rose/80">✦ pick your bloom for today 🌸</p>
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/60 z-[1]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-hotpink/45 z-[1]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
+          {/* Title anchored to the left — frosted pill so image stays vivid */}
+          <div className="relative z-[3] p-5 sm:p-7">
+            <div className="inline-block rounded-2xl bg-white/60 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">
+              <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2">
+                Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-rose/80">✦ pick your bloom for today 🌸</p>
+            </div>
           </div>
         </div>
       </section>
