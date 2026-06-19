@@ -246,8 +246,8 @@ function LineChart({ points }: { points: number[] }) {
   );
 }
 
-function HealthRing({ pct, label, tone }: { pct: number; label: string; tone: string }) {
-  const size = 150, r = size/2 - 12, c = 2 * Math.PI * r;
+function HealthRing({ pct, label, tone, size = 150 }: { pct: number; label: string; tone: string; size?: number }) {
+  const r = size/2 - 12, c = 2 * Math.PI * r;
   const dash = `${(pct / 100) * c} ${c}`;
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -259,7 +259,27 @@ function HealthRing({ pct, label, tone }: { pct: number; label: string; tone: st
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
           <div className="text-3xl font-bold" style={{ color: tone }}>{Math.round(pct)}%</div>
-          <div className="text-xs font-semibold text-[#9D5C7E]">{label}</div>
+          {label && <div className="text-xs font-semibold text-[#9D5C7E]">{label}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniRing({ pct, size = 100 }: { pct: number; size?: number }) {
+  const r = size / 2 - 8, c = 2 * Math.PI * r;
+  const dash = `${(pct / 100) * c} ${c}`;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="9" />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth="9"
+          strokeDasharray={dash} strokeLinecap="round" className="transition-all duration-700" />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center text-white">
+        <div>
+          <div className="text-xl sm:text-2xl font-extrabold leading-none">{Math.round(pct)}%</div>
+          <div className="text-[9px] sm:text-[10px] font-semibold opacity-80 leading-tight">of your goal<br/>reached</div>
         </div>
       </div>
     </div>
@@ -506,30 +526,21 @@ function StatCards({ income, expenses, savings, balance, currency }: {
   income: number; expenses: number; savings: number; balance: number; currency: CurrencyKey;
 }) {
   const items = [
-    { label: "Total Income",   v: income,   Icon: Wallet,       tone: "bg-pink-50 text-[#EC4899]" },
-    { label: "Total Expenses", v: expenses, Icon: TrendingDown, tone: "bg-pink-50 text-[#EC4899]" },
-    { label: "Total Savings",  v: savings,  Icon: PiggyBank,    tone: "bg-pink-50 text-[#EC4899]" },
-    { label: "Total Balance",  v: balance,  Icon: Gem,          tone: "bg-pink-50 text-[#EC4899]" },
+    { label: "Income Garden",   emoji: "🌷", v: income,   sub: "your monthly earnings",  bg: "from-pink-50 to-rose-50" },
+    { label: "Spending Petals", emoji: "🛍️", v: expenses, sub: "this month's spends",    bg: "from-fuchsia-50 to-pink-50" },
+    { label: "Savings Bloom",   emoji: "🌸", v: savings,  sub: "building your future",   bg: "from-purple-50 to-pink-50" },
+    { label: "Dream Balance",   emoji: "💎", v: balance,  sub: "your available balance",  bg: "from-rose-50 to-fuchsia-50" },
   ];
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {items.map((it) => (
-        <Card key={it.label} className="hover:-translate-y-1">
-          <div className={`grid h-8 w-8 place-items-center rounded-full ${it.tone}`}>
-            <it.Icon className="h-4 w-4" strokeWidth={1.6} />
-          </div>
-          <div
-            className="mt-2 text-xl sm:text-2xl font-extrabold tracking-tight font-script leading-none text-[#EC4899]"
-            style={{ textShadow: "0 1px 2px rgba(255,255,255,0.9)" }}
-          >
+        <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
+          <div className="absolute -top-3 -right-3 text-5xl opacity-20 select-none pointer-events-none">{it.emoji}</div>
+          <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
+          <div className="mt-1 font-script text-lg sm:text-2xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
           </div>
-          <div
-            className="mt-0.5 text-[9px] sm:text-[10px] font-extrabold tracking-widest text-[#BE185D]"
-            style={{ textShadow: "0 1px 2px rgba(255,255,255,0.8)" }}
-          >
-            {it.label.toUpperCase()}
-          </div>
+          <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
         </Card>
       ))}
     </div>
@@ -548,53 +559,20 @@ function DashboardTab(props: {
   incomes: Income[];
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, allCats, goals, bills, setTab,
+    txns, setTxns, selectedCats, allCats, goals, setTab,
     incomes, budget } = props;
 
   const steps = [
-    { key: "income", label: "Add your income",     hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
-    { key: "setup",  label: "Set up your budget",  hint: "Pick spending categories & set monthly limits", done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
-    { key: "goals",  label: "Add a savings goal",  hint: "A vacation, an emergency fund — dream big",     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
-    { key: "track",  label: "Log your first spend", hint: "Track where your money actually goes",         done: txns.length > 0,                                                    tab: "Reports"       as TabKey, Icon: FileBarChart },
+    { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
+    { key: "setup",  label: "Set up your budget",   hint: "Pick spending categories & set monthly limits", done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
+    { key: "goals",  label: "Add a savings goal",   hint: "A vacation, an emergency fund — dream big",     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
+    { key: "track",  label: "Log your first spend", hint: "Track where your money actually goes",          done: txns.length > 0,                                                    tab: "Reports"       as TabKey, Icon: FileBarChart },
   ];
   const completed = steps.filter(s => s.done).length;
   const nextStep  = steps.find(s => !s.done);
   const allDone   = completed === steps.length;
 
-  // Donut data
-  const donutData = useMemo(() => {
-    const byCat: Record<string, number> = {};
-    txns.filter(t => t.type === "expense").forEach(t => {
-      byCat[t.catKey] = (byCat[t.catKey] ?? 0) + t.amount;
-    });
-    const palette = ["#EC4899","#F472B6","#FB7185","#F9A8D4","#C026D3","#E11D48","#FBCFE8","#A21CAF"];
-    return Object.entries(byCat).map(([k, v], i) => {
-      const cat = allCats.find(c => c.key === k);
-      return { label: cat?.label ?? k, value: v, color: palette[i % palette.length] };
-    });
-  }, [txns, allCats]);
-
-  // Weekly trend (current month)
-  const trend = useMemo(() => {
-    const buckets = [0, 0, 0, 0];
-    const now = new Date();
-    txns.filter(t => t.type === "expense").forEach(t => {
-      const d = new Date(t.date);
-      if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
-      buckets[Math.min(3, Math.floor((d.getDate() - 1) / 7))] += t.amount;
-    });
-    return buckets;
-  }, [txns]);
-
-  // Health
-  const savingsPct = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
-  const health = savingsPct > 20
-    ? { tone: "#16A34A", label: "Healthy ✿",    tip: "Beautiful! You're saving with intention 🌿" }
-    : savingsPct >= 10
-      ? { tone: "#F59E0B", label: "Watch Out",   tip: "Almost there — trim a want category this week 🌷" }
-      : { tone: "#EF4444", label: "Over Budget", tip: "Take a soft pause and review your wants 💗" };
-
-  // Inline add txn state
+  // Inline form state
   const [amount, setAmount]   = useState("");
   const [catKey, setCatKey]   = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
   const [desc, setDesc]       = useState("");
@@ -617,7 +595,36 @@ function DashboardTab(props: {
     setTimeout(() => setTxnSaved(false), 1500);
   }
 
-  // ── NEW USER: no income yet → full onboarding screen ──
+  // Spending by category
+  const catSpend = useMemo(() => {
+    const byCat: Record<string, number> = {};
+    txns.filter(t => t.type === "expense").forEach(t => {
+      byCat[t.catKey] = (byCat[t.catKey] ?? 0) + t.amount;
+    });
+    const total = Object.values(byCat).reduce((s, v) => s + v, 0) || 1;
+    return Object.entries(byCat)
+      .sort(([, a], [, b]) => b - a)
+      .map(([k, v]) => ({ key: k, cat: allCats.find(c => c.key === k), amount: v, pct: Math.round((v / total) * 100) }));
+  }, [txns, allCats]);
+
+  // Monthly story insights
+  const insights = useMemo(() => {
+    const r: { icon: string; main: string; sub: string }[] = [];
+    if (totalSavings > 0) r.push({ icon: "🌸", main: `You saved ${fmt(totalSavings, currency)}`, sub: "Keep growing!" });
+    const planned = txns.filter(t => t.mood === "planned").length;
+    const impulsive = txns.filter(t => t.mood === "impulsive").length;
+    if (txns.length > 0 && planned >= impulsive) r.push({ icon: "🌷", main: "You spent mindfully this month", sub: "Great choice!" });
+    else if (txns.length > 0 && impulsive > planned) r.push({ icon: "💗", main: "Some impulsive spends this month", sub: "Soft pause next time ✿" });
+    if (goals.length > 0) r.push({ icon: "✨", main: `You have ${goals.length} savings goal${goals.length > 1 ? "s" : ""}`, sub: "You are amazing!" });
+    if (r.length === 0) r.push({ icon: "🌸", main: "Start tracking to see your story", sub: "bloom here ✿" });
+    return r.slice(0, 3);
+  }, [totalSavings, txns, goals, currency]);
+
+  // Hero goal (first goal)
+  const heroGoal = goals[0];
+  const heroGoalPct = heroGoal?.target > 0 ? Math.min(100, (heroGoal.saved / heroGoal.target) * 100) : 0;
+
+  // ── ONBOARDING (no income) ──
   if (incomes.length === 0) {
     return (
       <div className="space-y-4 animate-fade-in">
@@ -628,9 +635,7 @@ function DashboardTab(props: {
             <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold tracking-widest text-[#9D5C7E]">
               <Sparkles className="h-3 w-3 text-[#EC4899]" /> WELCOME TO YOUR BUDGET
             </span>
-            <h2 className="mt-3 font-script text-4xl sm:text-5xl text-[#831843] leading-tight">
-              Let's bloom your budget ✿
-            </h2>
+            <h2 className="mt-3 font-script text-4xl sm:text-5xl text-[#831843] leading-tight">Let's bloom your budget ✿</h2>
             <p className="mt-2 text-sm text-[#9D5C7E] max-w-lg leading-relaxed">
               Four gentle steps and you're set. Bloom guides you from your first paycheck to your dream savings goal — no spreadsheets, no stress.
             </p>
@@ -650,7 +655,6 @@ function DashboardTab(props: {
             </div>
           </div>
         </Card>
-
         <Card>
           <h3 className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-4 uppercase">Your 4-step path</h3>
           <ol className="space-y-2.5">
@@ -661,20 +665,14 @@ function DashboardTab(props: {
                   className={["flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-300 border-[0.5px]",
                     s.done ? "bg-emerald-50/80 border-emerald-200/60"
                     : isNext ? "bg-gradient-to-r from-pink-50 to-purple-50/50 border-pink-300/60 shadow-sm"
-                    : "bg-white/60 border-pink-100/60"].join(" ")}
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
+                    : "bg-white/60 border-pink-100/60"].join(" ")}>
                   <div className={["grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition-all duration-300",
-                    s.done ? "bg-emerald-500 text-white shadow-sm shadow-emerald-300/40"
-                    : isNext ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30"
-                    : "bg-pink-100 text-[#C4A0CE]"].join(" ")}>
+                    s.done ? "bg-emerald-500 text-white" : isNext ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30" : "bg-pink-100 text-[#C4A0CE]"].join(" ")}>
                     {s.done ? <Check className="h-5 w-5" strokeWidth={2.5} /> : <s.Icon className="h-4 w-4" strokeWidth={1.8} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-bold tracking-widest text-[#C4A0CE] uppercase">Step {i + 1}</div>
-                    <div className={["text-sm font-semibold truncate", s.done ? "text-emerald-700 line-through decoration-emerald-300/60" : "text-[#831843]"].join(" ")}>
-                      {s.label}
-                    </div>
+                    <div className={["text-sm font-semibold truncate", s.done ? "text-emerald-700 line-through decoration-emerald-300/60" : "text-[#831843]"].join(" ")}>{s.label}</div>
                     {!s.done && <div className="text-[10px] text-[#9D5C7E] mt-0.5 leading-snug">{s.hint}</div>}
                   </div>
                   {isNext && (
@@ -693,13 +691,13 @@ function DashboardTab(props: {
     );
   }
 
-  // ── HAS INCOME but setup incomplete → compact guide + partial dashboard ──
+  // ── FULL DASHBOARD ──
   return (
     <div className="space-y-4 animate-fade-in">
 
-      {/* Smart Guide Banner — visible until all 4 steps done */}
+      {/* Smart guide banner */}
       {!allDone && nextStep && (
-        <div className="relative overflow-hidden rounded-2xl border border-pink-200/60 bg-gradient-to-r from-pink-50 via-white to-purple-50/40 px-4 py-4 shadow-sm animate-fade-in">
+        <div className="relative overflow-hidden rounded-2xl border border-pink-200/60 bg-gradient-to-r from-pink-50 via-white to-purple-50/40 px-4 py-4 shadow-sm">
           <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-pink-200/30 blur-2xl" />
           <div className="relative flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
@@ -716,8 +714,8 @@ function DashboardTab(props: {
             <div className="flex items-center gap-3 shrink-0">
               <div className="hidden sm:flex gap-1">
                 {steps.map(s => (
-                  <div key={s.key} className={["h-2 w-2 rounded-full transition-all duration-300",
-                    s.done ? "bg-emerald-400" : s === nextStep ? "bg-[#EC4899] w-4" : "bg-pink-200"].join(" ")} />
+                  <div key={s.key} className={["h-2 rounded-full transition-all duration-300",
+                    s.done ? "w-2 bg-emerald-400" : s === nextStep ? "w-4 bg-[#EC4899]" : "w-2 bg-pink-200"].join(" ")} />
                 ))}
               </div>
               <PrimaryBtn onClick={() => setTab(nextStep.tab)}>
@@ -727,10 +725,8 @@ function DashboardTab(props: {
           </div>
         </div>
       )}
-
-      {/* All-done celebration */}
       {allDone && (
-        <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/60 px-4 py-3 flex items-center gap-3 animate-fade-in">
+        <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/60 px-4 py-3 flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm">
             <Check className="h-5 w-5" strokeWidth={2.5} />
           </div>
@@ -741,16 +737,88 @@ function DashboardTab(props: {
         </div>
       )}
 
-      {/* Stat Cards */}
+      {/* 1. HERO "You're blooming" */}
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl" style={{ minHeight: 160 }}>
+        <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.88) 0%, rgba(236,72,153,0.65) 52%, rgba(236,72,153,0.18) 80%, transparent 100%)" }} />
+        <div className="relative z-10 flex items-center justify-between gap-3 p-5 sm:p-7" style={{ minHeight: 160 }}>
+          <div className="max-w-[58%]">
+            <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+              You're blooming ✿
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
+            <button className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+              <Calendar className="h-3 w-3" /> This month <ChevronDown className="h-3 w-3 opacity-70" />
+            </button>
+          </div>
+          <MiniRing pct={heroGoalPct} size={110} />
+        </div>
+      </div>
+
+      {/* 2. STAT CARDS */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
 
-      {/* Add Expense — prominent when no transactions yet */}
-      {txns.length === 0 && (
+      {/* 3. FEATURED GOAL */}
+      {heroGoal ? (
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-pink-200/60 shadow-lg" style={{ minHeight: 120 }}>
+          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }} />
+          <div className="absolute right-0 top-0 bottom-0 w-2/5 opacity-20" style={{ background: "radial-gradient(circle at 80% 50%, rgba(255,255,255,0.6) 0%, transparent 70%)" }} />
+          <div className="relative z-10 flex items-center justify-between gap-4 p-5 sm:p-6" style={{ minHeight: 120 }}>
+            <div className="flex-1 min-w-0">
+              <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
+                <Sparkles className="h-3 w-3" /> My Dream Goal
+              </p>
+              <h3 className="font-script text-2xl sm:text-3xl text-white mt-0.5 leading-tight truncate">{heroGoal.name}</h3>
+              <p className="text-sm text-white/90 mt-0.5">{fmt(heroGoal.saved, currency)} / {fmt(heroGoal.target, currency)}</p>
+              <div className="mt-2.5 h-2.5 rounded-full bg-white/30 overflow-hidden max-w-[180px] sm:max-w-xs">
+                <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${heroGoalPct}%` }} />
+              </div>
+              <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(heroGoalPct)}% completed</p>
+            </div>
+            <MiniRing pct={heroGoalPct} size={88} />
+          </div>
+        </div>
+      ) : (
+        <Card className="border-dashed border-pink-300/50 text-center py-5 bg-gradient-to-br from-pink-50 to-rose-50">
+          <p className="font-script text-2xl text-[#831843]">Add your first dream goal ✿</p>
+          <p className="text-xs text-[#9D5C7E] mt-1">A vacation, an emergency fund — dream big</p>
+          <PrimaryBtn onClick={() => setTab("Savings Goals")} className="mt-3">
+            <Flag className="h-4 w-4" /> Add Goal
+          </PrimaryBtn>
+        </Card>
+      )}
+
+      {/* 4. SPENDING CATEGORIES */}
+      {catSpend.length > 0 ? (
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+              <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
+            </h3>
+            <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+              See all <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+            {catSpend.slice(0, 6).map(({ key, cat, amount, pct }) => (
+              <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
+                  {cat?.emoji ?? "💰"}
+                </div>
+                <p className="text-[10px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
+                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amount, currency)}</p>
+                <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#EC4899] transition-all duration-700" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-[9px] text-[#9D5C7E] font-semibold">{pct}%</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : (
         <Card className="border-pink-300/50 bg-gradient-to-br from-pink-50 to-white">
           <div className="flex items-center gap-2 mb-1">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
-              <ArrowDownRight className="h-4 w-4" />
-            </div>
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]"><ArrowDownRight className="h-4 w-4" /></div>
             <h3 className="font-script text-2xl text-[#831843]">Log your first expense</h3>
           </div>
           <p className="text-xs text-[#9D5C7E] mb-4">Track where your money actually goes — every spend counts ✿</p>
@@ -763,143 +831,69 @@ function DashboardTab(props: {
         </Card>
       )}
 
-      {/* Overview: donut + trend */}
-      {txns.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-script text-3xl text-[#831843]">Expense Breakdown</h3>
-              <PiggyBank className="h-5 w-5 text-[#EC4899]" />
-            </div>
-            {donutData.length === 0 ? (
-              <EmptyState Icon={PiggyBank} text="No expenses yet — log one below to see the breakdown." />
-            ) : (
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Donut data={donutData} total={totalExpenses} currency={currency} />
-                <ul className="flex-1 space-y-1.5 w-full">
-                  {donutData.map(d => (
-                    <li key={d.label} className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2 text-[#831843]">
-                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-                        {d.label}
-                      </span>
-                      <span className="text-[#9D5C7E] font-semibold">{Math.round((d.value / totalExpenses) * 100)}%</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-script text-3xl text-[#831843]">This Month</h3>
-              <LineIcon className="h-5 w-5 text-[#EC4899]" />
-            </div>
-            <LineChart points={trend} />
-            <div className="flex justify-between mt-1 px-1">
-              {["Week 1","Week 2","Week 3","Week 4"].map(w => (
-                <span key={w} className="text-[9px] text-[#C4A0CE] font-semibold">{w}</span>
-              ))}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Bills + Goals + Health */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 5. THIS MONTH'S STORY + INCOME VS EXPENSES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-script text-2xl text-[#831843]">Upcoming Bills</h3>
-            <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline">View all</button>
-          </div>
-          {bills.length === 0 ? (
-            <div className="py-3 text-center">
-              <EmptyState Icon={Calendar} text="No bills yet." compact />
-              <button onClick={() => setTab("Reports")} className="mt-2 text-xs font-bold text-[#EC4899] hover:underline">Add a bill →</button>
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {bills.slice(0, 3).map(b => {
-                const d = daysUntil(b.due);
-                const status = b.paid ? { l: "Paid", c: "bg-emerald-100 text-emerald-700" }
-                  : d < 0 ? { l: "Overdue", c: "bg-red-100 text-red-700" }
-                  : { l: `${d}d`, c: "bg-amber-100 text-amber-700" };
-                return (
-                  <li key={b.id} className="flex items-center justify-between rounded-xl bg-pink-50/60 px-3 py-2 text-sm">
-                    <div>
-                      <div className="font-semibold text-[#831843]">{b.name}</div>
-                      <div className="text-xs text-[#9D5C7E]">{fmt(b.amount, currency)}</div>
-                    </div>
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
+            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> This month's story
+          </h3>
+          <ul className="space-y-3">
+            {insights.map((ins, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span className="text-base leading-none mt-0.5 shrink-0">{ins.icon}</span>
+                <div>
+                  <p className="text-sm font-semibold text-[#831843] leading-snug">{ins.main}</p>
+                  <p className="text-[11px] text-[#9D5C7E]">{ins.sub}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </Card>
 
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-script text-2xl text-[#831843]">Savings Goals</h3>
-            <button onClick={() => setTab("Savings Goals")} className="text-xs font-semibold text-[#EC4899] hover:underline">View all</button>
-          </div>
-          {goals.length === 0 ? (
-            <div className="py-3 text-center">
-              <EmptyState Icon={Flag} text="No goals yet." compact />
-              <button onClick={() => setTab("Savings Goals")} className="mt-2 text-xs font-bold text-[#EC4899] hover:underline">Add a goal →</button>
+            <h3 className="text-sm font-bold text-[#831843]">Income vs Expenses</h3>
+            <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#F9A8D4] inline-block" /> Expenses</span>
             </div>
+          </div>
+          {totalIncome === 0 && totalExpenses === 0 ? (
+            <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
           ) : (
-            <ul className="space-y-3">
-              {goals.slice(0, 3).map(g => {
-                const p = Math.min(100, (g.saved / g.target) * 100);
-                return (
-                  <li key={g.id}>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="font-semibold text-[#831843] truncate">{g.name}</span>
-                      <span className="text-[#9D5C7E] shrink-0 ml-2">{Math.round(p)}%</span>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 flex items-end gap-3 h-28">
+                {(["income", "expenses"] as const).map(type => {
+                  const val = type === "income" ? totalIncome : totalExpenses;
+                  const maxVal = Math.max(totalIncome, totalExpenses, 1);
+                  const h = Math.max(8, (val / maxVal) * 100);
+                  return (
+                    <div key={type} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
+                      <span className="text-[10px] font-bold text-[#831843]">{fmt(val, currency)}</span>
+                      <div className="w-full rounded-t-xl transition-all duration-700"
+                        style={{ height: `${h}%`, background: type === "income" ? "#EC4899" : "#F9A8D4" }} />
+                      <span className="text-[10px] text-[#9D5C7E] font-semibold capitalize">{type}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-pink-100 overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${p}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
-                    </div>
-                    <div className="flex justify-between mt-0.5">
-                      <span className="text-[10px] text-[#9D5C7E]">{fmt(g.saved, currency)} saved</span>
-                      <span className="text-[10px] text-[#9D5C7E]">Goal: {fmt(g.target, currency)}</span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Card>
-
-        <Card className="flex flex-col items-center text-center">
-          <h3 className="font-script text-2xl text-[#831843] mb-2">Budget Health</h3>
-          {totalIncome === 0 ? (
-            <EmptyState Icon={PiggyBank} text="Add income to see your health score." compact />
-          ) : (
-            <>
-              <HealthRing pct={Math.max(0, Math.min(100, savingsPct))} label={health.label} tone={health.tone} />
-              <p className="mt-3 text-xs text-[#9D5C7E] leading-relaxed">{health.tip}</p>
-              <div className="mt-3 w-full text-left rounded-xl bg-pink-50/60 p-3">
-                <p className="text-[10px] font-bold text-[#9D5C7E] uppercase tracking-wider mb-1">50/30/20 guide</p>
-                {[
-                  { label: "Needs (50%)", pct: 50, v: totalIncome * 0.5 },
-                  { label: "Wants (30%)", pct: 30, v: totalIncome * 0.3 },
-                  { label: "Savings (20%)", pct: 20, v: totalIncome * 0.2 },
-                ].map(r => (
-                  <div key={r.label} className="flex justify-between text-[11px] text-[#831843] py-0.5">
-                    <span>{r.label}</span><span className="font-semibold">{fmt(r.v, currency)}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            </>
+              {totalIncome > 0 && (
+                <div className="shrink-0 text-center">
+                  <HealthRing
+                    pct={Math.min(100, (totalExpenses / totalIncome) * 100)}
+                    label=""
+                    tone="#EC4899"
+                    size={120}
+                  />
+                  <p className="text-[10px] text-[#9D5C7E] font-semibold -mt-2">of income spent</p>
+                </div>
+              )}
+            </div>
           )}
         </Card>
       </div>
 
-      {/* Add Transaction — always shown when income exists */}
+      {/* 6. LOG A SPEND */}
       {txns.length > 0 && (
         <Card>
           <div className="flex items-center gap-2 mb-4">
