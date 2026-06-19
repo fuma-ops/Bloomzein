@@ -42,6 +42,14 @@ import {
 
 
 
+/* ---------- Meal photo fallbacks (by slot type) ---------- */
+const MEAL_PHOTO_FALLBACK: Record<string, string> = {
+  breakfast: '/images/meal-oats.jpg',
+  lunch:     '/images/meal-buddha.jpg',
+  dinner:    '/images/meal-stew.jpg',
+  lunchbox:  '/images/meal-lunchbox.jpg',
+};
+
 /* ---------- localStorage keys ---------- */
 const LS = {
   pantry: "bloom:meals-pantry",        // {category: string[] items checked}
@@ -616,36 +624,73 @@ function WeekTab({
         />
       ) : (
         <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {DAYS.map((d) => (
-            <Glass key={d} className="p-3">
-              <div className="flex items-center justify-between mb-2">
+          {DAYS.map((d, di) => (
+            <Glass key={d} className="p-3 animate-scale-in" style={{ animationDelay: `${di * 60}ms` }}>
+              <div className="flex items-center justify-between mb-2.5">
                 <p className="font-script text-xl text-hotpink">{d}</p>
-                <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose hover:text-hotpink">
-                  <RefreshCw className="h-3 w-3" /> redo
+                <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
+                  <RefreshCw className="h-3 w-3" /> redo day
                 </button>
               </div>
-              <div className="space-y-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {(["breakfast","lunch","dinner"] as MealType[]).map((slot) => {
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
                   const proteinBoosted = d === proteinBoostDay && slot === "dinner";
+                  const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.jpg';
+                  const photoSrc = r?.photo ? `/images/recipes/${r.photo}` : fallback;
                   return (
-                    <div key={slot} className="flex items-center gap-2 rounded-xl bg-blush/60 px-2 py-1.5">
-                      <span className="text-[10px] uppercase font-bold text-hotpink w-14 shrink-0">{slot}</span>
-                      {r ? (
-                        <button onClick={() => onOpen(r.id)} className="flex-1 text-left text-sm text-rose truncate font-medium hover:text-hotpink">
-                          {r.name}
-                        </button>
-                      ) : (
-                        <span className="flex-1 text-xs text-rose/50">—</span>
-                      )}
-                      {proteinBoosted && (
-                        <span title="Post-workout protein boost" className="shrink-0 text-[9px] font-bold uppercase rounded-full bg-hotpink/10 text-hotpink px-1.5 py-0.5">
-                          Protein ✿
+                    <div
+                      key={slot}
+                      className="relative rounded-xl overflow-hidden"
+                      style={{ aspectRatio: '3/4' }}
+                    >
+                      {/* Photo */}
+                      <img
+                        src={photoSrc}
+                        alt={r?.name ?? slot}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
+                      />
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+                      {/* Meal type badge */}
+                      <div className="absolute top-1.5 left-1.5">
+                        <span className="text-[8px] font-bold uppercase tracking-wide text-white/90 bg-black/35 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                          {slot === 'breakfast' ? 'morn' : slot === 'dinner' ? 'eve' : slot}
                         </span>
+                      </div>
+
+                      {/* Protein badge */}
+                      {proteinBoosted && (
+                        <div className="absolute top-1.5 right-1.5">
+                          <span className="text-[7px] font-bold uppercase text-white bg-hotpink rounded-full px-1 py-0.5">✿ PRO</span>
+                        </div>
                       )}
-                      <button onClick={() => onSwap(d, slot)} title="Swap" className="text-rose hover:text-hotpink">
-                        <Shuffle className="h-3.5 w-3.5" />
+
+                      {/* Recipe name + swap — bottom overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                        {r ? (
+                          <button
+                            onClick={() => onOpen(r.id)}
+                            className="w-full text-left"
+                          >
+                            <p className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{r.name}</p>
+                          </button>
+                        ) : (
+                          <p className="text-[9px] text-white/40 italic">not set</p>
+                        )}
+                      </div>
+
+                      {/* Swap button */}
+                      <button
+                        onClick={() => onSwap(d, slot)}
+                        title="Swap meal"
+                        className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
+                        style={{ display: proteinBoosted ? 'none' : undefined }}
+                      >
+                        <Shuffle className="h-2.5 w-2.5" />
                       </button>
                     </div>
                   );
