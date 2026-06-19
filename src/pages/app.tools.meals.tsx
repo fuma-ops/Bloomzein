@@ -345,15 +345,16 @@ export default function MealsPage() {
         <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
-          <div>
+        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">
+          {/* Title block — vertically centered in the available space, left-anchored */}
+          <div className="flex-1 flex flex-col justify-center max-w-[55%] sm:max-w-[45%] lg:max-w-[38%]">
             <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
             {phase !== "any" && tab === "week" && (
-              <p className="animate-fade-in mt-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
+              <p className="animate-fade-in mt-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
                 {phase} phase
               </p>
             )}
-            <p className="animate-fade-in mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
+            <p className="animate-fade-in mt-2 text-xs sm:text-sm lg:text-base italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
           </div>
           {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
           <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: '320ms' }}>
@@ -565,21 +566,21 @@ function WeekTab({
             );
           })}
         </div>
-        <div className="mt-4 flex flex-col gap-2.5">
+        {/* Action buttons — stacked on mobile, 3-per-row on desktop */}
+        <div className="mt-4 flex flex-col lg:flex-row lg:items-stretch gap-2.5 lg:gap-2">
           {/* Primary CTA — Plan my week */}
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="w-full relative overflow-hidden rounded-2xl text-white font-bold text-base sm:text-lg flex items-center justify-between px-5 py-3.5 active:scale-[.97] transition-transform"
+            className="lg:flex-1 relative overflow-hidden rounded-2xl text-white font-bold text-base flex items-center justify-between px-5 py-3 active:scale-[.97] transition-transform"
             style={{
               background: generating
                 ? 'linear-gradient(135deg,#DB2777 0%,#9D174D 100%)'
                 : 'linear-gradient(135deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)',
-              boxShadow: '0 8px 28px rgba(236,72,153,.45)',
+              boxShadow: '0 6px 22px rgba(236,72,153,.40)',
               animation: generating ? 'none' : 'ctaBreathe 3s ease-in-out infinite',
             }}
           >
-            {/* shimmer overlay */}
             <span aria-hidden className="absolute inset-0 pointer-events-none"
               style={{
                 background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.18) 50%,transparent 80%)',
@@ -589,55 +590,51 @@ function WeekTab({
             />
             <span className="flex items-center gap-2 relative z-10">
               {generating
-                ? <RefreshCw className="h-5 w-5 animate-spin" />
-                : <Sparkles className="h-5 w-5 opacity-90" />}
+                ? <RefreshCw className="h-4 w-4 animate-spin" />
+                : <Sparkles className="h-4 w-4 opacity-90" />}
               {generating ? 'Building your week ✨' : 'Plan my week'}
             </span>
             {!generating && (
-              <span className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm">
-                <ChevronRight className="h-5 w-5" />
+              <span className="relative z-10 flex items-center justify-center w-7 h-7 rounded-full bg-white/20">
+                <ChevronRight className="h-4 w-4" />
               </span>
             )}
           </button>
 
-          {/* Secondary row */}
-          <div className="flex gap-2">
-            {!hasPantry && (
-              <button
-                onClick={goPantry}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl border-2 font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all hover:shadow-md"
-                style={{
-                  borderColor: '#0d9488',
-                  color: '#0d9488',
-                  background: 'rgba(13,148,136,.06)',
-                  transition: 'background .2s,box-shadow .2s,transform .15s',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.12)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.06)'; }}
-              >
-                <Apple className="h-4 w-4 flex-shrink-0" />
-                Build pantry first
-              </button>
-            )}
-            {!planEmpty && (
-              <button
-                onClick={handleGenerate}
-                className="flex items-center justify-center gap-2 rounded-xl border font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all"
-                style={{
-                  borderColor: 'rgba(236,72,153,.4)',
-                  color: '#EC4899',
-                  background: 'rgba(236,72,153,.06)',
-                  flexShrink: 0,
-                  transition: 'background .2s,box-shadow .2s,transform .15s',
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.12)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.06)'; }}
-              >
-                <RefreshCw className="h-4 w-4 flex-shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
-                Regenerate
-              </button>
-            )}
-          </div>
+          {!hasPantry && (
+            <button
+              onClick={goPantry}
+              className="flex items-center justify-center gap-2 rounded-xl border-2 font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all hover:shadow-md lg:min-w-[10.5rem]"
+              style={{
+                borderColor: '#0d9488',
+                color: '#0d9488',
+                background: 'rgba(13,148,136,.06)',
+                transition: 'background .2s,box-shadow .2s,transform .15s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.12)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.06)'; }}
+            >
+              <Apple className="h-4 w-4 flex-shrink-0" />
+              Build pantry first
+            </button>
+          )}
+          {!planEmpty && (
+            <button
+              onClick={handleGenerate}
+              className="flex items-center justify-center gap-2 rounded-xl border font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all lg:min-w-[9rem]"
+              style={{
+                borderColor: 'rgba(236,72,153,.4)',
+                color: '#EC4899',
+                background: 'rgba(236,72,153,.06)',
+                transition: 'background .2s,box-shadow .2s,transform .15s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.12)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.06)'; }}
+            >
+              <RefreshCw className="h-4 w-4 flex-shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
+              Regenerate
+            </button>
+          )}
         </div>
       </Glass>
 
@@ -733,8 +730,9 @@ function WeekTab({
           className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:scale-[.98] transition-transform"
           style={{
             background: 'linear-gradient(135deg,rgba(251,207,232,.9) 0%,rgba(244,114,182,.35) 100%)',
-            border: '1px solid rgba(236,72,153,.25)',
-            boxShadow: '0 4px 16px rgba(236,72,153,.12)',
+            border: '1px solid rgba(236,72,153,.30)',
+            boxShadow: '0 4px 20px rgba(236,72,153,.28)',
+            animation: 'ctaBreathe 2.8s ease-in-out infinite',
           }}
         >
           <div className="flex items-center gap-3">
@@ -1153,56 +1151,49 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
       cta="Browse this week" onCta={() => {}} />;
   }
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-3 gap-2">
       {list.map((r) => {
-        const imgSrc = recipeImg(r);
-        const gradient = CUISINE_GRADIENT[r.cuisine ?? ""] ?? "from-pink-50 to-rose-100";
-        const emoji = MEAL_EMOJI[r.mealType] ?? "🌸";
+        const fallback = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
+        const photoSrc = recipeImg(r) ?? fallback;
         return (
-          <Glass key={r.id} className="overflow-hidden p-0 hover:shadow-lg transition-shadow duration-200">
-            {/* Image area — always shown */}
-            <button onClick={() => onOpen(r.id)} className="w-full text-left block">
-              <div className={`aspect-[4/3] relative overflow-hidden bg-gradient-to-br ${gradient}`}>
-                {imgSrc && (
-                  <img
-                    src={imgSrc} loading="lazy" alt={r.name}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                  />
-                )}
-                {/* Always-visible gradient overlay + emoji so even failed loads look great */}
-                <div className="absolute inset-0 flex items-end justify-start p-3 bg-gradient-to-t from-black/40 via-transparent to-transparent">
-                  <span className="text-white/80 text-3xl drop-shadow">{emoji}</span>
-                </div>
-                {/* Cuisine badge top-right */}
-                {r.cuisine && (
-                  <span className="absolute top-2 right-2 rounded-full bg-white/80 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-rose/80">
-                    {r.cuisine}
-                  </span>
-                )}
+          <div key={r.id} className="flex flex-col gap-1">
+            {/* Photo tile */}
+            <div
+              className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
+              style={{ aspectRatio: '3/4' }}
+              onClick={() => requestAnimationFrame(() => onOpen(r.id))}
+            >
+              <img
+                src={photoSrc} alt={r.name}
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={(e) => { e.currentTarget.src = fallback; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-transparent" />
+              {/* Heart — remove from favs */}
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleFav(r.id); }}
+                className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/35 flex items-center justify-center"
+              >
+                <Heart className="h-2.5 w-2.5 text-white fill-white" />
+              </button>
+              {/* Pink glass name strip */}
+              <div
+                className="absolute bottom-0 left-0 right-0 px-2 py-2 text-center"
+                style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
+              >
+                <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r.name}</p>
               </div>
-              {/* Card body */}
-              <div className="p-3 pb-2">
-                <p className="font-script text-xl text-hotpink leading-tight">{r.name}</p>
-                <p className="text-[11px] text-rose/60 mt-0.5">
-                  {r.prepMin + r.cookMin} min · {r.difficulty} · {r.cost}
-                </p>
-              </div>
-            </button>
-            {/* Ratings + unfav */}
-            <div className="px-3 pb-3 flex items-center gap-1">
+            </div>
+            {/* Rating pills */}
+            <div className="flex gap-0.5 justify-center">
               {(["love","ok","never"] as const).map((v) => (
                 <button key={v} onClick={() => setRatings({ ...ratings, [r.id]: v })}
-                  className={`text-[11px] rounded-full px-2.5 py-0.5 border transition ${ratings[r.id] === v ? "bg-hotpink text-white border-hotpink" : "border-petal/60 text-rose hover:bg-blush"}`}>
+                  className={`text-[8px] rounded-full px-1.5 py-0.5 border leading-none ${ratings[r.id] === v ? "bg-hotpink text-white border-hotpink" : "border-petal/60 text-rose/70"}`}>
                   {v}
                 </button>
               ))}
-              <button onClick={() => toggleFav(r.id)} className="ml-auto text-hotpink hover:scale-110 transition-transform">
-                <Heart className="h-4 w-4 fill-hotpink" />
-              </button>
             </div>
-          </Glass>
+          </div>
         );
       })}
     </div>

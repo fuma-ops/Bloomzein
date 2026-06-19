@@ -881,17 +881,28 @@ function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index:
   return (
     <button
       onClick={onClick}
-      className="bloom-pearl-card hover-scale group overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in"
-      style={{ animationDelay: `${index * 60}ms` }}
+      className="relative overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in hover-scale group"
+      style={{ animationDelay: `${index * 60}ms`, aspectRatio: '3/4' }}
     >
-      <div className="relative h-28 w-full overflow-hidden sm:h-32">
-        <img src={preset.image} alt="" loading="lazy" className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-110" />
-        <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/45 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
-          {preset.duration} min
-        </span>
-      </div>
-      <div className="p-2.5">
-        <p className="text-xs font-bold leading-tight text-rose">{preset.label}</p>
+      <img
+        src={preset.image} alt="" loading="lazy"
+        className="absolute inset-0 h-full w-full object-cover object-top transition duration-300 group-hover:scale-105"
+      />
+      {/* subtle vignette so text is always readable */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+      {/* Duration badge */}
+      <span className="absolute top-1.5 right-1.5 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white">
+        {preset.duration} min
+      </span>
+      {/* Glass label strip */}
+      <div
+        className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
+        style={{
+          background: 'rgba(255,255,255,0.20)',
+          borderTop: '1px solid rgba(255,255,255,0.28)',
+        }}
+      >
+        <p className="text-[10px] font-bold leading-tight text-white drop-shadow">{preset.label}</p>
       </div>
     </button>
   );
