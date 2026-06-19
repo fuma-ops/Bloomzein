@@ -4,7 +4,7 @@ import {
   Sparkles, Bell, BellRing, Smartphone, Check, Calendar, Clock,
   Heart, Palette, Tag, AlertCircle, X, ChevronDown, ChevronUp, RotateCcw,
   Pill, Users, Sparkle, Cake, Stethoscope, Plane, Briefcase, CalendarClock,
-  Droplets, Dumbbell, Moon, type LucideIcon
+  Droplets, Dumbbell, Moon, Flower2, NotebookPen, type LucideIcon
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
