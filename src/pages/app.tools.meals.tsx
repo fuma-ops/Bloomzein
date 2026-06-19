@@ -238,6 +238,16 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "favs", label: "Favorites", icon: Heart },
 ];
 
+const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
+  week:     { title: "Meal Planner",    subtitle: "cook with love, glow all week ✿" },
+  kids:     { title: "Kids Lunch Box",  subtitle: "pack joy in every bite 🐣" },
+  pantry:   { title: "My Pantry",       subtitle: "know what you have, waste less 🌿" },
+  shop:     { title: "Shopping List",   subtitle: "grab only what you need ✓" },
+  prep:     { title: "Sunday Prep",     subtitle: "cook once, eat all week 🍳" },
+  conserve: { title: "Conservation",    subtitle: "keep it fresh, nothing wasted ❄️" },
+  favs:     { title: "My Favourites",   subtitle: "your most-loved recipes ♥" },
+};
+
 /* ---------- Page ---------- */
 
 export default function MealsPage() {
@@ -337,13 +347,13 @@ export default function MealsPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div>
-            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>Meal Planner</h1>
-            {phase !== "any" && (
+            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
+            {phase !== "any" && tab === "week" && (
               <p className="animate-fade-in mt-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
                 {phase} phase
               </p>
             )}
-            <p className="animate-fade-in mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>cook with love, glow all week ✿</p>
+            <p className="animate-fade-in mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
           </div>
           {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
           <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: '320ms' }}>
@@ -389,6 +399,7 @@ export default function MealsPage() {
             owned={owned}
             proteinBoostDay={proteinBoostDay}
             goPantry={() => { setStep(1); setTab("pantry"); }}
+            goPrep={() => setTab("prep")}
           />
         )}
 
@@ -489,7 +500,7 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate,
-  onOpen, onSwap, onRegen, owned, goPantry, proteinBoostDay,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDay,
 }: any) {
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
@@ -702,6 +713,28 @@ function WeekTab({
             </Glass>
           ))}
         </div>
+      )}
+
+      {/* Sunday Prep CTA — only when a plan exists */}
+      {!planEmpty && (
+        <button
+          onClick={goPrep}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:scale-[.98] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg,rgba(251,207,232,.9) 0%,rgba(244,114,182,.35) 100%)',
+            border: '1px solid rgba(236,72,153,.25)',
+            boxShadow: '0 4px 16px rgba(236,72,153,.12)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🍳</span>
+            <div className="text-left">
+              <p className="font-bold text-hotpink text-sm leading-tight">Batch-cook your week</p>
+              <p className="text-xs text-rose/70 mt-0.5">Sunday Prep · ready in ~2 hours</p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-hotpink flex-shrink-0" />
+        </button>
       )}
     </>
   );
@@ -952,9 +985,9 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
 
 function SundayPrepTab({ plan, planEmpty, goWeek }: any) {
   if (planEmpty) {
-    return <EmptyState icon={Sparkles} title="Prep needs a plan"
-      blurb="Once your week is planned, I'll show you the smart order to batch-cook everything."
-      cta="Go to This Week" onCta={goWeek} />;
+    return <EmptyState icon={Sparkles} title="Cook once, eat all week"
+      blurb="Sunday Prep gives you a step-by-step order to batch-cook your entire week in ~2 hours. Plan your week first and I'll build your prep guide automatically."
+      cta="Plan my week" onCta={goWeek} />;
   }
   const recipes = Object.values(plan as Record<string, Record<MealType, string | null>>)
     .flatMap((d) => Object.values(d).filter(Boolean) as string[])
@@ -964,15 +997,36 @@ function SundayPrepTab({ plan, planEmpty, goWeek }: any) {
   const stove = recipes.filter((r) => r.cookMin > 0 && r.cookMin < 15);
   const cold = recipes.filter((r) => r.cookMin === 0);
   return (
-    <Glass className="p-4 sm:p-5">
-      <p className="font-script text-2xl text-hotpink">Sunday prep — in 2 hours your week is ready</p>
-      <ol className="mt-3 space-y-3">
-        <PrepStep n={1} title="Oven first (longest cook)" items={oven.map((r) => r.name)} />
-        <PrepStep n={2} title="Stovetop while oven runs" items={stove.map((r) => r.name)} />
-        <PrepStep n={3} title="Cold prep & assembly" items={cold.map((r) => r.name)} />
-        <PrepStep n={4} title="Pack & label" items={["Portion into containers", "Label with date", "Fridge or freezer per recipe"]} />
-      </ol>
-    </Glass>
+    <div className="space-y-3">
+      {/* Explainer */}
+      <Glass className="p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <span className="text-3xl" aria-hidden>🍳</span>
+          <div>
+            <p className="font-script text-2xl text-hotpink leading-tight">Cook once, eat all week</p>
+            <p className="mt-1 text-sm text-rose/80 leading-snug">
+              Sunday Prep is your batch-cooking guide. Instead of cooking every day, you spend ~2 hours on Sunday
+              preparing everything at once — then your fridge is stocked for the whole week.
+            </p>
+            <p className="mt-2 text-xs text-rose/60">
+              The recipes from your week plan are sorted in the most efficient order:
+              start the oven first (slowest), then use the stovetop while it heats, finish with quick cold prep.
+            </p>
+          </div>
+        </div>
+      </Glass>
+
+      {/* Steps */}
+      <Glass className="p-4 sm:p-5">
+        <p className="font-script text-xl text-hotpink mb-3">Your prep order this week</p>
+        <ol className="space-y-3">
+          <PrepStep n={1} title="Start the oven — longest cook" items={oven.map((r) => r.name)} />
+          <PrepStep n={2} title="Stovetop while oven runs" items={stove.map((r) => r.name)} />
+          <PrepStep n={3} title="Cold prep & assembly" items={cold.map((r) => r.name)} />
+          <PrepStep n={4} title="Pack & label" items={["Portion into containers", "Label with day + meal", "Fridge (≤3 days) or freezer the rest"]} />
+        </ol>
+      </Glass>
+    </div>
   );
 }
 function PrepStep({ n, title, items }: { n: number; title: string; items: string[] }) {
