@@ -1,6 +1,6 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { Sparkles, Search, Pin, ChevronRight, SlidersHorizontal, ArrowRight, Heart } from "lucide-react";
+import { Sparkles, Search, Pin, ChevronRight, ArrowRight, Heart } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { scrollToTopOf } from "@/lib/scrollToTopOf";
@@ -99,11 +99,8 @@ export default function ToolsIndex() {
 
       {/* TOOLS GRID */}
       <section className="mt-2">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Your Bloom Tools 🌸</h2>
-          <span className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-hotpink/80">
-            Customize <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={2} />
-          </span>
+        <div className="mb-3">
+          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Your Bloom Tools</h2>
         </div>
 
         {ordered.length === 0 ? (
@@ -149,6 +146,7 @@ export default function ToolsIndex() {
             <a
               href="/app/today"
               className="bloom-luxury-btn mt-2 sm:mt-3 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
+              style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
             >
               Read more <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
             </a>
