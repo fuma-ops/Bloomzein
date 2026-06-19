@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Wallet, TrendingUp, TrendingDown, PiggyBank, Gem, Plus, Trash2,
-  ChevronDown, ChevronLeft, ChevronRight, Check, Sparkles, X,
+  ChevronDown, ChevronLeft, ChevronRight, Check, Sparkles, X, Moon,
   Home as HomeIcon, ShoppingCart, GraduationCap, Car, Dumbbell, Zap, Droplets,
   Flame, Smartphone, Pill, Sparkle, Film, Shirt, Plane, Heart, UtensilsCrossed,
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
@@ -12,6 +12,7 @@ import {
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
 import { estimateWeeklyGroceryCost } from "./mealsBudget";
+import { readCyclePhase, hasCycleSettings, type CyclePhase } from "./cyclePhase";
 
 /* ============================================================
    TOKENS / CONSTANTS
@@ -525,17 +526,22 @@ function StatNumber({ value, currency }: { value: number; currency: CurrencyKey 
 function StatCards({ income, expenses, savings, balance, currency }: {
   income: number; expenses: number; savings: number; balance: number; currency: CurrencyKey;
 }) {
+  const spendScale = income > 0 ? Math.min(2.0, 1 + (expenses / income) * 0.7) : 1;
+  const saveScale  = income > 0 && savings > 0 ? Math.min(1.7, 1 + (savings / income) * 0.5) : Math.max(0.7, 1);
   const items = [
-    { label: "Income Garden",   emoji: "🌷", v: income,   sub: "your monthly earnings",  bg: "from-pink-50 to-rose-50" },
-    { label: "Spending Petals", emoji: "🛍️", v: expenses, sub: "this month's spends",    bg: "from-fuchsia-50 to-pink-50" },
-    { label: "Savings Bloom",   emoji: "🌸", v: savings,  sub: "building your future",   bg: "from-purple-50 to-pink-50" },
-    { label: "Dream Balance",   emoji: "💎", v: balance,  sub: "your available balance",  bg: "from-rose-50 to-fuchsia-50" },
+    { label: "Income Garden",   emoji: "🌷", v: income,   sub: "your monthly earnings",  bg: "from-pink-50 to-rose-50",     emojiScale: 1.0 },
+    { label: "Spending Petals", emoji: "🛍️", v: expenses, sub: "this month's spends",    bg: "from-fuchsia-50 to-pink-50",  emojiScale: spendScale },
+    { label: "Savings Bloom",   emoji: "🌸", v: savings,  sub: "building your future",   bg: "from-purple-50 to-pink-50",   emojiScale: saveScale },
+    { label: "Dream Balance",   emoji: "💎", v: balance,  sub: "your available balance",  bg: "from-rose-50 to-fuchsia-50",  emojiScale: balance > 0 ? 1.15 : 0.85 },
   ];
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {items.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
-          <div className="absolute -top-3 -right-3 text-5xl opacity-20 select-none pointer-events-none">{it.emoji}</div>
+          <div className="absolute -top-3 -right-3 text-5xl select-none pointer-events-none opacity-20 transition-transform duration-500"
+            style={{ transform: `scale(${it.emojiScale})`, transformOrigin: "top right" }}>
+            {it.emoji}
+          </div>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
           <div className="mt-1 font-script text-lg sm:text-2xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
@@ -544,6 +550,82 @@ function StatCards({ income, expenses, savings, balance, currency }: {
         </Card>
       ))}
     </div>
+  );
+}
+
+/* ============================================================
+   QUICK ADD SHEET — glassmorphism bottom sheet, 3-tap UX
+============================================================ */
+function QuickAddSheet({ open, onClose, onSave, allCats, selectedCats, currency }: {
+  open: boolean; onClose: () => void;
+  onSave: (amount: number, catKey: string) => void;
+  allCats: Cat[]; selectedCats: string[]; currency: CurrencyKey;
+}) {
+  const [amount, setAmount] = useState("");
+  const [catKey, setCatKey] = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
+  const [saved, setSaved]   = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const cats = (selectedCats.length ? selectedCats : allCats.map(c => c.key))
+    .map(k => allCats.find(c => c.key === k)).filter(Boolean) as Cat[];
+
+  useEffect(() => {
+    if (open) { setAmount(""); setSaved(false); setTimeout(() => inputRef.current?.focus(), 80); }
+  }, [open]);
+
+  function handleSave() {
+    const amt = parseFloat(amount);
+    if (!amt || amt <= 0) return;
+    onSave(amt, catKey);
+    setSaved(true);
+    setTimeout(() => { onClose(); setSaved(false); setAmount(""); }, 1300);
+  }
+
+  return (
+    <>
+      {open && <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />}
+      <div className={["fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out will-change-transform",
+        open ? "translate-y-0" : "translate-y-full"].join(" ")}>
+        <div className="mx-auto max-w-lg rounded-t-[2rem] bg-white/92 backdrop-blur-xl border-t border-pink-200/60 shadow-2xl shadow-pink-300/30 px-5 pt-2 pb-safe">
+          <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-pink-200" />
+          {saved ? (
+            <div className="py-10 flex flex-col items-center gap-3 animate-fade-in">
+              <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
+                <Check className="h-8 w-8" strokeWidth={3} />
+              </div>
+              <p className="font-script text-3xl text-[#831843]">Logged ✿</p>
+              <p className="text-sm text-[#9D5C7E]">{CURRENCIES[currency].symbol}{amount} · {allCats.find(c => c.key === catKey)?.label}</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-3">Quick add</p>
+              <div className="relative mb-3">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
+                <input ref={inputRef} type="number" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
+                  className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-4 text-3xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50" />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar mb-4">
+                {cats.slice(0, 8).map(c => (
+                  <button key={c.key} onClick={() => setCatKey(c.key)}
+                    className={["shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all duration-150",
+                      c.key === catKey
+                        ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.05]"
+                        : "bg-pink-50 text-[#9D5C7E] border-pink-200/60"].join(" ")}>
+                    <span>{c.emoji}</span>{c.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={handleSave} disabled={!amount || parseFloat(amount) <= 0}
+                className="w-full bloom-luxury-btn py-4 text-base font-bold text-white rounded-2xl disabled:opacity-40 transition-all"
+                style={{ animation: amount && parseFloat(amount) > 0 ? 'ctaBreathe 2.8s ease-in-out infinite' : 'none' }}>
+                Log ✿
+              </button>
+              <div className="h-6" />
+            </>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -559,8 +641,7 @@ function DashboardTab(props: {
   incomes: Income[];
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, allCats, goals, setTab,
-    incomes, budget } = props;
+    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget } = props;
 
   const steps = [
     { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
@@ -572,7 +653,20 @@ function DashboardTab(props: {
   const nextStep  = steps.find(s => !s.done);
   const allDone   = completed === steps.length;
 
-  // Inline form state
+  // View period toggle: week ↔ month
+  const [viewPeriod, setViewPeriod] = useState<"week" | "month">("month");
+
+  // Goals carousel
+  const [goalIdx, setGoalIdx] = useState(0);
+
+  // Quick add sheet
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  // Cycle phase (read-only from Cycle Tracker)
+  const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
+  useEffect(() => { if (hasCycleSettings()) setCyclePhase(readCyclePhase()); }, []);
+
+  // Inline detailed form state
   const [amount, setAmount]   = useState("");
   const [catKey, setCatKey]   = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
   const [desc, setDesc]       = useState("");
@@ -595,34 +689,73 @@ function DashboardTab(props: {
     setTimeout(() => setTxnSaved(false), 1500);
   }
 
-  // Spending by category
+  // === WEEK vs MONTH FILTER ===
+  const filteredTxns = useMemo(() => {
+    if (viewPeriod === "month") return txns;
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 6); cutoff.setHours(0, 0, 0, 0);
+    return txns.filter(t => new Date(t.date + "T00:00:00") >= cutoff);
+  }, [txns, viewPeriod]);
+
+  // 7-day band
+  const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6 - i));
+    const iso = d.toISOString().slice(0, 10);
+    const spent = txns.filter(t => t.date === iso && t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    return { iso, label: ["S", "M", "T", "W", "T", "F", "S"][d.getDay()], spent, isToday: i === 6 };
+  }), [txns]);
+
+  // Spending by category (filtered)
   const catSpend = useMemo(() => {
     const byCat: Record<string, number> = {};
-    txns.filter(t => t.type === "expense").forEach(t => {
+    filteredTxns.filter(t => t.type === "expense").forEach(t => {
       byCat[t.catKey] = (byCat[t.catKey] ?? 0) + t.amount;
     });
     const total = Object.values(byCat).reduce((s, v) => s + v, 0) || 1;
     return Object.entries(byCat)
       .sort(([, a], [, b]) => b - a)
       .map(([k, v]) => ({ key: k, cat: allCats.find(c => c.key === k), amount: v, pct: Math.round((v / total) * 100) }));
-  }, [txns, allCats]);
+  }, [filteredTxns, allCats]);
 
-  // Monthly story insights
+  // Filtered totals for insights
+  const filteredExpenses = filteredTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const filteredSavings  = totalIncome > 0 ? totalIncome - filteredExpenses : 0;
+
+  // Story insights — warm, never red
   const insights = useMemo(() => {
     const r: { icon: string; main: string; sub: string }[] = [];
-    if (totalSavings > 0) r.push({ icon: "🌸", main: `You saved ${fmt(totalSavings, currency)}`, sub: "Keep growing!" });
-    const planned = txns.filter(t => t.mood === "planned").length;
-    const impulsive = txns.filter(t => t.mood === "impulsive").length;
-    if (txns.length > 0 && planned >= impulsive) r.push({ icon: "🌷", main: "You spent mindfully this month", sub: "Great choice!" });
-    else if (txns.length > 0 && impulsive > planned) r.push({ icon: "💗", main: "Some impulsive spends this month", sub: "Soft pause next time ✿" });
-    if (goals.length > 0) r.push({ icon: "✨", main: `You have ${goals.length} savings goal${goals.length > 1 ? "s" : ""}`, sub: "You are amazing!" });
-    if (r.length === 0) r.push({ icon: "🌸", main: "Start tracking to see your story", sub: "bloom here ✿" });
+    if (totalIncome > 0 && filteredExpenses > totalIncome)
+      r.push({ icon: "💗", main: "Take a soft pause this month", sub: "A little over budget — you've totally got this 🌸" });
+    else if (filteredSavings > 0)
+      r.push({ icon: "🌸", main: `You saved ${fmt(filteredSavings, currency)}`, sub: "Keep growing!" });
+    const planned  = filteredTxns.filter(t => t.mood === "planned").length;
+    const impulsive = filteredTxns.filter(t => t.mood === "impulsive").length;
+    if (filteredTxns.length > 0 && planned >= impulsive)
+      r.push({ icon: "🌷", main: "You spent mindfully", sub: "Great choice!" });
+    else if (filteredTxns.length > 0 && impulsive > planned)
+      r.push({ icon: "🌸", main: "Some unplanned spends", sub: "Soft pause next time — no stress ✿" });
+    if (goals.length > 0)
+      r.push({ icon: "✨", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: "You are amazing!" });
+    if (r.length === 0)
+      r.push({ icon: "🌸", main: "Start tracking to see your story", sub: "bloom here ✿" });
     return r.slice(0, 3);
-  }, [totalSavings, txns, goals, currency]);
+  }, [filteredSavings, filteredExpenses, filteredTxns, goals, totalIncome, currency]);
 
-  // Hero goal (first goal)
-  const heroGoal = goals[0];
-  const heroGoalPct = heroGoal?.target > 0 ? Math.min(100, (heroGoal.saved / heroGoal.target) * 100) : 0;
+  // Cycle tips
+  const CYCLE_TIPS: Partial<Record<string, { emoji: string; headline: string; sub: string; grad: string }>> = {
+    luteal:     { emoji: "🌙", headline: "Luteal phase — your inner PMS budget",  sub: "Budget a little extra self-care this week. Cravings are real.",       grad: "from-purple-50 to-pink-50" },
+    period:     { emoji: "🌸", headline: "Period week — gentle care first",        sub: "Rest & warmth over everything. You deserve every cent of it.",         grad: "from-pink-50 to-rose-50" },
+    follicular: { emoji: "🌱", headline: "Follicular — rising energy mode",        sub: "Great week for big financial decisions. Your mind is clear.",           grad: "from-emerald-50 to-pink-50" },
+    ovulation:  { emoji: "✨", headline: "Ovulation peak — full power mode",       sub: "Your best week to tackle financial goals. Go for it.",                 grad: "from-yellow-50 to-pink-50" },
+    fertile:    { emoji: "💐", headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-purple-50" },
+  };
+
+  // Goals carousel (keep names: Income Garden, etc.)
+  const clampedGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
+  const heroGoal       = goals[clampedGoalIdx];
+  const heroGoalPct    = heroGoal?.target > 0 ? Math.min(100, (heroGoal.saved / heroGoal.target) * 100) : 0;
+
+  // Meal plan sync hint
+  const mealEstimate = useMemo(() => estimateWeeklyGroceryCost(), []);
 
   // ── ONBOARDING (no income) ──
   if (incomes.length === 0) {
@@ -693,7 +826,7 @@ function DashboardTab(props: {
 
   // ── FULL DASHBOARD ──
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 animate-fade-in pb-24">
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
@@ -737,8 +870,22 @@ function DashboardTab(props: {
         </div>
       )}
 
-      {/* 1. HERO "You're blooming" */}
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl" style={{ minHeight: 160 }}>
+      {/* ① CYCLE INSIGHT — warm, phase-aware (never shown in red) */}
+      {cyclePhase && cyclePhase !== "any" && CYCLE_TIPS[cyclePhase] && (() => {
+        const tip = CYCLE_TIPS[cyclePhase]!;
+        return (
+          <div className={`rounded-2xl border border-pink-100/80 bg-gradient-to-r ${tip.grad} px-4 py-3 flex items-center gap-3 animate-fade-in`}>
+            <span className="text-3xl shrink-0 leading-none">{tip.emoji}</span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">{tip.headline}</p>
+              <p className="text-sm text-[#831843] mt-0.5 leading-snug">{tip.sub}</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ② HERO "You're blooming" + W/M toggle + 7-day band */}
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
         <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.88) 0%, rgba(236,72,153,0.65) 52%, rgba(236,72,153,0.18) 80%, transparent 100%)" }} />
         <div className="relative z-10 flex items-center justify-between gap-3 p-5 sm:p-7" style={{ minHeight: 160 }}>
@@ -747,22 +894,41 @@ function DashboardTab(props: {
               You're blooming ✿
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
-            <button className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-              <Calendar className="h-3 w-3" /> This month <ChevronDown className="h-3 w-3 opacity-70" />
+            {/* Week / Month toggle */}
+            <button
+              onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+              <Calendar className="h-3 w-3" />
+              {viewPeriod === "week" ? "This week" : "This month"}
+              <ChevronDown className="h-3 w-3 opacity-70" />
             </button>
+            {/* 7-day band — visible in week mode */}
+            {viewPeriod === "week" && (
+              <div className="flex gap-1 mt-2.5">
+                {weekBand.map(d => (
+                  <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition",
+                    d.isToday ? "bg-white/30" : ""].join(" ")}>
+                    <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
+                    <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
+                    {d.spent > 0 && (
+                      <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <MiniRing pct={heroGoalPct} size={110} />
         </div>
       </div>
 
-      {/* 2. STAT CARDS */}
+      {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
 
-      {/* 3. FEATURED GOAL */}
+      {/* ④ GOALS CAROUSEL */}
       {heroGoal ? (
         <div className="relative overflow-hidden rounded-[1.5rem] border border-pink-200/60 shadow-lg" style={{ minHeight: 120 }}>
           <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }} />
-          <div className="absolute right-0 top-0 bottom-0 w-2/5 opacity-20" style={{ background: "radial-gradient(circle at 80% 50%, rgba(255,255,255,0.6) 0%, transparent 70%)" }} />
           <div className="relative z-10 flex items-center justify-between gap-4 p-5 sm:p-6" style={{ minHeight: 120 }}>
             <div className="flex-1 min-w-0">
               <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
@@ -777,6 +943,28 @@ function DashboardTab(props: {
             </div>
             <MiniRing pct={heroGoalPct} size={88} />
           </div>
+          {/* Carousel controls (only when >1 goal) */}
+          {goals.length > 1 && (
+            <>
+              <button onClick={() => setGoalIdx(i => Math.max(0, i - 1))}
+                disabled={clampedGoalIdx === 0}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/30 text-white hover:bg-white/50 transition disabled:opacity-30">
+                <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+              </button>
+              <button onClick={() => setGoalIdx(i => Math.min(goals.length - 1, i + 1))}
+                disabled={clampedGoalIdx === goals.length - 1}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/30 text-white hover:bg-white/50 transition disabled:opacity-30">
+                <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+              </button>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+                {goals.map((_, i) => (
+                  <button key={i} onClick={() => setGoalIdx(i)}
+                    className={["h-1.5 rounded-full transition-all duration-300 bg-white",
+                      i === clampedGoalIdx ? "w-4" : "w-1.5 opacity-50"].join(" ")} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <Card className="border-dashed border-pink-300/50 text-center py-5 bg-gradient-to-br from-pink-50 to-rose-50">
@@ -788,25 +976,34 @@ function DashboardTab(props: {
         </Card>
       )}
 
-      {/* 4. SPENDING CATEGORIES */}
+      {/* ⑤ SPENDING CATEGORIES — reacts to week/month filter */}
       {catSpend.length > 0 ? (
         <Card>
           <div className="flex items-center justify-between mb-3">
             <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
               <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
             </h3>
-            <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-              See all <ChevronRight className="h-3 w-3" />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* ⑦ Meal plan sync hint */}
+              {mealEstimate && !budget["food"] && (
+                <button onClick={() => setTab("Budget Setup")}
+                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
+                  <UtensilsCrossed className="h-3 w-3" /> Sync meals
+                </button>
+              )}
+              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                See all <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-            {catSpend.slice(0, 6).map(({ key, cat, amount, pct }) => (
+            {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
               <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
                   {cat?.emoji ?? "💰"}
                 </div>
                 <p className="text-[10px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
-                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amount, currency)}</p>
+                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amt, currency)}</p>
                 <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden">
                   <div className="h-full rounded-full bg-[#EC4899] transition-all duration-700" style={{ width: `${pct}%` }} />
                 </div>
@@ -831,11 +1028,12 @@ function DashboardTab(props: {
         </Card>
       )}
 
-      {/* 5. THIS MONTH'S STORY + INCOME VS EXPENSES */}
+      {/* ⑥ THIS MONTH'S STORY (warm — never red) + INCOME VS EXPENSES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
-            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> This month's story
+            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
+            {viewPeriod === "week" ? "This week's story" : "This month's story"}
           </h3>
           <ul className="space-y-3">
             {insights.map((ins, i) => (
@@ -864,8 +1062,8 @@ function DashboardTab(props: {
             <div className="flex items-center gap-4">
               <div className="flex-1 flex items-end gap-3 h-28">
                 {(["income", "expenses"] as const).map(type => {
-                  const val = type === "income" ? totalIncome : totalExpenses;
-                  const maxVal = Math.max(totalIncome, totalExpenses, 1);
+                  const val = type === "income" ? totalIncome : filteredExpenses;
+                  const maxVal = Math.max(totalIncome, filteredExpenses, 1);
                   const h = Math.max(8, (val / maxVal) * 100);
                   return (
                     <div key={type} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
@@ -880,7 +1078,7 @@ function DashboardTab(props: {
               {totalIncome > 0 && (
                 <div className="shrink-0 text-center">
                   <HealthRing
-                    pct={Math.min(100, (totalExpenses / totalIncome) * 100)}
+                    pct={Math.min(100, (filteredExpenses / totalIncome) * 100)}
                     label=""
                     tone="#EC4899"
                     size={120}
@@ -893,7 +1091,7 @@ function DashboardTab(props: {
         </Card>
       </div>
 
-      {/* 6. LOG A SPEND */}
+      {/* Detailed log form */}
       {txns.length > 0 && (
         <Card>
           <div className="flex items-center gap-2 mb-4">
@@ -964,6 +1162,28 @@ function DashboardTab(props: {
           </div>
         </div>
       )}
+
+      {/* ③ QUICK ADD FAB */}
+      <button
+        onClick={() => setShowQuickAdd(true)}
+        className="fixed bottom-20 right-4 z-30 grid h-14 w-14 place-items-center rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95"
+        style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
+        aria-label="Quick add expense"
+      >
+        <Plus className="h-6 w-6" strokeWidth={2.5} />
+      </button>
+
+      {/* Quick Add Sheet */}
+      <QuickAddSheet
+        open={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        onSave={(amt, cat) => {
+          setTxns(prev => [{ id: uid(), amount: amt, catKey: cat, description: "", date: todayISO(), mood: "planned" as MoodKey, type: "expense" }, ...prev]);
+        }}
+        allCats={allCats}
+        selectedCats={catOptions}
+        currency={currency}
+      />
     </div>
   );
 }
