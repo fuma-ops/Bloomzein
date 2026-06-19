@@ -551,7 +551,17 @@ function DashboardTab(props: {
     txns, setTxns, selectedCats, allCats, goals, bills, setTab,
     incomes, budget } = props;
 
-  // Donut data: expense totals by category
+  const steps = [
+    { key: "income", label: "Add your income",     hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
+    { key: "setup",  label: "Set up your budget",  hint: "Pick spending categories & set monthly limits", done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
+    { key: "goals",  label: "Add a savings goal",  hint: "A vacation, an emergency fund — dream big",     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
+    { key: "track",  label: "Log your first spend", hint: "Track where your money actually goes",         done: txns.length > 0,                                                    tab: "Reports"       as TabKey, Icon: FileBarChart },
+  ];
+  const completed = steps.filter(s => s.done).length;
+  const nextStep  = steps.find(s => !s.done);
+  const allDone   = completed === steps.length;
+
+  // Donut data
   const donutData = useMemo(() => {
     const byCat: Record<string, number> = {};
     txns.filter(t => t.type === "expense").forEach(t => {
@@ -571,8 +581,7 @@ function DashboardTab(props: {
     txns.filter(t => t.type === "expense").forEach(t => {
       const d = new Date(t.date);
       if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return;
-      const wk = Math.min(3, Math.floor((d.getDate() - 1) / 7));
-      buckets[wk] += t.amount;
+      buckets[Math.min(3, Math.floor((d.getDate() - 1) / 7))] += t.amount;
     });
     return buckets;
   }, [txns]);
@@ -580,132 +589,101 @@ function DashboardTab(props: {
   // Health
   const savingsPct = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
   const health = savingsPct > 20
-    ? { tone: "#16A34A", label: "Healthy", tip: "Beautiful! You're saving with intention 🌿" }
+    ? { tone: "#16A34A", label: "Healthy ✿",    tip: "Beautiful! You're saving with intention 🌿" }
     : savingsPct >= 10
-      ? { tone: "#F59E0B", label: "Watch Out", tip: "Almost there — trim a want category this week 🌷" }
+      ? { tone: "#F59E0B", label: "Watch Out",   tip: "Almost there — trim a want category this week 🌷" }
       : { tone: "#EF4444", label: "Over Budget", tip: "Take a soft pause and review your wants 💗" };
 
-  // Inline add txn
-  const [amount, setAmount] = useState("");
-  const [catKey, setCatKey] = useState(selectedCats[0] ?? allCats[0].key);
-  const [desc, setDesc] = useState("");
-  const [date, setDate] = useState(todayISO());
-  const [mood, setMood] = useState<MoodKey>("planned");
+  // Inline add txn state
+  const [amount, setAmount]   = useState("");
+  const [catKey, setCatKey]   = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
+  const [desc, setDesc]       = useState("");
+  const [date, setDate]       = useState(todayISO());
+  const [mood, setMood]       = useState<MoodKey>("planned");
+  const [showCatModal, setShowCatModal]   = useState(false);
+  const [showMoodModal, setShowMoodModal] = useState(false);
+  const [txnSaved, setTxnSaved] = useState(false);
+
+  const catOptions = selectedCats.length ? selectedCats : allCats.map(c => c.key);
+  const currentCat = allCats.find(c => c.key === catKey);
+  const currentMood = MOODS.find(m => m.key === mood)!;
 
   function addTxn() {
     const amt = parseFloat(amount);
-    if (!amt) return;
+    if (!amt || amt <= 0) return;
     setTxns(prev => [{ id: uid(), amount: amt, catKey, description: desc, date, mood, type: "expense" }, ...prev]);
     setAmount(""); setDesc("");
+    setTxnSaved(true);
+    setTimeout(() => setTxnSaved(false), 1500);
   }
 
-  const steps = [
-    { key: "income", label: "Add your income",            done: incomes.length > 0,                                                            tab: "Incomes"           as TabKey, Icon: Wallet },
-    { key: "setup",  label: "Set up your budget",         done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0),             tab: "Budget Setup"      as TabKey, Icon: Receipt },
-    { key: "goals",  label: "Add a savings goal",         done: goals.length > 0,                                                               tab: "Savings Goals"     as TabKey, Icon: Flag },
-    { key: "track",  label: "Track your spending",        done: txns.length > 0,                                                                tab: "Reports"           as TabKey, Icon: FileBarChart },
-  ];
-  const completed = steps.filter(s => s.done).length;
-  const nextStep = steps.find(s => !s.done);
-  const hasAnyData =
-    incomes.length > 0 ||
-    txns.length > 0 ||
-    goals.length > 0 ||
-    bills.length > 0 ||
-    Object.values(budget).some(v => v > 0);
-
-  if (!hasAnyData) {
+  // ── NEW USER: no income yet → full onboarding screen ──
+  if (incomes.length === 0) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-4 animate-fade-in">
         <Card className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-pink-200/50 blur-2xl" />
+          <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-purple-200/30 blur-2xl" />
           <div className="relative">
             <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold tracking-widest text-[#9D5C7E]">
-              <Sparkles className="h-3 w-3 text-[#EC4899]" /> WELCOME
+              <Sparkles className="h-3 w-3 text-[#EC4899]" /> WELCOME TO YOUR BUDGET
             </span>
             <h2 className="mt-3 font-script text-4xl sm:text-5xl text-[#831843] leading-tight">
-              Let's set up your soft budget
+              Let's bloom your budget ✿
             </h2>
-            <p className="mt-2 text-sm text-[#9D5C7E] max-w-lg">
-              Five gentle steps and you're done. Bloom will guide you the whole way — no pressure, no spreadsheets.
+            <p className="mt-2 text-sm text-[#9D5C7E] max-w-lg leading-relaxed">
+              Four gentle steps and you're set. Bloom guides you from your first paycheck to your dream savings goal — no spreadsheets, no stress.
             </p>
-
-            <div className="mt-4 flex items-center gap-3">
-              <div className="flex-1 h-2 rounded-full bg-pink-100 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${(completed / steps.length) * 100}%`,
-                    background: "linear-gradient(90deg,#C084FC,#EC4899)",
-                  }}
-                />
+            <div className="mt-5 flex items-center gap-3">
+              <div className="flex-1 h-2.5 rounded-full bg-pink-100 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
               </div>
-              <span className="text-xs font-bold tracking-widest text-[#9D5C7E]">
-                {completed}/{steps.length}
-              </span>
+              <span className="shrink-0 text-xs font-bold tracking-widest text-[#9D5C7E]">{completed}/{steps.length} done</span>
             </div>
-
-            <div className="mt-5">
-              <PrimaryBtn
-                onClick={() => nextStep && setTab(nextStep.tab)}
-                className="text-base px-6 py-3 shadow-lg shadow-pink-400/40 animate-pulse"
-              >
-                <Sparkles className="h-4 w-4" />
-                {completed === 0 ? "Start Here" : `Continue: ${nextStep?.label}`}
-                <ArrowRight className="h-4 w-4" />
+            <div className="mt-6">
+              <PrimaryBtn onClick={() => setTab("Incomes")}
+                className="bloom-luxury-btn text-sm sm:text-base px-6 py-3 shadow-lg shadow-pink-400/40"
+                style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}>
+                <Wallet className="h-4 w-4" /> Start — Add your income <ArrowRight className="h-4 w-4" />
               </PrimaryBtn>
             </div>
           </div>
         </Card>
 
         <Card>
-          <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">YOUR PATH</h3>
-          <ol className="space-y-2">
+          <h3 className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-4 uppercase">Your 4-step path</h3>
+          <ol className="space-y-2.5">
             {steps.map((s, i) => {
-              const isNext = !s.done && s === nextStep;
+              const isNext = s === nextStep;
               return (
-                <li
-                  key={s.key}
-                  className={[
-                    "flex items-center gap-3 rounded-2xl px-3 py-3 transition-all border-[0.5px]",
-                    s.done
-                      ? "bg-emerald-50/70 border-emerald-200/60"
-                      : isNext
-                        ? "bg-pink-50 border-pink-300/60 shadow-sm"
-                        : "bg-white/70 border-pink-200/40",
-                  ].join(" ")}
+                <li key={s.key}
+                  className={["flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-300 border-[0.5px]",
+                    s.done ? "bg-emerald-50/80 border-emerald-200/60"
+                    : isNext ? "bg-gradient-to-r from-pink-50 to-purple-50/50 border-pink-300/60 shadow-sm"
+                    : "bg-white/60 border-pink-100/60"].join(" ")}
+                  style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  <div
-                    className={[
-                      "grid h-9 w-9 shrink-0 place-items-center rounded-full",
-                      s.done
-                        ? "bg-emerald-500 text-white"
-                        : isNext
-                          ? "bg-[#EC4899] text-white"
-                          : "bg-pink-100 text-[#9D5C7E]",
-                    ].join(" ")}
-                  >
-                    {s.done ? <Check className="h-5 w-5" /> : <s.Icon className="h-4 w-4" strokeWidth={1.8} />}
+                  <div className={["grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition-all duration-300",
+                    s.done ? "bg-emerald-500 text-white shadow-sm shadow-emerald-300/40"
+                    : isNext ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30"
+                    : "bg-pink-100 text-[#C4A0CE]"].join(" ")}>
+                    {s.done ? <Check className="h-5 w-5" strokeWidth={2.5} /> : <s.Icon className="h-4 w-4" strokeWidth={1.8} />}
                   </div>
-                  <div className="flex-1">
-                    <div className="text-[10px] font-bold tracking-widest text-[#9D5C7E]">
-                      STEP {i + 1}
-                    </div>
-                    <div className={`text-sm font-semibold ${s.done ? "text-emerald-700 line-through decoration-emerald-300" : "text-[#831843]"}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] font-bold tracking-widest text-[#C4A0CE] uppercase">Step {i + 1}</div>
+                    <div className={["text-sm font-semibold truncate", s.done ? "text-emerald-700 line-through decoration-emerald-300/60" : "text-[#831843]"].join(" ")}>
                       {s.label}
                     </div>
+                    {!s.done && <div className="text-[10px] text-[#9D5C7E] mt-0.5 leading-snug">{s.hint}</div>}
                   </div>
                   {isNext && (
-                    <button
-                      onClick={() => setTab(s.tab)}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#EC4899] px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-pink-400/30 hover:bg-[#DB2777] transition active:scale-95"
-                    >
+                    <button onClick={() => setTab(s.tab)}
+                      className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#EC4899] px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-pink-400/30 hover:bg-[#DB2777] transition active:scale-95">
                       Go <ArrowRight className="h-3 w-3" />
                     </button>
                   )}
-                  {s.done && (
-                    <span className="text-[11px] font-semibold text-emerald-700">Done</span>
-                  )}
+                  {s.done && <span className="shrink-0 text-[11px] font-bold text-emerald-600">✓ Done</span>}
                 </li>
               );
             })}
@@ -715,65 +693,143 @@ function DashboardTab(props: {
     );
   }
 
+  // ── HAS INCOME but setup incomplete → compact guide + partial dashboard ──
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 animate-fade-in">
+
+      {/* Smart Guide Banner — visible until all 4 steps done */}
+      {!allDone && nextStep && (
+        <div className="relative overflow-hidden rounded-2xl border border-pink-200/60 bg-gradient-to-r from-pink-50 via-white to-purple-50/40 px-4 py-4 shadow-sm animate-fade-in">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-pink-200/30 blur-2xl" />
+          <div className="relative flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#EC4899] text-white shadow-md shadow-pink-400/30"
+                style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}>
+                <nextStep.Icon className="h-4 w-4" strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9D5C7E]">Next step · {completed}/{steps.length} done</p>
+                <p className="text-sm font-bold text-[#831843] truncate">{nextStep.label}</p>
+                <p className="text-[11px] text-[#9D5C7E] leading-snug">{nextStep.hint}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="hidden sm:flex gap-1">
+                {steps.map(s => (
+                  <div key={s.key} className={["h-2 w-2 rounded-full transition-all duration-300",
+                    s.done ? "bg-emerald-400" : s === nextStep ? "bg-[#EC4899] w-4" : "bg-pink-200"].join(" ")} />
+                ))}
+              </div>
+              <PrimaryBtn onClick={() => setTab(nextStep.tab)}>
+                {nextStep.label} <ArrowRight className="h-3.5 w-3.5" />
+              </PrimaryBtn>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All-done celebration */}
+      {allDone && (
+        <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/60 px-4 py-3 flex items-center gap-3 animate-fade-in">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm">
+            <Check className="h-5 w-5" strokeWidth={2.5} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-emerald-800">Setup complete — you're blooming! 🌸</p>
+            <p className="text-[11px] text-emerald-600">Keep logging your daily spends to see your budget shine.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Stat Cards */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
 
-      {/* Overview: donut + trend */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-script text-3xl text-[#831843]">Expense Breakdown</h3>
-            <PiggyBank className="h-5 w-5 text-[#EC4899]" />
-          </div>
-          {donutData.length === 0 ? (
-            <EmptyState Icon={PiggyBank} text="No expenses yet — log one below to see the breakdown." />
-          ) : (
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Donut data={donutData} total={totalExpenses} currency={currency} />
-              <ul className="flex-1 space-y-1.5 w-full">
-                {donutData.map(d => (
-                  <li key={d.label} className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-[#831843]">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
-                      {d.label}
-                    </span>
-                    <span className="text-[#9D5C7E]">{Math.round((d.value / totalExpenses) * 100)}%</span>
-                  </li>
-                ))}
-              </ul>
+      {/* Add Expense — prominent when no transactions yet */}
+      {txns.length === 0 && (
+        <Card className="border-pink-300/50 bg-gradient-to-br from-pink-50 to-white">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <ArrowDownRight className="h-4 w-4" />
             </div>
-          )}
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-script text-3xl text-[#831843]">Spending Trend</h3>
-            <LineIcon className="h-5 w-5 text-[#EC4899]" />
+            <h3 className="font-script text-2xl text-[#831843]">Log your first expense</h3>
           </div>
-          <LineChart points={trend} />
+          <p className="text-xs text-[#9D5C7E] mb-4">Track where your money actually goes — every spend counts ✿</p>
+          <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
+            desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
+            catOptions={catOptions} allCats={allCats} currentCat={currentCat} currentMood={currentMood}
+            showCatModal={showCatModal} setShowCatModal={setShowCatModal}
+            showMoodModal={showMoodModal} setShowMoodModal={setShowMoodModal}
+            txnSaved={txnSaved} addTxn={addTxn} currency={currency} />
         </Card>
-      </div>
+      )}
 
-      {/* Bills + Goals preview + Health */}
+      {/* Overview: donut + trend */}
+      {txns.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-script text-3xl text-[#831843]">Expense Breakdown</h3>
+              <PiggyBank className="h-5 w-5 text-[#EC4899]" />
+            </div>
+            {donutData.length === 0 ? (
+              <EmptyState Icon={PiggyBank} text="No expenses yet — log one below to see the breakdown." />
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Donut data={donutData} total={totalExpenses} currency={currency} />
+                <ul className="flex-1 space-y-1.5 w-full">
+                  {donutData.map(d => (
+                    <li key={d.label} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-[#831843]">
+                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                        {d.label}
+                      </span>
+                      <span className="text-[#9D5C7E] font-semibold">{Math.round((d.value / totalExpenses) * 100)}%</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-script text-3xl text-[#831843]">This Month</h3>
+              <LineIcon className="h-5 w-5 text-[#EC4899]" />
+            </div>
+            <LineChart points={trend} />
+            <div className="flex justify-between mt-1 px-1">
+              {["Week 1","Week 2","Week 3","Week 4"].map(w => (
+                <span key={w} className="text-[9px] text-[#C4A0CE] font-semibold">{w}</span>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Bills + Goals + Health */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-script text-2xl text-[#831843]">Upcoming Bills</h3>
             <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline">View all</button>
           </div>
-          {bills.length === 0 ? <EmptyState Icon={Calendar} text="No bills yet." compact /> : (
+          {bills.length === 0 ? (
+            <div className="py-3 text-center">
+              <EmptyState Icon={Calendar} text="No bills yet." compact />
+              <button onClick={() => setTab("Reports")} className="mt-2 text-xs font-bold text-[#EC4899] hover:underline">Add a bill →</button>
+            </div>
+          ) : (
             <ul className="space-y-2">
               {bills.slice(0, 3).map(b => {
                 const d = daysUntil(b.due);
-                const status = b.paid ? { l: "Paid 💚", c: "bg-emerald-100 text-emerald-700" }
-                  : d < 0 ? { l: "Overdue 🔴", c: "bg-red-100 text-red-700" }
-                  : { l: "Upcoming 🟡", c: "bg-amber-100 text-amber-700" };
+                const status = b.paid ? { l: "Paid", c: "bg-emerald-100 text-emerald-700" }
+                  : d < 0 ? { l: "Overdue", c: "bg-red-100 text-red-700" }
+                  : { l: `${d}d`, c: "bg-amber-100 text-amber-700" };
                 return (
                   <li key={b.id} className="flex items-center justify-between rounded-xl bg-pink-50/60 px-3 py-2 text-sm">
                     <div>
                       <div className="font-semibold text-[#831843]">{b.name}</div>
-                      <div className="text-xs text-[#9D5C7E]">in {d} days · {fmt(b.amount, currency)}</div>
+                      <div className="text-xs text-[#9D5C7E]">{fmt(b.amount, currency)}</div>
                     </div>
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
                   </li>
@@ -785,22 +841,31 @@ function DashboardTab(props: {
 
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-script text-2xl text-[#831843]">Top Goals</h3>
+            <h3 className="font-script text-2xl text-[#831843]">Savings Goals</h3>
             <button onClick={() => setTab("Savings Goals")} className="text-xs font-semibold text-[#EC4899] hover:underline">View all</button>
           </div>
-          {goals.length === 0 ? <EmptyState Icon={Flag} text="No goals yet." compact /> : (
+          {goals.length === 0 ? (
+            <div className="py-3 text-center">
+              <EmptyState Icon={Flag} text="No goals yet." compact />
+              <button onClick={() => setTab("Savings Goals")} className="mt-2 text-xs font-bold text-[#EC4899] hover:underline">Add a goal →</button>
+            </div>
+          ) : (
             <ul className="space-y-3">
               {goals.slice(0, 3).map(g => {
                 const p = Math.min(100, (g.saved / g.target) * 100);
                 return (
                   <li key={g.id}>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-[#831843]">{g.name}</span>
-                      <span className="text-[#9D5C7E]">{Math.round(p)}%</span>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="font-semibold text-[#831843] truncate">{g.name}</span>
+                      <span className="text-[#9D5C7E] shrink-0 ml-2">{Math.round(p)}%</span>
                     </div>
-                    <div className="mt-1 h-2 rounded-full bg-pink-100 overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500"
+                    <div className="h-2 rounded-full bg-pink-100 overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700"
                         style={{ width: `${p}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                    </div>
+                    <div className="flex justify-between mt-0.5">
+                      <span className="text-[10px] text-[#9D5C7E]">{fmt(g.saved, currency)} saved</span>
+                      <span className="text-[10px] text-[#9D5C7E]">Goal: {fmt(g.target, currency)}</span>
                     </div>
                   </li>
                 );
@@ -811,35 +876,157 @@ function DashboardTab(props: {
 
         <Card className="flex flex-col items-center text-center">
           <h3 className="font-script text-2xl text-[#831843] mb-2">Budget Health</h3>
-          <HealthRing pct={Math.max(0, Math.min(100, savingsPct))} label={health.label} tone={health.tone} />
-          <p className="mt-3 text-xs text-[#9D5C7E]">{health.tip}</p>
+          {totalIncome === 0 ? (
+            <EmptyState Icon={PiggyBank} text="Add income to see your health score." compact />
+          ) : (
+            <>
+              <HealthRing pct={Math.max(0, Math.min(100, savingsPct))} label={health.label} tone={health.tone} />
+              <p className="mt-3 text-xs text-[#9D5C7E] leading-relaxed">{health.tip}</p>
+              <div className="mt-3 w-full text-left rounded-xl bg-pink-50/60 p-3">
+                <p className="text-[10px] font-bold text-[#9D5C7E] uppercase tracking-wider mb-1">50/30/20 guide</p>
+                {[
+                  { label: "Needs (50%)", pct: 50, v: totalIncome * 0.5 },
+                  { label: "Wants (30%)", pct: 30, v: totalIncome * 0.3 },
+                  { label: "Savings (20%)", pct: 20, v: totalIncome * 0.2 },
+                ].map(r => (
+                  <div key={r.label} className="flex justify-between text-[11px] text-[#831843] py-0.5">
+                    <span>{r.label}</span><span className="font-semibold">{fmt(r.v, currency)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </Card>
       </div>
 
-      {/* Inline Add Transaction */}
-      <Card>
-        <div className="flex items-center gap-2 mb-3">
-          <Plus className="h-4 w-4 text-[#EC4899]" />
-          <h3 className="font-script text-3xl text-[#831843]">Add Transaction</h3>
+      {/* Add Transaction — always shown when income exists */}
+      {txns.length > 0 && (
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <Plus className="h-4 w-4" />
+            </div>
+            <h3 className="font-script text-2xl text-[#831843]">Log a spend</h3>
+          </div>
+          <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
+            desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
+            catOptions={catOptions} allCats={allCats} currentCat={currentCat} currentMood={currentMood}
+            showCatModal={showCatModal} setShowCatModal={setShowCatModal}
+            showMoodModal={showMoodModal} setShowMoodModal={setShowMoodModal}
+            txnSaved={txnSaved} addTxn={addTxn} currency={currency} />
+        </Card>
+      )}
+
+      {/* Category picker modal */}
+      {showCatModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+              <h3 className="font-script text-2xl text-[#831843]">Category ✿</h3>
+              <button onClick={() => setShowCatModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="px-3 py-3 max-h-72 overflow-y-auto space-y-1">
+              {catOptions.map(k => {
+                const c = allCats.find(x => x.key === k);
+                const active = k === catKey;
+                return (
+                  <button key={k} onClick={() => { setCatKey(k); setShowCatModal(false); }}
+                    className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition active:scale-[0.98]",
+                      active ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#831843]">
+                      <span className="text-base">{c?.emoji ?? "💰"}</span>{c?.label ?? k}
+                    </span>
+                    {active && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-          <Input type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} className="lg:col-span-1" />
-          <Select value={catKey} onChange={(e) => setCatKey(e.target.value)} className="lg:col-span-1">
-            {(selectedCats.length ? selectedCats : allCats.map(c => c.key)).map(k => {
-              const c = allCats.find(x => x.key === k);
-              return <option key={k} value={k}>{c?.label}</option>;
-            })}
-          </Select>
-          <Input placeholder="Description (optional)" value={desc} onChange={(e) => setDesc(e.target.value)} className="lg:col-span-2" />
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="lg:col-span-1" />
-          <Select value={mood} onChange={(e) => setMood(e.target.value as MoodKey)} className="lg:col-span-1">
-            {MOODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
-          </Select>
+      )}
+
+      {/* Mood picker modal */}
+      {showMoodModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+              <h3 className="font-script text-2xl text-[#831843]">Spend type ✿</h3>
+              <button onClick={() => setShowMoodModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="px-3 py-3 space-y-1">
+              {MOODS.map(m => (
+                <button key={m.key} onClick={() => { setMood(m.key); setShowMoodModal(false); }}
+                  className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition",
+                    mood === m.key ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
+                  <span className={["inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold border", m.tone].join(" ")}>
+                    <m.Icon className="h-3.5 w-3.5" /> {m.label}
+                  </span>
+                  {mood === m.key && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="mt-3 flex justify-end">
-          <PrimaryBtn onClick={addTxn}><Plus className="h-4 w-4" /> Save Transaction</PrimaryBtn>
+      )}
+    </div>
+  );
+}
+
+/* Extracted Add Transaction form — used in two places */
+function AddTxnForm({ amount, setAmount, catKey, setCatKey, desc, setDesc, date, setDate, mood, setMood,
+  catOptions, allCats, currentCat, currentMood, showCatModal, setShowCatModal,
+  showMoodModal, setShowMoodModal, txnSaved, addTxn, currency }: {
+  amount: string; setAmount: (v: string) => void;
+  catKey: string; setCatKey: (v: string) => void;
+  desc: string; setDesc: (v: string) => void;
+  date: string; setDate: (v: string) => void;
+  mood: MoodKey; setMood: (v: MoodKey) => void;
+  catOptions: string[]; allCats: Cat[];
+  currentCat: Cat | undefined; currentMood: typeof MOODS[number];
+  showCatModal: boolean; setShowCatModal: (v: boolean) => void;
+  showMoodModal: boolean; setShowMoodModal: (v: boolean) => void;
+  txnSaved: boolean; addTxn: () => void; currency: CurrencyKey;
+}) {
+  return (
+    <div className="space-y-3">
+      {/* Amount row */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
+          <Input type="number" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)}
+            className="pl-7 text-lg font-bold" onKeyDown={e => e.key === "Enter" && addTxn()} />
         </div>
-      </Card>
+        <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-36 shrink-0" />
+      </div>
+      {/* Category + Mood */}
+      <div className="flex gap-2">
+        <button onClick={() => setShowCatModal(true)}
+          className="flex-1 flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left">
+          <span className="text-base">{currentCat?.emoji ?? "💰"}</span>
+          <span className="flex-1 truncate font-medium">{currentCat?.label ?? catKey}</span>
+          <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0" />
+        </button>
+        <button onClick={() => setShowMoodModal(true)}
+          className={["flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold border transition shrink-0", currentMood.tone].join(" ")}>
+          <currentMood.Icon className="h-3.5 w-3.5" /> {currentMood.label}
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </button>
+      </div>
+      {/* Description */}
+      <Input placeholder="What did you spend on? (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
+      {/* Save */}
+      <div className="flex items-center justify-between pt-1">
+        {txnSaved ? (
+          <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 animate-fade-in">
+            <Check className="h-4 w-4" /> Saved ✿
+          </span>
+        ) : <span />}
+        <PrimaryBtn onClick={addTxn} disabled={!amount || parseFloat(amount) <= 0}>
+          <Plus className="h-4 w-4" /> Save spend
+        </PrimaryBtn>
+      </div>
     </div>
   );
 }
