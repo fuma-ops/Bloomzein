@@ -657,12 +657,12 @@ function WeekTab({
                         className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
                       />
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                      {/* Subtle top-only gradient so badges stay readable */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
 
                       {/* Meal type badge */}
                       <div className="absolute top-1.5 left-1.5">
-                        <span className="text-[8px] font-bold uppercase tracking-wide text-white/90 bg-black/35 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                        <span className="text-[8px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">
                           {slot === 'breakfast' ? 'morn' : slot === 'dinner' ? 'eve' : slot}
                         </span>
                       </div>
@@ -674,16 +674,15 @@ function WeekTab({
                         </div>
                       )}
 
-                      {/* Recipe name — glass pill, centered */}
-                      <div className="absolute bottom-2 left-2 right-2">
+                      {/* Pink glass bottom strip — full width */}
+                      <div
+                        className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
+                        style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
+                      >
                         {r ? (
-                          <div className="rounded-xl px-2 py-1.5 text-center" style={{ background: 'rgba(0,0,0,0.52)' }}>
-                            <p className="text-[9px] font-semibold text-white leading-tight line-clamp-2">{r.name}</p>
-                          </div>
+                          <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r.name}</p>
                         ) : (
-                          <div className="rounded-xl px-2 py-1 text-center" style={{ background: 'rgba(0,0,0,0.35)' }}>
-                            <p className="text-[9px] text-white/40 italic">—</p>
-                          </div>
+                          <p className="text-[9px] text-white/50 italic">—</p>
                         )}
                       </div>
 
@@ -754,8 +753,8 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
             >
               {/* Photo */}
               <img src={photo} alt={r?.name ?? d} className="absolute inset-0 w-full h-full object-cover" />
-              {/* Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+              {/* Subtle top gradient for badge readability */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
               {/* Day badge */}
               <div className="absolute top-1.5 left-1.5">
                 <span className="text-[9px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">{d}</span>
@@ -768,11 +767,12 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
               >
                 <Shuffle className="h-2.5 w-2.5" />
               </button>
-              {/* Name — glass pill, centered */}
-              <div className="absolute bottom-2 left-2 right-2">
-                <div className="rounded-xl px-2 py-1.5 text-center" style={{ background: 'rgba(0,0,0,0.52)' }}>
-                  <p className="text-[9px] font-semibold text-white leading-tight line-clamp-2">{r?.name ?? '—'}</p>
-                </div>
+              {/* Pink glass bottom strip — full width */}
+              <div
+                className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
+                style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
+              >
+                <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r?.name ?? '—'}</p>
               </div>
             </div>
           );
