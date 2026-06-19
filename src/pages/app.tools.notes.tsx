@@ -973,27 +973,6 @@ export default function NotesPage() {
         )}
       </div>
 
-      {/* WELCOME */}
-      {!welcomed && (
-        <div className="mb-4 rounded-[1.75rem] border border-[#EC4899]/20 bg-white/90 backdrop-blur p-5 sm:p-6 shadow-md animate-fade-in">
-          <div className="flex items-start gap-4">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#EC4899] to-[#DB2777] text-white">
-              <Heart className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-script text-2xl text-[#EC4899]">Welcome back, beautiful!</h3>
-              <p className="mt-1.5 text-xs sm:text-sm text-[#831843] leading-relaxed">
-                Welcome to your little corner of peace. Here you can write down sweet thoughts, dump feelings,
-                or set gorgeous nudges. Pinned notes float to the top so you can easily view your vision.
-              </p>
-              <button onClick={handleStartHere} className="bloom-luxury-btn mt-4 px-4 py-1.5 text-xs font-bold text-white">
-                Start Here ✿
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* HERO */}
       <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
         <img src="/images/notes-hero.png" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
@@ -1009,15 +988,15 @@ export default function NotesPage() {
             <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
               <button
                 onClick={() => setTab("notes")}
-                className={["rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "notes" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
+                className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "notes" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
               >
-                ✿ Notes
+                <NotebookPen className="h-3.5 w-3.5" strokeWidth={2} /> Notes
               </button>
               <button
                 onClick={() => setTab("reminders")}
-                className={["rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
+                className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
               >
-                ⏰ Reminders
+                <Bell className="h-3.5 w-3.5" strokeWidth={2} /> Reminders
               </button>
             </div>
           </div>
@@ -1061,7 +1040,7 @@ export default function NotesPage() {
                 onClick={() => { resetReminderForm(); setShowReminderForm((v) => !v); }}
                 className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white"
               >
-                <Plus className="h-3.5 w-3.5" /> New Reminder
+                New Reminder
               </button>
             )}
             {justSaved && (
@@ -1070,6 +1049,30 @@ export default function NotesPage() {
               </span>
             )}
           </div>
+
+          {/* WELCOME BANNER — dismissable, below search bar */}
+          {!welcomed && (
+            <div className="rounded-[1.75rem] border border-[#EC4899]/20 bg-white/90 backdrop-blur p-5 shadow-md animate-fade-in">
+              <div className="flex items-start gap-4">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#EC4899] to-[#DB2777] text-white">
+                  <Heart className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-script text-2xl text-[#EC4899]">Welcome back, beautiful!</h3>
+                  <p className="mt-1.5 text-xs sm:text-sm text-[#831843] leading-relaxed">
+                    Welcome to your little corner of peace. Here you can write down sweet thoughts, dump feelings,
+                    or set gorgeous nudges. Pinned notes float to the top so you can easily view your vision.
+                  </p>
+                  <button onClick={handleStartHere} className="bloom-luxury-btn mt-4 px-4 py-1.5 text-xs font-bold text-white">
+                    Start Here ✿
+                  </button>
+                </div>
+                <button onClick={handleStartHere} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* FILTER CHIPS — notes tab */}
           {tab === "notes" && (
@@ -1557,13 +1560,13 @@ export default function NotesPage() {
             <div className="animate-fade-in space-y-4">
               {sortedReminders.length === 0 ? (
                 <div className="rounded-[2rem] bg-white/70 border border-petal/40 p-8 text-center flex flex-col items-center justify-center">
-                  <span className="text-4xl mb-2">🌸</span>
+                  <Flower2 className="h-10 w-10 mb-2 text-[#EC4899]" strokeWidth={1.5} />
                   <p className="text-sm text-rose italic">All clear! No upcoming nudges.</p>
                   <button
                     onClick={() => setShowReminderForm(true)}
                     className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
                   >
-                    <Plus className="h-3.5 w-3.5" /> + New reminder
+                    New reminder
                   </button>
                 </div>
               ) : (
