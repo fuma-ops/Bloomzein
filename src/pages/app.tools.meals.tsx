@@ -1101,57 +1101,131 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
   const r = RECIPES.find((x) => x.id === id);
   if (!r) return null;
   const fav = favorites.includes(r.id);
+  const photoSrc = r.photo ? `/images/recipes/${r.photo}` : (MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg');
+  const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl">
-        {(r.photo || r.image) && (
+    /* Backdrop */
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+      style={{ animation: 'bloom-fade-in .22s ease both' }}
+      onClick={onClose}
+    >
+      {/* Sheet */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl"
+        style={{ animation: 'recipeSlideUp .32s cubic-bezier(.22,1,.36,1) both' }}
+      >
+        {/* Hero photo */}
+        <div className="relative h-52 sm:h-64 overflow-hidden rounded-t-[2rem] sm:rounded-t-[2rem]">
           <img
-            src={r.photo ? `/images/recipes/${r.photo}` : r.image}
+            src={photoSrc}
             alt={r.name}
-            className="w-full h-40 sm:h-56 object-cover"
-            onError={(e) => {
-              const fallback = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
-              (e.currentTarget as HTMLImageElement).src = fallback;
-            }}
+            className="w-full h-full object-cover"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
           />
-        )}
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="font-script text-3xl text-hotpink leading-none">{r.name}</h3>
-              <p className="mt-1 text-xs text-rose/70">
-                {r.vibe} · {r.prepMin + r.cookMin} min · {r.difficulty} · {r.cost}
-              </p>
+          {/* gradient so text is readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
+          {/* ✕ close — top right */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {/* Recipe name overlaid on photo */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <h3 className="font-script text-3xl text-white leading-tight drop-shadow">{r.name}</h3>
+            <p className="mt-0.5 text-xs text-white/80">
+              {r.vibe} · {r.prepMin + r.cookMin} min · {r.difficulty} · {r.cost}
+            </p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4">
+
+          {/* Macros row */}
+          <div className="grid grid-cols-4 gap-2 text-center">
+            {[
+              { label: 'Cal', value: r.macros.calories },
+              { label: 'Protein', value: `${r.macros.protein}g` },
+              { label: 'Carbs', value: `${r.macros.carbs}g` },
+              { label: 'Fat', value: `${r.macros.fat}g` },
+            ].map(({ label, value }) => (
+              <div key={label} className="rounded-xl bg-blush/60 py-2 px-1">
+                <p className="text-[10px] text-rose/60 uppercase font-semibold">{label}</p>
+                <p className="text-sm font-bold text-hotpink">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Ingredients */}
+          <div>
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Ingredients</p>
+            <ul className="space-y-1">
+              {r.ingredients.map((i) => (
+                <li key={i.item} className="flex gap-2 text-sm text-rose">
+                  <span className="text-hotpink mt-0.5">•</span>
+                  <span><b className="font-medium">{i.qty}</b> {i.item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Steps */}
+          <div>
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Steps</p>
+            <ol className="space-y-2">
+              {r.steps.map((s, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-rose">
+                  <span className="w-5 h-5 flex-shrink-0 rounded-full bg-hotpink text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                  <span className="leading-snug">{s}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Storage */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-xl bg-blush/60 p-2.5">
+              <p className="font-bold text-hotpink mb-0.5">Keeps</p>
+              <p className="text-rose">{r.conservation.fridgeDays}d fridge{r.conservation.freezerWeeks ? ` · ${r.conservation.freezerWeeks}w freezer` : ''}</p>
             </div>
-            <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink"><X className="h-4 w-4" /></button>
+            <div className="rounded-xl bg-blush/60 p-2.5">
+              <p className="font-bold text-hotpink mb-0.5">Container</p>
+              <p className="text-rose">{r.conservation.container || 'Airtight'}</p>
+            </div>
+            {r.batchTip && (
+              <div className="rounded-xl bg-blush/60 p-2.5 col-span-2">
+                <p className="font-bold text-hotpink mb-0.5">Batch tip</p>
+                <p className="text-rose">{r.batchTip}</p>
+              </div>
+            )}
+            {r.substitutionTip && (
+              <div className="rounded-xl bg-blush/60 p-2.5 col-span-2">
+                <p className="font-bold text-hotpink mb-0.5">Easy swap</p>
+                <p className="text-rose">{r.substitutionTip}</p>
+              </div>
+            )}
           </div>
 
-          <p className="mt-4 text-xs uppercase font-bold text-hotpink">Ingredients</p>
-          <ul className="mt-1 space-y-0.5 text-sm text-rose">
-            {r.ingredients.map((i) => <li key={i.item}>• {i.qty} — {i.item}</li>)}
-          </ul>
-
-          <p className="mt-4 text-xs uppercase font-bold text-hotpink">Steps</p>
-          <ol className="mt-1 space-y-1 text-sm text-rose list-decimal list-inside">
-            {r.steps.map((s, i) => <li key={i}>{s}</li>)}
-          </ol>
-
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-xl bg-blush/70 p-2"><b className="text-hotpink">Keeps:</b> {r.conservation.fridgeDays}d fridge{r.conservation.freezerWeeks ? ` · ${r.conservation.freezerWeeks}w freezer` : ""}</div>
-            <div className="rounded-xl bg-blush/70 p-2"><b className="text-hotpink">Container:</b> {r.conservation.container || "Airtight"}</div>
-            {r.batchTip && <div className="rounded-xl bg-blush/70 p-2 col-span-2"><b className="text-hotpink">Batch:</b> {r.batchTip}</div>}
-            {r.substitutionTip && <div className="rounded-xl bg-blush/70 p-2 col-span-2"><b className="text-hotpink">Swap:</b> {r.substitutionTip}</div>}
-          </div>
-
-          <div className="mt-4 flex items-center gap-2">
+          {/* Actions */}
+          <div className="flex items-center gap-2 pt-1 pb-2">
             <PinkBtn onClick={() => toggleFav(r.id)} variant={fav ? "solid" : "outline"}>
-              <Heart className={`h-4 w-4 ${fav ? "fill-white" : ""}`} /> {fav ? "Loved" : "Save"}
+              <Heart className={`h-4 w-4 ${fav ? 'fill-white' : ''}`} /> {fav ? 'Loved ✨' : 'Save'}
             </PinkBtn>
             <div className="flex items-center gap-1 ml-auto">
-              {(["love","ok","never"] as const).map((v) => (
-                <button key={v} onClick={() => setRatings({ ...ratings, [r.id]: v })}
-                  className={`text-[11px] rounded-full px-2 py-1 border ${ratings[r.id] === v ? "bg-hotpink text-white border-hotpink" : "border-petal/60 text-rose"}`}>
+              {(['love', 'ok', 'never'] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setRatings({ ...ratings, [r.id]: v })}
+                  className={`text-[11px] rounded-full px-2.5 py-1 border transition-colors ${ratings[r.id] === v ? 'bg-hotpink text-white border-hotpink' : 'border-petal/60 text-rose hover:border-hotpink/40'}`}
+                >
                   {v}
                 </button>
               ))}
