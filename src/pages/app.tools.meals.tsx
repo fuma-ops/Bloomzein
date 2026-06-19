@@ -505,26 +505,86 @@ function WeekTab({
                 <div className="text-xs sm:text-sm font-semibold leading-tight">{i.label}</div>
                 <div className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight ${active ? "text-white/80" : "text-rose/60"}`}>{i.blurb}</div>
                 {recommended && !active && (
-                  <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] font-bold uppercase rounded-full bg-hotpink/10 text-hotpink px-1 sm:px-1.5 py-0.5">For you</span>
+                  <span
+                    className="absolute top-1 right-1 text-[8px] sm:text-[9px] font-bold uppercase rounded-full px-1 sm:px-1.5 py-0.5"
+                    style={{
+                      background: 'linear-gradient(135deg,#EC4899,#DB2777)',
+                      color: 'white',
+                      animation: 'ctaBreathe 2.2s ease-in-out infinite',
+                      boxShadow: '0 0 8px rgba(236,72,153,.55)',
+                    }}
+                  >For you</span>
                 )}
               </button>
             );
           })}
         </div>
-        <div className="mt-3 flex flex-wrap gap-2 items-center">
-          <PinkBtn onClick={onGenerate}>
-            <Sparkles className="h-4 w-4" /> Plan my week
-          </PinkBtn>
-          {!hasPantry && (
-            <PinkBtn variant="outline" onClick={goPantry}>
-              Build pantry first
-            </PinkBtn>
-          )}
-          {!planEmpty && (
-            <PinkBtn variant="ghost" onClick={onGenerate}>
-              <RefreshCw className="h-4 w-4" /> Regenerate week
-            </PinkBtn>
-          )}
+        <div className="mt-4 flex flex-col gap-2.5">
+          {/* Primary CTA — Plan my week */}
+          <button
+            onClick={onGenerate}
+            className="w-full relative overflow-hidden rounded-2xl text-white font-bold text-base sm:text-lg flex items-center justify-between px-5 py-3.5 active:scale-[.97] transition-transform"
+            style={{
+              background: 'linear-gradient(135deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)',
+              boxShadow: '0 8px 28px rgba(236,72,153,.45)',
+              animation: 'ctaBreathe 3s ease-in-out infinite',
+            }}
+          >
+            {/* shimmer overlay */}
+            <span aria-hidden className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.18) 50%,transparent 80%)',
+                backgroundSize: '200% 100%',
+                animation: 'bloom-shimmer 2.4s linear infinite',
+              }}
+            />
+            <span className="flex items-center gap-2 relative z-10">
+              <Sparkles className="h-5 w-5 opacity-90" />
+              Plan my week
+            </span>
+            <span className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm">
+              <ChevronRight className="h-5 w-5" />
+            </span>
+          </button>
+
+          {/* Secondary row */}
+          <div className="flex gap-2">
+            {!hasPantry && (
+              <button
+                onClick={goPantry}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl border-2 font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all hover:shadow-md"
+                style={{
+                  borderColor: '#0d9488',
+                  color: '#0d9488',
+                  background: 'rgba(13,148,136,.06)',
+                  transition: 'background .2s,box-shadow .2s,transform .15s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.12)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(13,148,136,.06)'; }}
+              >
+                <Apple className="h-4 w-4 flex-shrink-0" />
+                Build pantry first
+              </button>
+            )}
+            {!planEmpty && (
+              <button
+                onClick={onGenerate}
+                className="flex items-center justify-center gap-2 rounded-xl border font-semibold text-sm px-4 py-2.5 active:scale-[.97] transition-all"
+                style={{
+                  borderColor: 'rgba(236,72,153,.4)',
+                  color: '#EC4899',
+                  background: 'rgba(236,72,153,.06)',
+                  flexShrink: 0,
+                  transition: 'background .2s,box-shadow .2s,transform .15s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.12)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(236,72,153,.06)'; }}
+              >
+                <RefreshCw className="h-4 w-4 flex-shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
+                Regenerate
+              </button>
+            )}
+          </div>
         </div>
       </Glass>
 
