@@ -644,7 +644,7 @@ function WeekTab({
                       key={slot}
                       className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
                       style={{ aspectRatio: '3/4' }}
-                      onClick={() => r && onOpen(r.id)}
+                      onClick={() => r && setTimeout(() => onOpen(r.id), 0)}
                     >
                       {/* Photo */}
                       <img
@@ -1102,14 +1102,22 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
   if (!r) return null;
   const fav = favorites.includes(r.id);
   const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
-  const photoSrc  = fallback; // recipe-specific photos not yet in /images/recipes/
+  const photoSrc  = fallback;
+
+  // Guard: ignore backdrop clicks for the first 80ms after mount so the
+  // opening tap doesn't immediately close the modal via event propagation.
+  const [canClose, setCanClose] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setCanClose(true), 80);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     /* Backdrop — no backdrop-blur (causes green glitch on Android) */
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in"
       style={{ background: 'rgba(0,0,0,0.55)' }}
-      onClick={onClose}
+      onClick={() => canClose && onClose()}
     >
       {/* Sheet */}
       <div
