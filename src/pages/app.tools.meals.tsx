@@ -674,12 +674,16 @@ function WeekTab({
                         </div>
                       )}
 
-                      {/* Recipe name — bottom overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                      {/* Recipe name — glass pill, centered */}
+                      <div className="absolute bottom-2 left-2 right-2">
                         {r ? (
-                          <p className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{r.name}</p>
+                          <div className="rounded-xl px-2 py-1.5 text-center" style={{ background: 'rgba(0,0,0,0.52)' }}>
+                            <p className="text-[9px] font-semibold text-white leading-tight line-clamp-2">{r.name}</p>
+                          </div>
                         ) : (
-                          <p className="text-[9px] text-white/40 italic">not set</p>
+                          <div className="rounded-xl px-2 py-1 text-center" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                            <p className="text-[9px] text-white/40 italic">—</p>
+                          </div>
                         )}
                       </div>
 
@@ -764,9 +768,11 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
               >
                 <Shuffle className="h-2.5 w-2.5" />
               </button>
-              {/* Name */}
-              <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                <p className="text-[10px] font-semibold text-white leading-tight line-clamp-2">{r?.name ?? '—'}</p>
+              {/* Name — glass pill, centered */}
+              <div className="absolute bottom-2 left-2 right-2">
+                <div className="rounded-xl px-2 py-1.5 text-center" style={{ background: 'rgba(0,0,0,0.52)' }}>
+                  <p className="text-[9px] font-semibold text-white leading-tight line-clamp-2">{r?.name ?? '—'}</p>
+                </div>
               </div>
             </div>
           );
