@@ -87,14 +87,10 @@ export default function ToolsIndex() {
             >
               ✦ pick your bloom for today 🌸
             </p>
-            {/* Glass "Play welcome tour" CTA — left aligned below subtitle */}
+            {/* "Play welcome tour" CTA — poppy pink with ctaBreathe animation */}
             <button
-              className="mt-0.5 inline-flex items-center gap-1.5 rounded-full font-semibold text-white text-[11px] sm:text-xs px-3 sm:px-4 py-2 sm:py-2.5 transition active:scale-95 backdrop-blur-md"
-              style={{
-                background: 'rgba(236,72,153,0.28)',
-                border: '1px solid rgba(255,255,255,0.45)',
-                boxShadow: '0 4px 18px rgba(236,72,153,0.32), inset 0 1px 0 rgba(255,255,255,0.35)',
-              }}
+              className="bloom-luxury-btn mt-0.5 inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-xs font-semibold text-white transition active:scale-95"
+              style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
             >
               <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="currentColor" strokeWidth={0} />
               Play welcome tour
