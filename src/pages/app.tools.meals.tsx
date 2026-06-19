@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -250,6 +250,16 @@ export default function MealsPage() {
   const owned = useMemo(() => pantrySet(pantry), [pantry]);
   const planEmpty = Object.keys(plan).length === 0;
 
+  // Scroll-hint on hero tabs: peek right then snap back so user sees there are more tabs
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const t1 = setTimeout(() => { el.scrollTo({ left: 80, behavior: 'smooth' }); }, 900);
+    const t2 = setTimeout(() => { el.scrollTo({ left: 0, behavior: 'smooth' }); }, 1700);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
   // Diet tool's "My Rules" (allergies + diet type) silently filter the pool
   // every recipe is picked from, so the weekly plan never recommends a recipe
   // the user has ruled out in the Diet tool.
@@ -317,17 +327,17 @@ export default function MealsPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
-          <div className="animate-scale-in">
-            <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Meal Planner</h1>
+          <div>
+            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>Meal Planner</h1>
             {phase !== "any" && (
-              <p className="mt-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none">
+              <p className="animate-fade-in mt-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
                 {phase} phase
               </p>
             )}
-            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">cook with love, glow all week ✿</p>
+            <p className="animate-fade-in mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>cook with love, glow all week ✿</p>
           </div>
-          {/* Pill tabs at bottom of hero */}
-          <div className="overflow-x-auto no-scrollbar">
+          {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
+          <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: '320ms' }}>
             <div className="flex gap-1.5 w-max">
               {TABS.map((t) => {
                 const active = tab === t.key;
@@ -478,7 +488,7 @@ function WeekTab({
           <p className="font-script text-2xl text-hotpink">This week's vibe</p>
           <PhasePill phase={phase} setPhase={setPhase} />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
           {INTENTIONS.map((i) => {
             const active = intention === i.key;
             const recommended = i.key === "cycle" && phase !== "any";
@@ -486,16 +496,16 @@ function WeekTab({
               <button
                 key={i.key} onClick={() => setIntention(i.key)}
                 className={[
-                  "relative text-left rounded-2xl border p-3 transition active:scale-[0.98]",
+                  "relative text-left rounded-xl sm:rounded-2xl border p-2 sm:p-3 transition active:scale-[0.98]",
                   active
                     ? "bg-hotpink text-white border-hotpink shadow shadow-hotpink/30"
                     : "bg-white/80 border-petal/60 text-rose hover:bg-blush",
                 ].join(" ")}
               >
-                <div className="text-sm font-semibold">{i.label}</div>
-                <div className={`text-[11px] mt-0.5 ${active ? "text-white/80" : "text-rose/60"}`}>{i.blurb}</div>
+                <div className="text-xs sm:text-sm font-semibold leading-tight">{i.label}</div>
+                <div className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight ${active ? "text-white/80" : "text-rose/60"}`}>{i.blurb}</div>
                 {recommended && !active && (
-                  <span className="absolute top-1.5 right-1.5 text-[9px] font-bold uppercase rounded-full bg-hotpink/10 text-hotpink px-1.5 py-0.5">For you</span>
+                  <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] font-bold uppercase rounded-full bg-hotpink/10 text-hotpink px-1 sm:px-1.5 py-0.5">For you</span>
                 )}
               </button>
             );
