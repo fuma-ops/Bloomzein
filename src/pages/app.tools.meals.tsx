@@ -326,6 +326,7 @@ export default function MealsPage() {
   };
 
   return (
+    <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
       <BloomBubbles count={10} />
 
@@ -432,16 +433,19 @@ export default function MealsPage() {
         <CleverRow onOpen={setOpenRecipe} owned={owned} />
       </div>
 
-      {openRecipe && (
-        <RecipeSheet
-          id={openRecipe} onClose={() => setOpenRecipe(null)}
-          favorites={favorites} toggleFav={toggleFav}
-          ratings={ratings} setRatings={setRatings}
-        />
-      )}
-
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
     </div>
+
+    {/* RecipeSheet rendered OUTSIDE the animated div so position:fixed works correctly.
+        CSS transform on an ancestor breaks fixed positioning — moving it here fixes it. */}
+    {openRecipe && (
+      <RecipeSheet
+        id={openRecipe} onClose={() => setOpenRecipe(null)}
+        favorites={favorites} toggleFav={toggleFav}
+        ratings={ratings} setRatings={setRatings}
+      />
+    )}
+    </>
   );
 }
 
