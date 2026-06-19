@@ -1113,16 +1113,16 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
   }, []);
 
   return (
-    /* Backdrop */
+    /* Backdrop — z-[200] to sit above the bottom nav (z-50) */
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.55)' }}
       onClick={() => canClose && onClose()}
     >
       {/* Sheet — no animation class, render immediately fully visible */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl"
+        className="relative w-full sm:max-w-md max-h-[85vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl"
         style={{ background: '#ffffff' }}
       >
         {/* Hero photo */}
