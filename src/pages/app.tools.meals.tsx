@@ -1101,21 +1101,21 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
   const r = RECIPES.find((x) => x.id === id);
   if (!r) return null;
   const fav = favorites.includes(r.id);
-  const photoSrc = r.photo ? `/images/recipes/${r.photo}` : (MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg');
   const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
+  const photoSrc  = fallback; // recipe-specific photos not yet in /images/recipes/
 
   return (
-    /* Backdrop */
+    /* Backdrop — no backdrop-blur (causes green glitch on Android) */
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
-      style={{ animation: 'bloom-fade-in .22s ease both' }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fade-in"
+      style={{ background: 'rgba(0,0,0,0.55)' }}
       onClick={onClose}
     >
       {/* Sheet */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl"
-        style={{ animation: 'recipeSlideUp .32s cubic-bezier(.22,1,.36,1) both' }}
+        className="relative w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl animate-scale-in"
+        style={{ background: '#fff' }}
       >
         {/* Hero photo */}
         <div className="relative h-52 sm:h-64 overflow-hidden rounded-t-[2rem] sm:rounded-t-[2rem]">
