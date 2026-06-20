@@ -1661,25 +1661,26 @@ function BudgetSetupTab(props: {
 
       <Card>
         <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5">
           {allCats.map(c => {
             const on = selectedCats.includes(c.key);
             return (
               <button key={c.key} onClick={() => toggle(c.key)}
                 className={[
-                  "flex flex-col items-center gap-1 rounded-2xl p-2 sm:p-3 lg:p-2 text-sm font-semibold transition-all duration-200 border-[0.5px]",
+                  "flex flex-col items-center gap-0.5 rounded-xl p-1.5 sm:p-2.5 lg:p-2 text-sm font-semibold transition-all duration-200 border-[0.5px]",
                   on ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.02]"
                      : "bg-white/80 text-[#831843] border-pink-300/40 hover:bg-pink-50",
                 ].join(" ")}
               >
-                <c.Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
-                <span className="text-center leading-tight text-[11px] sm:text-xs">{c.label}</span>
+                <c.Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                <span className="text-center leading-tight text-[9px] sm:text-[11px]">{c.label}</span>
               </button>
             );
           })}
           <button onClick={() => setShowCustom(v => !v)}
-            className="flex flex-col items-center justify-center gap-1 rounded-2xl p-3 text-sm font-semibold border-[0.5px] border-dashed border-pink-400/60 text-[#EC4899] bg-pink-50/40 hover:bg-pink-100">
-            <Plus className="h-5 w-5" /> Custom
+            className="flex flex-col items-center justify-center gap-0.5 rounded-xl p-1.5 sm:p-2.5 text-sm font-semibold border-[0.5px] border-dashed border-pink-400/60 text-[#EC4899] bg-pink-50/40 hover:bg-pink-100">
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[9px] sm:text-[11px]">Custom</span>
           </button>
         </div>
 
@@ -1713,18 +1714,18 @@ function BudgetSetupTab(props: {
               if (!c) return null;
               const sugg = suggestion(k);
               return (
-                <li key={k} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center rounded-xl bg-pink-50/40 px-3 py-2">
-                  <div className="sm:col-span-5 flex items-center gap-2">
-                    <c.Icon className="h-5 w-5 text-[#EC4899]" strokeWidth={1.6} />
-                    <span className="font-semibold text-[#831843]">{c.label}</span>
-                  </div>
-                  <div className="sm:col-span-4">
+                <li key={k} className="flex items-center gap-2 rounded-xl bg-pink-50/40 px-2.5 py-2">
+                  <c.Icon className="h-4 w-4 shrink-0 text-[#EC4899]" strokeWidth={1.6} />
+                  <span className="flex-1 min-w-0 truncate text-xs sm:text-sm font-semibold text-[#831843]">{c.label}</span>
+                  <div className="w-20 sm:w-28 shrink-0">
                     <Input type="number" value={budget[k] || ""} placeholder="0"
                       onChange={(e) => setBudget(prev => ({ ...prev, [k]: parseFloat(e.target.value) || 0 }))} />
                   </div>
-                  <div className="sm:col-span-3 text-xs text-[#9D5C7E]">
-                    {sugg > 0 && <>Recommended: <span className="font-semibold text-[#EC4899]">{fmt(sugg, currency)}</span></>}
-                  </div>
+                  {sugg > 0 && (
+                    <span className="shrink-0 text-[10px] font-bold text-[#EC4899] hidden sm:block whitespace-nowrap">
+                      {fmt(sugg, currency)}
+                    </span>
+                  )}
                 </li>
               );
             })}
