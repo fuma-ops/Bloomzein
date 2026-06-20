@@ -201,6 +201,92 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
   );
 }
 
+function PinkDatePicker({ value, onChange, className = "" }: {
+  value: string; onChange: (v: string) => void; className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const todayObj = new Date(); todayObj.setHours(0,0,0,0);
+  const todayStr = todayObj.toISOString().slice(0,10);
+  const base = value ? new Date(value + "T00:00:00") : todayObj;
+  const [view, setView] = useState({ y: base.getFullYear(), m: base.getMonth() });
+
+  function openPicker() {
+    const d = value ? new Date(value + "T00:00:00") : todayObj;
+    setView({ y: d.getFullYear(), m: d.getMonth() });
+    setOpen(true);
+  }
+
+  const display = value
+    ? new Date(value + "T00:00:00").toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    : "Select date";
+
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DAY_HDR = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+
+  const firstOfMonth = new Date(view.y, view.m, 1);
+  const offset = (firstOfMonth.getDay() + 6) % 7;
+  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+  const cells = Array.from({ length: Math.ceil((offset + daysInMonth) / 7) * 7 }, (_, i) => {
+    const d = new Date(view.y, view.m, 1 - offset + i);
+    const iso = d.toISOString().slice(0,10);
+    return { d, iso, inMonth: d.getMonth() === view.m, isToday: iso === todayStr, isSelected: iso === value };
+  });
+
+  return (
+    <>
+      <button type="button" onClick={openPicker}
+        className={`flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left ${className}`}>
+        <Calendar className="h-3.5 w-3.5 text-[#EC4899] shrink-0" />
+        <span className="flex-1 truncate">{display}</span>
+      </button>
+      {open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+              <h3 className="font-script text-2xl text-[#831843]">Pick a date ✿</h3>
+              <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <button onClick={() => setView(v => { const d = new Date(v.y, v.m-1); return {y:d.getFullYear(),m:d.getMonth()}; })}
+                className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="font-semibold text-sm text-[#831843]">{MONTHS[view.m]} {view.y}</span>
+              <button onClick={() => setView(v => { const d = new Date(v.y, v.m+1); return {y:d.getFullYear(),m:d.getMonth()}; })}
+                className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-7 px-4 pb-1">
+              {DAY_HDR.map(d => <div key={d} className="text-center text-[10px] font-bold text-[#C4A0CE] pb-1">{d}</div>)}
+            </div>
+            <div className="grid grid-cols-7 px-4 pb-5 gap-y-0.5">
+              {cells.map(({ iso, d, inMonth, isToday, isSelected }) => (
+                <button key={iso} onClick={() => { if (inMonth) { onChange(iso); setOpen(false); } }}
+                  className={["h-9 w-9 mx-auto rounded-full text-sm font-semibold transition-all duration-150",
+                    isSelected ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30 scale-105"
+                    : isToday ? "bg-pink-100 text-[#EC4899] ring-1 ring-[#EC4899]/50"
+                    : inMonth ? "hover:bg-pink-50 text-[#831843] active:scale-95"
+                    : "text-[#C4A0CE] opacity-40 pointer-events-none"].join(" ")}>
+                  {d.getDate()}
+                </button>
+              ))}
+            </div>
+            <div className="px-5 pb-5 flex gap-2">
+              <button onClick={() => { onChange(todayStr); setOpen(false); }}
+                className="flex-1 rounded-full bg-pink-50 py-2 text-xs font-semibold text-[#9D5C7E] hover:bg-pink-100 transition border border-pink-200/60">
+                Today
+              </button>
+              <button onClick={() => setOpen(false)} className="flex-1 bloom-luxury-btn py-2 text-sm font-bold text-white">Done ✿</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 function PrimaryBtn({ children, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
@@ -437,29 +523,6 @@ export function BudgetPlanner() {
       )}
 
       <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-5">
-        {/* Hero */}
-        <div className="relative w-full aspect-[8/3] lg:aspect-[16/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-2 animate-hero-border-signal">
-          <img src="/images/budget-hero.png" alt="Budget" className="absolute inset-0 h-full w-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#EC4899]/70 via-[#EC4899]/20 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-          <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
-            <div className="animate-scale-in">
-              <h1 className="font-script text-2xl sm:text-4xl lg:text-3xl xl:text-4xl text-white leading-none drop-shadow-md">Budget</h1>
-              <p className="mt-0.5 text-xs sm:text-sm lg:text-xs italic text-white/90 max-w-[10rem] sm:max-w-xs drop-shadow leading-snug">Soft, smart money planning — your way.</p>
-            </div>
-            {/* Currency selector inside hero — custom pink picker */}
-            <div className="self-end relative">
-              <button
-                onClick={() => setShowCurrencyPicker(true)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/30 active:scale-95"
-              >
-                {currency} — {CURRENCIES[currency].symbol}
-                <ChevronDown className="h-3.5 w-3.5 opacity-80" strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Tabs */}
         <div className="sticky top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1 backdrop-blur bg-transparent">
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
@@ -500,6 +563,7 @@ export function BudgetPlanner() {
               bills={bills}
               setTab={setTab}
               incomes={incomes}
+              onCurrencyClick={() => setShowCurrencyPicker(true)}
             />
           )}
           {tab === "Incomes" && (
@@ -680,10 +744,12 @@ function DashboardTab(props: {
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
   budget: Budget; selectedCats: string[]; allCats: Cat[];
   goals: Goal[]; bills: Bill[]; setTab: (t: TabKey) => void;
-  incomes: Income[];
+  incomes: Income[]; onCurrencyClick: () => void;
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget } = props;
+    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget, onCurrencyClick } = props;
+
+  const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
   const steps = [
     { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
@@ -909,15 +975,21 @@ function DashboardTab(props: {
           </div>
         </div>
       )}
-      {allDone && (
+      {allDone && !setupDismissed && (
         <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/60 px-4 py-3 flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm shrink-0">
             <Check className="h-5 w-5" strokeWidth={2.5} />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-emerald-800">Setup complete — you're blooming! 🌸</p>
             <p className="text-[11px] text-emerald-600">Keep logging your daily spends to see your budget shine.</p>
           </div>
+          <button
+            onClick={() => setSetupDismissed(true)}
+            className="grid h-8 w-8 place-items-center rounded-full hover:bg-emerald-100 text-emerald-600 transition shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
@@ -945,14 +1017,22 @@ function DashboardTab(props: {
               You're blooming ✿
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
-            {/* Week / Month toggle */}
-            <button
-              onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-              <Calendar className="h-3 w-3" />
-              {viewPeriod === "week" ? "This week" : "This month"}
-              <ChevronDown className="h-3 w-3 opacity-70" />
-            </button>
+            {/* Week / Month toggle + Currency button */}
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                <Calendar className="h-3 w-3" />
+                {viewPeriod === "week" ? "This week" : "This month"}
+                <ChevronDown className="h-3 w-3 opacity-70" />
+              </button>
+              <button
+                onClick={onCurrencyClick}
+                className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                <Coins className="h-3 w-3" />
+                {CURRENCIES[currency].symbol}
+              </button>
+            </div>
             {/* 7-day band — visible in week mode */}
             {viewPeriod === "week" && (
               <div className="flex gap-1 mt-2.5">
@@ -1314,7 +1394,7 @@ function AddTxnForm({ amount, setAmount, catKey, setCatKey, desc, setDesc, date,
           <Input type="number" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)}
             className="pl-7 text-lg font-bold" onKeyDown={e => e.key === "Enter" && addTxn()} />
         </div>
-        <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-36 shrink-0" />
+        <PinkDatePicker value={date} onChange={setDate} className="w-36 shrink-0" />
       </div>
       {/* Category + Mood */}
       <div className="flex gap-2">
@@ -1882,7 +1962,7 @@ function ReportsTab(props: {
         {billOpen && (
           <div className="mb-3 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
             <Input placeholder="Bill name" value={bName} onChange={(e) => setBName(e.target.value)} className="sm:col-span-4" />
-            <Input type="date" value={bDate} onChange={(e) => setBDate(e.target.value)} className="sm:col-span-3" />
+            <div className="sm:col-span-3"><PinkDatePicker value={bDate} onChange={setBDate} className="w-full" /></div>
             <Input type="number" placeholder="Amount" value={bAmt} onChange={(e) => setBAmt(e.target.value)} className="sm:col-span-3" />
             <PrimaryBtn onClick={addBill} className="sm:col-span-2">Add</PrimaryBtn>
           </div>
