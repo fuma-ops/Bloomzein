@@ -961,6 +961,57 @@ function DashboardTab(props: {
       {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
 
+      {/* ③b BUDGET PLAN — always visible once budget is configured */}
+      {(() => {
+        const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
+        if (budgetedCats.length === 0) return null;
+        const visible = budgetedCats.slice(0, 5);
+        const extra = budgetedCats.length - visible.length;
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget Plan
+              </h3>
+              <button onClick={() => setTab("Budget Setup")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                Edit <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="space-y-2.5">
+              {visible.map(k => {
+                const cat = allCats.find(c => c.key === k);
+                const budgeted = budget[k] ?? 0;
+                const spent = filteredTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const pct = budgeted > 0 ? Math.min(100, (spent / budgeted) * 100) : 0;
+                const barColor = pct >= 90
+                  ? "linear-gradient(90deg,#F9A8D4,#EC4899)"
+                  : "linear-gradient(90deg,#C084FC,#EC4899)";
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <span className="text-lg shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-1 gap-2">
+                        <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                        <span className="text-[10px] text-[#9D5C7E] shrink-0 tabular-nums">{fmt(spent, currency)} / {fmt(budgeted, currency)}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-pink-100 overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor }} />
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-[#9D5C7E] shrink-0 w-7 text-right">{Math.round(pct)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+            {extra > 0 && (
+              <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-xs text-[#EC4899] font-semibold hover:underline">
+                +{extra} more {extra === 1 ? "category" : "categories"}
+              </button>
+            )}
+          </Card>
+        );
+      })()}
+
       {/* ④ GOALS CAROUSEL */}
       {heroGoal ? (
         <div className="relative overflow-hidden rounded-[1.5rem] border border-pink-200/60 shadow-lg" style={{ minHeight: 120 }}>
@@ -1300,9 +1351,9 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Wallet className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> My Income Sources</h2>
+        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Wallet className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Income Sources</h2>
         <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income Source</PrimaryBtn>
       </div>
 
@@ -1428,8 +1479,8 @@ function BudgetSetupTab(props: {
   }
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+      <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
 
       {mealEstimate && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
@@ -1446,19 +1497,19 @@ function BudgetSetupTab(props: {
 
       <Card>
         <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
           {allCats.map(c => {
             const on = selectedCats.includes(c.key);
             return (
               <button key={c.key} onClick={() => toggle(c.key)}
                 className={[
-                  "flex flex-col items-center gap-1 rounded-2xl p-3 text-sm font-semibold transition-all duration-200 border-[0.5px]",
+                  "flex flex-col items-center gap-1 rounded-2xl p-2 sm:p-3 text-sm font-semibold transition-all duration-200 border-[0.5px]",
                   on ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.02]"
                      : "bg-white/80 text-[#831843] border-pink-300/40 hover:bg-pink-50",
                 ].join(" ")}
               >
-                <c.Icon className={`h-6 w-6 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
-                <span className="text-center leading-tight text-xs">{c.label}</span>
+                <c.Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                <span className="text-center leading-tight text-[11px] sm:text-xs">{c.label}</span>
               </button>
             );
           })}
@@ -1569,9 +1620,9 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
   function remove(id: string) { setGoals(prev => prev.filter(g => g.id !== id)); }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Flag className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> My Goals</h2>
+        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Flag className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Goals</h2>
         <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add New Goal</PrimaryBtn>
       </div>
 
@@ -1737,9 +1788,9 @@ function ReportsTab(props: {
   function removeBill(id: string) { setBills(prev => prev.filter(b => b.id !== id)); }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><FileBarChart className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> My Reports</h2>
+        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><FileBarChart className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Reports</h2>
         <div className="flex items-center gap-2">
           <button onClick={() => shiftMonth(-1)} className="grid h-9 w-9 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
             <ChevronLeft className="h-4 w-4" />
