@@ -942,8 +942,70 @@ function DashboardTab(props: {
   }
 
   // ── FULL DASHBOARD ──
+  const cycleTip = cyclePhase && cyclePhase !== "any" ? CYCLE_TIPS[cyclePhase] : undefined;
+
   return (
     <div className="space-y-3 sm:space-y-4 animate-fade-in pb-24">
+
+      {/* ① HERO — always first */}
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
+        <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
+        <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6 lg:p-5 min-h-[130px] sm:min-h-[150px] lg:min-h-[130px]">
+          <div className="max-w-[60%]">
+            <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+              You're blooming ✿
+            </h2>
+
+            {/* Phase badge — integrates cycle insight directly, no white card */}
+            {cycleTip ? (
+              <div className="mt-1.5 space-y-0.5">
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="text-sm leading-none" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }}>{cycleTip.emoji}</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-white/85 italic leading-snug pl-0.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.20)' }}>{cycleTip.sub}</p>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
+            )}
+
+            {/* Week / Month toggle + Currency button */}
+            <div className="mt-2.5 flex items-center gap-2">
+              <button
+                onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                <Calendar className="h-3 w-3" />
+                {viewPeriod === "week" ? "This week" : "This month"}
+                <ChevronDown className="h-3 w-3 opacity-70" />
+              </button>
+              <button
+                onClick={onCurrencyClick}
+                className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                <Coins className="h-3 w-3" />
+                {CURRENCIES[currency].symbol}
+              </button>
+            </div>
+
+            {/* 7-day band — visible in week mode */}
+            {viewPeriod === "week" && (
+              <div className="flex gap-1 mt-2.5">
+                {weekBand.map(d => (
+                  <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition",
+                    d.isToday ? "bg-white/30" : ""].join(" ")}>
+                    <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
+                    <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
+                    {d.spent > 0 && (
+                      <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <MiniRing pct={heroGoalPct} size={110} />
+        </div>
+      </div>
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
@@ -992,66 +1054,6 @@ function DashboardTab(props: {
           </button>
         </div>
       )}
-
-      {/* ① CYCLE INSIGHT — warm, phase-aware (never shown in red) */}
-      {cyclePhase && cyclePhase !== "any" && CYCLE_TIPS[cyclePhase] && (() => {
-        const tip = CYCLE_TIPS[cyclePhase]!;
-        return (
-          <div className={`rounded-2xl border border-pink-100/80 bg-gradient-to-r ${tip.grad} px-4 py-3 flex items-center gap-3 animate-fade-in`}>
-            <span className="text-3xl shrink-0 leading-none">{tip.emoji}</span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">{tip.headline}</p>
-              <p className="text-sm text-[#831843] mt-0.5 leading-snug">{tip.sub}</p>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ② HERO "You're blooming" + W/M toggle + 7-day band */}
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
-        <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.88) 0%, rgba(236,72,153,0.65) 52%, rgba(236,72,153,0.18) 80%, transparent 100%)" }} />
-        <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6 lg:p-5 min-h-[120px] sm:min-h-[140px] lg:min-h-[120px]">
-          <div className="max-w-[58%]">
-            <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-              You're blooming ✿
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
-            {/* Week / Month toggle + Currency button */}
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-                <Calendar className="h-3 w-3" />
-                {viewPeriod === "week" ? "This week" : "This month"}
-                <ChevronDown className="h-3 w-3 opacity-70" />
-              </button>
-              <button
-                onClick={onCurrencyClick}
-                className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-                <Coins className="h-3 w-3" />
-                {CURRENCIES[currency].symbol}
-              </button>
-            </div>
-            {/* 7-day band — visible in week mode */}
-            {viewPeriod === "week" && (
-              <div className="flex gap-1 mt-2.5">
-                {weekBand.map(d => (
-                  <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition",
-                    d.isToday ? "bg-white/30" : ""].join(" ")}>
-                    <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
-                    <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
-                    {d.spent > 0 && (
-                      <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <MiniRing pct={heroGoalPct} size={110} />
-        </div>
-      </div>
 
       {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
