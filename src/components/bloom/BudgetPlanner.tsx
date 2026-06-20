@@ -131,7 +131,7 @@ function daysUntil(dateISO: string): number {
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-2xl bg-white/85 backdrop-blur p-3 sm:p-5 shadow-[0_8px_24px_-12px_rgba(236,72,153,0.25)] border-[0.5px] border-pink-300/30 transition-all duration-200 ${className}`}
+      className={`rounded-2xl bg-white/85 backdrop-blur p-2.5 sm:p-4 lg:p-5 shadow-[0_8px_24px_-12px_rgba(236,72,153,0.25)] border-[0.5px] border-pink-300/30 transition-all duration-200 ${className}`}
     >
       {children}
     </div>
@@ -147,15 +147,51 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
-function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
   return (
-    <div className="relative">
-      <select
-        {...props}
-        className={`appearance-none w-full rounded-xl bg-white/80 pl-3 pr-8 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 outline-none transition focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 ${props.className ?? ""}`}
-      />
-      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9D5C7E]" />
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left"
+      >
+        <span className="truncate">{selected?.label ?? placeholder}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0 ml-2" />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+              <h3 className="font-script text-2xl text-[#831843]">Choose ✿</h3>
+              <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] hover:text-hotpink transition">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-3 py-3 max-h-72 overflow-y-auto space-y-1">
+              {options.map(o => {
+                const active = o.value === value;
+                return (
+                  <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
+                    className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition active:scale-[0.98]",
+                      active ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
+                    <span className={["text-sm font-semibold", active ? "text-[#831843]" : "text-[#9D5C7E]"].join(" ")}>{o.label}</span>
+                    {active && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -394,9 +430,9 @@ export function BudgetPlanner() {
         </div>
       )}
 
-      <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
+      <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-5">
         {/* Hero */}
-        <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-3 animate-hero-border-signal">
+        <div className="relative w-full aspect-[8/3] lg:aspect-[10/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-2 animate-hero-border-signal">
           <img src="/images/budget-hero.png" alt="Budget" className="absolute inset-0 h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#EC4899]/70 via-[#EC4899]/20 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
@@ -419,7 +455,7 @@ export function BudgetPlanner() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1.5 backdrop-blur bg-transparent">
+        <div className="sticky top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1 backdrop-blur bg-transparent">
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {TABS.map((t) => {
               const active = tab === t;
@@ -442,7 +478,7 @@ export function BudgetPlanner() {
         </div>
 
         {/* Tab content */}
-        <div key={tab} className="mt-3 animate-fade-in">
+        <div key={tab} className="mt-2 animate-fade-in">
           {tab === "Dashboard" && (
             <DashboardTab
               currency={currency}
@@ -760,7 +796,7 @@ function DashboardTab(props: {
   // ── ONBOARDING (no income) ──
   if (incomes.length === 0) {
     return (
-      <div className="space-y-4 animate-fade-in">
+      <div className="space-y-3 animate-fade-in">
         <Card className="relative overflow-hidden">
           <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-purple-200/30 blur-2xl" />
@@ -768,7 +804,7 @@ function DashboardTab(props: {
             <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold tracking-widest text-[#9D5C7E]">
               <Sparkles className="h-3 w-3 text-[#EC4899]" /> WELCOME TO YOUR BUDGET
             </span>
-            <h2 className="mt-3 font-script text-4xl sm:text-5xl text-[#831843] leading-tight">Let's bloom your budget ✿</h2>
+            <h2 className="mt-2 font-script text-3xl sm:text-5xl text-[#831843] leading-tight">Let's bloom your budget ✿</h2>
             <p className="mt-2 text-sm text-[#9D5C7E] max-w-lg leading-relaxed">
               Four gentle steps and you're set. Bloom guides you from your first paycheck to your dream savings goal — no spreadsheets, no stress.
             </p>
@@ -826,7 +862,7 @@ function DashboardTab(props: {
 
   // ── FULL DASHBOARD ──
   return (
-    <div className="space-y-4 animate-fade-in pb-24">
+    <div className="space-y-3 sm:space-y-4 animate-fade-in pb-24">
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
@@ -888,7 +924,7 @@ function DashboardTab(props: {
       <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
         <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.88) 0%, rgba(236,72,153,0.65) 52%, rgba(236,72,153,0.18) 80%, transparent 100%)" }} />
-        <div className="relative z-10 flex items-center justify-between gap-3 p-5 sm:p-7" style={{ minHeight: 160 }}>
+        <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6 lg:p-5 min-h-[120px] sm:min-h-[140px] lg:min-h-[120px]">
           <div className="max-w-[58%]">
             <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
               You're blooming ✿
@@ -924,6 +960,57 @@ function DashboardTab(props: {
 
       {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
+
+      {/* ③b BUDGET PLAN — always visible once budget is configured */}
+      {(() => {
+        const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
+        if (budgetedCats.length === 0) return null;
+        const visible = budgetedCats.slice(0, 5);
+        const extra = budgetedCats.length - visible.length;
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget Plan
+              </h3>
+              <button onClick={() => setTab("Budget Setup")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                Edit <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="space-y-2.5">
+              {visible.map(k => {
+                const cat = allCats.find(c => c.key === k);
+                const budgeted = budget[k] ?? 0;
+                const spent = filteredTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const pct = budgeted > 0 ? Math.min(100, (spent / budgeted) * 100) : 0;
+                const barColor = pct >= 90
+                  ? "linear-gradient(90deg,#F9A8D4,#EC4899)"
+                  : "linear-gradient(90deg,#C084FC,#EC4899)";
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <span className="text-lg shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline mb-1 gap-2">
+                        <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                        <span className="text-[10px] text-[#9D5C7E] shrink-0 tabular-nums">{fmt(spent, currency)} / {fmt(budgeted, currency)}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-pink-100 overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor }} />
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-[#9D5C7E] shrink-0 w-7 text-right">{Math.round(pct)}%</span>
+                  </div>
+                );
+              })}
+            </div>
+            {extra > 0 && (
+              <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-xs text-[#EC4899] font-semibold hover:underline">
+                +{extra} more {extra === 1 ? "category" : "categories"}
+              </button>
+            )}
+          </Card>
+        );
+      })()}
 
       {/* ④ GOALS CAROUSEL */}
       {heroGoal ? (
@@ -1264,9 +1351,9 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Wallet className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> My Income Sources</h2>
+        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Wallet className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Income Sources</h2>
         <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income Source</PrimaryBtn>
       </div>
 
@@ -1284,14 +1371,16 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
           <ul className="space-y-3">
             {incomes.map(i => (
               <li key={i.id} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center rounded-xl bg-pink-50/40 p-3">
-                <Select value={i.source} onChange={(e) => update(i.id, { source: e.target.value })} className="sm:col-span-4">
-                  {INCOME_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
-                </Select>
+                <div className="sm:col-span-4">
+                  <PinkSelect value={i.source} onChange={(v) => update(i.id, { source: v })}
+                    options={INCOME_SOURCES.map(s => ({ value: s, label: s }))} />
+                </div>
                 <Input type="number" value={i.amount || ""} onChange={(e) => update(i.id, { amount: parseFloat(e.target.value) || 0 })}
                   placeholder="Amount" className="sm:col-span-3" />
-                <Select value={i.frequency} onChange={(e) => update(i.id, { frequency: e.target.value as Frequency })} className="sm:col-span-3">
-                  {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
-                </Select>
+                <div className="sm:col-span-3">
+                  <PinkSelect value={i.frequency} onChange={(v) => update(i.id, { frequency: v as Frequency })}
+                    options={FREQUENCIES.map(f => ({ value: f, label: f }))} />
+                </div>
                 <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
                   <span className="text-xs text-[#9D5C7E]">≈ {fmt(toMonthly(i), currency)}/mo</span>
                   <button onClick={() => remove(i.id)} className="grid h-9 w-9 place-items-center rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 transition">
@@ -1390,8 +1479,8 @@ function BudgetSetupTab(props: {
   }
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+      <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
 
       {mealEstimate && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
@@ -1408,19 +1497,19 @@ function BudgetSetupTab(props: {
 
       <Card>
         <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
           {allCats.map(c => {
             const on = selectedCats.includes(c.key);
             return (
               <button key={c.key} onClick={() => toggle(c.key)}
                 className={[
-                  "flex flex-col items-center gap-1 rounded-2xl p-3 text-sm font-semibold transition-all duration-200 border-[0.5px]",
+                  "flex flex-col items-center gap-1 rounded-2xl p-2 sm:p-3 text-sm font-semibold transition-all duration-200 border-[0.5px]",
                   on ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.02]"
                      : "bg-white/80 text-[#831843] border-pink-300/40 hover:bg-pink-50",
                 ].join(" ")}
               >
-                <c.Icon className={`h-6 w-6 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
-                <span className="text-center leading-tight text-xs">{c.label}</span>
+                <c.Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                <span className="text-center leading-tight text-[11px] sm:text-xs">{c.label}</span>
               </button>
             );
           })}
@@ -1434,11 +1523,10 @@ function BudgetSetupTab(props: {
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
             <Input placeholder="Category name" value={customName} onChange={(e) => setCustomName(e.target.value)} className="sm:col-span-5" />
             <Input placeholder="Emoji" maxLength={2} value={customEmoji} onChange={(e) => setCustomEmoji(e.target.value)} className="sm:col-span-2" />
-            <Select value={customGroup} onChange={(e) => setCustomGroup(e.target.value as Need)} className="sm:col-span-3">
-              <option value="need">Need</option>
-              <option value="want">Want</option>
-              <option value="savings">Savings</option>
-            </Select>
+            <div className="sm:col-span-3">
+              <PinkSelect value={customGroup} onChange={(v) => setCustomGroup(v as Need)}
+                options={[{ value: "need", label: "Need" }, { value: "want", label: "Want" }, { value: "savings", label: "Savings" }]} />
+            </div>
             <PrimaryBtn onClick={addCustom} className="sm:col-span-2"><Plus className="h-4 w-4" /> Add</PrimaryBtn>
           </div>
         )}
@@ -1532,9 +1620,9 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
   function remove(id: string) { setGoals(prev => prev.filter(g => g.id !== id)); }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><Flag className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> My Goals</h2>
+        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Flag className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Goals</h2>
         <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add New Goal</PrimaryBtn>
       </div>
 
@@ -1700,9 +1788,9 @@ function ReportsTab(props: {
   function removeBill(id: string) { setBills(prev => prev.filter(b => b.id !== id)); }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="font-script text-4xl text-[#831843] flex items-center gap-2"><FileBarChart className="h-7 w-7 text-[#EC4899]" strokeWidth={1.6} /> My Reports</h2>
+        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><FileBarChart className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Reports</h2>
         <div className="flex items-center gap-2">
           <button onClick={() => shiftMonth(-1)} className="grid h-9 w-9 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
             <ChevronLeft className="h-4 w-4" />
@@ -1720,18 +1808,18 @@ function ReportsTab(props: {
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h3 className="font-script text-2xl text-[#831843]">Transactions</h3>
           <div className="flex flex-wrap gap-2">
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
-              <option value="date">Sort: Date</option>
-              <option value="amount">Sort: Amount</option>
-            </Select>
-            <Select value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
-              <option value="">All categories</option>
-              {allCats.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-            </Select>
-            <Select value={filterMood} onChange={(e) => setFilterMood(e.target.value)}>
-              <option value="">All moods</option>
-              {MOODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
-            </Select>
+            <div className="w-32">
+              <PinkSelect value={sortBy} onChange={(v) => setSortBy(v as "date" | "amount")}
+                options={[{ value: "date", label: "Sort: Date" }, { value: "amount", label: "Sort: Amount" }]} />
+            </div>
+            <div className="w-36">
+              <PinkSelect value={filterCat} onChange={setFilterCat}
+                options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
+            </div>
+            <div className="w-28">
+              <PinkSelect value={filterMood} onChange={setFilterMood}
+                options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
+            </div>
           </div>
         </div>
         {filtered.length === 0 ? (
