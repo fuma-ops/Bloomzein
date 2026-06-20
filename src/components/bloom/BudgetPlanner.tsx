@@ -167,15 +167,15 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
               <h3 className="font-script text-2xl text-[#831843]">Choose ✿</h3>
               <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] hover:text-hotpink transition">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="px-3 py-3 max-h-72 overflow-y-auto space-y-1">
+            <div className="px-3 py-3 overflow-y-auto flex-1 min-h-0 space-y-1">
               {options.map(o => {
                 const active = o.value === value;
                 return (
@@ -187,6 +187,11 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
                   </button>
                 );
               })}
+            </div>
+            <div className="px-5 pb-5 pt-2 shrink-0">
+              <button onClick={() => setOpen(false)} className="bloom-luxury-btn w-full py-2.5 text-sm font-bold text-white">
+                Done ✿
+              </button>
             </div>
           </div>
         </div>
@@ -732,6 +737,15 @@ function DashboardTab(props: {
     return txns.filter(t => new Date(t.date + "T00:00:00") >= cutoff);
   }, [txns, viewPeriod]);
 
+  // Current calendar-month transactions — used for Budget Plan bars regardless of the week/month toggle
+  const monthTxns = useMemo(() => {
+    const now = new Date();
+    return txns.filter(t => {
+      const d = new Date(t.date + "T00:00:00");
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+  }, [txns]);
+
   // 7-day band
   const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
@@ -981,7 +995,7 @@ function DashboardTab(props: {
               {visible.map(k => {
                 const cat = allCats.find(c => c.key === k);
                 const budgeted = budget[k] ?? 0;
-                const spent = filteredTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const spent = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
                 const pct = budgeted > 0 ? Math.min(100, (spent / budgeted) * 100) : 0;
                 const barColor = pct >= 90
                   ? "linear-gradient(90deg,#F9A8D4,#EC4899)"
@@ -1497,13 +1511,13 @@ function BudgetSetupTab(props: {
 
       <Card>
         <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {allCats.map(c => {
             const on = selectedCats.includes(c.key);
             return (
               <button key={c.key} onClick={() => toggle(c.key)}
                 className={[
-                  "flex flex-col items-center gap-1 rounded-2xl p-2 sm:p-3 text-sm font-semibold transition-all duration-200 border-[0.5px]",
+                  "flex flex-col items-center gap-1 rounded-2xl p-2 sm:p-3 lg:p-2 text-sm font-semibold transition-all duration-200 border-[0.5px]",
                   on ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.02]"
                      : "bg-white/80 text-[#831843] border-pink-300/40 hover:bg-pink-50",
                 ].join(" ")}
