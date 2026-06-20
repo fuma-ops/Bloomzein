@@ -447,7 +447,7 @@ export function BudgetPlanner() {
   );
 
   return (
-    <>
+    <div data-bp>
       {/* Custom pink currency picker modal */}
       {showCurrencyPicker && createPortal(
         <div
@@ -585,10 +585,10 @@ export function BudgetPlanner() {
       </div>
 
       <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [data-bp] *::-webkit-scrollbar { display: none; }
+        [data-bp] * { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
-    </>
+    </div>
   );
 }
 
@@ -997,26 +997,28 @@ function DashboardTab(props: {
         </div>
       </div>
 
-      {/* ② SPENDING CATEGORIES — right after hero */}
-      {catSpend.length > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-              <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
-            </h3>
-            <div className="flex items-center gap-2">
-              {mealEstimate && !budget["food"] && (
-                <button onClick={() => setTab("Budget Setup")}
-                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
-                  <UtensilsCrossed className="h-3 w-3" /> Sync meals
-                </button>
-              )}
+      {/* ② SPENDING CATEGORIES — always visible under hero */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
+          </h3>
+          <div className="flex items-center gap-2">
+            {mealEstimate && !budget["food"] && (
+              <button onClick={() => setTab("Budget Setup")}
+                className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
+                <UtensilsCrossed className="h-3 w-3" /> Sync meals
+              </button>
+            )}
+            {catSpend.length > 0 && (
               <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
                 See all <ChevronRight className="h-3 w-3" />
               </button>
-            </div>
+            )}
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+        </div>
+        {catSpend.length > 0 ? (
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
               <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
@@ -1031,68 +1033,21 @@ function DashboardTab(props: {
               </div>
             ))}
           </div>
-        </Card>
-      )}
-
-      {/* ① HERO — always first */}
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
-        <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
-        <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6 lg:p-5 min-h-[130px] sm:min-h-[150px] lg:min-h-[130px]">
-          <div className="max-w-[60%]">
-            <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-              You're blooming ✿
-            </h2>
-
-            {/* Phase badge — integrates cycle insight directly, no white card */}
-            {cycleTip ? (
-              <div className="mt-1.5 space-y-0.5">
-                <div className="inline-flex items-center gap-1.5">
-                  <span className="text-sm leading-none" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }}>{cycleTip.emoji}</span>
-                  <span className="text-[11px] sm:text-xs font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
-                </div>
-                <p className="text-[10px] sm:text-[11px] text-white/85 italic leading-snug pl-0.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.20)' }}>{cycleTip.sub}</p>
-              </div>
-            ) : (
-              <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
-            )}
-
-            {/* Week / Month toggle + Currency button */}
-            <div className="mt-2.5 flex items-center gap-2">
-              <button
-                onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-                <Calendar className="h-3 w-3" />
-                {viewPeriod === "week" ? "This week" : "This month"}
-                <ChevronDown className="h-3 w-3 opacity-70" />
-              </button>
-              <button
-                onClick={onCurrencyClick}
-                className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-                <Coins className="h-3 w-3" />
-                {CURRENCIES[currency].symbol}
-              </button>
+        ) : (
+          <div className="flex items-center gap-3 py-1">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <ArrowDownRight className="h-4 w-4" />
             </div>
-
-            {/* 7-day band — visible in week mode */}
-            {viewPeriod === "week" && (
-              <div className="flex gap-1 mt-2.5">
-                {weekBand.map(d => (
-                  <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition",
-                    d.isToday ? "bg-white/30" : ""].join(" ")}>
-                    <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
-                    <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
-                    {d.spent > 0 && (
-                      <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-[#831843]">Log your first spend ✿</p>
+              <p className="text-[11px] text-[#9D5C7E]">Track where your money goes — every spend counts</p>
+            </div>
+            <button onClick={() => setTab("Reports")} className="shrink-0 text-xs font-bold text-[#EC4899] hover:underline">
+              Add
+            </button>
           </div>
-          <MiniRing pct={heroGoalPct} size={110} />
-        </div>
-      </div>
+        )}
+      </Card>
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
