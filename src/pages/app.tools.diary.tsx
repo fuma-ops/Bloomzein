@@ -182,11 +182,61 @@ const DIARY_CSS = `
   @keyframes dd-toast    { from{ opacity:0;transform:translateX(-50%) translateY(8px) scale(.92) } to{ opacity:1;transform:translateX(-50%) translateY(0) scale(1) } }
   @keyframes dd-mic      { 0%,100%{ box-shadow:0 0 0 0 rgba(219,39,119,.5) } 50%{ box-shadow:0 0 0 7px rgba(219,39,119,0) } }
   @keyframes dd-hintfade { from{ opacity:0 } to{ opacity:1 } }
+  @keyframes dd-pagehint { 0%,100%{ opacity:0;transform:translateX(-50%) translateY(0) } 15%,85%{ opacity:1 } 50%{ transform:translateX(-50%) translateY(-5px) } }
   .dd-tool{ transition:all .2s ease; }
   .dd-tool:hover{ filter:brightness(1.05); transform:translateY(-1px); }
   .dd-mem:hover{ transform:rotate(0deg) translateY(-5px) !important; box-shadow:0 20px 36px rgba(131,24,67,.2) !important; }
   .dd-prompt:hover{ transform:translateY(-3px) rotate(-.5deg); box-shadow:0 16px 30px rgba(236,72,153,.2); }
+  .dd-textarea::-webkit-scrollbar{ display:none }
+  .dd-textarea{ scrollbar-width:none;-ms-overflow-style:none; }
+  .dd-item .dd-del{ opacity:0;transition:opacity .18s ease; }
+  .dd-item:hover .dd-del{ opacity:1; }
 `;
+
+/* ─── Mood fallback for memories ─────────────────────────────────── */
+
+function MemFallback({ mood, tint }: { mood: string; tint: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    Calm: (
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+        <path d="M7 15.5h8.4a3.2 3.2 0 0 0 .2-6.4A4.6 4.6 0 0 0 7 9 3 3 0 0 0 7 15.5Z"/><path d="M5 20h14M8 20v2M16 20v2"/>
+      </svg>
+    ),
+    Happy: (
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+        <circle cx="12" cy="12" r="8"/><path d="M8.8 13.6c.8 1.1 1.9 1.6 3.2 1.6s2.4-.5 3.2-1.6"/>
+        <circle cx="9.4" cy="10" r=".85" fill="currentColor" stroke="none"/>
+        <circle cx="14.6" cy="10" r=".85" fill="currentColor" stroke="none"/>
+      </svg>
+    ),
+    Energetic: (
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+        <path d="M13 3 6 13h4.4l-1 8 7.6-11H12l1-7Z"/>
+      </svg>
+    ),
+    Sensitive: (
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+        <path d="M12 20S4.5 15 4.5 9.8A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7.5 2.8C19.5 15 12 20 12 20Z"/>
+      </svg>
+    ),
+    Dreamy: (
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+        <path d="M20.5 14.6A7.5 7.5 0 1 1 10.8 5a6 6 0 0 0 9.7 9.6Z"/>
+        <path d="M17.5 4l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6Z"/>
+      </svg>
+    ),
+    Tired: (
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+        <path d="M5 10.6c2 2.6 4.8 3.9 7 3.9s5-1.3 7-3.9"/><path d="M7.4 14l-1 1.9M12 15.1v2M16.6 14l1 1.9"/>
+      </svg>
+    ),
+  };
+  return (
+    <div style={{ width:"100%", height:"100%", display:"grid", placeItems:"center", background:`linear-gradient(135deg,rgba(255,255,255,.5),${tint}55)`, borderRadius:8 }}>
+      <div style={{ opacity:.5, color:"#9D5C7E" }}>{icons[mood] ?? icons["Calm"]}</div>
+    </div>
+  );
+}
 
 /* ─── Small SVG helpers ───────────────────────────────────────────── */
 
@@ -230,17 +280,20 @@ interface DiaryBookPageProps {
   mood: string;
   draft: string;
   onDraft: (txt: string) => void;
-  onSave: () => void;
-  onPhotoRequest: () => void; // triggers hidden file input
+  onSave: (photos: string[]) => void;
+  onPhotoRequest: () => void;
+  viewEntry?: DiaryEntry | null;
+  onClearView?: () => void;
 }
 
-function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest }: DiaryBookPageProps) {
+function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, viewEntry, onClearView }: DiaryBookPageProps) {
   const [items, setItems] = useState<DragItem[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micLabel, setMicLabel] = useState("Listening…");
   const [focused, setFocused] = useState(false);
   const [nextId, setNextId] = useState(1);
+  const [pageFull, setPageFull] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: number; dx: number; dy: number } | null>(null);
   const recRef = useRef<any>(null);
@@ -326,10 +379,34 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest }: Di
 
   /* ── Page 0: Writing surface ── */
   if (idx === 0) {
+    /* Read-only view when a past entry is selected */
+    if (viewEntry) {
+      return (
+        <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "18px 22px 16px", fontFamily: "'Quicksand',sans-serif" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexShrink: 0 }}>
+            <div>
+              <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 20, color: "#DB2777", lineHeight: 1 }}>{fmtDate(viewEntry.date)}</div>
+              <span style={{ display: "inline-block", marginTop: 3, fontSize: 11, fontWeight: 700, color: "#9D5C7E", background: "rgba(236,72,153,.1)", padding: "2px 10px", borderRadius: 999 }}>{viewEntry.mood}</span>
+            </div>
+            <button onClick={onClearView} style={{ flexShrink: 0, border: "none", cursor: "pointer", padding: "7px 14px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, boxShadow: "0 4px 10px rgba(219,39,119,.3)" }}>
+              + New entry
+            </button>
+          </div>
+          <div className="dd-textarea" style={{ flex: 1, overflowY: "auto", marginTop: 12, fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "30px", color: "#831843" }}>
+            <div dangerouslySetInnerHTML={{ __html: viewEntry.html }} />
+            {viewEntry.images?.[0] && (
+              <img src={viewEntry.images[0]} style={{ display: "block", width: "100%", maxHeight: 130, objectFit: "cover", borderRadius: 8, marginTop: 12, boxShadow: "0 6px 18px rgba(131,24,67,.18)" }} alt="" />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* Write mode */
     return (
       <div data-nodrag="1" style={{ height: "100%", display: "flex", flexDirection: "column", padding: "22px 24px 18px", fontFamily: "'Quicksand',sans-serif" }}>
         {/* Top bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexShrink: 0 }}>
           <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 22, color: "#DB2777" }}>
             {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
           </div>
@@ -348,49 +425,40 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest }: Di
 
         {/* Sticker picker */}
         {pickerOpen && (
-          <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8, padding: "10px 12px", borderRadius: 14, background: "rgba(255,253,249,.96)", border: "1px solid rgba(236,72,153,.18)", boxShadow: "0 10px 24px rgba(131,24,67,.16)" }}>
+          <div style={{ marginTop: 10, flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 8, padding: "10px 12px", borderRadius: 14, background: "rgba(255,253,249,.96)", border: "1px solid rgba(236,72,153,.18)", boxShadow: "0 10px 24px rgba(131,24,67,.16)" }}>
             {Object.keys(STICKER_ICONS).map((k) => (
-              <button key={k} className="dd-tool" onClick={() => addSticker(k)} style={{ width: 34, height: 34, border: "none", cursor: "pointer", borderRadius: 9, background: "#fff", boxShadow: "0 3px 8px rgba(131,24,67,.12)", display: "grid", placeItems: "center" }}>
+              <button key={k} className="dd-tool" onClick={() => addSticker(k)} style={{ width: 34, height: 34, border: "none", cursor: "pointer", borderRadius: 9, background: "transparent", display: "grid", placeItems: "center" }}>
                 {STICKER_ICONS[k]}
               </button>
             ))}
           </div>
         )}
 
-        {/* Canvas */}
-        <div ref={canvasRef} style={{ position: "relative", flex: 1, marginTop: 12 }}>
+        {/* Textarea — hidden scrollbar, fills remaining space */}
+        <div style={{ position: "relative", flex: 1, marginTop: 12 }}>
           <textarea
+            className="dd-textarea"
             ref={textRef}
             value={draft}
-            onChange={(e) => onDraft(e.target.value)}
+            onChange={(e) => {
+              onDraft(e.target.value);
+              setPageFull(e.target.scrollHeight > e.target.clientHeight + 4);
+            }}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            style={{ position: "absolute", inset: 0, zIndex: 2, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 22, lineHeight: "30px", color: "#831843" }}
+            style={{ position: "absolute", inset: 0, zIndex: 2, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 22, lineHeight: "30px", color: "#831843", overflowY: "auto" }}
           />
           {showHint && (
             <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 22, lineHeight: "30px", color: "#C9A6B8", animation: "dd-hintfade .4s ease" }}>
               Tap here and let your thoughts bloom…
             </div>
           )}
-          {/* Draggable elements */}
-          {items.map((it) => (
-            <div key={it.id} onPointerDown={(e) => onPointerDown(it.id, e)} style={{ position: "absolute", left: it.x, top: it.y, zIndex: 5, cursor: "grab", touchAction: "none" }}>
-              <button onClick={() => deleteItem(it.id)} style={{ position: "absolute", top: -9, right: -9, zIndex: 6, width: 20, height: 20, border: "none", cursor: "pointer", borderRadius: "50%", background: "#fff", color: "#DB2777", boxShadow: "0 3px 8px rgba(131,24,67,.25)", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700 }}>✕</button>
-              {it.type === "photo" && (
-                <div style={{ padding: "6px 6px 18px", background: "#fffdf9", borderRadius: 3, boxShadow: "0 8px 18px rgba(131,24,67,.22)" }}>
-                  {it.src
-                    ? <img src={it.src} style={{ display: "block", width: 110, height: 84, objectFit: "cover", borderRadius: 2 }} alt="diary photo" />
-                    : <div style={{ width: 110, height: 84, background: "#FBE3F5", borderRadius: 2, display: "grid", placeItems: "center", color: "#C9A6B8", fontSize: 12 }}>photo</div>
-                  }
-                </div>
-              )}
-              {it.type === "sticker" && it.icon && (
-                <div style={{ width: 46, height: 46, background: "#fffdf9", borderRadius: 6, boxShadow: "0 5px 12px rgba(131,24,67,.2)", display: "grid", placeItems: "center" }}>
-                  {STICKER_ICONS[it.icon]}
-                </div>
-              )}
+          {/* Page-full hint */}
+          {pageFull && (
+            <div style={{ position: "absolute", bottom: 4, left: "50%", zIndex: 3, pointerEvents: "none", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 999, background: "rgba(219,39,119,.85)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, animation: "dd-pagehint 2.8s ease-in-out infinite" }}>
+              turn the page ✿
             </div>
-          ))}
+          )}
           {/* Mic listening pill */}
           {listening && (
             <div style={{ position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)", zIndex: 4, display: "flex", alignItems: "center", gap: 8, padding: "7px 15px", borderRadius: 999, background: "rgba(219,39,119,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, boxShadow: "0 8px 18px rgba(219,39,119,.4)" }}>
@@ -400,7 +468,30 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest }: Di
           )}
         </div>
 
-        <button onClick={onSave} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 6, border: "none", cursor: "pointer", padding: "9px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>
+        {/* Photos + stickers strip — below text, never overlapping */}
+        {items.length > 0 && (
+          <div className="dd-textarea" style={{ flexShrink: 0, marginTop: 8, display: "flex", gap: 8, overflowX: "auto", padding: "6px 2px 4px", alignItems: "flex-end" }}>
+            {items.map((it) => (
+              <div key={it.id} className="dd-item" style={{ position: "relative", flexShrink: 0 }}>
+                <button className="dd-del" onClick={() => deleteItem(it.id)} style={{ position: "absolute", top: -7, right: -7, zIndex: 6, width: 18, height: 18, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✕</button>
+                {it.type === "photo" && it.src && (
+                  <img src={it.src} alt="diary photo" style={{ display: "block", width: 72, height: 56, objectFit: "cover", borderRadius: 8, boxShadow: "0 4px 14px rgba(131,24,67,.22)", transform: `rotate(${(it.id % 3 - 1) * 2.5}deg)` }} />
+                )}
+                {it.type === "sticker" && it.icon && (
+                  <div style={{ width: 44, height: 44, display: "grid", placeItems: "center", filter: "drop-shadow(0 2px 5px rgba(131,24,67,.2))" }}>
+                    {STICKER_ICONS[it.icon]}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={() => onSave(items.filter((i) => i.type === "photo" && i.src).map((i) => i.src!))}
+          data-nodrag="1"
+          style={{ alignSelf: "flex-start", marginTop: 8, flexShrink: 0, border: "none", cursor: "pointer", padding: "9px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}
+        >
           Save entry ✿
         </button>
 
@@ -520,8 +611,11 @@ export default function DiaryPage() {
   const [toast, setToast] = useState(false);
   const [bloomBelow, setBloomBelow] = useState(false);
 
+  const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
+
   const tiltTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bookRef = useRef<HTMLDivElement>(null);
 
   // Derived
   const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
@@ -554,12 +648,22 @@ export default function DiaryPage() {
   };
 
   const openAtPage = (idx: number, seedDraft?: string) => {
+    setViewEntry(null);
     setOpen(true);
     setPg(idx);
     if (seedDraft !== undefined) setDraft(seedDraft);
   };
 
-  const onSave = () => {
+  const openMemory = (entry: DiaryEntry) => {
+    setViewEntry(entry);
+    setOpen(true);
+    setPg(0);
+    setTimeout(() => {
+      bookRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+  };
+
+  const onSave = (photos: string[]) => {
     if (!draft.trim()) return;
     const entry: DiaryEntry = {
       id: `diary-${Date.now()}`,
@@ -570,7 +674,7 @@ export default function DiaryPage() {
       theme: "sakura",
       font: "caveat",
       createdAt: new Date().toISOString(),
-      images: [],
+      images: photos,
     };
     setEntries((prev) => [entry, ...prev]);
     setDraft("");
@@ -714,7 +818,7 @@ export default function DiaryPage() {
           </div>
 
           {/* ── The Book ── */}
-          <div style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div ref={bookRef} style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
 
               {/* Prev arrow */}
@@ -734,7 +838,7 @@ export default function DiaryPage() {
                     <>
                       <div onClick={() => turn(-1)} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", borderRadius: "8px 3px 3px 8px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.12) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset -22px 0 34px -26px rgba(131,24,67,.5)" }}>
                         <div style={{ position: "absolute", inset: 0 }}>
-                          <DiaryBookPage idx={spread * 2} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} />
+                          <DiaryBookPage idx={spread * 2} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={spread === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                         </div>
                         <div style={{ position: "absolute", left: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {spread * 2 + 1} ·</div>
                       </div>
@@ -742,7 +846,7 @@ export default function DiaryPage() {
                       <div style={{ position: "absolute", top: 6, bottom: 6, left: "50%", transform: "translateX(-50%)", width: 16, zIndex: 3, background: "linear-gradient(90deg,rgba(131,24,67,.18),rgba(131,24,67,.03) 42%,rgba(255,255,255,.5) 50%,rgba(131,24,67,.03) 58%,rgba(131,24,67,.18))", boxShadow: "0 0 14px rgba(131,24,67,.18)" }} />
                       <div onClick={() => turn(1)} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", borderRadius: "3px 8px 8px 3px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.1) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 22px 0 34px -26px rgba(131,24,67,.5)" }}>
                         <div style={{ position: "absolute", inset: 0 }}>
-                          <DiaryBookPage idx={spread * 2 + 1} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} />
+                          <DiaryBookPage idx={spread * 2 + 1} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                         </div>
                         <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {spread * 2 + 2} ·</div>
                       </div>
@@ -752,7 +856,7 @@ export default function DiaryPage() {
                   {narrow && (
                     <div onClick={() => turn(1)} style={{ position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.11) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 0 0 30px -18px rgba(131,24,67,.4)" }}>
                       <div style={{ position: "absolute", inset: 0 }}>
-                        <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} />
+                        <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={pg === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                       </div>
                       <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {pg + 1} / 6 ·</div>
                     </div>
@@ -842,18 +946,18 @@ export default function DiaryPage() {
               const t = MEM_TINTS[i % MEM_TINTS.length];
               const rot = MEM_ROTS[i % MEM_ROTS.length];
               return (
-                <div key={entry.id} className="dd-mem" style={{ position: "relative", display: "flex", flexDirection: "column", padding: "14px 13px 13px", borderRadius: "4px 14px 6px 16px", boxShadow: "0 10px 24px rgba(131,24,67,.13)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", background: t.bg, transform: `rotate(${rot}deg)` }}>
+                <div key={entry.id} className="dd-mem" onClick={() => openMemory(entry)} style={{ position: "relative", display: "flex", flexDirection: "column", padding: "14px 13px 13px", borderRadius: "4px 14px 6px 16px", boxShadow: "0 10px 24px rgba(131,24,67,.13)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", background: t.bg, transform: `rotate(${rot}deg)` }}>
                   {/* Flower top-right */}
                   <div style={{ position: "absolute", top: 8, right: 10, width: 24, height: 24, opacity: .9 }}>
                     <MemFlower pc={t.fp} fc={t.fc} />
                   </div>
                   {/* Tape */}
                   <div style={{ position: "absolute", top: -9, left: "50%", transform: "translateX(-50%) rotate(-3deg)", width: 48, height: 16, background: t.tape, boxShadow: "0 2px 5px rgba(131,24,67,.16)" }} />
-                  {/* Photo placeholder */}
-                  <div style={{ marginTop: 4, width: "100%", height: 96, background: "linear-gradient(135deg,rgba(255,255,255,.6),rgba(251,207,232,.4))", borderRadius: 8, display: "grid", placeItems: "center" }}>
+                  {/* Photo or cute fallback */}
+                  <div style={{ marginTop: 4, width: "100%", height: 96, borderRadius: 8, overflow: "hidden" }}>
                     {entry.images?.[0]
-                      ? <img src={entry.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }} alt="" />
-                      : <span style={{ fontFamily: "'Caveat',cursive", fontSize: 12, color: "#C9A6B8" }}>add a photo</span>
+                      ? <img src={entry.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                      : <MemFallback mood={entry.mood} tint={t.fp} />
                     }
                   </div>
                   <div style={{ marginTop: 10, fontFamily: "'Caveat',cursive", fontSize: 21, color: "#831843", lineHeight: 1.05 }}>{entry.title}</div>

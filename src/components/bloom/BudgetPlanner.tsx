@@ -588,7 +588,7 @@ export function BudgetPlanner() {
         [data-bp] *::-webkit-scrollbar { display: none; }
         [data-bp] * { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
-    </div>
+    </>
   );
 }
 
