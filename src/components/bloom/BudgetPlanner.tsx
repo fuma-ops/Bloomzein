@@ -447,16 +447,7 @@ export function BudgetPlanner() {
   );
 
   return (
-    <div
-      className="relative min-h-screen overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(circle at 20% 10%, #FFE4F1 0%, transparent 55%), radial-gradient(circle at 85% 80%, #FBCFE8 0%, transparent 50%), linear-gradient(180deg, #FFF5FA 0%, #FFE9F3 100%)",
-      }}
-    >
-      <BudgetBubbles />
-      <KawaiiBackground count={8} />
-
+    <>
       {/* Custom pink currency picker modal */}
       {showCurrencyPicker && createPortal(
         <div
@@ -522,10 +513,9 @@ export function BudgetPlanner() {
         document.body
       )}
 
-      <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-5">
-        {/* Tabs */}
-        <div className="sticky top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1 backdrop-blur bg-transparent">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+      {/* Tabs */}
+      <div className="sticky top-14 md:top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1.5 backdrop-blur bg-white/40">
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {TABS.map((t) => {
               const active = tab === t;
               return (
@@ -543,12 +533,12 @@ export function BudgetPlanner() {
                 </button>
               );
             })}
-          </div>
         </div>
+      </div>
 
-        {/* Tab content */}
-        <div key={tab} className="mt-2 animate-fade-in">
-          {tab === "Dashboard" && (
+      {/* Tab content */}
+      <div key={tab} className="mt-2 animate-fade-in">
+        {tab === "Dashboard" && (
             <DashboardTab
               currency={currency}
               totalIncome={totalIncome}
@@ -592,14 +582,13 @@ export function BudgetPlanner() {
               currency={currency}
             />
           )}
-        </div>
       </div>
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-    </div>
+    </>
   );
 }
 
@@ -766,6 +755,7 @@ function DashboardTab(props: {
 
   // Goals carousel
   const [goalIdx, setGoalIdx] = useState(0);
+  const goalTouchX = useRef<number | null>(null);
 
   // Quick add sheet
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -945,7 +935,7 @@ function DashboardTab(props: {
   const cycleTip = cyclePhase && cyclePhase !== "any" ? CYCLE_TIPS[cyclePhase] : undefined;
 
   return (
-    <div className="space-y-3 sm:space-y-4 animate-fade-in pb-24">
+    <div className="space-y-3 sm:space-y-4 animate-fade-in">
 
       {/* ① HERO — always first */}
       <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
@@ -1006,6 +996,43 @@ function DashboardTab(props: {
           <MiniRing pct={heroGoalPct} size={110} />
         </div>
       </div>
+
+      {/* ② SPENDING CATEGORIES — right after hero */}
+      {catSpend.length > 0 && (
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+              <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
+            </h3>
+            <div className="flex items-center gap-2">
+              {mealEstimate && !budget["food"] && (
+                <button onClick={() => setTab("Budget Setup")}
+                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
+                  <UtensilsCrossed className="h-3 w-3" /> Sync meals
+                </button>
+              )}
+              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                See all <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+            {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
+              <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
+                  {cat?.emoji ?? "💰"}
+                </div>
+                <p className="text-[10px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
+                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amt, currency)}</p>
+                <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#EC4899] transition-all duration-700" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-[9px] text-[#9D5C7E] font-semibold">{pct}%</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
@@ -1109,47 +1136,104 @@ function DashboardTab(props: {
         );
       })()}
 
-      {/* ④ GOALS CAROUSEL */}
-      {heroGoal ? (
-        <div className="relative overflow-hidden rounded-[1.5rem] border border-pink-200/60 shadow-lg" style={{ minHeight: 120 }}>
-          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }} />
-          <div className="relative z-10 flex items-center justify-between gap-4 p-5 sm:p-6" style={{ minHeight: 120 }}>
-            <div className="flex-1 min-w-0">
-              <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
-                <Sparkles className="h-3 w-3" /> My Dream Goal
-              </p>
-              <h3 className="font-script text-2xl sm:text-3xl text-white mt-0.5 leading-tight truncate">{heroGoal.name}</h3>
-              <p className="text-sm text-white/90 mt-0.5">{fmt(heroGoal.saved, currency)} / {fmt(heroGoal.target, currency)}</p>
-              <div className="mt-2.5 h-2.5 rounded-full bg-white/30 overflow-hidden max-w-[180px] sm:max-w-xs">
-                <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${heroGoalPct}%` }} />
-              </div>
-              <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(heroGoalPct)}% completed</p>
-            </div>
-            <MiniRing pct={heroGoalPct} size={88} />
-          </div>
-          {/* Carousel controls (only when >1 goal) */}
-          {goals.length > 1 && (
-            <>
-              <button onClick={() => setGoalIdx(i => Math.max(0, i - 1))}
-                disabled={clampedGoalIdx === 0}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/30 text-white hover:bg-white/50 transition disabled:opacity-30">
-                <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-              <button onClick={() => setGoalIdx(i => Math.min(goals.length - 1, i + 1))}
-                disabled={clampedGoalIdx === goals.length - 1}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/30 text-white hover:bg-white/50 transition disabled:opacity-30">
-                <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+      {/* ④ MY DREAM GOALS — 3D carousel on mobile · up-to-3 grid on desktop */}
+      {goals.length > 0 ? (
+        <>
+          {/* ── Mobile 3D coverflow carousel ── */}
+          <div
+            className="relative lg:hidden"
+            style={{ height: 178, perspective: "1200px" }}
+            onTouchStart={e => { goalTouchX.current = e.touches[0].clientX; }}
+            onTouchEnd={e => {
+              if (goalTouchX.current === null) return;
+              const delta = e.changedTouches[0].clientX - goalTouchX.current;
+              if (Math.abs(delta) > 40) setGoalIdx(p => delta < 0 ? Math.min(goals.length - 1, p + 1) : Math.max(0, p - 1));
+              goalTouchX.current = null;
+            }}
+          >
+            {goals.map((goal, i) => {
+              let pos = i - clampedGoalIdx;
+              if (Math.abs(pos) > 1) return null;
+              const isCenter = pos === 0;
+              const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
+              return (
+                <div key={goal.id}
+                  onClick={() => !isCenter && setGoalIdx(i)}
+                  className="absolute left-1/2 top-1/2 w-[84%] transition-all duration-500 ease-out"
+                  style={{
+                    transform: `translate(-50%, -50%) translateX(${pos * 90}%) scale(${isCenter ? 1 : 0.83}) rotateY(${pos * -26}deg)`,
+                    zIndex: isCenter ? 20 : 10,
+                    opacity: isCenter ? 1 : 0.55,
+                    transformStyle: "preserve-3d",
+                    cursor: isCenter ? "default" : "pointer",
+                  }}>
+                  <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
+                    style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                    <div className="flex items-center justify-between gap-3 p-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
+                          <Sparkles className="h-2.5 w-2.5" /> Dream Goal
+                        </p>
+                        <h3 className="font-script text-xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
+                        <p className="text-xs text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
+                        <div className="mt-2 h-2 rounded-full bg-white/30 overflow-hidden max-w-[160px]">
+                          <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}% completed</p>
+                      </div>
+                      <MiniRing pct={pct} size={72} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <button onClick={() => setGoalIdx(p => Math.max(0, p - 1))} disabled={clampedGoalIdx === 0}
+              className="absolute left-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
+              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            <button onClick={() => setGoalIdx(p => Math.min(goals.length - 1, p + 1))} disabled={clampedGoalIdx === goals.length - 1}
+              className="absolute right-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
+              <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            {goals.length > 1 && (
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1.5 z-30">
                 {goals.map((_, i) => (
                   <button key={i} onClick={() => setGoalIdx(i)}
-                    className={["h-1.5 rounded-full transition-all duration-300 bg-white",
-                      i === clampedGoalIdx ? "w-4" : "w-1.5 opacity-50"].join(" ")} />
+                    className={["h-1.5 rounded-full transition-all duration-300 bg-[#EC4899]",
+                      i === clampedGoalIdx ? "w-4" : "w-1.5 opacity-40"].join(" ")} />
                 ))}
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+
+          {/* ── Desktop grid: 1 / 2 / 3 columns ── */}
+          <div className={["hidden lg:grid gap-4",
+            goals.length === 1 ? "lg:grid-cols-1 max-w-md" :
+            goals.length === 2 ? "lg:grid-cols-2" : "lg:grid-cols-3"].join(" ")}>
+            {goals.map(goal => {
+              const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
+              return (
+                <div key={goal.id} className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
+                  style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                  <div className="flex items-center justify-between gap-3 p-5">
+                    <div className="flex-1 min-w-0">
+                      <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
+                        <Sparkles className="h-3 w-3" /> Dream Goal
+                      </p>
+                      <h3 className="font-script text-2xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
+                      <p className="text-sm text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
+                      <div className="mt-2.5 h-2 rounded-full bg-white/30 overflow-hidden">
+                        <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(pct)}% completed</p>
+                    </div>
+                    <MiniRing pct={pct} size={80} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : (
         <Card className="border-dashed border-pink-300/50 text-center py-5 bg-gradient-to-br from-pink-50 to-rose-50">
           <p className="font-script text-2xl text-[#831843]">Add your first dream goal ✿</p>
@@ -1160,57 +1244,6 @@ function DashboardTab(props: {
         </Card>
       )}
 
-      {/* ⑤ SPENDING CATEGORIES — reacts to week/month filter */}
-      {catSpend.length > 0 ? (
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-              <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
-            </h3>
-            <div className="flex items-center gap-2">
-              {/* ⑦ Meal plan sync hint */}
-              {mealEstimate && !budget["food"] && (
-                <button onClick={() => setTab("Budget Setup")}
-                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
-                  <UtensilsCrossed className="h-3 w-3" /> Sync meals
-                </button>
-              )}
-              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-                See all <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-            {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
-              <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
-                  {cat?.emoji ?? "💰"}
-                </div>
-                <p className="text-[10px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
-                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amt, currency)}</p>
-                <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden">
-                  <div className="h-full rounded-full bg-[#EC4899] transition-all duration-700" style={{ width: `${pct}%` }} />
-                </div>
-                <p className="text-[9px] text-[#9D5C7E] font-semibold">{pct}%</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ) : (
-        <Card className="border-pink-300/50 bg-gradient-to-br from-pink-50 to-white">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]"><ArrowDownRight className="h-4 w-4" /></div>
-            <h3 className="font-script text-2xl text-[#831843]">Log your first expense</h3>
-          </div>
-          <p className="text-xs text-[#9D5C7E] mb-4">Track where your money actually goes — every spend counts ✿</p>
-          <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
-            desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
-            catOptions={catOptions} allCats={allCats} currentCat={currentCat} currentMood={currentMood}
-            showCatModal={showCatModal} setShowCatModal={setShowCatModal}
-            showMoodModal={showMoodModal} setShowMoodModal={setShowMoodModal}
-            txnSaved={txnSaved} addTxn={addTxn} currency={currency} />
-        </Card>
-      )}
 
       {/* ⑥ THIS MONTH'S STORY (warm — never red) + INCOME VS EXPENSES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
