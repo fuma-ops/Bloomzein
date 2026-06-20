@@ -166,9 +166,8 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
         <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0 ml-2" />
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-black/20" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
               <h3 className="font-script text-2xl text-[#831843]">Choose ✿</h3>
               <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] hover:text-hotpink transition">
@@ -373,12 +372,11 @@ export function BudgetPlanner() {
       {/* Custom pink currency picker modal */}
       {showCurrencyPicker && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
           onClick={() => setShowCurrencyPicker(false)}
         >
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
           <div
-            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl shadow-pink-300/30 overflow-hidden animate-scale-in"
+            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -623,7 +621,7 @@ function QuickAddSheet({ open, onClose, onSave, allCats, selectedCats, currency 
 
   return (
     <>
-      {open && <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />}
+      {open && <div className="fixed inset-0 z-40 bg-transparent" onClick={onClose} />}
       <div className={["fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out will-change-transform",
         open ? "translate-y-0" : "translate-y-full"].join(" ")}>
         <div className="mx-auto max-w-lg rounded-t-[2rem] bg-white/92 backdrop-blur-xl border-t border-pink-200/60 shadow-2xl shadow-pink-300/30 px-5 pt-2 pb-safe">
@@ -1212,14 +1210,13 @@ function DashboardTab(props: {
 
       {/* Category picker modal */}
       {showCatModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
               <h3 className="font-script text-2xl text-[#831843]">Category ✿</h3>
               <button onClick={() => setShowCatModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
             </div>
-            <div className="px-3 py-3 max-h-72 overflow-y-auto space-y-1">
+            <div className="px-3 py-3 overflow-y-auto flex-1 min-h-0 space-y-1">
               {catOptions.map(k => {
                 const c = allCats.find(x => x.key === k);
                 const active = k === catKey;
@@ -1241,9 +1238,8 @@ function DashboardTab(props: {
 
       {/* Mood picker modal */}
       {showMoodModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
               <h3 className="font-script text-2xl text-[#831843]">Spend type ✿</h3>
               <button onClick={() => setShowMoodModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
