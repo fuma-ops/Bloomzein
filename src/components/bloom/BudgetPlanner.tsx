@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Wallet, TrendingUp, TrendingDown, PiggyBank, Gem, Plus, Trash2,
   ChevronDown, ChevronLeft, ChevronRight, Check, Sparkles, X, Moon,
@@ -165,7 +166,7 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
         <span className="truncate">{selected?.label ?? placeholder}</span>
         <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0 ml-2" />
       </button>
-      {open && (
+      {open && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
           <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
@@ -193,7 +194,8 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -370,7 +372,7 @@ export function BudgetPlanner() {
       <KawaiiBackground count={8} />
 
       {/* Custom pink currency picker modal */}
-      {showCurrencyPicker && (
+      {showCurrencyPicker && createPortal(
         <div
           className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
           onClick={() => setShowCurrencyPicker(false)}
@@ -430,7 +432,8 @@ export function BudgetPlanner() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-5">
@@ -1209,7 +1212,7 @@ function DashboardTab(props: {
       )}
 
       {/* Category picker modal */}
-      {showCatModal && (
+      {showCatModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
           <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
@@ -1233,11 +1236,12 @@ function DashboardTab(props: {
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Mood picker modal */}
-      {showMoodModal && (
+      {showMoodModal && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
           <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
@@ -1257,7 +1261,8 @@ function DashboardTab(props: {
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ③ QUICK ADD FAB */}
