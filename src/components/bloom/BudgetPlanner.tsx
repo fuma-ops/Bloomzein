@@ -432,14 +432,14 @@ export function BudgetPlanner() {
 
       <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-5">
         {/* Hero */}
-        <div className="relative w-full aspect-[8/3] lg:aspect-[10/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-2 animate-hero-border-signal">
+        <div className="relative w-full aspect-[8/3] lg:aspect-[16/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-2 animate-hero-border-signal">
           <img src="/images/budget-hero.png" alt="Budget" className="absolute inset-0 h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#EC4899]/70 via-[#EC4899]/20 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
             <div className="animate-scale-in">
-              <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Budget</h1>
-              <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">Soft, smart money planning — your way.</p>
+              <h1 className="font-script text-2xl sm:text-4xl lg:text-3xl xl:text-4xl text-white leading-none drop-shadow-md">Budget</h1>
+              <p className="mt-0.5 text-xs sm:text-sm lg:text-xs italic text-white/90 max-w-[10rem] sm:max-w-xs drop-shadow leading-snug">Soft, smart money planning — your way.</p>
             </div>
             {/* Currency selector inside hero — custom pink picker */}
             <div className="self-end relative">
