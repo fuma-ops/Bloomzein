@@ -80,6 +80,14 @@ const BP_CYCLE_TIPS: Partial<Record<string, { emoji: string; headline: string; s
   fertile:    { emoji: "💐", headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-purple-50" },
 };
 
+const HERO_CONFIG: Record<string, { title: string; sub: string }> = {
+  Dashboard:       { title: "You're blooming",         sub: "Your budget. Your dreams. Your future." },
+  Incomes:         { title: "Your income garden 🌱",   sub: "Grow every stream, bloom every month." },
+  "Budget Setup":  { title: "Build your plan ✦",       sub: "A clear budget is your map to every dream." },
+  "Savings Goals": { title: "Dream big, save smart 💎",sub: "Every dirham saved brings you closer." },
+  Reports:         { title: "Know your numbers ✨",     sub: "Clarity is the first step to financial freedom." },
+};
+
 /* ============================================================
    TYPES
 ============================================================ */
@@ -548,56 +556,62 @@ export function BudgetPlanner() {
         document.body
       )}
 
-      {/* Hero — Dashboard only, sits BEFORE the tab bar */}
-      {tab === "Dashboard" && incomes.length > 0 && (
-        <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
-          <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
-          <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6 lg:p-5 min-h-[130px] sm:min-h-[150px] lg:min-h-[130px]">
-            <div className="max-w-[60%]">
-              <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-                You're blooming ✿
-              </h2>
-              {cycleTip ? (
-                <div className="mt-1.5 space-y-0.5">
-                  <div className="inline-flex items-center gap-1.5">
-                    <span className="text-sm leading-none" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }}>{cycleTip.emoji}</span>
-                    <span className="text-[11px] sm:text-xs font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
-                  </div>
-                  <p className="text-[10px] sm:text-[11px] text-white/85 italic leading-snug pl-0.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.20)' }}>{cycleTip.sub}</p>
-                </div>
-              ) : (
-                <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
-              )}
-              <div className="mt-2.5 flex items-center gap-2">
-                <button onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-                  <Calendar className="h-3 w-3" />
-                  {viewPeriod === "week" ? "This week" : "This month"}
-                  <ChevronDown className="h-3 w-3 opacity-70" />
-                </button>
-                <button onClick={() => setShowCurrencyPicker(true)}
-                  className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-                  <Coins className="h-3 w-3" />
-                  {CURRENCIES[currency].symbol}
-                </button>
-              </div>
-              {viewPeriod === "week" && (
-                <div className="flex gap-1 mt-2.5">
-                  {weekBand.map(d => (
-                    <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl", d.isToday ? "bg-white/30" : ""].join(" ")}>
-                      <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
-                      <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
-                      {d.spent > 0 && <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>}
+      {/* Hero — always visible, content adapts per tab */}
+      {(() => {
+        const hc = HERO_CONFIG[tab] ?? HERO_CONFIG.Dashboard;
+        const isDash = tab === "Dashboard";
+        return (
+          <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
+            <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
+            <div className={["relative z-10 flex items-center justify-between gap-3 p-4 sm:p-5 lg:p-5", isDash ? "min-h-[120px] sm:min-h-[140px]" : "min-h-[88px] sm:min-h-[100px]"].join(" ")}>
+              <div className="max-w-[65%]">
+                <h2 className="font-script text-2xl sm:text-3xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+                  {hc.title}
+                </h2>
+                {isDash && cycleTip ? (
+                  <div className="mt-1 space-y-0.5">
+                    <div className="inline-flex items-center gap-1.5">
+                      <span className="text-sm leading-none" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }}>{cycleTip.emoji}</span>
+                      <span className="text-[11px] font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
                     </div>
-                  ))}
+                    <p className="text-[10px] text-white/85 italic leading-snug pl-0.5">{cycleTip.sub}</p>
+                  </div>
+                ) : (
+                  <p className="mt-0.5 text-[11px] sm:text-xs text-white/90">{hc.sub}</p>
+                )}
+                <div className="mt-2 flex items-center gap-2">
+                  {isDash && (
+                    <button onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                      <Calendar className="h-3 w-3" />
+                      {viewPeriod === "week" ? "This week" : "This month"}
+                      <ChevronDown className="h-3 w-3 opacity-70" />
+                    </button>
+                  )}
+                  <button onClick={() => setShowCurrencyPicker(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                    <Coins className="h-3 w-3" />
+                    {CURRENCIES[currency].symbol}
+                  </button>
                 </div>
-              )}
+                {isDash && viewPeriod === "week" && (
+                  <div className="flex gap-1 mt-2">
+                    {weekBand.map(d => (
+                      <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl", d.isToday ? "bg-white/30" : ""].join(" ")}>
+                        <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
+                        <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
+                        {d.spent > 0 && <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {isDash && <MiniRing pct={heroGoalPct} size={100} />}
             </div>
-            <MiniRing pct={heroGoalPct} size={110} />
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Tabs */}
       <div className="sticky top-14 md:top-0 z-30 py-2">
@@ -1504,9 +1518,8 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Wallet className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Income Sources</h2>
-        <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income Source</PrimaryBtn>
+      <div className="flex justify-end">
+        <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income</PrimaryBtn>
       </div>
 
       {incomes.length === 0 ? (
@@ -1632,7 +1645,6 @@ function BudgetSetupTab(props: {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
-      <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
 
       {mealEstimate && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
@@ -1773,9 +1785,8 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Flag className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Goals</h2>
-        <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add New Goal</PrimaryBtn>
+      <div className="flex justify-end">
+        <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add Goal</PrimaryBtn>
       </div>
 
       <Card>
@@ -1941,19 +1952,16 @@ function ReportsTab(props: {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><FileBarChart className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Reports</h2>
-        <div className="flex items-center gap-2">
-          <button onClick={() => shiftMonth(-1)} className="grid h-9 w-9 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="font-semibold text-[#831843] min-w-[110px] text-center">
-            {new Date(month.y, month.m).toLocaleString(undefined, { month: "long", year: "numeric" })}
-          </span>
-          <button onClick={() => shiftMonth(1)} className="grid h-9 w-9 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={() => shiftMonth(-1)} className="grid h-8 w-8 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="text-sm font-semibold text-[#831843] min-w-[100px] text-center">
+          {new Date(month.y, month.m).toLocaleString(undefined, { month: "long", year: "numeric" })}
+        </span>
+        <button onClick={() => shiftMonth(1)} className="grid h-8 w-8 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
 
       <Card>
