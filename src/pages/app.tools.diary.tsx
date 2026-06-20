@@ -1,85 +1,40 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
-import {
-  Plus, Trash2, Edit3, X, BookHeart, Sparkles,
-  Cloud, Smile, Heart, CloudRain, Battery, Activity, Droplet,
-  Calendar, List, LayoutGrid, BookOpen, ChevronLeft, ChevronRight, Printer,
-  Flame, Quote, Mic, RefreshCw,
-} from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { PageHeader } from "@/components/bloom/PageHeader";
-import { DiaryRichEditor, DIARY_FONTS, fontFamilyFor } from "@/components/bloom/DiaryRichEditor";
-import { playPageFlipSound } from "@/lib/diarySound";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+
+/* ─── Types & persistence ─────────────────────────────────────────── */
 
 export interface DiaryEntry {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string;        // YYYY-MM-DD
   mood: string;
   title: string;
   html: string;
   theme: string;
   font: string;
   createdAt: string;
-  images?: string[]; // base64 compressed photos
+  images?: string[];   // base64 compressed photos
 }
 
 export const DIARY_STORAGE_KEY = "bloom:diary";
-const VIEW_STORAGE_KEY = "bloom:diary-view";
 
-export const DIARY_MOODS = [
-  { key: "calm", label: "Calm", Icon: Cloud },
-  { key: "happy", label: "Happy", Icon: Smile },
-  { key: "energetic", label: "Energetic", Icon: Sparkles },
-  { key: "sensitive", label: "Sensitive", Icon: Heart },
-  { key: "sad", label: "Sad", Icon: CloudRain },
-  { key: "tired", label: "Tired", Icon: Battery },
-  { key: "cramps", label: "Cramps", Icon: Activity },
-  { key: "bloated", label: "Bloated", Icon: Droplet },
-] as const;
-
-export const DIARY_THEMES = [
-  { key: "sakura", label: "Sakura Blush", page: "from-[#FFF0F6] to-[#FFE0EE]", ring: "ring-pink-200", accent: "#EC4899", chip: "bg-[#FBCFE8]" },
-  { key: "lavender", label: "Lavender Glow", page: "from-[#F5EEFF] to-[#EAE0FB]", ring: "ring-purple-200", accent: "#8B5CF6", chip: "bg-[#DDD6FE]" },
-  { key: "mint", label: "Mint Whisper", page: "from-[#ECFDF5] to-[#DEFAEC]", ring: "ring-emerald-200", accent: "#10B981", chip: "bg-[#BBF7D0]" },
-  { key: "lemon", label: "Lemon Custard", page: "from-[#FEFCE8] to-[#FCF6D6]", ring: "ring-yellow-200", accent: "#EAB308", chip: "bg-[#FDE68A]" },
-  { key: "peach", label: "Peach Cream", page: "from-[#FFF5F5] to-[#FFE9E2]", ring: "ring-orange-200", accent: "#F97316", chip: "bg-[#FED7AA]" },
-] as const;
-
-export function moodMeta(key: string) {
-  return DIARY_MOODS.find((m) => m.key === key) ?? DIARY_MOODS[0];
-}
-
-export function themeMeta(key: string) {
-  return DIARY_THEMES.find((t) => t.key === key) ?? DIARY_THEMES[0];
-}
-
-function sampleEntry(): DiaryEntry {
-  const today = new Date().toISOString().slice(0, 10);
-  return {
-    id: "bloom-sample-001",
-    date: today,
-    mood: "happy",
-    title: "A gentle morning ✿",
-    html: `<p>Today started with the softest light coming through my window. I made chamomile tea and sat quietly for a few minutes before the day began.</p><p>I feel grateful — for small things mostly. The way the cherry blossoms are blooming. A kind message from a friend. The simple fact that I woke up today.</p><p>My intention: stay present, choose softness, and do at least one thing just for me. 🌸</p>`,
-    theme: "sakura",
-    font: "caveat",
-    createdAt: new Date().toISOString(),
-  };
+// Backward-compat export used by toolSnapshots
+export function moodMeta(key: string): { label: string } {
+  const known = ["Calm","Happy","Energetic","Sensitive","Dreamy","Tired"];
+  const match = known.find((n) => n.toLowerCase() === key.toLowerCase());
+  return { label: match ?? key };
 }
 
 function loadEntries(): DiaryEntry[] {
   try {
     const raw = localStorage.getItem(DIARY_STORAGE_KEY);
     if (!raw) return [sampleEntry()];
-    const parsed = JSON.parse(raw);
-    return (parsed as any[]).map((e) => ({
+    return (JSON.parse(raw) as DiaryEntry[]).map((e) => ({
       id: e.id,
       date: e.date,
-      mood: e.mood ?? "calm",
+      mood: e.mood ?? "Calm",
       title: e.title ?? "",
-      html: e.html ?? (e.text ? escapeHtml(e.text).replace(/\n/g, "<br/>") : ""),
+      html: e.html ?? "",
       theme: e.theme ?? "sakura",
-      font: e.font ?? "quicksand",
+      font: e.font ?? "caveat",
       createdAt: e.createdAt,
       images: e.images ?? [],
     }));
@@ -88,16 +43,26 @@ function loadEntries(): DiaryEntry[] {
   }
 }
 
-function escapeHtml(s: string) {
-  const div = document.createElement("div");
-  div.textContent = s;
-  return div.innerHTML;
+function saveEntries(entries: DiaryEntry[]) {
+  try {
+    localStorage.setItem(DIARY_STORAGE_KEY, JSON.stringify(entries));
+    window.dispatchEvent(new Event("bloom:diary-updated"));
+  } catch {}
 }
 
-function plainTextOf(html: string) {
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return (div.textContent || "").trim();
+function sampleEntry(): DiaryEntry {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    id: "bloom-sample-001",
+    date: today,
+    mood: "Calm",
+    title: "Thursday's glow",
+    html: "<p>Today started with the softest light coming through my window. I feel grateful for small things.</p>",
+    theme: "sakura",
+    font: "caveat",
+    createdAt: new Date().toISOString(),
+    images: [],
+  };
 }
 
 function compressImage(file: File, maxPx = 640): Promise<string> {
@@ -119,22 +84,13 @@ function compressImage(file: File, maxPx = 640): Promise<string> {
   });
 }
 
-function saveEntries(entries: DiaryEntry[]) {
-  try {
-    localStorage.setItem(DIARY_STORAGE_KEY, JSON.stringify(entries));
-    window.dispatchEvent(new Event("bloom:diary-updated"));
-  } catch {}
-}
-
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
 function fmtDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
+    weekday: "long", day: "numeric", month: "long",
   });
 }
 
@@ -149,1739 +105,811 @@ function computeStreak(entries: DiaryEntry[]): number {
   return streak;
 }
 
-const AFFIRMATIONS = [
-  "I am enough. I am worthy. I am loved.",
-  "My feelings are valid, and I honor them.",
-  "I release what no longer serves me.",
-  "I bloom where I am planted.",
-  "Softness is my strength.",
-  "I am the author of my own story.",
-  "Today I choose peace and joy.",
-  "I am worthy of love, rest, and all beautiful things.",
-  "My sensitivity is a superpower.",
-  "I flow with life's changes gracefully.",
-  "I celebrate my progress, not just my destination.",
-  "I am allowed to take up space.",
-  "With each breath, I grow stronger.",
-  "I trust the journey, even the uncertain parts.",
-  "I lead with kindness, starting with myself.",
+/* ─── Design data ─────────────────────────────────────────────────── */
+
+const MOOD_DATA = [
+  { name: "Calm",      tint: "#FBCFE8",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M7 15.5h8.4a3.2 3.2 0 0 0 .2-6.4A4.6 4.6 0 0 0 7 9 3 3 0 0 0 7 15.5Z"/></svg> },
+  { name: "Happy",     tint: "#FCD9A0",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M8.8 13.6c.8 1.1 1.9 1.6 3.2 1.6s2.4-.5 3.2-1.6"/><circle cx="9.4" cy="10" r=".85" fill="currentColor" stroke="none"/><circle cx="14.6" cy="10" r=".85" fill="currentColor" stroke="none"/></svg> },
+  { name: "Energetic", tint: "#F9A8D4",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M13 3 6 13h4.4l-1 8 7.6-11H12l1-7Z"/></svg> },
+  { name: "Sensitive", tint: "#F5C6E0",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M12 20S4.5 15 4.5 9.8A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7.5 2.8C19.5 15 12 20 12 20Z"/></svg> },
+  { name: "Dreamy",    tint: "#E2D2FB",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M20.5 14.6A7.5 7.5 0 1 1 10.8 5a6 6 0 0 0 9.7 9.6Z"/><path d="M17.5 4l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6Z"/></svg> },
+  { name: "Tired",     tint: "#DAD7F2",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M5 10.6c2 2.6 4.8 3.9 7 3.9s5-1.3 7-3.9"/><path d="M7.4 14l-1 1.9M12 15.1v2M16.6 14l1 1.9"/></svg> },
 ];
 
-const BLOOM_TIPS = [
-  "Morning pages: 3 stream-of-consciousness pages before checking your phone.",
-  "Try the gratitude sandwich: start and end each entry with something you're thankful for.",
-  "Draw your feelings today — sometimes a doodle says more than words.",
-  "Write a letter to your future self. What do you hope she knows?",
-  "Track your energy throughout the day — patterns emerge beautifully.",
-  "Light a candle and write in silence for 10 minutes. Notice what surfaces.",
-  "Re-read your entries from last month — notice how far you've come.",
+const PROMPT_DATA = [
+  { text: "What made you smile today?",       icon: "sun",    tint: "#FFF4D9", ic: "#E0A53B" },
+  { text: "A feeling you want to release",    icon: "leaf",   tint: "#E4F6EC", ic: "#3FAE7E" },
+  { text: "Something you are grateful for",   icon: "heart",  tint: "#FCE4EE", ic: "#DB2777" },
+  { text: "A dream from last night",          icon: "moon",   tint: "#EEE7FF", ic: "#7C5AA6" },
+  { text: "A small win to celebrate",         icon: "star",   tint: "#FDE8F2", ic: "#EC4899" },
+  { text: "How does your body feel today?",   icon: "cloud",  tint: "#E9F1FF", ic: "#5B7FC2" },
 ];
 
-function todayAffirmation() {
-  const d = new Date();
-  return AFFIRMATIONS[(d.getDay() + d.getDate()) % AFFIRMATIONS.length];
-}
-
-function todayBloomTip() {
-  const d = new Date();
-  return BLOOM_TIPS[(d.getDate() + d.getMonth()) % BLOOM_TIPS.length];
-}
-
-type ViewMode = "dashboard" | "list" | "grid" | "book";
-
-export default function DiaryPage() {
-  const [entries, setEntries] = useState<DiaryEntry[]>(() => loadEntries());
-  const [composing, setComposing] = useState(false);
-  const [editing, setEditing] = useState<DiaryEntry | null>(null);
-  const [view, setView] = useState<ViewMode>(() => {
-    try { return (localStorage.getItem(VIEW_STORAGE_KEY) as ViewMode) || "dashboard"; } catch { return "dashboard"; }
-  });
-
-  useEffect(() => { saveEntries(entries); }, [entries]);
-  useEffect(() => { try { localStorage.setItem(VIEW_STORAGE_KEY, view); } catch {} }, [view]);
-
-  const sorted = useMemo(
-    () => [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [entries]
-  );
-
-  const upsertEntry = (entry: DiaryEntry) => {
-    setEntries((prev) => {
-      const exists = prev.some((e) => e.id === entry.id);
-      return exists ? prev.map((e) => (e.id === entry.id ? entry : e)) : [entry, ...prev];
-    });
-    setComposing(false);
-    setEditing(null);
-  };
-
-  const deleteEntry = (id: string) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
-  };
-
-  return (
-    <div className="relative animate-fade-in">
-      <BloomBubbles count={10} />
-
-      <PageHeader title="Dreamy Diary" emoji="✿">
-        <div className="flex items-center gap-2">
-          <ViewSwitcher view={view} onChange={setView} />
-          <button
-            onClick={() => setComposing(true)}
-            className="bloom-luxury-btn inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
-          >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2} /> New entry
-          </button>
-        </div>
-      </PageHeader>
-
-      {view === "dashboard" ? (
-        <DiaryDashboard
-          entries={sorted}
-          onNew={() => setComposing(true)}
-          onSaveEntry={upsertEntry}
-          onEdit={setEditing}
-          onDelete={deleteEntry}
-        />
-      ) : sorted.length === 0 ? (
-        <EmptyDiary onStart={() => setComposing(true)} />
-      ) : view === "list" ? (
-        <ListView entries={sorted} onEdit={setEditing} onDelete={deleteEntry} />
-      ) : view === "grid" ? (
-        <GridView entries={sorted} onEdit={setEditing} onDelete={deleteEntry} />
-      ) : (
-        <BookView entries={sorted} onEdit={setEditing} onDelete={deleteEntry} />
-      )}
-
-      {(composing || editing) && (
-        <DiaryComposer
-          initial={editing ?? undefined}
-          onClose={() => { setComposing(false); setEditing(null); }}
-          onSave={upsertEntry}
-        />
-      )}
-    </div>
-  );
-}
-
-/* ============================================================
-   DASHBOARD — luxury open journal experience
-   ============================================================ */
-
-const REFLECTION_PROMPTS: Record<string, string> = {
-  Menstrual: "What does your body need most right now?",
-  Follicular: "What new possibility is calling to you?",
-  Ovulatory: "How do you want to share yourself with the world today?",
-  Luteal: "What wisdom is your inner voice whispering?",
+const PROMPT_ICONS: Record<string, React.ReactNode> = {
+  sun:   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg>,
+  leaf:  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M5 19c0-8 6-13 14-13 0 8-6 13-14 13Z"/><path d="M5 19c3-4 6-6 10-7.5"/></svg>,
+  heart: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M12 20S4.5 15 4.5 9.8A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7.5 2.8C19.5 15 12 20 12 20Z"/></svg>,
+  moon:  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M20.5 14.6A7.5 7.5 0 1 1 10.8 5a6 6 0 0 0 9.7 9.6Z"/></svg>,
+  star:  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M12 3.5l2.4 5 5.5.7-4 3.8 1 5.4-4.9-2.7-4.9 2.7 1-5.4-4-3.8 5.5-.7 2.4-5Z"/></svg>,
+  cloud: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M7 17h9.5a3.2 3.2 0 0 0 .3-6.4A4.7 4.7 0 0 0 7 10.5 3.2 3.2 0 0 0 7 17Z"/></svg>,
 };
 
-const ALL_PROMPTS = [
-  "What does your body need most right now?",
-  "What new possibility is calling to you?",
-  "How do you want to share yourself with the world today?",
-  "What wisdom is your inner voice whispering?",
-  "What are you grateful for in this moment?",
-  "What would feel most nourishing today?",
-  "Where is your energy flowing naturally right now?",
-  "What do you need to release or let go of?",
-  "What's one small thing that brought you joy recently?",
-  "How are you honoring yourself today?",
-  "What emotion is asking to be seen right now?",
-  "What would your future self thank you for doing today?",
+const STICKER_ICONS: Record<string, React.ReactNode> = {
+  flower:    <svg width="24" height="24" viewBox="0 0 24 24"><ellipse cx="12" cy="6.2" rx="2.6" ry="3.6" fill="#F472B6"/><ellipse cx="12" cy="17.8" rx="2.6" ry="3.6" fill="#F472B6"/><ellipse cx="6.2" cy="12" rx="3.6" ry="2.6" fill="#F472B6"/><ellipse cx="17.8" cy="12" rx="3.6" ry="2.6" fill="#F472B6"/><circle cx="12" cy="12" r="2.6" fill="#F9C784"/></svg>,
+  heart:     <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 20S4.5 15 4.5 9.8A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7.5 2.8C19.5 15 12 20 12 20Z" fill="#F472B6"/></svg>,
+  star:      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3l2.5 5.5 6 .6-4.5 4 1.3 5.9L12 21l-5.3 3 1.3-5.9-4.5-4 6-.6Z" fill="#F9C784"/></svg>,
+  moon:      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M20.5 14.6A7.5 7.5 0 1 1 10.8 5a6 6 0 0 0 9.7 9.6Z" fill="#C4A4FC"/></svg>,
+  sun:       <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="#F9C784"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" stroke="#F9C784" strokeWidth="1.7" strokeLinecap="round"/></svg>,
+  butterfly: <svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 12C9 6 3 6 3.5 11c.4 4 6 3 8.5 1Z" fill="#F9A8D4"/><path d="M12 12c3-6 9-6 8.5-1-.4 4-6 3-8.5 1Z" fill="#F472B6"/><path d="M12 7v9" stroke="#9D5C7E" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+};
+
+const BOOK_COVERS: Record<string, string> = {
+  Rose:  "linear-gradient(150deg,#F9A8D4 0%,#EC4899 45%,#BE185D 100%)",
+  Plum:  "linear-gradient(150deg,#D8B4FE 0%,#C084FC 45%,#9333EA 100%)",
+  Peach: "linear-gradient(150deg,#FDBA74 0%,#F472B6 55%,#DB2777 100%)",
+};
+
+const MEM_TINTS = [
+  { bg: "#FCE4EE", tape: "rgba(244,114,182,.45)", fp: "#F472B6", fc: "#F9C784", tag: "#DB2777" },
+  { bg: "#EEE7FF", tape: "rgba(196,164,252,.5)",  fp: "#C4A4FC", fc: "#FBCFE8", tag: "#7C5AA6" },
+  { bg: "#FFEFD9", tape: "rgba(251,186,116,.5)",  fp: "#FBBA74", fc: "#F472B6", tag: "#C77C2A" },
+  { bg: "#E4F6EC", tape: "rgba(126,202,185,.5)",  fp: "#7ECAB9", fc: "#F9C784", tag: "#3F9E7E" },
 ];
+const MEM_ROTS = [-2.5, 2, -1.6, 1.4];
 
-function DiaryDashboard({
-  entries, onNew, onSaveEntry, onEdit,
-}: {
-  entries: DiaryEntry[];
-  onNew: () => void;
-  onSaveEntry: (entry: DiaryEntry) => void;
-  onEdit: (e: DiaryEntry) => void;
-  onDelete: (id: string) => void;
-}) {
-  const streak = useMemo(() => computeStreak(entries), [entries]);
-  const affirmation = todayAffirmation();
-  const todayEntry = entries.find((e) => e.date === todayISO());
-  const recent = entries.slice(0, 3);
-  const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
-  const phase = cycleDay <= 5 ? "Menstrual" : cycleDay <= 13 ? "Follicular" : cycleDay <= 15 ? "Ovulatory" : "Luteal";
+/* ─── CSS keyframes + utilities ───────────────────────────────────── */
 
-  return (
-    <div className="relative">
-      <FloatingAtmosphere />
-
-      <div className="grid gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
-
-        {/* ── Left: Today's Bloom — first on desktop, below journal on mobile ── */}
-        <aside className="order-3 lg:order-1 lg:col-span-2">
-          <TodaysBloomCard cycleDay={cycleDay} phase={phase} style={{ animationDelay: "60ms" }} />
-        </aside>
-
-        {/* ── Center: Open Journal HERO (wider) — always first on mobile ── */}
-        <main className="order-1 lg:order-2 lg:col-span-8 flex flex-col gap-4">
-          <OpenJournal entries={entries} onSaveEntry={onSaveEntry} cycleDay={cycleDay} phase={phase} style={{ animationDelay: "0ms" }} />
-          <JournalStatsRow streak={streak} todayEntry={todayEntry} phase={phase} style={{ animationDelay: "220ms" }} />
-        </main>
-
-        {/* ── Right: Affirmation + Memories ── */}
-        <aside className="order-4 lg:order-3 lg:col-span-2 flex flex-col gap-4">
-          <DailyAffirmationCard affirmation={affirmation} style={{ animationDelay: "80ms" }} />
-          {recent.length > 0 && (
-            <RecentMemoriesCard entries={recent} onEdit={onEdit} style={{ animationDelay: "160ms" }} />
-          )}
-        </aside>
-
-      </div>
-    </div>
-  );
-}
-
-/* ── Floating atmosphere ── */
-function FloatingAtmosphere() {
-  return (
-    <div className="pointer-events-none select-none absolute inset-0 overflow-hidden -z-10" aria-hidden>
-      <img src="/images/landing-orb-flower.png" alt=""
-        className="absolute -top-8 right-6 w-44 opacity-[0.07] rotate-12 animate-pulse hidden lg:block"
-        style={{ animationDuration: "7s" }}
-      />
-      <img src="/images/landing-orb-life.png" alt=""
-        className="absolute bottom-16 -left-8 w-36 opacity-[0.05] -rotate-6 animate-pulse hidden lg:block"
-        style={{ animationDuration: "9s", animationDelay: "2s" }}
-      />
-      <img src="/images/landing-orb-mind.png" alt=""
-        className="absolute top-1/3 right-0 w-24 opacity-[0.04] animate-pulse hidden lg:block"
-        style={{ animationDuration: "11s", animationDelay: "1s" }}
-      />
-      {[3, 2.5, 2, 3, 2, 2.5].map((size, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full bg-hotpink animate-pulse hidden lg:block"
-          style={{
-            width: `${size}px`, height: `${size}px`,
-            top: `${6 + i * 14}%`, right: `${1 + i * 7}%`,
-            opacity: 0.06 + i * 0.01,
-            animationDuration: `${4 + i}s`,
-            animationDelay: `${i * 0.7}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* ── Open Journal (HERO — dreamy book image frame + HTML overlay) ── */
-const JOURNAL_STYLES = `
-  @keyframes bk-flip-out {
-    0%   { transform: rotateY(0deg);   opacity: 1; }
-    100% { transform: rotateY(-88deg); opacity: 0; }
-  }
-  @keyframes bk-flip-in {
-    0%   { transform: rotateY(88deg);  opacity: 0; }
-    100% { transform: rotateY(0deg);   opacity: 1; }
-  }
-  @keyframes bk-hint {
-    0%   { transform: rotateY(0deg); }
-    45%  { transform: rotateY(-24deg); opacity: 0.88; }
-    100% { transform: rotateY(0deg); opacity: 1; }
-  }
-  .bk-flip-out { animation: bk-flip-out 0.28s cubic-bezier(0.4,0,1,1) forwards; transform-origin: left center; }
-  .bk-flip-in  { animation: bk-flip-in  0.28s cubic-bezier(0,0,0.6,1) forwards; transform-origin: left center; }
-  .bk-hint     { animation: bk-hint 0.9s ease-in-out 1.4s 1 forwards; transform-origin: left center; }
-  [contenteditable][data-ph]:empty::before {
-    content: attr(data-ph);
-    color: rgba(190,110,140,0.4);
-    pointer-events: none;
-    font-style: italic;
-  }
-  .diary-overlay::-webkit-scrollbar { width: 3px; }
-  .diary-overlay::-webkit-scrollbar-thumb { background: rgba(200,100,140,0.25); border-radius: 2px; }
-  .diary-book-wrap { cursor: grab; touch-action: pan-y; }
-  .diary-book-wrap:active { cursor: grabbing; }
-  .diary-book-desktop { width: 100%; display: block; pointer-events: none; }
-  .diary-book-mobile  { width: 100%; display: none;  pointer-events: none; }
-  .diary-flip-arrow {
-    position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(255,210,225,0.75); backdrop-filter: blur(8px);
-    border: 1.5px solid rgba(200,88,122,0.45);
-    display: flex; align-items: center; justify-content: center;
-    color: #C8587A; cursor: pointer;
-    transition: opacity 0.2s, transform 0.15s, background 0.15s;
-    box-shadow: 0 2px 12px rgba(200,88,122,0.18);
-  }
-  .diary-flip-arrow:hover:not(:disabled) { background: rgba(255,180,210,0.92); transform: translateY(-50%) scale(1.1); }
-  .diary-flip-arrow:active:not(:disabled) { transform: translateY(-50%) scale(0.93); }
-  .diary-flip-arrow:disabled { opacity: 0.22; cursor: default; }
-  /* ── breathing bg animation ── */
-  @keyframes bg-breathe {
-    0%,100% { transform: scale(1); }
-    50%      { transform: scale(1.06); }
-  }
-  @keyframes corner-fold {
-    0%   { opacity: 0; transform: scale(0.4); }
-    25%  { opacity: 1; transform: scale(1.15); }
-    50%  { opacity: 0.7; transform: scale(1); }
-    75%  { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0; transform: scale(0.4); }
-  }
-  @keyframes mic-pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(200,88,122,0.45); }
-    50%      { box-shadow: 0 0 0 8px rgba(200,88,122,0); }
-  }
-  .diary-page-corner { display: none; }
-  .diary-mobile-bg, .diary-vignette, .diary-mobile-layer { display: none; }
-  @media (max-width: 1023px) {
-    .diary-book-desktop { display: none !important; }
-    .diary-book-mobile  { display: none !important; }
-    .diary-flip-arrow   { display: none !important; }
-    .diary-left-page    { display: none !important; }
-    .diary-right-page   { display: none !important; }
-    .diary-mood-selector-external { display: none !important; }
-    .diary-book-wrap {
-      aspect-ratio: 3 / 4;
-      overflow: hidden;
-      border-radius: 18px;
-      position: relative;
-    }
-    .diary-mobile-bg {
-      display: block;
-      position: absolute;
-      inset: -8%;
-      background-image: url('/images/diary-bg-floral.png');
-      background-size: cover;
-      background-position: center top;
-      animation: bg-breathe 7s ease-in-out infinite;
-      z-index: 0;
-    }
-    .diary-vignette {
-      display: block;
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 88% 82% at 50% 46%,
-        transparent 28%,
-        rgba(255,215,230,0.18) 54%,
-        rgba(210,70,120,0.38) 78%,
-        rgba(160,32,82,0.64) 100%);
-      z-index: 1;
-      pointer-events: none;
-    }
-    .diary-mobile-layer {
-      display: flex;
-      flex-direction: column;
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      padding: 22px 22px 16px;
-      box-sizing: border-box;
-      overflow: hidden;
-      background:
-        repeating-linear-gradient(
-          transparent, transparent 27px,
-          rgba(200,140,160,0.12) 27px, rgba(200,140,160,0.12) 28px
-        ),
-        linear-gradient(160deg, #FFFDF8 0%, #FFF5EE 55%, #FFF0EC 100%);
-      box-shadow:
-        -8px 0 22px rgba(160,50,75,0.2),
-        8px 0 22px rgba(255,255,255,0.45),
-        0 16px 52px rgba(0,0,0,0.2),
-        0 3px 16px rgba(200,88,122,0.14),
-        inset 0 2px 0 rgba(255,255,255,0.95);
-      mask-image: radial-gradient(ellipse 92% 90% at 50% 48%, black 52%, rgba(0,0,0,0.72) 70%, rgba(0,0,0,0.18) 87%, transparent 100%);
-      -webkit-mask-image: radial-gradient(ellipse 92% 90% at 50% 48%, black 52%, rgba(0,0,0,0.72) 70%, rgba(0,0,0,0.18) 87%, transparent 100%);
-    }
-    .diary-nav-mini {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: rgba(255,210,225,0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(200,88,122,0.35);
-      display: inline-flex; align-items: center; justify-content: center;
-      color: #C8587A;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.15s;
-      flex-shrink: 0;
-      padding: 0;
-    }
-    .diary-nav-mini:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
-    .diary-nav-mini:not(:disabled):active { transform: scale(0.88); }
-    .diary-page-corner {
-      display: block;
-      position: absolute;
-      bottom: 5px; right: 5px;
-      width: 0; height: 0;
-      border-left: 26px solid transparent;
-      border-bottom: 26px solid rgba(200,88,122,0.42);
-      z-index: 20;
-      pointer-events: none;
-      opacity: 0;
-      animation: corner-fold 2.2s ease-in-out 2.2s 1 forwards;
-    }
-  }
-  @media (min-width: 1024px) {
-    .diary-book-desktop { display: block !important; }
-    .diary-book-mobile  { display: none  !important; }
-  }
-  /* ── Torn-edge photo frames ── */
-  .diary-photo-torn {
-    display: block;
-    border-radius: 2px;
-    clip-path: polygon(
-      1% 4%, 4% 0%, 12% 3%, 24% 0%, 36% 3%, 50% 0%, 63% 2%, 76% 0%, 88% 3%, 97% 0%, 100% 5%,
-      98% 18%, 100% 32%, 99% 48%, 100% 63%, 98% 78%, 100% 92%, 97% 100%,
-      84% 97%, 72% 100%, 58% 97%, 44% 100%, 30% 97%, 17% 100%, 6% 97%, 0% 100%,
-      2% 84%, 0% 68%, 2% 52%, 0% 36%, 2% 20%, 0% 8%
-    );
-    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
-    transition: transform 0.2s;
-  }
-  .diary-photo-torn:hover { transform: scale(1.02) rotate(0.5deg); }
-  /* ── Sticker panel ── */
-  .diary-sticker-panel {
-    position: absolute; bottom: 100%; right: 0;
-    background: rgba(255,248,252,0.96);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(200,88,122,0.2);
-    border-radius: 14px;
-    padding: 10px;
-    display: flex; flex-wrap: wrap; gap: 8px;
-    width: 200px;
-    box-shadow: 0 8px 28px rgba(200,88,122,0.18);
-    z-index: 50;
-  }
+const DIARY_CSS = `
+  @keyframes dd-floaty   { 0%,100%{ transform:translateY(0) translateX(0) } 50%{ transform:translateY(-26px) translateX(12px) } }
+  @keyframes dd-floaty2  { 0%,100%{ transform:translateY(0) translateX(0) } 50%{ transform:translateY(24px) translateX(-14px) } }
+  @keyframes dd-twinkle  { 0%,100%{ opacity:.1;transform:scale(.4) } 50%{ opacity:1;transform:scale(1) } }
+  @keyframes dd-rise     { 0%{ transform:translateY(40px) rotate(0deg);opacity:0 } 12%{ opacity:.85 } 100%{ transform:translateY(-150px) rotate(40deg);opacity:0 } }
+  @keyframes dd-breathe  { 0%,100%{ transform:scale(1);opacity:.55 } 50%{ transform:scale(1.16);opacity:.85 } }
+  @keyframes dd-spin3dA  { 0%{ transform:rotateX(22deg) rotateY(0deg) } 100%{ transform:rotateX(22deg) rotateY(360deg) } }
+  @keyframes dd-spin3dB  { 0%{ transform:rotateX(-18deg) rotateY(360deg) } 100%{ transform:rotateX(-18deg) rotateY(0deg) } }
+  @keyframes dd-drift    { 0%{ transform:translate(0,0) } 33%{ transform:translate(28px,-22px) } 66%{ transform:translate(-20px,18px) } 100%{ transform:translate(0,0) } }
+  @keyframes dd-drift2   { 0%{ transform:translate(0,0) } 50%{ transform:translate(-30px,-26px) } 100%{ transform:translate(0,0) } }
+  @keyframes dd-ribbon   { 0%,100%{ transform:translateX(-50%) rotate(-1.5deg) } 50%{ transform:translateX(-50%) rotate(1.5deg) } }
+  @keyframes dd-glow     { 0%,100%{ box-shadow:0 8px 22px rgba(219,39,119,.32) } 50%{ box-shadow:0 16px 44px rgba(219,39,119,.6) } }
+  @keyframes dd-shimmer  { 0%,100%{ filter:drop-shadow(0 2px 10px rgba(236,72,153,.25)) } 50%{ filter:drop-shadow(0 4px 20px rgba(236,72,153,.5)) } }
+  @keyframes dd-hint     { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(4px) } }
+  @keyframes dd-toast    { from{ opacity:0;transform:translateX(-50%) translateY(8px) scale(.92) } to{ opacity:1;transform:translateX(-50%) translateY(0) scale(1) } }
+  @keyframes dd-mic      { 0%,100%{ box-shadow:0 0 0 0 rgba(219,39,119,.5) } 50%{ box-shadow:0 0 0 7px rgba(219,39,119,0) } }
+  @keyframes dd-hintfade { from{ opacity:0 } to{ opacity:1 } }
+  .dd-tool{ transition:all .2s ease; }
+  .dd-tool:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+  .dd-mem:hover{ transform:rotate(0deg) translateY(-5px) !important; box-shadow:0 20px 36px rgba(131,24,67,.2) !important; }
+  .dd-prompt:hover{ transform:translateY(-3px) rotate(-.5deg); box-shadow:0 16px 30px rgba(236,72,153,.2); }
 `;
 
-function OpenJournal({
-  entries, onSaveEntry, style, cycleDay, phase,
-}: {
-  entries: DiaryEntry[];
-  onSaveEntry: (entry: DiaryEntry) => void;
-  style?: CSSProperties;
-  cycleDay: number;
-  phase: string;
-}) {
-  const [pageIndex, setPageIndex] = useState(0);
-  const [flipClass, setFlipClass] = useState("");
-  const [hintDone, setHintDone] = useState(false);
-  const [selectedMood, setSelectedMood] = useState<string>(() => {
-    const todayEntry = entries.find((e) => e.date === todayISO());
-    return todayEntry?.mood ?? "calm";
-  });
-  const selectedMoodRef = useRef(selectedMood);
-  const titleRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const mTitleRef = useRef<HTMLDivElement>(null); // mobile: editable entry title (centered)
-  const mBodyRef = useRef<HTMLDivElement>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
-  const pageIndexRef = useRef(0);
-  const todayEntryRef = useRef<DiaryEntry | undefined>(undefined);
-  const pointerStartX = useRef<number | null>(null);
-  const pointerHasDragged = useRef(false);
-  const recognitionRef = useRef<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+/* ─── Small SVG helpers ───────────────────────────────────────────── */
 
-  const phaseIdx = ["Menstrual", "Follicular", "Ovulatory", "Luteal"].indexOf(phase);
-  const [promptIndex, setPromptIndex] = useState(Math.max(0, phaseIdx));
-  const [isListening, setIsListening] = useState(false);
-  const [showMoodPicker, setShowMoodPicker] = useState(false);
-  const [showReflection, setShowReflection] = useState(true);
-  const [showStickerPanel, setShowStickerPanel] = useState(false);
-
-  selectedMoodRef.current = selectedMood;
-  const todayISO_ = todayISO();
-  const todayEntry = entries.find((e) => e.date === todayISO_);
-  const pastEntries = entries.filter((e) => e.date !== todayISO_);
-
-  const BLANK_PAGES = 5; // extra blank pages beyond existing entries
-  const isToday = pageIndex === 0;
-  const canFlipForward = pageIndex < pastEntries.length + BLANK_PAGES;
-  const canFlipBack = pageIndex > 0;
-
-  pageIndexRef.current = pageIndex;
-  todayEntryRef.current = todayEntry;
-
-  const currentEntry: DiaryEntry | undefined = isToday ? todayEntry : pastEntries[pageIndex - 1];
-  const leftEntry: DiaryEntry | undefined = pageIndex === 0 ? undefined : (pageIndex === 1 ? todayEntry : pastEntries[pageIndex - 2]);
-
-  // Always English dates
-  const fmtLong = (iso: string) =>
-    new Date(iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
-  const todayLabel = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
-
-  const rightDateLabel = isToday ? todayLabel : (currentEntry ? fmtLong(currentEntry.date) : "");
-  const leftDateLabel  = pageIndex === 0 ? todayLabel : (leftEntry ? fmtLong(leftEntry.date) : "");
-
-  // Clear hint animation once
-  useEffect(() => {
-    const t = setTimeout(() => setHintDone(true), 2400);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Sync editable fields + mood when navigating pages
-  useEffect(() => {
-    if (pageIndex !== 0) return;
-    const title = todayEntryRef.current?.title || "";
-    const html = todayEntryRef.current?.html ?? "";
-    if (titleRef.current) titleRef.current.textContent = title;
-    if (bodyRef.current) bodyRef.current.innerHTML = html;
-    if (mTitleRef.current) mTitleRef.current.textContent = title;
-    if (mBodyRef.current) mBodyRef.current.innerHTML = html;
-    const m = todayEntryRef.current?.mood ?? "calm";
-    setSelectedMood(m);
-    selectedMoodRef.current = m;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex]);
-
-  const saveCurrentContent = () => {
-    if (pageIndexRef.current !== 0) return;
-    const te = todayEntryRef.current;
-    const label = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
-    onSaveEntry({
-      id: te?.id ?? crypto.randomUUID(),
-      date: todayISO(),
-      mood: selectedMoodRef.current,
-      title: (typeof window !== 'undefined' && window.innerWidth < 1024 ? mTitleRef.current : titleRef.current)?.textContent?.trim() || label,
-      html: (typeof window !== 'undefined' && window.innerWidth < 1024 ? mBodyRef.current : bodyRef.current)?.innerHTML ?? "",
-      theme: te?.theme ?? "sakura",
-      font: te?.font ?? "caveat",
-      createdAt: te?.createdAt ?? new Date().toISOString(),
-      images: te?.images ?? [],
-    });
-  };
-
-  const handleInput = () => {
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(saveCurrentContent, 1200);
-  };
-
-  const handleMoodChange = (key: string) => {
-    setSelectedMood(key);
-    selectedMoodRef.current = key;
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(saveCurrentContent, 400);
-  };
-
-  const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-    const rec = new SR();
-    recognitionRef.current = rec;
-    rec.continuous = true;
-    rec.interimResults = false;
-    rec.lang = navigator.language || "en-US";
-    rec.onresult = (e: any) => {
-      const text = Array.from(e.results as any[])
-        .slice(e.resultIndex)
-        .map((r: any) => r[0].transcript)
-        .join("");
-      const isMob = window.innerWidth < 1024;
-      const bodyEl = isMob ? mBodyRef.current : bodyRef.current;
-      if (bodyEl) {
-        bodyEl.focus();
-        document.execCommand("insertText", false, text);
-        handleInput();
-      }
-    };
-    rec.onerror = () => setIsListening(false);
-    rec.onend = () => setIsListening(false);
-    rec.start();
-    setIsListening(true);
-  };
-
-  const stopListening = () => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-  };
-
-  const handlePhotoImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const b64 = await compressImage(file);
-    const te = todayEntryRef.current;
-    const label = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" });
-    onSaveEntry({
-      id: te?.id ?? crypto.randomUUID(),
-      date: todayISO(),
-      mood: selectedMoodRef.current,
-      title: mTitleRef.current?.textContent?.trim() || titleRef.current?.textContent?.trim() || label,
-      html: mBodyRef.current?.innerHTML ?? bodyRef.current?.innerHTML ?? "",
-      theme: te?.theme ?? "sakura",
-      font: te?.font ?? "caveat",
-      createdAt: te?.createdAt ?? new Date().toISOString(),
-      images: [...(te?.images ?? []), b64],
-    });
-    e.target.value = "";
-  };
-
-  const STICKERS = ["🌸", "💕", "✨", "🌙", "🦋", "🌺", "💫", "🌷", "❤️", "⭐", "🎀", "🍓"];
-
-  const insertSticker = (s: string) => {
-    const isMob = typeof window !== "undefined" && window.innerWidth < 1024;
-    const el = isMob ? mBodyRef.current : bodyRef.current;
-    if (el) {
-      el.focus();
-      document.execCommand("insertHTML", false, `<span style="font-size:1.3em;display:inline">${s}</span>`);
-      handleInput();
-    }
-    setShowStickerPanel(false);
-  };
-
-  const flip = (dir: 1 | -1) => {
-    const next = pageIndexRef.current + dir;
-    if (next < 0 || next > pastEntries.length + BLANK_PAGES) return;
-    setHintDone(true);
-    setFlipClass("bk-flip-out");
-    setTimeout(() => {
-      setPageIndex(next);
-      setFlipClass("bk-flip-in");
-      setTimeout(() => setFlipClass(""), 280);
-    }, 280);
-  };
-
-  // Unified pointer events — works for both mouse and touch
-  const onPointerDown = (e: React.PointerEvent) => {
-    pointerStartX.current = e.clientX;
-    pointerHasDragged.current = false;
-    // Only capture when NOT on a text-editing area so contenteditable still works
-    const tgt = e.target as HTMLElement;
-    if (!tgt.isContentEditable && !tgt.closest?.('[contenteditable]')) {
-      try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
-    }
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (pointerStartX.current === null) return;
-    if (Math.abs(e.clientX - pointerStartX.current) > 8) pointerHasDragged.current = true;
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    if (pointerStartX.current === null) return;
-    const dx = e.clientX - pointerStartX.current;
-    const dragged = pointerHasDragged.current;
-    pointerStartX.current = null;
-    pointerHasDragged.current = false;
-    if (!dragged) return;
-    if (dx < -60) flip(1);
-    else if (dx > 60) flip(-1);
-  };
-  const onPointerCancel = () => { pointerStartX.current = null; pointerHasDragged.current = false; };
-
-  const HW    = "'Caveat', cursive";
-  const PINK  = "#C8587A";
-  const DEEP  = "#7A1835";
-  const BODY  = "#5A2030";
-  const MUTED = "#B08090";
-
-  const rightPageClass = ["diary-right-page", flipClass, !hintDone ? "bk-hint" : ""].filter(Boolean).join(" ");
-
-  const CurrentMoodIcon = (moodMeta(isToday ? selectedMood : (currentEntry?.mood ?? "calm"))).Icon;
-  const LeftMoodIcon = leftEntry ? (moodMeta(leftEntry.mood)).Icon : null;
-
+function Flower({ size, pc, cc }: { size: number; pc: string; cc: string }) {
+  const petals = [0, 72, 144, 216, 288].map((a) => (
+    <ellipse key={a} cx={32} cy={16} rx={8.5} ry={14} fill={pc} transform={`rotate(${a} 32 32)`} />
+  ));
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: JOURNAL_STYLES }} />
-      <div className="animate-scale-in" style={style}>
+    <svg width={size} height={size} viewBox="0 0 64 64">
+      {petals}
+      <circle cx={32} cy={32} r={8} fill={cc} />
+    </svg>
+  );
+}
 
-        {/* Rounded card wrapper */}
-        <div style={{
-          borderRadius: 20,
-          overflow: "hidden",
-          boxShadow: "0 4px 32px rgba(200,88,122,0.1), 0 1px 4px rgba(200,88,122,0.08)",
-        }}>
-          <div
-            className="diary-book-wrap"
-            style={{ position: "relative" }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerCancel}
-          >
-            {/* Desktop: two-page open book */}
-            <img src="/images/dreamy-book.png"        alt="" aria-hidden draggable={false} className="diary-book-desktop" />
-            {/* Phone/tablet: single-page portrait notebook */}
-            <img src="/images/dreamy-book-mobile.png" alt="" aria-hidden draggable={false} className="diary-book-mobile" />
+function MemFlower({ pc, fc }: { pc: string; fc: string }) {
+  const petals = [0, 72, 144, 216, 288].map((a) => (
+    <ellipse key={a} cx={12} cy={5} rx={2.6} ry={4.2} fill={pc} transform={`rotate(${a} 12 12)`} />
+  ));
+  return (
+    <svg width={24} height={24} viewBox="0 0 24 24">
+      {petals}
+      <circle cx={12} cy={12} r={3} fill={fc} />
+    </svg>
+  );
+}
 
-            {/* Flip arrows */}
-            <button
-              className="diary-flip-arrow"
-              style={{ left: "2%" }}
-              disabled={!canFlipBack}
-              onClick={() => flip(-1)}
-              onPointerDown={e => e.stopPropagation()}
-            >
-              <ChevronLeft style={{ width: 18, height: 18 }} strokeWidth={2.5} />
-            </button>
-            <button
-              className="diary-flip-arrow"
-              style={{ right: "2%" }}
-              disabled={!canFlipForward}
-              onClick={() => flip(1)}
-              onPointerDown={e => e.stopPropagation()}
-            >
-              <ChevronRight style={{ width: 18, height: 18 }} strokeWidth={2.5} />
-            </button>
+/* ─── DiaryBookPage — the 6 inner page contents ──────────────────── */
 
-            {/* LEFT PAGE — text starts close to spine (small right padding) */}
-            <div className="diary-left-page" style={{
-              position: "absolute",
-              top: "10%", left: "10%", width: "38%", height: "78%",
-              padding: "3% 2% 3% 3%",
-              boxSizing: "border-box",
-              display: "flex", flexDirection: "column",
-              overflow: "hidden",
-            }}>
-              {/* Date + mood icon */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "3%", flexShrink: 0 }}>
-                <p style={{ fontFamily: HW, fontSize: "clamp(12px,2.3vw,18px)", color: PINK, fontWeight: 600, lineHeight: 1.2 }}>
-                  {leftDateLabel}
-                </p>
-                {LeftMoodIcon && (
-                  <span style={{
-                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                    background: "rgba(200,88,122,0.12)", border: `1px solid ${PINK}33`,
-                    display: "inline-flex", alignItems: "center", justifyContent: "center", color: PINK,
-                  }}>
-                    <LeftMoodIcon style={{ width: 12, height: 12 }} strokeWidth={2} />
-                  </span>
-                )}
-              </div>
-              <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}44, ${PINK}66, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
+interface DragItem {
+  id: number;
+  type: "photo" | "sticker";
+  icon?: string;
+  x: number;
+  y: number;
+  src?: string; // for photos
+}
 
-              {leftEntry ? (
-                <div style={{ flex: 1, overflow: "hidden" }}>
-                  {leftEntry.title && (
-                    <p style={{ fontFamily: HW, fontSize: "clamp(13px,2.4vw,19px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%" }}>
-                      {leftEntry.title}
-                    </p>
-                  )}
-                  <div
-                    className="diary-overlay"
-                    style={{ fontFamily: HW, fontSize: "clamp(11px,1.9vw,15px)", lineHeight: 1.65, color: BODY, overflow: "hidden", maxHeight: "82%" }}
-                    dangerouslySetInnerHTML={{ __html: leftEntry.html || `<em style="color:${MUTED}">Blank page…</em>` }}
-                  />
-                </div>
-              ) : (
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ marginBottom: "8%" }}>
-                    <span style={{ fontFamily: HW, fontSize: "clamp(20px,3.2vw,30px)", color: `${PINK}2A`, lineHeight: 1, display: "block" }}>"</span>
-                    <p style={{ fontFamily: HW, fontSize: "clamp(10px,1.8vw,14px)", lineHeight: 1.65, color: BODY, fontStyle: "italic", margin: "2px 0 4px" }}>
-                      She remembered who she was,<br />and the game changed.
-                    </p>
-                    <p style={{ fontFamily: HW, fontSize: "clamp(9px,1.4vw,11px)", color: MUTED }}>— Lalah Delia</p>
-                  </div>
-                  {entries.length > 0 && (
-                    <>
-                      <p style={{ fontSize: "clamp(7px,1vw,9px)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: MUTED, marginBottom: "4%" }}>Recent moods</p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(3px,0.5vw,5px)" }}>
-                        {entries.slice(0, 10).map((e, i) => {
-                          const M = moodMeta(e.mood);
-                          return (
-                            <span key={e.id} title={`${e.date}: ${M.label}`} style={{
-                              width: "clamp(17px,2.4vw,21px)", height: "clamp(17px,2.4vw,21px)",
-                              borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                              background: `rgba(200,88,122,${Math.max(0.18, 0.82 - i * 0.08)})`,
-                            }}>
-                              <M.Icon style={{ width: "55%", height: "55%", color: "white" }} strokeWidth={2} />
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-                  {entries.length === 0 && (
-                    <p style={{ fontFamily: HW, fontSize: "clamp(12px,1.9vw,15px)", color: MUTED }}>Begin your story here ✨</p>
-                  )}
-                </div>
-              )}
-              <p style={{ fontFamily: HW, fontSize: "clamp(8px,1.1vw,10px)", textAlign: "center", color: `${PINK}55`, marginTop: "auto", paddingTop: "2%", flexShrink: 0 }}>
-                ~ {pageIndex * 2 + 1} ~
-              </p>
-            </div>
+interface DiaryBookPageProps {
+  idx: number;
+  mood: string;
+  draft: string;
+  onDraft: (txt: string) => void;
+  onSave: () => void;
+  onPhotoRequest: () => void; // triggers hidden file input
+}
 
-            {/* RIGHT PAGE — text starts close to spine (small left padding) */}
-            <div
-              className={rightPageClass}
-              style={{
-                position: "absolute",
-                top: "10%", right: "10%", width: "38%", height: "78%",
-                padding: "3% 3% 3% 2%",
-                boxSizing: "border-box",
-                display: "flex", flexDirection: "column",
-                overflow: "hidden",
-                transformStyle: "preserve-3d",
-              }}
-            >
-              {/* Date + selected mood icon */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "3%", flexShrink: 0 }}>
-                <p style={{ fontFamily: HW, fontSize: "clamp(12px,2.3vw,18px)", color: PINK, fontWeight: 600, lineHeight: 1.2 }}>
-                  {rightDateLabel}
-                </p>
-                <span style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  background: "rgba(200,88,122,0.15)", border: `1px solid ${PINK}44`,
-                  display: "inline-flex", alignItems: "center", justifyContent: "center", color: PINK,
-                }}>
-                  <CurrentMoodIcon style={{ width: 12, height: 12 }} strokeWidth={2} />
-                </span>
-              </div>
-              <div style={{ height: 1, background: `linear-gradient(to right, transparent, ${PINK}66, transparent)`, marginBottom: "3%", flexShrink: 0 }} />
+function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest }: DiaryBookPageProps) {
+  const [items, setItems] = useState<DragItem[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [micLabel, setMicLabel] = useState("Listening…");
+  const [focused, setFocused] = useState(false);
+  const [nextId, setNextId] = useState(1);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ id: number; dx: number; dy: number } | null>(null);
+  const recRef = useRef<any>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
 
-              {/* Title */}
-              {isToday ? (
-                <div
-                  ref={titleRef}
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={handleInput}
-                  data-ph="Give this page a title…"
-                  style={{
-                    fontFamily: HW, fontSize: "clamp(14px,2.6vw,21px)",
-                    color: DEEP, lineHeight: 1.2,
-                    outline: "none", cursor: "text",
-                    marginBottom: "3%", flexShrink: 0,
-                    minHeight: "1.3em", wordBreak: "break-word",
-                  }}
-                />
-              ) : (
-                <p style={{ fontFamily: HW, fontSize: "clamp(14px,2.6vw,21px)", color: DEEP, lineHeight: 1.2, marginBottom: "3%", flexShrink: 0, minHeight: "1.3em" }}>
-                  {currentEntry?.title || ""}
-                </p>
-              )}
+  const addPhoto = (src: string) => {
+    setItems((p) => [...p, { id: nextId, type: "photo", x: 140 + (p.length * 16) % 70, y: 18 + (p.length * 22) % 80, src }]);
+    setNextId((n) => n + 1);
+  };
+  const addSticker = (icon: string) => {
+    setItems((p) => [...p, { id: nextId, type: "sticker", icon, x: 160 + (p.length * 18) % 60, y: 12 + (p.length * 24) % 80 }]);
+    setNextId((n) => n + 1);
+    setPickerOpen(false);
+  };
+  const deleteItem = (id: number) => setItems((p) => p.filter((i) => i.id !== id));
 
-              <div style={{ height: 1, background: `linear-gradient(to right, ${PINK}1A, ${PINK}33, transparent)`, marginBottom: "4%", flexShrink: 0 }} />
+  const onPointerDown = useCallback((id: number, e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest("button")) return;
+    e.preventDefault();
+    const it = items.find((i) => i.id === id);
+    if (!it || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    dragRef.current = { id, dx: e.clientX - (rect.left + it.x), dy: e.clientY - (rect.top + it.y) };
+    const onMove = (ev: PointerEvent) => {
+      if (!dragRef.current || !canvasRef.current) return;
+      const r = canvasRef.current.getBoundingClientRect();
+      const x = Math.max(-8, Math.min(r.width - 44, ev.clientX - r.left - dragRef.current.dx));
+      const y = Math.max(-8, Math.min(r.height - 30, ev.clientY - r.top - dragRef.current.dy));
+      setItems((p) => p.map((i) => i.id === dragRef.current!.id ? { ...i, x, y } : i));
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      dragRef.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }, [items]);
 
-              {/* Body */}
-              {isToday ? (
-                <div
-                  ref={bodyRef}
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={handleInput}
-                  data-ph="Start writing here… let your thoughts flow ✨"
-                  className="diary-overlay"
-                  style={{
-                    flex: 1,
-                    fontFamily: HW, fontSize: "clamp(12px,2vw,17px)",
-                    lineHeight: 1.65, color: BODY,
-                    outline: "none", cursor: "text",
-                    wordBreak: "break-word", overflowY: "auto",
-                  }}
-                />
-              ) : (
-                <div
-                  className="diary-overlay"
-                  style={{
-                    flex: 1,
-                    fontFamily: HW, fontSize: "clamp(12px,2vw,17px)",
-                    lineHeight: 1.65, color: BODY, overflowY: "auto",
-                  }}
-                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:${MUTED}">Blank page…</em>` }}
-                />
-              )}
+  const toggleMic = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      setListening(true); setMicLabel("Voice not supported");
+      setTimeout(() => setListening(false), 2000);
+      return;
+    }
+    if (recRef.current && listening) { try { recRef.current.stop(); } catch {} return; }
+    const rec = new SR();
+    rec.lang = "en-US"; rec.interimResults = false; rec.continuous = false;
+    rec.onresult = (ev: any) => {
+      let t = "";
+      for (let i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript;
+      const cur = draft || "";
+      const sep = cur && !/\s$/.test(cur) ? " " : "";
+      onDraft(cur + sep + t);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recRef.current = rec;
+    setListening(true); setMicLabel("Listening…");
+    try { rec.start(); } catch { setListening(false); }
+  };
 
-              <p style={{ fontFamily: HW, fontSize: "clamp(8px,1.1vw,10px)", textAlign: "center", color: `${PINK}55`, marginTop: "3%", flexShrink: 0 }}>
-                ~ {pageIndex * 2 + 2} ~
-              </p>
-            </div>
+  useEffect(() => () => { if (recRef.current) { try { recRef.current.stop(); } catch {} } }, []);
 
-            {/* ── MOBILE: corner hint + bg + vignette + paper ── */}
-            <div className="diary-page-corner" />
-            <div className="diary-mobile-bg" />
-            <div className="diary-vignette" />
-            <div className="diary-mobile-layer">
+  const showHint = !draft.length && !focused;
 
-              {/* ── ROW 1: compact date+arrows LEFT  |  mood single-icon RIGHT  |  mic RIGHT ── */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexShrink: 0 }}>
+  const toolBtn = (
+    onClick: () => void, title: string, active?: boolean, children?: React.ReactNode
+  ) => (
+    <button
+      className="dd-tool"
+      onClick={onClick} title={title}
+      style={{
+        width: 32, height: 32, border: "none", cursor: "pointer", borderRadius: 10,
+        display: "grid", placeItems: "center",
+        background: active ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.9)",
+        color: active ? "#fff" : "#DB2777",
+        animation: active ? "dd-mic 1.2s ease-in-out infinite" : "none",
+      }}
+    >{children}</button>
+  );
 
-                {/* Left: nav + compact date */}
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <button className="diary-nav-mini" style={{ width: 24, height: 24 }} disabled={!canFlipBack} onClick={() => flip(-1)} onPointerDown={e => e.stopPropagation()}>
-                    <ChevronLeft style={{ width: 11, height: 11 }} strokeWidth={2.5} />
-                  </button>
-                  <button className="diary-nav-mini" style={{ width: 24, height: 24 }} disabled={!canFlipForward} onClick={() => flip(1)} onPointerDown={e => e.stopPropagation()}>
-                    <ChevronRight style={{ width: 11, height: 11 }} strokeWidth={2.5} />
-                  </button>
-                  <p style={{ fontFamily: HW, fontSize: "clamp(11px,2.8vw,13px)", color: "rgba(200,88,122,0.7)", fontWeight: 600, marginLeft: 3 }}>
-                    {isToday
-                      ? new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                      : (currentEntry ? new Date(currentEntry.date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "")}
-                  </p>
-                </div>
-
-                {/* Right: mood single-icon + mic */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {/* Mood icon — tap to open picker */}
-                  {isToday && (
-                    <div style={{ position: "relative" }}>
-                      <button
-                        onClick={() => setShowMoodPicker(v => !v)}
-                        onPointerDown={e => e.stopPropagation()}
-                        title="Change mood"
-                        style={{
-                          width: 30, height: 30, borderRadius: "50%",
-                          background: "linear-gradient(135deg, #D4618A, #C8587A)",
-                          border: "none", cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: "white", padding: 0, position: "relative",
-                          boxShadow: "0 2px 10px rgba(200,88,122,0.35)",
-                        }}
-                      >
-                        <CurrentMoodIcon style={{ width: 13, height: 13 }} strokeWidth={2} />
-                        <Edit3 style={{ width: 7, height: 7, position: "absolute", bottom: 2, right: 2, opacity: 0.85 }} strokeWidth={2.5} />
-                      </button>
-                      {showMoodPicker && (
-                        <div onPointerDown={e => e.stopPropagation()} style={{
-                          position: "absolute", top: "110%", right: 0, zIndex: 50,
-                          background: "rgba(255,248,252,0.97)", backdropFilter: "blur(14px)",
-                          border: "1px solid rgba(200,88,122,0.2)", borderRadius: 14,
-                          padding: "8px 10px", display: "flex", flexWrap: "wrap", gap: 6,
-                          width: 180, boxShadow: "0 8px 28px rgba(200,88,122,0.18)",
-                        }}>
-                          {DIARY_MOODS.map(m => {
-                            const active = selectedMood === m.key;
-                            return (
-                              <button key={m.key} onClick={() => { handleMoodChange(m.key); setShowMoodPicker(false); }} title={m.label}
-                                style={{
-                                  width: 32, height: 32, borderRadius: "50%", padding: 0,
-                                  background: active ? "linear-gradient(135deg,#D4618A,#C8587A)" : "rgba(200,88,122,0.08)",
-                                  border: active ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.18)",
-                                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                                  color: active ? "white" : "#C8587A",
-                                  transform: active ? "scale(1.15)" : "scale(1)", transition: "all 0.15s",
-                                }}
-                              >
-                                <m.Icon style={{ width: 14, height: 14 }} strokeWidth={active ? 2.2 : 1.8} />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Mic button */}
-                  {isToday && (
-                    <button
-                      onClick={isListening ? stopListening : startListening}
-                      onPointerDown={e => e.stopPropagation()}
-                      title={isListening ? "Stop recording" : "Dictate"}
-                      style={{
-                        width: 30, height: 30, borderRadius: "50%",
-                        background: isListening ? "linear-gradient(135deg,#D4618A,#C8587A)" : "rgba(200,88,122,0.1)",
-                        border: isListening ? "1.5px solid #C8587A" : "1px solid rgba(200,88,122,0.25)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        cursor: "pointer", color: isListening ? "white" : "#C8587A", padding: 0,
-                        ...(isListening ? { animation: "mic-pulse 1s ease-in-out infinite" } : {}),
-                      }}
-                    >
-                      <Mic style={{ width: 13, height: 13 }} strokeWidth={2} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* ── EDITABLE DIARY TITLE — centred, handwritten, tap to rename ── */}
-              {isToday ? (
-                <div
-                  ref={mTitleRef}
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={handleInput}
-                  onPointerDown={e => e.stopPropagation()}
-                  data-ph="✿  Dreamy Diary  ✿"
-                  style={{
-                    fontFamily: HW, fontSize: "clamp(19px,5.2vw,25px)",
-                    color: "#C8587A", fontWeight: 700, lineHeight: 1.15,
-                    textAlign: "center", outline: "none", cursor: "text",
-                    marginBottom: 8, flexShrink: 0,
-                    minHeight: "1.2em", wordBreak: "break-word",
-                    borderBottom: "1.5px dashed rgba(200,88,122,0.22)",
-                    paddingBottom: 6,
-                  }}
-                />
-              ) : (
-                <p style={{
-                  fontFamily: HW, fontSize: "clamp(19px,5.2vw,25px)",
-                  color: "#C8587A", fontWeight: 700, lineHeight: 1.15,
-                  textAlign: "center", marginBottom: 8, flexShrink: 0,
-                  borderBottom: "1.5px solid rgba(200,88,122,0.15)", paddingBottom: 6,
-                }}>
-                  {currentEntry?.title || "✿  Dreamy Diary  ✿"}
-                </p>
-              )}
-
-              {/* ── REFLECTION — dismissable, switchable ── */}
-              {showReflection && (
-                <div style={{ marginBottom: 8, flexShrink: 0, background: "rgba(200,88,122,0.05)", borderRadius: 10, padding: "7px 10px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                    <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#C8587A" }}>✦ Reflection</p>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      <button onClick={() => setPromptIndex(i => (i + 1) % ALL_PROMPTS.length)} onPointerDown={e => e.stopPropagation()} title="Next prompt"
-                        style={{ width: 18, height: 18, borderRadius: "50%", background: "transparent", border: "1px solid rgba(200,88,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}>
-                        <RefreshCw style={{ width: 9, height: 9 }} strokeWidth={2.2} />
-                      </button>
-                      <button onClick={() => setShowReflection(false)} onPointerDown={e => e.stopPropagation()} title="Dismiss"
-                        style={{ width: 18, height: 18, borderRadius: "50%", background: "transparent", border: "1px solid rgba(200,88,122,0.25)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}>
-                        <X style={{ width: 9, height: 9 }} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                  </div>
-                  <p style={{ fontFamily: HW, fontSize: "clamp(11px,3vw,14px)", color: "#5A2030", lineHeight: 1.4 }}>
-                    {ALL_PROMPTS[promptIndex]}
-                  </p>
-                </div>
-              )}
-
-              <div style={{ height: 1, background: "linear-gradient(to right, rgba(200,88,122,0.08), rgba(200,88,122,0.25), rgba(200,88,122,0.08))", marginBottom: 8, flexShrink: 0 }} />
-
-              {/* ── BODY ── */}
-              {isToday ? (
-                <div
-                  ref={mBodyRef}
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={handleInput}
-                  data-ph="Let your thoughts flow… ✨"
-                  className="diary-overlay"
-                  style={{
-                    flex: 1,
-                    fontFamily: HW, fontSize: "clamp(12px,3.2vw,15px)",
-                    lineHeight: 1.75, color: "#5A2030",
-                    outline: "none", cursor: "text",
-                    wordBreak: "break-word", overflow: "hidden",
-                  }}
-                />
-              ) : (
-                <div
-                  className="diary-overlay"
-                  style={{
-                    flex: 1,
-                    fontFamily: HW, fontSize: "clamp(12px,3.2vw,15px)",
-                    lineHeight: 1.75, color: "#5A2030", overflow: "hidden",
-                  }}
-                  dangerouslySetInnerHTML={{ __html: currentEntry?.html || `<em style="color:rgba(180,100,130,0.4)">Blank page…</em>` }}
-                />
-              )}
-
-              {/* ── PHOTOS ── */}
-              {(currentEntry?.images?.length ?? 0) > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10, flexShrink: 0 }}>
-                  {(currentEntry!.images!).map((src, i) => (
-                    <img key={i} src={src} alt="" className="diary-photo-torn"
-                      style={{ width: "45%", height: "auto", objectFit: "cover", cursor: "default" }} />
-                  ))}
-                </div>
-              )}
-
-              {/* ── BOTTOM TOOLBAR ── */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto", paddingTop: 8, flexShrink: 0 }}>
-                <div style={{ display: "flex", gap: 6, position: "relative" }}>
-                  {/* Photo import */}
-                  {isToday && (
-                    <>
-                      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoImport} />
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        onPointerDown={e => e.stopPropagation()}
-                        title="Add photo"
-                        style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(200,88,122,0.1)", border: "1px solid rgba(200,88,122,0.22)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0 }}
-                      >
-                        <Calendar style={{ width: 12, height: 12 }} strokeWidth={2} />
-                      </button>
-                    </>
-                  )}
-                  {/* Sticker panel */}
-                  {isToday && (
-                    <div style={{ position: "relative" }}>
-                      <button
-                        onClick={() => setShowStickerPanel(v => !v)}
-                        onPointerDown={e => e.stopPropagation()}
-                        title="Add sticker"
-                        style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(200,88,122,0.1)", border: "1px solid rgba(200,88,122,0.22)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#C8587A", padding: 0, fontSize: 13 }}
-                      >
-                        🌸
-                      </button>
-                      {showStickerPanel && (
-                        <div className="diary-sticker-panel" onPointerDown={e => e.stopPropagation()}>
-                          {STICKERS.map(s => (
-                            <button key={s} onClick={() => insertSticker(s)}
-                              style={{ fontSize: 20, background: "none", border: "none", cursor: "pointer", padding: 2, borderRadius: 6, transition: "transform 0.12s" }}
-                              onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.3)")}
-                              onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
-                            >{s}</button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <p style={{ fontFamily: HW, fontSize: 11, color: "rgba(200,88,122,0.35)" }}>
-                  ~ {pageIndex * 2 + 2} ~
-                </p>
-                <div style={{ width: 32 }} />
-              </div>
-
-            </div>
+  /* ── Page 0: Writing surface ── */
+  if (idx === 0) {
+    return (
+      <div data-nodrag="1" style={{ height: "100%", display: "flex", flexDirection: "column", padding: "22px 24px 18px", fontFamily: "'Quicksand',sans-serif" }}>
+        {/* Top bar */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 22, color: "#DB2777" }}>
+            {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            {toolBtn(onPhotoRequest, "Add a photo", false,
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 8.5h2.5L8 6.5h8l1.5 2H20v11H4Z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
+            )}
+            {toolBtn(() => setPickerOpen((p) => !p), "Add a sticker", false,
+              <svg width="18" height="18" viewBox="0 0 24 24"><ellipse cx="12" cy="6.2" rx="2.6" ry="3.6" fill="currentColor"/><ellipse cx="12" cy="17.8" rx="2.6" ry="3.6" fill="currentColor"/><ellipse cx="6.2" cy="12" rx="3.6" ry="2.6" fill="currentColor"/><ellipse cx="17.8" cy="12" rx="3.6" ry="2.6" fill="currentColor"/><circle cx="12" cy="12" r="2.6" fill="#F9C784"/></svg>
+            )}
+            {toolBtn(toggleMic, "Voice to text", listening,
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg>
+            )}
           </div>
         </div>
 
-        {/* ── Mood selector — pink glassmorphism circles, just below the book ── */}
-        {isToday && (
-          <div className="diary-mood-selector-external" style={{
-            display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 8,
-            marginTop: 14, padding: "10px 16px",
-            borderRadius: 16,
-            background: "rgba(255,182,206,0.18)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255,150,180,0.22)",
-            boxShadow: "0 2px 16px rgba(200,88,122,0.06), inset 0 1px 0 rgba(255,255,255,0.6)",
-          }}>
-            {DIARY_MOODS.map((m) => {
-              const active = selectedMood === m.key;
-              return (
-                <button
-                  key={m.key}
-                  onClick={() => handleMoodChange(m.key)}
-                  title={m.label}
-                  style={{
-                    width: 42, height: 42, borderRadius: "50%",
-                    background: active
-                      ? "linear-gradient(135deg, #D4618A, #C8587A)"
-                      : "rgba(255,210,225,0.55)",
-                    backdropFilter: "blur(12px)",
-                    border: active
-                      ? "2px solid #C8587A"
-                      : "1px solid rgba(255,150,180,0.45)",
-                    cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: active ? "white" : "#C8587A",
-                    boxShadow: active
-                      ? "0 4px 16px rgba(200,88,122,0.4), inset 0 1px 0 rgba(255,255,255,0.25)"
-                      : "0 2px 8px rgba(200,88,122,0.08), inset 0 1px 0 rgba(255,255,255,0.7)",
-                    transition: "all 0.18s ease",
-                    transform: active ? "scale(1.12)" : "scale(1)",
-                    flexShrink: 0,
-                  }}
-                >
-                  <m.Icon style={{ width: 18, height: 18 }} strokeWidth={active ? 2 : 1.7} />
-                </button>
-              );
-            })}
+        {/* Sticker picker */}
+        {pickerOpen && (
+          <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 8, padding: "10px 12px", borderRadius: 14, background: "rgba(255,253,249,.96)", border: "1px solid rgba(236,72,153,.18)", boxShadow: "0 10px 24px rgba(131,24,67,.16)" }}>
+            {Object.keys(STICKER_ICONS).map((k) => (
+              <button key={k} className="dd-tool" onClick={() => addSticker(k)} style={{ width: 34, height: 34, border: "none", cursor: "pointer", borderRadius: 9, background: "#fff", boxShadow: "0 3px 8px rgba(131,24,67,.12)", display: "grid", placeItems: "center" }}>
+                {STICKER_ICONS[k]}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Page label */}
-        <p style={{ textAlign: "center", fontFamily: HW, fontSize: "clamp(13px,1.9vw,16px)", color: `${PINK}88`, marginTop: 10 }}>
-          {pageIndex === 0 ? "today ✨" : `page ${pageIndex} of ${pastEntries.length}`}
-        </p>
-
-      </div>
-    </>
-  );
-}
-
-function MoodChip({ moodKey, date }: { moodKey: string; date: string }) {
-  const M = moodMeta(moodKey);
-  return (
-    <div className="flex items-center gap-2 mt-1.5">
-      <span
-        className="inline-flex items-center gap-1 text-[10px] px-2.5 py-0.5 rounded-full font-semibold"
-        style={{ background: "rgba(255,47,146,0.1)", color: "#FF2F92" }}
-      >
-        <M.Icon className="h-2.5 w-2.5" strokeWidth={2} /> {M.label}
-      </span>
-      <span className="text-[10px]" style={{ color: "#A08060" }}>{fmtDate(date)}</span>
-    </div>
-  );
-}
-
-/* ── Journal stats row (below book) ── */
-function JournalStatsRow({
-  streak, todayEntry, phase, style,
-}: { streak: number; todayEntry?: DiaryEntry; phase: string; style?: CSSProperties }) {
-  const M = todayEntry ? moodMeta(todayEntry.mood) : null;
-  const cards = [
-    {
-      emoji: "🌸",
-      label: "Writing Streak",
-      value: <><Flame className="h-4 w-4 inline mr-1" style={{ color: "#FF2F92" }} strokeWidth={1.8} />{streak} days</>,
-    },
-    {
-      emoji: "💖",
-      label: "Current Mood",
-      value: M ? <><M.Icon className="h-4 w-4 inline mr-1" style={{ color: "#FF2F92" }} strokeWidth={1.8} />{M.label}</> : <span className="opacity-40">···</span>,
-    },
-    {
-      emoji: "🌙",
-      label: "Current Phase",
-      value: <span className="text-sm leading-tight">{phase}</span>,
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-3 gap-3 animate-scale-in" style={style}>
-      {cards.map((c, i) => (
-        <div
-          key={i}
-          className="rounded-xl p-3 text-center shadow-sm"
-          style={{
-            background: "#FEFCF7",
-            border: "1px solid rgba(232,213,180,0.7)",
-            animationDelay: `${220 + i * 40}ms`,
-          }}
-        >
-          <p className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: "#A08060" }}>{c.label}</p>
-          <p className="font-script text-[17px] leading-snug" style={{ color: "#6B4C30" }}>{c.value}</p>
-          <span className="text-sm">{c.emoji}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ── Today's Bloom (single left card) ── */
-function TodaysBloomCard({ cycleDay, phase, style }: { cycleDay: number; phase: string; style?: CSSProperties }) {
-  const prompt = REFLECTION_PROMPTS[phase] ?? "What does your heart need today?";
-
-  return (
-    <div
-      className="animate-scale-in rounded-2xl shadow-sm"
-      style={{ border: "1px solid rgba(232,213,180,0.65)", background: "#FEFCF7", animationDelay: style?.animationDelay as string }}
-    >
-      <div className="p-3">
-        <div className="flex items-center gap-1.5 mb-2.5">
-          <span className="text-hotpink text-base">✿</span>
-          <h3 className="font-script text-lg" style={{ color: "#8B6840" }}>Today's Bloom</h3>
-        </div>
-
-        <div className="flex items-center gap-3 mb-2.5">
-          <div className="text-center">
-            <p className="text-2xl font-bold leading-none" style={{ color: "#FF2F92" }}>{cycleDay}</p>
-            <p className="text-[8px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "#A08060" }}>Cycle Day</p>
-          </div>
-          <div className="h-7 w-px" style={{ background: "rgba(232,213,180,0.8)" }} />
-          <div>
-            <p className="text-xs font-bold leading-none" style={{ color: "#6B4C30" }}>{phase}</p>
-            <p className="text-[9px] mt-0.5" style={{ color: "#A08060" }}>phase</p>
-          </div>
-        </div>
-
-        <div className="h-px mb-2.5" style={{ background: "linear-gradient(to right, transparent, rgba(232,213,180,0.8), transparent)" }} />
-
-        <p className="text-[8px] font-bold uppercase tracking-wider mb-1" style={{ color: "#FF2F92" }}>Reflection</p>
-        <p className="font-script text-[13px] leading-snug" style={{ color: "#6B4C30" }}>{prompt}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ── Daily Affirmation (right column, large) ── */
-function DailyAffirmationCard({ affirmation, style }: { affirmation: string; style?: CSSProperties }) {
-  return (
-    <div
-      className="animate-scale-in overflow-hidden rounded-2xl shadow-sm"
-      style={{ border: "1px solid rgba(232,213,180,0.65)", animationDelay: style?.animationDelay as string }}
-    >
-      <div className="relative h-40 overflow-hidden">
-        <img src="/images/tools-hero-affirmation.png" alt="" className="w-full h-full object-cover object-center" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #FEFCF7 0%, rgba(254,252,247,0.3) 55%, transparent 100%)" }} />
-      </div>
-      <div className="p-5" style={{ background: "#FEFCF7" }}>
-        <p className="text-[9px] font-bold uppercase tracking-wider mb-3" style={{ color: "#FF2F92" }}>Daily Affirmation</p>
-        <div className="relative pl-4">
-          <Quote className="absolute -top-0.5 left-0 h-4 w-4 opacity-20" style={{ color: "#FF2F92" }} strokeWidth={1.5} />
-          <p className="font-script text-[17px] leading-relaxed italic" style={{ color: "#6B4C30" }}>
-            {affirmation}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Recent Memories ── */
-function RecentMemoriesCard({
-  entries, onEdit, style,
-}: { entries: DiaryEntry[]; onEdit: (e: DiaryEntry) => void; style?: CSSProperties }) {
-  const memoryImages = ["/images/blog-1.png", "/images/blog-2.png", "/images/blog-3.png"];
-  return (
-    <div
-      className="animate-scale-in rounded-2xl p-5 shadow-sm"
-      style={{ background: "#FEFCF7", border: "1px solid rgba(232,213,180,0.65)", animationDelay: style?.animationDelay as string }}
-    >
-      <p className="text-[9px] font-bold uppercase tracking-wider mb-4" style={{ color: "#FF2F92" }}>Recent Memories ✿</p>
-      <div className="flex flex-col gap-3">
-        {entries.map((entry, i) => {
-          const M = moodMeta(entry.mood);
-          return (
-            <button key={entry.id} onClick={() => onEdit(entry)}
-              className="group flex items-start gap-3 rounded-xl p-2 text-left transition w-full"
-              style={{ background: "transparent" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(232,213,180,0.25)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              <div className="h-12 w-12 rounded-xl overflow-hidden flex-shrink-0"
-                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                <img src={memoryImages[i % 3]} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold truncate" style={{ color: "#6B4C30" }}>{entry.title || "Untitled"}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "#A08060" }}>{fmtDate(entry.date)}</p>
-                <span
-                  className="mt-1 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: "rgba(255,47,146,0.09)", color: "#FF2F92" }}
-                >
-                  <M.Icon className="h-2.5 w-2.5" strokeWidth={2} /> {M.label}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================
-   EMPTY STATE
-   ============================================================ */
-function EmptyDiary({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="rounded-[2rem] bg-white/85 backdrop-blur p-10 text-center shadow-xl shadow-rose/10 border border-petal/50">
-      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blush text-hotpink">
-        <BookHeart className="h-6 w-6" strokeWidth={1.6} />
-      </span>
-      <p className="mt-3 font-script text-3xl text-hotpink">Your softest little journal</p>
-      <p className="mt-1.5 text-sm text-rose/80">Write down how today felt — your future self will love reading it back.</p>
-      <button
-        onClick={onStart}
-        className="bloom-luxury-btn mt-5 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white"
-      >
-        <Plus className="h-4 w-4" strokeWidth={2} /> Write your first entry
-      </button>
-    </div>
-  );
-}
-
-/* ============================================================
-   VIEW SWITCHER
-   ============================================================ */
-function ViewSwitcher({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
-  const opts: { key: ViewMode; label: string; Icon: typeof List }[] = [
-    { key: "dashboard", label: "Journal", Icon: BookHeart },
-    { key: "list", label: "List", Icon: List },
-    { key: "grid", label: "Pinned", Icon: LayoutGrid },
-    { key: "book", label: "Book", Icon: BookOpen },
-  ];
-  return (
-    <div className="inline-flex items-center gap-0.5 rounded-full border border-petal/60 bg-white/80 p-1">
-      {opts.map((o) => {
-        const active = view === o.key;
-        return (
-          <button
-            key={o.key}
-            onClick={() => onChange(o.key)}
-            title={o.label}
-            className={[
-              "inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition",
-              active ? "bg-hotpink text-white shadow-sm shadow-hotpink/30" : "text-rose/70 hover:bg-blush",
-            ].join(" ")}
-          >
-            <o.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
-            <span className="hidden sm:inline">{o.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ============================================================
-   LIST VIEW
-   ============================================================ */
-function ListView({
-  entries, onEdit, onDelete,
-}: { entries: DiaryEntry[]; onEdit: (e: DiaryEntry) => void; onDelete: (id: string) => void }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {entries.map((entry) => {
-        const mood = moodMeta(entry.mood);
-        const theme = themeMeta(entry.theme);
-        return (
-          <div
-            key={entry.id}
-            className={`group rounded-3xl bg-gradient-to-br ${theme.page} p-5 border border-petal/50 shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-0.5`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
-                  <mood.Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
-                </span>
-                <div>
-                  <h3 className="text-sm font-bold text-rose">{entry.title || "Untitled"}</h3>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-rose/60">
-                    <Calendar className="h-3 w-3" strokeWidth={1.8} /> {fmtDate(entry.date)} · {mood.label}
-                  </span>
-                </div>
-              </div>
-              <EntryActions entry={entry} onEdit={onEdit} onDelete={onDelete} />
-            </div>
-            <p
-              style={{ fontFamily: fontFamilyFor(entry.font) }}
-              className="mt-3 text-sm text-rose/80 leading-relaxed line-clamp-6"
-              dangerouslySetInnerHTML={{ __html: entry.html }}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ============================================================
-   GRID / PINNED VIEW
-   ============================================================ */
-const PIN_ROTATIONS = ["-rotate-2", "rotate-1", "-rotate-1", "rotate-2", "rotate-0", "-rotate-3"];
-
-function GridView({
-  entries, onEdit, onDelete,
-}: { entries: DiaryEntry[]; onEdit: (e: DiaryEntry) => void; onDelete: (id: string) => void }) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 pt-2">
-      {entries.map((entry, i) => {
-        const mood = moodMeta(entry.mood);
-        const theme = themeMeta(entry.theme);
-        const rotate = PIN_ROTATIONS[i % PIN_ROTATIONS.length];
-        return (
-          <div key={entry.id} className={`group relative ${rotate} hover:rotate-0 transition-transform duration-300`}>
-            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-magenta shadow-md shadow-magenta/40 ring-2 ring-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-white/90" />
-            </span>
-            <div className={`rounded-2xl bg-gradient-to-br ${theme.page} ring-1 ${theme.ring} p-4 shadow-[0_10px_24px_-10px_oklch(0.7_0.18_350/0.4)] transition hover:shadow-[0_16px_32px_-10px_oklch(0.7_0.22_350/0.5)]`}>
-              <div className="flex items-center justify-between">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-hotpink">
-                  <mood.Icon className="h-3.5 w-3.5" strokeWidth={1.7} />
-                </span>
-                <div className="opacity-0 group-hover:opacity-100 transition">
-                  <EntryActions entry={entry} onEdit={onEdit} onDelete={onDelete} compact />
-                </div>
-              </div>
-              <h3 className="mt-2 text-xs font-bold text-rose truncate">{entry.title || "Untitled"}</h3>
-              <p
-                style={{ fontFamily: fontFamilyFor(entry.font) }}
-                className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-4"
-                dangerouslySetInnerHTML={{ __html: entry.html }}
-              />
-              <p className="mt-2 text-[10px] font-semibold text-rose/50">{fmtDate(entry.date)}</p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ============================================================
-   BOOK VIEW — swipeable pages with a soft page-flip sound
-   ============================================================ */
-function BookView({
-  entries, onEdit, onDelete,
-}: { entries: DiaryEntry[]; onEdit: (e: DiaryEntry) => void; onDelete: (id: string) => void }) {
-  const [index, setIndex] = useState(0);
-  const [dragX, setDragX] = useState(0);
-  const dragging = useRef(false);
-  const startX = useRef(0);
-
-  const clampedIndex = Math.min(index, entries.length - 1);
-  const entry = entries[clampedIndex];
-  const mood = moodMeta(entry.mood);
-  const theme = themeMeta(entry.theme);
-
-  const goTo = (next: number) => {
-    if (next < 0 || next >= entries.length || next === clampedIndex) return;
-    playPageFlipSound();
-    setIndex(next);
-  };
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    dragging.current = true;
-    startX.current = e.clientX;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    setDragX(e.clientX - startX.current);
-  };
-  const endDrag = () => {
-    if (!dragging.current) return;
-    dragging.current = false;
-    if (dragX < -70) goTo(clampedIndex + 1);
-    else if (dragX > 70) goTo(clampedIndex - 1);
-    setDragX(0);
-  };
-
-  return (
-    <div className="flex flex-col items-center pt-2">
-      <div
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerLeave={endDrag}
-        style={{ transform: `translateX(${dragX}px) rotate(${dragX / 40}deg)`, touchAction: "pan-y" }}
-        className="relative w-full max-w-xl select-none cursor-grab active:cursor-grabbing transition-transform"
-      >
-        <div className={`absolute inset-x-3 -bottom-3 h-full rounded-[1.75rem] bg-gradient-to-br ${theme.page} opacity-60 -z-10 blur-[1px]`} />
-        <div className={`relative rounded-[1.75rem] bg-gradient-to-br ${theme.page} ring-1 ${theme.ring} border border-white/70 p-6 sm:p-8 shadow-[0_24px_48px_-18px_oklch(0.6_0.2_350/0.45)] min-h-[420px] flex flex-col`}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30">
-                <mood.Icon className="h-5 w-5" strokeWidth={1.6} />
-              </span>
-              <div>
-                <h3 className="font-script text-2xl text-hotpink leading-none">{entry.title || "Untitled"}</h3>
-                <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-rose/60">
-                  <Calendar className="h-3 w-3" strokeWidth={1.8} /> {fmtDate(entry.date)} · {mood.label}
-                </span>
-              </div>
-            </div>
-            <EntryActions entry={entry} onEdit={onEdit} onDelete={onDelete} />
-          </div>
-
-          <div className="mt-4 h-px w-full bg-gradient-to-r from-transparent via-hotpink/25 to-transparent" />
-
-          <div
-            style={{ fontFamily: fontFamilyFor(entry.font) }}
-            className="diary-page-content mt-4 flex-1 overflow-y-auto text-[15px] text-rose/85 leading-relaxed pr-1"
-            dangerouslySetInnerHTML={{ __html: entry.html || "<span class='opacity-50'>This page is blank…</span>" }}
+        {/* Canvas */}
+        <div ref={canvasRef} style={{ position: "relative", flex: 1, marginTop: 12 }}>
+          <textarea
+            ref={textRef}
+            value={draft}
+            onChange={(e) => onDraft(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            style={{ position: "absolute", inset: 0, zIndex: 2, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 22, lineHeight: "30px", color: "#831843" }}
           />
+          {showHint && (
+            <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 22, lineHeight: "30px", color: "#C9A6B8", animation: "dd-hintfade .4s ease" }}>
+              Tap here and let your thoughts bloom…
+            </div>
+          )}
+          {/* Draggable elements */}
+          {items.map((it) => (
+            <div key={it.id} onPointerDown={(e) => onPointerDown(it.id, e)} style={{ position: "absolute", left: it.x, top: it.y, zIndex: 5, cursor: "grab", touchAction: "none" }}>
+              <button onClick={() => deleteItem(it.id)} style={{ position: "absolute", top: -9, right: -9, zIndex: 6, width: 20, height: 20, border: "none", cursor: "pointer", borderRadius: "50%", background: "#fff", color: "#DB2777", boxShadow: "0 3px 8px rgba(131,24,67,.25)", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700 }}>✕</button>
+              {it.type === "photo" && (
+                <div style={{ padding: "6px 6px 18px", background: "#fffdf9", borderRadius: 3, boxShadow: "0 8px 18px rgba(131,24,67,.22)" }}>
+                  {it.src
+                    ? <img src={it.src} style={{ display: "block", width: 110, height: 84, objectFit: "cover", borderRadius: 2 }} alt="diary photo" />
+                    : <div style={{ width: 110, height: 84, background: "#FBE3F5", borderRadius: 2, display: "grid", placeItems: "center", color: "#C9A6B8", fontSize: 12 }}>photo</div>
+                  }
+                </div>
+              )}
+              {it.type === "sticker" && it.icon && (
+                <div style={{ width: 46, height: 46, background: "#fffdf9", borderRadius: 6, boxShadow: "0 5px 12px rgba(131,24,67,.2)", display: "grid", placeItems: "center" }}>
+                  {STICKER_ICONS[it.icon]}
+                </div>
+              )}
+            </div>
+          ))}
+          {/* Mic listening pill */}
+          {listening && (
+            <div style={{ position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)", zIndex: 4, display: "flex", alignItems: "center", gap: 8, padding: "7px 15px", borderRadius: 999, background: "rgba(219,39,119,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, boxShadow: "0 8px 18px rgba(219,39,119,.4)" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff", display: "inline-block", animation: "dd-mic 1.2s ease-in-out infinite" }} />
+              {micLabel}
+            </div>
+          )}
+        </div>
 
-          <p className="mt-4 text-center text-[11px] font-semibold text-rose/40">
-            page {clampedIndex + 1} of {entries.length}
-          </p>
+        <button onClick={onSave} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 6, border: "none", cursor: "pointer", padding: "9px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>
+          Save entry ✿
+        </button>
+
+        {/* Hidden file input for photo */}
+        <input
+          id="dd-photo-input"
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            const src = await compressImage(f);
+            addPhoto(src);
+            e.target.value = "";
+          }}
+        />
+      </div>
+    );
+  }
+
+  /* ── Page 1: Today's whisper ── */
+  if (idx === 1) return (
+    <div style={{ padding: "30px 28px", position: "relative", height: "100%" }}>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>Today's whisper</div>
+      <div style={{ marginTop: 22, fontFamily: "'Caveat',cursive", fontSize: 30, lineHeight: 1.3, color: "#831843", maxWidth: 230 }}>I am worthy of love, rest, and all beautiful things.</div>
+      <div style={{ marginTop: 16, fontFamily: "'Caveat',cursive", fontSize: 18, color: "#B07291" }}>— breathe, you are blooming</div>
+      {/* pressed flower motif */}
+      <div style={{ position: "absolute", right: 28, bottom: 34, width: 42, height: 42, display: "grid", placeItems: "center" }}>
+        {[0, 72, 144, 216, 288].map((a) => (
+          <span key={a} style={{ position: "absolute", width: 16, height: 16, borderRadius: "60% 40%", background: "rgba(244,114,182,.5)", transform: `rotate(${a}deg) translateY(-11px)` }} />
+        ))}
+        <span style={{ position: "absolute", width: 13, height: 13, borderRadius: "50%", background: "#F9C784" }} />
+      </div>
+    </div>
+  );
+
+  /* ── Page 2: Memory ── */
+  if (idx === 2) return (
+    <div style={{ padding: "30px 28px" }}>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>A memory to keep</div>
+      <div style={{ margin: "18px auto 0", width: "max-content", transform: "rotate(-3deg)", padding: "8px 8px 24px", background: "#fffdf9", borderRadius: 3, boxShadow: "0 10px 22px rgba(131,24,67,.22)" }}>
+        <div style={{ width: 150, height: 116, background: "linear-gradient(135deg,#FBE3F5,#FCE4EE)", borderRadius: 2, display: "grid", placeItems: "center" }}>
+          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 13, color: "#C9A6B8" }}>drop a photo</span>
+        </div>
+        <div style={{ textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 16, color: "#9D5C7E", marginTop: 4 }}>the day I felt free ♡</div>
+      </div>
+    </div>
+  );
+
+  /* ── Page 3: Gratitudes ── */
+  if (idx === 3) return (
+    <div style={{ padding: "30px 28px", position: "relative", height: "100%" }}>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>Three soft gratitudes</div>
+      <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 15 }}>
+        {[
+          { text: "slow morning light", checked: true },
+          { text: "a friend who listens", checked: true },
+          { text: "add your own…", checked: false, placeholder: true },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 11 }}>
+            <span style={{ width: 20, height: 20, borderRadius: 6, border: item.checked ? "1.8px solid #F472B6" : "1.8px dashed rgba(236,72,153,.4)", display: "grid", placeItems: "center", color: "#DB2777", fontSize: 13, flex: "0 0 auto" }}>
+              {item.checked ? "✓" : ""}
+            </span>
+            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 21, color: item.placeholder ? "#C9A6B8" : "#9D5C7E" }}>{item.text}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ position: "absolute", right: 26, bottom: 30, transform: "rotate(10deg)", width: 42, height: 42, background: "#fffdf9", borderRadius: 4, boxShadow: "0 5px 12px rgba(131,24,67,.18)", display: "grid", placeItems: "center" }}>
+        <svg width="23" height="23" viewBox="0 0 24 24"><path d="M12 20S4.5 15 4.5 9.8A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7.5 2.8C19.5 15 12 20 12 20Z" fill="#F472B6"/></svg>
+      </div>
+    </div>
+  );
+
+  /* ── Page 4: Reflection & mood ── */
+  if (idx === 4) return (
+    <div style={{ padding: "30px 28px" }}>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>Reflection &amp; mood</div>
+      <div style={{ marginTop: 16, fontFamily: "'Caveat',cursive", fontSize: 24, lineHeight: 1.2, color: "#831843" }}>What is your inner voice whispering tonight?</div>
+      <div style={{ marginTop: 14, fontSize: 11.5, color: "#9D5C7E", fontFamily: "'Quicksand'", fontWeight: 600 }}>
+        Today you feel <strong style={{ color: "#DB2777" }}>{mood}</strong>
+      </div>
+      <div style={{ marginTop: 14, width: "max-content", transform: "rotate(3deg)", padding: "7px 7px 20px", background: "#fffdf9", borderRadius: 3, boxShadow: "0 8px 16px rgba(131,24,67,.2)" }}>
+        <div style={{ width: 120, height: 90, background: "linear-gradient(135deg,#FBE3F5,#FCE4EE)", borderRadius: 2, display: "grid", placeItems: "center" }}>
+          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 12, color: "#C9A6B8" }}>add a photo</span>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Navigation */}
-      <div className="mt-5 flex items-center gap-4">
-        <button
-          onClick={() => goTo(clampedIndex - 1)}
-          disabled={clampedIndex === 0}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 border border-petal/50 text-hotpink shadow-sm transition hover:-translate-x-0.5 disabled:opacity-30 disabled:hover:translate-x-0"
-        >
-          <ChevronLeft className="h-4.5 w-4.5" strokeWidth={2} />
-        </button>
-        <span className="font-script text-lg text-rose/60">swipe to turn the page ✿</span>
-        <button
-          onClick={() => goTo(clampedIndex + 1)}
-          disabled={clampedIndex === entries.length - 1}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/85 border border-petal/50 text-hotpink shadow-sm transition hover:translate-x-0.5 disabled:opacity-30 disabled:hover:translate-x-0"
-        >
-          <ChevronRight className="h-4.5 w-4.5" strokeWidth={2} />
-        </button>
+  /* ── Page 5: Closing ── */
+  return (
+    <div style={{ height: "100%", padding: "30px 28px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+      <div style={{ fontFamily: "'Caveat',cursive", fontSize: 25, color: "#B07291" }}>see you tomorrow,<br />bloom ✿</div>
+    </div>
+  );
+}
+
+/* ─── Main DiaryPage component ────────────────────────────────────── */
+
+export default function DiaryPage() {
+  // Persistent entries
+  const [entries, setEntries] = useState<DiaryEntry[]>(() => loadEntries());
+  const [search, setSearch] = useState("");
+
+  // Book state
+  const [open, setOpen] = useState(false);
+  const [pg, setPg] = useState(0);
+  const [tilt, setTilt] = useState(0);
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 860);
+
+  // UI state
+  const [mood, setMood] = useState("Calm");
+  const [tab, setTab] = useState("Journal");
+  const [draft, setDraft] = useState("");
+  const [savedCount, setSavedCount] = useState(0);
+  const [toast, setToast] = useState(false);
+  const [bloomBelow, setBloomBelow] = useState(false);
+
+  const tiltTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Derived
+  const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
+  const phase = cycleDay <= 5 ? "Menstrual" : cycleDay <= 13 ? "Follicular" : cycleDay <= 15 ? "Ovulatory" : "Luteal";
+  const streak = useMemo(() => computeStreak(entries), [entries]);
+  const moodTint = MOOD_DATA.find((m) => m.name === mood)?.tint ?? "#FBCFE8";
+
+  useEffect(() => { saveEntries(entries); }, [entries]);
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth < 860);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const turn = (dir: number) => {
+    if (!open) { setOpen(true); return; }
+    const totalPgs = 6;
+    let next: number;
+    if (narrow) {
+      next = Math.min(totalPgs - 1, Math.max(0, pg + dir));
+    } else {
+      const sp = Math.floor(pg / 2);
+      next = Math.min(2, Math.max(0, sp + dir)) * 2;
+    }
+    if (next === pg) return;
+    setPg(next);
+    setTilt(dir > 0 ? -11 : 11);
+    if (tiltTimerRef.current) clearTimeout(tiltTimerRef.current);
+    tiltTimerRef.current = setTimeout(() => setTilt(0), 70);
+  };
+
+  const openAtPage = (idx: number, seedDraft?: string) => {
+    setOpen(true);
+    setPg(idx);
+    if (seedDraft !== undefined) setDraft(seedDraft);
+  };
+
+  const onSave = () => {
+    if (!draft.trim()) return;
+    const entry: DiaryEntry = {
+      id: `diary-${Date.now()}`,
+      date: todayISO(),
+      mood,
+      title: draft.trim().slice(0, 60) || "Diary entry",
+      html: `<p>${draft.replace(/\n/g, "</p><p>")}</p>`,
+      theme: "sakura",
+      font: "caveat",
+      createdAt: new Date().toISOString(),
+      images: [],
+    };
+    setEntries((prev) => [entry, ...prev]);
+    setDraft("");
+    setSavedCount((c) => c + 1);
+    setToast(true);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(false), 1800);
+  };
+
+  useEffect(() => () => {
+    if (tiltTimerRef.current) clearTimeout(tiltTimerRef.current);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+  }, []);
+
+  const spread = Math.floor(pg / 2);
+  const atStart = pg <= 0;
+  const atEnd = narrow ? pg >= 5 : spread >= 2;
+  const dots = narrow ? 6 : 3;
+  const activeDot = narrow ? pg : spread;
+
+  const coverBg = BOOK_COVERS.Rose;
+
+  const filteredMems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return entries.slice(0, 8);
+    return entries.filter((e) => (e.title + " " + e.mood).toLowerCase().includes(q)).slice(0, 8);
+  }, [entries, search]);
+
+  return (
+    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden", fontFamily: "'Quicksand',sans-serif", color: "#831843", background: "radial-gradient(120% 90% at 18% -10%,#FFE3F0 0%,transparent 55%), radial-gradient(100% 80% at 100% 0%,#FBE3F5 0%,transparent 50%), radial-gradient(120% 100% at 50% 120%,#FCEAF3 0%,transparent 60%), linear-gradient(180deg,#FFF0F6 0%,#FDE6F1 100%)" }}>
+      <style>{DIARY_CSS}</style>
+
+      {/* ── Atmosphere layer ── */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        {/* Blobs */}
+        <div style={{ position: "absolute", top: "-8%", left: "8%", width: 360, height: 360, borderRadius: "50%", filter: "blur(50px)", background: "radial-gradient(circle at 40% 35%,rgba(249,168,212,.9),transparent 65%)", opacity: .55, animation: "dd-floaty 16s ease-in-out infinite" }} />
+        <div style={{ position: "absolute", top: "30%", right: "-4%", width: 300, height: 300, borderRadius: "50%", filter: "blur(55px)", background: "radial-gradient(circle at 50% 50%,rgba(226,210,251,.85),transparent 65%)", opacity: .5, animation: "dd-floaty2 20s ease-in-out infinite" }} />
+        <div style={{ position: "absolute", bottom: "-6%", left: "34%", width: 420, height: 420, borderRadius: "50%", filter: "blur(60px)", background: `radial-gradient(circle at 50% 50%,${moodTint},transparent 68%)`, opacity: .6, transition: "background 1.2s ease", animation: "dd-breathe 9s ease-in-out infinite" }} />
+        {/* 3D Flowers */}
+        <div style={{ position: "absolute", top: "12%", left: "14%", opacity: .85, animation: "dd-drift 26s ease-in-out infinite" }}>
+          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dA 14s linear infinite", filter: "drop-shadow(0 12px 16px rgba(190,24,93,.22))" }}>
+            <Flower size={118} pc="rgba(244,114,182,.85)" cc="#F9C784" />
+          </div>
+        </div>
+        <div style={{ position: "absolute", top: "62%", left: "8%", opacity: .7, animation: "dd-drift2 30s ease-in-out infinite" }}>
+          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dB 18s linear infinite", filter: "drop-shadow(0 10px 14px rgba(124,90,166,.22))" }}>
+            <Flower size={96} pc="rgba(196,164,252,.8)" cc="#FBCFE8" />
+          </div>
+        </div>
+        <div style={{ position: "absolute", top: "22%", right: "12%", opacity: .8, animation: "dd-drift 32s ease-in-out infinite" }}>
+          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dB 16s linear infinite", filter: "drop-shadow(0 12px 16px rgba(190,24,93,.2))" }}>
+            <Flower size={104} pc="rgba(251,186,116,.78)" cc="#F472B6" />
+          </div>
+        </div>
+        <div style={{ position: "absolute", bottom: "14%", right: "18%", opacity: .65, animation: "dd-drift2 28s ease-in-out infinite" }}>
+          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dA 20s linear infinite" }}>
+            <Flower size={70} pc="rgba(249,168,212,.8)" cc="#F9C784" />
+          </div>
+        </div>
+        {/* Twinkling dots */}
+        {[
+          { top: "12%", left: "30%" }, { top: "60%", left: "72%" },
+          { top: "74%", left: "40%" }, { top: "35%", left: "86%" },
+        ].map((pos, i) => (
+          <div key={i} style={{ position: "absolute", ...pos, width: 5, height: 5, borderRadius: "50%", background: "#fff", boxShadow: "0 0 8px #fff", animation: `dd-twinkle ${3.1 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }} />
+        ))}
+        {/* Rising petals */}
+        {[
+          { left: "22%", bg: "#F9A8D4", delay: "0s" },
+          { left: "58%", bg: "#F472B6", delay: "3s" },
+          { left: "78%", bg: "#FBCFE8", delay: "6s" },
+        ].map((p, i) => (
+          <div key={i} style={{ position: "absolute", bottom: 0, left: p.left, width: 13, height: 13, borderRadius: "60% 40% 55% 45%", background: `radial-gradient(circle at 35% 30%,#fff,${p.bg} 70%)`, opacity: .7, animation: `dd-rise ${14 + i * 2}s linear ${p.delay} infinite` }} />
+        ))}
       </div>
-    </div>
-  );
-}
 
-/* ============================================================
-   PER-ENTRY ACTIONS (edit / print / delete)
-   ============================================================ */
-function EntryActions({
-  entry, onEdit, onDelete, compact,
-}: { entry: DiaryEntry; onEdit: (e: DiaryEntry) => void; onDelete: (id: string) => void; compact?: boolean }) {
-  const printEntry = () => {
-    const mood = moodMeta(entry.mood);
-    const theme = themeMeta(entry.theme);
-    const win = window.open("", "_blank", "width=720,height=900");
-    if (!win) return;
-    win.document.write(`<!doctype html><html><head><meta charset="utf-8" />
-      <title>${escapeHtml(entry.title || "Diary entry")}</title>
-      <style>
-        @page { margin: 28mm 22mm; }
-        body { font-family: 'Quicksand', sans-serif; color: #831843; padding: 24px; }
-        h1 { font-family: 'Caveat', cursive; font-size: 40px; color: ${theme.accent}; margin: 0 0 4px; }
-        .meta { font-size: 12px; color: #9D5C7E; margin-bottom: 18px; }
-        .content { font-family: ${fontFamilyFor(entry.font)}; font-size: 15px; line-height: 1.7; }
-        hr { border: none; border-top: 1px solid ${theme.accent}33; margin: 16px 0; }
-      </style>
-      </head><body>
-        <h1>${escapeHtml(entry.title || "Untitled")}</h1>
-        <p class="meta">${fmtDate(entry.date)} · ${mood.label}</p>
-        <hr />
-        <div class="content">${entry.html}</div>
-      </body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 300);
-  };
+      {/* ── Main content ── */}
+      <div style={{ position: "relative", zIndex: 5, padding: "30px 20px 80px", maxWidth: 1180, margin: "0 auto" }}>
 
-  return (
-    <div className={["flex items-center gap-1", compact ? "" : "opacity-0 group-hover:opacity-100 transition"].join(" ")}>
-      <button
-        onClick={printEntry}
-        title="Print or save as PDF"
-        className="flex h-8 w-8 items-center justify-center rounded-full text-rose/60 hover:text-hotpink hover:bg-blush transition"
-      >
-        <Printer className="h-3.5 w-3.5" strokeWidth={1.8} />
-      </button>
-      <button
-        onClick={() => onEdit(entry)}
-        title="Edit"
-        className="flex h-8 w-8 items-center justify-center rounded-full text-rose/60 hover:text-hotpink hover:bg-blush transition"
-      >
-        <Edit3 className="h-3.5 w-3.5" strokeWidth={1.8} />
-      </button>
-      <button
-        onClick={() => onDelete(entry.id)}
-        title="Delete"
-        className="flex h-8 w-8 items-center justify-center rounded-full text-rose/60 hover:text-magenta hover:bg-magenta/10 transition"
-      >
-        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
-      </button>
-    </div>
-  );
-}
-
-/* ============================================================
-   COMPOSER
-   ============================================================ */
-function DiaryComposer({
-  initial, onClose, onSave,
-}: { initial?: DiaryEntry; onClose: () => void; onSave: (entry: DiaryEntry) => void }) {
-  const [title, setTitle] = useState(initial?.title ?? "");
-  const [html, setHtml] = useState(initial?.html ?? "");
-  const [mood, setMood] = useState(initial?.mood ?? "calm");
-  const [theme, setTheme] = useState(initial?.theme ?? "sakura");
-  const [font, setFont] = useState(initial?.font ?? "quicksand");
-  const [date, setDate] = useState(initial?.date ?? todayISO());
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!plainTextOf(html)) return;
-    onSave({
-      id: initial?.id ?? crypto.randomUUID(),
-      date, mood, theme, font,
-      title: title.trim(),
-      html,
-      createdAt: initial?.createdAt ?? new Date().toISOString(),
-    });
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-[#831843]/40 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-[2rem] bg-white shadow-2xl shadow-[#EC4899]/30 border border-[#EC4899]/15 p-6 max-h-[92vh] overflow-y-auto">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#9D5C7E] hover:text-[#EC4899] hover:bg-[#FBCFE8] transition"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        <h2 className="font-script text-3xl text-[#831843]">{initial ? "Edit entry" : "New entry"} ✿</h2>
-
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-rose/70">Date</label>
-              <input
-                type="date"
-                value={date}
-                max={todayISO()}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 w-full rounded-2xl border border-[#EC4899]/20 bg-[#FFF0F6]/60 px-4 py-2.5 text-sm text-[#831843] outline-none focus:border-[#EC4899] transition"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-rose/70">Title (optional)</label>
-              <input
-                type="text"
-                placeholder="A little headline…"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 w-full rounded-2xl border border-[#EC4899]/20 bg-[#FFF0F6]/60 px-4 py-2.5 text-sm text-[#831843] placeholder:text-[#9D5C7E]/70 outline-none focus:border-[#EC4899] transition"
-              />
-            </div>
-          </div>
-
+        {/* ── Header ── */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap", marginBottom: 22 }}>
           <div>
-            <label className="text-xs font-semibold text-rose/70">How were you feeling?</label>
-            <div className="mt-1.5 grid grid-cols-4 gap-2">
-              {DIARY_MOODS.map((m) => {
-                const active = mood === m.key;
-                return (
-                  <button
-                    type="button"
-                    key={m.key}
-                    onClick={() => setMood(m.key)}
-                    className={[
-                      "flex flex-col items-center gap-1 rounded-2xl p-2 border transition",
-                      active ? "bg-hotpink/10 border-hotpink/30" : "bg-transparent border-transparent hover:bg-blush/60",
-                    ].join(" ")}
-                  >
-                    <span className={[
-                      "flex h-9 w-9 items-center justify-center rounded-full transition",
-                      active ? "bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/40" : "bg-blush text-hotpink",
-                    ].join(" ")}>
-                      <m.Icon className="h-4 w-4" strokeWidth={1.6} />
-                    </span>
-                    <span className={["text-[10px] font-semibold", active ? "text-hotpink" : "text-rose"].join(" ")}>{m.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(38px,6vw,52px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
+              Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(20px,3vw,28px)" }}>✿</span>
+            </h1>
+            <p style={{ margin: "7px 0 0", fontSize: 14, color: "#9D5C7E", fontWeight: 500 }}>
+              Your softest pages — open the book, turn with the arrows, and write.
+            </p>
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            {/* Segmented tabs */}
+            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: 5, borderRadius: 999, background: "rgba(255,255,255,.7)", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 4px 14px rgba(236,72,153,.1)" }}>
+              {["Journal", "List", "Pinned", "Book"].map((t) => (
+                <button key={t} onClick={() => setTab(t)} style={{ border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 999, fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 13.5, transition: "all .25s ease", background: t === tab ? "linear-gradient(135deg,#F472B6,#DB2777)" : "transparent", color: t === tab ? "#fff" : "#9D5C7E", boxShadow: t === tab ? "0 6px 14px rgba(219,39,119,.3)" : "none" }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+            {/* New entry CTA */}
+            <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14.5, animation: "dd-glow 3.4s ease-in-out infinite" }}>
+              <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
+            </button>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-rose/70">Page color</label>
-              <div className="mt-1.5 flex flex-wrap gap-2">
-                {DIARY_THEMES.map((t) => (
-                  <button
-                    type="button"
-                    key={t.key}
-                    title={t.label}
-                    onClick={() => setTheme(t.key)}
-                    className={[
-                      "h-8 w-8 rounded-full border-2 transition",
-                      `bg-gradient-to-br ${t.page}`,
-                      theme === t.key ? "border-hotpink scale-110" : "border-white/70 hover:scale-105",
-                    ].join(" ")}
-                  />
-                ))}
+        {/* ── Bloom + Book column ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+          {/* Today's Bloom card (order toggles) */}
+          <div style={{ position: "relative", order: bloomBelow ? 2 : 0, borderRadius: 22, padding: "18px 20px", background: "rgba(255,255,255,.84)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
+            <button onClick={() => setBloomBelow((b) => !b)} title={bloomBelow ? "Move back to top" : "Move below the book"} style={{ position: "absolute", top: 12, right: 12, width: 28, height: 28, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(252,231,243,.9)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700 }}>
+              {bloomBelow ? "↑" : "✕"}
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              {/* Cycle ring */}
+              <div style={{ position: "relative", width: 70, height: 70, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.16) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+                <div style={{ width: 54, height: 54, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center" }}>
+                  <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 24, color: "#EC4899" }}>{cycleDay}</span>
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 27, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
+                <div style={{ fontSize: 13.5, color: "#9D5C7E", marginTop: 4 }}>
+                  <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
+                </div>
               </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-rose/70">Writing font</label>
-              <select
-                value={font}
-                onChange={(e) => setFont(e.target.value)}
-                className="mt-1.5 w-full rounded-2xl border border-[#EC4899]/20 bg-[#FFF0F6]/60 px-3 py-2 text-sm text-[#831843] outline-none focus:border-[#EC4899] transition cursor-pointer"
-                style={{ fontFamily: fontFamilyFor(font) }}
-              >
-                {DIARY_FONTS.map((f) => (
-                  <option key={f.key} value={f.key} style={{ fontFamily: f.family }}>{f.label}</option>
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.22)" }}>
+              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 10 }}>How are you feeling?</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {MOOD_DATA.map((m) => {
+                  const sel = m.name === mood;
+                  return (
+                    <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px 7px 11px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12.5, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.16)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.8)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 8px 18px rgba(219,39,119,.32)" : "0 2px 8px rgba(236,72,153,.08)" }}>
+                      {m.icon}{m.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ── The Book ── */}
+          <div style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
+
+              {/* Prev arrow */}
+              <button onClick={() => turn(-1)} style={{ flex: "0 0 auto", width: 46, height: 46, borderRadius: "50%", border: "none", cursor: "pointer", display: "grid", placeItems: "center", background: "rgba(255,255,255,.92)", color: "#DB2777", boxShadow: "0 10px 24px rgba(236,72,153,.28)", transition: "transform .2s ease, opacity .3s ease", opacity: (open && !atStart) ? 1 : 0.35 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+              </button>
+
+              {/* Stage */}
+              <div style={{ position: "relative", width: narrow ? "min(360px, 90vw)" : "min(560px, 78vw)", height: narrow ? "clamp(420px,92vw,520px)" : "clamp(370px,54vw,460px)" }}>
+                {/* Rose edge/binding */}
+                <div style={{ position: "absolute", inset: "-14px -12px -16px -12px", borderRadius: 16, background: coverBg, boxShadow: "0 34px 70px rgba(190,24,93,.36), inset 0 2px 6px rgba(255,255,255,.4)", zIndex: 0 }} />
+
+                {/* Pages wrapper */}
+                <div style={{ position: "absolute", inset: 0, zIndex: 1, transform: `perspective(1600px) rotateY(${tilt}deg)`, transformOrigin: tilt < 0 ? "left center" : "right center", transition: "transform .5s cubic-bezier(.2,.8,.2,1)" }}>
+                  {/* Desktop: two-page spread */}
+                  {!narrow && (
+                    <>
+                      <div onClick={() => turn(-1)} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", borderRadius: "8px 3px 3px 8px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.12) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset -22px 0 34px -26px rgba(131,24,67,.5)" }}>
+                        <div style={{ position: "absolute", inset: 0 }}>
+                          <DiaryBookPage idx={spread * 2} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} />
+                        </div>
+                        <div style={{ position: "absolute", left: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {spread * 2 + 1} ·</div>
+                      </div>
+                      {/* Spine */}
+                      <div style={{ position: "absolute", top: 6, bottom: 6, left: "50%", transform: "translateX(-50%)", width: 16, zIndex: 3, background: "linear-gradient(90deg,rgba(131,24,67,.18),rgba(131,24,67,.03) 42%,rgba(255,255,255,.5) 50%,rgba(131,24,67,.03) 58%,rgba(131,24,67,.18))", boxShadow: "0 0 14px rgba(131,24,67,.18)" }} />
+                      <div onClick={() => turn(1)} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", borderRadius: "3px 8px 8px 3px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.1) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 22px 0 34px -26px rgba(131,24,67,.5)" }}>
+                        <div style={{ position: "absolute", inset: 0 }}>
+                          <DiaryBookPage idx={spread * 2 + 1} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} />
+                        </div>
+                        <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {spread * 2 + 2} ·</div>
+                      </div>
+                    </>
+                  )}
+                  {/* Mobile: single page */}
+                  {narrow && (
+                    <div onClick={() => turn(1)} style={{ position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.11) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 0 0 30px -18px rgba(131,24,67,.4)" }}>
+                      <div style={{ position: "absolute", inset: 0 }}>
+                        <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} />
+                      </div>
+                      <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {pg + 1} / 6 ·</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ribbon */}
+                <div style={{ position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)", width: 13, height: 130, background: "linear-gradient(180deg,#DB2777,#BE185D)", borderRadius: "0 0 3px 3px", boxShadow: "0 6px 12px rgba(190,24,93,.4)", zIndex: 4, animation: "dd-ribbon 6s ease-in-out infinite" }} />
+
+                {/* Cover */}
+                <div onClick={() => !open && setOpen(true)} style={{ position: "absolute", inset: "-14px -12px -16px -12px", borderRadius: 16, zIndex: 7, display: "grid", placeItems: "center", cursor: open ? "default" : "pointer", background: coverBg, boxShadow: "0 38px 76px rgba(190,24,93,.42),inset 0 2px 8px rgba(255,255,255,.45)", transform: open ? "rotateY(-24deg) scale(.97)" : "none", transformOrigin: "left center", opacity: open ? 0 : 1, pointerEvents: open ? "none" : "auto", transition: "opacity .7s ease,transform .8s cubic-bezier(.6,.02,.2,1)" }}>
+                  <div style={{ position: "absolute", inset: 14, border: "1.5px solid rgba(255,255,255,.45)", borderRadius: 12 }} />
+                  {/* Clasp */}
+                  <div style={{ position: "absolute", right: -2, top: "50%", transform: "translateY(-50%)", width: 24, height: 50, borderRadius: "8px 4px 4px 8px", background: "linear-gradient(90deg,#FCE7F3,#F9A8D4)", boxShadow: "0 4px 10px rgba(131,24,67,.35)" }} />
+                  <div style={{ textAlign: "center", color: "#fff", padding: "0 18px" }}>
+                    <div style={{ fontSize: 40, marginBottom: 4, textShadow: "0 4px 14px rgba(131,24,67,.4)" }}>✿</div>
+                    <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 40, lineHeight: 1, textShadow: "0 4px 16px rgba(131,24,67,.45)" }}>Dreamy Diary</div>
+                    <div style={{ marginTop: 18, display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 999, background: "rgba(255,255,255,.9)", color: "#DB2777", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 18px rgba(131,24,67,.25)", animation: "dd-hint 2.2s ease-in-out infinite" }}>
+                      Tap to open ✿
+                    </div>
+                  </div>
+                </div>
+
+                {/* Close button */}
+                {open && (
+                  <button onClick={() => setOpen(false)} style={{ position: "absolute", top: -12, right: -12, zIndex: 8, width: 34, height: 34, border: "none", cursor: "pointer", borderRadius: "50%", background: "#fff", color: "#DB2777", boxShadow: "0 6px 16px rgba(236,72,153,.3)", display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700 }}>✕</button>
+                )}
+
+                {/* Save toast */}
+                {toast && (
+                  <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", zIndex: 9, padding: "9px 18px", borderRadius: 999, background: "rgba(126,202,185,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 20px rgba(126,202,185,.5)", animation: "dd-toast .3s ease" }}>
+                    Saved to your diary ✨
+                  </div>
+                )}
+              </div>
+
+              {/* Next arrow */}
+              <button onClick={() => turn(1)} style={{ flex: "0 0 auto", width: 46, height: 46, borderRadius: "50%", border: "none", cursor: "pointer", display: "grid", placeItems: "center", background: "rgba(255,255,255,.92)", color: "#DB2777", boxShadow: "0 10px 24px rgba(236,72,153,.28)", transition: "transform .2s ease, opacity .3s ease", opacity: (open && !atEnd) ? 1 : 0.35 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+
+            {/* Dots + guide */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, marginTop: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                {Array.from({ length: dots }).map((_, i) => (
+                  <span key={i} style={{ display: "inline-block", width: i === activeDot ? 22 : 8, height: 8, borderRadius: 999, background: i === activeDot ? "linear-gradient(90deg,#F472B6,#DB2777)" : "rgba(236,72,153,.28)", transition: "all .3s ease" }} />
                 ))}
-              </select>
+              </div>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#B07291" }}>
+                {!open ? "tap the cover to open your diary ✿" : pg === 0 ? "your page is ready — just start writing ✿" : "use the ‹ › arrows to turn the page"}
+              </div>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="text-xs font-semibold text-rose/70">What's on your heart?</label>
-            <div className="mt-1.5">
-              <DiaryRichEditor
-                html={html}
-                onChange={setHtml}
-                fontKey={font}
-                placeholder="Write freely, or tap Speak to dictate your entry…"
-              />
-            </div>
-            <p className="mt-1 text-[11px] text-rose/50">Select text to bold, underline, highlight, recolor, or change its font ✿</p>
+        {/* ── Prompts to bloom ── */}
+        <div style={{ marginTop: 30, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Prompts to bloom</span>
+            <span style={{ fontSize: 16 }}>✿</span>
           </div>
+          <div style={{ fontSize: 12.5, color: "#9D5C7E", marginBottom: 14 }}>Not sure what to write? Tap a prompt and a fresh page opens for you.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+            {PROMPT_DATA.map((p) => (
+              <button key={p.text} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.12)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 16px rgba(236,72,153,.08)", background: p.tint }}>
+                <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "#fff", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.12)" }}>
+                  {PROMPT_ICONS[p.icon]}
+                </span>
+                <span style={{ fontFamily: "'Caveat',cursive", fontSize: 20, color: "#831843", lineHeight: 1.15, textAlign: "left" }}>{p.text}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <button
-            type="submit"
-            className="mt-1 rounded-full bg-[#EC4899] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-[#EC4899]/30 hover:bg-[#DB2777] transition"
-          >
-            {initial ? "Save changes" : "Save entry"}
-          </button>
-        </form>
+        {/* ── Recent memories ── */}
+        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px", background: "rgba(255,255,255,.82)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Recent memories</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 999, background: "rgba(252,231,243,.7)", border: "1px solid rgba(236,72,153,.16)", minWidth: 170 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth={2} strokeLinecap="round" style={{ flex: "0 0 auto" }}><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="search memories…" style={{ border: "none", outline: "none", background: "transparent", width: "100%", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12.5, color: "#831843" }} />
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}>
+            {filteredMems.map((entry, i) => {
+              const t = MEM_TINTS[i % MEM_TINTS.length];
+              const rot = MEM_ROTS[i % MEM_ROTS.length];
+              return (
+                <div key={entry.id} className="dd-mem" style={{ position: "relative", display: "flex", flexDirection: "column", padding: "14px 13px 13px", borderRadius: "4px 14px 6px 16px", boxShadow: "0 10px 24px rgba(131,24,67,.13)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", background: t.bg, transform: `rotate(${rot}deg)` }}>
+                  {/* Flower top-right */}
+                  <div style={{ position: "absolute", top: 8, right: 10, width: 24, height: 24, opacity: .9 }}>
+                    <MemFlower pc={t.fp} fc={t.fc} />
+                  </div>
+                  {/* Tape */}
+                  <div style={{ position: "absolute", top: -9, left: "50%", transform: "translateX(-50%) rotate(-3deg)", width: 48, height: 16, background: t.tape, boxShadow: "0 2px 5px rgba(131,24,67,.16)" }} />
+                  {/* Photo placeholder */}
+                  <div style={{ marginTop: 4, width: "100%", height: 96, background: "linear-gradient(135deg,rgba(255,255,255,.6),rgba(251,207,232,.4))", borderRadius: 8, display: "grid", placeItems: "center" }}>
+                    {entry.images?.[0]
+                      ? <img src={entry.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }} alt="" />
+                      : <span style={{ fontFamily: "'Caveat',cursive", fontSize: 12, color: "#C9A6B8" }}>add a photo</span>
+                    }
+                  </div>
+                  <div style={{ marginTop: 10, fontFamily: "'Caveat',cursive", fontSize: 21, color: "#831843", lineHeight: 1.05 }}>{entry.title}</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3 }}>
+                    <span style={{ fontSize: 11, color: "#9D5C7E", fontWeight: 600 }}>
+                      {new Date(entry.date + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                    </span>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: t.tag, background: "rgba(255,255,255,.85)", padding: "3px 9px", borderRadius: 999 }}>
+                      {entry.mood}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            {filteredMems.length === 0 && (
+              <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 18, fontFamily: "'Caveat',cursive", fontSize: 19, color: "#C9A6B8" }}>
+                no memories match — but tomorrow is a fresh page ✿
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Charms row ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 18, marginTop: 22 }}>
+          {/* Writing streak */}
+          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Writing streak</div>
+              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>Day {Math.max(1, streak + savedCount)}</div>
+              <div style={{ fontSize: 11.5, color: "#9D5C7E" }}>keep your soft habit ✿</div>
+            </div>
+            <div style={{ position: "relative", width: 40, height: 40, flex: "0 0 auto" }}>
+              <div style={{ position: "absolute", left: 18, bottom: 0, width: 3, height: 26, background: "#7ECAB9", borderRadius: 2 }} />
+              <div style={{ position: "absolute", left: 11, top: 2, width: 18, height: 18, borderRadius: "50% 0", background: "radial-gradient(circle at 40% 40%,#F9A8D4,#EC4899)", boxShadow: "0 4px 10px rgba(236,72,153,.3)" }} />
+            </div>
+          </div>
+          {/* Current mood */}
+          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Current mood</div>
+              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>{mood}</div>
+              <div style={{ fontSize: 11.5, color: "#9D5C7E" }}>the diary glows with you</div>
+            </div>
+            <div style={{ width: 38, height: 38, borderRadius: "50%", background: moodTint, boxShadow: "0 6px 16px rgba(236,72,153,.3),inset 0 0 0 4px rgba(255,255,255,.6)", transition: "background 1s ease", flex: "0 0 auto" }} />
+          </div>
+          {/* Current phase */}
+          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Current phase</div>
+              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>{phase}</div>
+              <div style={{ fontSize: 11.5, color: "#9D5C7E" }}>honor your need for rest</div>
+            </div>
+            <div style={{ width: 38, height: 38, borderRadius: "50%", background: `conic-gradient(#F9C784 0% ${(cycleDay / 28) * 100}%,rgba(249,199,132,.25) ${(cycleDay / 28) * 100}% 100%)`, boxShadow: "inset 0 0 0 4px rgba(255,255,255,.6)", flex: "0 0 auto" }} />
+          </div>
+        </div>
+
       </div>
     </div>
   );
