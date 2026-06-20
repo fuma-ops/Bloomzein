@@ -447,7 +447,7 @@ export function BudgetPlanner() {
   );
 
   return (
-    <>
+    <div data-bp>
       {/* Custom pink currency picker modal */}
       {showCurrencyPicker && createPortal(
         <div
@@ -585,10 +585,10 @@ export function BudgetPlanner() {
       </div>
 
       <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [data-bp] *::-webkit-scrollbar { display: none; }
+        [data-bp] * { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
-    </>
+    </div>
   );
 }
 
@@ -997,26 +997,28 @@ function DashboardTab(props: {
         </div>
       </div>
 
-      {/* ② SPENDING CATEGORIES — right after hero */}
-      {catSpend.length > 0 && (
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-              <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
-            </h3>
-            <div className="flex items-center gap-2">
-              {mealEstimate && !budget["food"] && (
-                <button onClick={() => setTab("Budget Setup")}
-                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
-                  <UtensilsCrossed className="h-3 w-3" /> Sync meals
-                </button>
-              )}
+      {/* ② SPENDING CATEGORIES — always visible under hero */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
+          </h3>
+          <div className="flex items-center gap-2">
+            {mealEstimate && !budget["food"] && (
+              <button onClick={() => setTab("Budget Setup")}
+                className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
+                <UtensilsCrossed className="h-3 w-3" /> Sync meals
+              </button>
+            )}
+            {catSpend.length > 0 && (
               <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
                 See all <ChevronRight className="h-3 w-3" />
               </button>
-            </div>
+            )}
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+        </div>
+        {catSpend.length > 0 ? (
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
               <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
@@ -1031,8 +1033,21 @@ function DashboardTab(props: {
               </div>
             ))}
           </div>
-        </Card>
-      )}
+        ) : (
+          <div className="flex items-center gap-3 py-1">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <ArrowDownRight className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-[#831843]">Log your first spend ✿</p>
+              <p className="text-[11px] text-[#9D5C7E]">Track where your money goes — every spend counts</p>
+            </div>
+            <button onClick={() => setTab("Reports")} className="shrink-0 text-xs font-bold text-[#EC4899] hover:underline">
+              Add
+            </button>
+          </div>
+        )}
+      </Card>
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
