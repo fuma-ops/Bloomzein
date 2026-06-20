@@ -444,6 +444,17 @@ export function BudgetPlanner() {
   const [goalIdx, setGoalIdx] = useState(0);
   useEffect(() => { if (hasCycleSettings()) setCyclePhase(readCyclePhase()); }, []);
 
+  const tabScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabScrollRef.current;
+    if (!el || window.innerWidth >= 1024) return;
+    const t = setTimeout(() => {
+      el.scrollTo({ left: 55, behavior: "smooth" });
+      setTimeout(() => el.scrollTo({ left: 0, behavior: "smooth" }), 450);
+    }, 700);
+    return () => clearTimeout(t);
+  }, []);
+
   const clampedHeroGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
   const heroGoalPct = (() => { const g = goals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
   const cycleTip = cyclePhase && cyclePhase !== "any" ? BP_CYCLE_TIPS[cyclePhase] : undefined;
@@ -589,8 +600,9 @@ export function BudgetPlanner() {
       )}
 
       {/* Tabs */}
-      <div className="sticky top-14 md:top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1.5 backdrop-blur bg-white/40">
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+      <div className="sticky top-14 md:top-0 z-30 py-2">
+        <div className="relative">
+          <div ref={tabScrollRef} className="flex gap-1.5 overflow-x-auto no-scrollbar px-1">
             {TABS.map((t) => {
               const active = tab === t;
               return (
@@ -598,16 +610,19 @@ export function BudgetPlanner() {
                   key={t}
                   onClick={() => setTab(t)}
                   className={[
-                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
+                    "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
                     active
                       ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/40 border-transparent scale-[1.02]"
-                      : "bg-[#FCE7F3] text-[#9D5C7E] border-pink-400/30 hover:bg-pink-200",
+                      : "bg-white/70 backdrop-blur text-[#9D5C7E] border-pink-300/50 hover:bg-white/90",
                   ].join(" ")}
                 >
                   {t}
                 </button>
               );
             })}
+          </div>
+          {/* right-edge fade — hints at horizontal scroll on mobile/tablet */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#FDF2F8] to-transparent lg:hidden" />
         </div>
       </div>
 
