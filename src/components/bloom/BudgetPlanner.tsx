@@ -479,10 +479,12 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
 
   const todayVal = cumByDay[today - 1] ?? 0;
   const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+  const todayX = xp(today);
+  const todayY = yp(todayVal);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 112 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }}>
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
@@ -493,14 +495,18 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
           <filter id="shGlow" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="1.8" result="blur" />
+            <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* subtle grid */}
-        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.6" />
-        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="0.8" />
+        {/* subtle horizontal grid */}
+        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.8" />
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
+
+        {/* today vertical marker — goes from top to baseline */}
+        <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
+          stroke="#EC4899" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
 
         {/* gradient fill under curve */}
         {realPtsArr.length >= 2 && (
@@ -509,49 +515,53 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
 
         {/* budget reference line — light pink dashed */}
         <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
-          stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" />
-        <text x={W - pR - 2} y={yp(planned) - 3} fontSize="6.5" fill="#EC4899"
+          stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" />
+        <text x={W - pR - 2} y={yp(planned) - 4} fontSize="8" fill="#EC4899"
           textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
         {/* spending curve — all pink */}
         {realPtsArr.length >= 2 && (
           <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#shLine)"
-            strokeWidth="2.5" strokeLinecap="round" filter="url(#shGlow)" />
+            strokeWidth="3" strokeLinecap="round" filter="url(#shGlow)" />
         )}
 
-        {/* today dot */}
+        {/* today dot — prominent */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={xp(today)} cy={yp(todayVal)} r="5" fill="#EC4899" opacity="0.2" />
-            <circle cx={xp(today)} cy={yp(todayVal)} r="3" fill="#EC4899" stroke="white" strokeWidth="1.5" />
-            <text x={xp(today)} y={yp(todayVal) - 6} fontSize="6.5" fill="#EC4899"
+            {/* pulse ring */}
+            <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
+            <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
+            <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
+            {/* value label above */}
+            <text x={todayX} y={todayY - 13} fontSize="9" fill="#EC4899"
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
 
         {/* X axis labels */}
-        <text x={xp(1)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">1</text>
-        <text x={xp(Math.ceil(daysInMonth / 2))} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
-          {Math.ceil(daysInMonth / 2)}
+        <text x={xp(1)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">1</text>
+        {/* "Today" label at today's x position */}
+        <text x={todayX} y={H - 3} fontSize="8" fill="#EC4899" textAnchor="middle" fontWeight="700">
+          {today}
         </text>
-        <text x={xp(daysInMonth)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
+        <text x={xp(daysInMonth)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">
           {daysInMonth}
         </text>
       </svg>
 
       {/* legend */}
-      <div className="flex items-center gap-4 mt-1 px-1">
-        <div className="flex items-center gap-1">
-          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Budget</span>
+      <div className="flex items-center gap-4 mt-1.5 px-1">
+        <div className="flex items-center gap-1.5">
+          <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" /></svg>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Budget</span>
         </div>
-        <div className="flex items-center gap-1">
-          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="2" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Spending</span>
+        <div className="flex items-center gap-1.5">
+          <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#EC4899" strokeWidth="2.5" /></svg>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Spending</span>
         </div>
-        <div className="flex items-center gap-1 ml-auto">
-          <svg width="8" height="8"><circle cx="4" cy="4" r="3" fill="#EC4899" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Today</span>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#EC4899" /></svg>
+          <span className="text-[10px] font-semibold text-[#EC4899]">Today ({today})</span>
         </div>
       </div>
     </div>
