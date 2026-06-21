@@ -804,17 +804,6 @@ export function BudgetPlanner() {
                     {CURRENCIES[currency].symbol}
                   </button>
                 </div>
-                {isDash && viewPeriod === "week" && (
-                  <div className="flex gap-1 mt-2">
-                    {weekBand.map(d => (
-                      <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl", d.isToday ? "bg-white/30" : ""].join(" ")}>
-                        <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
-                        <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
-                        {d.spent > 0 && <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
               {isDash && <MiniRing pct={heroGoalPct} size={100} />}
             </div>
@@ -1058,21 +1047,7 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
           </div>
         ) : (
           <div className="px-5 py-4 space-y-4 max-h-[78vh] overflow-y-auto">
-            {/* Amount */}
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
-              <input
-                ref={inputRef} type="number" inputMode="decimal" value={amount}
-                onChange={e => setAmount(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
-                className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-3.5 text-2xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50"
-              />
-            </div>
-
-            {/* Date */}
-            <PinkDatePicker value={date} onChange={setDate} className="w-full" />
-
-            {/* Categories grid — ALL cats */}
+            {/* Categories grid — pick first */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Category</p>
               <div className="grid grid-cols-4 gap-2 max-h-44 overflow-y-auto pr-0.5">
@@ -1088,7 +1063,6 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
                     <span className="text-[9px] font-semibold leading-tight line-clamp-2">{c.label}</span>
                   </button>
                 ))}
-                {/* Add new category button */}
                 <button onClick={() => setShowAddCat(v => !v)}
                   className="flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border border-dashed border-pink-300 bg-pink-50/40 text-[#EC4899] transition-all hover:bg-pink-100">
                   <span className="text-base font-bold">+</span>
@@ -1113,6 +1087,20 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
                 </div>
               </div>
             )}
+
+            {/* Amount */}
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
+              <input
+                ref={inputRef} type="number" inputMode="decimal" value={amount}
+                onChange={e => setAmount(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
+                className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-3.5 text-2xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50"
+              />
+            </div>
+
+            {/* Date */}
+            <PinkDatePicker value={date} onChange={setDate} className="w-full" />
 
             {/* Mood / Spend type */}
             <div>
