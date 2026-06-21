@@ -653,6 +653,7 @@ export function BudgetPlanner() {
   const [txns, setTxns] = useLocal<Txn[]>("bp:txns", []);
   const [goals, setGoals] = useLocal<Goal[]>("bp:goals", []);
   const [bills, setBills] = useLocal<Bill[]>("bp:bills", []);
+  const [showExtraSpend, setShowExtraSpend] = useState(false);
 
   // State lifted from DashboardTab for hero placement before the tab bar
   const [viewPeriod, setViewPeriod] = useState<"week"|"month">("month");
@@ -870,7 +871,6 @@ export function BudgetPlanner() {
               setViewPeriod={setViewPeriod}
               goalIdx={goalIdx}
               setGoalIdx={setGoalIdx}
-              setCustomCats={setCustomCats}
             />
           )}
           {tab === "Incomes" && (
@@ -900,6 +900,26 @@ export function BudgetPlanner() {
             />
           )}
       </div>
+
+      {/* ✦ GLOBAL CTA FAB — always visible on every tab */}
+      <button
+        onClick={() => setShowExtraSpend(true)}
+        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95 px-5 h-14"
+        style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
+        aria-label="Add spend"
+      >
+        <Plus className="h-5 w-5" strokeWidth={2.5} />
+        <span className="text-sm font-bold">+ Spend</span>
+      </button>
+
+      <ExtraSpendModal
+        open={showExtraSpend}
+        onClose={() => setShowExtraSpend(false)}
+        onSave={txnData => setTxns(prev => [{ id: uid(), ...txnData }, ...prev])}
+        allCats={allCats}
+        setCustomCats={setCustomCats}
+        currency={currency}
+      />
 
       <style>{`
         [data-bp] *::-webkit-scrollbar { display: none; }
@@ -1143,11 +1163,10 @@ function DashboardTab(props: {
   incomes: Income[]; onCurrencyClick: () => void;
   viewPeriod: "week"|"month"; setViewPeriod: React.Dispatch<React.SetStateAction<"week"|"month">>;
   goalIdx: number; setGoalIdx: React.Dispatch<React.SetStateAction<number>>;
-  setCustomCats: (v: CustomCat[] | ((p: CustomCat[]) => CustomCat[])) => void;
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
     txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget, onCurrencyClick,
-    viewPeriod, setViewPeriod, goalIdx, setGoalIdx, setCustomCats } = props;
+    viewPeriod, setViewPeriod, goalIdx, setGoalIdx } = props;
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
@@ -1163,8 +1182,6 @@ function DashboardTab(props: {
 
   const goalTouchX = useRef<number | null>(null);
   const [budgetShowAll, setBudgetShowAll] = useState(false);
-
-  const [showExtraSpend, setShowExtraSpend] = useState(false);
 
   // === WEEK vs MONTH FILTER ===
   const filteredTxns = useMemo(() => {
@@ -1709,28 +1726,6 @@ function DashboardTab(props: {
       })()}
 
 
-      {/* CTA FAB — opens Extra Spend modal */}
-      <button
-        onClick={() => setShowExtraSpend(true)}
-        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95 px-5 h-14"
-        style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
-        aria-label="Add spend"
-      >
-        <Plus className="h-5 w-5" strokeWidth={2.5} />
-        <span className="text-sm font-bold">+ Spend</span>
-      </button>
-
-      {/* Extra Spend Modal */}
-      <ExtraSpendModal
-        open={showExtraSpend}
-        onClose={() => setShowExtraSpend(false)}
-        onSave={txnData => {
-          setTxns(prev => [{ id: uid(), ...txnData }, ...prev]);
-        }}
-        allCats={allCats}
-        setCustomCats={setCustomCats}
-        currency={currency}
-      />
     </div>
   );
 }
