@@ -613,12 +613,15 @@ export default function DiaryPage() {
   const [moodOpen, setMoodOpen] = useState(false);
   const [moodSet, setMoodSet] = useState(false);
   const [toast, setToast] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, right: 16 });
 
   const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
 
   const tiltTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bookRef = useRef<HTMLDivElement>(null);
+  const moodBtnRef = useRef<HTMLButtonElement>(null);
 
   // Derived
   const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
@@ -635,6 +638,14 @@ export default function DiaryPage() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    if (moodSet || !mobile) return;
+    const show = () => { setShowReminder(true); setTimeout(() => setShowReminder(false), 2800); };
+    const t = setTimeout(show, 3500);
+    const interval = setInterval(show, 14000);
+    return () => { clearTimeout(t); clearInterval(interval); };
+  }, [moodSet, mobile]);
 
   const turn = (dir: number) => {
     if (!open) { setOpen(true); return; }
@@ -713,98 +724,109 @@ export default function DiaryPage() {
     <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843" }}>
       <style>{DIARY_CSS}</style>
 
-        {/* ── HERO ── */}
-        <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
-          {/* Mood ambient glow */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
-          {/* Title + CTA row */}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
-            <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(34px,6vw,50px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
-              Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(18px,3vw,26px)" }}>✿</span>
-            </h1>
+      {/* ── Hero section (title + Today's Bloom unified) ── */}
+      <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
+        {/* Mood ambient glow */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
 
-            {/* Desktop: full pill button */}
-            {!mobile && (
-              <button onClick={() => openAtPage(0)} style={{ flexShrink: 0, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite", boxShadow: "0 8px 22px rgba(219,39,119,.32)" }}>
-                <span style={{ fontSize: 17, lineHeight: 0 }}>+</span> New entry
-              </button>
-            )}
-
-            {/* Mobile: circular mood picker button */}
-            {mobile && (
-              <div style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-                {/* "how is your mood?" hint — shown until first selection */}
-                {!moodSet && (
-                  <span style={{ fontFamily: "'Caveat',cursive", fontSize: 15, color: "#DB2777", whiteSpace: "nowrap", opacity: .85 }}>
-                    how is your mood today? ✿
-                  </span>
-                )}
-
-                <button
-                  onClick={() => setMoodOpen((o) => !o)}
-                  style={{ width: 46, height: 46, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,.85)", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", display: "grid", placeItems: "center", color: "#fff", animation: "dd-mood-bounce 2.6s ease-in-out infinite", boxShadow: "0 6px 18px rgba(219,39,119,.38)", flexShrink: 0 }}
-                  aria-label="Select mood"
-                >
-                  {moodSet
-                    ? <span style={{ display: "flex", color: "#fff" }}>{MOOD_DATA.find((m) => m.name === mood)?.icon}</span>
-                    : <svg width="20" height="20" viewBox="0 0 24 24" style={{ animation: "dd-spin 4s linear infinite" }}><ellipse cx="12" cy="5.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/><ellipse cx="12" cy="18.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/><ellipse cx="5.5" cy="12" rx="3.4" ry="2.4" fill="rgba(255,255,255,.9)"/><ellipse cx="18.5" cy="12" rx="3.4" ry="2.4" fill="rgba(255,255,255,.9)"/><circle cx="12" cy="12" r="2.4" fill="rgba(255,255,255,.75)"/></svg>
+        {/* Title + CTA row */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
+            Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(16px,2.5vw,24px)" }}>✿</span>
+          </h1>
+          {!mobile && (
+            <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite" }}>
+              <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
+            </button>
+          )}
+          {mobile && (
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              {/* Periodic reminder bubble */}
+              {showReminder && !moodSet && (
+                <div style={{ position: "absolute", bottom: 54, right: 0, whiteSpace: "nowrap", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", background: "linear-gradient(135deg,#F472B6,#DB2777)", padding: "5px 12px", borderRadius: 999, boxShadow: "0 4px 14px rgba(219,39,119,.35)", animation: "dd-toast .3s ease", zIndex: 10 }}>
+                  how's your mood? ✿
+                </div>
+              )}
+              <button
+                ref={moodBtnRef}
+                onClick={() => {
+                  if (moodBtnRef.current) {
+                    const r = moodBtnRef.current.getBoundingClientRect();
+                    setPopoverPos({ top: r.bottom + 10, right: Math.max(12, window.innerWidth - r.right) });
                   }
-                </button>
-
-                {/* Mood popover — compact 2-col grid, all 6 moods */}
-                {moodOpen && (
-                  <>
-                    <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 18 }} />
-                    <div style={{ position: "absolute", top: 54, right: 0, zIndex: 19, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
-                      {MOOD_DATA.map((m) => {
-                        const sel = m.name === mood;
-                        return (
-                          <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
-                            <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
-                            {m.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Cycle ring + Today's Bloom */}
-          <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 22 }}>
-            <div style={{ position: "relative", width: 68, height: 68, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.18) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto", boxShadow: "0 6px 20px rgba(236,72,153,.28)" }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,.9)", display: "grid", placeItems: "center" }}>
-                <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 22, color: "#EC4899" }}>{cycleDay}</span>
-              </div>
+                  setMoodOpen((o) => !o);
+                }}
+                style={{ width: 46, height: 46, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,.85)", background: "linear-gradient(135deg,#F472B6,#DB2777)", display: "grid", placeItems: "center", color: "#fff", animation: "dd-mood-bounce 2.6s ease-in-out infinite", boxShadow: "0 6px 18px rgba(219,39,119,.38)", cursor: "pointer" }}
+              >
+                {moodSet
+                  ? <span style={{ display: "flex", color: "#fff" }}>{MOOD_DATA.find((m) => m.name === mood)?.icon}</span>
+                  : <svg width="20" height="20" viewBox="0 0 24 24" style={{ animation: "dd-spin 4s linear infinite" }}>
+                      <ellipse cx="12" cy="5.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/>
+                      <ellipse cx="12" cy="18.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/>
+                      <ellipse cx="5.5" cy="12" rx="3.4" ry="2.4" fill="rgba(255,255,255,.9)"/>
+                      <ellipse cx="18.5" cy="12" rx="3.4" ry="2.4" fill="rgba(255,255,255,.9)"/>
+                      <circle cx="12" cy="12" r="2.4" fill="rgba(255,255,255,.75)"/>
+                    </svg>
+                }
+              </button>
+              {/* Mood popover — position:fixed escapes hero overflow:hidden */}
+              {moodOpen && (
+                <>
+                  <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 28 }} />
+                  <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 29, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
+                    {MOOD_DATA.map((m) => {
+                      const sel = m.name === mood;
+                      return (
+                        <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
+                          <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
+                          {m.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
-            <div style={{ flex: 1, minWidth: 140 }}>
-              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
-              <div style={{ fontSize: 13, color: "#9D5C7E", marginTop: 5 }}>
-                <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
-              </div>
+          )}
+        </div>
+
+        {/* Cycle ring + Today's Bloom info */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 18 }}>
+          <div style={{ position: "relative", width: 64, height: 64, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.16) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "grid", placeItems: "center" }}>
+              <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 21, color: "#EC4899" }}>{cycleDay}</span>
             </div>
           </div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 24, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
+            <div style={{ fontSize: 13, color: "#9D5C7E", marginTop: 3 }}>
+              <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
+            </div>
+          </div>
+        </div>
 
-          {/* How are you feeling — compact strip (tablet/desktop only) */}
-          {!mobile && <div style={{ position: "relative", marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.2)" }}>
-            <div style={{ fontSize: 10, letterSpacing: ".13em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 8 }}>How are you feeling?</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {/* How are you feeling strip — tablet/desktop only */}
+        {!mobile && (
+          <div style={{ position: "relative", marginTop: 18, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.22)" }}>
+            <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 10 }}>How are you feeling?</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {MOOD_DATA.map((m) => {
                 const sel = m.name === mood;
                 return (
-                  <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px 6px 9px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.15)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.75)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 6px 14px rgba(219,39,119,.28)" : "0 2px 6px rgba(236,72,153,.07)" }}>
+                  <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); }} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px 7px 11px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12.5, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.16)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.8)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 8px 18px rgba(219,39,119,.32)" : "0 2px 8px rgba(236,72,153,.08)" }}>
                     {m.icon}{m.name}
                   </button>
                 );
               })}
             </div>
-          </div>}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* ── Bloom + Book column ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* ── Book + sections ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+          {/* ── The Book ── */}
           <div ref={bookRef} style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
 
@@ -898,7 +920,6 @@ export default function DiaryPage() {
               </div>
             </div>
           </div>
-        </div>
 
         {/* ── Prompts to bloom ── */}
         <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
@@ -1001,13 +1022,11 @@ export default function DiaryPage() {
           </div>
         </div>
 
-      {/* ── Mobile FAB ── */}
+      </div>
+
+      {/* Mobile FAB */}
       {mobile && (
-        <button
-          onClick={() => openAtPage(0)}
-          style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }}
-          aria-label="New diary entry"
-        >+</button>
+        <button onClick={() => openAtPage(0)} style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }} aria-label="New diary entry">+</button>
       )}
 
     </div>
