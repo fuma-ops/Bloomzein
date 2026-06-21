@@ -618,10 +618,11 @@ export default function DiaryPage() {
   const [moodSet, setMoodSet] = useState(false);
   const [toast, setToast] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
-  const [popoverPos, setPopoverPos] = useState({ top: 0, right: 16 });
-  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
+  const [calPickerDate, setCalPickerDate] = useState<Date | null>(null);
+  const [calViewMonth, setCalViewMonth] = useState(() => new Date());
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterPos, setFilterPos] = useState({ top: 0, right: 16 });
+  const [filterPos, setFilterPos] = useState({ top: 0, left: 0 });
 
   const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
 
@@ -722,44 +723,70 @@ export default function DiaryPage() {
 
   const coverBg = BOOK_COVERS.Rose;
 
+  const calDays = useMemo(() => {
+    const year = calViewMonth.getFullYear();
+    const month = calViewMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days: Date[] = [];
+    for (let i = firstDay - 1; i >= 0; i--) days.push(new Date(year, month, -i));
+    for (let d = 1; d <= daysInMonth; d++) days.push(new Date(year, month, d));
+    const total = Math.ceil(days.length / 7) * 7;
+    let next = 1;
+    while (days.length < total) days.push(new Date(year, month + 1, next++));
+    return days;
+  }, [calViewMonth]);
+
   const filteredMems = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const now = new Date();
-    let list = entries.filter((e) => {
+    const pickedISO = calPickerDate ? calPickerDate.toISOString().slice(0, 10) : null;
+    return entries.filter((e) => {
       if (q && !(e.title + " " + e.mood).toLowerCase().includes(q)) return false;
-      if (dateFilter === "today") return e.date === todayISO();
-      if (dateFilter === "week") {
-        const d = new Date(now); d.setDate(d.getDate() - 7);
-        return new Date(e.date + "T00:00:00") >= d;
-      }
-      if (dateFilter === "month") {
-        const d = new Date(now); d.setDate(d.getDate() - 30);
-        return new Date(e.date + "T00:00:00") >= d;
-      }
+      if (pickedISO) return e.date === pickedISO;
       return true;
-    });
-    return list.slice(0, 10);
-  }, [entries, search, dateFilter]);
+    }).slice(0, 10);
+  }, [entries, search, calPickerDate]);
 
   return (
     <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843" }}>
       <style>{DIARY_CSS}</style>
 
-      {/* Date filter popup — root level to avoid stacking context issues */}
+      {/* Calendar date picker — root level */}
       {filterOpen && (
         <>
           <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 198 }} />
-          <div style={{ position: "fixed", top: filterPos.top, right: filterPos.right, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "14px 12px", minWidth: 180 }}>
-            <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "#B07291", marginBottom: 10 }}>Filter by date</div>
-            {(["all", "today", "week", "month"] as const).map((f) => {
-              const labels = { all: "All time", today: "Today", week: "Last 7 days", month: "Last 30 days" };
-              const sel = dateFilter === f;
-              return (
-                <button key={f} onClick={() => { setDateFilter(f); setFilterOpen(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 13, marginBottom: 4, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
-                  {labels[f]}
-                </button>
-              );
-            })}
+          <div style={{ position: "fixed", top: filterPos.top, left: filterPos.left, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 22, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 18px 42px rgba(219,39,119,.26)", padding: "14px 12px 12px", width: 252 }}>
+            {/* Month nav */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <button onClick={() => { const d = new Date(calViewMonth); d.setMonth(d.getMonth() - 1); setCalViewMonth(d); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", cursor: "pointer", background: "rgba(236,72,153,.12)", color: "#DB2777", fontSize: 16, lineHeight: 1, display: "grid", placeItems: "center" }}>‹</button>
+              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 18, color: "#DB2777", fontWeight: 700 }}>
+                {calViewMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </div>
+              <button onClick={() => { const d = new Date(calViewMonth); d.setMonth(d.getMonth() + 1); setCalViewMonth(d); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", cursor: "pointer", background: "rgba(236,72,153,.12)", color: "#DB2777", fontSize: 16, lineHeight: 1, display: "grid", placeItems: "center" }}>›</button>
+            </div>
+            {/* Weekday labels */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
+              {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
+                <div key={d} style={{ textAlign: "center", fontSize: 9.5, fontWeight: 700, color: "#C9A6B8", letterSpacing: ".05em", padding: "2px 0" }}>{d}</div>
+              ))}
+            </div>
+            {/* Days */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3 }}>
+              {calDays.map((day, i) => {
+                const iso = day.toISOString().slice(0, 10);
+                const isThisMonth = day.getMonth() === calViewMonth.getMonth();
+                const isSel = calPickerDate && iso === calPickerDate.toISOString().slice(0, 10);
+                const isToday = iso === todayISO();
+                return (
+                  <button key={i} onClick={() => { if (!isThisMonth) return; setCalPickerDate(isSel ? null : day); setFilterOpen(false); }} style={{ width: "100%", aspectRatio: "1", borderRadius: 8, border: "none", cursor: isThisMonth ? "pointer" : "default", fontFamily: "'Quicksand'", fontWeight: isSel || isToday ? 700 : 500, fontSize: 12, background: isSel ? "linear-gradient(135deg,#F472B6,#DB2777)" : isToday ? "rgba(236,72,153,.15)" : "transparent", color: isSel ? "#fff" : isThisMonth ? "#831843" : "rgba(131,24,67,.25)", boxShadow: isToday && !isSel ? "0 0 0 1.5px #EC4899" : "none", transition: "all .15s ease" }}>
+                    {day.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+            {calPickerDate && (
+              <button onClick={() => { setCalPickerDate(null); setFilterOpen(false); }} style={{ marginTop: 10, width: "100%", padding: "7px", borderRadius: 11, border: "none", cursor: "pointer", background: "rgba(252,231,243,.8)", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, color: "#9D5C7E" }}>✕ Show all entries</button>
+            )}
           </div>
         </>
       )}
@@ -768,7 +795,7 @@ export default function DiaryPage() {
       {moodOpen && (
         <>
           <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 198 }} />
-          <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
+          <div style={{ position: "fixed", top: popoverPos.top, left: popoverPos.left, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 196 }}>
             {MOOD_DATA.map((m) => {
               const sel = m.name === mood;
               return (
@@ -793,14 +820,9 @@ export default function DiaryPage() {
           <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
             Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(16px,2.5vw,24px)" }}>✿</span>
           </h1>
-          {!mobile && (
-            <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite" }}>
-              <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
-            </button>
-          )}
-          {mobile && (
-            <div style={{ position: "relative", flexShrink: 0 }}>
-              {/* Periodic reminder bubble */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            {/* Mood circle — all devices */}
+            <div style={{ position: "relative" }}>
               {showReminder && !moodSet && (
                 <div style={{ position: "absolute", bottom: 54, right: 0, whiteSpace: "nowrap", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", background: "linear-gradient(135deg,#F472B6,#DB2777)", padding: "5px 12px", borderRadius: 999, boxShadow: "0 4px 14px rgba(219,39,119,.35)", animation: "dd-toast .3s ease", zIndex: 10 }}>
                   how's your mood? ✿
@@ -811,7 +833,9 @@ export default function DiaryPage() {
                 onClick={() => {
                   if (moodBtnRef.current) {
                     const r = moodBtnRef.current.getBoundingClientRect();
-                    setPopoverPos({ top: r.bottom + 10, right: Math.max(12, window.innerWidth - r.right) });
+                    const popW = 196;
+                    const idealLeft = r.right - popW;
+                    setPopoverPos({ top: r.bottom + 10, left: Math.min(Math.max(12, idealLeft), window.innerWidth - popW - 12) });
                   }
                   setMoodOpen((o) => !o);
                 }}
@@ -829,7 +853,13 @@ export default function DiaryPage() {
                 }
               </button>
             </div>
-          )}
+            {/* New entry — desktop only (mobile uses FAB) */}
+            {!mobile && (
+              <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite" }}>
+                <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Cycle ring + Today's Bloom info */}
@@ -846,23 +876,6 @@ export default function DiaryPage() {
             </div>
           </div>
         </div>
-
-        {/* How are you feeling strip — tablet/desktop only */}
-        {!mobile && (
-          <div style={{ position: "relative", marginTop: 18, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.22)" }}>
-            <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 10 }}>How are you feeling?</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {MOOD_DATA.map((m) => {
-                const sel = m.name === mood;
-                return (
-                  <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); }} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px 7px 11px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12.5, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.16)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.8)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 8px 18px rgba(219,39,119,.32)" : "0 2px 8px rgba(236,72,153,.08)" }}>
-                    {m.icon}{m.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Book + sections ── */}
@@ -979,14 +992,16 @@ export default function DiaryPage() {
                 onClick={() => {
                   if (filterBtnRef.current) {
                     const r = filterBtnRef.current.getBoundingClientRect();
-                    setFilterPos({ top: r.bottom + 8, right: Math.max(12, window.innerWidth - r.right) });
+                    const popW = 252;
+                    const idealLeft = r.right - popW;
+                    setFilterPos({ top: r.bottom + 8, left: Math.min(Math.max(12, idealLeft), window.innerWidth - popW - 12) });
                   }
                   setFilterOpen((o) => !o);
                 }}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: dateFilter !== "all" ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: dateFilter !== "all" ? "#fff" : "#DB2777", transition: "all .2s ease" }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: calPickerDate ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: calPickerDate ? "#fff" : "#DB2777", transition: "all .2s ease" }}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                {dateFilter === "all" ? "Date" : dateFilter === "today" ? "Today" : dateFilter === "week" ? "7 days" : "30 days"}
+                {calPickerDate ? calPickerDate.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "Date"}
               </button>
             </div>
           </div>
