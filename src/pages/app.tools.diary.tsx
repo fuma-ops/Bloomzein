@@ -602,6 +602,7 @@ export default function DiaryPage() {
   const [pg, setPg] = useState(0);
   const [tilt, setTilt] = useState(0);
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 860);
+  const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
 
   // UI state
   const [mood, setMood] = useState("Calm");
@@ -623,7 +624,10 @@ export default function DiaryPage() {
 
   useEffect(() => { saveEntries(entries); }, [entries]);
   useEffect(() => {
-    const onResize = () => setNarrow(window.innerWidth < 860);
+    const onResize = () => {
+      setNarrow(window.innerWidth < 860);
+      setMobile(window.innerWidth < 768);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -714,9 +718,11 @@ export default function DiaryPage() {
             <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(34px,6vw,50px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
               Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(18px,3vw,26px)" }}>✿</span>
             </h1>
-            <button onClick={() => openAtPage(0)} style={{ flexShrink: 0, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite", boxShadow: "0 8px 22px rgba(219,39,119,.32)" }}>
-              <span style={{ fontSize: 17, lineHeight: 0 }}>+</span> New entry
-            </button>
+            {!mobile && (
+              <button onClick={() => openAtPage(0)} style={{ flexShrink: 0, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite", boxShadow: "0 8px 22px rgba(219,39,119,.32)" }}>
+                <span style={{ fontSize: 17, lineHeight: 0 }}>+</span> New entry
+              </button>
+            )}
           </div>
 
           {/* Cycle ring + Today's Bloom */}
@@ -947,6 +953,15 @@ export default function DiaryPage() {
             <div style={{ width: 38, height: 38, borderRadius: "50%", background: `conic-gradient(#F9C784 0% ${(cycleDay / 28) * 100}%,rgba(249,199,132,.25) ${(cycleDay / 28) * 100}% 100%)`, boxShadow: "inset 0 0 0 4px rgba(255,255,255,.6)", flex: "0 0 auto" }} />
           </div>
         </div>
+
+      {/* ── Mobile FAB ── */}
+      {mobile && (
+        <button
+          onClick={() => openAtPage(0)}
+          style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }}
+          aria-label="New diary entry"
+        >+</button>
+      )}
 
     </div>
   );
