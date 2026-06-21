@@ -623,7 +623,7 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
             <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
           </div>
-          <p className="text-lg font-bold text-[#831843] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
+          <p className="text-lg font-bold text-[#EC4899] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
@@ -950,12 +950,8 @@ function StatCards({ income, expenses, savings, balance, currency }: {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {items.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
-          <div className="absolute -top-3 -right-3 text-5xl select-none pointer-events-none opacity-20 transition-transform duration-500"
-            style={{ transform: `scale(${it.emojiScale})`, transformOrigin: "top right" }}>
-            {it.emoji}
-          </div>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-lg sm:text-2xl font-extrabold leading-none text-[#EC4899]">
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
           </div>
           <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
@@ -1393,21 +1389,11 @@ function DashboardTab(props: {
                             <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
                             <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            {badge === "over" && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600">
-                                +{fmt(overAmount, currency)} / {fmt(planned, currency)}
-                              </span>
-                            )}
-                            {badge === "watch" && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-pink-100 text-[#EC4899]">Watch</span>
-                            )}
-                            {badge === "ok" && actual > 0 && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">OK</span>
-                            )}
-                            <span className="text-[10px] font-bold text-[#9D5C7E] tabular-nums">
-                              {fmt(actual, currency)}<span className="opacity-60"> / {fmt(planned, currency)}</span>
+                          <div className="flex items-center gap-1 shrink-0 ml-2 tabular-nums">
+                            <span className={["text-[11px] font-bold", isOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
+                              {fmt(actual, currency)}
                             </span>
+                            <span className="text-[11px] text-[#C4A0B8]"> / {fmt(planned, currency)}</span>
                           </div>
                         </div>
                         <div className="flex h-2 rounded-full overflow-hidden bg-pink-100">
