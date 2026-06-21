@@ -608,7 +608,6 @@ export default function DiaryPage() {
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [toast, setToast] = useState(false);
-  const [bloomBelow, setBloomBelow] = useState(false);
 
   const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
 
@@ -753,55 +752,54 @@ export default function DiaryPage() {
       {/* ── Main content ── */}
       <div style={{ position: "relative", zIndex: 5, padding: "30px 20px 80px", maxWidth: 1180, margin: "0 auto" }}>
 
-        {/* ── Header ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", marginBottom: 22 }}>
-          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(38px,6vw,52px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
-            Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(20px,3vw,28px)" }}>✿</span>
-          </h1>
-          {/* New entry CTA */}
-          <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14.5, animation: "dd-glow 3.4s ease-in-out infinite" }}>
-            <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
-          </button>
-        </div>
+        {/* ── HERO ── */}
+        <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
+          {/* Mood ambient glow */}
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
 
-        {/* ── Bloom + Book column ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-
-          {/* Today's Bloom card (order toggles) */}
-          <div style={{ position: "relative", order: bloomBelow ? 2 : 0, borderRadius: 22, padding: "18px 20px", background: "rgba(255,255,255,.84)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
-            <button onClick={() => setBloomBelow((b) => !b)} title={bloomBelow ? "Move back to top" : "Move below the book"} style={{ position: "absolute", top: 12, right: 12, width: 28, height: 28, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(252,231,243,.9)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700 }}>
-              {bloomBelow ? "↑" : "✕"}
+          {/* Title + CTA row */}
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+            <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(34px,6vw,50px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
+              Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(18px,3vw,26px)" }}>✿</span>
+            </h1>
+            <button onClick={() => openAtPage(0)} style={{ flexShrink: 0, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite", boxShadow: "0 8px 22px rgba(219,39,119,.32)" }}>
+              <span style={{ fontSize: 17, lineHeight: 0 }}>+</span> New entry
             </button>
-            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-              {/* Cycle ring */}
-              <div style={{ position: "relative", width: 70, height: 70, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.16) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-                <div style={{ width: 54, height: 54, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center" }}>
-                  <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 24, color: "#EC4899" }}>{cycleDay}</span>
-                </div>
-              </div>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 27, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
-                <div style={{ fontSize: 13.5, color: "#9D5C7E", marginTop: 4 }}>
-                  <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
-                </div>
+          </div>
+
+          {/* Cycle ring + Today's Bloom */}
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 20 }}>
+            <div style={{ position: "relative", width: 68, height: 68, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.18) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto", boxShadow: "0 6px 20px rgba(236,72,153,.28)" }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center" }}>
+                <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 22, color: "#EC4899" }}>{cycleDay}</span>
               </div>
             </div>
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.22)" }}>
-              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 10 }}>How are you feeling?</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {MOOD_DATA.map((m) => {
-                  const sel = m.name === mood;
-                  return (
-                    <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px 7px 11px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12.5, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.16)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.8)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 8px 18px rgba(219,39,119,.32)" : "0 2px 8px rgba(236,72,153,.08)" }}>
-                      {m.icon}{m.name}
-                    </button>
-                  );
-                })}
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
+              <div style={{ fontSize: 13, color: "#9D5C7E", marginTop: 5 }}>
+                <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
               </div>
             </div>
           </div>
 
-          {/* ── The Book ── */}
+          {/* How are you feeling — compact strip */}
+          <div style={{ position: "relative", marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.2)" }}>
+            <div style={{ fontSize: 10, letterSpacing: ".13em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 8 }}>How are you feeling?</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {MOOD_DATA.map((m) => {
+                const sel = m.name === mood;
+                return (
+                  <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px 6px 9px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.15)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.75)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 6px 14px rgba(219,39,119,.28)" : "0 2px 6px rgba(236,72,153,.07)" }}>
+                    {m.icon}{m.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Bloom + Book column ── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div ref={bookRef} style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
 
