@@ -1368,7 +1368,7 @@ function DashboardTab(props: {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalActual  = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        const totalActual  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         const totalOverage = Math.max(0, totalActual - totalPlanned);
         return (
           <Card>
