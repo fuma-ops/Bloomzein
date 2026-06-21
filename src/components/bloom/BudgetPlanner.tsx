@@ -1099,30 +1099,30 @@ function DashboardTab(props: {
               </button>
             </div>
 
-            {/* total summary */}
-            <div className={["flex items-center gap-3 rounded-xl px-3 py-2.5 mb-4 border",
-              totalIsOver ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-100"
-            ].join(" ")}>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-1">THIS MONTH · TOTAL</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-bold text-[#831843]">{fmt(grandTotal, currency)}</span>
-                  <span className="text-[10px] text-[#9D5C7E]">planned {fmt(totalPlanned, currency)}</span>
-                  {totalIsOver && <span className="text-[10px] font-bold text-rose-500">+{fmt(totalExtra, currency)} extra</span>}
+            {/* total summary — 3 clean metrics */}
+            <div className={["rounded-xl px-3 py-2.5 mb-4 border", totalIsOver ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-100"].join(" ")}>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div>
+                  <p className="text-[9px] font-bold tracking-widest text-[#9D5C7E] mb-0.5">PLANNED</p>
+                  <p className="text-sm font-bold text-[#831843] tabular-nums">{fmt(totalPlanned, currency)}</p>
                 </div>
-                {/* two-part bar: pink (plan) + red (extra) */}
-                <div className="flex h-1.5 rounded-full overflow-hidden mt-1.5 bg-pink-100">
-                  <div className="h-full transition-all duration-700 rounded-l-full"
-                    style={{ width: totalIsOver ? `${(totalPlanned / grandTotal) * 100}%` : "100%", background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
-                  {totalIsOver && (
-                    <div className="h-full flex-1 transition-all duration-700 rounded-r-full"
-                      style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />
-                  )}
+                <div className="text-center">
+                  <p className="text-[9px] font-bold tracking-widest text-amber-600 mb-0.5">EXTRA</p>
+                  <p className={["text-sm font-bold tabular-nums", totalIsOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
+                    {totalIsOver ? `+${fmt(totalExtra, currency)}` : "—"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-bold tracking-widest text-[#9D5C7E] mb-0.5">REALITY</p>
+                  <p className={["text-sm font-bold tabular-nums", totalIsOver ? "text-rose-600" : "text-emerald-700"].join(" ")}>{fmt(grandTotal, currency)}</p>
                 </div>
               </div>
-              {totalIsOver
-                ? <XCircle className="h-6 w-6 text-rose-500 shrink-0" strokeWidth={1.8} />
-                : <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" strokeWidth={1.8} />}
+              {/* two-part bar */}
+              <div className="flex h-2 rounded-full overflow-hidden bg-pink-100">
+                <div className="h-full transition-all duration-700"
+                  style={{ width: totalIsOver ? `${(totalPlanned / grandTotal) * 100}%` : "100%", background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: totalIsOver ? "9999px 0 0 9999px" : "9999px" }} />
+                {totalIsOver && <div className="h-full flex-1 transition-all duration-700 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
+              </div>
             </div>
 
             {/* budgeted categories */}
@@ -1136,42 +1136,26 @@ function DashboardTab(props: {
                 // Pink portion = planned / total; red portion = extra / total
                 const pinkPct = isOver ? (planned / total) * 100 : 100;
                 const redPct  = isOver ? (extra / total) * 100 : 0;
+                const overPct = isOver ? Math.round((extra / planned) * 100) : 0;
                 return (
-                  <div key={k}>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline gap-2 mb-1">
-                          <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                          <span className="text-[10px] tabular-nums shrink-0" style={{ color: isOver ? "#EF4444" : "#9D5C7E" }}>
-                            {fmt(planned, currency)}{isOver ? ` + ${fmt(extra, currency)}` : ""}
-                          </span>
-                        </div>
-                        {/* two-part bar */}
-                        <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-50">
-                          <div className="h-full transition-all duration-700"
-                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
-                          {isOver && (
-                            <div className="h-full transition-all duration-700 rounded-r-full"
-                              style={{ width: `${redPct}%`, background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />
-                          )}
-                        </div>
+                  <div key={k} className="flex items-center gap-2.5">
+                    <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2 mb-1">
+                        <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                        <span className="text-[10px] tabular-nums shrink-0 text-[#9D5C7E]">{fmt(planned, currency)}</span>
                       </div>
-                      <div className="shrink-0 w-16 flex justify-end">
-                        {isOver
-                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 whitespace-nowrap">
-                              <XCircle className="h-2.5 w-2.5" /> +{fmt(extra, currency)}
-                            </span>
-                          : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
-                              <CheckCircle2 className="h-2.5 w-2.5" /> On plan
-                            </span>}
+                      <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-50">
+                        <div className="h-full transition-all duration-700"
+                          style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                        {isOver && <div className="h-full flex-1 transition-all duration-700 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
                       </div>
                     </div>
-                    {isOver && (
-                      <p className="mt-0.5 ml-8 text-[9px] text-rose-500 font-semibold">
-                        {fmt(total, currency)} total · {fmt(extra, currency)} over plan
-                      </p>
-                    )}
+                    <div className="shrink-0 w-14 flex justify-end">
+                      {isOver
+                        ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600">+{overPct}%</span>
+                        : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /></span>}
+                    </div>
                   </div>
                 );
               })}
@@ -1242,20 +1226,38 @@ function DashboardTab(props: {
           </div>
         </div>
         {catSpend.length > 0 ? (
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
-              <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
-                  {cat?.emoji ?? "💰"}
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {catSpend.slice(0, 6).map(({ key, cat, amount: amt }) => {
+              const plannedAmt = budget[key] ?? 0;
+              const extra = monthTxns.filter(t => t.type === "expense" && t.catKey === key).reduce((s, t) => s + t.amount, 0);
+              const isOver = plannedAmt > 0 && extra > 0;
+              const isUnplanned = plannedAmt === 0;
+              const overPct = isOver ? Math.round((extra / plannedAmt) * 100) : 0;
+              const pinkPct = isOver ? (plannedAmt / (plannedAmt + extra)) * 100 : 100;
+              return (
+                <div key={key} className="shrink-0 flex flex-col items-center gap-1 w-16">
+                  <div className={["grid h-11 w-11 place-items-center rounded-2xl text-xl shadow-sm border",
+                    isOver ? "bg-rose-50 border-rose-200" : isUnplanned ? "bg-amber-50 border-amber-200" : "bg-pink-50 border-pink-100"
+                  ].join(" ")}>
+                    {cat?.emoji ?? "💰"}
+                  </div>
+                  <p className="text-[9px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
+                  {/* two-part bar */}
+                  <div className="flex w-full h-1.5 rounded-full overflow-hidden bg-pink-100">
+                    {isUnplanned
+                      ? <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
+                      : <>
+                          <div className="h-full transition-all duration-700"
+                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                          {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
+                        </>}
+                  </div>
+                  <p className={["text-[9px] font-bold", isOver ? "text-rose-500" : isUnplanned ? "text-amber-500" : "text-emerald-600"].join(" ")}>
+                    {isUnplanned ? "New" : isOver ? `+${overPct}%` : "✓ Plan"}
+                  </p>
                 </div>
-                <p className="text-[10px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
-                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amt, currency)}</p>
-                <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden">
-                  <div className="h-full rounded-full bg-[#EC4899] transition-all duration-700" style={{ width: `${pct}%` }} />
-                </div>
-                <p className="text-[9px] text-[#9D5C7E] font-semibold">{pct}%</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="flex items-center gap-3 py-1">
