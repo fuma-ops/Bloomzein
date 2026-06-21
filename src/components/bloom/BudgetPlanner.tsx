@@ -8,7 +8,7 @@ import {
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
   Building2, LineChart as LineIcon, Calendar, Download, Filter, ArrowUpRight,
   ArrowDownRight, ArrowRight, CheckCircle2, CircleDot, Coins, Receipt,
-  Flag, FileBarChart, type LucideIcon,
+  Flag, FileBarChart, AlertTriangle, XCircle, type LucideIcon,
 } from "lucide-react";
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
@@ -862,6 +862,7 @@ function DashboardTab(props: {
   const allDone   = completed === steps.length;
 
   const goalTouchX = useRef<number | null>(null);
+  const [budgetShowAll, setBudgetShowAll] = useState(false);
 
   // Quick add sheet
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -1069,52 +1070,143 @@ function DashboardTab(props: {
       {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
 
-      {/* ③b BUDGET PLAN — always visible once budget is configured */}
+      {/* ③b BUDGET VS REALITY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
-        const visible = budgetedCats.slice(0, 5);
-        const extra = budgetedCats.length - visible.length;
+
+        // Unplanned: spent in a category with no budget set
+        const spentCatKeys = [...new Set(monthTxns.filter(t => t.type === "expense").map(t => t.catKey))];
+        const unplannedKeys = spentCatKeys.filter(k => !(budget[k] > 0));
+
+        const totalBudgeted = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const totalSpent    = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+        const totalPct      = totalBudgeted > 0 ? Math.min(150, (totalSpent / totalBudgeted) * 100) : 0;
+        const totalOver     = totalSpent > totalBudgeted;
+        const totalWarn     = !totalOver && totalPct >= 80;
+
+        const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
+
         return (
           <Card>
+            {/* header */}
             <div className="flex items-center justify-between mb-3">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget Plan
+                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget vs Reality
               </h3>
               <button onClick={() => setTab("Budget Setup")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
                 Edit <ChevronRight className="h-3 w-3" />
               </button>
             </div>
-            <div className="space-y-2.5">
-              {visible.map(k => {
-                const cat = allCats.find(c => c.key === k);
+
+            {/* total summary row */}
+            <div className={["flex items-center gap-3 rounded-xl px-3 py-2.5 mb-4 border",
+              totalOver ? "bg-rose-50 border-rose-200" : totalWarn ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-100"
+            ].join(" ")}>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-1">THIS MONTH · TOTAL</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-sm font-bold text-[#831843]">{fmt(totalSpent, currency)}</span>
+                  <span className="text-[10px] text-[#9D5C7E]">of {fmt(totalBudgeted, currency)}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/60 overflow-hidden mt-1.5">
+                  <div className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${Math.min(100, totalPct)}%`, background: totalOver ? "linear-gradient(90deg,#FCA5A5,#EF4444)" : totalWarn ? "linear-gradient(90deg,#FCD34D,#F59E0B)" : "linear-gradient(90deg,#6EE7B7,#10B981)" }} />
+                </div>
+              </div>
+              {totalOver
+                ? <XCircle className="h-6 w-6 text-rose-500 shrink-0" strokeWidth={1.8} />
+                : totalWarn
+                ? <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0" strokeWidth={1.8} />
+                : <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" strokeWidth={1.8} />}
+            </div>
+
+            {/* budgeted categories */}
+            <div className="space-y-3">
+              {visibleBudgeted.map(k => {
+                const cat    = allCats.find(c => c.key === k);
                 const budgeted = budget[k] ?? 0;
-                const spent = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                const pct = budgeted > 0 ? Math.min(100, (spent / budgeted) * 100) : 0;
-                const barColor = pct >= 90
-                  ? "linear-gradient(90deg,#F9A8D4,#EC4899)"
-                  : "linear-gradient(90deg,#C084FC,#EC4899)";
+                const spent  = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const rawPct = budgeted > 0 ? (spent / budgeted) * 100 : 0;
+                const over   = spent > budgeted;
+                const warn   = !over && rawPct >= 80;
+                const barColor = over  ? "linear-gradient(90deg,#FCA5A5,#EF4444)"
+                               : warn  ? "linear-gradient(90deg,#FCD34D,#F59E0B)"
+                               : "linear-gradient(90deg,#C084FC,#EC4899)";
                 return (
-                  <div key={k} className="flex items-center gap-3">
-                    <span className="text-lg shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-1 gap-2">
-                        <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                        <span className="text-[10px] text-[#9D5C7E] shrink-0 tabular-nums">{fmt(spent, currency)} / {fmt(budgeted, currency)}</span>
+                  <div key={k}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline gap-2 mb-1">
+                          <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                          <span className="text-[10px] tabular-nums shrink-0" style={{ color: over ? "#EF4444" : warn ? "#D97706" : "#9D5C7E" }}>
+                            {fmt(spent, currency)} / {fmt(budgeted, currency)}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-pink-100 overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, rawPct)}%`, background: barColor }} />
+                        </div>
                       </div>
-                      <div className="h-1.5 rounded-full bg-pink-100 overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor }} />
+                      <div className="shrink-0 w-14 flex justify-end">
+                        {over
+                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600"><XCircle className="h-2.5 w-2.5" /> Over</span>
+                          : warn
+                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-600"><AlertTriangle className="h-2.5 w-2.5" /> Watch</span>
+                          : spent > 0
+                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /> OK</span>
+                          : <span className="text-[10px] font-semibold text-[#9D5C7E]">—</span>}
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-[#9D5C7E] shrink-0 w-7 text-right">{Math.round(pct)}%</span>
+                    {over && (
+                      <p className="mt-0.5 ml-8 text-[9px] text-rose-500 font-semibold">
+                        {fmt(spent - budgeted, currency)} over budget this month
+                      </p>
+                    )}
                   </div>
                 );
               })}
             </div>
-            {extra > 0 && (
-              <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-xs text-[#EC4899] font-semibold hover:underline">
-                +{extra} more {extra === 1 ? "category" : "categories"}
+
+            {budgetedCats.length > 5 && (
+              <button onClick={() => setBudgetShowAll(v => !v)} className="mt-3 text-xs text-[#EC4899] font-semibold hover:underline">
+                {budgetShowAll ? "Show less" : `+${budgetedCats.length - 5} more categories`}
               </button>
+            )}
+
+            {/* unplanned spending */}
+            {unplannedKeys.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-pink-100">
+                <p className="text-[10px] font-bold tracking-widest text-amber-600 mb-2.5 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" /> UNPLANNED SPENDING
+                </p>
+                <div className="space-y-2.5">
+                  {unplannedKeys.map(k => {
+                    const cat   = allCats.find(c => c.key === k);
+                    const spent = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                    return (
+                      <div key={k} className="flex items-center gap-2.5">
+                        <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💸"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline gap-2 mb-1">
+                            <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                            <span className="text-[10px] font-bold text-amber-600 tabular-nums shrink-0">{fmt(spent, currency)}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-amber-100 overflow-hidden">
+                            <div className="h-full rounded-full bg-amber-400 w-full" />
+                          </div>
+                        </div>
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
+                          💸 Extra
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-[10px] font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                  <Plus className="h-3 w-3" /> Add these to your budget
+                </button>
+              </div>
             )}
           </Card>
         );
