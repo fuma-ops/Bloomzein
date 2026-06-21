@@ -431,10 +431,9 @@ function MiniRing({ pct, size = 100 }: { pct: number; size?: number }) {
   );
 }
 
-function BudgetLineGraph({ planned, extraTxns, isOver, currency }: {
+function BudgetHistorique({ planned, extraTxns, currency }: {
   planned: number;
   extraTxns: { date: string; amount: number }[];
-  isOver: boolean;
   currency: CurrencyKey;
 }) {
   const now = new Date();
@@ -444,25 +443,34 @@ function BudgetLineGraph({ planned, extraTxns, isOver, currency }: {
   const pad = (n: number) => String(n).padStart(2, "0");
   const isoDay = (d: number) => `${y}-${pad(mo + 1)}-${pad(d)}`;
 
-  // Reality line: planned + cumulative extra spends through each day
+  // Reality = cumulative actual spend starting from 0 (not planned + extra)
   const cumByDay = Array.from({ length: daysInMonth }, (_, i) => {
     const iso = isoDay(i + 1);
-    return planned + extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
+    return extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
   });
 
-  // First transaction date = proxy for when budget was set up / spending began
-  const firstTxnDay = extraTxns.length > 0
-    ? parseInt(extraTxns.reduce((a, b) => a.date < b.date ? a : b).date.slice(8), 10)
-    : 1;
+  const rawMax = Math.max(planned * 1.25, ...cumByDay.slice(0, today), 1);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
+  const maxY = Math.ceil(rawMax / magnitude) * magnitude;
 
-  const maxY = Math.max(planned * 1.35, ...cumByDay.slice(0, today)) || 1;
-  const W = 300, H = 140, pL = 10, pR = 10, pT = 28, pB = 24;
+  const W = 320, H = 180, pL = 50, pR = 12, pT = 20, pB = 28;
   const plotW = W - pL - pR, plotH = H - pT - pB;
   const xp = (d: number) => pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * plotW;
   const yp = (v: number) => pT + plotH - (v / maxY) * plotH;
   const baseline = pT + plotH;
 
-  // Smooth bezier path from [x,y] points (catmull-rom → cubic bezier)
+  const fmtY = (v: number) => {
+    if (v === 0) return "0";
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${(v / 1_000) % 1 === 0 ? v / 1_000 : (v / 1_000).toFixed(1)}k`;
+    return String(Math.round(v));
+  };
+
+  const yTicks = Array.from({ length: 5 }, (_, i) => (i * maxY) / 4);
+  const xLabels = [1, 5, 10, 15, 20, 25, daysInMonth]
+    .filter(d => d <= daysInMonth)
+    .filter((v, i, a) => a.indexOf(v) === i);
+
   const smoothPath = (pts: [number, number][], closeFill = false) => {
     if (pts.length < 2) return "";
     let d = `M ${pts[0][0]} ${pts[0][1]}`;
@@ -481,71 +489,72 @@ function BudgetLineGraph({ planned, extraTxns, isOver, currency }: {
     return d;
   };
 
-  const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+  const todayVal = cumByDay[today - 1] ?? 0;
+  const isOver = todayVal > planned;
   const realColor = isOver ? "#EF4444" : "#EC4899";
-  const fillColor0 = isOver ? "#FCA5A5" : "#F9A8D4";
-  const todayVal = cumByDay[today - 1] ?? planned;
-  const todayX = xp(today);
-  const todayY = yp(todayVal);
+  const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 148 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 190 }}>
         <defs>
-          <linearGradient id="lgFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={fillColor0} stopOpacity="0.55" />
-            <stop offset="100%" stopColor={fillColor0} stopOpacity="0" />
+          <linearGradient id="hFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isOver ? "#FCA5A5" : "#F9A8D4"} stopOpacity="0.5" />
+            <stop offset="100%" stopColor={isOver ? "#FCA5A5" : "#F9A8D4"} stopOpacity="0" />
           </linearGradient>
-          <linearGradient id="lgLine" x1="0" y1="0" x2="1" y2="0">
+          <linearGradient id="hLine" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={isOver ? "#F87171" : "#C084FC"} />
             <stop offset="100%" stopColor={realColor} />
           </linearGradient>
-          <filter id="glow" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <filter id="hGlow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* gradient fill under reality curve */}
+        {/* Y axis grid + labels */}
+        {yTicks.map((v, i) => (
+          <g key={i}>
+            <line x1={pL} y1={yp(v)} x2={W - pR} y2={yp(v)}
+              stroke="#FCE7F3" strokeWidth={i === 0 ? 1 : 0.6} />
+            <text x={pL - 5} y={yp(v) + 3} fontSize="7" fill="#C4A0B8" textAnchor="end">
+              {fmtY(v)}
+            </text>
+          </g>
+        ))}
+
+        {/* gradient fill */}
         {realPtsArr.length >= 2 && (
-          <path d={smoothPath(realPtsArr, true)} fill="url(#lgFill)" />
+          <path d={smoothPath(realPtsArr, true)} fill="url(#hFill)" />
         )}
 
-        {/* planned dashed reference line */}
-        {firstTxnDay > 1 && (
-          <line x1={xp(1)} y1={yp(planned)} x2={xp(firstTxnDay)} y2={yp(planned)}
-            stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.3" />
-        )}
-        <line x1={xp(firstTxnDay)} y1={yp(planned)} x2={xp(daysInMonth)} y2={yp(planned)}
-          stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.65" />
-        <text x={xp(daysInMonth)} y={yp(planned) - 5} fontSize="7.5" fill="#C084FC"
-          textAnchor="end" fontWeight="700">Planned · {fmt(planned, currency)}</text>
+        {/* budget reference line */}
+        <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
+          stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
+        <text x={W - pR} y={yp(planned) - 4} fontSize="7" fill="#C084FC"
+          textAnchor="end" fontWeight="700">Budget</text>
 
-        {/* glowing reality curve */}
+        {/* reality curve */}
         {realPtsArr.length >= 2 && (
-          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#lgLine)"
-            strokeWidth="2.8" strokeLinecap="round" filter="url(#glow)" />
+          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#hLine)"
+            strokeWidth="2.8" strokeLinecap="round" filter="url(#hGlow)" />
         )}
 
-        {/* today dot with pulse ring */}
+        {/* today dot */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={todayX} cy={todayY} r="6" fill={realColor} opacity="0.18" />
-            <circle cx={todayX} cy={todayY} r="3.5" fill={realColor} stroke="white" strokeWidth="1.5" />
-            <text x={todayX} y={todayY - 9} fontSize="7.5" fill={realColor}
+            <circle cx={xp(today)} cy={yp(todayVal)} r="6" fill={realColor} opacity="0.2" />
+            <circle cx={xp(today)} cy={yp(todayVal)} r="3.5" fill={realColor} stroke="white" strokeWidth="1.5" />
+            <text x={xp(today)} y={yp(todayVal) - 9} fontSize="7.5" fill={realColor}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
 
-        {/* x-axis baseline */}
+        {/* X axis */}
         <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
-        <text x={xp(1)} y={baseline + 13} fontSize="7.5" fill="#C4A0B8" textAnchor="middle">1</text>
-        <text x={xp(Math.ceil(daysInMonth / 2))} y={baseline + 13} fontSize="7.5" fill="#C4A0B8" textAnchor="middle">
-          {Math.ceil(daysInMonth / 2)}
-        </text>
-        <text x={xp(daysInMonth)} y={baseline + 13} fontSize="7.5" fill="#C4A0B8" textAnchor="middle">
-          {daysInMonth}
-        </text>
+        {xLabels.map(d => (
+          <text key={d} x={xp(d)} y={baseline + 14} fontSize="7" fill="#C4A0B8" textAnchor="middle">{d}</text>
+        ))}
       </svg>
 
       {/* legend */}
@@ -554,18 +563,88 @@ function BudgetLineGraph({ planned, extraTxns, isOver, currency }: {
           <svg width="20" height="8">
             <line x1="0" y1="4" x2="20" y2="4" stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
           </svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Planned</span>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Budget</span>
         </div>
         <div className="flex items-center gap-1.5">
           <svg width="20" height="8">
             <line x1="0" y1="4" x2="20" y2="4" stroke={realColor} strokeWidth="2.5" />
           </svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Reality</span>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Dépenses réelles</span>
         </div>
         <div className="flex items-center gap-1.5 ml-auto">
           <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill={realColor} /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Today</span>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Aujourd'hui</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function BudgetPie({ budgetedCats, budget, monthTxns, allCats, currency }: {
+  budgetedCats: string[];
+  budget: Budget;
+  monthTxns: Txn[];
+  allCats: Cat[];
+  currency: CurrencyKey;
+}) {
+  const PIE_COLORS = ["#EC4899", "#C084FC", "#F472B6", "#9D5C7E", "#A855F7", "#F9A8D4", "#831843", "#FBCFE8"];
+
+  const data = budgetedCats
+    .map((k, i) => {
+      const planned   = budget[k] ?? 0;
+      const actual    = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+      const overAmount = Math.max(0, actual - planned);
+      return { key: k, cat: allCats.find(c => c.key === k), planned, actual, overAmount, isOver: actual > planned, color: PIE_COLORS[i % PIE_COLORS.length] };
+    })
+    .filter(d => d.planned > 0);
+
+  const total = data.reduce((s, d) => s + d.planned, 0);
+  if (total === 0 || data.length === 0) return null;
+
+  const R = 48, ri = 26, cx = 64, cy = 64;
+  let angle = -Math.PI / 2;
+
+  const slices = data.map(d => {
+    const pct   = d.planned / total;
+    const start = angle;
+    const end   = angle + pct * Math.PI * 2;
+    angle = end;
+    const x1 = cx + R  * Math.cos(start), y1 = cy + R  * Math.sin(start);
+    const x2 = cx + R  * Math.cos(end),   y2 = cy + R  * Math.sin(end);
+    const ix1= cx + ri * Math.cos(start), iy1= cy + ri * Math.sin(start);
+    const ix2= cx + ri * Math.cos(end),   iy2= cy + ri * Math.sin(end);
+    const la  = pct > 0.5 ? 1 : 0;
+    return {
+      ...d, pct,
+      path: `M ${ix1.toFixed(1)} ${iy1.toFixed(1)} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 ${la} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${ix2.toFixed(1)} ${iy2.toFixed(1)} A ${ri} ${ri} 0 ${la} 0 ${ix1.toFixed(1)} ${iy1.toFixed(1)} Z`,
+    };
+  });
+
+  return (
+    <div className="flex items-center gap-4">
+      <svg viewBox="0 0 128 128" width="116" height="116" className="shrink-0">
+        {slices.map(s => (
+          <path key={s.key} d={s.path} fill={s.isOver ? "#EF4444" : s.color} stroke="white" strokeWidth="1.5" />
+        ))}
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="8" fill="#831843" fontWeight="700">
+          {fmt(total, currency)}
+        </text>
+        <text x={cx} y={cy + 8} textAnchor="middle" fontSize="6" fill="#9D5C7E">planifié</text>
+      </svg>
+      <div className="flex-1 min-w-0 space-y-1.5">
+        {slices.map(s => (
+          <div key={s.key} className="flex items-center gap-1.5 min-w-0">
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ background: s.isOver ? "#EF4444" : s.color }} />
+            <span className="text-[10px] text-[#831843] font-semibold truncate flex-1 min-w-0">
+              {s.cat?.emoji} {s.cat?.label ?? s.key}
+            </span>
+            <span className="text-[9px] tabular-nums shrink-0 font-semibold">
+              {s.isOver
+                ? <span className="text-rose-500">+{fmt(s.overAmount, currency)}</span>
+                : <span className="text-[#9D5C7E]">{fmt(s.planned, currency)}</span>}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1219,11 +1298,9 @@ function DashboardTab(props: {
         const spentCatKeys = [...new Set(monthTxns.filter(t => t.type === "expense").map(t => t.catKey))];
         const unplannedKeys = spentCatKeys.filter(k => !(budget[k] > 0));
 
-        // Total: plan (committed) + any extra logged on top
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalExtra   = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
-        const grandTotal   = totalPlanned + totalExtra;
-        const totalIsOver  = totalExtra > 0;
+        const totalActual  = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        const totalIsOver  = totalActual > totalPlanned;
 
         const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
 
@@ -1239,12 +1316,13 @@ function DashboardTab(props: {
               </button>
             </div>
 
-            {/* total summary — line graph */}
-            <div className="mb-4 -mx-1">
-              <BudgetLineGraph
-                planned={totalPlanned}
-                extraTxns={monthTxns.filter(t => t.type === "expense")}
-                isOver={totalIsOver}
+            {/* total summary — pie chart */}
+            <div className="mb-4">
+              <BudgetPie
+                budgetedCats={budgetedCats}
+                budget={budget}
+                monthTxns={monthTxns}
+                allCats={allCats}
                 currency={currency}
               />
             </div>
@@ -1252,15 +1330,15 @@ function DashboardTab(props: {
             {/* budgeted categories */}
             <div className="space-y-3">
               {visibleBudgeted.map(k => {
-                const cat     = allCats.find(c => c.key === k);
-                const planned = budget[k] ?? 0;
-                const extra   = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                const total   = planned + extra;
-                const isOver  = extra > 0;
-                // Pink portion = planned / total; red portion = extra / total
-                const pinkPct = isOver ? (planned / total) * 100 : 100;
-                const redPct  = isOver ? (extra / total) * 100 : 0;
-                const overPct = isOver ? Math.round((extra / planned) * 100) : 0;
+                const cat        = allCats.find(c => c.key === k);
+                const planned    = budget[k] ?? 0;
+                const actual     = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const overAmount = Math.max(0, actual - planned);
+                const isOver     = actual > planned;
+                // Pink = up to planned, red = amount over
+                const pinkPct    = isOver ? (planned / actual) * 100 : 100;
+                const redPct     = isOver ? (overAmount / actual) * 100 : 0;
+                const overPct    = isOver ? Math.round((overAmount / planned) * 100) : 0;
                 const badge = isOver
                   ? overPct > 50
                     ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 whitespace-nowrap"><XCircle className="h-2.5 w-2.5" /> Over</span>
@@ -1273,7 +1351,7 @@ function DashboardTab(props: {
                       <div className="flex justify-between items-baseline gap-2 mb-1">
                         <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
                         <span className="text-[10px] tabular-nums shrink-0">
-                          {isOver && <span className="text-rose-500 font-bold">+{fmt(extra, currency)} / </span>}
+                          {isOver && <span className="text-rose-500 font-bold">+{fmt(overAmount, currency)} / </span>}
                           <span className="text-[#9D5C7E]">{fmt(planned, currency)}</span>
                         </span>
                       </div>
@@ -1574,6 +1652,31 @@ function DashboardTab(props: {
           )}
         </Card>
       </div>
+
+      {/* HISTORIQUE DES DÉPENSES */}
+      {(() => {
+        const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        if (totalPlanned === 0) return null;
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
+                Historique des Dépenses
+              </h3>
+              <span className="text-[10px] text-[#9D5C7E] font-semibold">
+                {new Date().toLocaleString("default", { month: "long", year: "numeric" })}
+              </span>
+            </div>
+            <BudgetHistorique
+              planned={totalPlanned}
+              extraTxns={monthTxns.filter(t => t.type === "expense")}
+              currency={currency}
+            />
+          </Card>
+        );
+      })()}
 
       {/* Detailed log form */}
       {txns.length > 0 && (
