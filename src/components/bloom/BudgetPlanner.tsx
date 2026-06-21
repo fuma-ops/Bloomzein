@@ -1378,10 +1378,8 @@ function DashboardTab(props: {
                     const cat = allCats.find(c => c.key === k);
                     const planned = budget[k] ?? 0;
                     const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                    const overAmount = Math.max(0, actual - planned);
                     const isOver = actual > planned;
                     const fillPct = planned > 0 ? Math.min(100, (isOver ? planned / actual : actual / planned) * 100) : 0;
-                    const badge = actual === 0 ? "ok" : isOver ? "over" : actual / planned > 0.8 ? "watch" : "ok";
                     return (
                       <div key={k}>
                         <div className="flex items-center justify-between mb-1">
