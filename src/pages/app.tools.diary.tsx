@@ -605,7 +605,6 @@ export default function DiaryPage() {
 
   // UI state
   const [mood, setMood] = useState("Calm");
-  const [tab, setTab] = useState("Journal");
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [toast, setToast] = useState(false);
@@ -755,29 +754,14 @@ export default function DiaryPage() {
       <div style={{ position: "relative", zIndex: 5, padding: "30px 20px 80px", maxWidth: 1180, margin: "0 auto" }}>
 
         {/* ── Header ── */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap", marginBottom: 22 }}>
-          <div>
-            <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(38px,6vw,52px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
-              Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(20px,3vw,28px)" }}>✿</span>
-            </h1>
-            <p style={{ margin: "7px 0 0", fontSize: 14, color: "#9D5C7E", fontWeight: 500 }}>
-              Your softest pages — open the book, turn with the arrows, and write.
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            {/* Segmented tabs */}
-            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: 5, borderRadius: 999, background: "rgba(255,255,255,.7)", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 4px 14px rgba(236,72,153,.1)" }}>
-              {["Journal", "List", "Pinned", "Book"].map((t) => (
-                <button key={t} onClick={() => setTab(t)} style={{ border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 999, fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 13.5, transition: "all .25s ease", background: t === tab ? "linear-gradient(135deg,#F472B6,#DB2777)" : "transparent", color: t === tab ? "#fff" : "#9D5C7E", boxShadow: t === tab ? "0 6px 14px rgba(219,39,119,.3)" : "none" }}>
-                  {t}
-                </button>
-              ))}
-            </div>
-            {/* New entry CTA */}
-            <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14.5, animation: "dd-glow 3.4s ease-in-out infinite" }}>
-              <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
-            </button>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", marginBottom: 22 }}>
+          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(38px,6vw,52px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
+            Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(20px,3vw,28px)" }}>✿</span>
+          </h1>
+          {/* New entry CTA */}
+          <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14.5, animation: "dd-glow 3.4s ease-in-out infinite" }}>
+            <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
+          </button>
         </div>
 
         {/* ── Bloom + Book column ── */}
