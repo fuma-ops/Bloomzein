@@ -193,6 +193,10 @@ const DIARY_CSS = `
   .dd-textarea{ scrollbar-width:none;-ms-overflow-style:none; }
   .dd-item .dd-del{ opacity:0;transition:opacity .18s ease; }
   .dd-item:hover .dd-del{ opacity:1; }
+  @keyframes dd-hscroll { from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+  .dd-marquee { display:flex; width:max-content; animation:dd-hscroll 26s linear infinite; }
+  .dd-marquee:hover { animation-play-state:paused; }
+  .dd-hbox { overflow:hidden; }
 `;
 
 /* ─── Mood fallback for memories ─────────────────────────────────── */
@@ -615,6 +619,9 @@ export default function DiaryPage() {
   const [toast, setToast] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [popoverPos, setPopoverPos] = useState({ top: 0, right: 16 });
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterPos, setFilterPos] = useState({ top: 0, right: 16 });
 
   const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
 
@@ -622,6 +629,7 @@ export default function DiaryPage() {
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bookRef = useRef<HTMLDivElement>(null);
   const moodBtnRef = useRef<HTMLButtonElement>(null);
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
 
   // Derived
   const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
@@ -716,13 +724,64 @@ export default function DiaryPage() {
 
   const filteredMems = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return entries.slice(0, 8);
-    return entries.filter((e) => (e.title + " " + e.mood).toLowerCase().includes(q)).slice(0, 8);
-  }, [entries, search]);
+    const now = new Date();
+    let list = entries.filter((e) => {
+      if (q && !(e.title + " " + e.mood).toLowerCase().includes(q)) return false;
+      if (dateFilter === "today") return e.date === todayISO();
+      if (dateFilter === "week") {
+        const d = new Date(now); d.setDate(d.getDate() - 7);
+        return new Date(e.date + "T00:00:00") >= d;
+      }
+      if (dateFilter === "month") {
+        const d = new Date(now); d.setDate(d.getDate() - 30);
+        return new Date(e.date + "T00:00:00") >= d;
+      }
+      return true;
+    });
+    return list.slice(0, 10);
+  }, [entries, search, dateFilter]);
 
   return (
     <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843" }}>
       <style>{DIARY_CSS}</style>
+
+      {/* Date filter popup — root level to avoid stacking context issues */}
+      {filterOpen && (
+        <>
+          <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 198 }} />
+          <div style={{ position: "fixed", top: filterPos.top, right: filterPos.right, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "14px 12px", minWidth: 180 }}>
+            <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "#B07291", marginBottom: 10 }}>Filter by date</div>
+            {(["all", "today", "week", "month"] as const).map((f) => {
+              const labels = { all: "All time", today: "Today", week: "Last 7 days", month: "Last 30 days" };
+              const sel = dateFilter === f;
+              return (
+                <button key={f} onClick={() => { setDateFilter(f); setFilterOpen(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 13, marginBottom: 4, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
+                  {labels[f]}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Mood popover — rendered at root level to escape hero's backdrop-filter stacking context */}
+      {moodOpen && (
+        <>
+          <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 198 }} />
+          <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
+            {MOOD_DATA.map((m) => {
+              const sel = m.name === mood;
+              return (
+                <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
+                  <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
+                  {m.name}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+
 
       {/* ── Hero section (title + Today's Bloom unified) ── */}
       <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
@@ -769,23 +828,6 @@ export default function DiaryPage() {
                     </svg>
                 }
               </button>
-              {/* Mood popover — position:fixed escapes hero overflow:hidden */}
-              {moodOpen && (
-                <>
-                  <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 28 }} />
-                  <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 29, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
-                    {MOOD_DATA.map((m) => {
-                      const sel = m.name === mood;
-                      return (
-                        <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
-                          <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
-                          {m.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
             </div>
           )}
         </div>
@@ -827,7 +869,7 @@ export default function DiaryPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
           {/* ── The Book ── */}
-          <div ref={bookRef} style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div ref={bookRef} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
 
               {/* Prev arrow */}
@@ -921,104 +963,88 @@ export default function DiaryPage() {
             </div>
           </div>
 
+        {/* ── Recent memories ── */}
+        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px 16px", background: "rgba(255,255,255,.82)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Recent memories</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* Search */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: "rgba(252,231,243,.7)", border: "1px solid rgba(236,72,153,.16)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth={2} strokeLinecap="round" style={{ flex: "0 0 auto" }}><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="search…" style={{ border: "none", outline: "none", background: "transparent", width: 90, fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, color: "#831843" }} />
+              </div>
+              {/* Date filter button */}
+              <button
+                ref={filterBtnRef}
+                onClick={() => {
+                  if (filterBtnRef.current) {
+                    const r = filterBtnRef.current.getBoundingClientRect();
+                    setFilterPos({ top: r.bottom + 8, right: Math.max(12, window.innerWidth - r.right) });
+                  }
+                  setFilterOpen((o) => !o);
+                }}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: dateFilter !== "all" ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: dateFilter !== "all" ? "#fff" : "#DB2777", transition: "all .2s ease" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                {dateFilter === "all" ? "Date" : dateFilter === "today" ? "Today" : dateFilter === "week" ? "7 days" : "30 days"}
+              </button>
+            </div>
+          </div>
+          <div className="dd-hbox" style={{ margin: "0 -22px", padding: "8px 22px 12px" }}>
+            <div className="dd-marquee" style={{ gap: 18 }}>
+              {[...filteredMems, ...filteredMems].map((entry, i) => {
+                const t = MEM_TINTS[i % MEM_TINTS.length];
+                const rot = MEM_ROTS[i % MEM_ROTS.length];
+                return (
+                  <div key={`${entry.id}-${i}`} className="dd-mem" onClick={() => openMemory(entry)} style={{ flex: "0 0 auto", width: 190, position: "relative", display: "flex", flexDirection: "column", padding: "14px 13px 13px", borderRadius: "4px 14px 6px 16px", boxShadow: "0 10px 24px rgba(131,24,67,.13)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", background: t.bg, transform: `rotate(${rot}deg)` }}>
+                    <div style={{ position: "absolute", top: 8, right: 10, width: 24, height: 24, opacity: .9 }}>
+                      <MemFlower pc={t.fp} fc={t.fc} />
+                    </div>
+                    <div style={{ position: "absolute", top: -9, left: "50%", transform: "translateX(-50%) rotate(-3deg)", width: 48, height: 16, background: t.tape, boxShadow: "0 2px 5px rgba(131,24,67,.16)" }} />
+                    <div style={{ marginTop: 4, width: "100%", height: 96, borderRadius: 8, overflow: "hidden" }}>
+                      {entry.images?.[0]
+                        ? <img src={entry.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                        : <MemFallback mood={entry.mood} tint={t.fp} />
+                      }
+                    </div>
+                    <div style={{ marginTop: 10, fontFamily: "'Caveat',cursive", fontSize: 20, color: "#831843", lineHeight: 1.05 }}>{entry.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3 }}>
+                      <span style={{ fontSize: 11, color: "#9D5C7E", fontWeight: 600 }}>
+                        {new Date(entry.date + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                      </span>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: t.tag, background: "rgba(255,255,255,.85)", padding: "3px 9px", borderRadius: 999 }}>
+                        {entry.mood}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+              {filteredMems.length === 0 && (
+                <div style={{ padding: "20px 8px", fontFamily: "'Caveat',cursive", fontSize: 19, color: "#C9A6B8" }}>
+                  no memories match — but tomorrow is a fresh page ✿
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* ── Prompts to bloom ── */}
-        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px 16px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
             <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Prompts to bloom</span>
             <span style={{ fontSize: 16 }}>✿</span>
           </div>
-          <div style={{ fontSize: 12.5, color: "#9D5C7E", marginBottom: 14 }}>Not sure what to write? Tap a prompt and a fresh page opens for you.</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
-            {PROMPT_DATA.map((p) => (
-              <button key={p.text} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.12)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 16px rgba(236,72,153,.08)", background: p.tint }}>
-                <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "#fff", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.12)" }}>
-                  {PROMPT_ICONS[p.icon]}
-                </span>
-                <span style={{ fontFamily: "'Caveat',cursive", fontSize: 20, color: "#831843", lineHeight: 1.15, textAlign: "left" }}>{p.text}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Recent memories ── */}
-        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px", background: "rgba(255,255,255,.82)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Recent memories</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 999, background: "rgba(252,231,243,.7)", border: "1px solid rgba(236,72,153,.16)", minWidth: 170 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth={2} strokeLinecap="round" style={{ flex: "0 0 auto" }}><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="search memories…" style={{ border: "none", outline: "none", background: "transparent", width: "100%", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12.5, color: "#831843" }} />
+          <div className="dd-hbox" style={{ margin: "0 -22px", padding: "4px 22px 10px" }}>
+            <div className="dd-marquee" style={{ gap: 12, animationDuration: "32s" }}>
+              {[...PROMPT_DATA, ...PROMPT_DATA].map((p, i) => (
+                <button key={i} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ flex: "0 0 auto", width: 230, display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.12)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 16px rgba(236,72,153,.08)", background: p.tint }}>
+                  <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "#fff", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.12)" }}>
+                    {PROMPT_ICONS[p.icon]}
+                  </span>
+                  <span style={{ fontFamily: "'Caveat',cursive", fontSize: 19, color: "#831843", lineHeight: 1.15, textAlign: "left" }}>{p.text}</span>
+                </button>
+              ))}
             </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(190px,1fr))", gap: 18 }}>
-            {filteredMems.map((entry, i) => {
-              const t = MEM_TINTS[i % MEM_TINTS.length];
-              const rot = MEM_ROTS[i % MEM_ROTS.length];
-              return (
-                <div key={entry.id} className="dd-mem" onClick={() => openMemory(entry)} style={{ position: "relative", display: "flex", flexDirection: "column", padding: "14px 13px 13px", borderRadius: "4px 14px 6px 16px", boxShadow: "0 10px 24px rgba(131,24,67,.13)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", background: t.bg, transform: `rotate(${rot}deg)` }}>
-                  {/* Flower top-right */}
-                  <div style={{ position: "absolute", top: 8, right: 10, width: 24, height: 24, opacity: .9 }}>
-                    <MemFlower pc={t.fp} fc={t.fc} />
-                  </div>
-                  {/* Tape */}
-                  <div style={{ position: "absolute", top: -9, left: "50%", transform: "translateX(-50%) rotate(-3deg)", width: 48, height: 16, background: t.tape, boxShadow: "0 2px 5px rgba(131,24,67,.16)" }} />
-                  {/* Photo or cute fallback */}
-                  <div style={{ marginTop: 4, width: "100%", height: 96, borderRadius: 8, overflow: "hidden" }}>
-                    {entry.images?.[0]
-                      ? <img src={entry.images[0]} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-                      : <MemFallback mood={entry.mood} tint={t.fp} />
-                    }
-                  </div>
-                  <div style={{ marginTop: 10, fontFamily: "'Caveat',cursive", fontSize: 21, color: "#831843", lineHeight: 1.05 }}>{entry.title}</div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3 }}>
-                    <span style={{ fontSize: 11, color: "#9D5C7E", fontWeight: 600 }}>
-                      {new Date(entry.date + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                    </span>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: t.tag, background: "rgba(255,255,255,.85)", padding: "3px 9px", borderRadius: 999 }}>
-                      {entry.mood}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-            {filteredMems.length === 0 && (
-              <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 18, fontFamily: "'Caveat',cursive", fontSize: 19, color: "#C9A6B8" }}>
-                no memories match — but tomorrow is a fresh page ✿
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Charms row ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 18, marginTop: 22 }}>
-          {/* Writing streak */}
-          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Writing streak</div>
-              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>Day {Math.max(1, streak + savedCount)}</div>
-              <div style={{ fontSize: 11.5, color: "#9D5C7E" }}>keep your soft habit ✿</div>
-            </div>
-            <div style={{ position: "relative", width: 40, height: 40, flex: "0 0 auto" }}>
-              <div style={{ position: "absolute", left: 18, bottom: 0, width: 3, height: 26, background: "#7ECAB9", borderRadius: 2 }} />
-              <div style={{ position: "absolute", left: 11, top: 2, width: 18, height: 18, borderRadius: "50% 0", background: "radial-gradient(circle at 40% 40%,#F9A8D4,#EC4899)", boxShadow: "0 4px 10px rgba(236,72,153,.3)" }} />
-            </div>
-          </div>
-          {/* Current mood */}
-          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Current mood</div>
-              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>{mood}</div>
-              <div style={{ fontSize: 11.5, color: "#9D5C7E" }}>the diary glows with you</div>
-            </div>
-            <div style={{ width: 38, height: 38, borderRadius: "50%", background: moodTint, boxShadow: "0 6px 16px rgba(236,72,153,.3),inset 0 0 0 4px rgba(255,255,255,.6)", transition: "background 1s ease", flex: "0 0 auto" }} />
-          </div>
-          {/* Current phase */}
-          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Current phase</div>
-              <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>{phase}</div>
-              <div style={{ fontSize: 11.5, color: "#9D5C7E" }}>honor your need for rest</div>
-            </div>
-            <div style={{ width: 38, height: 38, borderRadius: "50%", background: `conic-gradient(#F9C784 0% ${(cycleDay / 28) * 100}%,rgba(249,199,132,.25) ${(cycleDay / 28) * 100}% 100%)`, boxShadow: "inset 0 0 0 4px rgba(255,255,255,.6)", flex: "0 0 auto" }} />
           </div>
         </div>
 
