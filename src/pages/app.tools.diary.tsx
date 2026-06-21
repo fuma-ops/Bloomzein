@@ -753,12 +753,9 @@ export default function DiaryPage() {
       <div style={{ position: "relative", zIndex: 5, padding: "30px 20px 80px", maxWidth: 1180, margin: "0 auto" }}>
 
         {/* ── HERO ── */}
-        <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
-          {/* Mood ambient glow */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
-
+        <div style={{ position: "relative", marginBottom: 28, padding: "6px 4px 0" }}>
           {/* Title + CTA row */}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
             <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(34px,6vw,50px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
               Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(18px,3vw,26px)" }}>✿</span>
             </h1>
@@ -768,9 +765,9 @@ export default function DiaryPage() {
           </div>
 
           {/* Cycle ring + Today's Bloom */}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 22 }}>
             <div style={{ position: "relative", width: 68, height: 68, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.18) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto", boxShadow: "0 6px 20px rgba(236,72,153,.28)" }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center" }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,.9)", display: "grid", placeItems: "center" }}>
                 <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 22, color: "#EC4899" }}>{cycleDay}</span>
               </div>
             </div>
@@ -783,13 +780,13 @@ export default function DiaryPage() {
           </div>
 
           {/* How are you feeling — compact strip */}
-          <div style={{ position: "relative", marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.2)" }}>
+          <div style={{ marginTop: 18 }}>
             <div style={{ fontSize: 10, letterSpacing: ".13em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 8 }}>How are you feeling?</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MOOD_DATA.map((m) => {
                 const sel = m.name === mood;
                 return (
-                  <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px 6px 9px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.15)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.75)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 6px 14px rgba(219,39,119,.28)" : "0 2px 6px rgba(236,72,153,.07)" }}>
+                  <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 11px 6px 9px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.22)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.55)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 6px 14px rgba(219,39,119,.28)" : "none", backdropFilter: "blur(4px)" }}>
                     {m.icon}{m.name}
                   </button>
                 );
@@ -896,16 +893,15 @@ export default function DiaryPage() {
         </div>
 
         {/* ── Prompts to bloom ── */}
-        <div style={{ marginTop: 30, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div style={{ marginTop: 30, padding: "0 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Prompts to bloom</span>
             <span style={{ fontSize: 16 }}>✿</span>
           </div>
-          <div style={{ fontSize: 12.5, color: "#9D5C7E", marginBottom: 14 }}>Not sure what to write? Tap a prompt and a fresh page opens for you.</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
             {PROMPT_DATA.map((p) => (
-              <button key={p.text} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.12)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 16px rgba(236,72,153,.08)", background: p.tint }}>
-                <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "#fff", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.12)" }}>
+              <button key={p.text} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.18)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 20px rgba(236,72,153,.12)", background: p.tint }}>
+                <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "rgba(255,255,255,.8)", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.1)" }}>
                   {PROMPT_ICONS[p.icon]}
                 </span>
                 <span style={{ fontFamily: "'Caveat',cursive", fontSize: 20, color: "#831843", lineHeight: 1.15, textAlign: "left" }}>{p.text}</span>
@@ -915,10 +911,10 @@ export default function DiaryPage() {
         </div>
 
         {/* ── Recent memories ── */}
-        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px", background: "rgba(255,255,255,.82)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ marginTop: 30, padding: "0 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
             <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Recent memories</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 999, background: "rgba(252,231,243,.7)", border: "1px solid rgba(236,72,153,.16)", minWidth: 170 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 999, background: "rgba(255,255,255,.55)", border: "1px solid rgba(236,72,153,.2)", minWidth: 170, backdropFilter: "blur(6px)" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth={2} strokeLinecap="round" style={{ flex: "0 0 auto" }}><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="search memories…" style={{ border: "none", outline: "none", background: "transparent", width: "100%", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12.5, color: "#831843" }} />
             </div>
@@ -963,9 +959,9 @@ export default function DiaryPage() {
         </div>
 
         {/* ── Charms row ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 18, marginTop: 22 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 18, marginTop: 28, padding: "0 4px" }}>
           {/* Writing streak */}
-          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Writing streak</div>
               <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>Day {Math.max(1, streak + savedCount)}</div>
@@ -977,7 +973,7 @@ export default function DiaryPage() {
             </div>
           </div>
           {/* Current mood */}
-          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Current mood</div>
               <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>{mood}</div>
@@ -986,7 +982,7 @@ export default function DiaryPage() {
             <div style={{ width: 38, height: 38, borderRadius: "50%", background: moodTint, boxShadow: "0 6px 16px rgba(236,72,153,.3),inset 0 0 0 4px rgba(255,255,255,.6)", transition: "background 1s ease", flex: "0 0 auto" }} />
           </div>
           {/* Current phase */}
-          <div style={{ borderRadius: 20, padding: "16px 20px", background: "rgba(255,255,255,.8)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 12px 28px rgba(236,72,153,.11)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700 }}>Current phase</div>
               <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 28, color: "#831843", lineHeight: 1.1 }}>{phase}</div>
