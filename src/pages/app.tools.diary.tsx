@@ -782,6 +782,7 @@ export default function DiaryPage() {
         </>
       )}
 
+
       {/* ── Hero section (title + Today's Bloom unified) ── */}
       <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
         {/* Mood ambient glow */}

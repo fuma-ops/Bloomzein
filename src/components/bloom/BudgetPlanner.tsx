@@ -443,7 +443,6 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const pad = (n: number) => String(n).padStart(2, "0");
   const isoDay = (d: number) => `${y}-${pad(mo + 1)}-${pad(d)}`;
 
-  // Reality = cumulative actual spend starting from 0 (not planned + extra)
   const cumByDay = Array.from({ length: daysInMonth }, (_, i) => {
     const iso = isoDay(i + 1);
     return extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
@@ -453,23 +452,12 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
   const maxY = Math.ceil(rawMax / magnitude) * magnitude;
 
-  const W = 320, H = 180, pL = 50, pR = 12, pT = 20, pB = 28;
+  // Same compact dimensions as the Income vs Expenses bar chart (h-28 ≈ 112px)
+  const W = 280, H = 100, pL = 8, pR = 8, pT = 18, pB = 20;
   const plotW = W - pL - pR, plotH = H - pT - pB;
   const xp = (d: number) => pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * plotW;
   const yp = (v: number) => pT + plotH - (v / maxY) * plotH;
   const baseline = pT + plotH;
-
-  const fmtY = (v: number) => {
-    if (v === 0) return "0";
-    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-    if (v >= 1_000) return `${(v / 1_000) % 1 === 0 ? v / 1_000 : (v / 1_000).toFixed(1)}k`;
-    return String(Math.round(v));
-  };
-
-  const yTicks = Array.from({ length: 5 }, (_, i) => (i * maxY) / 4);
-  const xLabels = [1, 5, 10, 15, 20, 25, daysInMonth]
-    .filter(d => d <= daysInMonth)
-    .filter((v, i, a) => a.indexOf(v) === i);
 
   const smoothPath = (pts: [number, number][], closeFill = false) => {
     if (pts.length < 2) return "";
@@ -490,161 +478,152 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   };
 
   const todayVal = cumByDay[today - 1] ?? 0;
-  const isOver = todayVal > planned;
-  const realColor = isOver ? "#EF4444" : "#EC4899";
   const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 190 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 112 }}>
         <defs>
-          <linearGradient id="hFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={isOver ? "#FCA5A5" : "#F9A8D4"} stopOpacity="0.5" />
-            <stop offset="100%" stopColor={isOver ? "#FCA5A5" : "#F9A8D4"} stopOpacity="0" />
+          <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
+            <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0" />
           </linearGradient>
-          <linearGradient id="hLine" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor={isOver ? "#F87171" : "#C084FC"} />
-            <stop offset="100%" stopColor={realColor} />
+          <linearGradient id="shLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#F9A8D4" />
+            <stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
-          <filter id="hGlow" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+          <filter id="shGlow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* Y axis grid + labels */}
-        {yTicks.map((v, i) => (
-          <g key={i}>
-            <line x1={pL} y1={yp(v)} x2={W - pR} y2={yp(v)}
-              stroke="#FCE7F3" strokeWidth={i === 0 ? 1 : 0.6} />
-            <text x={pL - 5} y={yp(v) + 3} fontSize="7" fill="#C4A0B8" textAnchor="end">
-              {fmtY(v)}
-            </text>
-          </g>
-        ))}
+        {/* subtle grid */}
+        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.6" />
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="0.8" />
 
-        {/* gradient fill */}
+        {/* gradient fill under curve */}
         {realPtsArr.length >= 2 && (
-          <path d={smoothPath(realPtsArr, true)} fill="url(#hFill)" />
+          <path d={smoothPath(realPtsArr, true)} fill="url(#shFill)" />
         )}
 
-        {/* budget reference line */}
+        {/* budget reference line — light pink dashed */}
         <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
-          stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
-        <text x={W - pR} y={yp(planned) - 4} fontSize="7" fill="#C084FC"
-          textAnchor="end" fontWeight="700">Budget</text>
+          stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" />
+        <text x={W - pR - 2} y={yp(planned) - 3} fontSize="6.5" fill="#EC4899"
+          textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
-        {/* reality curve */}
+        {/* spending curve — all pink */}
         {realPtsArr.length >= 2 && (
-          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#hLine)"
-            strokeWidth="2.8" strokeLinecap="round" filter="url(#hGlow)" />
+          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#shLine)"
+            strokeWidth="2.5" strokeLinecap="round" filter="url(#shGlow)" />
         )}
 
         {/* today dot */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={xp(today)} cy={yp(todayVal)} r="6" fill={realColor} opacity="0.2" />
-            <circle cx={xp(today)} cy={yp(todayVal)} r="3.5" fill={realColor} stroke="white" strokeWidth="1.5" />
-            <text x={xp(today)} y={yp(todayVal) - 9} fontSize="7.5" fill={realColor}
+            <circle cx={xp(today)} cy={yp(todayVal)} r="5" fill="#EC4899" opacity="0.2" />
+            <circle cx={xp(today)} cy={yp(todayVal)} r="3" fill="#EC4899" stroke="white" strokeWidth="1.5" />
+            <text x={xp(today)} y={yp(todayVal) - 6} fontSize="6.5" fill="#EC4899"
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
 
-        {/* X axis */}
-        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
-        {xLabels.map(d => (
-          <text key={d} x={xp(d)} y={baseline + 14} fontSize="7" fill="#C4A0B8" textAnchor="middle">{d}</text>
-        ))}
+        {/* X axis labels */}
+        <text x={xp(1)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">1</text>
+        <text x={xp(Math.ceil(daysInMonth / 2))} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
+          {Math.ceil(daysInMonth / 2)}
+        </text>
+        <text x={xp(daysInMonth)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
+          {daysInMonth}
+        </text>
       </svg>
 
       {/* legend */}
-      <div className="flex items-center gap-5 px-2 mt-1">
-        <div className="flex items-center gap-1.5">
-          <svg width="20" height="8">
-            <line x1="0" y1="4" x2="20" y2="4" stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
-          </svg>
+      <div className="flex items-center gap-4 mt-1 px-1">
+        <div className="flex items-center gap-1">
+          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" /></svg>
           <span className="text-[9px] font-semibold text-[#9D5C7E]">Budget</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <svg width="20" height="8">
-            <line x1="0" y1="4" x2="20" y2="4" stroke={realColor} strokeWidth="2.5" />
-          </svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Dépenses réelles</span>
+        <div className="flex items-center gap-1">
+          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="2" /></svg>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Spending</span>
         </div>
-        <div className="flex items-center gap-1.5 ml-auto">
-          <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill={realColor} /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Aujourd'hui</span>
+        <div className="flex items-center gap-1 ml-auto">
+          <svg width="8" height="8"><circle cx="4" cy="4" r="3" fill="#EC4899" /></svg>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Today</span>
         </div>
       </div>
     </div>
   );
 }
 
-function BudgetPie({ budgetedCats, budget, monthTxns, allCats, currency }: {
-  budgetedCats: string[];
-  budget: Budget;
-  monthTxns: Txn[];
-  allCats: Cat[];
+function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
+  totalPlanned: number;
+  totalOverage: number;
   currency: CurrencyKey;
 }) {
-  const PIE_COLORS = ["#EC4899", "#C084FC", "#F472B6", "#9D5C7E", "#A855F7", "#F9A8D4", "#831843", "#FBCFE8"];
+  const R = 44, ri = 22, cx = 56, cy = 56;
+  const hasExtra = totalOverage > 0;
+  const total = totalPlanned + totalOverage;
+  const plannedSweep = hasExtra ? (totalPlanned / total) * Math.PI * 2 : Math.PI * 2 - 0.001;
+  const extraSweep   = hasExtra ? (totalOverage / total) * Math.PI * 2 : 0;
+  const a0 = -Math.PI / 2;
 
-  const data = budgetedCats
-    .map((k, i) => {
-      const planned   = budget[k] ?? 0;
-      const actual    = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-      const overAmount = Math.max(0, actual - planned);
-      return { key: k, cat: allCats.find(c => c.key === k), planned, actual, overAmount, isOver: actual > planned, color: PIE_COLORS[i % PIE_COLORS.length] };
-    })
-    .filter(d => d.planned > 0);
-
-  const total = data.reduce((s, d) => s + d.planned, 0);
-  if (total === 0 || data.length === 0) return null;
-
-  const R = 48, ri = 26, cx = 64, cy = 64;
-  let angle = -Math.PI / 2;
-
-  const slices = data.map(d => {
-    const pct   = d.planned / total;
-    const start = angle;
-    const end   = angle + pct * Math.PI * 2;
-    angle = end;
-    const x1 = cx + R  * Math.cos(start), y1 = cy + R  * Math.sin(start);
-    const x2 = cx + R  * Math.cos(end),   y2 = cy + R  * Math.sin(end);
-    const ix1= cx + ri * Math.cos(start), iy1= cy + ri * Math.sin(start);
-    const ix2= cx + ri * Math.cos(end),   iy2= cy + ri * Math.sin(end);
-    const la  = pct > 0.5 ? 1 : 0;
-    return {
-      ...d, pct,
-      path: `M ${ix1.toFixed(1)} ${iy1.toFixed(1)} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 ${la} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${ix2.toFixed(1)} ${iy2.toFixed(1)} A ${ri} ${ri} 0 ${la} 0 ${ix1.toFixed(1)} ${iy1.toFixed(1)} Z`,
-    };
-  });
+  const arcPath = (start: number, sweep: number) => {
+    const end = start + sweep;
+    const f = (n: number) => n.toFixed(1);
+    const x1 = cx + R  * Math.cos(start),  y1 = cy + R  * Math.sin(start);
+    const x2 = cx + R  * Math.cos(end),    y2 = cy + R  * Math.sin(end);
+    const ix1= cx + ri * Math.cos(start),  iy1= cy + ri * Math.sin(start);
+    const ix2= cx + ri * Math.cos(end),    iy2= cy + ri * Math.sin(end);
+    const la = sweep > Math.PI ? 1 : 0;
+    return `M ${f(ix1)} ${f(iy1)} L ${f(x1)} ${f(y1)} A ${R} ${R} 0 ${la} 1 ${f(x2)} ${f(y2)} L ${f(ix2)} ${f(iy2)} A ${ri} ${ri} 0 ${la} 0 ${f(ix1)} ${f(iy1)} Z`;
+  };
 
   return (
-    <div className="flex items-center gap-4">
-      <svg viewBox="0 0 128 128" width="116" height="116" className="shrink-0">
-        {slices.map(s => (
-          <path key={s.key} d={s.path} fill={s.isOver ? "#EF4444" : s.color} stroke="white" strokeWidth="1.5" />
-        ))}
-        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="8" fill="#831843" fontWeight="700">
-          {fmt(total, currency)}
-        </text>
-        <text x={cx} y={cy + 8} textAnchor="middle" fontSize="6" fill="#9D5C7E">planifié</text>
+    <div className="flex items-center gap-6">
+      <svg viewBox="0 0 112 112" width="108" height="108" className="shrink-0">
+        {/* planned slice — hot pink */}
+        <path d={arcPath(a0, plannedSweep)} fill="#EC4899" stroke="white" strokeWidth="1.5" />
+        {/* extra slice — light pink (distinct but still in palette) */}
+        {hasExtra && (
+          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill="#F9A8D4" stroke="white" strokeWidth="1.5" />
+        )}
+        {/* center label */}
+        {hasExtra ? (
+          <>
+            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EC4899" fontWeight="700">
+              +{fmt(totalOverage, currency)}
+            </text>
+            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#9D5C7E">over budget</text>
+          </>
+        ) : (
+          <>
+            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#831843" fontWeight="700">
+              {fmt(totalPlanned, currency)}
+            </text>
+            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#9D5C7E">on budget ✓</text>
+          </>
+        )}
       </svg>
-      <div className="flex-1 min-w-0 space-y-1.5">
-        {slices.map(s => (
-          <div key={s.key} className="flex items-center gap-1.5 min-w-0">
-            <span className="h-2 w-2 rounded-full shrink-0" style={{ background: s.isOver ? "#EF4444" : s.color }} />
-            <span className="text-[10px] text-[#831843] font-semibold truncate flex-1 min-w-0">
-              {s.cat?.emoji} {s.cat?.label ?? s.key}
-            </span>
-            <span className="text-[9px] tabular-nums shrink-0 font-semibold">
-              {s.isOver
-                ? <span className="text-rose-500">+{fmt(s.overAmount, currency)}</span>
-                : <span className="text-[#9D5C7E]">{fmt(s.planned, currency)}</span>}
-            </span>
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
+            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
           </div>
-        ))}
+          <p className="text-lg font-bold text-[#831843] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
+            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
+          </div>
+          <p className={["text-lg font-bold tabular-nums leading-none", hasExtra ? "text-[#EC4899]" : "text-[#9D5C7E]"].join(" ")}>
+            {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1293,21 +1272,12 @@ function DashboardTab(props: {
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
-
-        // Extra spends = anything logged this month via the Extra Spends form
-        const spentCatKeys = [...new Set(monthTxns.filter(t => t.type === "expense").map(t => t.catKey))];
-        const unplannedKeys = spentCatKeys.filter(k => !(budget[k] > 0));
-
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
         const totalActual  = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
-        const totalIsOver  = totalActual > totalPlanned;
-
-        const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
-
+        const totalOverage = Math.max(0, totalActual - totalPlanned);
         return (
           <Card>
-            {/* header */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
                 <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget vs Reality
               </h3>
@@ -1315,98 +1285,7 @@ function DashboardTab(props: {
                 Edit <ChevronRight className="h-3 w-3" />
               </button>
             </div>
-
-            {/* total summary — pie chart */}
-            <div className="mb-4">
-              <BudgetPie
-                budgetedCats={budgetedCats}
-                budget={budget}
-                monthTxns={monthTxns}
-                allCats={allCats}
-                currency={currency}
-              />
-            </div>
-
-            {/* budgeted categories */}
-            <div className="space-y-3">
-              {visibleBudgeted.map(k => {
-                const cat        = allCats.find(c => c.key === k);
-                const planned    = budget[k] ?? 0;
-                const actual     = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                const overAmount = Math.max(0, actual - planned);
-                const isOver     = actual > planned;
-                // Pink = up to planned, red = amount over
-                const pinkPct    = isOver ? (planned / actual) * 100 : 100;
-                const redPct     = isOver ? (overAmount / actual) * 100 : 0;
-                const overPct    = isOver ? Math.round((overAmount / planned) * 100) : 0;
-                const badge = isOver
-                  ? overPct > 50
-                    ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 whitespace-nowrap"><XCircle className="h-2.5 w-2.5" /> Over</span>
-                    : <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 whitespace-nowrap"><AlertTriangle className="h-2.5 w-2.5" /> Watch</span>
-                  : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /> OK</span>;
-                return (
-                  <div key={k} className="flex items-center gap-2.5">
-                    <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline gap-2 mb-1">
-                        <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                        <span className="text-[10px] tabular-nums shrink-0">
-                          {isOver && <span className="text-rose-500 font-bold">+{fmt(overAmount, currency)} / </span>}
-                          <span className="text-[#9D5C7E]">{fmt(planned, currency)}</span>
-                        </span>
-                      </div>
-                      <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-50">
-                        <div className="h-full transition-all duration-700"
-                          style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
-                        {isOver && <div className="h-full flex-1 transition-all duration-700 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
-                      </div>
-                    </div>
-                    <div className="shrink-0 w-16 flex justify-end">{badge}</div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {budgetedCats.length > 5 && (
-              <button onClick={() => setBudgetShowAll(v => !v)} className="mt-3 text-xs text-[#EC4899] font-semibold hover:underline">
-                {budgetShowAll ? "Show less" : `+${budgetedCats.length - 5} more categories`}
-              </button>
-            )}
-
-            {/* unplanned: extra spends in categories with no budget set */}
-            {unplannedKeys.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-pink-100">
-                <p className="text-[10px] font-bold tracking-widest text-amber-600 mb-2.5 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" /> EXTRA · NOT IN PLAN
-                </p>
-                <div className="space-y-2.5">
-                  {unplannedKeys.map(k => {
-                    const cat   = allCats.find(c => c.key === k);
-                    const extra = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                    return (
-                      <div key={k} className="flex items-center gap-2.5">
-                        <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💸"}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-baseline gap-2 mb-1">
-                            <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                            <span className="text-[10px] font-bold text-amber-600 tabular-nums shrink-0">{fmt(extra, currency)}</span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-amber-100 overflow-hidden">
-                            <div className="h-full rounded-full w-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
-                          </div>
-                        </div>
-                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
-                          💸 Extra
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-[10px] font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-                  <Plus className="h-3 w-3" /> Add to your plan
-                </button>
-              </div>
-            )}
+            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} />
           </Card>
         );
       })()}
@@ -1653,7 +1532,7 @@ function DashboardTab(props: {
         </Card>
       </div>
 
-      {/* HISTORIQUE DES DÉPENSES */}
+      {/* SPENDING HISTORY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
@@ -1663,7 +1542,7 @@ function DashboardTab(props: {
             <div className="flex items-center justify-between mb-3">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
                 <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
-                Historique des Dépenses
+                Spending History
               </h3>
               <span className="text-[10px] text-[#9D5C7E] font-semibold">
                 {new Date().toLocaleString("default", { month: "long", year: "numeric" })}
