@@ -1411,16 +1411,22 @@ function DashboardTab(props: {
                             <span className="text-[11px] text-[#C4A0B8]"> / {fmt(planned, currency)}</span>
                           </div>
                         </div>
-                        <div className="flex h-2 rounded-full overflow-hidden bg-pink-100">
-                          <div className="h-full transition-all duration-700"
+                        <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
+                          <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
                             style={{
-                              width: `${fillPct}%`,
-                              background: "linear-gradient(90deg,#C084FC,#EC4899)",
+                              width: isOver ? `${fillPct}%` : `${fillPct}%`,
+                              background: isOver
+                                ? "linear-gradient(90deg,#C084FC,#EC4899)"
+                                : "linear-gradient(90deg,#C084FC,#EC4899)",
                               borderRadius: isOver ? "9999px 0 0 9999px" : "9999px"
                             }} />
                           {isOver && (
-                            <div className="h-full flex-1 rounded-r-full"
-                              style={{ background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
+                            <div className="absolute inset-y-0 rounded-r-full"
+                              style={{
+                                left: `${fillPct}%`,
+                                right: 0,
+                                background: "linear-gradient(90deg,#F9A8D4,#EC4899)"
+                              }} />
                           )}
                         </div>
                       </div>
