@@ -431,6 +431,39 @@ function MiniRing({ pct, size = 100 }: { pct: number; size?: number }) {
   );
 }
 
+function BudgetDonut({ planned, extra, currency }: { planned: number; extra: number; currency: CurrencyKey }) {
+  const total = planned + extra;
+  const r = 34, cx = 48, cy = 48, circ = 2 * Math.PI * r;
+  const plannedPct = total > 0 ? planned / total : 1;
+  const plannedDash = plannedPct * circ;
+  const extraOffset = plannedPct * 360 - 90;
+  const extraDash = (extra / total) * circ;
+  return (
+    <svg viewBox="0 0 96 96" width="96" height="96">
+      <defs>
+        <linearGradient id="bdp" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#C084FC"/><stop offset="100%" stopColor="#EC4899"/></linearGradient>
+        <linearGradient id="bdr" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#FCA5A5"/><stop offset="100%" stopColor="#EF4444"/></linearGradient>
+      </defs>
+      {/* track */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FCE7F3" strokeWidth="11"/>
+      {/* planned arc */}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#bdp)" strokeWidth="11"
+        strokeDasharray={`${plannedDash} ${circ - plannedDash}`} strokeLinecap="butt"
+        transform={`rotate(-90 ${cx} ${cy})`}/>
+      {/* extra arc */}
+      {extra > 0 && (
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#bdr)" strokeWidth="11"
+          strokeDasharray={`${extraDash} ${circ - extraDash}`} strokeLinecap="butt"
+          transform={`rotate(${extraOffset} ${cx} ${cy})`}/>
+      )}
+      {/* center */}
+      <text x={cx} y={cy - 5} textAnchor="middle" fill="#831843" fontSize="9" fontWeight="700">{fmt(total, currency)}</text>
+      <text x={cx} y={cy + 7} textAnchor="middle" fill="#9D5C7E" fontSize="7">reality</text>
+      {extra > 0 && <text x={cx} y={cy + 17} textAnchor="middle" fill="#EF4444" fontSize="6.5" fontWeight="700">+{fmt(extra, currency)}</text>}
+    </svg>
+  );
+}
+
 /* ============================================================
    MAIN COMPONENT
 ============================================================ */
@@ -1099,29 +1132,26 @@ function DashboardTab(props: {
               </button>
             </div>
 
-            {/* total summary — 3 clean metrics */}
-            <div className={["rounded-xl px-3 py-2.5 mb-4 border", totalIsOver ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-100"].join(" ")}>
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                <div>
-                  <p className="text-[9px] font-bold tracking-widest text-[#9D5C7E] mb-0.5">PLANNED</p>
-                  <p className="text-sm font-bold text-[#831843] tabular-nums">{fmt(totalPlanned, currency)}</p>
+            {/* total summary — donut + stat list */}
+            <div className={["flex items-center gap-4 rounded-2xl px-3 py-3 mb-4 border", totalIsOver ? "bg-rose-50 border-rose-200" : "bg-gradient-to-br from-pink-50 to-purple-50/40 border-pink-200"].join(" ")}>
+              <BudgetDonut planned={totalPlanned} extra={totalExtra} currency={currency} />
+              <div className="flex-1 space-y-1.5 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                  <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
+                  <span className="ml-auto text-xs font-bold text-[#831843] tabular-nums">{fmt(totalPlanned, currency)}</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-[9px] font-bold tracking-widest text-amber-600 mb-0.5">EXTRA</p>
-                  <p className={["text-sm font-bold tabular-nums", totalIsOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
+                <div className="flex items-center gap-2">
+                  <span className={["h-2 w-2 rounded-full shrink-0", totalIsOver ? "bg-rose-400" : "bg-pink-200"].join(" ")} />
+                  <span className={["text-[9px] font-bold tracking-widest", totalIsOver ? "text-rose-600" : "text-[#9D5C7E]"].join(" ")}>EXTRA</span>
+                  <span className={["ml-auto text-xs font-bold tabular-nums", totalIsOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
                     {totalIsOver ? `+${fmt(totalExtra, currency)}` : "—"}
-                  </p>
+                  </span>
                 </div>
-                <div className="text-right">
-                  <p className="text-[9px] font-bold tracking-widest text-[#9D5C7E] mb-0.5">REALITY</p>
-                  <p className={["text-sm font-bold tabular-nums", totalIsOver ? "text-rose-600" : "text-emerald-700"].join(" ")}>{fmt(grandTotal, currency)}</p>
+                <div className="flex items-center gap-2 pt-1.5 border-t border-pink-200/60">
+                  <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">REALITY</span>
+                  <span className={["ml-auto text-sm font-bold tabular-nums", totalIsOver ? "text-rose-600" : "text-emerald-700"].join(" ")}>{fmt(grandTotal, currency)}</span>
                 </div>
-              </div>
-              {/* two-part bar */}
-              <div className="flex h-2 rounded-full overflow-hidden bg-pink-100">
-                <div className="h-full transition-all duration-700"
-                  style={{ width: totalIsOver ? `${(totalPlanned / grandTotal) * 100}%` : "100%", background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: totalIsOver ? "9999px 0 0 9999px" : "9999px" }} />
-                {totalIsOver && <div className="h-full flex-1 transition-all duration-700 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
               </div>
             </div>
 
@@ -1137,13 +1167,21 @@ function DashboardTab(props: {
                 const pinkPct = isOver ? (planned / total) * 100 : 100;
                 const redPct  = isOver ? (extra / total) * 100 : 0;
                 const overPct = isOver ? Math.round((extra / planned) * 100) : 0;
+                const badge = isOver
+                  ? overPct > 50
+                    ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 whitespace-nowrap"><XCircle className="h-2.5 w-2.5" /> Over</span>
+                    : <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 whitespace-nowrap"><AlertTriangle className="h-2.5 w-2.5" /> Watch</span>
+                  : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /> OK</span>;
                 return (
                   <div key={k} className="flex items-center gap-2.5">
                     <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-baseline gap-2 mb-1">
                         <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                        <span className="text-[10px] tabular-nums shrink-0 text-[#9D5C7E]">{fmt(planned, currency)}</span>
+                        <span className="text-[10px] tabular-nums shrink-0">
+                          {isOver && <span className="text-rose-500 font-bold">+{fmt(extra, currency)} / </span>}
+                          <span className="text-[#9D5C7E]">{fmt(planned, currency)}</span>
+                        </span>
                       </div>
                       <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-50">
                         <div className="h-full transition-all duration-700"
@@ -1151,11 +1189,7 @@ function DashboardTab(props: {
                         {isOver && <div className="h-full flex-1 transition-all duration-700 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
                       </div>
                     </div>
-                    <div className="shrink-0 w-14 flex justify-end">
-                      {isOver
-                        ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600">+{overPct}%</span>
-                        : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /></span>}
-                    </div>
+                    <div className="shrink-0 w-16 flex justify-end">{badge}</div>
                   </div>
                 );
               })}
