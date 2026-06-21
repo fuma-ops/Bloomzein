@@ -183,6 +183,7 @@ const DIARY_CSS = `
   @keyframes dd-mic      { 0%,100%{ box-shadow:0 0 0 0 rgba(219,39,119,.5) } 50%{ box-shadow:0 0 0 7px rgba(219,39,119,0) } }
   @keyframes dd-hintfade { from{ opacity:0 } to{ opacity:1 } }
   @keyframes dd-pagehint { 0%,100%{ opacity:0;transform:translateX(-50%) translateY(0) } 15%,85%{ opacity:1 } 50%{ transform:translateX(-50%) translateY(-5px) } }
+  @keyframes dd-mood-bounce { 0%,100%{ transform:scale(1);filter:drop-shadow(0 4px 12px rgba(219,39,119,.35)) } 45%{ transform:translateY(-5px) scale(1.12);filter:drop-shadow(0 10px 22px rgba(219,39,119,.65)) } }
   .dd-tool{ transition:all .2s ease; }
   .dd-tool:hover{ filter:brightness(1.05); transform:translateY(-1px); }
   .dd-mem:hover{ transform:rotate(0deg) translateY(-5px) !important; box-shadow:0 20px 36px rgba(131,24,67,.2) !important; }
@@ -608,6 +609,7 @@ export default function DiaryPage() {
   const [mood, setMood] = useState("Calm");
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
+  const [moodOpen, setMoodOpen] = useState(false);
   const [toast, setToast] = useState(false);
 
   const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
@@ -714,14 +716,47 @@ export default function DiaryPage() {
           {/* Mood ambient glow */}
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
           {/* Title + CTA row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
             <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(34px,6vw,50px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
               Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(18px,3vw,26px)" }}>✿</span>
             </h1>
+
+            {/* Desktop: full pill button */}
             {!mobile && (
               <button onClick={() => openAtPage(0)} style={{ flexShrink: 0, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite", boxShadow: "0 8px 22px rgba(219,39,119,.32)" }}>
                 <span style={{ fontSize: 17, lineHeight: 0 }}>+</span> New entry
               </button>
+            )}
+
+            {/* Mobile: circular mood picker button */}
+            {mobile && (
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                <button
+                  onClick={() => setMoodOpen((o) => !o)}
+                  style={{ width: 46, height: 46, borderRadius: "50%", border: "3px solid rgba(255,255,255,.9)", cursor: "pointer", background: moodTint, display: "grid", placeItems: "center", color: "#DB2777", animation: "dd-mood-bounce 2.6s ease-in-out infinite", transition: "background .6s ease" }}
+                  aria-label="Select mood"
+                >
+                  {MOOD_DATA.find((m) => m.name === mood)?.icon}
+                </button>
+
+                {/* Mood popover */}
+                {moodOpen && (
+                  <>
+                    {/* backdrop to close on outside tap */}
+                    <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 18 }} />
+                    <div style={{ position: "absolute", top: 54, right: 0, zIndex: 19, background: "rgba(255,255,255,.97)", borderRadius: 20, border: "1px solid rgba(236,72,153,.18)", boxShadow: "0 18px 40px rgba(219,39,119,.22)", padding: "10px 8px", display: "flex", flexDirection: "column", gap: 5, minWidth: 158 }}>
+                      {MOOD_DATA.map((m) => {
+                        const sel = m.name === mood;
+                        return (
+                          <button key={m.name} onClick={() => { setMood(m.name); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 13, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : m.tint, color: sel ? "#fff" : "#831843", transition: "all .2s ease" }}>
+                            {m.icon} {m.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
@@ -740,8 +775,8 @@ export default function DiaryPage() {
             </div>
           </div>
 
-          {/* How are you feeling — compact strip */}
-          <div style={{ position: "relative", marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.2)" }}>
+          {/* How are you feeling — compact strip (tablet/desktop only) */}
+          {!mobile && <div style={{ position: "relative", marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.2)" }}>
             <div style={{ fontSize: 10, letterSpacing: ".13em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 8 }}>How are you feeling?</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {MOOD_DATA.map((m) => {
@@ -753,7 +788,7 @@ export default function DiaryPage() {
                 );
               })}
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* ── Bloom + Book column ── */}
