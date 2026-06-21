@@ -183,6 +183,8 @@ const DIARY_CSS = `
   @keyframes dd-mic      { 0%,100%{ box-shadow:0 0 0 0 rgba(219,39,119,.5) } 50%{ box-shadow:0 0 0 7px rgba(219,39,119,0) } }
   @keyframes dd-hintfade { from{ opacity:0 } to{ opacity:1 } }
   @keyframes dd-pagehint { 0%,100%{ opacity:0;transform:translateX(-50%) translateY(0) } 15%,85%{ opacity:1 } 50%{ transform:translateX(-50%) translateY(-5px) } }
+  @keyframes dd-mood-bounce { 0%,100%{ transform:scale(1) } 45%{ transform:scale(1.12) } 55%{ transform:scale(.95) } 70%{ transform:scale(1.06) } }
+  @keyframes dd-spin { from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
   .dd-tool{ transition:all .2s ease; }
   .dd-tool:hover{ filter:brightness(1.05); transform:translateY(-1px); }
   .dd-mem:hover{ transform:rotate(0deg) translateY(-5px) !important; box-shadow:0 20px 36px rgba(131,24,67,.2) !important; }
@@ -602,20 +604,24 @@ export default function DiaryPage() {
   const [pg, setPg] = useState(0);
   const [tilt, setTilt] = useState(0);
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 860);
+  const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
 
   // UI state
   const [mood, setMood] = useState("Calm");
-  const [tab, setTab] = useState("Journal");
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [toast, setToast] = useState(false);
-  const [bloomBelow, setBloomBelow] = useState(false);
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [moodSet, setMoodSet] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, right: 16 });
 
   const [viewEntry, setViewEntry] = useState<DiaryEntry | null>(null);
 
   const tiltTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bookRef = useRef<HTMLDivElement>(null);
+  const moodBtnRef = useRef<HTMLButtonElement>(null);
 
   // Derived
   const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
@@ -625,10 +631,21 @@ export default function DiaryPage() {
 
   useEffect(() => { saveEntries(entries); }, [entries]);
   useEffect(() => {
-    const onResize = () => setNarrow(window.innerWidth < 860);
+    const onResize = () => {
+      setNarrow(window.innerWidth < 860);
+      setMobile(window.innerWidth < 768);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    if (moodSet || !mobile) return;
+    const show = () => { setShowReminder(true); setTimeout(() => setShowReminder(false), 2800); };
+    const t = setTimeout(show, 3500);
+    const interval = setInterval(show, 14000);
+    return () => { clearTimeout(t); clearInterval(interval); };
+  }, [moodSet, mobile]);
 
   const turn = (dir: number) => {
     if (!open) { setOpen(true); return; }
@@ -704,118 +721,110 @@ export default function DiaryPage() {
   }, [entries, search]);
 
   return (
-    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden", fontFamily: "'Quicksand',sans-serif", color: "#831843", background: "radial-gradient(120% 90% at 18% -10%,#FFE3F0 0%,transparent 55%), radial-gradient(100% 80% at 100% 0%,#FBE3F5 0%,transparent 50%), radial-gradient(120% 100% at 50% 120%,#FCEAF3 0%,transparent 60%), linear-gradient(180deg,#FFF0F6 0%,#FDE6F1 100%)" }}>
+    <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843" }}>
       <style>{DIARY_CSS}</style>
 
-      {/* ── Atmosphere layer ── */}
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-        {/* Blobs */}
-        <div style={{ position: "absolute", top: "-8%", left: "8%", width: 360, height: 360, borderRadius: "50%", filter: "blur(50px)", background: "radial-gradient(circle at 40% 35%,rgba(249,168,212,.9),transparent 65%)", opacity: .55, animation: "dd-floaty 16s ease-in-out infinite" }} />
-        <div style={{ position: "absolute", top: "30%", right: "-4%", width: 300, height: 300, borderRadius: "50%", filter: "blur(55px)", background: "radial-gradient(circle at 50% 50%,rgba(226,210,251,.85),transparent 65%)", opacity: .5, animation: "dd-floaty2 20s ease-in-out infinite" }} />
-        <div style={{ position: "absolute", bottom: "-6%", left: "34%", width: 420, height: 420, borderRadius: "50%", filter: "blur(60px)", background: `radial-gradient(circle at 50% 50%,${moodTint},transparent 68%)`, opacity: .6, transition: "background 1.2s ease", animation: "dd-breathe 9s ease-in-out infinite" }} />
-        {/* 3D Flowers */}
-        <div style={{ position: "absolute", top: "12%", left: "14%", opacity: .85, animation: "dd-drift 26s ease-in-out infinite" }}>
-          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dA 14s linear infinite", filter: "drop-shadow(0 12px 16px rgba(190,24,93,.22))" }}>
-            <Flower size={118} pc="rgba(244,114,182,.85)" cc="#F9C784" />
-          </div>
-        </div>
-        <div style={{ position: "absolute", top: "62%", left: "8%", opacity: .7, animation: "dd-drift2 30s ease-in-out infinite" }}>
-          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dB 18s linear infinite", filter: "drop-shadow(0 10px 14px rgba(124,90,166,.22))" }}>
-            <Flower size={96} pc="rgba(196,164,252,.8)" cc="#FBCFE8" />
-          </div>
-        </div>
-        <div style={{ position: "absolute", top: "22%", right: "12%", opacity: .8, animation: "dd-drift 32s ease-in-out infinite" }}>
-          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dB 16s linear infinite", filter: "drop-shadow(0 12px 16px rgba(190,24,93,.2))" }}>
-            <Flower size={104} pc="rgba(251,186,116,.78)" cc="#F472B6" />
-          </div>
-        </div>
-        <div style={{ position: "absolute", bottom: "14%", right: "18%", opacity: .65, animation: "dd-drift2 28s ease-in-out infinite" }}>
-          <div style={{ transformStyle: "preserve-3d", animation: "dd-spin3dA 20s linear infinite" }}>
-            <Flower size={70} pc="rgba(249,168,212,.8)" cc="#F9C784" />
-          </div>
-        </div>
-        {/* Twinkling dots */}
-        {[
-          { top: "12%", left: "30%" }, { top: "60%", left: "72%" },
-          { top: "74%", left: "40%" }, { top: "35%", left: "86%" },
-        ].map((pos, i) => (
-          <div key={i} style={{ position: "absolute", ...pos, width: 5, height: 5, borderRadius: "50%", background: "#fff", boxShadow: "0 0 8px #fff", animation: `dd-twinkle ${3.1 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }} />
-        ))}
-        {/* Rising petals */}
-        {[
-          { left: "22%", bg: "#F9A8D4", delay: "0s" },
-          { left: "58%", bg: "#F472B6", delay: "3s" },
-          { left: "78%", bg: "#FBCFE8", delay: "6s" },
-        ].map((p, i) => (
-          <div key={i} style={{ position: "absolute", bottom: 0, left: p.left, width: 13, height: 13, borderRadius: "60% 40% 55% 45%", background: `radial-gradient(circle at 35% 30%,#fff,${p.bg} 70%)`, opacity: .7, animation: `dd-rise ${14 + i * 2}s linear ${p.delay} infinite` }} />
-        ))}
-      </div>
+      {/* ── Hero section (title + Today's Bloom unified) ── */}
+      <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
+        {/* Mood ambient glow */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
 
-      {/* ── Main content ── */}
-      <div style={{ position: "relative", zIndex: 5, padding: "30px 20px 80px", maxWidth: 1180, margin: "0 auto" }}>
-
-        {/* ── Header ── */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap", marginBottom: 22 }}>
-          <div>
-            <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(38px,6vw,52px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
-              Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(20px,3vw,28px)" }}>✿</span>
-            </h1>
-            <p style={{ margin: "7px 0 0", fontSize: 14, color: "#9D5C7E", fontWeight: 500 }}>
-              Your softest pages — open the book, turn with the arrows, and write.
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            {/* Segmented tabs */}
-            <div style={{ display: "flex", alignItems: "center", gap: 3, padding: 5, borderRadius: 999, background: "rgba(255,255,255,.7)", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 4px 14px rgba(236,72,153,.1)" }}>
-              {["Journal", "List", "Pinned", "Book"].map((t) => (
-                <button key={t} onClick={() => setTab(t)} style={{ border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 999, fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 13.5, transition: "all .25s ease", background: t === tab ? "linear-gradient(135deg,#F472B6,#DB2777)" : "transparent", color: t === tab ? "#fff" : "#9D5C7E", boxShadow: t === tab ? "0 6px 14px rgba(219,39,119,.3)" : "none" }}>
-                  {t}
-                </button>
-              ))}
-            </div>
-            {/* New entry CTA */}
-            <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14.5, animation: "dd-glow 3.4s ease-in-out infinite" }}>
+        {/* Title + CTA row */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
+            Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(16px,2.5vw,24px)" }}>✿</span>
+          </h1>
+          {!mobile && (
+            <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite" }}>
               <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
             </button>
+          )}
+          {mobile && (
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              {/* Periodic reminder bubble */}
+              {showReminder && !moodSet && (
+                <div style={{ position: "absolute", bottom: 54, right: 0, whiteSpace: "nowrap", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", background: "linear-gradient(135deg,#F472B6,#DB2777)", padding: "5px 12px", borderRadius: 999, boxShadow: "0 4px 14px rgba(219,39,119,.35)", animation: "dd-toast .3s ease", zIndex: 10 }}>
+                  how's your mood? ✿
+                </div>
+              )}
+              <button
+                ref={moodBtnRef}
+                onClick={() => {
+                  if (moodBtnRef.current) {
+                    const r = moodBtnRef.current.getBoundingClientRect();
+                    setPopoverPos({ top: r.bottom + 10, right: Math.max(12, window.innerWidth - r.right) });
+                  }
+                  setMoodOpen((o) => !o);
+                }}
+                style={{ width: 46, height: 46, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,.85)", background: "linear-gradient(135deg,#F472B6,#DB2777)", display: "grid", placeItems: "center", color: "#fff", animation: "dd-mood-bounce 2.6s ease-in-out infinite", boxShadow: "0 6px 18px rgba(219,39,119,.38)", cursor: "pointer" }}
+              >
+                {moodSet
+                  ? <span style={{ display: "flex", color: "#fff" }}>{MOOD_DATA.find((m) => m.name === mood)?.icon}</span>
+                  : <svg width="20" height="20" viewBox="0 0 24 24" style={{ animation: "dd-spin 4s linear infinite" }}>
+                      <ellipse cx="12" cy="5.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/>
+                      <ellipse cx="12" cy="18.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/>
+                      <ellipse cx="5.5" cy="12" rx="3.4" ry="2.4" fill="rgba(255,255,255,.9)"/>
+                      <ellipse cx="18.5" cy="12" rx="3.4" ry="2.4" fill="rgba(255,255,255,.9)"/>
+                      <circle cx="12" cy="12" r="2.4" fill="rgba(255,255,255,.75)"/>
+                    </svg>
+                }
+              </button>
+              {/* Mood popover — position:fixed escapes hero overflow:hidden */}
+              {moodOpen && (
+                <>
+                  <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 28 }} />
+                  <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 29, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
+                    {MOOD_DATA.map((m) => {
+                      const sel = m.name === mood;
+                      return (
+                        <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
+                          <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
+                          {m.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Cycle ring + Today's Bloom info */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 18 }}>
+          <div style={{ position: "relative", width: 64, height: 64, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.16) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "grid", placeItems: "center" }}>
+              <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 21, color: "#EC4899" }}>{cycleDay}</span>
+            </div>
+          </div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 24, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
+            <div style={{ fontSize: 13, color: "#9D5C7E", marginTop: 3 }}>
+              <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
+            </div>
           </div>
         </div>
 
-        {/* ── Bloom + Book column ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-
-          {/* Today's Bloom card (order toggles) */}
-          <div style={{ position: "relative", order: bloomBelow ? 2 : 0, borderRadius: 22, padding: "18px 20px", background: "rgba(255,255,255,.84)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
-            <button onClick={() => setBloomBelow((b) => !b)} title={bloomBelow ? "Move back to top" : "Move below the book"} style={{ position: "absolute", top: 12, right: 12, width: 28, height: 28, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(252,231,243,.9)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 700 }}>
-              {bloomBelow ? "↑" : "✕"}
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-              {/* Cycle ring */}
-              <div style={{ position: "relative", width: 70, height: 70, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.16) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-                <div style={{ width: 54, height: 54, borderRadius: "50%", background: "#fff", display: "grid", placeItems: "center" }}>
-                  <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 24, color: "#EC4899" }}>{cycleDay}</span>
-                </div>
-              </div>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 27, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
-                <div style={{ fontSize: 13.5, color: "#9D5C7E", marginTop: 4 }}>
-                  <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
-                </div>
-              </div>
-            </div>
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.22)" }}>
-              <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 10 }}>How are you feeling?</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {MOOD_DATA.map((m) => {
-                  const sel = m.name === mood;
-                  return (
-                    <button key={m.name} onClick={() => setMood(m.name)} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px 7px 11px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12.5, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.16)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.8)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 8px 18px rgba(219,39,119,.32)" : "0 2px 8px rgba(236,72,153,.08)" }}>
-                      {m.icon}{m.name}
-                    </button>
-                  );
-                })}
-              </div>
+        {/* How are you feeling strip — tablet/desktop only */}
+        {!mobile && (
+          <div style={{ position: "relative", marginTop: 18, paddingTop: 14, borderTop: "1px dashed rgba(236,72,153,.22)" }}>
+            <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: "#B07291", fontWeight: 700, marginBottom: 10 }}>How are you feeling?</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {MOOD_DATA.map((m) => {
+                const sel = m.name === mood;
+                return (
+                  <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); }} style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px 7px 11px", borderRadius: 999, fontFamily: "'Quicksand',sans-serif", fontWeight: 600, fontSize: 12.5, transition: "all .25s ease", lineHeight: 1, border: sel ? "1px solid transparent" : "1px solid rgba(236,72,153,.16)", background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(255,255,255,.8)", color: sel ? "#fff" : "#9D5C7E", boxShadow: sel ? "0 8px 18px rgba(219,39,119,.32)" : "0 2px 8px rgba(236,72,153,.08)" }}>
+                    {m.icon}{m.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* ── Book + sections ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
           {/* ── The Book ── */}
           <div ref={bookRef} style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -911,7 +920,6 @@ export default function DiaryPage() {
               </div>
             </div>
           </div>
-        </div>
 
         {/* ── Prompts to bloom ── */}
         <div style={{ marginTop: 30, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
@@ -1015,6 +1023,11 @@ export default function DiaryPage() {
         </div>
 
       </div>
+
+      {/* Mobile FAB */}
+      {mobile && (
+        <button onClick={() => openAtPage(0)} style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }} aria-label="New diary entry">+</button>
+      )}
     </div>
   );
 }
