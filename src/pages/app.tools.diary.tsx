@@ -197,6 +197,11 @@ const DIARY_CSS = `
   .dd-marquee { display:flex; width:max-content; animation:dd-hscroll 26s linear infinite; }
   .dd-marquee:hover { animation-play-state:paused; }
   .dd-hbox { overflow:hidden; }
+  @keyframes dd-curl-r { 0%,55%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(-1px -1px 3px rgba(131,24,67,.15)) } 75%{ transform:perspective(140px) rotateX(10deg) rotateY(-22deg) scale(1.08);filter:drop-shadow(-5px -5px 10px rgba(131,24,67,.35)) } 100%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(-1px -1px 3px rgba(131,24,67,.15)) } }
+  @keyframes dd-curl-l { 0%,55%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(1px -1px 3px rgba(131,24,67,.15)) } 75%{ transform:perspective(140px) rotateX(10deg) rotateY(22deg) scale(1.08);filter:drop-shadow(5px -5px 10px rgba(131,24,67,.35)) } 100%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(1px -1px 3px rgba(131,24,67,.15)) } }
+  .dd-curl-r { animation:dd-curl-r 3s ease-in-out infinite; transform-origin:bottom right; }
+  .dd-curl-l { animation:dd-curl-l 3.6s ease-in-out infinite; transform-origin:bottom left; }
+  .dd-book-wrap:hover .dd-curl-r, .dd-book-wrap:hover .dd-curl-l { animation-play-state:paused; }
 `;
 
 /* ─── Mood fallback for memories ─────────────────────────────────── */
@@ -882,16 +887,11 @@ export default function DiaryPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
           {/* ── The Book ── */}
-          <div ref={bookRef} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
+          <div ref={bookRef} className="dd-book-wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+            <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
 
-              {/* Prev arrow */}
-              <button onClick={() => turn(-1)} style={{ flex: "0 0 auto", width: 46, height: 46, borderRadius: "50%", border: "none", cursor: "pointer", display: "grid", placeItems: "center", background: "rgba(255,255,255,.92)", color: "#DB2777", boxShadow: "0 10px 24px rgba(236,72,153,.28)", transition: "transform .2s ease, opacity .3s ease", opacity: (open && !atStart) ? 1 : 0.35 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
-              </button>
-
-              {/* Stage */}
-              <div style={{ position: "relative", width: narrow ? "min(360px, 90vw)" : "min(560px, 78vw)", height: narrow ? "clamp(420px,92vw,520px)" : "clamp(370px,54vw,460px)" }}>
+              {/* Stage — wider now that arrows are gone */}
+              <div style={{ position: "relative", width: narrow ? "min(96vw, 420px)" : "min(90vw, 660px)", height: narrow ? "clamp(420px,92vw,520px)" : "clamp(370px,54vw,460px)" }}>
                 {/* Rose edge/binding */}
                 <div style={{ position: "absolute", inset: "-14px -12px -16px -12px", borderRadius: 16, background: coverBg, boxShadow: "0 34px 70px rgba(190,24,93,.36), inset 0 2px 6px rgba(255,255,255,.4)", zIndex: 0 }} />
 
@@ -916,13 +916,17 @@ export default function DiaryPage() {
                       </div>
                     </>
                   )}
-                  {/* Mobile: single page */}
+                  {/* Mobile: single page — left half goes back, right half goes forward */}
                   {narrow && (
-                    <div onClick={() => turn(1)} style={{ position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.11) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 0 0 30px -18px rgba(131,24,67,.4)" }}>
+                    <div style={{ position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.11) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 0 0 30px -18px rgba(131,24,67,.4)" }}>
                       <div style={{ position: "absolute", inset: 0 }}>
                         <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={pg === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                       </div>
-                      <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {pg + 1} / 6 ·</div>
+                      {/* Left half: go back */}
+                      <div onClick={() => turn(-1)} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", zIndex: 2, cursor: open && !atStart ? "pointer" : "default" }} />
+                      {/* Right half: go forward */}
+                      <div onClick={() => turn(1)} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", zIndex: 2, cursor: open && !atEnd ? "pointer" : "default" }} />
+                      <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 3 }}>· {pg + 1} / 6 ·</div>
                     </div>
                   )}
                 </div>
@@ -949,6 +953,20 @@ export default function DiaryPage() {
                   <button onClick={() => setOpen(false)} style={{ position: "absolute", top: -12, right: -12, zIndex: 8, width: 34, height: 34, border: "none", cursor: "pointer", borderRadius: "50%", background: "#fff", color: "#DB2777", boxShadow: "0 6px 16px rgba(236,72,153,.3)", display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700 }}>✕</button>
                 )}
 
+                {/* Page-curl flip hints — animated corners, pause on hover */}
+                {open && !atEnd && (
+                  <div className="dd-curl-r" onClick={() => turn(1)} style={{ position: "absolute", bottom: 0, right: 0, width: 52, height: 52, zIndex: 6, cursor: "pointer" }}>
+                    <div style={{ position: "absolute", bottom: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 0 52px 52px", borderColor: "transparent transparent rgba(255,248,252,.96) transparent", filter: "drop-shadow(-3px -3px 6px rgba(131,24,67,.22))" }} />
+                    <svg style={{ position: "absolute", bottom: 9, right: 9 }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth={2.5} strokeLinecap="round"><path d="M9 5l7 7-7 7"/></svg>
+                  </div>
+                )}
+                {open && !atStart && (
+                  <div className="dd-curl-l" onClick={() => turn(-1)} style={{ position: "absolute", bottom: 0, left: 0, width: 52, height: 52, zIndex: 6, cursor: "pointer" }}>
+                    <div style={{ position: "absolute", bottom: 0, left: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "52px 0 0 52px", borderColor: "transparent transparent transparent rgba(255,248,252,.96)", filter: "drop-shadow(3px -3px 6px rgba(131,24,67,.22))" }} />
+                    <svg style={{ position: "absolute", bottom: 9, left: 9 }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth={2.5} strokeLinecap="round"><path d="M15 5l-7 7 7 7"/></svg>
+                  </div>
+                )}
+
                 {/* Save toast */}
                 {toast && (
                   <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", zIndex: 9, padding: "9px 18px", borderRadius: 999, background: "rgba(126,202,185,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 20px rgba(126,202,185,.5)", animation: "dd-toast .3s ease" }}>
@@ -956,11 +974,6 @@ export default function DiaryPage() {
                   </div>
                 )}
               </div>
-
-              {/* Next arrow */}
-              <button onClick={() => turn(1)} style={{ flex: "0 0 auto", width: 46, height: 46, borderRadius: "50%", border: "none", cursor: "pointer", display: "grid", placeItems: "center", background: "rgba(255,255,255,.92)", color: "#DB2777", boxShadow: "0 10px 24px rgba(236,72,153,.28)", transition: "transform .2s ease, opacity .3s ease", opacity: (open && !atEnd) ? 1 : 0.35 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7"/></svg>
-              </button>
             </div>
 
             {/* Dots + guide */}
