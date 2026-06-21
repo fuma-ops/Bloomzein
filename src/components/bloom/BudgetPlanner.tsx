@@ -1966,56 +1966,70 @@ function ReportsTab(props: {
       </div>
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 className="font-script text-2xl text-[#831843]">Transactions</h3>
-          <div className="flex flex-wrap gap-2">
-            <div className="w-32">
-              <PinkSelect value={sortBy} onChange={(v) => setSortBy(v as "date" | "amount")}
-                options={[{ value: "date", label: "Sort: Date" }, { value: "amount", label: "Sort: Amount" }]} />
-            </div>
-            <div className="w-36">
-              <PinkSelect value={filterCat} onChange={setFilterCat}
-                options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
-            </div>
-            <div className="w-28">
-              <PinkSelect value={filterMood} onChange={setFilterMood}
-                options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
-            </div>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="font-script text-xl text-[#831843]">Transactions</h3>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
+        </div>
+        {/* filters — single scrollable row */}
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-3 pb-0.5">
+          <div className="shrink-0 w-28">
+            <PinkSelect value={sortBy} onChange={(v) => setSortBy(v as "date" | "amount")}
+              options={[{ value: "date", label: "Sort: Date" }, { value: "amount", label: "Sort: Amount" }]} />
+          </div>
+          <div className="shrink-0 w-32">
+            <PinkSelect value={filterCat} onChange={setFilterCat}
+              options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
+          </div>
+          <div className="shrink-0 w-24">
+            <PinkSelect value={filterMood} onChange={setFilterMood}
+              options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
           </div>
         </div>
         {filtered.length === 0 ? (
           <EmptyState Icon={Receipt} title="No transactions yet" text="Head to the Dashboard to log your first expense for this month." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-[11px] tracking-widest text-[#9D5C7E]">
-                <tr><th className="py-2">DATE</th><th>CATEGORY</th><th>DESCRIPTION</th><th>MOOD</th><th>TYPE</th><th className="text-right">AMOUNT</th><th></th></tr>
-              </thead>
-              <tbody>
-                {filtered.map(t => {
-                  const c = allCats.find(x => x.key === t.catKey);
-                  const mood = MOODS.find(m => m.key === t.mood)!;
-                  return (
-                    <tr key={t.id} className="border-t border-pink-100">
-                      <td className="py-2 text-[#831843]">{t.date}</td>
-                      <td className="text-[#831843]">{c?.label}</td>
-                      <td className="text-[#9D5C7E]">{t.description || "—"}</td>
-                      <td><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border ${mood.tone}`}><mood.Icon className="h-3 w-3" /> {mood.label}</span></td>
-                      <td>{t.type === "income"
-                        ? <span className="inline-flex items-center text-emerald-700 text-xs font-semibold"><ArrowUpRight className="h-3 w-3" /> Income</span>
-                        : <span className="inline-flex items-center text-rose-700 text-xs font-semibold"><ArrowDownRight className="h-3 w-3" /> Expense</span>}</td>
-                      <td className="text-right font-semibold text-[#831843]">{fmt(t.amount, currency)}</td>
-                      <td className="text-right">
-                        <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-500 hover:text-rose-700">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-pink-100">
+            {filtered.map(t => {
+              const c = allCats.find(x => x.key === t.catKey);
+              const mood = MOODS.find(m => m.key === t.mood)!;
+              const isIncome = t.type === "income";
+              return (
+                <li key={t.id} className="flex items-center gap-2.5 py-2.5">
+                  {/* category icon bubble */}
+                  <div className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-pink-100">
+                    {c ? <c.Icon className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> : <Wallet className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />}
+                  </div>
+                  {/* main info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-[#831843] truncate">{c?.label ?? t.catKey}</span>
+                      <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
+                        <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-[#9D5C7E]">{t.date}</span>
+                      {t.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {t.description}</span>}
+                    </div>
+                  </div>
+                  {/* amount + type + delete */}
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    <span className={`text-sm font-bold ${isIncome ? "text-emerald-700" : "text-[#831843]"}`}>
+                      {isIncome ? "+" : "-"}{fmt(t.amount, currency)}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isIncome
+                        ? <span className="inline-flex items-center text-emerald-600 text-[9px] font-semibold gap-0.5"><ArrowUpRight className="h-2.5 w-2.5" />Income</span>
+                        : <span className="inline-flex items-center text-rose-600 text-[9px] font-semibold gap-0.5"><ArrowDownRight className="h-2.5 w-2.5" />Expense</span>}
+                      <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-400 hover:text-rose-600 transition">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </Card>
 
