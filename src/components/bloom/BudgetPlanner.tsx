@@ -627,10 +627,10 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
           </div>
-          <p className="text-lg font-bold tabular-nums leading-none text-[#EC4899]">
+          <p className="text-lg font-bold tabular-nums leading-none text-[#F472B6]">
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -1397,12 +1397,16 @@ function DashboardTab(props: {
                     const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
                     const isOver = actual > planned;
                     const fillPct = planned > 0 ? Math.min(100, (isOver ? planned / actual : actual / planned) * 100) : 0;
+                    const status = actual === 0 ? null : isOver ? "over" : actual / planned > 0.8 ? "watch" : "ok";
                     return (
                       <div key={k}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
                             <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                            {status === "ok"    && <span className="shrink-0 text-[9px] font-bold text-emerald-600 bg-emerald-100 rounded-full px-1.5 py-0.5">OK</span>}
+                            {status === "watch" && <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">Watch</span>}
+                            {status === "over"  && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
                           </div>
                           <div className="flex items-center gap-1 shrink-0 ml-2 tabular-nums">
                             <span className={["text-[11px] font-bold", isOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
@@ -1412,21 +1416,15 @@ function DashboardTab(props: {
                           </div>
                         </div>
                         <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
-                          <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                          <div className="absolute inset-y-0 left-0 transition-all duration-700"
                             style={{
-                              width: isOver ? `${fillPct}%` : `${fillPct}%`,
-                              background: isOver
-                                ? "linear-gradient(90deg,#C084FC,#EC4899)"
-                                : "linear-gradient(90deg,#C084FC,#EC4899)",
+                              width: `${fillPct}%`,
+                              background: "linear-gradient(90deg,#C084FC,#EC4899)",
                               borderRadius: isOver ? "9999px 0 0 9999px" : "9999px"
                             }} />
                           {isOver && (
                             <div className="absolute inset-y-0 rounded-r-full"
-                              style={{
-                                left: `${fillPct}%`,
-                                right: 0,
-                                background: "linear-gradient(90deg,#F9A8D4,#EC4899)"
-                              }} />
+                              style={{ left: `${fillPct}%`, right: 0, background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
                           )}
                         </div>
                       </div>
