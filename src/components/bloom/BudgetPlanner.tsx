@@ -455,80 +455,116 @@ function BudgetLineGraph({ planned, extraTxns, isOver, currency }: {
     ? parseInt(extraTxns.reduce((a, b) => a.date < b.date ? a : b).date.slice(8), 10)
     : 1;
 
-  const maxY = Math.max(planned * 1.3, ...cumByDay.slice(0, today)) || 1;
-  const W = 280, H = 110, pL = 4, pR = 30, pT = 10, pB = 20;
+  const maxY = Math.max(planned * 1.35, ...cumByDay.slice(0, today)) || 1;
+  const W = 300, H = 140, pL = 10, pR = 10, pT = 28, pB = 24;
   const plotW = W - pL - pR, plotH = H - pT - pB;
   const xp = (d: number) => pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * plotW;
   const yp = (v: number) => pT + plotH - (v / maxY) * plotH;
+  const baseline = pT + plotH;
 
-  const realPts = cumByDay.slice(0, today).map((v, i) => `${xp(i + 1)},${yp(v)}`).join(" ");
-  const planDashBefore = firstTxnDay > 1 ? `${xp(1)},${yp(planned)} ${xp(firstTxnDay)},${yp(planned)}` : "";
-  const planSolidAfter = `${xp(firstTxnDay)},${yp(planned)} ${xp(daysInMonth)},${yp(planned)}`;
+  // Smooth bezier path from [x,y] points (catmull-rom → cubic bezier)
+  const smoothPath = (pts: [number, number][], closeFill = false) => {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[Math.max(0, i - 2)];
+      const p1 = pts[i - 1];
+      const p2 = pts[i];
+      const p3 = pts[Math.min(pts.length - 1, i + 1)];
+      const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+    }
+    if (closeFill) d += ` L ${pts[pts.length - 1][0]} ${baseline} L ${pts[0][0]} ${baseline} Z`;
+    return d;
+  };
+
+  const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
   const realColor = isOver ? "#EF4444" : "#EC4899";
+  const fillColor0 = isOver ? "#FCA5A5" : "#F9A8D4";
   const todayVal = cumByDay[today - 1] ?? planned;
+  const todayX = xp(today);
+  const todayY = yp(todayVal);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 110 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 148 }}>
         <defs>
-          <linearGradient id="lgReal" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor={isOver ? "#FCA5A5" : "#C084FC"} />
-            <stop offset="100%" stopColor={isOver ? "#EF4444" : "#EC4899"} />
+          <linearGradient id="lgFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={fillColor0} stopOpacity="0.55" />
+            <stop offset="100%" stopColor={fillColor0} stopOpacity="0" />
           </linearGradient>
+          <linearGradient id="lgLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={isOver ? "#F87171" : "#C084FC"} />
+            <stop offset="100%" stopColor={realColor} />
+          </linearGradient>
+          <filter id="glow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
-        {/* horizontal grid lines */}
-        {[0.33, 0.66, 1].map(f => (
-          <line key={f} x1={pL} y1={yp(maxY * f)} x2={W - pR} y2={yp(maxY * f)}
-            stroke="#FCE7F3" strokeWidth="0.6" />
-        ))}
-        {/* planned line — dashed before first txn (faded), dashed after (solid color) */}
-        {firstTxnDay > 1 && planDashBefore && (
-          <polyline points={planDashBefore} fill="none" stroke="#C084FC"
-            strokeWidth="1.5" strokeDasharray="4 3" opacity="0.4" />
+
+        {/* gradient fill under reality curve */}
+        {realPtsArr.length >= 2 && (
+          <path d={smoothPath(realPtsArr, true)} fill="url(#lgFill)" />
         )}
-        <polyline points={planSolidAfter} fill="none" stroke="#C084FC"
-          strokeWidth="1.5" strokeDasharray="4 3" />
-        {/* planned label on right */}
-        <text x={W - pR + 3} y={yp(planned) + 3} fontSize="5.5" fill="#C084FC" fontWeight="700">
-          {fmt(planned, currency)}
-        </text>
-        {/* reality line */}
-        {today > 1 && (
-          <polyline points={realPts} fill="none" stroke="url(#lgReal)"
-            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* planned dashed reference line */}
+        {firstTxnDay > 1 && (
+          <line x1={xp(1)} y1={yp(planned)} x2={xp(firstTxnDay)} y2={yp(planned)}
+            stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.3" />
         )}
-        {/* today dot + label */}
-        <circle cx={xp(today)} cy={yp(todayVal)} r="3.5" fill={realColor} stroke="white" strokeWidth="1.2" />
-        <text x={xp(today)} y={yp(todayVal) - 5} fontSize="5.5" fill={realColor}
-          textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
+        <line x1={xp(firstTxnDay)} y1={yp(planned)} x2={xp(daysInMonth)} y2={yp(planned)}
+          stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.65" />
+        <text x={xp(daysInMonth)} y={yp(planned) - 5} fontSize="7.5" fill="#C084FC"
+          textAnchor="end" fontWeight="700">Planned · {fmt(planned, currency)}</text>
+
+        {/* glowing reality curve */}
+        {realPtsArr.length >= 2 && (
+          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#lgLine)"
+            strokeWidth="2.8" strokeLinecap="round" filter="url(#glow)" />
+        )}
+
+        {/* today dot with pulse ring */}
+        {realPtsArr.length > 0 && (
+          <>
+            <circle cx={todayX} cy={todayY} r="6" fill={realColor} opacity="0.18" />
+            <circle cx={todayX} cy={todayY} r="3.5" fill={realColor} stroke="white" strokeWidth="1.5" />
+            <text x={todayX} y={todayY - 9} fontSize="7.5" fill={realColor}
+              textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
+          </>
+        )}
+
         {/* x-axis baseline */}
-        <line x1={pL} y1={H - pB + 4} x2={W - pR} y2={H - pB + 4} stroke="#FCE7F3" strokeWidth="0.6" />
-        {/* x-axis day labels */}
-        <text x={xp(1)} y={H - 4} fontSize="6" fill="#9D5C7E" textAnchor="middle">1</text>
-        <text x={xp(Math.ceil(daysInMonth / 2))} y={H - 4} fontSize="6" fill="#9D5C7E" textAnchor="middle">
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
+        <text x={xp(1)} y={baseline + 13} fontSize="7.5" fill="#C4A0B8" textAnchor="middle">1</text>
+        <text x={xp(Math.ceil(daysInMonth / 2))} y={baseline + 13} fontSize="7.5" fill="#C4A0B8" textAnchor="middle">
           {Math.ceil(daysInMonth / 2)}
         </text>
-        <text x={xp(daysInMonth)} y={H - 4} fontSize="6" fill="#9D5C7E" textAnchor="middle">
+        <text x={xp(daysInMonth)} y={baseline + 13} fontSize="7.5" fill="#C4A0B8" textAnchor="middle">
           {daysInMonth}
         </text>
       </svg>
+
       {/* legend */}
-      <div className="flex items-center gap-4 mt-1 px-1">
-        <div className="flex items-center gap-1">
-          <svg width="18" height="7">
-            <line x1="0" y1="3.5" x2="18" y2="3.5" stroke="#C084FC" strokeWidth="1.5" strokeDasharray="4 3" />
+      <div className="flex items-center gap-5 px-2 mt-1">
+        <div className="flex items-center gap-1.5">
+          <svg width="20" height="8">
+            <line x1="0" y1="4" x2="20" y2="4" stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
           </svg>
-          <span className="text-[8px] font-semibold text-[#9D5C7E]">Planned</span>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Planned</span>
         </div>
-        <div className="flex items-center gap-1">
-          <svg width="18" height="7">
-            <line x1="0" y1="3.5" x2="18" y2="3.5" stroke={realColor} strokeWidth="2" />
+        <div className="flex items-center gap-1.5">
+          <svg width="20" height="8">
+            <line x1="0" y1="4" x2="20" y2="4" stroke={realColor} strokeWidth="2.5" />
           </svg>
-          <span className="text-[8px] font-semibold text-[#9D5C7E]">Reality</span>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Reality</span>
         </div>
-        <div className="flex items-center gap-1 ml-auto">
-          <svg width="8" height="8"><circle cx="4" cy="4" r="3" fill={realColor} /></svg>
-          <span className="text-[8px] font-semibold text-[#9D5C7E]">Today</span>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill={realColor} /></svg>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Today</span>
         </div>
       </div>
     </div>
@@ -1203,30 +1239,14 @@ function DashboardTab(props: {
               </button>
             </div>
 
-            {/* total summary — line graph + compact stat row */}
-            <div className={["rounded-2xl px-3 pt-3 pb-2 mb-4 border", totalIsOver ? "bg-rose-50 border-rose-200" : "bg-gradient-to-br from-pink-50 to-purple-50/40 border-pink-200"].join(" ")}>
+            {/* total summary — line graph */}
+            <div className="mb-4 -mx-1">
               <BudgetLineGraph
                 planned={totalPlanned}
                 extraTxns={monthTxns.filter(t => t.type === "expense")}
                 isOver={totalIsOver}
                 currency={currency}
               />
-              <div className="grid grid-cols-3 gap-1 mt-3 pt-2 border-t border-pink-200/50">
-                <div>
-                  <p className="text-[8px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</p>
-                  <p className="text-xs font-bold text-[#831843] tabular-nums">{fmt(totalPlanned, currency)}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[8px] font-bold tracking-widest text-amber-600">EXTRA</p>
-                  <p className={["text-xs font-bold tabular-nums", totalIsOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
-                    {totalIsOver ? `+${fmt(totalExtra, currency)}` : "—"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[8px] font-bold tracking-widest text-[#9D5C7E]">REALITY</p>
-                  <p className={["text-xs font-bold tabular-nums", totalIsOver ? "text-rose-600" : "text-emerald-700"].join(" ")}>{fmt(grandTotal, currency)}</p>
-                </div>
-              </div>
             </div>
 
             {/* budgeted categories */}
