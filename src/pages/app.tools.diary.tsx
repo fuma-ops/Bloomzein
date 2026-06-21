@@ -724,6 +724,24 @@ export default function DiaryPage() {
     <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843" }}>
       <style>{DIARY_CSS}</style>
 
+      {/* Mood popover — rendered at root level to escape hero's backdrop-filter stacking context */}
+      {moodOpen && (
+        <>
+          <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 198 }} />
+          <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
+            {MOOD_DATA.map((m) => {
+              const sel = m.name === mood;
+              return (
+                <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
+                  <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
+                  {m.name}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+
       {/* ── Hero section (title + Today's Bloom unified) ── */}
       <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
         {/* Mood ambient glow */}
@@ -769,23 +787,6 @@ export default function DiaryPage() {
                     </svg>
                 }
               </button>
-              {/* Mood popover — position:fixed escapes hero overflow:hidden */}
-              {moodOpen && (
-                <>
-                  <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 28 }} />
-                  <div style={{ position: "fixed", top: popoverPos.top, right: popoverPos.right, zIndex: 29, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 188 }}>
-                    {MOOD_DATA.map((m) => {
-                      const sel = m.name === mood;
-                      return (
-                        <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
-                          <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
-                          {m.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
             </div>
           )}
         </div>
@@ -827,7 +828,7 @@ export default function DiaryPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
           {/* ── The Book ── */}
-          <div ref={bookRef} style={{ order: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div ref={bookRef} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14, maxWidth: "100%" }}>
 
               {/* Prev arrow */}
