@@ -1056,7 +1056,7 @@ function DashboardTab(props: {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-emerald-800">Setup complete — you're blooming! 🌸</p>
-            <p className="text-[11px] text-emerald-600">Keep logging your daily spends to see your budget shine.</p>
+            <p className="text-[11px] text-emerald-600">Log extra spends to track what you bought on top of your plan.</p>
           </div>
           <button
             onClick={() => setSetupDismissed(true)}
@@ -1075,15 +1075,15 @@ function DashboardTab(props: {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
 
-        // Unplanned: spent in a category with no budget set
+        // Extra spends = anything logged this month via the Extra Spends form
         const spentCatKeys = [...new Set(monthTxns.filter(t => t.type === "expense").map(t => t.catKey))];
         const unplannedKeys = spentCatKeys.filter(k => !(budget[k] > 0));
 
-        const totalBudgeted = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalSpent    = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-        const totalPct      = totalBudgeted > 0 ? Math.min(150, (totalSpent / totalBudgeted) * 100) : 0;
-        const totalOver     = totalSpent > totalBudgeted;
-        const totalWarn     = !totalOver && totalPct >= 80;
+        // Total: plan (committed) + any extra logged on top
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const totalExtra   = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        const grandTotal   = totalPlanned + totalExtra;
+        const totalIsOver  = totalExtra > 0;
 
         const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
 
@@ -1099,40 +1099,43 @@ function DashboardTab(props: {
               </button>
             </div>
 
-            {/* total summary row */}
+            {/* total summary */}
             <div className={["flex items-center gap-3 rounded-xl px-3 py-2.5 mb-4 border",
-              totalOver ? "bg-rose-50 border-rose-200" : totalWarn ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-100"
+              totalIsOver ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-100"
             ].join(" ")}>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-1">THIS MONTH · TOTAL</p>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm font-bold text-[#831843]">{fmt(totalSpent, currency)}</span>
-                  <span className="text-[10px] text-[#9D5C7E]">of {fmt(totalBudgeted, currency)}</span>
+                  <span className="text-sm font-bold text-[#831843]">{fmt(grandTotal, currency)}</span>
+                  <span className="text-[10px] text-[#9D5C7E]">planned {fmt(totalPlanned, currency)}</span>
+                  {totalIsOver && <span className="text-[10px] font-bold text-rose-500">+{fmt(totalExtra, currency)} extra</span>}
                 </div>
-                <div className="h-1.5 rounded-full bg-white/60 overflow-hidden mt-1.5">
-                  <div className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${Math.min(100, totalPct)}%`, background: totalOver ? "linear-gradient(90deg,#FCA5A5,#EF4444)" : totalWarn ? "linear-gradient(90deg,#FCD34D,#F59E0B)" : "linear-gradient(90deg,#6EE7B7,#10B981)" }} />
+                {/* two-part bar: pink (plan) + red (extra) */}
+                <div className="flex h-1.5 rounded-full overflow-hidden mt-1.5 bg-pink-100">
+                  <div className="h-full transition-all duration-700 rounded-l-full"
+                    style={{ width: totalIsOver ? `${(totalPlanned / grandTotal) * 100}%` : "100%", background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                  {totalIsOver && (
+                    <div className="h-full flex-1 transition-all duration-700 rounded-r-full"
+                      style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />
+                  )}
                 </div>
               </div>
-              {totalOver
+              {totalIsOver
                 ? <XCircle className="h-6 w-6 text-rose-500 shrink-0" strokeWidth={1.8} />
-                : totalWarn
-                ? <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0" strokeWidth={1.8} />
                 : <CheckCircle2 className="h-6 w-6 text-emerald-500 shrink-0" strokeWidth={1.8} />}
             </div>
 
             {/* budgeted categories */}
             <div className="space-y-3">
               {visibleBudgeted.map(k => {
-                const cat    = allCats.find(c => c.key === k);
-                const budgeted = budget[k] ?? 0;
-                const spent  = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                const rawPct = budgeted > 0 ? (spent / budgeted) * 100 : 0;
-                const over   = spent > budgeted;
-                const warn   = !over && rawPct >= 80;
-                const barColor = over  ? "linear-gradient(90deg,#FCA5A5,#EF4444)"
-                               : warn  ? "linear-gradient(90deg,#FCD34D,#F59E0B)"
-                               : "linear-gradient(90deg,#C084FC,#EC4899)";
+                const cat     = allCats.find(c => c.key === k);
+                const planned = budget[k] ?? 0;
+                const extra   = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const total   = planned + extra;
+                const isOver  = extra > 0;
+                // Pink portion = planned / total; red portion = extra / total
+                const pinkPct = isOver ? (planned / total) * 100 : 100;
+                const redPct  = isOver ? (extra / total) * 100 : 0;
                 return (
                   <div key={k}>
                     <div className="flex items-center gap-2.5">
@@ -1140,27 +1143,33 @@ function DashboardTab(props: {
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline gap-2 mb-1">
                           <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                          <span className="text-[10px] tabular-nums shrink-0" style={{ color: over ? "#EF4444" : warn ? "#D97706" : "#9D5C7E" }}>
-                            {fmt(spent, currency)} / {fmt(budgeted, currency)}
+                          <span className="text-[10px] tabular-nums shrink-0" style={{ color: isOver ? "#EF4444" : "#9D5C7E" }}>
+                            {fmt(planned, currency)}{isOver ? ` + ${fmt(extra, currency)}` : ""}
                           </span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-pink-100 overflow-hidden">
-                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, rawPct)}%`, background: barColor }} />
+                        {/* two-part bar */}
+                        <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-50">
+                          <div className="h-full transition-all duration-700"
+                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                          {isOver && (
+                            <div className="h-full transition-all duration-700 rounded-r-full"
+                              style={{ width: `${redPct}%`, background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />
+                          )}
                         </div>
                       </div>
-                      <div className="shrink-0 w-14 flex justify-end">
-                        {over
-                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600"><XCircle className="h-2.5 w-2.5" /> Over</span>
-                          : warn
-                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-600"><AlertTriangle className="h-2.5 w-2.5" /> Watch</span>
-                          : spent > 0
-                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /> OK</span>
-                          : <span className="text-[10px] font-semibold text-[#9D5C7E]">—</span>}
+                      <div className="shrink-0 w-16 flex justify-end">
+                        {isOver
+                          ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 whitespace-nowrap">
+                              <XCircle className="h-2.5 w-2.5" /> +{fmt(extra, currency)}
+                            </span>
+                          : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
+                              <CheckCircle2 className="h-2.5 w-2.5" /> On plan
+                            </span>}
                       </div>
                     </div>
-                    {over && (
+                    {isOver && (
                       <p className="mt-0.5 ml-8 text-[9px] text-rose-500 font-semibold">
-                        {fmt(spent - budgeted, currency)} over budget this month
+                        {fmt(total, currency)} total · {fmt(extra, currency)} over plan
                       </p>
                     )}
                   </div>
@@ -1174,26 +1183,26 @@ function DashboardTab(props: {
               </button>
             )}
 
-            {/* unplanned spending */}
+            {/* unplanned: extra spends in categories with no budget set */}
             {unplannedKeys.length > 0 && (
               <div className="mt-4 pt-3 border-t border-pink-100">
                 <p className="text-[10px] font-bold tracking-widest text-amber-600 mb-2.5 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" /> UNPLANNED SPENDING
+                  <AlertTriangle className="h-3 w-3" /> EXTRA · NOT IN PLAN
                 </p>
                 <div className="space-y-2.5">
                   {unplannedKeys.map(k => {
                     const cat   = allCats.find(c => c.key === k);
-                    const spent = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                    const extra = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
                     return (
                       <div key={k} className="flex items-center gap-2.5">
                         <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💸"}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-baseline gap-2 mb-1">
                             <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                            <span className="text-[10px] font-bold text-amber-600 tabular-nums shrink-0">{fmt(spent, currency)}</span>
+                            <span className="text-[10px] font-bold text-amber-600 tabular-nums shrink-0">{fmt(extra, currency)}</span>
                           </div>
                           <div className="h-1.5 rounded-full bg-amber-100 overflow-hidden">
-                            <div className="h-full rounded-full bg-amber-400 w-full" />
+                            <div className="h-full rounded-full w-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
                           </div>
                         </div>
                         <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
@@ -1204,7 +1213,7 @@ function DashboardTab(props: {
                   })}
                 </div>
                 <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-[10px] font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-                  <Plus className="h-3 w-3" /> Add these to your budget
+                  <Plus className="h-3 w-3" /> Add to your plan
                 </button>
               </div>
             )}
@@ -1443,7 +1452,7 @@ function DashboardTab(props: {
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
               <Plus className="h-4 w-4" />
             </div>
-            <h3 className="font-script text-2xl text-[#831843]">Log a spend</h3>
+            <h3 className="font-script text-2xl text-[#831843]">Extra Spends</h3>
           </div>
           <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
             desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
