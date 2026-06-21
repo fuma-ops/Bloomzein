@@ -479,10 +479,12 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
 
   const todayVal = cumByDay[today - 1] ?? 0;
   const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+  const todayX = xp(today);
+  const todayY = yp(todayVal);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 112 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }}>
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
@@ -493,14 +495,18 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
           <filter id="shGlow" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="1.8" result="blur" />
+            <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* subtle grid */}
-        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.6" />
-        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="0.8" />
+        {/* subtle horizontal grid */}
+        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.8" />
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
+
+        {/* today vertical marker — goes from top to baseline */}
+        <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
+          stroke="#EC4899" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
 
         {/* gradient fill under curve */}
         {realPtsArr.length >= 2 && (
@@ -509,49 +515,53 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
 
         {/* budget reference line — light pink dashed */}
         <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
-          stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" />
-        <text x={W - pR - 2} y={yp(planned) - 3} fontSize="6.5" fill="#EC4899"
+          stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" />
+        <text x={W - pR - 2} y={yp(planned) - 4} fontSize="8" fill="#EC4899"
           textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
         {/* spending curve — all pink */}
         {realPtsArr.length >= 2 && (
           <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#shLine)"
-            strokeWidth="2.5" strokeLinecap="round" filter="url(#shGlow)" />
+            strokeWidth="3" strokeLinecap="round" filter="url(#shGlow)" />
         )}
 
-        {/* today dot */}
+        {/* today dot — prominent */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={xp(today)} cy={yp(todayVal)} r="5" fill="#EC4899" opacity="0.2" />
-            <circle cx={xp(today)} cy={yp(todayVal)} r="3" fill="#EC4899" stroke="white" strokeWidth="1.5" />
-            <text x={xp(today)} y={yp(todayVal) - 6} fontSize="6.5" fill="#EC4899"
+            {/* pulse ring */}
+            <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
+            <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
+            <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
+            {/* value label above */}
+            <text x={todayX} y={todayY - 13} fontSize="9" fill="#EC4899"
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
 
         {/* X axis labels */}
-        <text x={xp(1)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">1</text>
-        <text x={xp(Math.ceil(daysInMonth / 2))} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
-          {Math.ceil(daysInMonth / 2)}
+        <text x={xp(1)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">1</text>
+        {/* "Today" label at today's x position */}
+        <text x={todayX} y={H - 3} fontSize="8" fill="#EC4899" textAnchor="middle" fontWeight="700">
+          {today}
         </text>
-        <text x={xp(daysInMonth)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
+        <text x={xp(daysInMonth)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">
           {daysInMonth}
         </text>
       </svg>
 
       {/* legend */}
-      <div className="flex items-center gap-4 mt-1 px-1">
-        <div className="flex items-center gap-1">
-          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Budget</span>
+      <div className="flex items-center gap-4 mt-1.5 px-1">
+        <div className="flex items-center gap-1.5">
+          <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" /></svg>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Budget</span>
         </div>
-        <div className="flex items-center gap-1">
-          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="2" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Spending</span>
+        <div className="flex items-center gap-1.5">
+          <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#EC4899" strokeWidth="2.5" /></svg>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Spending</span>
         </div>
-        <div className="flex items-center gap-1 ml-auto">
-          <svg width="8" height="8"><circle cx="4" cy="4" r="3" fill="#EC4899" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Today</span>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#EC4899" /></svg>
+          <span className="text-[10px] font-semibold text-[#EC4899]">Today ({today})</span>
         </div>
       </div>
     </div>
@@ -582,8 +592,8 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
   };
 
   return (
-    <div className="flex items-center gap-6">
-      <svg viewBox="0 0 112 112" width="108" height="108" className="shrink-0">
+    <div className="flex flex-col items-center gap-3">
+      <svg viewBox="0 0 112 112" width="108" height="108">
         {/* planned slice — hot pink */}
         <path d={arcPath(a0, plannedSweep)} fill="#EC4899" stroke="white" strokeWidth="1.5" />
         {/* extra slice — light pink (distinct but still in palette) */}
@@ -607,16 +617,16 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
           </>
         )}
       </svg>
-      <div className="space-y-4">
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
+      <div className="flex gap-8 justify-center">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
           </div>
           <p className="text-lg font-bold text-[#831843] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
         </div>
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
           </div>
@@ -860,6 +870,7 @@ export function BudgetPlanner() {
               setViewPeriod={setViewPeriod}
               goalIdx={goalIdx}
               setGoalIdx={setGoalIdx}
+              setCustomCats={setCustomCats}
             />
           )}
           {tab === "Incomes" && (
@@ -955,78 +966,172 @@ function StatCards({ income, expenses, savings, balance, currency }: {
 }
 
 /* ============================================================
-   QUICK ADD SHEET — glassmorphism bottom sheet, 3-tap UX
+   EXTRA SPEND MODAL — centered popup with full form
 ============================================================ */
-function QuickAddSheet({ open, onClose, onSave, allCats, selectedCats, currency }: {
+function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, currency }: {
   open: boolean; onClose: () => void;
-  onSave: (amount: number, catKey: string) => void;
-  allCats: Cat[]; selectedCats: string[]; currency: CurrencyKey;
+  onSave: (txn: { amount: number; catKey: string; description: string; date: string; mood: MoodKey; type: "expense" }) => void;
+  allCats: Cat[]; setCustomCats: (v: CustomCat[] | ((p: CustomCat[]) => CustomCat[])) => void;
+  currency: CurrencyKey;
 }) {
   const [amount, setAmount] = useState("");
-  const [catKey, setCatKey] = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
-  const [saved, setSaved]   = useState(false);
+  const [catKey, setCatKey] = useState(allCats[0]?.key ?? "food");
+  const [desc, setDesc] = useState("");
+  const [date, setDate] = useState(todayISO());
+  const [mood, setMood] = useState<MoodKey>("planned");
+  const [saved, setSaved] = useState(false);
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCatLabel, setNewCatLabel] = useState("");
+  const [newCatEmoji, setNewCatEmoji] = useState("💰");
   const inputRef = useRef<HTMLInputElement>(null);
-  const cats = (selectedCats.length ? selectedCats : allCats.map(c => c.key))
-    .map(k => allCats.find(c => c.key === k)).filter(Boolean) as Cat[];
 
   useEffect(() => {
-    if (open) { setAmount(""); setSaved(false); setTimeout(() => inputRef.current?.focus(), 80); }
+    if (open) {
+      setAmount(""); setDesc(""); setSaved(false); setShowAddCat(false);
+      setDate(todayISO()); setNewCatLabel(""); setNewCatEmoji("💰");
+      setTimeout(() => inputRef.current?.focus(), 80);
+    }
   }, [open]);
 
   function handleSave() {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return;
-    onSave(amt, catKey);
+    onSave({ amount: amt, catKey, description: desc, date, mood, type: "expense" });
     setSaved(true);
-    setTimeout(() => { onClose(); setSaved(false); setAmount(""); }, 1300);
+    setTimeout(() => { onClose(); setSaved(false); setAmount(""); setDesc(""); }, 1300);
   }
 
-  return (
-    <>
-      {open && <div className="fixed inset-0 z-40 bg-transparent" onClick={onClose} />}
-      <div className={["fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out will-change-transform",
-        open ? "translate-y-0" : "translate-y-full"].join(" ")}>
-        <div className="mx-auto max-w-lg rounded-t-[2rem] bg-white/92 backdrop-blur-xl border-t border-pink-200/60 shadow-2xl shadow-pink-300/30 px-5 pt-2 pb-safe">
-          <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-pink-200" />
-          {saved ? (
-            <div className="py-10 flex flex-col items-center gap-3 animate-fade-in">
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
-                <Check className="h-8 w-8" strokeWidth={3} />
-              </div>
-              <p className="font-script text-3xl text-[#831843]">Logged ✿</p>
-              <p className="text-sm text-[#9D5C7E]">{CURRENCIES[currency].symbol}{amount} · {allCats.find(c => c.key === catKey)?.label}</p>
+  function addCustomCat() {
+    if (!newCatLabel.trim()) return;
+    const key = `custom_${Date.now()}`;
+    setCustomCats(prev => [...prev, { key, label: newCatLabel.trim(), emoji: newCatEmoji, group: "need" as Need }]);
+    setCatKey(key);
+    setShowAddCat(false);
+    setNewCatLabel(""); setNewCatEmoji("💰");
+  }
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-sm rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <Plus className="h-4 w-4" />
             </div>
-          ) : (
-            <>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-3">Quick add</p>
-              <div className="relative mb-3">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
-                <input ref={inputRef} type="number" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
-                  className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-4 text-3xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50" />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar mb-4">
-                {cats.slice(0, 8).map(c => (
+            <h3 className="font-script text-2xl text-[#831843]">Extra Spend ✿</h3>
+          </div>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {saved ? (
+          <div className="py-12 flex flex-col items-center gap-3 animate-fade-in">
+            <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
+              <Check className="h-8 w-8" strokeWidth={3} />
+            </div>
+            <p className="font-script text-3xl text-[#831843]">Saved ✿</p>
+            <p className="text-sm text-[#9D5C7E]">{CURRENCIES[currency].symbol}{amount} · {allCats.find(c => c.key === catKey)?.label ?? catKey}</p>
+          </div>
+        ) : (
+          <div className="px-5 py-4 space-y-4 max-h-[78vh] overflow-y-auto">
+            {/* Amount */}
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
+              <input
+                ref={inputRef} type="number" inputMode="decimal" value={amount}
+                onChange={e => setAmount(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
+                className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-3.5 text-2xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50"
+              />
+            </div>
+
+            {/* Date */}
+            <PinkDatePicker value={date} onChange={setDate} className="w-full" />
+
+            {/* Categories grid — ALL cats */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Category</p>
+              <div className="grid grid-cols-4 gap-2 max-h-44 overflow-y-auto pr-0.5">
+                {allCats.map(c => (
                   <button key={c.key} onClick={() => setCatKey(c.key)}
-                    className={["shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all duration-150",
+                    className={[
+                      "flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border transition-all duration-150 text-center",
                       c.key === catKey
-                        ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.05]"
-                        : "bg-pink-50 text-[#9D5C7E] border-pink-200/60"].join(" ")}>
-                    <span>{c.emoji}</span>{c.label}
+                        ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.04]"
+                        : "bg-pink-50/80 text-[#9D5C7E] border-pink-100 hover:border-pink-300"
+                    ].join(" ")}>
+                    <span className="text-base">{c.emoji}</span>
+                    <span className="text-[9px] font-semibold leading-tight line-clamp-2">{c.label}</span>
+                  </button>
+                ))}
+                {/* Add new category button */}
+                <button onClick={() => setShowAddCat(v => !v)}
+                  className="flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border border-dashed border-pink-300 bg-pink-50/40 text-[#EC4899] transition-all hover:bg-pink-100">
+                  <span className="text-base font-bold">+</span>
+                  <span className="text-[9px] font-semibold">New</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Add new category inline form */}
+            {showAddCat && (
+              <div className="rounded-2xl border border-pink-200 bg-pink-50/60 p-3 space-y-2 animate-fade-in">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">New Category</p>
+                <div className="flex gap-2">
+                  <input value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} maxLength={2}
+                    className="w-12 rounded-xl bg-white border border-pink-200 text-center text-lg p-2 outline-none focus:ring-1 focus:ring-pink-400" />
+                  <input value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} placeholder="Category name"
+                    className="flex-1 rounded-xl bg-white border border-pink-200 px-3 py-2 text-sm font-medium text-[#831843] outline-none focus:ring-1 focus:ring-pink-400" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowAddCat(false)} className="flex-1 rounded-xl border border-pink-200 py-1.5 text-xs font-semibold text-[#9D5C7E]">Cancel</button>
+                  <button onClick={addCustomCat} className="flex-1 rounded-xl bg-[#EC4899] text-white py-1.5 text-xs font-bold hover:bg-[#DB2777] transition">Add</button>
+                </div>
+              </div>
+            )}
+
+            {/* Mood / Spend type */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Spend type</p>
+              <div className="flex gap-2">
+                {MOODS.map(m => (
+                  <button key={m.key} onClick={() => setMood(m.key)}
+                    className={[
+                      "flex-1 flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold border transition-all",
+                      mood === m.key
+                        ? "bg-[#EC4899]/10 border-[#EC4899]/40 text-[#EC4899]"
+                        : "bg-white border-pink-200/60 text-[#9D5C7E] hover:border-pink-300"
+                    ].join(" ")}>
+                    <m.Icon className="h-3.5 w-3.5" /> {m.label}
                   </button>
                 ))}
               </div>
-              <button onClick={handleSave} disabled={!amount || parseFloat(amount) <= 0}
-                className="w-full bloom-luxury-btn py-4 text-base font-bold text-white rounded-2xl disabled:opacity-40 transition-all"
-                style={{ animation: amount && parseFloat(amount) > 0 ? 'ctaBreathe 2.8s ease-in-out infinite' : 'none' }}>
-                Log ✿
-              </button>
-              <div className="h-6" />
-            </>
-          )}
-        </div>
+            </div>
+
+            {/* Description */}
+            <Input placeholder="What did you spend on? (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
+
+            {/* Save button */}
+            <button
+              onClick={handleSave} disabled={!amount || parseFloat(amount) <= 0}
+              className="w-full bloom-luxury-btn py-3.5 text-base font-bold text-white rounded-2xl disabled:opacity-40 transition-all"
+              style={{ animation: amount && parseFloat(amount) > 0 ? 'ctaBreathe 2.8s ease-in-out infinite' : 'none' }}
+            >
+              Save Spend ✿
+            </button>
+          </div>
+        )}
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
 
@@ -1042,10 +1147,11 @@ function DashboardTab(props: {
   incomes: Income[]; onCurrencyClick: () => void;
   viewPeriod: "week"|"month"; setViewPeriod: React.Dispatch<React.SetStateAction<"week"|"month">>;
   goalIdx: number; setGoalIdx: React.Dispatch<React.SetStateAction<number>>;
+  setCustomCats: (v: CustomCat[] | ((p: CustomCat[]) => CustomCat[])) => void;
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
     txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget, onCurrencyClick,
-    viewPeriod, setViewPeriod, goalIdx, setGoalIdx } = props;
+    viewPeriod, setViewPeriod, goalIdx, setGoalIdx, setCustomCats } = props;
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
@@ -1062,31 +1168,7 @@ function DashboardTab(props: {
   const goalTouchX = useRef<number | null>(null);
   const [budgetShowAll, setBudgetShowAll] = useState(false);
 
-  // Quick add sheet
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-
-  // Inline detailed form state
-  const [amount, setAmount]   = useState("");
-  const [catKey, setCatKey]   = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
-  const [desc, setDesc]       = useState("");
-  const [date, setDate]       = useState(todayISO());
-  const [mood, setMood]       = useState<MoodKey>("planned");
-  const [showCatModal, setShowCatModal]   = useState(false);
-  const [showMoodModal, setShowMoodModal] = useState(false);
-  const [txnSaved, setTxnSaved] = useState(false);
-
-  const catOptions = selectedCats.length ? selectedCats : allCats.map(c => c.key);
-  const currentCat = allCats.find(c => c.key === catKey);
-  const currentMood = MOODS.find(m => m.key === mood)!;
-
-  function addTxn() {
-    const amt = parseFloat(amount);
-    if (!amt || amt <= 0) return;
-    setTxns(prev => [{ id: uid(), amount: amt, catKey, description: desc, date, mood, type: "expense" }, ...prev]);
-    setAmount(""); setDesc("");
-    setTxnSaved(true);
-    setTimeout(() => setTxnSaved(false), 1500);
-  }
+  const [showExtraSpend, setShowExtraSpend] = useState(false);
 
   // === WEEK vs MONTH FILTER ===
   const filteredTxns = useMemo(() => {
@@ -1286,6 +1368,91 @@ function DashboardTab(props: {
               </button>
             </div>
             <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} />
+
+            {/* Per-category budget bars */}
+            {(() => {
+              const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
+              const unplanned = monthTxns
+                .filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey))
+                .reduce<Record<string, number>>((acc, t) => { acc[t.catKey] = (acc[t.catKey] ?? 0) + t.amount; return acc; }, {});
+              const unplannedEntries = Object.entries(unplanned);
+              return (
+                <div className="mt-4 space-y-3">
+                  {visibleBudgeted.map(k => {
+                    const cat = allCats.find(c => c.key === k);
+                    const planned = budget[k] ?? 0;
+                    const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                    const overAmount = Math.max(0, actual - planned);
+                    const isOver = actual > planned;
+                    const fillPct = planned > 0 ? Math.min(100, (isOver ? planned / actual : actual / planned) * 100) : 0;
+                    const badge = actual === 0 ? "ok" : isOver ? "over" : actual / planned > 0.8 ? "watch" : "ok";
+                    return (
+                      <div key={k}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                            <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            {badge === "over" && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-600">
+                                +{fmt(overAmount, currency)} / {fmt(planned, currency)}
+                              </span>
+                            )}
+                            {badge === "watch" && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-pink-100 text-[#EC4899]">Watch</span>
+                            )}
+                            {badge === "ok" && actual > 0 && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">OK</span>
+                            )}
+                            <span className="text-[10px] font-bold text-[#9D5C7E] tabular-nums">
+                              {fmt(actual, currency)}<span className="opacity-60"> / {fmt(planned, currency)}</span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex h-2 rounded-full overflow-hidden bg-pink-100">
+                          <div className="h-full transition-all duration-700"
+                            style={{
+                              width: `${fillPct}%`,
+                              background: "linear-gradient(90deg,#C084FC,#EC4899)",
+                              borderRadius: isOver ? "9999px 0 0 9999px" : "9999px"
+                            }} />
+                          {isOver && (
+                            <div className="h-full flex-1 rounded-r-full"
+                              style={{ background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {budgetedCats.length > 5 && (
+                    <button onClick={() => setBudgetShowAll(v => !v)}
+                      className="w-full text-center text-xs font-bold text-[#EC4899] hover:underline py-0.5">
+                      {budgetShowAll ? "Show less ↑" : `Show all ${budgetedCats.length} categories ↓`}
+                    </button>
+                  )}
+
+                  {unplannedEntries.length > 0 && (
+                    <div className="pt-2 border-t border-pink-100">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Unplanned spends</p>
+                      {unplannedEntries.map(([k, amt]) => {
+                        const cat = allCats.find(c => c.key === k);
+                        return (
+                          <div key={k} className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">{cat?.emoji ?? "💰"}</span>
+                              <span className="text-[11px] font-semibold text-[#831843]">{cat?.label ?? k}</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-[#EC4899]">{fmt(amt, currency)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </Card>
         );
       })()}
@@ -1557,97 +1724,27 @@ function DashboardTab(props: {
         );
       })()}
 
-      {/* Detailed log form */}
-      {txns.length > 0 && (
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
-              <Plus className="h-4 w-4" />
-            </div>
-            <h3 className="font-script text-2xl text-[#831843]">Extra Spends</h3>
-          </div>
-          <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
-            desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
-            catOptions={catOptions} allCats={allCats} currentCat={currentCat} currentMood={currentMood}
-            showCatModal={showCatModal} setShowCatModal={setShowCatModal}
-            showMoodModal={showMoodModal} setShowMoodModal={setShowMoodModal}
-            txnSaved={txnSaved} addTxn={addTxn} currency={currency} />
-        </Card>
-      )}
 
-      {/* Category picker modal */}
-      {showCatModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
-              <h3 className="font-script text-2xl text-[#831843]">Category ✿</h3>
-              <button onClick={() => setShowCatModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="px-3 py-3 overflow-y-auto flex-1 min-h-0 space-y-1">
-              {catOptions.map(k => {
-                const c = allCats.find(x => x.key === k);
-                const active = k === catKey;
-                return (
-                  <button key={k} onClick={() => { setCatKey(k); setShowCatModal(false); }}
-                    className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition active:scale-[0.98]",
-                      active ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#831843]">
-                      <span className="text-base">{c?.emoji ?? "💰"}</span>{c?.label ?? k}
-                    </span>
-                    {active && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Mood picker modal */}
-      {showMoodModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
-              <h3 className="font-script text-2xl text-[#831843]">Spend type ✿</h3>
-              <button onClick={() => setShowMoodModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="px-3 py-3 space-y-1">
-              {MOODS.map(m => (
-                <button key={m.key} onClick={() => { setMood(m.key); setShowMoodModal(false); }}
-                  className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition",
-                    mood === m.key ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
-                  <span className={["inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold border", m.tone].join(" ")}>
-                    <m.Icon className="h-3.5 w-3.5" /> {m.label}
-                  </span>
-                  {mood === m.key && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ③ QUICK ADD FAB */}
+      {/* CTA FAB — opens Extra Spend modal */}
       <button
-        onClick={() => setShowQuickAdd(true)}
-        className="fixed bottom-20 right-4 z-30 grid h-14 w-14 place-items-center rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95"
+        onClick={() => setShowExtraSpend(true)}
+        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95 px-5 h-14"
         style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
-        aria-label="Quick add expense"
+        aria-label="Add spend"
       >
-        <Plus className="h-6 w-6" strokeWidth={2.5} />
+        <Plus className="h-5 w-5" strokeWidth={2.5} />
+        <span className="text-sm font-bold">+ Spend</span>
       </button>
 
-      {/* Quick Add Sheet */}
-      <QuickAddSheet
-        open={showQuickAdd}
-        onClose={() => setShowQuickAdd(false)}
-        onSave={(amt, cat) => {
-          setTxns(prev => [{ id: uid(), amount: amt, catKey: cat, description: "", date: todayISO(), mood: "planned" as MoodKey, type: "expense" }, ...prev]);
+      {/* Extra Spend Modal */}
+      <ExtraSpendModal
+        open={showExtraSpend}
+        onClose={() => setShowExtraSpend(false)}
+        onSave={txnData => {
+          setTxns(prev => [{ id: uid(), ...txnData }, ...prev]);
         }}
         allCats={allCats}
-        selectedCats={catOptions}
+        setCustomCats={setCustomCats}
         currency={currency}
       />
     </div>
