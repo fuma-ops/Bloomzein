@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Wallet, TrendingUp, TrendingDown, PiggyBank, Gem, Plus, Trash2,
   ChevronDown, ChevronLeft, ChevronRight, Check, Sparkles, X, Moon,
@@ -7,7 +8,7 @@ import {
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
   Building2, LineChart as LineIcon, Calendar, Download, Filter, ArrowUpRight,
   ArrowDownRight, ArrowRight, CheckCircle2, CircleDot, Coins, Receipt,
-  Flag, FileBarChart, type LucideIcon,
+  Flag, FileBarChart, AlertTriangle, XCircle, type LucideIcon,
 } from "lucide-react";
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
@@ -70,6 +71,22 @@ const MOODS = [
 type MoodKey = typeof MOODS[number]["key"];
 
 const PRESET_GOALS = ["Emergency Fund","Vacation","New Device","Investment","Wedding","Home","Education","Car"];
+
+const BP_CYCLE_TIPS: Partial<Record<string, { emoji: string; headline: string; sub: string; grad: string }>> = {
+  luteal:     { emoji: "🌙", headline: "Luteal phase — your inner PMS budget",  sub: "Budget a little extra self-care this week. Cravings are real.",       grad: "from-purple-50 to-pink-50" },
+  period:     { emoji: "🌸", headline: "Period week — gentle care first",        sub: "Rest & warmth over everything. You deserve every cent of it.",         grad: "from-pink-50 to-rose-50" },
+  follicular: { emoji: "🌱", headline: "Follicular — rising energy mode",        sub: "Great week for big financial decisions. Your mind is clear.",           grad: "from-emerald-50 to-pink-50" },
+  ovulation:  { emoji: "✨", headline: "Ovulation peak — full power mode",       sub: "Your best week to tackle financial goals. Go for it.",                 grad: "from-yellow-50 to-pink-50" },
+  fertile:    { emoji: "💐", headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-purple-50" },
+};
+
+const HERO_CONFIG: Record<string, { title: string; sub: string }> = {
+  Dashboard:       { title: "You're blooming",         sub: "Your budget. Your dreams. Your future." },
+  Incomes:         { title: "Your income garden 🌱",   sub: "Grow every stream, bloom every month." },
+  "Budget Setup":  { title: "Build your plan ✦",       sub: "A clear budget is your map to every dream." },
+  "Savings Goals": { title: "Dream big, save smart 💎",sub: "Every dirham saved brings you closer." },
+  Reports:         { title: "Know your numbers ✨",     sub: "Clarity is the first step to financial freedom." },
+};
 
 /* ============================================================
    TYPES
@@ -165,17 +182,16 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
         <span className="truncate">{selected?.label ?? placeholder}</span>
         <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0 ml-2" />
       </button>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
               <h3 className="font-script text-2xl text-[#831843]">Choose ✿</h3>
               <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] hover:text-hotpink transition">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="px-3 py-3 max-h-72 overflow-y-auto space-y-1">
+            <div className="px-3 py-3 overflow-y-auto flex-1 min-h-0 space-y-1">
               {options.map(o => {
                 const active = o.value === value;
                 return (
@@ -188,8 +204,100 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
                 );
               })}
             </div>
+            <div className="px-5 pb-5 pt-2 shrink-0">
+              <button onClick={() => setOpen(false)} className="bloom-luxury-btn w-full py-2.5 text-sm font-bold text-white">
+                Done ✿
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+function PinkDatePicker({ value, onChange, className = "" }: {
+  value: string; onChange: (v: string) => void; className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const todayObj = new Date(); todayObj.setHours(0,0,0,0);
+  const todayStr = todayObj.toISOString().slice(0,10);
+  const base = value ? new Date(value + "T00:00:00") : todayObj;
+  const [view, setView] = useState({ y: base.getFullYear(), m: base.getMonth() });
+
+  function openPicker() {
+    const d = value ? new Date(value + "T00:00:00") : todayObj;
+    setView({ y: d.getFullYear(), m: d.getMonth() });
+    setOpen(true);
+  }
+
+  const display = value
+    ? new Date(value + "T00:00:00").toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    : "Select date";
+
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DAY_HDR = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+
+  const firstOfMonth = new Date(view.y, view.m, 1);
+  const offset = (firstOfMonth.getDay() + 6) % 7;
+  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+  const cells = Array.from({ length: Math.ceil((offset + daysInMonth) / 7) * 7 }, (_, i) => {
+    const d = new Date(view.y, view.m, 1 - offset + i);
+    const iso = d.toISOString().slice(0,10);
+    return { d, iso, inMonth: d.getMonth() === view.m, isToday: iso === todayStr, isSelected: iso === value };
+  });
+
+  return (
+    <>
+      <button type="button" onClick={openPicker}
+        className={`flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left ${className}`}>
+        <Calendar className="h-3.5 w-3.5 text-[#EC4899] shrink-0" />
+        <span className="flex-1 truncate">{display}</span>
+      </button>
+      {open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+              <h3 className="font-script text-2xl text-[#831843]">Pick a date ✿</h3>
+              <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <button onClick={() => setView(v => { const d = new Date(v.y, v.m-1); return {y:d.getFullYear(),m:d.getMonth()}; })}
+                className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="font-semibold text-sm text-[#831843]">{MONTHS[view.m]} {view.y}</span>
+              <button onClick={() => setView(v => { const d = new Date(v.y, v.m+1); return {y:d.getFullYear(),m:d.getMonth()}; })}
+                className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-7 px-4 pb-1">
+              {DAY_HDR.map(d => <div key={d} className="text-center text-[10px] font-bold text-[#C4A0CE] pb-1">{d}</div>)}
+            </div>
+            <div className="grid grid-cols-7 px-4 pb-5 gap-y-0.5">
+              {cells.map(({ iso, d, inMonth, isToday, isSelected }) => (
+                <button key={iso} onClick={() => { if (inMonth) { onChange(iso); setOpen(false); } }}
+                  className={["h-9 w-9 mx-auto rounded-full text-sm font-semibold transition-all duration-150",
+                    isSelected ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30 scale-105"
+                    : isToday ? "bg-pink-100 text-[#EC4899] ring-1 ring-[#EC4899]/50"
+                    : inMonth ? "hover:bg-pink-50 text-[#831843] active:scale-95"
+                    : "text-[#C4A0CE] opacity-40 pointer-events-none"].join(" ")}>
+                  {d.getDate()}
+                </button>
+              ))}
+            </div>
+            <div className="px-5 pb-5 flex gap-2">
+              <button onClick={() => { onChange(todayStr); setOpen(false); }}
+                className="flex-1 rounded-full bg-pink-50 py-2 text-xs font-semibold text-[#9D5C7E] hover:bg-pink-100 transition border border-pink-200/60">
+                Today
+              </button>
+              <button onClick={() => setOpen(false)} className="flex-1 bloom-luxury-btn py-2 text-sm font-bold text-white">Done ✿</button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -323,6 +431,225 @@ function MiniRing({ pct, size = 100 }: { pct: number; size?: number }) {
   );
 }
 
+function BudgetHistorique({ planned, extraTxns, currency }: {
+  planned: number;
+  extraTxns: { date: string; amount: number }[];
+  currency: CurrencyKey;
+}) {
+  const now = new Date();
+  const y = now.getFullYear(), mo = now.getMonth();
+  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  const today = now.getDate();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const isoDay = (d: number) => `${y}-${pad(mo + 1)}-${pad(d)}`;
+
+  // Reality = cumulative actual spend starting from 0 (not planned + extra)
+  const cumByDay = Array.from({ length: daysInMonth }, (_, i) => {
+    const iso = isoDay(i + 1);
+    return extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
+  });
+
+  const rawMax = Math.max(planned * 1.25, ...cumByDay.slice(0, today), 1);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
+  const maxY = Math.ceil(rawMax / magnitude) * magnitude;
+
+  const W = 320, H = 180, pL = 50, pR = 12, pT = 20, pB = 28;
+  const plotW = W - pL - pR, plotH = H - pT - pB;
+  const xp = (d: number) => pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * plotW;
+  const yp = (v: number) => pT + plotH - (v / maxY) * plotH;
+  const baseline = pT + plotH;
+
+  const fmtY = (v: number) => {
+    if (v === 0) return "0";
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${(v / 1_000) % 1 === 0 ? v / 1_000 : (v / 1_000).toFixed(1)}k`;
+    return String(Math.round(v));
+  };
+
+  const yTicks = Array.from({ length: 5 }, (_, i) => (i * maxY) / 4);
+  const xLabels = [1, 5, 10, 15, 20, 25, daysInMonth]
+    .filter(d => d <= daysInMonth)
+    .filter((v, i, a) => a.indexOf(v) === i);
+
+  const smoothPath = (pts: [number, number][], closeFill = false) => {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[Math.max(0, i - 2)];
+      const p1 = pts[i - 1];
+      const p2 = pts[i];
+      const p3 = pts[Math.min(pts.length - 1, i + 1)];
+      const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+    }
+    if (closeFill) d += ` L ${pts[pts.length - 1][0]} ${baseline} L ${pts[0][0]} ${baseline} Z`;
+    return d;
+  };
+
+  const todayVal = cumByDay[today - 1] ?? 0;
+  const isOver = todayVal > planned;
+  const realColor = isOver ? "#EF4444" : "#EC4899";
+  const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 190 }}>
+        <defs>
+          <linearGradient id="hFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={isOver ? "#FCA5A5" : "#F9A8D4"} stopOpacity="0.5" />
+            <stop offset="100%" stopColor={isOver ? "#FCA5A5" : "#F9A8D4"} stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="hLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={isOver ? "#F87171" : "#C084FC"} />
+            <stop offset="100%" stopColor={realColor} />
+          </linearGradient>
+          <filter id="hGlow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* Y axis grid + labels */}
+        {yTicks.map((v, i) => (
+          <g key={i}>
+            <line x1={pL} y1={yp(v)} x2={W - pR} y2={yp(v)}
+              stroke="#FCE7F3" strokeWidth={i === 0 ? 1 : 0.6} />
+            <text x={pL - 5} y={yp(v) + 3} fontSize="7" fill="#C4A0B8" textAnchor="end">
+              {fmtY(v)}
+            </text>
+          </g>
+        ))}
+
+        {/* gradient fill */}
+        {realPtsArr.length >= 2 && (
+          <path d={smoothPath(realPtsArr, true)} fill="url(#hFill)" />
+        )}
+
+        {/* budget reference line */}
+        <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
+          stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
+        <text x={W - pR} y={yp(planned) - 4} fontSize="7" fill="#C084FC"
+          textAnchor="end" fontWeight="700">Budget</text>
+
+        {/* reality curve */}
+        {realPtsArr.length >= 2 && (
+          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#hLine)"
+            strokeWidth="2.8" strokeLinecap="round" filter="url(#hGlow)" />
+        )}
+
+        {/* today dot */}
+        {realPtsArr.length > 0 && (
+          <>
+            <circle cx={xp(today)} cy={yp(todayVal)} r="6" fill={realColor} opacity="0.2" />
+            <circle cx={xp(today)} cy={yp(todayVal)} r="3.5" fill={realColor} stroke="white" strokeWidth="1.5" />
+            <text x={xp(today)} y={yp(todayVal) - 9} fontSize="7.5" fill={realColor}
+              textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
+          </>
+        )}
+
+        {/* X axis */}
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
+        {xLabels.map(d => (
+          <text key={d} x={xp(d)} y={baseline + 14} fontSize="7" fill="#C4A0B8" textAnchor="middle">{d}</text>
+        ))}
+      </svg>
+
+      {/* legend */}
+      <div className="flex items-center gap-5 px-2 mt-1">
+        <div className="flex items-center gap-1.5">
+          <svg width="20" height="8">
+            <line x1="0" y1="4" x2="20" y2="4" stroke="#C084FC" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.7" />
+          </svg>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Budget</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <svg width="20" height="8">
+            <line x1="0" y1="4" x2="20" y2="4" stroke={realColor} strokeWidth="2.5" />
+          </svg>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Dépenses réelles</span>
+        </div>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill={realColor} /></svg>
+          <span className="text-[9px] font-semibold text-[#9D5C7E]">Aujourd'hui</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BudgetPie({ budgetedCats, budget, monthTxns, allCats, currency }: {
+  budgetedCats: string[];
+  budget: Budget;
+  monthTxns: Txn[];
+  allCats: Cat[];
+  currency: CurrencyKey;
+}) {
+  const PIE_COLORS = ["#EC4899", "#C084FC", "#F472B6", "#9D5C7E", "#A855F7", "#F9A8D4", "#831843", "#FBCFE8"];
+
+  const data = budgetedCats
+    .map((k, i) => {
+      const planned   = budget[k] ?? 0;
+      const actual    = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+      const overAmount = Math.max(0, actual - planned);
+      return { key: k, cat: allCats.find(c => c.key === k), planned, actual, overAmount, isOver: actual > planned, color: PIE_COLORS[i % PIE_COLORS.length] };
+    })
+    .filter(d => d.planned > 0);
+
+  const total = data.reduce((s, d) => s + d.planned, 0);
+  if (total === 0 || data.length === 0) return null;
+
+  const R = 48, ri = 26, cx = 64, cy = 64;
+  let angle = -Math.PI / 2;
+
+  const slices = data.map(d => {
+    const pct   = d.planned / total;
+    const start = angle;
+    const end   = angle + pct * Math.PI * 2;
+    angle = end;
+    const x1 = cx + R  * Math.cos(start), y1 = cy + R  * Math.sin(start);
+    const x2 = cx + R  * Math.cos(end),   y2 = cy + R  * Math.sin(end);
+    const ix1= cx + ri * Math.cos(start), iy1= cy + ri * Math.sin(start);
+    const ix2= cx + ri * Math.cos(end),   iy2= cy + ri * Math.sin(end);
+    const la  = pct > 0.5 ? 1 : 0;
+    return {
+      ...d, pct,
+      path: `M ${ix1.toFixed(1)} ${iy1.toFixed(1)} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${R} ${R} 0 ${la} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L ${ix2.toFixed(1)} ${iy2.toFixed(1)} A ${ri} ${ri} 0 ${la} 0 ${ix1.toFixed(1)} ${iy1.toFixed(1)} Z`,
+    };
+  });
+
+  return (
+    <div className="flex items-center gap-4">
+      <svg viewBox="0 0 128 128" width="116" height="116" className="shrink-0">
+        {slices.map(s => (
+          <path key={s.key} d={s.path} fill={s.isOver ? "#EF4444" : s.color} stroke="white" strokeWidth="1.5" />
+        ))}
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="8" fill="#831843" fontWeight="700">
+          {fmt(total, currency)}
+        </text>
+        <text x={cx} y={cy + 8} textAnchor="middle" fontSize="6" fill="#9D5C7E">planifié</text>
+      </svg>
+      <div className="flex-1 min-w-0 space-y-1.5">
+        {slices.map(s => (
+          <div key={s.key} className="flex items-center gap-1.5 min-w-0">
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ background: s.isOver ? "#EF4444" : s.color }} />
+            <span className="text-[10px] text-[#831843] font-semibold truncate flex-1 min-w-0">
+              {s.cat?.emoji} {s.cat?.label ?? s.key}
+            </span>
+            <span className="text-[9px] tabular-nums shrink-0 font-semibold">
+              {s.isOver
+                ? <span className="text-rose-500">+{fmt(s.overAmount, currency)}</span>
+                : <span className="text-[#9D5C7E]">{fmt(s.planned, currency)}</span>}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ============================================================
    MAIN COMPONENT
 ============================================================ */
@@ -337,6 +664,33 @@ export function BudgetPlanner() {
   const [txns, setTxns] = useLocal<Txn[]>("bp:txns", []);
   const [goals, setGoals] = useLocal<Goal[]>("bp:goals", []);
   const [bills, setBills] = useLocal<Bill[]>("bp:bills", []);
+
+  // State lifted from DashboardTab for hero placement before the tab bar
+  const [viewPeriod, setViewPeriod] = useState<"week"|"month">("month");
+  const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
+  const [goalIdx, setGoalIdx] = useState(0);
+  useEffect(() => { if (hasCycleSettings()) setCyclePhase(readCyclePhase()); }, []);
+
+  const tabScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabScrollRef.current;
+    if (!el || window.innerWidth >= 1024) return;
+    const t = setTimeout(() => {
+      el.scrollTo({ left: 55, behavior: "smooth" });
+      setTimeout(() => el.scrollTo({ left: 0, behavior: "smooth" }), 450);
+    }, 700);
+    return () => clearTimeout(t);
+  }, []);
+
+  const clampedHeroGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
+  const heroGoalPct = (() => { const g = goals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
+  const cycleTip = cyclePhase && cyclePhase !== "any" ? BP_CYCLE_TIPS[cyclePhase] : undefined;
+  const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6 - i));
+    const iso = d.toISOString().slice(0, 10);
+    const spent = txns.filter(t => t.date === iso && t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    return { iso, label: ["S","M","T","W","T","F","S"][d.getDay()], spent, isToday: i === 6 };
+  }), [txns]);
 
   const allCats: Cat[] = useMemo(() => [
     ...DEFAULT_CATS,
@@ -355,25 +709,15 @@ export function BudgetPlanner() {
   );
 
   return (
-    <div
-      className="relative min-h-screen overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(circle at 20% 10%, #FFE4F1 0%, transparent 55%), radial-gradient(circle at 85% 80%, #FBCFE8 0%, transparent 50%), linear-gradient(180deg, #FFF5FA 0%, #FFE9F3 100%)",
-      }}
-    >
-      <BudgetBubbles />
-      <KawaiiBackground count={8} />
-
+    <div data-bp>
       {/* Custom pink currency picker modal */}
-      {showCurrencyPicker && (
+      {showCurrencyPicker && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
           onClick={() => setShowCurrencyPicker(false)}
         >
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
           <div
-            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl shadow-pink-300/30 overflow-hidden animate-scale-in"
+            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 overflow-hidden animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -427,36 +771,71 @@ export function BudgetPlanner() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      <div className="relative mx-auto max-w-6xl px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-5">
-        {/* Hero */}
-        <div className="relative w-full aspect-[8/3] lg:aspect-[16/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/40 mb-2 animate-hero-border-signal">
-          <img src="/images/budget-hero.png" alt="Budget" className="absolute inset-0 h-full w-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#EC4899]/70 via-[#EC4899]/20 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-          <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
-            <div className="animate-scale-in">
-              <h1 className="font-script text-2xl sm:text-4xl lg:text-3xl xl:text-4xl text-white leading-none drop-shadow-md">Budget</h1>
-              <p className="mt-0.5 text-xs sm:text-sm lg:text-xs italic text-white/90 max-w-[10rem] sm:max-w-xs drop-shadow leading-snug">Soft, smart money planning — your way.</p>
-            </div>
-            {/* Currency selector inside hero — custom pink picker */}
-            <div className="self-end relative">
-              <button
-                onClick={() => setShowCurrencyPicker(true)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/30 active:scale-95"
-              >
-                {currency} — {CURRENCIES[currency].symbol}
-                <ChevronDown className="h-3.5 w-3.5 opacity-80" strokeWidth={2.5} />
-              </button>
+      {/* Hero — always visible, content adapts per tab */}
+      {(() => {
+        const hc = HERO_CONFIG[tab] ?? HERO_CONFIG.Dashboard;
+        const isDash = tab === "Dashboard";
+        return (
+          <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
+            <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
+            <div className={["relative z-10 flex items-center justify-between gap-3 p-4 sm:p-5 lg:p-5", isDash ? "min-h-[120px] sm:min-h-[140px]" : "min-h-[88px] sm:min-h-[100px]"].join(" ")}>
+              <div className="max-w-[65%]">
+                <h2 className="font-script text-2xl sm:text-3xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+                  {hc.title}
+                </h2>
+                {isDash && cycleTip ? (
+                  <div className="mt-1 space-y-0.5">
+                    <div className="inline-flex items-center gap-1.5">
+                      <span className="text-sm leading-none" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }}>{cycleTip.emoji}</span>
+                      <span className="text-[11px] font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
+                    </div>
+                    <p className="text-[10px] text-white/85 italic leading-snug pl-0.5">{cycleTip.sub}</p>
+                  </div>
+                ) : (
+                  <p className="mt-0.5 text-[11px] sm:text-xs text-white/90">{hc.sub}</p>
+                )}
+                <div className="mt-2 flex items-center gap-2">
+                  {isDash && (
+                    <button onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                      <Calendar className="h-3 w-3" />
+                      {viewPeriod === "week" ? "This week" : "This month"}
+                      <ChevronDown className="h-3 w-3 opacity-70" />
+                    </button>
+                  )}
+                  <button onClick={() => setShowCurrencyPicker(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                    <Coins className="h-3 w-3" />
+                    {CURRENCIES[currency].symbol}
+                  </button>
+                </div>
+                {isDash && viewPeriod === "week" && (
+                  <div className="flex gap-1 mt-2">
+                    {weekBand.map(d => (
+                      <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl", d.isToday ? "bg-white/30" : ""].join(" ")}>
+                        <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
+                        <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
+                        {d.spent > 0 && <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {isDash && <MiniRing pct={heroGoalPct} size={100} />}
             </div>
           </div>
-        </div>
+        );
+      })()}
 
-        {/* Tabs */}
-        <div className="sticky top-0 z-30 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-1 backdrop-blur bg-transparent">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+      {/* Tabs */}
+      <div className="sticky top-14 md:top-0 z-30 py-2">
+        <div className="relative">
+          <div ref={tabScrollRef} className="flex gap-1.5 overflow-x-auto no-scrollbar px-1">
             {TABS.map((t) => {
               const active = tab === t;
               return (
@@ -464,10 +843,10 @@ export function BudgetPlanner() {
                   key={t}
                   onClick={() => setTab(t)}
                   className={[
-                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
+                    "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
                     active
                       ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/40 border-transparent scale-[1.02]"
-                      : "bg-[#FCE7F3] text-[#9D5C7E] border-pink-400/30 hover:bg-pink-200",
+                      : "bg-white/70 backdrop-blur text-[#9D5C7E] border-pink-300/50 hover:bg-white/90",
                   ].join(" ")}
                 >
                   {t}
@@ -475,11 +854,14 @@ export function BudgetPlanner() {
               );
             })}
           </div>
+          {/* right-edge fade — hints at horizontal scroll on mobile/tablet */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#FDF2F8] to-transparent lg:hidden" />
         </div>
+      </div>
 
-        {/* Tab content */}
-        <div key={tab} className="mt-2 animate-fade-in">
-          {tab === "Dashboard" && (
+      {/* Tab content */}
+      <div key={tab} className="mt-2 animate-fade-in">
+        {tab === "Dashboard" && (
             <DashboardTab
               currency={currency}
               totalIncome={totalIncome}
@@ -494,6 +876,11 @@ export function BudgetPlanner() {
               bills={bills}
               setTab={setTab}
               incomes={incomes}
+              onCurrencyClick={() => setShowCurrencyPicker(true)}
+              viewPeriod={viewPeriod}
+              setViewPeriod={setViewPeriod}
+              goalIdx={goalIdx}
+              setGoalIdx={setGoalIdx}
             />
           )}
           {tab === "Incomes" && (
@@ -522,12 +909,11 @@ export function BudgetPlanner() {
               currency={currency}
             />
           )}
-        </div>
       </div>
 
       <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [data-bp] *::-webkit-scrollbar { display: none; }
+        [data-bp] * { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
     </div>
   );
@@ -618,7 +1004,7 @@ function QuickAddSheet({ open, onClose, onSave, allCats, selectedCats, currency 
 
   return (
     <>
-      {open && <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]" onClick={onClose} />}
+      {open && <div className="fixed inset-0 z-40 bg-transparent" onClick={onClose} />}
       <div className={["fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out will-change-transform",
         open ? "translate-y-0" : "translate-y-full"].join(" ")}>
         <div className="mx-auto max-w-lg rounded-t-[2rem] bg-white/92 backdrop-blur-xl border-t border-pink-200/60 shadow-2xl shadow-pink-300/30 px-5 pt-2 pb-safe">
@@ -674,10 +1060,15 @@ function DashboardTab(props: {
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
   budget: Budget; selectedCats: string[]; allCats: Cat[];
   goals: Goal[]; bills: Bill[]; setTab: (t: TabKey) => void;
-  incomes: Income[];
+  incomes: Income[]; onCurrencyClick: () => void;
+  viewPeriod: "week"|"month"; setViewPeriod: React.Dispatch<React.SetStateAction<"week"|"month">>;
+  goalIdx: number; setGoalIdx: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget } = props;
+    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget, onCurrencyClick,
+    viewPeriod, setViewPeriod, goalIdx, setGoalIdx } = props;
+
+  const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
   const steps = [
     { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
@@ -689,18 +1080,11 @@ function DashboardTab(props: {
   const nextStep  = steps.find(s => !s.done);
   const allDone   = completed === steps.length;
 
-  // View period toggle: week ↔ month
-  const [viewPeriod, setViewPeriod] = useState<"week" | "month">("month");
-
-  // Goals carousel
-  const [goalIdx, setGoalIdx] = useState(0);
+  const goalTouchX = useRef<number | null>(null);
+  const [budgetShowAll, setBudgetShowAll] = useState(false);
 
   // Quick add sheet
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-
-  // Cycle phase (read-only from Cycle Tracker)
-  const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
-  useEffect(() => { if (hasCycleSettings()) setCyclePhase(readCyclePhase()); }, []);
 
   // Inline detailed form state
   const [amount, setAmount]   = useState("");
@@ -732,13 +1116,14 @@ function DashboardTab(props: {
     return txns.filter(t => new Date(t.date + "T00:00:00") >= cutoff);
   }, [txns, viewPeriod]);
 
-  // 7-day band
-  const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (6 - i));
-    const iso = d.toISOString().slice(0, 10);
-    const spent = txns.filter(t => t.date === iso && t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    return { iso, label: ["S", "M", "T", "W", "T", "F", "S"][d.getDay()], spent, isToday: i === 6 };
-  }), [txns]);
+  // Current calendar-month transactions — used for Budget Plan bars regardless of the week/month toggle
+  const monthTxns = useMemo(() => {
+    const now = new Date();
+    return txns.filter(t => {
+      const d = new Date(t.date + "T00:00:00");
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+  }, [txns]);
 
   // Spending by category (filtered)
   const catSpend = useMemo(() => {
@@ -776,19 +1161,8 @@ function DashboardTab(props: {
     return r.slice(0, 3);
   }, [filteredSavings, filteredExpenses, filteredTxns, goals, totalIncome, currency]);
 
-  // Cycle tips
-  const CYCLE_TIPS: Partial<Record<string, { emoji: string; headline: string; sub: string; grad: string }>> = {
-    luteal:     { emoji: "🌙", headline: "Luteal phase — your inner PMS budget",  sub: "Budget a little extra self-care this week. Cravings are real.",       grad: "from-purple-50 to-pink-50" },
-    period:     { emoji: "🌸", headline: "Period week — gentle care first",        sub: "Rest & warmth over everything. You deserve every cent of it.",         grad: "from-pink-50 to-rose-50" },
-    follicular: { emoji: "🌱", headline: "Follicular — rising energy mode",        sub: "Great week for big financial decisions. Your mind is clear.",           grad: "from-emerald-50 to-pink-50" },
-    ovulation:  { emoji: "✨", headline: "Ovulation peak — full power mode",       sub: "Your best week to tackle financial goals. Go for it.",                 grad: "from-yellow-50 to-pink-50" },
-    fertile:    { emoji: "💐", headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-purple-50" },
-  };
-
   // Goals carousel (keep names: Income Garden, etc.)
   const clampedGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
-  const heroGoal       = goals[clampedGoalIdx];
-  const heroGoalPct    = heroGoal?.target > 0 ? Math.min(100, (heroGoal.saved / heroGoal.target) * 100) : 0;
 
   // Meal plan sync hint
   const mealEstimate = useMemo(() => estimateWeeklyGroceryCost(), []);
@@ -862,7 +1236,7 @@ function DashboardTab(props: {
 
   // ── FULL DASHBOARD ──
   return (
-    <div className="space-y-3 sm:space-y-4 animate-fade-in pb-24">
+    <div className="space-y-3 sm:space-y-4 animate-fade-in">
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
@@ -894,165 +1268,317 @@ function DashboardTab(props: {
           </div>
         </div>
       )}
-      {allDone && (
+      {allDone && !setupDismissed && (
         <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/60 px-4 py-3 flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm shrink-0">
             <Check className="h-5 w-5" strokeWidth={2.5} />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-emerald-800">Setup complete — you're blooming! 🌸</p>
-            <p className="text-[11px] text-emerald-600">Keep logging your daily spends to see your budget shine.</p>
+            <p className="text-[11px] text-emerald-600">Log extra spends to track what you bought on top of your plan.</p>
           </div>
+          <button
+            onClick={() => setSetupDismissed(true)}
+            className="grid h-8 w-8 place-items-center rounded-full hover:bg-emerald-100 text-emerald-600 transition shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
-
-      {/* ① CYCLE INSIGHT — warm, phase-aware (never shown in red) */}
-      {cyclePhase && cyclePhase !== "any" && CYCLE_TIPS[cyclePhase] && (() => {
-        const tip = CYCLE_TIPS[cyclePhase]!;
-        return (
-          <div className={`rounded-2xl border border-pink-100/80 bg-gradient-to-r ${tip.grad} px-4 py-3 flex items-center gap-3 animate-fade-in`}>
-            <span className="text-3xl shrink-0 leading-none">{tip.emoji}</span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">{tip.headline}</p>
-              <p className="text-sm text-[#831843] mt-0.5 leading-snug">{tip.sub}</p>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ② HERO "You're blooming" + W/M toggle + 7-day band */}
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
-        <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.88) 0%, rgba(236,72,153,0.65) 52%, rgba(236,72,153,0.18) 80%, transparent 100%)" }} />
-        <div className="relative z-10 flex items-center justify-between gap-3 p-4 sm:p-6 lg:p-5 min-h-[120px] sm:min-h-[140px] lg:min-h-[120px]">
-          <div className="max-w-[58%]">
-            <h2 className="font-script text-3xl sm:text-4xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
-              You're blooming ✿
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-white/90">Your budget. Your dreams. Your future.</p>
-            {/* Week / Month toggle */}
-            <button
-              onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
-              <Calendar className="h-3 w-3" />
-              {viewPeriod === "week" ? "This week" : "This month"}
-              <ChevronDown className="h-3 w-3 opacity-70" />
-            </button>
-            {/* 7-day band — visible in week mode */}
-            {viewPeriod === "week" && (
-              <div className="flex gap-1 mt-2.5">
-                {weekBand.map(d => (
-                  <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition",
-                    d.isToday ? "bg-white/30" : ""].join(" ")}>
-                    <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
-                    <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
-                    {d.spent > 0 && (
-                      <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <MiniRing pct={heroGoalPct} size={110} />
-        </div>
-      </div>
 
       {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
       <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
 
-      {/* ③b BUDGET PLAN — always visible once budget is configured */}
+      {/* ③b BUDGET VS REALITY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
-        const visible = budgetedCats.slice(0, 5);
-        const extra = budgetedCats.length - visible.length;
+
+        // Extra spends = anything logged this month via the Extra Spends form
+        const spentCatKeys = [...new Set(monthTxns.filter(t => t.type === "expense").map(t => t.catKey))];
+        const unplannedKeys = spentCatKeys.filter(k => !(budget[k] > 0));
+
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const totalActual  = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        const totalIsOver  = totalActual > totalPlanned;
+
+        const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
+
         return (
           <Card>
+            {/* header */}
             <div className="flex items-center justify-between mb-3">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget Plan
+                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget vs Reality
               </h3>
               <button onClick={() => setTab("Budget Setup")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
                 Edit <ChevronRight className="h-3 w-3" />
               </button>
             </div>
-            <div className="space-y-2.5">
-              {visible.map(k => {
-                const cat = allCats.find(c => c.key === k);
-                const budgeted = budget[k] ?? 0;
-                const spent = filteredTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                const pct = budgeted > 0 ? Math.min(100, (spent / budgeted) * 100) : 0;
-                const barColor = pct >= 90
-                  ? "linear-gradient(90deg,#F9A8D4,#EC4899)"
-                  : "linear-gradient(90deg,#C084FC,#EC4899)";
+
+            {/* total summary — pie chart */}
+            <div className="mb-4">
+              <BudgetPie
+                budgetedCats={budgetedCats}
+                budget={budget}
+                monthTxns={monthTxns}
+                allCats={allCats}
+                currency={currency}
+              />
+            </div>
+
+            {/* budgeted categories */}
+            <div className="space-y-3">
+              {visibleBudgeted.map(k => {
+                const cat        = allCats.find(c => c.key === k);
+                const planned    = budget[k] ?? 0;
+                const actual     = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                const overAmount = Math.max(0, actual - planned);
+                const isOver     = actual > planned;
+                // Pink = up to planned, red = amount over
+                const pinkPct    = isOver ? (planned / actual) * 100 : 100;
+                const redPct     = isOver ? (overAmount / actual) * 100 : 0;
+                const overPct    = isOver ? Math.round((overAmount / planned) * 100) : 0;
+                const badge = isOver
+                  ? overPct > 50
+                    ? <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 whitespace-nowrap"><XCircle className="h-2.5 w-2.5" /> Over</span>
+                    : <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 whitespace-nowrap"><AlertTriangle className="h-2.5 w-2.5" /> Watch</span>
+                  : <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700"><CheckCircle2 className="h-2.5 w-2.5" /> OK</span>;
                 return (
-                  <div key={k} className="flex items-center gap-3">
-                    <span className="text-lg shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
+                  <div key={k} className="flex items-center gap-2.5">
+                    <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💰"}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-1 gap-2">
+                      <div className="flex justify-between items-baseline gap-2 mb-1">
                         <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                        <span className="text-[10px] text-[#9D5C7E] shrink-0 tabular-nums">{fmt(spent, currency)} / {fmt(budgeted, currency)}</span>
+                        <span className="text-[10px] tabular-nums shrink-0">
+                          {isOver && <span className="text-rose-500 font-bold">+{fmt(overAmount, currency)} / </span>}
+                          <span className="text-[#9D5C7E]">{fmt(planned, currency)}</span>
+                        </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-pink-100 overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor }} />
+                      <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-50">
+                        <div className="h-full transition-all duration-700"
+                          style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                        {isOver && <div className="h-full flex-1 transition-all duration-700 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-[#9D5C7E] shrink-0 w-7 text-right">{Math.round(pct)}%</span>
+                    <div className="shrink-0 w-16 flex justify-end">{badge}</div>
                   </div>
                 );
               })}
             </div>
-            {extra > 0 && (
-              <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-xs text-[#EC4899] font-semibold hover:underline">
-                +{extra} more {extra === 1 ? "category" : "categories"}
+
+            {budgetedCats.length > 5 && (
+              <button onClick={() => setBudgetShowAll(v => !v)} className="mt-3 text-xs text-[#EC4899] font-semibold hover:underline">
+                {budgetShowAll ? "Show less" : `+${budgetedCats.length - 5} more categories`}
               </button>
+            )}
+
+            {/* unplanned: extra spends in categories with no budget set */}
+            {unplannedKeys.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-pink-100">
+                <p className="text-[10px] font-bold tracking-widest text-amber-600 mb-2.5 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" /> EXTRA · NOT IN PLAN
+                </p>
+                <div className="space-y-2.5">
+                  {unplannedKeys.map(k => {
+                    const cat   = allCats.find(c => c.key === k);
+                    const extra = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                    return (
+                      <div key={k} className="flex items-center gap-2.5">
+                        <span className="text-base shrink-0 leading-none">{cat?.emoji ?? "💸"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline gap-2 mb-1">
+                            <span className="text-xs font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                            <span className="text-[10px] font-bold text-amber-600 tabular-nums shrink-0">{fmt(extra, currency)}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-amber-100 overflow-hidden">
+                            <div className="h-full rounded-full w-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
+                          </div>
+                        </div>
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
+                          💸 Extra
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setTab("Budget Setup")} className="mt-2.5 text-[10px] font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                  <Plus className="h-3 w-3" /> Add to your plan
+                </button>
+              </div>
             )}
           </Card>
         );
       })()}
 
-      {/* ④ GOALS CAROUSEL */}
-      {heroGoal ? (
-        <div className="relative overflow-hidden rounded-[1.5rem] border border-pink-200/60 shadow-lg" style={{ minHeight: 120 }}>
-          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }} />
-          <div className="relative z-10 flex items-center justify-between gap-4 p-5 sm:p-6" style={{ minHeight: 120 }}>
-            <div className="flex-1 min-w-0">
-              <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
-                <Sparkles className="h-3 w-3" /> My Dream Goal
-              </p>
-              <h3 className="font-script text-2xl sm:text-3xl text-white mt-0.5 leading-tight truncate">{heroGoal.name}</h3>
-              <p className="text-sm text-white/90 mt-0.5">{fmt(heroGoal.saved, currency)} / {fmt(heroGoal.target, currency)}</p>
-              <div className="mt-2.5 h-2.5 rounded-full bg-white/30 overflow-hidden max-w-[180px] sm:max-w-xs">
-                <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${heroGoalPct}%` }} />
-              </div>
-              <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(heroGoalPct)}% completed</p>
-            </div>
-            <MiniRing pct={heroGoalPct} size={88} />
+      {/* ③c SPENDING CATEGORIES */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
+          </h3>
+          <div className="flex items-center gap-2">
+            {mealEstimate && !budget["food"] && (
+              <button onClick={() => setTab("Budget Setup")}
+                className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
+                <UtensilsCrossed className="h-3 w-3" /> Sync meals
+              </button>
+            )}
+            {catSpend.length > 0 && (
+              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
+                See all <ChevronRight className="h-3 w-3" />
+              </button>
+            )}
           </div>
-          {/* Carousel controls (only when >1 goal) */}
-          {goals.length > 1 && (
-            <>
-              <button onClick={() => setGoalIdx(i => Math.max(0, i - 1))}
-                disabled={clampedGoalIdx === 0}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/30 text-white hover:bg-white/50 transition disabled:opacity-30">
-                <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-              <button onClick={() => setGoalIdx(i => Math.min(goals.length - 1, i + 1))}
-                disabled={clampedGoalIdx === goals.length - 1}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/30 text-white hover:bg-white/50 transition disabled:opacity-30">
-                <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+        </div>
+        {catSpend.length > 0 ? (
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {catSpend.slice(0, 6).map(({ key, cat, amount: amt }) => {
+              const plannedAmt = budget[key] ?? 0;
+              const extra = monthTxns.filter(t => t.type === "expense" && t.catKey === key).reduce((s, t) => s + t.amount, 0);
+              const isOver = plannedAmt > 0 && extra > 0;
+              const isUnplanned = plannedAmt === 0;
+              const overPct = isOver ? Math.round((extra / plannedAmt) * 100) : 0;
+              const pinkPct = isOver ? (plannedAmt / (plannedAmt + extra)) * 100 : 100;
+              return (
+                <div key={key} className="shrink-0 flex flex-col items-center gap-1 w-16">
+                  <div className={["grid h-11 w-11 place-items-center rounded-2xl text-xl shadow-sm border",
+                    isOver ? "bg-rose-50 border-rose-200" : isUnplanned ? "bg-amber-50 border-amber-200" : "bg-pink-50 border-pink-100"
+                  ].join(" ")}>
+                    {cat?.emoji ?? "💰"}
+                  </div>
+                  <p className="text-[9px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
+                  {/* two-part bar */}
+                  <div className="flex w-full h-1.5 rounded-full overflow-hidden bg-pink-100">
+                    {isUnplanned
+                      ? <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
+                      : <>
+                          <div className="h-full transition-all duration-700"
+                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                          {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
+                        </>}
+                  </div>
+                  <p className={["text-[9px] font-bold", isOver ? "text-rose-500" : isUnplanned ? "text-amber-500" : "text-emerald-600"].join(" ")}>
+                    {isUnplanned ? "New" : isOver ? `+${overPct}%` : "✓ Plan"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 py-1">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <ArrowDownRight className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-[#831843]">Log your first spend ✿</p>
+              <p className="text-[11px] text-[#9D5C7E]">Track where your money goes — every spend counts</p>
+            </div>
+            <button onClick={() => setTab("Reports")} className="shrink-0 text-xs font-bold text-[#EC4899] hover:underline">
+              Add
+            </button>
+          </div>
+        )}
+      </Card>
+
+      {/* ④ MY DREAM GOALS — 3D carousel on mobile · up-to-3 grid on desktop */}
+      {goals.length > 0 ? (
+        <>
+          {/* ── Mobile 3D coverflow carousel ── */}
+          <div
+            className="relative lg:hidden"
+            style={{ height: 178, perspective: "1200px" }}
+            onTouchStart={e => { goalTouchX.current = e.touches[0].clientX; }}
+            onTouchEnd={e => {
+              if (goalTouchX.current === null) return;
+              const delta = e.changedTouches[0].clientX - goalTouchX.current;
+              if (Math.abs(delta) > 40) setGoalIdx(p => delta < 0 ? Math.min(goals.length - 1, p + 1) : Math.max(0, p - 1));
+              goalTouchX.current = null;
+            }}
+          >
+            {goals.map((goal, i) => {
+              let pos = i - clampedGoalIdx;
+              if (Math.abs(pos) > 1) return null;
+              const isCenter = pos === 0;
+              const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
+              return (
+                <div key={goal.id}
+                  onClick={() => !isCenter && setGoalIdx(i)}
+                  className="absolute left-1/2 top-1/2 w-[84%] transition-all duration-500 ease-out"
+                  style={{
+                    transform: `translate(-50%, -50%) translateX(${pos * 90}%) scale(${isCenter ? 1 : 0.83}) rotateY(${pos * -26}deg)`,
+                    zIndex: isCenter ? 20 : 10,
+                    opacity: isCenter ? 1 : 0.55,
+                    transformStyle: "preserve-3d",
+                    cursor: isCenter ? "default" : "pointer",
+                  }}>
+                  <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
+                    style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                    <div className="flex items-center justify-between gap-3 p-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
+                          <Sparkles className="h-2.5 w-2.5" /> Dream Goal
+                        </p>
+                        <h3 className="font-script text-xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
+                        <p className="text-xs text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
+                        <div className="mt-2 h-2 rounded-full bg-white/30 overflow-hidden max-w-[160px]">
+                          <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}% completed</p>
+                      </div>
+                      <MiniRing pct={pct} size={72} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <button onClick={() => setGoalIdx(p => Math.max(0, p - 1))} disabled={clampedGoalIdx === 0}
+              className="absolute left-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
+              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            <button onClick={() => setGoalIdx(p => Math.min(goals.length - 1, p + 1))} disabled={clampedGoalIdx === goals.length - 1}
+              className="absolute right-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
+              <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            {goals.length > 1 && (
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1.5 z-30">
                 {goals.map((_, i) => (
                   <button key={i} onClick={() => setGoalIdx(i)}
-                    className={["h-1.5 rounded-full transition-all duration-300 bg-white",
-                      i === clampedGoalIdx ? "w-4" : "w-1.5 opacity-50"].join(" ")} />
+                    className={["h-1.5 rounded-full transition-all duration-300 bg-[#EC4899]",
+                      i === clampedGoalIdx ? "w-4" : "w-1.5 opacity-40"].join(" ")} />
                 ))}
               </div>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+
+          {/* ── Desktop grid: 1 / 2 / 3 columns ── */}
+          <div className={["hidden lg:grid gap-4",
+            goals.length === 1 ? "lg:grid-cols-1 max-w-md" :
+            goals.length === 2 ? "lg:grid-cols-2" : "lg:grid-cols-3"].join(" ")}>
+            {goals.map(goal => {
+              const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
+              return (
+                <div key={goal.id} className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
+                  style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                  <div className="flex items-center justify-between gap-3 p-5">
+                    <div className="flex-1 min-w-0">
+                      <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
+                        <Sparkles className="h-3 w-3" /> Dream Goal
+                      </p>
+                      <h3 className="font-script text-2xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
+                      <p className="text-sm text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
+                      <div className="mt-2.5 h-2 rounded-full bg-white/30 overflow-hidden">
+                        <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(pct)}% completed</p>
+                    </div>
+                    <MiniRing pct={pct} size={80} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : (
         <Card className="border-dashed border-pink-300/50 text-center py-5 bg-gradient-to-br from-pink-50 to-rose-50">
           <p className="font-script text-2xl text-[#831843]">Add your first dream goal ✿</p>
@@ -1063,57 +1589,6 @@ function DashboardTab(props: {
         </Card>
       )}
 
-      {/* ⑤ SPENDING CATEGORIES — reacts to week/month filter */}
-      {catSpend.length > 0 ? (
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-              <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
-            </h3>
-            <div className="flex items-center gap-2">
-              {/* ⑦ Meal plan sync hint */}
-              {mealEstimate && !budget["food"] && (
-                <button onClick={() => setTab("Budget Setup")}
-                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
-                  <UtensilsCrossed className="h-3 w-3" /> Sync meals
-                </button>
-              )}
-              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-                See all <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-            {catSpend.slice(0, 6).map(({ key, cat, amount: amt, pct }) => (
-              <div key={key} className="shrink-0 flex flex-col items-center gap-1.5 w-16">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink-50 border border-pink-100 text-2xl shadow-sm">
-                  {cat?.emoji ?? "💰"}
-                </div>
-                <p className="text-[10px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
-                <p className="text-[11px] font-bold text-[#EC4899]">{fmt(amt, currency)}</p>
-                <div className="w-full h-1.5 rounded-full bg-pink-100 overflow-hidden">
-                  <div className="h-full rounded-full bg-[#EC4899] transition-all duration-700" style={{ width: `${pct}%` }} />
-                </div>
-                <p className="text-[9px] text-[#9D5C7E] font-semibold">{pct}%</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ) : (
-        <Card className="border-pink-300/50 bg-gradient-to-br from-pink-50 to-white">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]"><ArrowDownRight className="h-4 w-4" /></div>
-            <h3 className="font-script text-2xl text-[#831843]">Log your first expense</h3>
-          </div>
-          <p className="text-xs text-[#9D5C7E] mb-4">Track where your money actually goes — every spend counts ✿</p>
-          <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
-            desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
-            catOptions={catOptions} allCats={allCats} currentCat={currentCat} currentMood={currentMood}
-            showCatModal={showCatModal} setShowCatModal={setShowCatModal}
-            showMoodModal={showMoodModal} setShowMoodModal={setShowMoodModal}
-            txnSaved={txnSaved} addTxn={addTxn} currency={currency} />
-        </Card>
-      )}
 
       {/* ⑥ THIS MONTH'S STORY (warm — never red) + INCOME VS EXPENSES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1178,6 +1653,31 @@ function DashboardTab(props: {
         </Card>
       </div>
 
+      {/* HISTORIQUE DES DÉPENSES */}
+      {(() => {
+        const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        if (totalPlanned === 0) return null;
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
+                Historique des Dépenses
+              </h3>
+              <span className="text-[10px] text-[#9D5C7E] font-semibold">
+                {new Date().toLocaleString("default", { month: "long", year: "numeric" })}
+              </span>
+            </div>
+            <BudgetHistorique
+              planned={totalPlanned}
+              extraTxns={monthTxns.filter(t => t.type === "expense")}
+              currency={currency}
+            />
+          </Card>
+        );
+      })()}
+
       {/* Detailed log form */}
       {txns.length > 0 && (
         <Card>
@@ -1185,7 +1685,7 @@ function DashboardTab(props: {
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
               <Plus className="h-4 w-4" />
             </div>
-            <h3 className="font-script text-2xl text-[#831843]">Log a spend</h3>
+            <h3 className="font-script text-2xl text-[#831843]">Extra Spends</h3>
           </div>
           <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
             desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
@@ -1197,15 +1697,14 @@ function DashboardTab(props: {
       )}
 
       {/* Category picker modal */}
-      {showCatModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
+      {showCatModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
               <h3 className="font-script text-2xl text-[#831843]">Category ✿</h3>
               <button onClick={() => setShowCatModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
             </div>
-            <div className="px-3 py-3 max-h-72 overflow-y-auto space-y-1">
+            <div className="px-3 py-3 overflow-y-auto flex-1 min-h-0 space-y-1">
               {catOptions.map(k => {
                 const c = allCats.find(x => x.key === k);
                 const active = k === catKey;
@@ -1222,14 +1721,14 @@ function DashboardTab(props: {
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Mood picker modal */}
-      {showMoodModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border border-pink-200/60 shadow-2xl animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
+      {showMoodModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
+          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
               <h3 className="font-script text-2xl text-[#831843]">Spend type ✿</h3>
               <button onClick={() => setShowMoodModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
@@ -1247,7 +1746,8 @@ function DashboardTab(props: {
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ③ QUICK ADD FAB */}
@@ -1299,7 +1799,7 @@ function AddTxnForm({ amount, setAmount, catKey, setCatKey, desc, setDesc, date,
           <Input type="number" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)}
             className="pl-7 text-lg font-bold" onKeyDown={e => e.key === "Enter" && addTxn()} />
         </div>
-        <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-36 shrink-0" />
+        <PinkDatePicker value={date} onChange={setDate} className="w-36 shrink-0" />
       </div>
       {/* Category + Mood */}
       <div className="flex gap-2">
@@ -1352,9 +1852,8 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Wallet className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Income Sources</h2>
-        <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income Source</PrimaryBtn>
+      <div className="flex justify-end">
+        <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income</PrimaryBtn>
       </div>
 
       {incomes.length === 0 ? (
@@ -1480,7 +1979,6 @@ function BudgetSetupTab(props: {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
-      <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Receipt className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> Set Up Your Expenses</h2>
 
       {mealEstimate && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
@@ -1497,25 +1995,26 @@ function BudgetSetupTab(props: {
 
       <Card>
         <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5">
           {allCats.map(c => {
             const on = selectedCats.includes(c.key);
             return (
               <button key={c.key} onClick={() => toggle(c.key)}
                 className={[
-                  "flex flex-col items-center gap-1 rounded-2xl p-2 sm:p-3 text-sm font-semibold transition-all duration-200 border-[0.5px]",
+                  "flex flex-col items-center gap-0.5 rounded-xl p-1.5 sm:p-2.5 lg:p-2 text-sm font-semibold transition-all duration-200 border-[0.5px]",
                   on ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.02]"
                      : "bg-white/80 text-[#831843] border-pink-300/40 hover:bg-pink-50",
                 ].join(" ")}
               >
-                <c.Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
-                <span className="text-center leading-tight text-[11px] sm:text-xs">{c.label}</span>
+                <c.Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                <span className="text-center leading-tight text-[9px] sm:text-[11px]">{c.label}</span>
               </button>
             );
           })}
           <button onClick={() => setShowCustom(v => !v)}
-            className="flex flex-col items-center justify-center gap-1 rounded-2xl p-3 text-sm font-semibold border-[0.5px] border-dashed border-pink-400/60 text-[#EC4899] bg-pink-50/40 hover:bg-pink-100">
-            <Plus className="h-5 w-5" /> Custom
+            className="flex flex-col items-center justify-center gap-0.5 rounded-xl p-1.5 sm:p-2.5 text-sm font-semibold border-[0.5px] border-dashed border-pink-400/60 text-[#EC4899] bg-pink-50/40 hover:bg-pink-100">
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[9px] sm:text-[11px]">Custom</span>
           </button>
         </div>
 
@@ -1549,18 +2048,18 @@ function BudgetSetupTab(props: {
               if (!c) return null;
               const sugg = suggestion(k);
               return (
-                <li key={k} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center rounded-xl bg-pink-50/40 px-3 py-2">
-                  <div className="sm:col-span-5 flex items-center gap-2">
-                    <c.Icon className="h-5 w-5 text-[#EC4899]" strokeWidth={1.6} />
-                    <span className="font-semibold text-[#831843]">{c.label}</span>
-                  </div>
-                  <div className="sm:col-span-4">
+                <li key={k} className="flex items-center gap-2 rounded-xl bg-pink-50/40 px-2.5 py-2">
+                  <c.Icon className="h-4 w-4 shrink-0 text-[#EC4899]" strokeWidth={1.6} />
+                  <span className="flex-1 min-w-0 truncate text-xs sm:text-sm font-semibold text-[#831843]">{c.label}</span>
+                  <div className="w-20 sm:w-28 shrink-0">
                     <Input type="number" value={budget[k] || ""} placeholder="0"
                       onChange={(e) => setBudget(prev => ({ ...prev, [k]: parseFloat(e.target.value) || 0 }))} />
                   </div>
-                  <div className="sm:col-span-3 text-xs text-[#9D5C7E]">
-                    {sugg > 0 && <>Recommended: <span className="font-semibold text-[#EC4899]">{fmt(sugg, currency)}</span></>}
-                  </div>
+                  {sugg > 0 && (
+                    <span className="shrink-0 text-[10px] font-bold text-[#EC4899] hidden sm:block whitespace-nowrap">
+                      {fmt(sugg, currency)}
+                    </span>
+                  )}
                 </li>
               );
             })}
@@ -1621,9 +2120,8 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><Flag className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Goals</h2>
-        <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add New Goal</PrimaryBtn>
+      <div className="flex justify-end">
+        <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add Goal</PrimaryBtn>
       </div>
 
       <Card>
@@ -1789,72 +2287,83 @@ function ReportsTab(props: {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-[#831843] flex items-center gap-2"><FileBarChart className="h-6 w-6 sm:h-7 sm:w-7 text-[#EC4899]" strokeWidth={1.6} /> My Reports</h2>
-        <div className="flex items-center gap-2">
-          <button onClick={() => shiftMonth(-1)} className="grid h-9 w-9 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="font-semibold text-[#831843] min-w-[110px] text-center">
-            {new Date(month.y, month.m).toLocaleString(undefined, { month: "long", year: "numeric" })}
-          </span>
-          <button onClick={() => shiftMonth(1)} className="grid h-9 w-9 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="flex items-center justify-end gap-2">
+        <button onClick={() => shiftMonth(-1)} className="grid h-8 w-8 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="text-sm font-semibold text-[#831843] min-w-[100px] text-center">
+          {new Date(month.y, month.m).toLocaleString(undefined, { month: "long", year: "numeric" })}
+        </span>
+        <button onClick={() => shiftMonth(1)} className="grid h-8 w-8 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 className="font-script text-2xl text-[#831843]">Transactions</h3>
-          <div className="flex flex-wrap gap-2">
-            <div className="w-32">
-              <PinkSelect value={sortBy} onChange={(v) => setSortBy(v as "date" | "amount")}
-                options={[{ value: "date", label: "Sort: Date" }, { value: "amount", label: "Sort: Amount" }]} />
-            </div>
-            <div className="w-36">
-              <PinkSelect value={filterCat} onChange={setFilterCat}
-                options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
-            </div>
-            <div className="w-28">
-              <PinkSelect value={filterMood} onChange={setFilterMood}
-                options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
-            </div>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="font-script text-xl text-[#831843]">Transactions</h3>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
+        </div>
+        {/* filters — single scrollable row */}
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-3 pb-0.5">
+          <div className="shrink-0 w-28">
+            <PinkSelect value={sortBy} onChange={(v) => setSortBy(v as "date" | "amount")}
+              options={[{ value: "date", label: "Sort: Date" }, { value: "amount", label: "Sort: Amount" }]} />
+          </div>
+          <div className="shrink-0 w-32">
+            <PinkSelect value={filterCat} onChange={setFilterCat}
+              options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
+          </div>
+          <div className="shrink-0 w-24">
+            <PinkSelect value={filterMood} onChange={setFilterMood}
+              options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
           </div>
         </div>
         {filtered.length === 0 ? (
           <EmptyState Icon={Receipt} title="No transactions yet" text="Head to the Dashboard to log your first expense for this month." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-[11px] tracking-widest text-[#9D5C7E]">
-                <tr><th className="py-2">DATE</th><th>CATEGORY</th><th>DESCRIPTION</th><th>MOOD</th><th>TYPE</th><th className="text-right">AMOUNT</th><th></th></tr>
-              </thead>
-              <tbody>
-                {filtered.map(t => {
-                  const c = allCats.find(x => x.key === t.catKey);
-                  const mood = MOODS.find(m => m.key === t.mood)!;
-                  return (
-                    <tr key={t.id} className="border-t border-pink-100">
-                      <td className="py-2 text-[#831843]">{t.date}</td>
-                      <td className="text-[#831843]">{c?.label}</td>
-                      <td className="text-[#9D5C7E]">{t.description || "—"}</td>
-                      <td><span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold border ${mood.tone}`}><mood.Icon className="h-3 w-3" /> {mood.label}</span></td>
-                      <td>{t.type === "income"
-                        ? <span className="inline-flex items-center text-emerald-700 text-xs font-semibold"><ArrowUpRight className="h-3 w-3" /> Income</span>
-                        : <span className="inline-flex items-center text-rose-700 text-xs font-semibold"><ArrowDownRight className="h-3 w-3" /> Expense</span>}</td>
-                      <td className="text-right font-semibold text-[#831843]">{fmt(t.amount, currency)}</td>
-                      <td className="text-right">
-                        <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-500 hover:text-rose-700">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-pink-100">
+            {filtered.map(t => {
+              const c = allCats.find(x => x.key === t.catKey);
+              const mood = MOODS.find(m => m.key === t.mood)!;
+              const isIncome = t.type === "income";
+              return (
+                <li key={t.id} className="flex items-center gap-2.5 py-2.5">
+                  {/* category icon bubble */}
+                  <div className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-pink-100">
+                    {c ? <c.Icon className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> : <Wallet className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />}
+                  </div>
+                  {/* main info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-[#831843] truncate">{c?.label ?? t.catKey}</span>
+                      <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
+                        <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-[#9D5C7E]">{t.date}</span>
+                      {t.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {t.description}</span>}
+                    </div>
+                  </div>
+                  {/* amount + type + delete */}
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    <span className={`text-sm font-bold ${isIncome ? "text-emerald-700" : "text-[#831843]"}`}>
+                      {isIncome ? "+" : "-"}{fmt(t.amount, currency)}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isIncome
+                        ? <span className="inline-flex items-center text-emerald-600 text-[9px] font-semibold gap-0.5"><ArrowUpRight className="h-2.5 w-2.5" />Income</span>
+                        : <span className="inline-flex items-center text-rose-600 text-[9px] font-semibold gap-0.5"><ArrowDownRight className="h-2.5 w-2.5" />Expense</span>}
+                      <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-400 hover:text-rose-600 transition">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </Card>
 
@@ -1867,7 +2376,7 @@ function ReportsTab(props: {
         {billOpen && (
           <div className="mb-3 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
             <Input placeholder="Bill name" value={bName} onChange={(e) => setBName(e.target.value)} className="sm:col-span-4" />
-            <Input type="date" value={bDate} onChange={(e) => setBDate(e.target.value)} className="sm:col-span-3" />
+            <div className="sm:col-span-3"><PinkDatePicker value={bDate} onChange={setBDate} className="w-full" /></div>
             <Input type="number" placeholder="Amount" value={bAmt} onChange={(e) => setBAmt(e.target.value)} className="sm:col-span-3" />
             <PrimaryBtn onClick={addBill} className="sm:col-span-2">Add</PrimaryBtn>
           </div>

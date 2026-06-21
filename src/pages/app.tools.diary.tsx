@@ -183,7 +183,7 @@ const DIARY_CSS = `
   @keyframes dd-mic      { 0%,100%{ box-shadow:0 0 0 0 rgba(219,39,119,.5) } 50%{ box-shadow:0 0 0 7px rgba(219,39,119,0) } }
   @keyframes dd-hintfade { from{ opacity:0 } to{ opacity:1 } }
   @keyframes dd-pagehint { 0%,100%{ opacity:0;transform:translateX(-50%) translateY(0) } 15%,85%{ opacity:1 } 50%{ transform:translateX(-50%) translateY(-5px) } }
-  @keyframes dd-mood-bounce { 0%,100%{ transform:scale(1) } 45%{ transform:scale(1.12) } 55%{ transform:scale(.95) } 70%{ transform:scale(1.06) } }
+  @keyframes dd-mood-bounce { 0%,100%{ transform:scale(1);filter:drop-shadow(0 4px 12px rgba(219,39,119,.35)) } 45%{ transform:translateY(-5px) scale(1.12);filter:drop-shadow(0 10px 22px rgba(219,39,119,.65)) } }
   @keyframes dd-spin { from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
   .dd-tool{ transition:all .2s ease; }
   .dd-tool:hover{ filter:brightness(1.05); transform:translateY(-1px); }
@@ -610,9 +610,9 @@ export default function DiaryPage() {
   const [mood, setMood] = useState("Calm");
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
-  const [toast, setToast] = useState(false);
   const [moodOpen, setMoodOpen] = useState(false);
   const [moodSet, setMoodSet] = useState(false);
+  const [toast, setToast] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [popoverPos, setPopoverPos] = useState({ top: 0, right: 16 });
 
@@ -922,7 +922,7 @@ export default function DiaryPage() {
           </div>
 
         {/* ── Prompts to bloom ── */}
-        <div style={{ marginTop: 30, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
+        <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
             <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Prompts to bloom</span>
             <span style={{ fontSize: 16 }}>✿</span>
@@ -1028,6 +1028,7 @@ export default function DiaryPage() {
       {mobile && (
         <button onClick={() => openAtPage(0)} style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }} aria-label="New diary entry">+</button>
       )}
+
     </div>
   );
 }
