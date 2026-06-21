@@ -627,10 +627,10 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
           </div>
-          <p className={["text-lg font-bold tabular-nums leading-none", hasExtra ? "text-[#EC4899]" : "text-[#9D5C7E]"].join(" ")}>
+          <p className="text-lg font-bold tabular-nums leading-none text-[#EC4899]">
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
