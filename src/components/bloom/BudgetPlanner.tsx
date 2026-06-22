@@ -946,19 +946,18 @@ function StatNumber({ value, currency }: { value: number; currency: CurrencyKey 
   return <>{fmt(v, currency)}</>;
 }
 
-function StatCards({ income, expenses, savings, balance, currency }: {
-  income: number; expenses: number; savings: number; balance: number; currency: CurrencyKey;
+function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, currency }: {
+  income: number; plannedBudget: number; realExpenses: number; goalsSaved: number; balance: number; currency: CurrencyKey;
 }) {
-  const spendScale = income > 0 ? Math.min(2.0, 1 + (expenses / income) * 0.7) : 1;
-  const saveScale  = income > 0 && savings > 0 ? Math.min(1.7, 1 + (savings / income) * 0.5) : Math.max(0.7, 1);
   const items = [
-    { label: "Income Garden",   emoji: "🌷", v: income,   sub: "your monthly earnings",  bg: "from-pink-50 to-rose-50",     emojiScale: 1.0 },
-    { label: "Spending Petals", emoji: "🛍️", v: expenses, sub: "this month's spends",    bg: "from-fuchsia-50 to-pink-50",  emojiScale: spendScale },
-    { label: "Savings Bloom",   emoji: "🌸", v: savings,  sub: "building your future",   bg: "from-purple-50 to-pink-50",   emojiScale: saveScale },
-    { label: "Dream Balance",   emoji: "💎", v: balance,  sub: "your available balance",  bg: "from-rose-50 to-fuchsia-50",  emojiScale: balance > 0 ? 1.15 : 0.85 },
+    { label: "Income Garden",        v: income,        sub: "your monthly earnings",     bg: "from-pink-50 to-rose-50" },
+    { label: "Planned Budget",        v: plannedBudget, sub: "committed this month",      bg: "from-fuchsia-50 to-purple-50" },
+    { label: "Real Spending Petals",  v: realExpenses,  sub: "extra spends logged",       bg: "from-rose-50 to-pink-50" },
+    { label: "Savings Bloom",         v: goalsSaved,    sub: "saved across all goals",    bg: "from-purple-50 to-pink-50" },
+    { label: "Dream Balance",         v: balance,       sub: "your available balance",    bg: "from-rose-50 to-fuchsia-50" },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 animate-fade-in">
       {items.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
@@ -1353,8 +1352,22 @@ function DashboardTab(props: {
         </div>
       )}
 
-      {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
-      <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
+      {/* ③ STAT CARDS */}
+      {(() => {
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const realExpenses  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+        const goalsSaved    = goals.reduce((s, g) => s + (g.saved ?? 0), 0);
+        return (
+          <StatCards
+            income={totalIncome}
+            plannedBudget={plannedBudget}
+            realExpenses={realExpenses}
+            goalsSaved={goalsSaved}
+            balance={totalBalance}
+            currency={currency}
+          />
+        );
+      })()}
 
       {/* ③b BUDGET VS REALITY */}
       {(() => {
