@@ -544,7 +544,7 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
         <text x={W - pR - 2} y={budgetY - 4} fontSize="8"
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
-          textAnchor="end" fontWeight="700">Daily limit · {fmt(dailyBudget, currency)}</text>
+          textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
         {/* spending curve — pink, red tint when over budget */}
         {realPtsArr.length >= 2 && (
