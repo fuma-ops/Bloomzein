@@ -1461,17 +1461,22 @@ function DashboardTab(props: {
                             <span className="text-[11px] font-semibold text-[#9D5C7E]">{fmt(planned, currency)}</span>
                           </div>
                         </div>
-                        {/* Bar = always full hot pink = committed/already spent */}
-                        <div className="h-3.5 rounded-full"
-                          style={{ background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
-                        {/* Extra logged spend: rose overflow indicator below */}
-                        {isOver && (
-                          <div className="mt-0.5 h-1.5 rounded-full transition-all duration-700"
-                            style={{
-                              width: `${overflowPct}%`,
-                              background: "linear-gradient(90deg,#F9A8D4,#F43F5E)"
-                            }} />
-                        )}
+                        {/* Single bar: planned (hot pink) + extra (rose/red) side by side */}
+                        {(() => {
+                          const total = planned + actual;
+                          const plannedPct = total > 0 ? (planned / total) * 100 : 100;
+                          const extraPct   = total > 0 ? (actual  / total) * 100 : 0;
+                          return (
+                            <div className="flex h-3.5 rounded-full overflow-hidden">
+                              <div className="h-full transition-all duration-700"
+                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                              {actual > 0 && (
+                                <div className="h-full transition-all duration-700"
+                                  style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F43F5E)" }} />
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}
