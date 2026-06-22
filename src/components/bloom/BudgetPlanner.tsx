@@ -658,6 +658,166 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
   );
 }
 
+/* ============================================================
+   MONTHLY PATTERNS CHART — 6-month bar chart with income line
+============================================================ */
+function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
+  txns: Txn[];
+  plannedBudget: number;
+  income: number;
+  currency: CurrencyKey;
+}) {
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return { y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleString("default", { month: "short" }), isCurrent: i === 5 };
+  });
+
+  const monthData = months.map(mo => {
+    const extra = txns.filter(t => {
+      const d = new Date(t.date);
+      return t.type === "expense" && d.getFullYear() === mo.y && d.getMonth() === mo.m;
+    }).reduce((s, t) => s + t.amount, 0);
+    const totalSpend = plannedBudget + extra;
+    return { ...mo, extra, totalSpend, isOver: income > 0 && totalSpend > income };
+  });
+
+  const W = 300, H = 110, pL = 8, pR = 8, pT = 28, pB = 20;
+  const plotW = W - pL - pR, plotH = H - pT - pB;
+  const maxVal = Math.max(income * 1.1, ...monthData.map(d => d.totalSpend), 1);
+  const slotW = plotW / 6;
+  const barW = Math.max(10, Math.floor(slotW * 0.52));
+  const yp = (v: number) => pT + plotH - (v / maxVal) * plotH;
+  const incomeY = income > 0 ? yp(income) : null;
+  const plannedY = plannedBudget > 0 ? yp(plannedBudget) : null;
+
+  // Smooth line connecting monthly totals
+  const linePts: [number, number][] = monthData
+    .filter(mo => mo.totalSpend > 0 || mo.isCurrent)
+    .map((mo, _, arr) => {
+      const i = months.findIndex(m => m.y === mo.y && m.m === mo.m);
+      return [pL + i * slotW + slotW / 2, yp(mo.totalSpend)] as [number, number];
+    });
+
+  const smoothLine = (pts: [number, number][]) => {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[Math.max(0, i - 2)], p1 = pts[i - 1], p2 = pts[i], p3 = pts[Math.min(pts.length - 1, i + 1)];
+      const cp1x = p1[0] + (p2[0] - p0[0]) / 6, cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const cp2x = p2[0] - (p3[0] - p1[0]) / 6, cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+    }
+    return d;
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 145 }} overflow="visible">
+        <defs>
+          <linearGradient id="mpBarNorm" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#EC4899" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#F9A8D4" stopOpacity="0.35" />
+          </linearGradient>
+          <linearGradient id="mpBarOver" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FCA5A5" stopOpacity="0.35" />
+          </linearGradient>
+          <filter id="mpGlow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* grid baseline */}
+        <line x1={pL} y1={pT + plotH} x2={W - pR} y2={pT + plotH} stroke="#FCE7F3" strokeWidth="1" />
+
+        {/* planned budget line */}
+        {plannedY !== null && (
+          <line x1={pL} y1={plannedY} x2={W - pR} y2={plannedY}
+            stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.35" />
+        )}
+
+        {/* income line */}
+        {incomeY !== null && (
+          <>
+            <line x1={pL} y1={incomeY} x2={W - pR} y2={incomeY}
+              stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.75" />
+            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">Income</text>
+          </>
+        )}
+
+        {/* bars */}
+        {monthData.map((mo, i) => {
+          const barH = Math.max(2, (mo.totalSpend / maxVal) * plotH);
+          const barX = pL + i * slotW + (slotW - barW) / 2;
+          const barY = pT + plotH - barH;
+          const cx = barX + barW / 2;
+          const showLabel = mo.isCurrent || mo.isOver;
+          const labelY = Math.max(pT + 9, barY - 4);
+          return (
+            <g key={i} style={{ opacity: mo.isCurrent ? 1 : 0.55 }}>
+              <rect x={barX} y={barY} width={barW} height={barH} rx="3"
+                fill={mo.isOver ? "url(#mpBarOver)" : "url(#mpBarNorm)"}
+                className="transition-all duration-500" />
+              {showLabel && mo.totalSpend > 0 && (
+                <>
+                  <rect x={cx - 29} y={labelY - 8.5} width={58} height={10.5} rx="3" fill="white" fillOpacity="0.92" />
+                  <text x={cx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
+                    fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
+                </>
+              )}
+              <text x={cx} y={H - 3} fontSize="7.5" textAnchor="middle"
+                fill={mo.isCurrent ? "#EC4899" : "#C4A0B8"}
+                fontWeight={mo.isCurrent ? "700" : "400"}>{mo.label}</text>
+            </g>
+          );
+        })}
+
+        {/* smooth trend line */}
+        {linePts.length >= 2 && (
+          <path d={smoothLine(linePts)} fill="none"
+            stroke="#EC4899" strokeWidth="2" strokeLinecap="round" opacity="0.6"
+            filter="url(#mpGlow)" />
+        )}
+
+        {/* dots on trend line */}
+        {linePts.map(([x, y], i) => {
+          const mo = monthData.filter(mo => mo.totalSpend > 0 || mo.isCurrent)[i];
+          if (!mo) return null;
+          return (
+            <g key={i}>
+              <circle cx={x} cy={y} r={mo?.isCurrent ? 4.5 : 3} fill={mo?.isOver ? "#EF4444" : "#EC4899"}
+                stroke="white" strokeWidth="1.5" style={{ opacity: mo?.isCurrent ? 1 : 0.6 }} />
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* legend */}
+      <div className="flex items-center gap-4 mt-1 px-1">
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-4 rounded-sm" style={{ background: "linear-gradient(to right, #EC4899, #F9A8D4)" }} />
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Total spend</span>
+        </div>
+        {income > 0 && (
+          <div className="flex items-center gap-1.5">
+            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
+            <span className="text-[10px] font-semibold text-[#9D5C7E]">Income</span>
+          </div>
+        )}
+        {plannedBudget > 0 && (
+          <div className="flex items-center gap-1.5">
+            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.5" /></svg>
+            <span className="text-[10px] font-semibold text-[#9D5C7E]">Planned</span>
+          </div>
+        )}
+        <span className="ml-auto text-[9px] text-[#C4A0B8]">approx · current plan</span>
+      </div>
+    </div>
+  );
+}
+
 function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   totalPlanned: number;
   totalOverage: number;
@@ -2270,6 +2430,27 @@ function DashboardTab(props: {
         );
       })()}
 
+      {/* 6-MONTH OVERVIEW */}
+      {(txns.length > 0 || totalIncome > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0)) && (() => {
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
+                6-Month Overview
+              </h3>
+              <span className="text-[10px] text-[#9D5C7E] font-semibold">spend vs income trend</span>
+            </div>
+            <MonthlyPatternsChart
+              txns={txns}
+              plannedBudget={plannedBudget}
+              income={totalIncome}
+              currency={currency}
+            />
+          </Card>
+        );
+      })()}
 
     </div>
   );
