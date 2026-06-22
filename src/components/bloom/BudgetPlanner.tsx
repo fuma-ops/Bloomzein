@@ -466,10 +466,11 @@ function MiniRing({ pct, size = 96 }: { pct: number; size?: number }) {
   );
 }
 
-function BudgetHistorique({ planned, extraTxns, currency }: {
+function BudgetHistorique({ planned, extraTxns, currency, income }: {
   planned: number;
   extraTxns: { date: string; amount: number }[];
   currency: CurrencyKey;
+  income: number;
 }) {
   const now = new Date();
   const y = now.getFullYear(), mo = now.getMonth();
@@ -524,10 +525,15 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
 
   const budgetY = yp(dailyBudget);
   const isOverBudget = todayVal > dailyBudget;
+  const totalMonthlySpend = planned + extraTxns.reduce((s, t) => s + t.amount, 0);
+  const isOverIncome = income > 0 && totalMonthlySpend > income;
 
-  // Clamp label position so it never gets clipped at SVG edges
+  // Clamp label X; position label below dot when dot is in upper 55% to avoid overlap with curve
   const todayLabelX = Math.max(pL + 28, Math.min(W - pR - 28, todayX));
-  const todayLabelY = Math.max(pT + 8, todayY - 13);
+  const labelBelow = todayY <= pT + plotH * 0.55;
+  const todayLabelY = labelBelow
+    ? Math.min(baseline - 4, todayY + 17)
+    : Math.max(pT + 8, todayY - 13);
 
   return (
     <div>
@@ -536,6 +542,10 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
             <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="redChartBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FEE2E2" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FEF2F2" stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="shLine" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#F9A8D4" />
@@ -566,9 +576,14 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           </filter>
         </defs>
 
+        {/* red background when spending exceeds income */}
+        {isOverIncome && (
+          <rect x={0} y={0} width={W} height={H} rx="8" fill="url(#redChartBg)" />
+        )}
+
         {/* subtle horizontal grid */}
-        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.8" />
-        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
+        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke={isOverIncome ? "#FECACA" : "#FCE7F3"} strokeWidth="0.8" />
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke={isOverIncome ? "#FECACA" : "#FCE7F3"} strokeWidth="1" />
 
         {/* today vertical marker */}
         <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
@@ -606,8 +621,9 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
             <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
             <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
-            {/* value label above — clamped so it never clips at SVG edges */}
-            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill="#EC4899"
+            {/* value label — white pill background ensures it's always readable over the curve */}
+            <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.93" />
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#EF4444" : "#EC4899"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -642,14 +658,16 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   );
 }
 
-function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
+function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   totalPlanned: number;
   totalOverage: number;
   currency: CurrencyKey;
+  income: number;
 }) {
   const R = 44, ri = 22, cx = 56, cy = 56;
   const hasExtra = totalOverage > 0;
   const total = totalPlanned + totalOverage;
+  const isOverIncome = income > 0 && total > income;
   const plannedSweep = hasExtra ? (totalPlanned / total) * Math.PI * 2 : Math.PI * 2 - 0.001;
   const extraSweep   = hasExtra ? (totalOverage / total) * Math.PI * 2 : 0;
   const a0 = -Math.PI / 2;
@@ -665,17 +683,27 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
     return `M ${f(ix1)} ${f(iy1)} L ${f(x1)} ${f(y1)} A ${R} ${R} 0 ${la} 1 ${f(x2)} ${f(y2)} L ${f(ix2)} ${f(iy2)} A ${ri} ${ri} 0 ${la} 0 ${f(ix1)} ${f(iy1)} Z`;
   };
 
+  const plannedColor = isOverIncome ? "#EF4444" : "#EC4899";
+  const extraColor   = isOverIncome ? "#F87171" : "#F9A8D4";
+
   return (
     <div className="flex flex-col items-center gap-3">
       <svg viewBox="0 0 112 112" width="108" height="108">
-        {/* planned slice — hot pink */}
-        <path d={arcPath(a0, plannedSweep)} fill="#EC4899" stroke="white" strokeWidth="1.5" />
-        {/* extra slice — light pink (distinct but still in palette) */}
+        {/* planned slice */}
+        <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        {/* extra slice */}
         {hasExtra && (
-          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill="#F9A8D4" stroke="white" strokeWidth="1.5" />
+          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill={extraColor} stroke="white" strokeWidth="1.5" />
         )}
         {/* center label */}
-        {hasExtra ? (
+        {isOverIncome ? (
+          <>
+            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EF4444" fontWeight="700">
+              −{fmt(Math.abs(income - total), currency)}
+            </text>
+            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#EF4444">over income ⚠</text>
+          </>
+        ) : hasExtra ? (
           <>
             <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EC4899" fontWeight="700">
               +{fmt(totalOverage, currency)}
@@ -694,17 +722,17 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
       <div className="flex gap-8 justify-center">
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
           </div>
-          <p className="text-lg font-bold text-[#EC4899] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
           </div>
-          <p className="text-lg font-bold tabular-nums leading-none text-[#F472B6]">
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -1286,6 +1314,9 @@ export function BudgetPlanner() {
               bills={bills} setBills={setBills}
               allCats={allCats}
               currency={currency}
+              incomes={incomes}
+              budget={budget}
+              selectedCats={selectedCats}
             />
           )}
       </div>
@@ -1382,17 +1413,18 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
 }) {
   const totalSpend = plannedBudget + realExpenses;
   const surplus = income - totalSpend;
+  const isOverIncome = income > 0 && surplus < 0;
 
   const cards = [
     {
       label: "Income Garden",
       v: income,
       sub: "your monthly earnings",
-      bg: "from-pink-50 to-rose-50",
+      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-pink-50 to-rose-50",
       badge: income > 0
         ? surplus >= 0
           ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
-          : { text: `Balance = -${fmt(Math.abs(surplus), currency)}`, color: "text-rose-600 bg-rose-100" }
+          : { text: `⚠ −${fmt(Math.abs(surplus), currency)}`, color: "text-red-700 bg-red-100" }
         : null,
     },
     {
@@ -1406,7 +1438,7 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
       label: "Real Spending Petals",
       v: plannedBudget + realExpenses,
       sub: "extra spends this month",
-      bg: "from-rose-50 to-pink-50",
+      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-rose-50 to-pink-50",
       badge: null,
       planSub: fmt(plannedBudget, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1860,7 +1892,7 @@ function DashboardTab(props: {
                 Edit <ChevronRight className="h-3 w-3" />
               </button>
             </div>
-            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} />
+            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} income={totalIncome} />
 
             {/* Per-category budget bars */}
             {(() => {
@@ -2222,6 +2254,7 @@ function DashboardTab(props: {
               planned={totalPlanned}
               extraTxns={monthTxns.filter(t => t.type === "expense")}
               currency={currency}
+              income={totalIncome}
             />
           </Card>
         );
@@ -2688,24 +2721,56 @@ function ReportsTab(props: {
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
   bills: Bill[]; setBills: (v: Bill[] | ((p: Bill[]) => Bill[])) => void;
   allCats: Cat[]; currency: CurrencyKey;
+  incomes: Income[]; budget: Budget; selectedCats: string[];
 }) {
-  const { txns, setTxns, bills, setBills, allCats, currency } = props;
+  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats } = props;
   const now = new Date();
   const [month, setMonth] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [filterCat, setFilterCat] = useState("");
   const [filterMood, setFilterMood] = useState("");
 
-  const filtered = useMemo(() => {
-    let list = txns.filter(t => {
-      const d = new Date(t.date);
-      return d.getFullYear() === month.y && d.getMonth() === month.m;
+  type LKind = "income" | "planned" | "extra";
+  interface LedgerRow {
+    id: string; kind: LKind; date: string; catKey: string;
+    amount: number; description: string; mood?: MoodKey; type: "income" | "expense";
+  }
+
+  const ledger = useMemo((): LedgerRow[] => {
+    const monthFirst = `${month.y}-${String(month.m + 1).padStart(2, "0")}-01`;
+    const rows: LedgerRow[] = [];
+    incomes.forEach(inc => rows.push({
+      id: `vi_${inc.id}`, kind: "income", date: monthFirst,
+      catKey: "__income__", amount: toMonthly(inc), description: inc.source, type: "income",
+    }));
+    selectedCats.forEach(k => {
+      const amt = budget[k] ?? 0;
+      if (amt > 0) rows.push({
+        id: `vb_${k}`, kind: "planned", date: monthFirst,
+        catKey: k, amount: amt, description: "Planned budget", type: "expense",
+      });
     });
-    if (filterCat) list = list.filter(t => t.catKey === filterCat);
-    if (filterMood) list = list.filter(t => t.mood === filterMood);
+    txns.forEach(t => {
+      const d = new Date(t.date);
+      if (d.getFullYear() === month.y && d.getMonth() === month.m)
+        rows.push({ id: t.id, kind: "extra", date: t.date, catKey: t.catKey, amount: t.amount, description: t.description, mood: t.mood, type: t.type });
+    });
+    let list = rows;
+    if (filterCat) list = list.filter(e => e.catKey === filterCat);
+    if (filterMood) list = list.filter(e => e.kind !== "extra" || e.mood === filterMood);
     list.sort((a, b) => sortBy === "amount" ? b.amount - a.amount : (a.date < b.date ? 1 : -1));
     return list;
-  }, [txns, month, sortBy, filterCat, filterMood]);
+  }, [txns, month, sortBy, filterCat, filterMood, incomes, budget, selectedCats]);
+
+  const ledgerStats = useMemo(() => {
+    const incomeTotal = incomes.reduce((s, inc) => s + toMonthly(inc), 0);
+    const plannedTotal = selectedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+    const extraTotal = txns.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear() === month.y && d.getMonth() === month.m && t.type === "expense";
+    }).reduce((s, t) => s + t.amount, 0);
+    return { incomeTotal, plannedTotal, extraTotal };
+  }, [incomes, selectedCats, budget, txns, month]);
 
   function shiftMonth(dir: -1 | 1) {
     setMonth(({ y, m }) => {
@@ -2764,9 +2829,29 @@ function ReportsTab(props: {
 
       <Card>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="font-script text-xl text-[#831843]">Transactions</h3>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
+          <h3 className="font-script text-xl text-[#831843]">All Operations</h3>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{ledger.length} operation{ledger.length !== 1 ? "s" : ""}</span>
         </div>
+
+        {/* Monthly summary chips */}
+        <div className="flex gap-2 flex-wrap mb-3">
+          <div className="flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+            <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+            <span className="text-[10px] font-bold text-emerald-700">{fmt(ledgerStats.incomeTotal, currency)}</span>
+            <span className="text-[9px] text-emerald-500">income</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1">
+            <span className="text-[9px] text-violet-500">✦</span>
+            <span className="text-[10px] font-bold text-violet-700">{fmt(ledgerStats.plannedTotal, currency)}</span>
+            <span className="text-[9px] text-violet-500">planned</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1">
+            <ArrowDownRight className="h-3 w-3 text-rose-500" />
+            <span className="text-[10px] font-bold text-rose-700">{fmt(ledgerStats.extraTotal, currency)}</span>
+            <span className="text-[9px] text-rose-400">extra</span>
+          </div>
+        </div>
+
         {/* filters — single scrollable row */}
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-3 pb-0.5">
           <div className="shrink-0 w-28">
@@ -2775,52 +2860,81 @@ function ReportsTab(props: {
           </div>
           <div className="shrink-0 w-32">
             <PinkSelect value={filterCat} onChange={setFilterCat}
-              options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
+              options={[
+                { value: "", label: "All operations" },
+                ...(incomes.length > 0 ? [{ value: "__income__", label: "💰 Income" }] : []),
+                ...allCats.map(c => ({ value: c.key, label: c.label })),
+              ]} />
           </div>
           <div className="shrink-0 w-24">
             <PinkSelect value={filterMood} onChange={setFilterMood}
               options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
           </div>
         </div>
-        {filtered.length === 0 ? (
-          <EmptyState Icon={Receipt} title="No transactions yet" text="Head to the Dashboard to log your first expense for this month." />
+
+        {ledger.length === 0 ? (
+          <EmptyState Icon={Receipt} title="No operations this month" text="Add income, set up your budget, or log a spend to see all operations here." />
         ) : (
           <ul className="divide-y divide-pink-100">
-            {filtered.map(t => {
-              const c = allCats.find(x => x.key === t.catKey);
-              const mood = MOODS.find(m => m.key === t.mood)!;
-              const isIncome = t.type === "income";
+            {ledger.map(entry => {
+              const c = allCats.find(x => x.key === entry.catKey);
+              const mood = entry.mood ? MOODS.find(m => m.key === entry.mood) : undefined;
+              const isIncome = entry.kind === "income";
+              const isPlanned = entry.kind === "planned";
+              const isExtra = entry.kind === "extra";
+              const iconBg = isIncome ? "bg-emerald-100" : isPlanned ? "bg-violet-100" : "bg-pink-100";
+              const iconColor = isIncome ? "text-emerald-600" : isPlanned ? "text-violet-500" : "text-[#EC4899]";
+              const amtColor = isIncome ? "text-emerald-700" : isPlanned ? "text-violet-700" : "text-[#831843]";
               return (
-                <li key={t.id} className="flex items-center gap-2.5 py-2.5">
-                  {/* category icon bubble */}
-                  <div className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-pink-100">
-                    {c ? <c.Icon className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> : <Wallet className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />}
+                <li key={entry.id} className="flex items-center gap-2.5 py-2.5">
+                  <div className={`shrink-0 grid h-8 w-8 place-items-center rounded-full ${iconBg}`}>
+                    {isIncome
+                      ? <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                      : c ? <c.Icon className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                        : <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />}
                   </div>
-                  {/* main info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-[#831843] truncate">{c?.label ?? t.catKey}</span>
-                      <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
-                        <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-[#831843] truncate">
+                        {isIncome ? entry.description : (c?.label ?? entry.catKey)}
                       </span>
+                      {isIncome && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          <ArrowUpRight className="h-2.5 w-2.5" />Income
+                        </span>
+                      )}
+                      {isPlanned && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-violet-50 text-violet-600 border-violet-200">
+                          ✦ Planned
+                        </span>
+                      )}
+                      {isExtra && mood && (
+                        <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
+                          <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] text-[#9D5C7E]">{t.date}</span>
-                      {t.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {t.description}</span>}
+                      <span className="text-[10px] text-[#9D5C7E]">{entry.date}</span>
+                      {isPlanned && <span className="text-[9px] text-violet-400">· monthly allocation</span>}
+                      {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {entry.description}</span>}
                     </div>
                   </div>
-                  {/* amount + type + delete */}
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
-                    <span className={`text-sm font-bold ${isIncome ? "text-emerald-700" : "text-[#831843]"}`}>
-                      {isIncome ? "+" : "-"}{fmt(t.amount, currency)}
+                    <span className={`text-sm font-bold ${amtColor}`}>
+                      {isIncome ? "+" : "-"}{fmt(entry.amount, currency)}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {isIncome
-                        ? <span className="inline-flex items-center text-emerald-600 text-[9px] font-semibold gap-0.5"><ArrowUpRight className="h-2.5 w-2.5" />Income</span>
-                        : <span className="inline-flex items-center text-rose-600 text-[9px] font-semibold gap-0.5"><ArrowDownRight className="h-2.5 w-2.5" />Expense</span>}
-                      <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-400 hover:text-rose-600 transition">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {isExtra && (
+                        <span className="inline-flex items-center text-rose-500 text-[9px] font-semibold gap-0.5">
+                          <ArrowDownRight className="h-2.5 w-2.5" />Extra
+                        </span>
+                      )}
+                      {isExtra && (
+                        <button onClick={() => setTxns(prev => prev.filter(x => x.id !== entry.id))} className="text-rose-400 hover:text-rose-600 transition">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>
