@@ -1407,16 +1407,6 @@ function DashboardTab(props: {
                               {fmt(actual, currency)}
                             </span>
                             <span className="text-[11px] text-[#C4A0B8]"> / {fmt(planned, currency)}</span>
-                            <button
-                              onClick={() => {
-                                setSelectedCats(p => p.filter(x => x !== k));
-                                setBudget(p => { const n = { ...p }; delete n[k]; return n; });
-                              }}
-                              title="Remove from budget"
-                              className="grid h-5 w-5 place-items-center rounded-full text-pink-300 hover:bg-rose-100 hover:text-rose-500 transition ml-0.5"
-                            >
-                              <X className="h-3 w-3" strokeWidth={2.5} />
-                            </button>
                           </div>
                         </div>
                         {/* Track is always full in light pink = committed/reserved budget */}
