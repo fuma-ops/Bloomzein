@@ -443,14 +443,16 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const pad = (n: number) => String(n).padStart(2, "0");
   const isoDay = (d: number) => `${y}-${pad(mo + 1)}-${pad(d)}`;
 
-  // Curve = committed plan + cumulative extra transactions → starts AT budget line, goes above when extras logged
-  const cumByDay = Array.from({ length: daysInMonth }, (_, i) => {
+  // Daily budget reference line (planned / days in month)
+  const dailyBudget = planned / daysInMonth;
+
+  // Spending curve = DAILY extra spends (not cumulative): 0 on no-spend days, amount on spend days
+  const dailyByDay = Array.from({ length: daysInMonth }, (_, i) => {
     const iso = isoDay(i + 1);
-    const extras = extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
-    return planned + extras;
+    return extraTxns.filter(t => t.date === iso).reduce((s, t) => s + t.amount, 0);
   });
 
-  const rawMax = Math.max(planned * 1.3, ...cumByDay.slice(0, today).map(v => v * 1.1), 1);
+  const rawMax = Math.max(dailyBudget * 2.5, ...dailyByDay.slice(0, today), 1);
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
   const maxY = Math.ceil(rawMax / magnitude) * magnitude;
 
@@ -479,13 +481,13 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
     return d;
   };
 
-  const todayVal = cumByDay[today - 1] ?? 0;
-  const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+  const todayVal = dailyByDay[today - 1] ?? 0;
+  const realPtsArr: [number, number][] = dailyByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
   const todayX = xp(today);
   const todayY = yp(todayVal);
 
-  const budgetY = yp(planned);
-  const isOverBudget = todayVal > planned;
+  const budgetY = yp(dailyBudget);
+  const isOverBudget = todayVal > dailyBudget;
 
   return (
     <div>
@@ -542,7 +544,7 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
         <text x={W - pR - 2} y={budgetY - 4} fontSize="8"
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
-          textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
+          textAnchor="end" fontWeight="700">Daily limit · {fmt(dailyBudget, currency)}</text>
 
         {/* spending curve — pink, red tint when over budget */}
         {realPtsArr.length >= 2 && (
