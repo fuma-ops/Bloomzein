@@ -689,18 +689,12 @@ export function BudgetPlanner() {
 
   const totalIncome = useMemo(() => incomes.reduce((s, i) => s + toMonthly(i), 0), [incomes]);
 
-  // Effective expenses: planned budget = committed/reserved, plus any over-budget or unplanned actuals
+  // Effective expenses: committed plan + ALL actual recorded transactions (every "+ Spend" is extra on top of the plan)
   const totalExpenses = useMemo(() => {
     const budgetedKeys = selectedCats.filter(k => (budget[k] ?? 0) > 0);
     const plannedTotal = budgetedKeys.reduce((s, k) => s + (budget[k] ?? 0), 0);
-    const expTxns = txns.filter(t => t.type === "expense");
-    const overage =
-      budgetedKeys.reduce((s, k) => {
-        const actual = expTxns.filter(t => t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
-        return s + Math.max(0, actual - (budget[k] ?? 0));
-      }, 0) +
-      expTxns.filter(t => !budgetedKeys.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
-    return plannedTotal + overage;
+    const actualTotal = txns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    return plannedTotal + actualTotal;
   }, [txns, selectedCats, budget]);
 
   const totalSavings = totalIncome - totalExpenses;
@@ -1367,12 +1361,8 @@ function DashboardTab(props: {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalOverage =
-          budgetedCats.reduce((s, k) => {
-            const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
-            return s + Math.max(0, actual - (budget[k] ?? 0));
-          }, 0) +
-          monthTxns.filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        // EXTRA = ALL actual logged transactions (every "+ Spend" is extra on top of committed plan)
+        const totalOverage = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         return (
           <Card>
             <div className="flex items-center justify-between mb-4">
