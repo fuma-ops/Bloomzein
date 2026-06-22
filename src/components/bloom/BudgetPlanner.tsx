@@ -466,10 +466,11 @@ function MiniRing({ pct, size = 96 }: { pct: number; size?: number }) {
   );
 }
 
-function BudgetHistorique({ planned, extraTxns, currency }: {
+function BudgetHistorique({ planned, extraTxns, currency, income }: {
   planned: number;
   extraTxns: { date: string; amount: number }[];
   currency: CurrencyKey;
+  income: number;
 }) {
   const now = new Date();
   const y = now.getFullYear(), mo = now.getMonth();
@@ -524,10 +525,15 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
 
   const budgetY = yp(dailyBudget);
   const isOverBudget = todayVal > dailyBudget;
+  const totalMonthlySpend = planned + extraTxns.reduce((s, t) => s + t.amount, 0);
+  const isOverIncome = income > 0 && totalMonthlySpend > income;
 
-  // Clamp label position so it never gets clipped at SVG edges
+  // Clamp label X; position label below dot when dot is in upper 55% to avoid overlap with curve
   const todayLabelX = Math.max(pL + 28, Math.min(W - pR - 28, todayX));
-  const todayLabelY = Math.max(pT + 8, todayY - 13);
+  const labelBelow = todayY <= pT + plotH * 0.55;
+  const todayLabelY = labelBelow
+    ? Math.min(baseline - 4, todayY + 17)
+    : Math.max(pT + 8, todayY - 13);
 
   return (
     <div>
@@ -536,6 +542,10 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
             <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="redChartBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FEE2E2" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FEF2F2" stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="shLine" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#F9A8D4" />
@@ -566,9 +576,14 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           </filter>
         </defs>
 
+        {/* red background when spending exceeds income */}
+        {isOverIncome && (
+          <rect x={0} y={0} width={W} height={H} rx="8" fill="url(#redChartBg)" />
+        )}
+
         {/* subtle horizontal grid */}
-        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.8" />
-        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
+        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke={isOverIncome ? "#FECACA" : "#FCE7F3"} strokeWidth="0.8" />
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke={isOverIncome ? "#FECACA" : "#FCE7F3"} strokeWidth="1" />
 
         {/* today vertical marker */}
         <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
@@ -606,8 +621,9 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
             <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
             <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
-            {/* value label above — clamped so it never clips at SVG edges */}
-            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill="#EC4899"
+            {/* value label — white pill background ensures it's always readable over the curve */}
+            <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.93" />
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#EF4444" : "#EC4899"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -642,14 +658,16 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   );
 }
 
-function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
+function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   totalPlanned: number;
   totalOverage: number;
   currency: CurrencyKey;
+  income: number;
 }) {
   const R = 44, ri = 22, cx = 56, cy = 56;
   const hasExtra = totalOverage > 0;
   const total = totalPlanned + totalOverage;
+  const isOverIncome = income > 0 && total > income;
   const plannedSweep = hasExtra ? (totalPlanned / total) * Math.PI * 2 : Math.PI * 2 - 0.001;
   const extraSweep   = hasExtra ? (totalOverage / total) * Math.PI * 2 : 0;
   const a0 = -Math.PI / 2;
@@ -665,17 +683,27 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
     return `M ${f(ix1)} ${f(iy1)} L ${f(x1)} ${f(y1)} A ${R} ${R} 0 ${la} 1 ${f(x2)} ${f(y2)} L ${f(ix2)} ${f(iy2)} A ${ri} ${ri} 0 ${la} 0 ${f(ix1)} ${f(iy1)} Z`;
   };
 
+  const plannedColor = isOverIncome ? "#EF4444" : "#EC4899";
+  const extraColor   = isOverIncome ? "#F87171" : "#F9A8D4";
+
   return (
     <div className="flex flex-col items-center gap-3">
       <svg viewBox="0 0 112 112" width="108" height="108">
-        {/* planned slice — hot pink */}
-        <path d={arcPath(a0, plannedSweep)} fill="#EC4899" stroke="white" strokeWidth="1.5" />
-        {/* extra slice — light pink (distinct but still in palette) */}
+        {/* planned slice */}
+        <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        {/* extra slice */}
         {hasExtra && (
-          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill="#F9A8D4" stroke="white" strokeWidth="1.5" />
+          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill={extraColor} stroke="white" strokeWidth="1.5" />
         )}
         {/* center label */}
-        {hasExtra ? (
+        {isOverIncome ? (
+          <>
+            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EF4444" fontWeight="700">
+              −{fmt(Math.abs(income - total), currency)}
+            </text>
+            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#EF4444">over income ⚠</text>
+          </>
+        ) : hasExtra ? (
           <>
             <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EC4899" fontWeight="700">
               +{fmt(totalOverage, currency)}
@@ -694,17 +722,17 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
       <div className="flex gap-8 justify-center">
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
           </div>
-          <p className="text-lg font-bold text-[#EC4899] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
           </div>
-          <p className="text-lg font-bold tabular-nums leading-none text-[#F472B6]">
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -1385,17 +1413,18 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
 }) {
   const totalSpend = plannedBudget + realExpenses;
   const surplus = income - totalSpend;
+  const isOverIncome = income > 0 && surplus < 0;
 
   const cards = [
     {
       label: "Income Garden",
       v: income,
       sub: "your monthly earnings",
-      bg: "from-pink-50 to-rose-50",
+      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-pink-50 to-rose-50",
       badge: income > 0
         ? surplus >= 0
           ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
-          : { text: `Balance = -${fmt(Math.abs(surplus), currency)}`, color: "text-rose-600 bg-rose-100" }
+          : { text: `⚠ −${fmt(Math.abs(surplus), currency)}`, color: "text-red-700 bg-red-100" }
         : null,
     },
     {
@@ -1409,7 +1438,7 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
       label: "Real Spending Petals",
       v: plannedBudget + realExpenses,
       sub: "extra spends this month",
-      bg: "from-rose-50 to-pink-50",
+      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-rose-50 to-pink-50",
       badge: null,
       planSub: fmt(plannedBudget, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1863,7 +1892,7 @@ function DashboardTab(props: {
                 Edit <ChevronRight className="h-3 w-3" />
               </button>
             </div>
-            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} />
+            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} income={totalIncome} />
 
             {/* Per-category budget bars */}
             {(() => {
@@ -2225,6 +2254,7 @@ function DashboardTab(props: {
               planned={totalPlanned}
               extraTxns={monthTxns.filter(t => t.type === "expense")}
               currency={currency}
+              income={totalIncome}
             />
           </Card>
         );
