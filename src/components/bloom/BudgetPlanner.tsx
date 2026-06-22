@@ -621,9 +621,9 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         )}
 
         {/* ALL text labels drawn last — always above every graph element */}
-        {/* Budget label */}
-        <rect x={pL} y={budgetY - 13} width={106} height={12} rx="3" fill="white" fillOpacity="0.95" />
-        <text x={pL + 2} y={budgetY - 4} fontSize="8"
+        {/* Budget label — anchored in top-padding area (above pT=18), never overlaps the curve */}
+        <rect x={pL} y={2} width={108} height={13} rx="3" fill="white" fillOpacity="0.95" />
+        <text x={pL + 3} y={12} fontSize="8"
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
           textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
         {/* Today value label */}
@@ -2141,38 +2141,6 @@ function DashboardTab(props: {
             </div>
             <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} income={totalIncome} />
 
-            {/* Savings Goals bars */}
-            {goals.length > 0 && (
-              <div className="mt-4 space-y-3">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
-                  <Flag className="h-3 w-3" /> Savings Goals
-                </p>
-                {goals.map(g => {
-                  const pct = g.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0;
-                  return (
-                    <div key={g.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="shrink-0 text-[9px] font-bold text-violet-600 bg-violet-100 rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
-                          <span className="text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5 shrink-0 ml-2 tabular-nums text-[11px]">
-                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}/mo</span>
-                          <span className="text-[#9D5C7E] mx-0.5">·</span>
-                          <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
-                        </div>
-                      </div>
-                      <div className="relative h-3.5 rounded-full overflow-hidden bg-violet-100/50">
-                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#8B5CF6)" }} />
-                      </div>
-                    </div>
-                  );
-                })}
-                <div className="border-t border-pink-100" />
-              </div>
-            )}
-
             {/* Per-category budget bars */}
             {(() => {
               const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
@@ -2265,6 +2233,38 @@ function DashboardTab(props: {
                 </div>
               );
             })()}
+
+            {/* Savings Goals bars — after category bars */}
+            {goals.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <div className="border-t border-pink-100 mb-3" />
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
+                  <Flag className="h-3 w-3" /> Savings Goals
+                </p>
+                {goals.map(g => {
+                  const pct = g.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0;
+                  return (
+                    <div key={g.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="shrink-0 text-[9px] font-bold text-violet-600 bg-violet-100 rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
+                          <span className="text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0 ml-2 tabular-nums text-[11px]">
+                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}/mo</span>
+                          <span className="text-[#9D5C7E] mx-0.5">·</span>
+                          <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
+                        </div>
+                      </div>
+                      <div className="relative h-3.5 rounded-full overflow-hidden bg-violet-100/50">
+                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#8B5CF6)" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         );
       })()}
