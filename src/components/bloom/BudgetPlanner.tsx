@@ -1358,8 +1358,12 @@ function DashboardTab(props: {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalActual  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-        const totalOverage = Math.max(0, totalActual - totalPlanned);
+        const totalOverage =
+          budgetedCats.reduce((s, k) => {
+            const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
+            return s + Math.max(0, actual - (budget[k] ?? 0));
+          }, 0) +
+          monthTxns.filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
         return (
           <Card>
             <div className="flex items-center justify-between mb-4">
@@ -1386,7 +1390,7 @@ function DashboardTab(props: {
                     const planned = budget[k] ?? 0;
                     const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
                     const isOver = actual > planned;
-                    const fillPct = planned > 0 ? Math.min(100, (isOver ? planned / actual : actual / planned) * 100) : 0;
+                    const spentPct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
                     const status = actual === 0 ? null : isOver ? "over" : actual / planned > 0.8 ? "watch" : "ok";
                     return (
                       <div key={k}>
@@ -1415,18 +1419,23 @@ function DashboardTab(props: {
                             </button>
                           </div>
                         </div>
-                        <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
-                          <div className="absolute inset-y-0 left-0 transition-all duration-700"
+                        {/* Track is always full in light pink = committed/reserved budget */}
+                        <div className="relative h-3.5 rounded-full overflow-hidden" style={{ background: "#FBCFE8" }}>
+                          {/* Actual spending fills from left in hot pink */}
+                          <div className="absolute inset-y-0 left-0 transition-all duration-700 rounded-full"
                             style={{
-                              width: `${fillPct}%`,
-                              background: "linear-gradient(90deg,#C084FC,#EC4899)",
-                              borderRadius: isOver ? "9999px 0 0 9999px" : "9999px"
+                              width: `${spentPct}%`,
+                              background: "linear-gradient(90deg,#C084FC,#EC4899)"
                             }} />
-                          {isOver && (
-                            <div className="absolute inset-y-0 rounded-r-full"
-                              style={{ left: `${fillPct}%`, right: 0, background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
-                          )}
                         </div>
+                        {/* Over-budget: extra bar below */}
+                        {isOver && (
+                          <div className="mt-0.5 h-1.5 rounded-full transition-all duration-700"
+                            style={{
+                              width: `${Math.min(100, ((actual - planned) / planned) * 100)}%`,
+                              background: "linear-gradient(90deg,#F9A8D4,#F43F5E)"
+                            }} />
+                        )}
                       </div>
                     );
                   })}
