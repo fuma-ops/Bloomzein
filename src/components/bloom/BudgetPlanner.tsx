@@ -411,21 +411,21 @@ function HealthRing({ pct, label, tone, size = 150 }: { pct: number; label: stri
   );
 }
 
-function MiniRing({ pct, size = 100 }: { pct: number; size?: number }) {
-  const r = size / 2 - 8, c = 2 * Math.PI * r;
+function MiniRing({ pct, size = 96 }: { pct: number; size?: number }) {
+  const sw = 10;
+  const r = size / 2 - sw / 2 - 2;
+  const c = 2 * Math.PI * r;
   const dash = `${(pct / 100) * c} ${c}`;
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="9" />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth="9"
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={sw} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth={sw}
           strokeDasharray={dash} strokeLinecap="round" className="transition-all duration-700" />
       </svg>
-      <div className="absolute inset-0 grid place-items-center text-center text-white">
-        <div>
-          <div className="text-xl sm:text-2xl font-extrabold leading-none">{Math.round(pct)}%</div>
-          <div className="text-[9px] sm:text-[10px] font-semibold opacity-80 leading-tight">of your goal<br/>reached</div>
-        </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <div className="text-2xl font-extrabold leading-none">{Math.round(pct)}%</div>
+        <div className="text-[8px] font-semibold opacity-75 leading-tight text-center mt-0.5">reached</div>
       </div>
     </div>
   );
@@ -443,13 +443,14 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const pad = (n: number) => String(n).padStart(2, "0");
   const isoDay = (d: number) => `${y}-${pad(mo + 1)}-${pad(d)}`;
 
+  // Curve = committed plan + cumulative extra transactions → starts AT budget line, goes above when extras logged
   const cumByDay = Array.from({ length: daysInMonth }, (_, i) => {
     const iso = isoDay(i + 1);
-    return extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
+    const extras = extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
+    return planned + extras;
   });
 
-  // Allow spending to exceed budget line — give 30% headroom above max of planned vs actual
-  const rawMax = Math.max(planned * 1.3, ...cumByDay.slice(0, today).map(v => v * 1.15), 1);
+  const rawMax = Math.max(planned * 1.3, ...cumByDay.slice(0, today).map(v => v * 1.1), 1);
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
   const maxY = Math.ceil(rawMax / magnitude) * magnitude;
 
@@ -1267,29 +1268,27 @@ function DashboardTab(props: {
       .map(([k, v]) => ({ key: k, cat: allCats.find(c => c.key === k), amount: v, pct: Math.round((v / total) * 100) }));
   }, [filteredTxns, allCats]);
 
-  // Filtered totals for insights
-  const filteredExpenses = filteredTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-  const filteredSavings  = totalIncome > 0 ? totalIncome - filteredExpenses : 0;
+  // Effective totals for insights — use committed budget model
+  const plannedTotal   = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+  const extraLogged    = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const effectiveSpend = plannedTotal + extraLogged;
+  const effectiveSave  = totalIncome > 0 ? totalIncome - effectiveSpend : 0;
 
-  // Story insights — warm, never red
+  // Story insights reflecting actual budget state
   const insights = useMemo(() => {
     const r: { icon: string; main: string; sub: string }[] = [];
-    if (totalIncome > 0 && filteredExpenses > totalIncome)
-      r.push({ icon: "💗", main: "Take a soft pause this month", sub: "A little over budget — you've totally got this 🌸" });
-    else if (filteredSavings > 0)
-      r.push({ icon: "🌸", main: `You saved ${fmt(filteredSavings, currency)}`, sub: "Keep growing!" });
-    const planned  = filteredTxns.filter(t => t.mood === "planned").length;
-    const impulsive = filteredTxns.filter(t => t.mood === "impulsive").length;
-    if (filteredTxns.length > 0 && planned >= impulsive)
-      r.push({ icon: "🌷", main: "You spent mindfully", sub: "Great choice!" });
-    else if (filteredTxns.length > 0 && impulsive > planned)
-      r.push({ icon: "🌸", main: "Some unplanned spends", sub: "Soft pause next time — no stress ✿" });
+    if (totalIncome > 0 && effectiveSpend > totalIncome)
+      r.push({ icon: "💗", main: "Over income this month", sub: `Committed ${fmt(effectiveSpend, currency)} vs ${fmt(totalIncome, currency)} income — review your plan 🌸` });
+    else if (extraLogged > 0)
+      r.push({ icon: "🌸", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} still available` : "Budget is tight — take a soft pause ✿" });
+    else if (plannedTotal > 0)
+      r.push({ icon: "🌷", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} available after plan` : "Income fully allocated" });
     if (goals.length > 0)
       r.push({ icon: "✨", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: "You are amazing!" });
     if (r.length === 0)
       r.push({ icon: "🌸", main: "Start tracking to see your story", sub: "bloom here ✿" });
     return r.slice(0, 3);
-  }, [filteredSavings, filteredExpenses, filteredTxns, goals, totalIncome, currency]);
+  }, [effectiveSpend, extraLogged, effectiveSave, plannedTotal, goals, totalIncome, currency]);
 
   // Goals carousel (keep names: Income Garden, etc.)
   const clampedGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
@@ -1663,7 +1662,7 @@ function DashboardTab(props: {
                         </div>
                         <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}% completed</p>
                       </div>
-                      <MiniRing pct={pct} size={72} />
+                      <MiniRing pct={pct} size={88} />
                     </div>
                   </div>
                 </div>
