@@ -689,18 +689,12 @@ export function BudgetPlanner() {
 
   const totalIncome = useMemo(() => incomes.reduce((s, i) => s + toMonthly(i), 0), [incomes]);
 
-  // Effective expenses: planned budget = committed/reserved, plus any over-budget or unplanned actuals
+  // Effective expenses: committed plan + ALL actual recorded transactions (every "+ Spend" is extra on top of the plan)
   const totalExpenses = useMemo(() => {
     const budgetedKeys = selectedCats.filter(k => (budget[k] ?? 0) > 0);
     const plannedTotal = budgetedKeys.reduce((s, k) => s + (budget[k] ?? 0), 0);
-    const expTxns = txns.filter(t => t.type === "expense");
-    const overage =
-      budgetedKeys.reduce((s, k) => {
-        const actual = expTxns.filter(t => t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
-        return s + Math.max(0, actual - (budget[k] ?? 0));
-      }, 0) +
-      expTxns.filter(t => !budgetedKeys.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
-    return plannedTotal + overage;
+    const actualTotal = txns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    return plannedTotal + actualTotal;
   }, [txns, selectedCats, budget]);
 
   const totalSavings = totalIncome - totalExpenses;
@@ -952,19 +946,18 @@ function StatNumber({ value, currency }: { value: number; currency: CurrencyKey 
   return <>{fmt(v, currency)}</>;
 }
 
-function StatCards({ income, expenses, savings, balance, currency }: {
-  income: number; expenses: number; savings: number; balance: number; currency: CurrencyKey;
+function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, currency }: {
+  income: number; plannedBudget: number; realExpenses: number; goalsSaved: number; balance: number; currency: CurrencyKey;
 }) {
-  const spendScale = income > 0 ? Math.min(2.0, 1 + (expenses / income) * 0.7) : 1;
-  const saveScale  = income > 0 && savings > 0 ? Math.min(1.7, 1 + (savings / income) * 0.5) : Math.max(0.7, 1);
   const items = [
-    { label: "Income Garden",   emoji: "🌷", v: income,   sub: "your monthly earnings",  bg: "from-pink-50 to-rose-50",     emojiScale: 1.0 },
-    { label: "Spending Petals", emoji: "🛍️", v: expenses, sub: "this month's spends",    bg: "from-fuchsia-50 to-pink-50",  emojiScale: spendScale },
-    { label: "Savings Bloom",   emoji: "🌸", v: savings,  sub: "building your future",   bg: "from-purple-50 to-pink-50",   emojiScale: saveScale },
-    { label: "Dream Balance",   emoji: "💎", v: balance,  sub: "your available balance",  bg: "from-rose-50 to-fuchsia-50",  emojiScale: balance > 0 ? 1.15 : 0.85 },
+    { label: "Income Garden",        v: income,        sub: "your monthly earnings",     bg: "from-pink-50 to-rose-50" },
+    { label: "Planned Budget",        v: plannedBudget, sub: "committed this month",      bg: "from-fuchsia-50 to-purple-50" },
+    { label: "Real Spending Petals",  v: realExpenses,  sub: "extra spends logged",       bg: "from-rose-50 to-pink-50" },
+    { label: "Savings Bloom",         v: goalsSaved,    sub: "saved across all goals",    bg: "from-purple-50 to-pink-50" },
+    { label: "Dream Balance",         v: balance,       sub: "your available balance",    bg: "from-rose-50 to-fuchsia-50" },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 animate-fade-in">
       {items.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
@@ -1359,20 +1352,30 @@ function DashboardTab(props: {
         </div>
       )}
 
-      {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
-      <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
+      {/* ③ STAT CARDS */}
+      {(() => {
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const realExpenses  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+        const goalsSaved    = goals.reduce((s, g) => s + (g.saved ?? 0), 0);
+        return (
+          <StatCards
+            income={totalIncome}
+            plannedBudget={plannedBudget}
+            realExpenses={realExpenses}
+            goalsSaved={goalsSaved}
+            balance={totalBalance}
+            currency={currency}
+          />
+        );
+      })()}
 
       {/* ③b BUDGET VS REALITY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalOverage =
-          budgetedCats.reduce((s, k) => {
-            const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
-            return s + Math.max(0, actual - (budget[k] ?? 0));
-          }, 0) +
-          monthTxns.filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        // EXTRA = ALL actual logged transactions (every "+ Spend" is extra on top of committed plan)
+        const totalOverage = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         return (
           <Card>
             <div className="flex items-center justify-between mb-4">
@@ -1398,42 +1401,35 @@ function DashboardTab(props: {
                     const cat = allCats.find(c => c.key === k);
                     const planned = budget[k] ?? 0;
                     const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
-                    const isOver = actual > planned;
-                    const spentPct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
-                    const status = actual === 0 ? null : isOver ? "over" : actual / planned > 0.8 ? "watch" : "ok";
+                    // planned = committed/already spent → any logged extra = over budget
+                    const isOver = actual > 0;
+                    const overflowPct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
+                    const status = actual > 0 ? "over" : null;
                     return (
                       <div key={k}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
                             <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                            {status === "ok"    && <span className="shrink-0 text-[9px] font-bold text-emerald-600 bg-emerald-100 rounded-full px-1.5 py-0.5">OK</span>}
-                            {status === "watch" && <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">Watch</span>}
-                            {status === "over"  && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
+                            {status === "over" && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0 ml-2 tabular-nums">
                             {actual > 0 && (
-                              <span className={["text-[11px] font-bold", isOver ? "text-rose-500" : "text-[#EC4899]"].join(" ")}>
-                                {fmt(actual, currency)} /
+                              <span className="text-[11px] font-bold text-rose-500">
+                                +{fmt(actual, currency)} /
                               </span>
                             )}
                             <span className="text-[11px] font-semibold text-[#9D5C7E]">{fmt(planned, currency)}</span>
                           </div>
                         </div>
-                        {/* Track is always full in light pink = committed/reserved budget */}
-                        <div className="relative h-3.5 rounded-full overflow-hidden" style={{ background: "#FBCFE8" }}>
-                          {/* Actual spending fills from left in hot pink */}
-                          <div className="absolute inset-y-0 left-0 transition-all duration-700 rounded-full"
-                            style={{
-                              width: `${spentPct}%`,
-                              background: "linear-gradient(90deg,#C084FC,#EC4899)"
-                            }} />
-                        </div>
-                        {/* Over-budget: extra bar below */}
+                        {/* Bar = always full hot pink = committed/already spent */}
+                        <div className="h-3.5 rounded-full"
+                          style={{ background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                        {/* Extra logged spend: rose overflow indicator below */}
                         {isOver && (
                           <div className="mt-0.5 h-1.5 rounded-full transition-all duration-700"
                             style={{
-                              width: `${Math.min(100, ((actual - planned) / planned) * 100)}%`,
+                              width: `${overflowPct}%`,
                               background: "linear-gradient(90deg,#F9A8D4,#F43F5E)"
                             }} />
                         )}
