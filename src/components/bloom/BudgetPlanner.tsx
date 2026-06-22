@@ -1020,6 +1020,7 @@ export function BudgetPlanner() {
   const [goals, setGoals] = useLocal<Goal[]>("bp:goals", []);
   const [bills, setBills] = useLocal<Bill[]>("bp:bills", []);
   const [showExtraSpend, setShowExtraSpend] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   // State lifted from DashboardTab for hero placement before the tab bar
   const [viewPeriod, setViewPeriod] = useState<"week"|"month">("month");
@@ -1066,14 +1067,15 @@ export function BudgetPlanner() {
   const totalSavings = totalIncome - totalExpenses;
   const totalBalance = totalIncome - totalExpenses;
 
-  // Show guide only when budget isn't set up yet; skipping sets the flag permanently
+  // Auto-show when nothing is set up; also show on manual trigger via "Guide" button
   const hasSetup = incomes.length > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0);
+  const guideVisible = showGuide || (!onboarded && !hasSetup);
 
   return (
     <div data-bp>
-      {!onboarded && !hasSetup && (
+      {guideVisible && (
         <OnboardingGuide
-          onDone={() => setOnboarded(true)}
+          onDone={() => { setOnboarded(true); setShowGuide(false); }}
           setTab={setTab}
         />
       )}
@@ -1180,6 +1182,11 @@ export function BudgetPlanner() {
                     className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
                     <Coins className="h-3 w-3" />
                     {CURRENCIES[currency].symbol}
+                  </button>
+                  <button onClick={() => setShowGuide(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                    <Sparkles className="h-3 w-3" />
+                    Guide
                   </button>
                 </div>
               </div>
