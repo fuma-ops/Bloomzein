@@ -906,26 +906,26 @@ function OnboardingGuide({ onDone, setTab }: {
       {/* ── STEPS ── */}
       {phase === "steps" && (
         <>
-          {/* Dark overlay — click anywhere to advance */}
-          <div className="fixed inset-0 z-[9998] cursor-pointer" style={{ background: 'rgba(5,1,13,0.87)' }} onClick={advance} />
+          {/* Transparent click-catcher — advances on tap anywhere outside the tooltip */}
+          <div className="fixed inset-0 cursor-pointer" style={{ zIndex: 9998 }} onClick={advance} />
 
-          {/* Spotlight ring over target element */}
+          {/* Spotlight ring — box-shadow creates the dark overlay; interior is transparent so the button shows through */}
           {spotRect && (
             <div className="fixed pointer-events-none" style={{
-              zIndex: 9999,
+              zIndex: 10001,
               top: spotRect.top - 10,
               left: spotRect.left - 10,
               width: spotRect.width + 20,
               height: spotRect.height + 20,
               borderRadius: Math.min(spotRect.height * 0.55, 24),
-              border: '2.5px solid rgba(236,72,153,0.95)',
+              border: '3px solid rgba(236,72,153,1)',
               animation: 'spotPulse 2s ease-in-out infinite',
             }} />
           )}
 
           {/* Tooltip card */}
           {tooltipPos && (
-            <div className="fixed" style={{ zIndex: 10000, top: tooltipPos.top, left: tooltipPos.left, width: tooltipPos.width }}>
+            <div className="fixed" style={{ zIndex: 10002, top: tooltipPos.top, left: tooltipPos.left, width: tooltipPos.width }}>
               <div className="rounded-[1.5rem] border border-pink-200/40 p-5" style={{
                 background: 'rgba(255,255,255,0.97)',
                 backdropFilter: 'blur(24px)',
@@ -1304,8 +1304,14 @@ export function BudgetPlanner() {
           to   { transform: translate(-50%,-50%) scale(1.35); opacity: 0.38; }
         }
         @keyframes spotPulse {
-          0%,100% { box-shadow: 0 0 22px 5px rgba(236,72,153,0.42); }
-          50%      { box-shadow: 0 0 44px 12px rgba(236,72,153,0.68); }
+          0%,100% {
+            box-shadow: 0 0 0 9999px rgba(5,1,13,0.87), 0 0 22px 6px rgba(236,72,153,0.55);
+            border-color: rgba(236,72,153,0.92);
+          }
+          50% {
+            box-shadow: 0 0 0 9999px rgba(5,1,13,0.87), 0 0 44px 14px rgba(236,72,153,0.82);
+            border-color: rgba(236,72,153,1);
+          }
         }
         @keyframes guideCardIn {
           from { transform: scale(0.86) translateY(10px); opacity: 0; }
