@@ -600,14 +600,9 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
             clipPath="url(#aboveBudgetClip)" filter="url(#dangerGlow)" />
         )}
 
-        {/* budget reference line — dashed */}
+        {/* budget reference line — dashed (line only, label drawn last so it's always on top) */}
         <line x1={pL} y1={budgetY} x2={W - pR} y2={budgetY}
           stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
-        {/* white pill keeps label readable over any curve */}
-        <rect x={pL} y={budgetY - 13} width={106} height={12} rx="3" fill="white" fillOpacity="0.93" />
-        <text x={pL + 2} y={budgetY - 4} fontSize="8"
-          fill={isOverBudget ? "#EF4444" : "#EC4899"}
-          textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
         {/* spending curve — gradient: light pink at 0, pink at budget, red above */}
         {realPtsArr.length >= 2 && (
@@ -619,12 +614,22 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {/* today dot — prominent */}
         {realPtsArr.length > 0 && (
           <>
-            {/* pulse ring */}
             <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
             <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
             <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
-            {/* value label — white pill background ensures it's always readable over the curve */}
-            <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.93" />
+          </>
+        )}
+
+        {/* ALL text labels drawn last — always above every graph element */}
+        {/* Budget label */}
+        <rect x={pL} y={budgetY - 13} width={106} height={12} rx="3" fill="white" fillOpacity="0.95" />
+        <text x={pL + 2} y={budgetY - 4} fontSize="8"
+          fill={isOverBudget ? "#EF4444" : "#EC4899"}
+          textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
+        {/* Today value label */}
+        {realPtsArr.length > 0 && (
+          <>
+            <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.95" />
             <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#EF4444" : "#EC4899"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
@@ -740,41 +745,23 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
             stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.35" />
         )}
 
-        {/* income line */}
+        {/* income line (line only — label drawn last) */}
         {incomeY !== null && (
-          <>
-            <line x1={pL} y1={incomeY} x2={W - pR} y2={incomeY}
-              stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.75" />
-            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">Income</text>
-          </>
+          <line x1={pL} y1={incomeY} x2={W - pR} y2={incomeY}
+            stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.75" />
         )}
 
-        {/* bars */}
+        {/* bars — rect only, labels drawn after trend line */}
         {monthData.map((mo, i) => {
           const barH = Math.max(2, (mo.totalSpend / maxVal) * plotH);
           const barX = pL + i * slotW + (slotW - barW) / 2;
           const barY = pT + plotH - barH;
           const cx = barX + barW / 2;
-          // clamp so label never overflows chart edges
-          const labelCx = Math.max(pL + 30, Math.min(W - pR - 30, cx));
-          const showLabel = mo.isCurrent || mo.isOver;
-          const labelY = Math.max(pT + 9, barY - 4);
           return (
-            <g key={i} style={{ opacity: mo.isCurrent ? 1 : 0.55 }}>
-              <rect x={barX} y={barY} width={barW} height={barH} rx="3"
-                fill={mo.isOver ? "url(#mpBarOver)" : "url(#mpBarNorm)"}
-                className="transition-all duration-500" />
-              {showLabel && mo.totalSpend > 0 && (
-                <>
-                  <rect x={labelCx - 30} y={labelY - 8.5} width={60} height={10.5} rx="3" fill="white" fillOpacity="0.92" />
-                  <text x={labelCx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
-                    fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
-                </>
-              )}
-              <text x={cx} y={H - 3} fontSize="7.5" textAnchor="middle"
-                fill={mo.isCurrent ? "#EC4899" : "#C4A0B8"}
-                fontWeight={mo.isCurrent ? "700" : "400"}>{mo.label}</text>
-            </g>
+            <rect key={i} x={barX} y={barY} width={barW} height={barH} rx="3"
+              fill={mo.isOver ? "url(#mpBarOver)" : "url(#mpBarNorm)"}
+              style={{ opacity: mo.isCurrent ? 1 : 0.55 }}
+              className="transition-all duration-500" />
           );
         })}
 
@@ -790,9 +777,41 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
           const mo = monthData.filter(mo => mo.totalSpend > 0 || mo.isCurrent)[i];
           if (!mo) return null;
           return (
-            <g key={i}>
-              <circle cx={x} cy={y} r={mo?.isCurrent ? 4.5 : 3} fill={mo?.isOver ? "#EF4444" : "#EC4899"}
-                stroke="white" strokeWidth="1.5" style={{ opacity: mo?.isCurrent ? 1 : 0.6 }} />
+            <circle key={i} cx={x} cy={y} r={mo?.isCurrent ? 4.5 : 3}
+              fill={mo?.isOver ? "#EF4444" : "#EC4899"}
+              stroke="white" strokeWidth="1.5" style={{ opacity: mo?.isCurrent ? 1 : 0.6 }} />
+          );
+        })}
+
+        {/* ALL text labels last — always rendered above bars, trend line, and dots */}
+        {/* Income text */}
+        {incomeY !== null && (
+          <>
+            <rect x={pL} y={incomeY - 11} width={36} height={10} rx="2.5" fill="white" fillOpacity="0.92" />
+            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">Income</text>
+          </>
+        )}
+        {/* Bar value labels + month labels */}
+        {monthData.map((mo, i) => {
+          const barH = Math.max(2, (mo.totalSpend / maxVal) * plotH);
+          const barX = pL + i * slotW + (slotW - barW) / 2;
+          const barY = pT + plotH - barH;
+          const cx = barX + barW / 2;
+          const labelCx = Math.max(pL + 30, Math.min(W - pR - 30, cx));
+          const showLabel = mo.isCurrent || mo.isOver;
+          const labelY = Math.max(pT + 9, barY - 4);
+          return (
+            <g key={i} style={{ opacity: mo.isCurrent ? 1 : 0.55 }}>
+              {showLabel && mo.totalSpend > 0 && (
+                <>
+                  <rect x={labelCx - 30} y={labelY - 8.5} width={60} height={10.5} rx="3" fill="white" fillOpacity="0.95" />
+                  <text x={labelCx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
+                    fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
+                </>
+              )}
+              <text x={cx} y={H - 3} fontSize="7.5" textAnchor="middle"
+                fill={mo.isCurrent ? "#EC4899" : "#C4A0B8"}
+                fontWeight={mo.isCurrent ? "700" : "400"}>{mo.label}</text>
             </g>
           );
         })}
@@ -2121,6 +2140,38 @@ function DashboardTab(props: {
               </button>
             </div>
             <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} income={totalIncome} />
+
+            {/* Savings Goals bars */}
+            {goals.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
+                  <Flag className="h-3 w-3" /> Savings Goals
+                </p>
+                {goals.map(g => {
+                  const pct = g.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0;
+                  return (
+                    <div key={g.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="shrink-0 text-[9px] font-bold text-violet-600 bg-violet-100 rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
+                          <span className="text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0 ml-2 tabular-nums text-[11px]">
+                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}/mo</span>
+                          <span className="text-[#9D5C7E] mx-0.5">·</span>
+                          <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
+                        </div>
+                      </div>
+                      <div className="relative h-3.5 rounded-full overflow-hidden bg-violet-100/50">
+                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#8B5CF6)" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="border-t border-pink-100" />
+              </div>
+            )}
 
             {/* Per-category budget bars */}
             {(() => {
