@@ -688,15 +688,23 @@ export function BudgetPlanner() {
   ], [customCats]);
 
   const totalIncome = useMemo(() => incomes.reduce((s, i) => s + toMonthly(i), 0), [incomes]);
-  const totalExpenses = useMemo(
-    () => txns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0),
-    [txns],
-  );
+
+  // Effective expenses: planned budget = committed/reserved, plus any over-budget or unplanned actuals
+  const totalExpenses = useMemo(() => {
+    const budgetedKeys = selectedCats.filter(k => (budget[k] ?? 0) > 0);
+    const plannedTotal = budgetedKeys.reduce((s, k) => s + (budget[k] ?? 0), 0);
+    const expTxns = txns.filter(t => t.type === "expense");
+    const overage =
+      budgetedKeys.reduce((s, k) => {
+        const actual = expTxns.filter(t => t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
+        return s + Math.max(0, actual - (budget[k] ?? 0));
+      }, 0) +
+      expTxns.filter(t => !budgetedKeys.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+    return plannedTotal + overage;
+  }, [txns, selectedCats, budget]);
+
   const totalSavings = totalIncome - totalExpenses;
-  const totalBalance = useMemo(
-    () => txns.reduce((s, t) => s + (t.type === "income" ? t.amount : -t.amount), 0) + totalIncome,
-    [txns, totalIncome],
-  );
+  const totalBalance = totalIncome - totalExpenses;
 
   return (
     <div data-bp>
@@ -1404,10 +1412,12 @@ function DashboardTab(props: {
                             {status === "over"  && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0 ml-2 tabular-nums">
-                            <span className={["text-[11px] font-bold", isOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
-                              {fmt(actual, currency)}
-                            </span>
-                            <span className="text-[11px] text-[#C4A0B8]"> / {fmt(planned, currency)}</span>
+                            {actual > 0 && (
+                              <span className={["text-[11px] font-bold", isOver ? "text-rose-500" : "text-[#EC4899]"].join(" ")}>
+                                {fmt(actual, currency)} /
+                              </span>
+                            )}
+                            <span className="text-[11px] font-semibold text-[#9D5C7E]">{fmt(planned, currency)}</span>
                           </div>
                         </div>
                         {/* Track is always full in light pink = committed/reserved budget */}
@@ -1686,8 +1696,8 @@ function DashboardTab(props: {
             <div className="flex items-center gap-4">
               <div className="flex-1 flex items-end gap-3 h-28">
                 {(["income", "expenses"] as const).map(type => {
-                  const val = type === "income" ? totalIncome : filteredExpenses;
-                  const maxVal = Math.max(totalIncome, filteredExpenses, 1);
+                  const val = type === "income" ? totalIncome : totalExpenses;
+                  const maxVal = Math.max(totalIncome, totalExpenses, 1);
                   const h = Math.max(8, (val / maxVal) * 100);
                   return (
                     <div key={type} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
@@ -1702,7 +1712,7 @@ function DashboardTab(props: {
               {totalIncome > 0 && (
                 <div className="shrink-0 text-center">
                   <HealthRing
-                    pct={Math.min(100, (filteredExpenses / totalIncome) * 100)}
+                    pct={Math.min(100, (totalExpenses / totalIncome) * 100)}
                     label=""
                     tone="#EC4899"
                     size={120}
