@@ -847,8 +847,8 @@ export function BudgetPlanner() {
               totalSavings={totalSavings}
               totalBalance={totalBalance}
               txns={txns} setTxns={setTxns}
-              budget={budget}
-              selectedCats={selectedCats}
+              budget={budget} setBudget={setBudget}
+              selectedCats={selectedCats} setSelectedCats={setSelectedCats}
               allCats={allCats}
               goals={goals}
               bills={bills}
@@ -1145,14 +1145,17 @@ function DashboardTab(props: {
   currency: CurrencyKey;
   totalIncome: number; totalExpenses: number; totalSavings: number; totalBalance: number;
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
-  budget: Budget; selectedCats: string[]; allCats: Cat[];
+  budget: Budget; setBudget: (v: Budget | ((p: Budget) => Budget)) => void;
+  selectedCats: string[]; setSelectedCats: (v: string[] | ((p: string[]) => string[])) => void;
+  allCats: Cat[];
   goals: Goal[]; bills: Bill[]; setTab: (t: TabKey) => void;
   incomes: Income[]; onCurrencyClick: () => void;
   viewPeriod: "week"|"month"; setViewPeriod: React.Dispatch<React.SetStateAction<"week"|"month">>;
   goalIdx: number; setGoalIdx: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget, onCurrencyClick,
+    txns, setTxns, selectedCats, setSelectedCats, allCats, goals, setTab, incomes,
+    budget, setBudget, onCurrencyClick,
     viewPeriod, setViewPeriod, goalIdx, setGoalIdx } = props;
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
@@ -1355,14 +1358,8 @@ function DashboardTab(props: {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        // EXTRA = sum of per-category overages + unplanned spends
-        // Under-budget categories do NOT offset overages in other categories
-        const totalOverage =
-          budgetedCats.reduce((s, k) => {
-            const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
-            return s + Math.max(0, actual - (budget[k] ?? 0));
-          }, 0) +
-          monthTxns.filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
+        const totalActual  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+        const totalOverage = Math.max(0, totalActual - totalPlanned);
         return (
           <Card>
             <div className="flex items-center justify-between mb-4">
@@ -1401,11 +1398,21 @@ function DashboardTab(props: {
                             {status === "watch" && <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">Watch</span>}
                             {status === "over"  && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
                           </div>
-                          <div className="flex items-center gap-1 shrink-0 ml-2 tabular-nums">
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2 tabular-nums">
                             <span className={["text-[11px] font-bold", isOver ? "text-rose-500" : "text-[#9D5C7E]"].join(" ")}>
                               {fmt(actual, currency)}
                             </span>
                             <span className="text-[11px] text-[#C4A0B8]"> / {fmt(planned, currency)}</span>
+                            <button
+                              onClick={() => {
+                                setSelectedCats(p => p.filter(x => x !== k));
+                                setBudget(p => { const n = { ...p }; delete n[k]; return n; });
+                              }}
+                              title="Remove from budget"
+                              className="grid h-5 w-5 place-items-center rounded-full text-pink-300 hover:bg-rose-100 hover:text-rose-500 transition ml-0.5"
+                            >
+                              <X className="h-3 w-3" strokeWidth={2.5} />
+                            </button>
                           </div>
                         </div>
                         <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
