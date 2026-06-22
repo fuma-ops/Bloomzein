@@ -949,22 +949,61 @@ function StatNumber({ value, currency }: { value: number; currency: CurrencyKey 
 function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, currency }: {
   income: number; plannedBudget: number; realExpenses: number; goalsSaved: number; balance: number; currency: CurrencyKey;
 }) {
-  const items = [
-    { label: "Income Garden",        v: income,        sub: "your monthly earnings",     bg: "from-pink-50 to-rose-50" },
-    { label: "Planned Budget",        v: plannedBudget, sub: "committed this month",      bg: "from-fuchsia-50 to-purple-50" },
-    { label: "Real Spending Petals",  v: realExpenses,  sub: "extra spends logged",       bg: "from-rose-50 to-pink-50" },
-    { label: "Savings Bloom",         v: goalsSaved,    sub: "saved across all goals",    bg: "from-purple-50 to-pink-50" },
-    { label: "Dream Balance",         v: balance,       sub: "your available balance",    bg: "from-rose-50 to-fuchsia-50" },
+  const totalSpend = plannedBudget + realExpenses;
+  const surplus = income - totalSpend;
+
+  const cards = [
+    {
+      label: "Income Garden",
+      v: income,
+      sub: "your monthly earnings",
+      bg: "from-pink-50 to-rose-50",
+      badge: income > 0
+        ? surplus >= 0
+          ? { text: `+${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
+          : { text: `-${fmt(Math.abs(surplus), currency)}`, color: "text-rose-600 bg-rose-100" }
+        : null,
+    },
+    {
+      label: "Planned Budget",
+      v: plannedBudget,
+      sub: "committed this month",
+      bg: "from-fuchsia-50 to-purple-50",
+      badge: null,
+    },
+    {
+      label: "Real Spending Petals",
+      v: totalSpend,
+      sub: "planned + extra logged",
+      bg: "from-rose-50 to-pink-50",
+      badge: realExpenses > 0
+        ? { text: `+${fmt(realExpenses, currency)} extra`, color: "text-rose-600 bg-rose-100" }
+        : null,
+    },
+    {
+      label: "Savings Bloom",
+      v: goalsSaved,
+      sub: "saved across all goals",
+      bg: "from-purple-50 to-pink-50",
+      badge: null,
+    },
   ];
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 animate-fade-in">
-      {items.map((it) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
+      {cards.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
           <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
           </div>
-          <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+          {it.badge ? (
+            <span className={`mt-1 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
+              {it.badge.text}
+            </span>
+          ) : (
+            <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+          )}
         </Card>
       ))}
     </div>
