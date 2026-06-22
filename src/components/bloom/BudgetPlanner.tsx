@@ -452,9 +452,9 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
     return extraTxns.filter(t => t.date === iso).reduce((s, t) => s + t.amount, 0);
   });
 
-  const rawMax = Math.max(dailyBudget * 2.5, ...dailyByDay.slice(0, today), 1);
-  const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
-  const maxY = Math.ceil(rawMax / magnitude) * magnitude;
+  // Fix scale: anchor Y-axis to dailyBudget so the budget line always sits at ~62% height.
+  // Clamp curve display to maxY but show the true spend value in the label.
+  const maxY = dailyBudget * 1.6;
 
   // Same compact dimensions as the Income vs Expenses bar chart (h-28 ≈ 112px)
   const W = 280, H = 100, pL = 8, pR = 8, pT = 18, pB = 20;
@@ -482,9 +482,10 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   };
 
   const todayVal = dailyByDay[today - 1] ?? 0;
-  const realPtsArr: [number, number][] = dailyByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+  // Clamp display values so spikes don't go off-chart; true value still shown in label
+  const realPtsArr: [number, number][] = dailyByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(Math.min(v, maxY))]);
   const todayX = xp(today);
-  const todayY = yp(todayVal);
+  const todayY = yp(Math.min(todayVal, maxY));
 
   const budgetY = yp(dailyBudget);
   const isOverBudget = todayVal > dailyBudget;
