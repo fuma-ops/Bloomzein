@@ -588,9 +588,9 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
         {/* budget reference line — dashed */}
         <line x1={pL} y1={budgetY} x2={W - pR} y2={budgetY}
           stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
-        <text x={W - pR - 2} y={budgetY - 4} fontSize="8"
+        <text x={pL + 2} y={budgetY - 4} fontSize="8"
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
-          textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
+          textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
         {/* spending curve — gradient: light pink at 0, pink at budget, red above */}
         {realPtsArr.length >= 2 && (
