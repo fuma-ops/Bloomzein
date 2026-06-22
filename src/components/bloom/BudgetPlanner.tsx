@@ -1269,6 +1269,61 @@ export function BudgetPlanner() {
   const hasSetup = incomes.length > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0);
   const guideVisible = showGuide || (!onboarded && !hasSetup);
 
+  function seedDemoData() {
+    if (hasSetup && !window.confirm("Replace your current data with demo data?")) return;
+    setCurrency("MAD");
+    setIncomes([
+      { id: "di1", source: "Salary – Tech Company", amount: 9500, frequency: "Monthly" },
+      { id: "di2", source: "Freelance Design", amount: 2800, frequency: "Monthly" },
+      { id: "di3", source: "Rental Income", amount: 1500, frequency: "Monthly" },
+    ]);
+    setSelectedCats(["rent","food","transp","elec","phone","health","rest","shop"]);
+    setBudget({ rent: 3200, food: 1500, transp: 600, elec: 300, phone: 250, health: 300, rest: 700, shop: 900 });
+    setGoals([
+      { id: "dg1", name: "Emergency Fund 🌿", target: 20000, saved: 6500, monthly: 1200 },
+      { id: "dg2", name: "Morocco Road Trip ✈️", target: 8000, saved: 2400, monthly: 600 },
+      { id: "dg3", name: "New MacBook 💻", target: 12000, saved: 3800, monthly: 800 },
+    ]);
+    setTxns([
+      // June 2026
+      { id: "dt1",  date: "2026-06-03", catKey: "food",   amount: 340,  description: "Extra groceries & snacks",       mood: "planned",   type: "expense" },
+      { id: "dt2",  date: "2026-06-07", catKey: "rest",   amount: 580,  description: "Anniversary dinner",             mood: "necessary", type: "expense" },
+      { id: "dt3",  date: "2026-06-11", catKey: "shop",   amount: 1450, description: "Summer clothes haul",            mood: "impulsive", type: "expense" },
+      { id: "dt4",  date: "2026-06-15", catKey: "health", amount: 320,  description: "Pharmacy run",                   mood: "necessary", type: "expense" },
+      { id: "dt5",  date: "2026-06-18", catKey: "enter",  amount: 200,  description: "Cinema + dinner",                mood: "planned",   type: "expense" },
+      { id: "dt6",  date: "2026-06-21", catKey: "transp", amount: 120,  description: "Ride-sharing this week",         mood: "necessary", type: "expense" },
+      // May 2026
+      { id: "dt7",  date: "2026-05-04", catKey: "food",   amount: 210,  description: "Farmers market haul",            mood: "planned",   type: "expense" },
+      { id: "dt8",  date: "2026-05-09", catKey: "shop",   amount: 1200, description: "Shoes & bag",                    mood: "impulsive", type: "expense" },
+      { id: "dt9",  date: "2026-05-14", catKey: "rest",   amount: 470,  description: "Friends birthday brunch",        mood: "necessary", type: "expense" },
+      { id: "dt10", date: "2026-05-20", catKey: "self",   amount: 400,  description: "Spa & massage day",              mood: "planned",   type: "expense" },
+      { id: "dt11", date: "2026-05-25", catKey: "enter",  amount: 280,  description: "Concert night",                  mood: "planned",   type: "expense" },
+      { id: "dt12", date: "2026-05-29", catKey: "travel", amount: 650,  description: "Weekend getaway deposit",        mood: "impulsive", type: "expense" },
+      // April 2026
+      { id: "dt13", date: "2026-04-02", catKey: "food",   amount: 180,  description: "Easter special groceries",       mood: "planned",   type: "expense" },
+      { id: "dt14", date: "2026-04-10", catKey: "travel", amount: 3200, description: "Trip to Marrakech 🌴",           mood: "impulsive", type: "expense" },
+      { id: "dt15", date: "2026-04-18", catKey: "shop",   amount: 870,  description: "Spring wardrobe refresh",        mood: "impulsive", type: "expense" },
+      { id: "dt16", date: "2026-04-24", catKey: "health", amount: 250,  description: "Dental checkup",                 mood: "necessary", type: "expense" },
+      // March 2026
+      { id: "dt17", date: "2026-03-05", catKey: "rest",   amount: 320,  description: "Work team dinner",               mood: "necessary", type: "expense" },
+      { id: "dt18", date: "2026-03-12", catKey: "health", amount: 480,  description: "Doctor + pharmacy",              mood: "necessary", type: "expense" },
+      { id: "dt19", date: "2026-03-19", catKey: "enter",  amount: 190,  description: "Movie & events",                 mood: "planned",   type: "expense" },
+      { id: "dt20", date: "2026-03-26", catKey: "shop",   amount: 2100, description: "Ramadan shopping",               mood: "necessary", type: "expense" },
+      // February 2026
+      { id: "dt21", date: "2026-02-10", catKey: "food",   amount: 290,  description: "Valentine's dinner ingredients", mood: "planned",   type: "expense" },
+      { id: "dt22", date: "2026-02-14", catKey: "rest",   amount: 850,  description: "Valentine's romantic dinner",    mood: "impulsive", type: "expense" },
+      { id: "dt23", date: "2026-02-22", catKey: "shop",   amount: 600,  description: "Winter sale picks",              mood: "impulsive", type: "expense" },
+    ]);
+    setBills([
+      { id: "db1", name: "Monthly Rent",    due: "2026-07-01", amount: 3200, paid: false },
+      { id: "db2", name: "Internet & Phone",due: "2026-06-28", amount: 250,  paid: false },
+      { id: "db3", name: "Electricity",     due: "2026-07-05", amount: 300,  paid: false },
+      { id: "db4", name: "Water Bill",      due: "2026-06-30", amount: 180,  paid: false },
+    ]);
+    setOnboarded(true);
+    setTab("Dashboard");
+  }
+
   return (
     <div data-bp>
       {guideVisible && (
@@ -1385,6 +1440,10 @@ export function BudgetPlanner() {
                     className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
                     <Sparkles className="h-3 w-3" />
                     Guide
+                  </button>
+                  <button onClick={seedDemoData}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 px-3 py-1.5 text-xs text-white/80 font-semibold transition hover:bg-white/25 hover:text-white active:scale-95">
+                    ✦ Demo
                   </button>
                 </div>
               </div>
