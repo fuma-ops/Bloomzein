@@ -88,6 +88,41 @@ const HERO_CONFIG: Record<string, { title: string; sub: string }> = {
   Reports:         { title: "Know your numbers ✨",     sub: "Clarity is the first step to financial freedom." },
 };
 
+const GUIDE_STEPS = [
+  {
+    key: "income",
+    tab: "Incomes" as TabKey,
+    selector: "[data-tour='incomes-tab']",
+    icon: "🌱",
+    title: "Add your income",
+    desc: "Your salary, freelance income, or any stream of money — this is where your garden gets its water.",
+  },
+  {
+    key: "budget",
+    tab: "Budget Setup" as TabKey,
+    selector: "[data-tour='budget-tab']",
+    icon: "✦",
+    title: "Plan your budget",
+    desc: "Pick life categories and set monthly amounts. A clear plan becomes your map to every dream.",
+  },
+  {
+    key: "goals",
+    tab: "Savings Goals" as TabKey,
+    selector: "[data-tour='goals-tab']",
+    icon: "💎",
+    title: "Set your dream goals",
+    desc: "Give your savings a name — a vacation, an emergency fund, a new chapter of life.",
+  },
+  {
+    key: "spend",
+    tab: "Dashboard" as TabKey,
+    selector: "[data-tour='spend-fab']",
+    icon: "🌸",
+    title: "Log extra spends",
+    desc: "Whenever you spend outside your plan, tap this button. Your dashboard adapts instantly.",
+  },
+] as const;
+
 /* ============================================================
    TYPES
 ============================================================ */
@@ -411,30 +446,31 @@ function HealthRing({ pct, label, tone, size = 150 }: { pct: number; label: stri
   );
 }
 
-function MiniRing({ pct, size = 100 }: { pct: number; size?: number }) {
-  const r = size / 2 - 8, c = 2 * Math.PI * r;
+function MiniRing({ pct, size = 96 }: { pct: number; size?: number }) {
+  const sw = 10;
+  const r = size / 2 - sw / 2 - 2;
+  const c = 2 * Math.PI * r;
   const dash = `${(pct / 100) * c} ${c}`;
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="9" />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth="9"
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={sw} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeWidth={sw}
           strokeDasharray={dash} strokeLinecap="round" className="transition-all duration-700" />
       </svg>
-      <div className="absolute inset-0 grid place-items-center text-center text-white">
-        <div>
-          <div className="text-xl sm:text-2xl font-extrabold leading-none">{Math.round(pct)}%</div>
-          <div className="text-[9px] sm:text-[10px] font-semibold opacity-80 leading-tight">of your goal<br/>reached</div>
-        </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+        <div className="text-2xl font-extrabold leading-none">{Math.round(pct)}%</div>
+        <div className="text-[8px] font-semibold opacity-75 leading-tight text-center mt-0.5">reached</div>
       </div>
     </div>
   );
 }
 
-function BudgetHistorique({ planned, extraTxns, currency }: {
+function BudgetHistorique({ planned, extraTxns, currency, income }: {
   planned: number;
   extraTxns: { date: string; amount: number }[];
   currency: CurrencyKey;
+  income: number;
 }) {
   const now = new Date();
   const y = now.getFullYear(), mo = now.getMonth();
@@ -443,14 +479,18 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const pad = (n: number) => String(n).padStart(2, "0");
   const isoDay = (d: number) => `${y}-${pad(mo + 1)}-${pad(d)}`;
 
-  const cumByDay = Array.from({ length: daysInMonth }, (_, i) => {
+  // Daily budget reference line (planned / days in month)
+  const dailyBudget = planned / daysInMonth;
+
+  // Spending curve = DAILY extra spends (not cumulative): 0 on no-spend days, amount on spend days
+  const dailyByDay = Array.from({ length: daysInMonth }, (_, i) => {
     const iso = isoDay(i + 1);
-    return extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
+    return extraTxns.filter(t => t.date === iso).reduce((s, t) => s + t.amount, 0);
   });
 
-  const rawMax = Math.max(planned * 1.25, ...cumByDay.slice(0, today), 1);
-  const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
-  const maxY = Math.ceil(rawMax / magnitude) * magnitude;
+  // Fix scale: anchor Y-axis to dailyBudget so the budget line always sits at ~62% height.
+  // Clamp curve display to maxY but show the true spend value in the label.
+  const maxY = dailyBudget * 1.6;
 
   // Same compact dimensions as the Income vs Expenses bar chart (h-28 ≈ 112px)
   const W = 280, H = 100, pL = 8, pR = 8, pT = 18, pB = 20;
@@ -477,95 +517,340 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
     return d;
   };
 
-  const todayVal = cumByDay[today - 1] ?? 0;
-  const realPtsArr: [number, number][] = cumByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(v)]);
+  const todayVal = dailyByDay[today - 1] ?? 0;
+  // Clamp display values so spikes don't go off-chart; true value still shown in label
+  const realPtsArr: [number, number][] = dailyByDay.slice(0, today).map((v, i) => [xp(i + 1), yp(Math.min(v, maxY))]);
+  const todayX = xp(today);
+  const todayY = yp(Math.min(todayVal, maxY));
+
+  const budgetY = yp(dailyBudget);
+  const isOverBudget = todayVal > dailyBudget;
+  const totalMonthlySpend = planned + extraTxns.reduce((s, t) => s + t.amount, 0);
+  const isOverIncome = income > 0 && totalMonthlySpend > income;
+
+  // Clamp label X; position label below dot when dot is in upper 55% to avoid overlap with curve
+  const todayLabelX = Math.max(pL + 28, Math.min(W - pR - 28, todayX));
+  const labelBelow = todayY <= pT + plotH * 0.55;
+  const todayLabelY = labelBelow
+    ? Math.min(baseline - 4, todayY + 17)
+    : Math.max(pT + 8, todayY - 13);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 112 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }} overflow="visible">
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
             <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0" />
           </linearGradient>
+          <linearGradient id="redChartBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FEE2E2" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FEF2F2" stopOpacity="0.4" />
+          </linearGradient>
           <linearGradient id="shLine" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#F9A8D4" />
             <stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
+          {/* Vertical gradient for the spend curve: light pink at 0, pink at budget, red above */}
+          <linearGradient id="spendLineGrad" x1="0" y1={pT} x2="0" y2={baseline} gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#EC4899" />
+            <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0.7" />
+          </linearGradient>
+          {/* Danger gradient for over-budget zone: pink-poppy → red */}
+          <linearGradient id="dangerFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#EC4899" stopOpacity="0.15" />
+          </linearGradient>
+          {/* Clip path: only the region ABOVE the budget line */}
+          <clipPath id="aboveBudgetClip">
+            <rect x={pL} y={pT} width={plotW} height={Math.max(0, budgetY - pT)} />
+          </clipPath>
           <filter id="shGlow" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="1.8" result="blur" />
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="dangerGlow" x="-10%" y="-30%" width="120%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
-        {/* subtle grid */}
-        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.6" />
-        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="0.8" />
+        {/* red background when spending exceeds income */}
+        {isOverIncome && (
+          <rect x={0} y={0} width={W} height={H} rx="8" fill="url(#redChartBg)" />
+        )}
+
+        {/* subtle horizontal grid */}
+        <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke={isOverIncome ? "#FECACA" : "#FCE7F3"} strokeWidth="0.8" />
+        <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke={isOverIncome ? "#FECACA" : "#FCE7F3"} strokeWidth="1" />
+
+        {/* today vertical marker */}
+        <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
+          stroke="#EC4899" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
 
         {/* gradient fill under curve */}
         {realPtsArr.length >= 2 && (
           <path d={smoothPath(realPtsArr, true)} fill="url(#shFill)" />
         )}
 
-        {/* budget reference line — light pink dashed */}
-        <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
-          stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" />
-        <text x={W - pR - 2} y={yp(planned) - 3} fontSize="6.5" fill="#EC4899"
-          textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
-
-        {/* spending curve — all pink */}
-        {realPtsArr.length >= 2 && (
-          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#shLine)"
-            strokeWidth="2.5" strokeLinecap="round" filter="url(#shGlow)" />
+        {/* Danger zone fill — above budget line, below the spending curve */}
+        {realPtsArr.length >= 2 && isOverBudget && (
+          <path d={smoothPath(realPtsArr, true)} fill="url(#dangerFill)"
+            clipPath="url(#aboveBudgetClip)" filter="url(#dangerGlow)" />
         )}
 
-        {/* today dot */}
+        {/* budget reference line — dashed (line only, label drawn last so it's always on top) */}
+        <line x1={pL} y1={budgetY} x2={W - pR} y2={budgetY}
+          stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
+
+        {/* spending curve — gradient: light pink at 0, pink at budget, red above */}
+        {realPtsArr.length >= 2 && (
+          <path d={smoothPath(realPtsArr)} fill="none"
+            stroke="url(#spendLineGrad)"
+            strokeWidth="3" strokeLinecap="round" filter="url(#shGlow)" />
+        )}
+
+        {/* today dot — prominent */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={xp(today)} cy={yp(todayVal)} r="5" fill="#EC4899" opacity="0.2" />
-            <circle cx={xp(today)} cy={yp(todayVal)} r="3" fill="#EC4899" stroke="white" strokeWidth="1.5" />
-            <text x={xp(today)} y={yp(todayVal) - 6} fontSize="6.5" fill="#EC4899"
+            <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
+            <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
+            <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
+          </>
+        )}
+
+        {/* ALL text labels drawn last — always above every graph element */}
+        {/* Budget label — anchored in top-padding area (above pT=18), never overlaps the curve */}
+        <rect x={pL} y={2} width={108} height={13} rx="3" fill="white" fillOpacity="0.95" />
+        <text x={pL + 3} y={12} fontSize="8"
+          fill={isOverBudget ? "#EF4444" : "#EC4899"}
+          textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
+        {/* Today value label */}
+        {realPtsArr.length > 0 && (
+          <>
+            <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.95" />
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#EF4444" : "#EC4899"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
 
         {/* X axis labels */}
-        <text x={xp(1)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">1</text>
-        <text x={xp(Math.ceil(daysInMonth / 2))} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
-          {Math.ceil(daysInMonth / 2)}
+        <text x={xp(1)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">1</text>
+        {/* "Today" label at today's x position */}
+        <text x={todayX} y={H - 3} fontSize="8" fill="#EC4899" textAnchor="middle" fontWeight="700">
+          {today}
         </text>
-        <text x={xp(daysInMonth)} y={H - 4} fontSize="7" fill="#C4A0B8" textAnchor="middle">
+        <text x={xp(daysInMonth)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">
           {daysInMonth}
         </text>
       </svg>
 
       {/* legend */}
-      <div className="flex items-center gap-4 mt-1 px-1">
-        <div className="flex items-center gap-1">
-          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#F9A8D4" strokeWidth="1.5" strokeDasharray="5 4" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Budget</span>
+      <div className="flex items-center gap-4 mt-1.5 px-1">
+        <div className="flex items-center gap-1.5">
+          <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" /></svg>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Budget</span>
         </div>
-        <div className="flex items-center gap-1">
-          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="2" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Spending</span>
+        <div className="flex items-center gap-1.5">
+          <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#EC4899" strokeWidth="2.5" /></svg>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Spending</span>
         </div>
-        <div className="flex items-center gap-1 ml-auto">
-          <svg width="8" height="8"><circle cx="4" cy="4" r="3" fill="#EC4899" /></svg>
-          <span className="text-[9px] font-semibold text-[#9D5C7E]">Today</span>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#EC4899" /></svg>
+          <span className="text-[10px] font-semibold text-[#EC4899]">Today ({today})</span>
         </div>
       </div>
     </div>
   );
 }
 
-function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
+/* ============================================================
+   MONTHLY PATTERNS CHART — 6-month bar chart with income line
+============================================================ */
+function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
+  txns: Txn[];
+  plannedBudget: number;
+  income: number;
+  currency: CurrencyKey;
+}) {
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return { y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleString("default", { month: "short" }), isCurrent: i === 5 };
+  });
+
+  const monthData = months.map(mo => {
+    const extra = txns.filter(t => {
+      const d = new Date(t.date);
+      return t.type === "expense" && d.getFullYear() === mo.y && d.getMonth() === mo.m;
+    }).reduce((s, t) => s + t.amount, 0);
+    const totalSpend = plannedBudget + extra;
+    return { ...mo, extra, totalSpend, isOver: income > 0 && totalSpend > income };
+  });
+
+  const W = 300, H = 110, pL = 8, pR = 8, pT = 28, pB = 20;
+  const plotW = W - pL - pR, plotH = H - pT - pB;
+  const maxVal = Math.max(income * 1.1, ...monthData.map(d => d.totalSpend), 1);
+  const slotW = plotW / 6;
+  const barW = Math.max(10, Math.floor(slotW * 0.52));
+  const yp = (v: number) => pT + plotH - (v / maxVal) * plotH;
+  const incomeY = income > 0 ? yp(income) : null;
+  const plannedY = plannedBudget > 0 ? yp(plannedBudget) : null;
+
+  // Smooth line connecting monthly totals
+  const linePts: [number, number][] = monthData
+    .filter(mo => mo.totalSpend > 0 || mo.isCurrent)
+    .map((mo, _, arr) => {
+      const i = months.findIndex(m => m.y === mo.y && m.m === mo.m);
+      return [pL + i * slotW + slotW / 2, yp(mo.totalSpend)] as [number, number];
+    });
+
+  const smoothLine = (pts: [number, number][]) => {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[Math.max(0, i - 2)], p1 = pts[i - 1], p2 = pts[i], p3 = pts[Math.min(pts.length - 1, i + 1)];
+      const cp1x = p1[0] + (p2[0] - p0[0]) / 6, cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const cp2x = p2[0] - (p3[0] - p1[0]) / 6, cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+    }
+    return d;
+  };
+
+  return (
+    <div className="animate-fade-in">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 145 }} overflow="visible">
+        <defs>
+          <linearGradient id="mpBarNorm" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#EC4899" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#F9A8D4" stopOpacity="0.35" />
+          </linearGradient>
+          <linearGradient id="mpBarOver" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#FCA5A5" stopOpacity="0.35" />
+          </linearGradient>
+          <filter id="mpGlow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* grid baseline */}
+        <line x1={pL} y1={pT + plotH} x2={W - pR} y2={pT + plotH} stroke="#FCE7F3" strokeWidth="1" />
+
+        {/* planned budget line */}
+        {plannedY !== null && (
+          <line x1={pL} y1={plannedY} x2={W - pR} y2={plannedY}
+            stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.35" />
+        )}
+
+        {/* income line (line only — label drawn last) */}
+        {incomeY !== null && (
+          <line x1={pL} y1={incomeY} x2={W - pR} y2={incomeY}
+            stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.75" />
+        )}
+
+        {/* bars — rect only, labels drawn after trend line */}
+        {monthData.map((mo, i) => {
+          const barH = Math.max(2, (mo.totalSpend / maxVal) * plotH);
+          const barX = pL + i * slotW + (slotW - barW) / 2;
+          const barY = pT + plotH - barH;
+          const cx = barX + barW / 2;
+          return (
+            <rect key={i} x={barX} y={barY} width={barW} height={barH} rx="3"
+              fill={mo.isOver ? "url(#mpBarOver)" : "url(#mpBarNorm)"}
+              style={{ opacity: mo.isCurrent ? 1 : 0.55 }}
+              className="transition-all duration-500" />
+          );
+        })}
+
+        {/* smooth trend line */}
+        {linePts.length >= 2 && (
+          <path d={smoothLine(linePts)} fill="none"
+            stroke="#EC4899" strokeWidth="2" strokeLinecap="round" opacity="0.6"
+            filter="url(#mpGlow)" />
+        )}
+
+        {/* dots on trend line */}
+        {linePts.map(([x, y], i) => {
+          const mo = monthData.filter(mo => mo.totalSpend > 0 || mo.isCurrent)[i];
+          if (!mo) return null;
+          return (
+            <circle key={i} cx={x} cy={y} r={mo?.isCurrent ? 4.5 : 3}
+              fill={mo?.isOver ? "#EF4444" : "#EC4899"}
+              stroke="white" strokeWidth="1.5" style={{ opacity: mo?.isCurrent ? 1 : 0.6 }} />
+          );
+        })}
+
+        {/* ALL text labels last — always rendered above bars, trend line, and dots */}
+        {/* Income text */}
+        {incomeY !== null && (
+          <>
+            <rect x={pL} y={incomeY - 11} width={36} height={10} rx="2.5" fill="white" fillOpacity="0.92" />
+            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">Income</text>
+          </>
+        )}
+        {/* Bar value labels + month labels */}
+        {monthData.map((mo, i) => {
+          const barH = Math.max(2, (mo.totalSpend / maxVal) * plotH);
+          const barX = pL + i * slotW + (slotW - barW) / 2;
+          const barY = pT + plotH - barH;
+          const cx = barX + barW / 2;
+          const labelCx = Math.max(pL + 30, Math.min(W - pR - 30, cx));
+          const showLabel = mo.isCurrent || mo.isOver;
+          const labelY = Math.max(pT + 9, barY - 4);
+          return (
+            <g key={i} style={{ opacity: mo.isCurrent ? 1 : 0.55 }}>
+              {showLabel && mo.totalSpend > 0 && (
+                <>
+                  <rect x={labelCx - 30} y={labelY - 8.5} width={60} height={10.5} rx="3" fill="white" fillOpacity="0.95" />
+                  <text x={labelCx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
+                    fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
+                </>
+              )}
+              <text x={cx} y={H - 3} fontSize="7.5" textAnchor="middle"
+                fill={mo.isCurrent ? "#EC4899" : "#C4A0B8"}
+                fontWeight={mo.isCurrent ? "700" : "400"}>{mo.label}</text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* legend */}
+      <div className="flex items-center gap-4 mt-1 px-1">
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-4 rounded-sm" style={{ background: "linear-gradient(to right, #EC4899, #F9A8D4)" }} />
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">Total spend</span>
+        </div>
+        {income > 0 && (
+          <div className="flex items-center gap-1.5">
+            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
+            <span className="text-[10px] font-semibold text-[#9D5C7E]">Income</span>
+          </div>
+        )}
+        {plannedBudget > 0 && (
+          <div className="flex items-center gap-1.5">
+            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.5" /></svg>
+            <span className="text-[10px] font-semibold text-[#9D5C7E]">Planned</span>
+          </div>
+        )}
+        <span className="ml-auto text-[9px] text-[#C4A0B8]">approx · current plan</span>
+      </div>
+    </div>
+  );
+}
+
+function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   totalPlanned: number;
   totalOverage: number;
   currency: CurrencyKey;
+  income: number;
 }) {
   const R = 44, ri = 22, cx = 56, cy = 56;
   const hasExtra = totalOverage > 0;
   const total = totalPlanned + totalOverage;
+  const isOverIncome = income > 0 && total > income;
   const plannedSweep = hasExtra ? (totalPlanned / total) * Math.PI * 2 : Math.PI * 2 - 0.001;
   const extraSweep   = hasExtra ? (totalOverage / total) * Math.PI * 2 : 0;
   const a0 = -Math.PI / 2;
@@ -581,17 +866,27 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
     return `M ${f(ix1)} ${f(iy1)} L ${f(x1)} ${f(y1)} A ${R} ${R} 0 ${la} 1 ${f(x2)} ${f(y2)} L ${f(ix2)} ${f(iy2)} A ${ri} ${ri} 0 ${la} 0 ${f(ix1)} ${f(iy1)} Z`;
   };
 
+  const plannedColor = isOverIncome ? "#EF4444" : "#EC4899";
+  const extraColor   = isOverIncome ? "#F87171" : "#F9A8D4";
+
   return (
-    <div className="flex items-center gap-6">
-      <svg viewBox="0 0 112 112" width="108" height="108" className="shrink-0">
-        {/* planned slice — hot pink */}
-        <path d={arcPath(a0, plannedSweep)} fill="#EC4899" stroke="white" strokeWidth="1.5" />
-        {/* extra slice — light pink (distinct but still in palette) */}
+    <div className="flex flex-col items-center gap-3">
+      <svg viewBox="0 0 112 112" width="108" height="108">
+        {/* planned slice */}
+        <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        {/* extra slice */}
         {hasExtra && (
-          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill="#F9A8D4" stroke="white" strokeWidth="1.5" />
+          <path d={arcPath(a0 + plannedSweep, extraSweep)} fill={extraColor} stroke="white" strokeWidth="1.5" />
         )}
         {/* center label */}
-        {hasExtra ? (
+        {isOverIncome ? (
+          <>
+            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EF4444" fontWeight="700">
+              −{fmt(Math.abs(income - total), currency)}
+            </text>
+            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#EF4444">over income ⚠</text>
+          </>
+        ) : hasExtra ? (
           <>
             <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EC4899" fontWeight="700">
               +{fmt(totalOverage, currency)}
@@ -607,20 +902,20 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
           </>
         )}
       </svg>
-      <div className="space-y-4">
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#EC4899] shrink-0" />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
+      <div className="flex gap-8 justify-center">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
           </div>
-          <p className="text-lg font-bold text-[#831843] tabular-nums leading-none">{fmt(totalPlanned, currency)}</p>
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
         </div>
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#F9A8D4] shrink-0" />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
           </div>
-          <p className={["text-lg font-bold tabular-nums leading-none", hasExtra ? "text-[#EC4899]" : "text-[#9D5C7E]"].join(" ")}>
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -630,9 +925,311 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency }: {
 }
 
 /* ============================================================
+   ONBOARDING GUIDE
+============================================================ */
+function OnboardingGuide({ onDone, setTab }: {
+  onDone: () => void;
+  setTab: (t: TabKey) => void;
+}) {
+  const [phase, setPhase] = useState<"welcome" | "steps" | "finishing">("welcome");
+  const [stepIdx, setStepIdx] = useState(0);
+  const [spotRect, setSpotRect] = useState<DOMRect | null>(null);
+  const [timerPct, setTimerPct] = useState(0);
+  const [fadeIn, setFadeIn] = useState(false);
+
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stepIdxRef = useRef(stepIdx);
+  stepIdxRef.current = stepIdx;
+
+  const clearTimers = () => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (autoRef.current) { clearTimeout(autoRef.current); autoRef.current = null; }
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => setFadeIn(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  const particles = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
+    x: 3 + ((i * 19 + 7) % 94),
+    y: ((i * 29 + 11) % 100),
+    size: 3 + (i % 6),
+    dur: 2.5 + (i % 4) * 0.85,
+    delay: (i * 0.33) % 3.3,
+    color: i % 4 === 0 ? '#EC4899' : i % 4 === 1 ? '#F9A8D4' : i % 4 === 2 ? '#C084FC' : 'rgba(255,255,255,0.55)',
+  })), []);
+
+  const finish = () => {
+    clearTimers();
+    setPhase("finishing");
+    setTimeout(() => onDone(), 1300);
+  };
+
+  const advanceRef = useRef<() => void>(() => {});
+  advanceRef.current = () => {
+    clearTimers();
+    if (stepIdxRef.current < GUIDE_STEPS.length - 1) {
+      setStepIdx(stepIdxRef.current + 1);
+    } else {
+      finish();
+    }
+  };
+  const advance = () => advanceRef.current();
+
+  // Welcome: auto-advance after 5.5s
+  useEffect(() => {
+    if (phase !== "welcome") return;
+    setTimerPct(0);
+    const total = 5500, tick = 50;
+    timerRef.current = setInterval(() => setTimerPct(p => Math.min(100, p + 100 / (total / tick))), tick);
+    autoRef.current = setTimeout(() => { clearTimers(); setPhase("steps"); }, total);
+    return clearTimers;
+  }, [phase]);
+
+  // Steps: switch tab → find element → spotlight + timer
+  useEffect(() => {
+    if (phase !== "steps") return;
+    const s = GUIDE_STEPS[stepIdx];
+    setTab(s.tab);
+    setSpotRect(null);
+    setTimerPct(0);
+    clearTimers();
+
+    const findTimeout = setTimeout(() => {
+      const el = document.querySelector(s.selector);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        setTimeout(() => {
+          setSpotRect(el.getBoundingClientRect());
+          const dur = 5000;
+          timerRef.current = setInterval(() => setTimerPct(p => Math.min(100, p + 100 / (dur / 50))), 50);
+          autoRef.current = setTimeout(() => advanceRef.current(), dur);
+        }, 350);
+      }
+    }, 420);
+
+    return () => { clearTimeout(findTimeout); clearTimers(); };
+  }, [phase, stepIdx]); // eslint-disable-line
+
+  const currentStep = GUIDE_STEPS[stepIdx];
+
+  const tooltipPos = useMemo(() => {
+    if (!spotRect) return null;
+    const vp = { w: window.innerWidth, h: window.innerHeight };
+    const cardW = Math.min(vp.w * 0.88, 340);
+    const cardH = 195;
+    let top: number, left: number;
+    left = Math.max(12, Math.min(spotRect.left + spotRect.width / 2 - cardW / 2, vp.w - cardW - 12));
+    const belowTop = spotRect.bottom + 14;
+    const aboveTop = spotRect.top - cardH - 14;
+    if (belowTop + cardH < vp.h - 12) {
+      top = belowTop;
+    } else if (aboveTop > 56) {
+      top = aboveTop;
+    } else {
+      top = vp.h / 2 - cardH / 2;
+      if (spotRect.left > vp.w / 2) left = 12;
+    }
+    return { top, left, width: cardW };
+  }, [spotRect]);
+
+  return createPortal(
+    <>
+      {/* ── WELCOME ── */}
+      {phase === "welcome" && (
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center overflow-hidden select-none"
+          style={{ background: 'radial-gradient(ellipse at 50% -8%, #C084FC 0%, #831843 35%, #480a28 65%, #0d0110 100%)' }}>
+
+          {/* Ambient glow orb */}
+          <div className="absolute pointer-events-none" style={{
+            width: 480, height: 480,
+            background: 'radial-gradient(circle, rgba(236,72,153,0.38) 0%, transparent 70%)',
+            filter: 'blur(35px)',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            animation: 'guideOrb 4s ease-in-out infinite alternate',
+          }} />
+
+          {/* Floating particles */}
+          {particles.map((p, i) => (
+            <div key={i} className="absolute rounded-full pointer-events-none" style={{
+              width: p.size, height: p.size,
+              background: p.color,
+              opacity: 0.22,
+              left: `${p.x}%`, top: `${p.y}%`,
+              animation: `tourFloat ${p.dur}s ease-in-out ${p.delay}s infinite alternate`,
+              filter: p.size > 5 ? 'blur(1px)' : 'none',
+            }} />
+          ))}
+
+          {/* Content */}
+          <div className={`relative z-10 flex flex-col items-center text-center px-8 max-w-sm transition-all duration-1000 ease-out ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+
+            <div className="text-[9px] font-bold tracking-[0.5em] text-white/30 uppercase mb-6">✦ bloomzein budget ✦</div>
+
+            <h1 className="font-script leading-none mb-3" style={{
+              fontSize: 'clamp(3.5rem,14vw,5.5rem)',
+              color: 'white',
+              textShadow: '0 0 55px rgba(236,72,153,1), 0 0 110px rgba(192,132,252,0.55), 0 2px 14px rgba(0,0,0,0.45)',
+            }}>
+              Welcome
+            </h1>
+
+            <p className="text-white/60 text-[13px] font-light leading-relaxed max-w-[250px] mb-9 italic"
+              style={{ animation: 'fadeInUp 0.7s ease-out 0.5s both' }}>
+              In 4 steps, your budget will be alive and blooming
+            </p>
+
+            {/* 4-step preview icons */}
+            <div className="flex gap-4 mb-10">
+              {GUIDE_STEPS.map((s, i) => (
+                <div key={s.key} className="flex flex-col items-center gap-2"
+                  style={{ animation: `fadeInUp 0.5s ease-out ${0.65 + i * 0.12}s both` }}>
+                  <div className="flex items-center justify-center rounded-2xl border border-white/12"
+                    style={{ width: 46, height: 46, fontSize: '1.3rem', background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)', boxShadow: '0 4px 16px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                    {s.icon}
+                  </div>
+                  <span className="text-white/30 text-[9px] font-bold tracking-widest">{i + 1}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() => { clearTimers(); setPhase("steps"); }}
+              className="flex items-center gap-2 px-8 py-3.5 rounded-full text-white font-bold text-[15px] active:scale-95 transition-transform"
+              style={{
+                background: 'linear-gradient(135deg, #BE185D 0%, #EC4899 55%, #F472B6 100%)',
+                boxShadow: '0 8px 32px rgba(236,72,153,0.58), 0 0 0 1px rgba(255,255,255,0.08)',
+                animation: 'ctaBreathe 2.5s ease-in-out infinite',
+              }}>
+              Begin your journey
+              <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+            </button>
+
+            {/* Auto-timer bar */}
+            <div className="mt-6 w-32">
+              <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-white/28 rounded-full" style={{ width: `${timerPct}%`, transition: 'none' }} />
+              </div>
+              <p className="text-white/18 text-[10px] text-center mt-1.5">starting automatically…</p>
+            </div>
+
+            <button onClick={finish} className="mt-4 text-white/18 text-[11px] hover:text-white/45 transition-colors font-light">
+              skip guide
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEPS ── */}
+      {phase === "steps" && (
+        <>
+          {/* Transparent click-catcher — advances on tap anywhere outside the tooltip */}
+          <div className="fixed inset-0 cursor-pointer" style={{ zIndex: 9998 }} onClick={advance} />
+
+          {/* Spotlight ring — box-shadow creates the dark overlay; interior is transparent so the button shows through */}
+          {spotRect && (
+            <div className="fixed pointer-events-none" style={{
+              zIndex: 10001,
+              top: spotRect.top - 10,
+              left: spotRect.left - 10,
+              width: spotRect.width + 20,
+              height: spotRect.height + 20,
+              borderRadius: Math.min(spotRect.height * 0.55, 24),
+              border: '3px solid rgba(236,72,153,1)',
+              animation: 'spotPulse 2s ease-in-out infinite',
+            }} />
+          )}
+
+          {/* Tooltip card */}
+          {tooltipPos && (
+            <div className="fixed" style={{ zIndex: 10002, top: tooltipPos.top, left: tooltipPos.left, width: tooltipPos.width }}>
+              <div className="rounded-[1.5rem] border border-pink-200/40 p-5" style={{
+                background: 'rgba(255,255,255,0.97)',
+                backdropFilter: 'blur(24px)',
+                boxShadow: '0 24px 64px rgba(0,0,0,0.48), 0 0 0 1px rgba(236,72,153,0.07)',
+                animation: 'guideCardIn 0.38s cubic-bezier(0.34,1.56,0.64,1) both',
+              }}>
+
+                {/* Step counter + progress dots */}
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-black tracking-[0.3em] text-[#9D5C7E]">
+                    STEP {stepIdx + 1} / {GUIDE_STEPS.length}
+                  </span>
+                  <div className="flex gap-1.5 items-center">
+                    {GUIDE_STEPS.map((_, i) => (
+                      <div key={i} className="rounded-full" style={{
+                        width: i === stepIdx ? 18 : 6,
+                        height: 6,
+                        background: i <= stepIdx ? '#EC4899' : '#FCE7F3',
+                        transition: 'all 0.35s ease',
+                      }} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Icon + text */}
+                <div className="flex gap-3 items-start mb-4">
+                  <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl border" style={{ background: 'linear-gradient(135deg,#FDF2F8,#FCE7F3)', borderColor: 'rgba(236,72,153,0.15)' }}>
+                    {currentStep.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#831843] text-[14px] leading-tight mb-1">{currentStep.title}</h3>
+                    <p className="text-[#9D5C7E] text-[12px] leading-relaxed">{currentStep.desc}</p>
+                  </div>
+                </div>
+
+                {/* Timer bar */}
+                <div className="h-[3px] bg-pink-100 rounded-full overflow-hidden mb-4">
+                  <div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#BE185D,#EC4899,#F472B6)', width: `${timerPct}%`, transition: 'none' }} />
+                </div>
+
+                {/* Buttons */}
+                <div className="flex items-center justify-between">
+                  <button onClick={finish} className="text-[#C4B0BE] text-[11px] hover:text-[#9D5C7E] transition-colors px-1 py-1">
+                    skip guide
+                  </button>
+                  <button onClick={advance}
+                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-white text-[13px] font-bold active:scale-95 transition-transform"
+                    style={{ background: 'linear-gradient(135deg,#BE185D 0%,#EC4899 100%)', boxShadow: '0 4px 16px rgba(236,72,153,0.42)' }}>
+                    {stepIdx < GUIDE_STEPS.length - 1 ? (
+                      <><span>Next</span><ArrowRight className="h-3.5 w-3.5" /></>
+                    ) : (
+                      <><Sparkles className="h-3.5 w-3.5" /><span>Start blooming</span></>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── FINISHING ── */}
+      {phase === "finishing" && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at center, #831843 0%, #0d0110 100%)', animation: 'guideFadeOut 1.3s ease-in-out forwards' }}>
+          <div className="text-center" style={{ animation: 'fadeInUp 0.5s ease-out both' }}>
+            <div className="text-6xl mb-4">🌸</div>
+            <h2 className="font-script text-5xl text-white mb-2" style={{ textShadow: '0 0 35px rgba(236,72,153,0.85)' }}>
+              You&apos;re all set!
+            </h2>
+            <p className="text-white/50 text-sm">Your financial garden is ready to bloom.</p>
+          </div>
+        </div>
+      )}
+    </>,
+    document.body
+  );
+}
+
+/* ============================================================
    MAIN COMPONENT
 ============================================================ */
 export function BudgetPlanner() {
+  const [onboarded, setOnboarded] = useLocal<boolean>("bp:onboarded", false);
   const [tab, setTab] = useLocal<TabKey>("bp:tab", "Dashboard");
   const [currency, setCurrency] = useLocal<CurrencyKey>("bp:currency", "USD");
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
@@ -643,6 +1240,8 @@ export function BudgetPlanner() {
   const [txns, setTxns] = useLocal<Txn[]>("bp:txns", []);
   const [goals, setGoals] = useLocal<Goal[]>("bp:goals", []);
   const [bills, setBills] = useLocal<Bill[]>("bp:bills", []);
+  const [showExtraSpend, setShowExtraSpend] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   // State lifted from DashboardTab for hero placement before the tab bar
   const [viewPeriod, setViewPeriod] = useState<"week"|"month">("month");
@@ -677,18 +1276,86 @@ export function BudgetPlanner() {
   ], [customCats]);
 
   const totalIncome = useMemo(() => incomes.reduce((s, i) => s + toMonthly(i), 0), [incomes]);
-  const totalExpenses = useMemo(
-    () => txns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0),
-    [txns],
-  );
+
+  // Effective expenses: committed plan + ALL actual recorded transactions (every "+ Spend" is extra on top of the plan)
+  const totalExpenses = useMemo(() => {
+    const budgetedKeys = selectedCats.filter(k => (budget[k] ?? 0) > 0);
+    const plannedTotal = budgetedKeys.reduce((s, k) => s + (budget[k] ?? 0), 0);
+    const actualTotal = txns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    return plannedTotal + actualTotal;
+  }, [txns, selectedCats, budget]);
+
   const totalSavings = totalIncome - totalExpenses;
-  const totalBalance = useMemo(
-    () => txns.reduce((s, t) => s + (t.type === "income" ? t.amount : -t.amount), 0) + totalIncome,
-    [txns, totalIncome],
-  );
+  const totalBalance = totalIncome - totalExpenses;
+
+  // Auto-show when nothing is set up; also show on manual trigger via "Guide" button
+  const hasSetup = incomes.length > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0);
+  const guideVisible = showGuide || (!onboarded && !hasSetup);
+
+  function seedDemoData() {
+    if (hasSetup && !window.confirm("Replace your current data with demo data?")) return;
+    setCurrency("MAD");
+    setIncomes([
+      { id: "di1", source: "Salary – Tech Company", amount: 9500, frequency: "Monthly" },
+      { id: "di2", source: "Freelance Design", amount: 2800, frequency: "Monthly" },
+      { id: "di3", source: "Rental Income", amount: 1500, frequency: "Monthly" },
+    ]);
+    setSelectedCats(["rent","food","transp","elec","phone","health","rest","shop"]);
+    setBudget({ rent: 3200, food: 1500, transp: 600, elec: 300, phone: 250, health: 300, rest: 700, shop: 900 });
+    setGoals([
+      { id: "dg1", name: "Emergency Fund 🌿", target: 20000, saved: 6500, monthly: 1200 },
+      { id: "dg2", name: "Morocco Road Trip ✈️", target: 8000, saved: 2400, monthly: 600 },
+      { id: "dg3", name: "New MacBook 💻", target: 12000, saved: 3800, monthly: 800 },
+    ]);
+    setTxns([
+      // June 2026
+      { id: "dt1",  date: "2026-06-03", catKey: "food",   amount: 340,  description: "Extra groceries & snacks",       mood: "planned",   type: "expense" },
+      { id: "dt2",  date: "2026-06-07", catKey: "rest",   amount: 580,  description: "Anniversary dinner",             mood: "necessary", type: "expense" },
+      { id: "dt3",  date: "2026-06-11", catKey: "shop",   amount: 1450, description: "Summer clothes haul",            mood: "impulsive", type: "expense" },
+      { id: "dt4",  date: "2026-06-15", catKey: "health", amount: 320,  description: "Pharmacy run",                   mood: "necessary", type: "expense" },
+      { id: "dt5",  date: "2026-06-18", catKey: "enter",  amount: 200,  description: "Cinema + dinner",                mood: "planned",   type: "expense" },
+      { id: "dt6",  date: "2026-06-21", catKey: "transp", amount: 120,  description: "Ride-sharing this week",         mood: "necessary", type: "expense" },
+      // May 2026
+      { id: "dt7",  date: "2026-05-04", catKey: "food",   amount: 210,  description: "Farmers market haul",            mood: "planned",   type: "expense" },
+      { id: "dt8",  date: "2026-05-09", catKey: "shop",   amount: 1200, description: "Shoes & bag",                    mood: "impulsive", type: "expense" },
+      { id: "dt9",  date: "2026-05-14", catKey: "rest",   amount: 470,  description: "Friends birthday brunch",        mood: "necessary", type: "expense" },
+      { id: "dt10", date: "2026-05-20", catKey: "self",   amount: 400,  description: "Spa & massage day",              mood: "planned",   type: "expense" },
+      { id: "dt11", date: "2026-05-25", catKey: "enter",  amount: 280,  description: "Concert night",                  mood: "planned",   type: "expense" },
+      { id: "dt12", date: "2026-05-29", catKey: "travel", amount: 650,  description: "Weekend getaway deposit",        mood: "impulsive", type: "expense" },
+      // April 2026
+      { id: "dt13", date: "2026-04-02", catKey: "food",   amount: 180,  description: "Easter special groceries",       mood: "planned",   type: "expense" },
+      { id: "dt14", date: "2026-04-10", catKey: "travel", amount: 3200, description: "Trip to Marrakech 🌴",           mood: "impulsive", type: "expense" },
+      { id: "dt15", date: "2026-04-18", catKey: "shop",   amount: 870,  description: "Spring wardrobe refresh",        mood: "impulsive", type: "expense" },
+      { id: "dt16", date: "2026-04-24", catKey: "health", amount: 250,  description: "Dental checkup",                 mood: "necessary", type: "expense" },
+      // March 2026
+      { id: "dt17", date: "2026-03-05", catKey: "rest",   amount: 320,  description: "Work team dinner",               mood: "necessary", type: "expense" },
+      { id: "dt18", date: "2026-03-12", catKey: "health", amount: 480,  description: "Doctor + pharmacy",              mood: "necessary", type: "expense" },
+      { id: "dt19", date: "2026-03-19", catKey: "enter",  amount: 190,  description: "Movie & events",                 mood: "planned",   type: "expense" },
+      { id: "dt20", date: "2026-03-26", catKey: "shop",   amount: 2100, description: "Ramadan shopping",               mood: "necessary", type: "expense" },
+      // February 2026
+      { id: "dt21", date: "2026-02-10", catKey: "food",   amount: 290,  description: "Valentine's dinner ingredients", mood: "planned",   type: "expense" },
+      { id: "dt22", date: "2026-02-14", catKey: "rest",   amount: 850,  description: "Valentine's romantic dinner",    mood: "impulsive", type: "expense" },
+      { id: "dt23", date: "2026-02-22", catKey: "shop",   amount: 600,  description: "Winter sale picks",              mood: "impulsive", type: "expense" },
+    ]);
+    setBills([
+      { id: "db1", name: "Monthly Rent",    due: "2026-07-01", amount: 3200, paid: false },
+      { id: "db2", name: "Internet & Phone",due: "2026-06-28", amount: 250,  paid: false },
+      { id: "db3", name: "Electricity",     due: "2026-07-05", amount: 300,  paid: false },
+      { id: "db4", name: "Water Bill",      due: "2026-06-30", amount: 180,  paid: false },
+    ]);
+    setOnboarded(true);
+    setTab("Dashboard");
+  }
 
   return (
     <div data-bp>
+      {guideVisible && (
+        <OnboardingGuide
+          onDone={() => { setOnboarded(true); setShowGuide(false); }}
+          setTab={setTab}
+        />
+      )}
+
       {/* Custom pink currency picker modal */}
       {showCurrencyPicker && createPortal(
         <div
@@ -792,20 +1459,17 @@ export function BudgetPlanner() {
                     <Coins className="h-3 w-3" />
                     {CURRENCIES[currency].symbol}
                   </button>
+                  <button onClick={() => setShowGuide(true)}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                    <Sparkles className="h-3 w-3" />
+                    Guide
+                  </button>
+                  <button onClick={seedDemoData}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 px-3 py-1.5 text-xs text-white/80 font-semibold transition hover:bg-white/25 hover:text-white active:scale-95">
+                    ✦ Demo
+                  </button>
                 </div>
-                {isDash && viewPeriod === "week" && (
-                  <div className="flex gap-1 mt-2">
-                    {weekBand.map(d => (
-                      <div key={d.iso} className={["flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl", d.isToday ? "bg-white/30" : ""].join(" ")}>
-                        <span className="text-[9px] font-bold text-white/80 leading-none">{d.label}</span>
-                        <span className={["h-1.5 w-1.5 rounded-full", d.spent > 0 ? "bg-white" : "bg-white/30"].join(" ")} />
-                        {d.spent > 0 && <span className="text-[8px] font-bold text-white/90">{CURRENCIES[currency].symbol}{Math.round(d.spent)}</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-              {isDash && <MiniRing pct={heroGoalPct} size={100} />}
             </div>
           </div>
         );
@@ -817,9 +1481,14 @@ export function BudgetPlanner() {
           <div ref={tabScrollRef} className="flex gap-1.5 overflow-x-auto no-scrollbar px-1">
             {TABS.map((t) => {
               const active = tab === t;
+              const tourAttr =
+                t === "Incomes" ? "incomes-tab" :
+                t === "Budget Setup" ? "budget-tab" :
+                t === "Savings Goals" ? "goals-tab" : undefined;
               return (
                 <button
                   key={t}
+                  data-tour={tourAttr}
                   onClick={() => setTab(t)}
                   className={[
                     "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
@@ -848,8 +1517,8 @@ export function BudgetPlanner() {
               totalSavings={totalSavings}
               totalBalance={totalBalance}
               txns={txns} setTxns={setTxns}
-              budget={budget}
-              selectedCats={selectedCats}
+              budget={budget} setBudget={setBudget}
+              selectedCats={selectedCats} setSelectedCats={setSelectedCats}
               allCats={allCats}
               goals={goals}
               bills={bills}
@@ -871,6 +1540,7 @@ export function BudgetPlanner() {
               selectedCats={selectedCats} setSelectedCats={setSelectedCats}
               budget={budget} setBudget={setBudget}
               customCats={customCats} setCustomCats={setCustomCats}
+              setTxns={setTxns}
               currency={currency}
               totalIncome={totalIncome}
               setTab={setTab}
@@ -886,13 +1556,69 @@ export function BudgetPlanner() {
               bills={bills} setBills={setBills}
               allCats={allCats}
               currency={currency}
+              incomes={incomes}
+              budget={budget}
+              selectedCats={selectedCats}
             />
           )}
       </div>
 
+      {/* ✦ GLOBAL CTA FAB — always visible on every tab */}
+      <button
+        data-tour="spend-fab"
+        onClick={() => setShowExtraSpend(true)}
+        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95 px-5 h-14"
+        style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
+        aria-label="Add spend"
+      >
+        <Plus className="h-5 w-5" strokeWidth={2.5} />
+        <span className="text-sm font-bold">Spend</span>
+      </button>
+
+      <ExtraSpendModal
+        open={showExtraSpend}
+        onClose={() => setShowExtraSpend(false)}
+        onSave={txnData => setTxns(prev => [{ id: uid(), ...txnData }, ...prev])}
+        allCats={allCats}
+        setCustomCats={setCustomCats}
+        currency={currency}
+      />
+
       <style>{`
         [data-bp] *::-webkit-scrollbar { display: none; }
         [data-bp] * { scrollbar-width: none; -ms-overflow-style: none; }
+
+        @keyframes tourFloat {
+          from { transform: translateY(0px) scale(1); opacity: 0.22; }
+          to   { transform: translateY(-20px) scale(1.1); opacity: 0.1; }
+        }
+        @keyframes guideOrb {
+          from { transform: translate(-50%,-50%) scale(1);   opacity: 0.18; }
+          to   { transform: translate(-50%,-50%) scale(1.35); opacity: 0.38; }
+        }
+        @keyframes spotPulse {
+          0%,100% {
+            box-shadow: 0 0 0 9999px rgba(5,1,13,0.87), 0 0 22px 6px rgba(236,72,153,0.55);
+            border-color: rgba(236,72,153,0.92);
+          }
+          50% {
+            box-shadow: 0 0 0 9999px rgba(5,1,13,0.87), 0 0 44px 14px rgba(236,72,153,0.82);
+            border-color: rgba(236,72,153,1);
+          }
+        }
+        @keyframes guideCardIn {
+          from { transform: scale(0.86) translateY(10px); opacity: 0; }
+          to   { transform: scale(1)    translateY(0);    opacity: 1; }
+        }
+        @keyframes guideFadeOut {
+          0%   { opacity: 1; }
+          55%  { opacity: 1; }
+          100% { opacity: 0; pointer-events: none; }
+        }
+        @keyframes fadeInUp {
+          from { transform: translateY(14px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
       `}</style>
     </div>
   );
@@ -924,30 +1650,73 @@ function StatNumber({ value, currency }: { value: number; currency: CurrencyKey 
   return <>{fmt(v, currency)}</>;
 }
 
-function StatCards({ income, expenses, savings, balance, currency }: {
-  income: number; expenses: number; savings: number; balance: number; currency: CurrencyKey;
+function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSaved, balance, currency }: {
+  income: number; plannedBudget: number; goalsMonthly: number; realExpenses: number; goalsSaved: number; balance: number; currency: CurrencyKey;
 }) {
-  const spendScale = income > 0 ? Math.min(2.0, 1 + (expenses / income) * 0.7) : 1;
-  const saveScale  = income > 0 && savings > 0 ? Math.min(1.7, 1 + (savings / income) * 0.5) : Math.max(0.7, 1);
-  const items = [
-    { label: "Income Garden",   emoji: "🌷", v: income,   sub: "your monthly earnings",  bg: "from-pink-50 to-rose-50",     emojiScale: 1.0 },
-    { label: "Spending Petals", emoji: "🛍️", v: expenses, sub: "this month's spends",    bg: "from-fuchsia-50 to-pink-50",  emojiScale: spendScale },
-    { label: "Savings Bloom",   emoji: "🌸", v: savings,  sub: "building your future",   bg: "from-purple-50 to-pink-50",   emojiScale: saveScale },
-    { label: "Dream Balance",   emoji: "💎", v: balance,  sub: "your available balance",  bg: "from-rose-50 to-fuchsia-50",  emojiScale: balance > 0 ? 1.15 : 0.85 },
+  const totalSpend = plannedBudget + goalsMonthly + realExpenses;
+  const surplus = income - totalSpend;
+  const isOverIncome = income > 0 && surplus < 0;
+
+  const cards = [
+    {
+      label: "Income Garden",
+      v: income,
+      sub: "your monthly earnings",
+      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-pink-50 to-rose-50",
+      badge: income > 0
+        ? surplus >= 0
+          ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
+          : { text: `⚠ −${fmt(Math.abs(surplus), currency)}`, color: "text-red-700 bg-red-100" }
+        : null,
+    },
+    {
+      label: "Planned Budget",
+      v: plannedBudget + goalsMonthly,
+      sub: goalsMonthly > 0
+        ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
+        : "committed this month",
+      bg: "from-fuchsia-50 to-purple-50",
+      badge: null,
+    },
+    {
+      label: "Real Spending Petals",
+      v: plannedBudget + goalsMonthly + realExpenses,
+      sub: "extra spends this month",
+      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-rose-50 to-pink-50",
+      badge: null,
+      planSub: fmt(plannedBudget + goalsMonthly, currency),
+      extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
+    },
+    {
+      label: "Savings Bloom",
+      v: goalsSaved,
+      sub: "saved across all goals",
+      bg: "from-purple-50 to-pink-50",
+      badge: null,
+    },
   ];
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
-      {items.map((it) => (
+      {cards.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
-          <div className="absolute -top-3 -right-3 text-5xl select-none pointer-events-none opacity-20 transition-transform duration-500"
-            style={{ transform: `scale(${it.emojiScale})`, transformOrigin: "top right" }}>
-            {it.emoji}
-          </div>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-lg sm:text-2xl font-extrabold leading-none text-[#EC4899]">
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
           </div>
-          <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+          {"planSub" in it ? (
+            <div className="mt-1 flex items-center flex-wrap gap-x-0.5 text-[9px] font-semibold leading-tight">
+              {it.extraAmt && <span className="text-rose-500">{it.extraAmt} extra</span>}
+              {it.extraAmt && <span className="text-[#9D5C7E]">+</span>}
+              <span className="text-[#9D5C7E]">{it.planSub} planned</span>
+            </div>
+          ) : it.badge ? (
+            <span className={`mt-1 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
+              {it.badge.text}
+            </span>
+          ) : (
+            <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+          )}
         </Card>
       ))}
     </div>
@@ -955,78 +1724,171 @@ function StatCards({ income, expenses, savings, balance, currency }: {
 }
 
 /* ============================================================
-   QUICK ADD SHEET — glassmorphism bottom sheet, 3-tap UX
+   EXTRA SPEND MODAL — centered popup with full form
 ============================================================ */
-function QuickAddSheet({ open, onClose, onSave, allCats, selectedCats, currency }: {
+function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, currency }: {
   open: boolean; onClose: () => void;
-  onSave: (amount: number, catKey: string) => void;
-  allCats: Cat[]; selectedCats: string[]; currency: CurrencyKey;
+  onSave: (txn: { amount: number; catKey: string; description: string; date: string; mood: MoodKey; type: "expense" }) => void;
+  allCats: Cat[]; setCustomCats: (v: CustomCat[] | ((p: CustomCat[]) => CustomCat[])) => void;
+  currency: CurrencyKey;
 }) {
   const [amount, setAmount] = useState("");
-  const [catKey, setCatKey] = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
-  const [saved, setSaved]   = useState(false);
+  const [catKey, setCatKey] = useState(allCats[0]?.key ?? "food");
+  const [desc, setDesc] = useState("");
+  const [date, setDate] = useState(todayISO());
+  const [mood, setMood] = useState<MoodKey>("planned");
+  const [saved, setSaved] = useState(false);
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCatLabel, setNewCatLabel] = useState("");
+  const [newCatEmoji, setNewCatEmoji] = useState("💰");
   const inputRef = useRef<HTMLInputElement>(null);
-  const cats = (selectedCats.length ? selectedCats : allCats.map(c => c.key))
-    .map(k => allCats.find(c => c.key === k)).filter(Boolean) as Cat[];
 
   useEffect(() => {
-    if (open) { setAmount(""); setSaved(false); setTimeout(() => inputRef.current?.focus(), 80); }
+    if (open) {
+      setAmount(""); setDesc(""); setSaved(false); setShowAddCat(false);
+      setDate(todayISO()); setNewCatLabel(""); setNewCatEmoji("💰");
+      setTimeout(() => inputRef.current?.focus(), 80);
+    }
   }, [open]);
 
   function handleSave() {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return;
-    onSave(amt, catKey);
+    onSave({ amount: amt, catKey, description: desc, date, mood, type: "expense" });
     setSaved(true);
-    setTimeout(() => { onClose(); setSaved(false); setAmount(""); }, 1300);
+    setTimeout(() => { onClose(); setSaved(false); setAmount(""); setDesc(""); }, 1300);
   }
 
-  return (
-    <>
-      {open && <div className="fixed inset-0 z-40 bg-transparent" onClick={onClose} />}
-      <div className={["fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out will-change-transform",
-        open ? "translate-y-0" : "translate-y-full"].join(" ")}>
-        <div className="mx-auto max-w-lg rounded-t-[2rem] bg-white/92 backdrop-blur-xl border-t border-pink-200/60 shadow-2xl shadow-pink-300/30 px-5 pt-2 pb-safe">
-          <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-pink-200" />
-          {saved ? (
-            <div className="py-10 flex flex-col items-center gap-3 animate-fade-in">
-              <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
-                <Check className="h-8 w-8" strokeWidth={3} />
-              </div>
-              <p className="font-script text-3xl text-[#831843]">Logged ✿</p>
-              <p className="text-sm text-[#9D5C7E]">{CURRENCIES[currency].symbol}{amount} · {allCats.find(c => c.key === catKey)?.label}</p>
+  function addCustomCat() {
+    if (!newCatLabel.trim()) return;
+    const key = `custom_${Date.now()}`;
+    setCustomCats(prev => [...prev, { key, label: newCatLabel.trim(), emoji: newCatEmoji, group: "need" as Need }]);
+    setCatKey(key);
+    setShowAddCat(false);
+    setNewCatLabel(""); setNewCatEmoji("💰");
+  }
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-sm rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
+              <Plus className="h-4 w-4" />
             </div>
-          ) : (
-            <>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-3">Quick add</p>
-              <div className="relative mb-3">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
-                <input ref={inputRef} type="number" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
-                  className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-4 text-3xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50" />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar mb-4">
-                {cats.slice(0, 8).map(c => (
+            <h3 className="font-script text-2xl text-[#831843]">Extra Spend ✿</h3>
+          </div>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {saved ? (
+          <div className="py-12 flex flex-col items-center gap-3 animate-fade-in">
+            <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
+              <Check className="h-8 w-8" strokeWidth={3} />
+            </div>
+            <p className="font-script text-3xl text-[#831843]">Saved ✿</p>
+            <p className="text-sm text-[#9D5C7E]">{CURRENCIES[currency].symbol}{amount} · {allCats.find(c => c.key === catKey)?.label ?? catKey}</p>
+          </div>
+        ) : (
+          <div className="px-5 py-4 space-y-4 max-h-[78vh] overflow-y-auto">
+            {/* Categories grid — pick first */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Category</p>
+              <div className="grid grid-cols-4 gap-2 max-h-44 overflow-y-auto pr-0.5">
+                {allCats.map(c => (
                   <button key={c.key} onClick={() => setCatKey(c.key)}
-                    className={["shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border transition-all duration-150",
+                    className={[
+                      "flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border transition-all duration-150 text-center",
                       c.key === catKey
-                        ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.05]"
-                        : "bg-pink-50 text-[#9D5C7E] border-pink-200/60"].join(" ")}>
-                    <span>{c.emoji}</span>{c.label}
+                        ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.04]"
+                        : "bg-pink-50/80 text-[#9D5C7E] border-pink-100 hover:border-pink-300"
+                    ].join(" ")}>
+                    <span className="text-base">{c.emoji}</span>
+                    <span className="text-[9px] font-semibold leading-tight line-clamp-2">{c.label}</span>
+                  </button>
+                ))}
+                <button onClick={() => setShowAddCat(v => !v)}
+                  className="flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border border-dashed border-pink-300 bg-pink-50/40 text-[#EC4899] transition-all hover:bg-pink-100">
+                  <span className="text-base font-bold">+</span>
+                  <span className="text-[9px] font-semibold">New</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Add new category inline form */}
+            {showAddCat && (
+              <div className="rounded-2xl border border-pink-200 bg-pink-50/60 p-3 space-y-2 animate-fade-in">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">New Category</p>
+                <div className="flex gap-2">
+                  <input value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} maxLength={2}
+                    className="w-12 rounded-xl bg-white border border-pink-200 text-center text-lg p-2 outline-none focus:ring-1 focus:ring-pink-400" />
+                  <input value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} placeholder="Category name"
+                    className="flex-1 rounded-xl bg-white border border-pink-200 px-3 py-2 text-sm font-medium text-[#831843] outline-none focus:ring-1 focus:ring-pink-400" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowAddCat(false)} className="flex-1 rounded-xl border border-pink-200 py-1.5 text-xs font-semibold text-[#9D5C7E]">Cancel</button>
+                  <button onClick={addCustomCat} className="flex-1 rounded-xl bg-[#EC4899] text-white py-1.5 text-xs font-bold hover:bg-[#DB2777] transition">Add</button>
+                </div>
+              </div>
+            )}
+
+            {/* Amount */}
+            <div className="flex items-center gap-2 rounded-2xl bg-pink-50/80 border border-pink-200/60 px-4 focus-within:ring-2 focus-within:ring-pink-400/50">
+              <span className="text-xl font-bold text-[#EC4899] shrink-0">{CURRENCIES[currency].symbol}</span>
+              <input
+                ref={inputRef} type="number" inputMode="decimal" value={amount}
+                onChange={e => setAmount(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
+                className="flex-1 bg-transparent py-3.5 text-2xl font-bold text-[#831843] placeholder:text-pink-200 outline-none"
+              />
+            </div>
+
+            {/* Date */}
+            <PinkDatePicker value={date} onChange={setDate} className="w-full" />
+
+            {/* Mood / Spend type */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Spend type</p>
+              <div className="flex gap-2">
+                {MOODS.map(m => (
+                  <button key={m.key} onClick={() => setMood(m.key)}
+                    className={[
+                      "flex-1 flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold border transition-all",
+                      mood === m.key
+                        ? "bg-[#EC4899]/10 border-[#EC4899]/40 text-[#EC4899]"
+                        : "bg-white border-pink-200/60 text-[#9D5C7E] hover:border-pink-300"
+                    ].join(" ")}>
+                    <m.Icon className="h-3.5 w-3.5" /> {m.label}
                   </button>
                 ))}
               </div>
-              <button onClick={handleSave} disabled={!amount || parseFloat(amount) <= 0}
-                className="w-full bloom-luxury-btn py-4 text-base font-bold text-white rounded-2xl disabled:opacity-40 transition-all"
-                style={{ animation: amount && parseFloat(amount) > 0 ? 'ctaBreathe 2.8s ease-in-out infinite' : 'none' }}>
-                Log ✿
-              </button>
-              <div className="h-6" />
-            </>
-          )}
-        </div>
+            </div>
+
+            {/* Description */}
+            <Input placeholder="What did you spend on? (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
+
+            {/* Save button */}
+            <button
+              onClick={handleSave} disabled={!amount || parseFloat(amount) <= 0}
+              className="w-full bloom-luxury-btn py-3.5 text-base font-bold text-white rounded-2xl disabled:opacity-40 transition-all"
+              style={{ animation: amount && parseFloat(amount) > 0 ? 'ctaBreathe 2.8s ease-in-out infinite' : 'none' }}
+            >
+              Save Spend ✿
+            </button>
+          </div>
+        )}
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
 
@@ -1037,14 +1899,17 @@ function DashboardTab(props: {
   currency: CurrencyKey;
   totalIncome: number; totalExpenses: number; totalSavings: number; totalBalance: number;
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
-  budget: Budget; selectedCats: string[]; allCats: Cat[];
+  budget: Budget; setBudget: (v: Budget | ((p: Budget) => Budget)) => void;
+  selectedCats: string[]; setSelectedCats: (v: string[] | ((p: string[]) => string[])) => void;
+  allCats: Cat[];
   goals: Goal[]; bills: Bill[]; setTab: (t: TabKey) => void;
   incomes: Income[]; onCurrencyClick: () => void;
   viewPeriod: "week"|"month"; setViewPeriod: React.Dispatch<React.SetStateAction<"week"|"month">>;
   goalIdx: number; setGoalIdx: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, allCats, goals, setTab, incomes, budget, onCurrencyClick,
+    txns, setTxns, selectedCats, setSelectedCats, allCats, goals, setTab, incomes,
+    budget, setBudget, onCurrencyClick,
     viewPeriod, setViewPeriod, goalIdx, setGoalIdx } = props;
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
@@ -1053,7 +1918,7 @@ function DashboardTab(props: {
     { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
     { key: "setup",  label: "Set up your budget",   hint: "Pick spending categories & set monthly limits", done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
     { key: "goals",  label: "Add a savings goal",   hint: "A vacation, an emergency fund — dream big",     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
-    { key: "track",  label: "Log your first spend", hint: "Track where your money actually goes",          done: txns.length > 0,                                                    tab: "Reports"       as TabKey, Icon: FileBarChart },
+    { key: "track",  label: "Log your extra spends", hint: "Record any extra or unplanned expenses",        done: txns.filter(t => t.type === "expense").length > 0,              tab: "Reports"       as TabKey, Icon: FileBarChart },
   ];
   const completed = steps.filter(s => s.done).length;
   const nextStep  = steps.find(s => !s.done);
@@ -1061,32 +1926,6 @@ function DashboardTab(props: {
 
   const goalTouchX = useRef<number | null>(null);
   const [budgetShowAll, setBudgetShowAll] = useState(false);
-
-  // Quick add sheet
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-
-  // Inline detailed form state
-  const [amount, setAmount]   = useState("");
-  const [catKey, setCatKey]   = useState(selectedCats[0] ?? allCats[0]?.key ?? "food");
-  const [desc, setDesc]       = useState("");
-  const [date, setDate]       = useState(todayISO());
-  const [mood, setMood]       = useState<MoodKey>("planned");
-  const [showCatModal, setShowCatModal]   = useState(false);
-  const [showMoodModal, setShowMoodModal] = useState(false);
-  const [txnSaved, setTxnSaved] = useState(false);
-
-  const catOptions = selectedCats.length ? selectedCats : allCats.map(c => c.key);
-  const currentCat = allCats.find(c => c.key === catKey);
-  const currentMood = MOODS.find(m => m.key === mood)!;
-
-  function addTxn() {
-    const amt = parseFloat(amount);
-    if (!amt || amt <= 0) return;
-    setTxns(prev => [{ id: uid(), amount: amt, catKey, description: desc, date, mood, type: "expense" }, ...prev]);
-    setAmount(""); setDesc("");
-    setTxnSaved(true);
-    setTimeout(() => setTxnSaved(false), 1500);
-  }
 
   // === WEEK vs MONTH FILTER ===
   const filteredTxns = useMemo(() => {
@@ -1116,29 +1955,29 @@ function DashboardTab(props: {
       .map(([k, v]) => ({ key: k, cat: allCats.find(c => c.key === k), amount: v, pct: Math.round((v / total) * 100) }));
   }, [filteredTxns, allCats]);
 
-  // Filtered totals for insights
-  const filteredExpenses = filteredTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-  const filteredSavings  = totalIncome > 0 ? totalIncome - filteredExpenses : 0;
+  // Effective totals for insights — use committed budget model
+  // goals.monthly is real committed money (like rent) and must be part of planned spend
+  const plannedTotal   = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+  const goalsMonthly   = goals.reduce((s, g) => s + (g.monthly ?? 0), 0);
+  const extraLogged    = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const effectiveSpend = plannedTotal + goalsMonthly + extraLogged;
+  const effectiveSave  = totalIncome > 0 ? totalIncome - effectiveSpend : 0;
 
-  // Story insights — warm, never red
+  // Story insights reflecting actual budget state
   const insights = useMemo(() => {
     const r: { icon: string; main: string; sub: string }[] = [];
-    if (totalIncome > 0 && filteredExpenses > totalIncome)
-      r.push({ icon: "💗", main: "Take a soft pause this month", sub: "A little over budget — you've totally got this 🌸" });
-    else if (filteredSavings > 0)
-      r.push({ icon: "🌸", main: `You saved ${fmt(filteredSavings, currency)}`, sub: "Keep growing!" });
-    const planned  = filteredTxns.filter(t => t.mood === "planned").length;
-    const impulsive = filteredTxns.filter(t => t.mood === "impulsive").length;
-    if (filteredTxns.length > 0 && planned >= impulsive)
-      r.push({ icon: "🌷", main: "You spent mindfully", sub: "Great choice!" });
-    else if (filteredTxns.length > 0 && impulsive > planned)
-      r.push({ icon: "🌸", main: "Some unplanned spends", sub: "Soft pause next time — no stress ✿" });
+    if (totalIncome > 0 && effectiveSpend > totalIncome)
+      r.push({ icon: "💗", main: "Over income this month", sub: `Committed ${fmt(effectiveSpend, currency)} vs ${fmt(totalIncome, currency)} income — review your plan 🌸` });
+    else if (extraLogged > 0)
+      r.push({ icon: "🌸", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} still available` : "Budget is tight — take a soft pause ✿" });
+    else if (plannedTotal > 0)
+      r.push({ icon: "🌷", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} available after plan` : "Income fully allocated" });
     if (goals.length > 0)
       r.push({ icon: "✨", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: "You are amazing!" });
     if (r.length === 0)
       r.push({ icon: "🌸", main: "Start tracking to see your story", sub: "bloom here ✿" });
     return r.slice(0, 3);
-  }, [filteredSavings, filteredExpenses, filteredTxns, goals, totalIncome, currency]);
+  }, [effectiveSpend, extraLogged, effectiveSave, plannedTotal, goals, totalIncome, currency]);
 
   // Goals carousel (keep names: Income Garden, etc.)
   const clampedGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
@@ -1265,16 +2104,31 @@ function DashboardTab(props: {
         </div>
       )}
 
-      {/* ③ STAT CARDS — names kept: Income Garden / Spending Petals / Savings Bloom / Dream Balance */}
-      <StatCards income={totalIncome} expenses={totalExpenses} savings={totalSavings} balance={totalBalance} currency={currency} />
+      {/* ③ STAT CARDS */}
+      {(() => {
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const realExpenses  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+        const goalsSaved    = goals.reduce((s, g) => s + (g.saved ?? 0), 0);
+        return (
+          <StatCards
+            income={totalIncome}
+            plannedBudget={plannedBudget}
+            goalsMonthly={goalsMonthly}
+            realExpenses={realExpenses}
+            goalsSaved={goalsSaved}
+            balance={totalBalance}
+            currency={currency}
+          />
+        );
+      })()}
 
       {/* ③b BUDGET VS REALITY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-        if (budgetedCats.length === 0) return null;
-        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalActual  = monthTxns.filter(t => t.type === "expense" && budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
-        const totalOverage = Math.max(0, totalActual - totalPlanned);
+        if (budgetedCats.length === 0 && goalsMonthly === 0) return null;
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly;
+        // EXTRA = ALL actual logged transactions (every "+ Spend" is extra on top of committed plan)
+        const totalOverage = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         return (
           <Card>
             <div className="flex items-center justify-between mb-4">
@@ -1285,7 +2139,132 @@ function DashboardTab(props: {
                 Edit <ChevronRight className="h-3 w-3" />
               </button>
             </div>
-            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} />
+            <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} income={totalIncome} />
+
+            {/* Per-category budget bars */}
+            {(() => {
+              const visibleBudgeted = budgetShowAll ? budgetedCats : budgetedCats.slice(0, 5);
+              const unplanned = monthTxns
+                .filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey))
+                .reduce<Record<string, number>>((acc, t) => { acc[t.catKey] = (acc[t.catKey] ?? 0) + t.amount; return acc; }, {});
+              const unplannedEntries = Object.entries(unplanned);
+              return (
+                <div className="mt-4 space-y-3">
+                  {visibleBudgeted.map(k => {
+                    const cat = allCats.find(c => c.key === k);
+                    const planned = budget[k] ?? 0;
+                    const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((s, t) => s + t.amount, 0);
+                    // planned = committed/already spent → any logged extra = over budget
+                    const isOver = actual > 0;
+                    const overflowPct = planned > 0 ? Math.min(100, (actual / planned) * 100) : 0;
+                    const status = actual > 0 ? "over" : null;
+                    return (
+                      <div key={k}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                            <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                            {status === "over" && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2 tabular-nums">
+                            {actual > 0 && (
+                              <span className="text-[11px] font-bold text-rose-500">
+                                +{fmt(actual, currency)} /
+                              </span>
+                            )}
+                            <span className="text-[11px] font-semibold text-[#9D5C7E]">{fmt(planned, currency)}</span>
+                          </div>
+                        </div>
+                        {/* Single bar: planned (hot pink) + extra (rose/red) side by side */}
+                        {(() => {
+                          const total = planned + actual;
+                          const plannedPct = total > 0 ? (planned / total) * 100 : 100;
+                          const extraPct   = total > 0 ? (actual  / total) * 100 : 0;
+                          return (
+                            <div className="flex h-3.5 rounded-full overflow-hidden">
+                              <div className="h-full transition-all duration-700"
+                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                              {actual > 0 && (
+                                <div className="h-full transition-all duration-700"
+                                  style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F43F5E)" }} />
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })}
+
+                  {budgetedCats.length > 5 && (
+                    <button onClick={() => setBudgetShowAll(v => !v)}
+                      className="w-full text-center text-xs font-bold text-[#EC4899] hover:underline py-0.5">
+                      {budgetShowAll ? "Show less ↑" : `Show all ${budgetedCats.length} categories ↓`}
+                    </button>
+                  )}
+
+                  {unplannedEntries.length > 0 && (
+                    <div className="pt-2 border-t border-pink-100 space-y-3">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">Unplanned spends</p>
+                      {(() => {
+                        const maxUnplanned = Math.max(...unplannedEntries.map(([, v]) => v), 1);
+                        return unplannedEntries.map(([k, amt]) => {
+                          const cat = allCats.find(c => c.key === k);
+                          const pct = Math.min(100, (amt / maxUnplanned) * 100);
+                          return (
+                            <div key={k}>
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                                  <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                                  <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">New</span>
+                                </div>
+                                <span className="text-[11px] font-bold text-[#EC4899] tabular-nums shrink-0 ml-2">{fmt(amt, currency)}</span>
+                              </div>
+                              <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
+                                <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Savings Goals bars — after category bars */}
+            {goals.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <div className="border-t border-pink-100 mb-3" />
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
+                  <Flag className="h-3 w-3" /> Savings Goals
+                </p>
+                {goals.map(g => {
+                  const pct = g.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0;
+                  return (
+                    <div key={g.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="shrink-0 text-[9px] font-bold text-violet-600 bg-violet-100 rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
+                          <span className="text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0 ml-2 tabular-nums text-[11px]">
+                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}/mo</span>
+                          <span className="text-[#9D5C7E] mx-0.5">·</span>
+                          <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
+                        </div>
+                      </div>
+                      <div className="relative h-3.5 rounded-full overflow-hidden bg-violet-100/50">
+                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#8B5CF6)" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         );
       })()}
@@ -1392,7 +2371,7 @@ function DashboardTab(props: {
                     cursor: isCenter ? "default" : "pointer",
                   }}>
                   <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                    style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
                     <div className="flex items-center justify-between gap-3 p-4">
                       <div className="flex-1 min-w-0">
                         <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
@@ -1405,7 +2384,7 @@ function DashboardTab(props: {
                         </div>
                         <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}% completed</p>
                       </div>
-                      <MiniRing pct={pct} size={72} />
+                      <MiniRing pct={pct} size={88} />
                     </div>
                   </div>
                 </div>
@@ -1438,7 +2417,7 @@ function DashboardTab(props: {
               const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
               return (
                 <div key={goal.id} className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
                   <div className="flex items-center justify-between gap-3 p-5">
                     <div className="flex-1 min-w-0">
                       <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
@@ -1469,73 +2448,85 @@ function DashboardTab(props: {
       )}
 
 
-      {/* ⑥ THIS MONTH'S STORY (warm — never red) + INCOME VS EXPENSES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
-            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
-            {viewPeriod === "week" ? "This week's story" : "This month's story"}
-          </h3>
-          <ul className="space-y-3">
-            {insights.map((ins, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <span className="text-base leading-none mt-0.5 shrink-0">{ins.icon}</span>
-                <div>
-                  <p className="text-sm font-semibold text-[#831843] leading-snug">{ins.main}</p>
-                  <p className="text-[11px] text-[#9D5C7E]">{ins.sub}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-[#831843]">Income vs Expenses</h3>
-            <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#F9A8D4] inline-block" /> Expenses</span>
-            </div>
-          </div>
-          {totalIncome === 0 && totalExpenses === 0 ? (
-            <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
-          ) : (
-            <div className="flex items-center gap-4">
-              <div className="flex-1 flex items-end gap-3 h-28">
-                {(["income", "expenses"] as const).map(type => {
-                  const val = type === "income" ? totalIncome : filteredExpenses;
-                  const maxVal = Math.max(totalIncome, filteredExpenses, 1);
-                  const h = Math.max(8, (val / maxVal) * 100);
-                  return (
-                    <div key={type} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
-                      <span className="text-[10px] font-bold text-[#831843]">{fmt(val, currency)}</span>
-                      <div className="w-full rounded-t-xl transition-all duration-700"
-                        style={{ height: `${h}%`, background: type === "income" ? "#EC4899" : "#F9A8D4" }} />
-                      <span className="text-[10px] text-[#9D5C7E] font-semibold capitalize">{type}</span>
+      {/* ⑥ THIS MONTH'S STORY + INCOME VS EXPENSES */}
+      {(() => {
+        const storyOver = totalIncome > 0 && effectiveSpend > totalIncome;
+        const expenseBarColor = storyOver ? "#EF4444" : "#F9A8D4";
+        const ringTone = storyOver ? "#EF4444" : "#EC4899";
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
+                <Sparkles className={`h-4 w-4 ${storyOver ? "text-red-500" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                {viewPeriod === "week" ? "This week's story" : "This month's story"}
+              </h3>
+              <ul className="space-y-3">
+                {insights.map((ins, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="text-base leading-none mt-0.5 shrink-0">{ins.icon}</span>
+                    <div>
+                      <p className={`text-sm font-semibold leading-snug ${storyOver && i === 0 ? "text-red-700" : "text-[#831843]"}`}>{ins.main}</p>
+                      <p className={`text-[11px] ${storyOver && i === 0 ? "text-red-500" : "text-[#9D5C7E]"}`}>{ins.sub}</p>
                     </div>
-                  );
-                })}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+
+            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>Income vs Expenses</h3>
+                <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full inline-block transition-colors duration-500" style={{ background: expenseBarColor }} /> Expenses
+                  </span>
+                </div>
               </div>
-              {totalIncome > 0 && (
-                <div className="shrink-0 text-center">
-                  <HealthRing
-                    pct={Math.min(100, (filteredExpenses / totalIncome) * 100)}
-                    label=""
-                    tone="#EC4899"
-                    size={120}
-                  />
-                  <p className="text-[10px] text-[#9D5C7E] font-semibold -mt-2">of income spent</p>
+              {totalIncome === 0 && effectiveSpend === 0 ? (
+                <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 flex items-end gap-3">
+                    {(["income", "expenses"] as const).map(type => {
+                      const val = type === "income" ? totalIncome : effectiveSpend;
+                      const maxVal = Math.max(totalIncome, effectiveSpend, 1);
+                      const barPx = Math.max(4, Math.round((val / maxVal) * 80));
+                      const barColor = type === "income" ? "#EC4899" : expenseBarColor;
+                      return (
+                        <div key={type} className="flex-1 flex flex-col items-center gap-1">
+                          <span className={`text-[10px] font-bold ${storyOver && type === "expenses" ? "text-red-700" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
+                          <div className="relative w-full" style={{ height: 80 }}>
+                            <div className="absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-700"
+                              style={{ height: barPx, background: barColor }} />
+                          </div>
+                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-red-500" : "text-[#9D5C7E]"}`}>{type}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {totalIncome > 0 && (
+                    <div className="shrink-0 text-center">
+                      <HealthRing
+                        pct={Math.min(100, (effectiveSpend / totalIncome) * 100)}
+                        label=""
+                        tone={ringTone}
+                        size={120}
+                      />
+                      <p className={`text-[10px] font-semibold -mt-2 ${storyOver ? "text-red-500" : "text-[#9D5C7E]"}`}>of income spent</p>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </Card>
-      </div>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* SPENDING HISTORY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly;
         if (totalPlanned === 0) return null;
         return (
           <Card>
@@ -1552,104 +2543,34 @@ function DashboardTab(props: {
               planned={totalPlanned}
               extraTxns={monthTxns.filter(t => t.type === "expense")}
               currency={currency}
+              income={totalIncome}
             />
           </Card>
         );
       })()}
 
-      {/* Detailed log form */}
-      {txns.length > 0 && (
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
-              <Plus className="h-4 w-4" />
+      {/* 6-MONTH OVERVIEW */}
+      {(txns.length > 0 || totalIncome > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0)) && (() => {
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+        return (
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
+                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
+                6-Month Overview
+              </h3>
+              <span className="text-[10px] text-[#9D5C7E] font-semibold">spend vs income trend</span>
             </div>
-            <h3 className="font-script text-2xl text-[#831843]">Extra Spends</h3>
-          </div>
-          <AddTxnForm amount={amount} setAmount={setAmount} catKey={catKey} setCatKey={setCatKey}
-            desc={desc} setDesc={setDesc} date={date} setDate={setDate} mood={mood} setMood={setMood}
-            catOptions={catOptions} allCats={allCats} currentCat={currentCat} currentMood={currentMood}
-            showCatModal={showCatModal} setShowCatModal={setShowCatModal}
-            showMoodModal={showMoodModal} setShowMoodModal={setShowMoodModal}
-            txnSaved={txnSaved} addTxn={addTxn} currency={currency} />
-        </Card>
-      )}
+            <MonthlyPatternsChart
+              txns={txns}
+              plannedBudget={plannedBudget + goalsMonthly}
+              income={totalIncome}
+              currency={currency}
+            />
+          </Card>
+        );
+      })()}
 
-      {/* Category picker modal */}
-      {showCatModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowCatModal(false)}>
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
-              <h3 className="font-script text-2xl text-[#831843]">Category ✿</h3>
-              <button onClick={() => setShowCatModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="px-3 py-3 overflow-y-auto flex-1 min-h-0 space-y-1">
-              {catOptions.map(k => {
-                const c = allCats.find(x => x.key === k);
-                const active = k === catKey;
-                return (
-                  <button key={k} onClick={() => { setCatKey(k); setShowCatModal(false); }}
-                    className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition active:scale-[0.98]",
-                      active ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
-                    <span className="flex items-center gap-2 text-sm font-semibold text-[#831843]">
-                      <span className="text-base">{c?.emoji ?? "💰"}</span>{c?.label ?? k}
-                    </span>
-                    {active && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Mood picker modal */}
-      {showMoodModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setShowMoodModal(false)}>
-          <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
-              <h3 className="font-script text-2xl text-[#831843]">Spend type ✿</h3>
-              <button onClick={() => setShowMoodModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 text-rose/50 hover:text-hotpink transition"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="px-3 py-3 space-y-1">
-              {MOODS.map(m => (
-                <button key={m.key} onClick={() => { setMood(m.key); setShowMoodModal(false); }}
-                  className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition",
-                    mood === m.key ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
-                  <span className={["inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold border", m.tone].join(" ")}>
-                    <m.Icon className="h-3.5 w-3.5" /> {m.label}
-                  </span>
-                  {mood === m.key && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ③ QUICK ADD FAB */}
-      <button
-        onClick={() => setShowQuickAdd(true)}
-        className="fixed bottom-20 right-4 z-30 grid h-14 w-14 place-items-center rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95"
-        style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
-        aria-label="Quick add expense"
-      >
-        <Plus className="h-6 w-6" strokeWidth={2.5} />
-      </button>
-
-      {/* Quick Add Sheet */}
-      <QuickAddSheet
-        open={showQuickAdd}
-        onClose={() => setShowQuickAdd(false)}
-        onSave={(amt, cat) => {
-          setTxns(prev => [{ id: uid(), amount: amt, catKey: cat, description: "", date: todayISO(), mood: "planned" as MoodKey, type: "expense" }, ...prev]);
-        }}
-        allCats={allCats}
-        selectedCats={catOptions}
-        currency={currency}
-      />
     </div>
   );
 }
@@ -1806,6 +2727,7 @@ function BudgetSetupTab(props: {
   allCats: Cat[]; selectedCats: string[]; setSelectedCats: (v: string[] | ((p: string[]) => string[])) => void;
   budget: Budget; setBudget: (v: Budget | ((p: Budget) => Budget)) => void;
   customCats: CustomCat[]; setCustomCats: (v: CustomCat[] | ((p: CustomCat[]) => CustomCat[])) => void;
+  setTxns: (v: Txn[]) => void;
   currency: CurrencyKey;
   totalIncome: number;
   setTab: (t: TabKey) => void;
@@ -1915,6 +2837,11 @@ function BudgetSetupTab(props: {
           <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E]">STEP 2 · SET AMOUNTS</h3>
           <div className="flex items-center gap-2">
             {saved && <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>}
+            <button
+              onClick={() => { if (window.confirm("Reset everything? This will clear your budget setup AND all recorded transactions.")) { setBudget({}); setSelectedCats([]); props.setTxns([]); } }}
+              className="text-xs font-semibold text-[#9D5C7E] border border-pink-200 rounded-full px-3 py-1.5 hover:bg-pink-50 transition active:scale-95">
+              Reset
+            </button>
             <PrimaryBtn onClick={save}>Save Budget</PrimaryBtn>
           </div>
         </div>
@@ -2104,24 +3031,56 @@ function ReportsTab(props: {
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
   bills: Bill[]; setBills: (v: Bill[] | ((p: Bill[]) => Bill[])) => void;
   allCats: Cat[]; currency: CurrencyKey;
+  incomes: Income[]; budget: Budget; selectedCats: string[];
 }) {
-  const { txns, setTxns, bills, setBills, allCats, currency } = props;
+  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats } = props;
   const now = new Date();
   const [month, setMonth] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [filterCat, setFilterCat] = useState("");
   const [filterMood, setFilterMood] = useState("");
 
-  const filtered = useMemo(() => {
-    let list = txns.filter(t => {
-      const d = new Date(t.date);
-      return d.getFullYear() === month.y && d.getMonth() === month.m;
+  type LKind = "income" | "planned" | "extra";
+  interface LedgerRow {
+    id: string; kind: LKind; date: string; catKey: string;
+    amount: number; description: string; mood?: MoodKey; type: "income" | "expense";
+  }
+
+  const ledger = useMemo((): LedgerRow[] => {
+    const monthFirst = `${month.y}-${String(month.m + 1).padStart(2, "0")}-01`;
+    const rows: LedgerRow[] = [];
+    incomes.forEach(inc => rows.push({
+      id: `vi_${inc.id}`, kind: "income", date: monthFirst,
+      catKey: "__income__", amount: toMonthly(inc), description: inc.source, type: "income",
+    }));
+    selectedCats.forEach(k => {
+      const amt = budget[k] ?? 0;
+      if (amt > 0) rows.push({
+        id: `vb_${k}`, kind: "planned", date: monthFirst,
+        catKey: k, amount: amt, description: "Planned budget", type: "expense",
+      });
     });
-    if (filterCat) list = list.filter(t => t.catKey === filterCat);
-    if (filterMood) list = list.filter(t => t.mood === filterMood);
+    txns.forEach(t => {
+      const d = new Date(t.date);
+      if (d.getFullYear() === month.y && d.getMonth() === month.m)
+        rows.push({ id: t.id, kind: "extra", date: t.date, catKey: t.catKey, amount: t.amount, description: t.description, mood: t.mood, type: t.type });
+    });
+    let list = rows;
+    if (filterCat) list = list.filter(e => e.catKey === filterCat);
+    if (filterMood) list = list.filter(e => e.kind !== "extra" || e.mood === filterMood);
     list.sort((a, b) => sortBy === "amount" ? b.amount - a.amount : (a.date < b.date ? 1 : -1));
     return list;
-  }, [txns, month, sortBy, filterCat, filterMood]);
+  }, [txns, month, sortBy, filterCat, filterMood, incomes, budget, selectedCats]);
+
+  const ledgerStats = useMemo(() => {
+    const incomeTotal = incomes.reduce((s, inc) => s + toMonthly(inc), 0);
+    const plannedTotal = selectedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+    const extraTotal = txns.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear() === month.y && d.getMonth() === month.m && t.type === "expense";
+    }).reduce((s, t) => s + t.amount, 0);
+    return { incomeTotal, plannedTotal, extraTotal };
+  }, [incomes, selectedCats, budget, txns, month]);
 
   function shiftMonth(dir: -1 | 1) {
     setMonth(({ y, m }) => {
@@ -2180,9 +3139,29 @@ function ReportsTab(props: {
 
       <Card>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="font-script text-xl text-[#831843]">Transactions</h3>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
+          <h3 className="font-script text-xl text-[#831843]">All Operations</h3>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{ledger.length} operation{ledger.length !== 1 ? "s" : ""}</span>
         </div>
+
+        {/* Monthly summary chips */}
+        <div className="flex gap-2 flex-wrap mb-3">
+          <div className="flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+            <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+            <span className="text-[10px] font-bold text-emerald-700">{fmt(ledgerStats.incomeTotal, currency)}</span>
+            <span className="text-[9px] text-emerald-500">income</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1">
+            <span className="text-[9px] text-violet-500">✦</span>
+            <span className="text-[10px] font-bold text-violet-700">{fmt(ledgerStats.plannedTotal, currency)}</span>
+            <span className="text-[9px] text-violet-500">planned</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1">
+            <ArrowDownRight className="h-3 w-3 text-rose-500" />
+            <span className="text-[10px] font-bold text-rose-700">{fmt(ledgerStats.extraTotal, currency)}</span>
+            <span className="text-[9px] text-rose-400">extra</span>
+          </div>
+        </div>
+
         {/* filters — single scrollable row */}
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-3 pb-0.5">
           <div className="shrink-0 w-28">
@@ -2191,52 +3170,81 @@ function ReportsTab(props: {
           </div>
           <div className="shrink-0 w-32">
             <PinkSelect value={filterCat} onChange={setFilterCat}
-              options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
+              options={[
+                { value: "", label: "All operations" },
+                ...(incomes.length > 0 ? [{ value: "__income__", label: "💰 Income" }] : []),
+                ...allCats.map(c => ({ value: c.key, label: c.label })),
+              ]} />
           </div>
           <div className="shrink-0 w-24">
             <PinkSelect value={filterMood} onChange={setFilterMood}
               options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
           </div>
         </div>
-        {filtered.length === 0 ? (
-          <EmptyState Icon={Receipt} title="No transactions yet" text="Head to the Dashboard to log your first expense for this month." />
+
+        {ledger.length === 0 ? (
+          <EmptyState Icon={Receipt} title="No operations this month" text="Add income, set up your budget, or log a spend to see all operations here." />
         ) : (
           <ul className="divide-y divide-pink-100">
-            {filtered.map(t => {
-              const c = allCats.find(x => x.key === t.catKey);
-              const mood = MOODS.find(m => m.key === t.mood)!;
-              const isIncome = t.type === "income";
+            {ledger.map(entry => {
+              const c = allCats.find(x => x.key === entry.catKey);
+              const mood = entry.mood ? MOODS.find(m => m.key === entry.mood) : undefined;
+              const isIncome = entry.kind === "income";
+              const isPlanned = entry.kind === "planned";
+              const isExtra = entry.kind === "extra";
+              const iconBg = isIncome ? "bg-emerald-100" : isPlanned ? "bg-violet-100" : "bg-pink-100";
+              const iconColor = isIncome ? "text-emerald-600" : isPlanned ? "text-violet-500" : "text-[#EC4899]";
+              const amtColor = isIncome ? "text-emerald-700" : isPlanned ? "text-violet-700" : "text-[#831843]";
               return (
-                <li key={t.id} className="flex items-center gap-2.5 py-2.5">
-                  {/* category icon bubble */}
-                  <div className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-pink-100">
-                    {c ? <c.Icon className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> : <Wallet className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />}
+                <li key={entry.id} className="flex items-center gap-2.5 py-2.5">
+                  <div className={`shrink-0 grid h-8 w-8 place-items-center rounded-full ${iconBg}`}>
+                    {isIncome
+                      ? <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                      : c ? <c.Icon className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                        : <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />}
                   </div>
-                  {/* main info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-[#831843] truncate">{c?.label ?? t.catKey}</span>
-                      <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
-                        <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-[#831843] truncate">
+                        {isIncome ? entry.description : (c?.label ?? entry.catKey)}
                       </span>
+                      {isIncome && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          <ArrowUpRight className="h-2.5 w-2.5" />Income
+                        </span>
+                      )}
+                      {isPlanned && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-violet-50 text-violet-600 border-violet-200">
+                          ✦ Planned
+                        </span>
+                      )}
+                      {isExtra && mood && (
+                        <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
+                          <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] text-[#9D5C7E]">{t.date}</span>
-                      {t.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {t.description}</span>}
+                      <span className="text-[10px] text-[#9D5C7E]">{entry.date}</span>
+                      {isPlanned && <span className="text-[9px] text-violet-400">· monthly allocation</span>}
+                      {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {entry.description}</span>}
                     </div>
                   </div>
-                  {/* amount + type + delete */}
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
-                    <span className={`text-sm font-bold ${isIncome ? "text-emerald-700" : "text-[#831843]"}`}>
-                      {isIncome ? "+" : "-"}{fmt(t.amount, currency)}
+                    <span className={`text-sm font-bold ${amtColor}`}>
+                      {isIncome ? "+" : "-"}{fmt(entry.amount, currency)}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {isIncome
-                        ? <span className="inline-flex items-center text-emerald-600 text-[9px] font-semibold gap-0.5"><ArrowUpRight className="h-2.5 w-2.5" />Income</span>
-                        : <span className="inline-flex items-center text-rose-600 text-[9px] font-semibold gap-0.5"><ArrowDownRight className="h-2.5 w-2.5" />Expense</span>}
-                      <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-400 hover:text-rose-600 transition">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {isExtra && (
+                        <span className="inline-flex items-center text-rose-500 text-[9px] font-semibold gap-0.5">
+                          <ArrowDownRight className="h-2.5 w-2.5" />Extra
+                        </span>
+                      )}
+                      {isExtra && (
+                        <button onClick={() => setTxns(prev => prev.filter(x => x.id !== entry.id))} className="text-rose-400 hover:text-rose-600 transition">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>
