@@ -805,7 +805,6 @@ export function BudgetPlanner() {
                   </button>
                 </div>
               </div>
-              {isDash && <MiniRing pct={heroGoalPct} size={100} />}
             </div>
           </div>
         );
@@ -898,7 +897,7 @@ export function BudgetPlanner() {
         aria-label="Add spend"
       >
         <Plus className="h-5 w-5" strokeWidth={2.5} />
-        <span className="text-sm font-bold">+ Spend</span>
+        <span className="text-sm font-bold">Spend</span>
       </button>
 
       <ExtraSpendModal
@@ -1089,13 +1088,13 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
             )}
 
             {/* Amount */}
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
+            <div className="flex items-center gap-2 rounded-2xl bg-pink-50/80 border border-pink-200/60 px-4 focus-within:ring-2 focus-within:ring-pink-400/50">
+              <span className="text-xl font-bold text-[#EC4899] shrink-0">{CURRENCIES[currency].symbol}</span>
               <input
                 ref={inputRef} type="number" inputMode="decimal" value={amount}
                 onChange={e => setAmount(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSave()} placeholder="0.00"
-                className="w-full rounded-2xl bg-pink-50/80 border border-pink-200/60 pl-10 pr-4 py-3.5 text-2xl font-bold text-[#831843] placeholder:text-pink-200 outline-none focus:ring-2 focus:ring-pink-400/50"
+                className="flex-1 bg-transparent py-3.5 text-2xl font-bold text-[#831843] placeholder:text-pink-200 outline-none"
               />
             </div>
 
@@ -1427,20 +1426,31 @@ function DashboardTab(props: {
                   )}
 
                   {unplannedEntries.length > 0 && (
-                    <div className="pt-2 border-t border-pink-100">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Unplanned spends</p>
-                      {unplannedEntries.map(([k, amt]) => {
-                        const cat = allCats.find(c => c.key === k);
-                        return (
-                          <div key={k} className="flex items-center justify-between py-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm">{cat?.emoji ?? "💰"}</span>
-                              <span className="text-[11px] font-semibold text-[#831843]">{cat?.label ?? k}</span>
+                    <div className="pt-2 border-t border-pink-100 space-y-3">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">Unplanned spends</p>
+                      {(() => {
+                        const maxUnplanned = Math.max(...unplannedEntries.map(([, v]) => v), 1);
+                        return unplannedEntries.map(([k, amt]) => {
+                          const cat = allCats.find(c => c.key === k);
+                          const pct = Math.min(100, (amt / maxUnplanned) * 100);
+                          return (
+                            <div key={k}>
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                                  <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                                  <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">New</span>
+                                </div>
+                                <span className="text-[11px] font-bold text-[#EC4899] tabular-nums shrink-0 ml-2">{fmt(amt, currency)}</span>
+                              </div>
+                              <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
+                                <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
+                              </div>
                             </div>
-                            <span className="text-[10px] font-bold text-[#EC4899]">{fmt(amt, currency)}</span>
-                          </div>
-                        );
-                      })}
+                          );
+                        });
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1983,6 +1993,11 @@ function BudgetSetupTab(props: {
           <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E]">STEP 2 · SET AMOUNTS</h3>
           <div className="flex items-center gap-2">
             {saved && <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>}
+            <button
+              onClick={() => { if (window.confirm("Reset all budget amounts to zero?")) { setBudget({}); setSelectedCats([]); } }}
+              className="text-xs font-semibold text-[#9D5C7E] border border-pink-200 rounded-full px-3 py-1.5 hover:bg-pink-50 transition active:scale-95">
+              Reset
+            </button>
             <PrimaryBtn onClick={save}>Save Budget</PrimaryBtn>
           </div>
         </div>
