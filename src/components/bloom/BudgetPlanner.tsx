@@ -541,6 +541,12 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <stop offset="0%" stopColor="#F9A8D4" />
             <stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
+          {/* Vertical gradient for the spend curve: light pink at 0, pink at budget, red above */}
+          <linearGradient id="spendLineGrad" x1="0" y1={pT} x2="0" y2={baseline} gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#EC4899" />
+            <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0.7" />
+          </linearGradient>
           {/* Danger gradient for over-budget zone: pink-poppy → red */}
           <linearGradient id="dangerFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#EF4444" stopOpacity="0.55" />
@@ -586,10 +592,10 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
           textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
-        {/* spending curve — pink, red tint when over budget */}
+        {/* spending curve — gradient: light pink at 0, pink at budget, red above */}
         {realPtsArr.length >= 2 && (
           <path d={smoothPath(realPtsArr)} fill="none"
-            stroke={isOverBudget ? "#F43F5E" : "url(#shLine)"}
+            stroke="url(#spendLineGrad)"
             strokeWidth="3" strokeLinecap="round" filter="url(#shGlow)" />
         )}
 
@@ -2160,16 +2166,18 @@ function DashboardTab(props: {
             <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
           ) : (
             <div className="flex items-center gap-4">
-              <div className="flex-1 flex items-end gap-3 h-28">
+              <div className="flex-1 flex items-end gap-3">
                 {(["income", "expenses"] as const).map(type => {
                   const val = type === "income" ? totalIncome : totalExpenses;
                   const maxVal = Math.max(totalIncome, totalExpenses, 1);
-                  const h = Math.max(8, (val / maxVal) * 100);
+                  const barPx = Math.max(4, Math.round((val / maxVal) * 80));
                   return (
-                    <div key={type} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
+                    <div key={type} className="flex-1 flex flex-col items-center gap-1">
                       <span className="text-[10px] font-bold text-[#831843]">{fmt(val, currency)}</span>
-                      <div className="w-full rounded-t-xl transition-all duration-700"
-                        style={{ height: `${h}%`, background: type === "income" ? "#EC4899" : "#F9A8D4" }} />
+                      <div className="relative w-full" style={{ height: 80 }}>
+                        <div className="absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-700"
+                          style={{ height: barPx, background: type === "income" ? "#EC4899" : "#F9A8D4" }} />
+                      </div>
                       <span className="text-[10px] text-[#9D5C7E] font-semibold capitalize">{type}</span>
                     </div>
                   );
