@@ -525,9 +525,13 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const budgetY = yp(dailyBudget);
   const isOverBudget = todayVal > dailyBudget;
 
+  // Clamp label position so it never gets clipped at SVG edges
+  const todayLabelX = Math.max(pL + 28, Math.min(W - pR - 28, todayX));
+  const todayLabelY = Math.max(pT + 8, todayY - 13);
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }} overflow="visible">
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
@@ -596,8 +600,8 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
             <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
             <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
-            {/* value label above */}
-            <text x={todayX} y={todayY - 13} fontSize="9" fill="#EC4899"
+            {/* value label above — clamped so it never clips at SVG edges */}
+            <text x={todayLabelX} y={todayLabelY} fontSize="9" fill="#EC4899"
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -1394,12 +1398,13 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
     },
     {
       label: "Real Spending Petals",
-      v: realExpenses,
+      v: plannedBudget + realExpenses,
       sub: "extra spends this month",
       bg: "from-rose-50 to-pink-50",
       badge: realExpenses > 0
         ? { text: `Extra spends = ${fmt(realExpenses, currency)}`, color: "text-rose-600 bg-rose-100" }
         : null,
+      planSub: fmt(plannedBudget, currency),
     },
     {
       label: "Savings Bloom",
@@ -1418,7 +1423,16 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
           <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
           </div>
-          {it.badge ? (
+          {"planSub" in it ? (
+            <div className="mt-1 space-y-0.5">
+              <div className="text-[9px] font-semibold text-[#F9A8D4] leading-tight">{it.planSub} planned</div>
+              {it.badge && (
+                <span className={`inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
+                  {it.badge.text}
+                </span>
+              )}
+            </div>
+          ) : it.badge ? (
             <span className={`mt-1 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
               {it.badge.text}
             </span>
