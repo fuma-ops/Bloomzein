@@ -954,11 +954,11 @@ export default function DiaryPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
           {/* ── The Book ── */}
-          <div ref={bookRef} className="dd-book-wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+          <div ref={bookRef} className="dd-book-wrap" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", padding: narrow ? "0 13px" : "0" }}>
             <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
 
               {/* Stage — wider now that arrows are gone */}
-              <div style={{ position: "relative", width: narrow ? "min(96vw, 420px)" : "min(90vw, 660px)", height: narrow ? "clamp(420px,92vw,520px)" : "clamp(370px,54vw,460px)" }}>
+              <div style={{ position: "relative", width: narrow ? "100%" : "min(90vw, 660px)", height: narrow ? "clamp(420px,92vw,520px)" : "clamp(370px,54vw,460px)", boxShadow: narrow ? "0 22px 52px rgba(219,39,119,.22), 0 4px 16px rgba(219,39,119,.12)" : "none" }}>
                 {/* Rose edge/binding */}
                 <div style={{ position: "absolute", inset: "-14px -12px -16px -12px", borderRadius: 16, background: coverBg, boxShadow: "0 34px 70px rgba(190,24,93,.36), inset 0 2px 6px rgba(255,255,255,.4)", zIndex: 0 }} />
 
@@ -967,7 +967,7 @@ export default function DiaryPage() {
                   {/* Desktop: two-page spread */}
                   {!narrow && (
                     <>
-                      <div onClick={() => turn(-1)} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", borderRadius: "8px 3px 3px 8px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.12) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset -22px 0 34px -26px rgba(131,24,67,.5)" }}>
+                      <div onClick={(e) => { if ((e.target as HTMLElement).closest('button,input,textarea,[data-nodrag]')) return; turn(-1); }} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", borderRadius: "8px 3px 3px 8px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.12) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset -22px 0 34px -26px rgba(131,24,67,.5)" }}>
                         <div style={{ position: "absolute", inset: 0 }}>
                           <DiaryBookPage idx={spread * 2} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={spread === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                         </div>
@@ -975,7 +975,7 @@ export default function DiaryPage() {
                       </div>
                       {/* Spine */}
                       <div style={{ position: "absolute", top: 6, bottom: 6, left: "50%", transform: "translateX(-50%)", width: 16, zIndex: 3, background: "linear-gradient(90deg,rgba(131,24,67,.18),rgba(131,24,67,.03) 42%,rgba(255,255,255,.5) 50%,rgba(131,24,67,.03) 58%,rgba(131,24,67,.18))", boxShadow: "0 0 14px rgba(131,24,67,.18)" }} />
-                      <div onClick={() => turn(1)} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", borderRadius: "3px 8px 8px 3px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.1) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 22px 0 34px -26px rgba(131,24,67,.5)" }}>
+                      <div onClick={(e) => { if ((e.target as HTMLElement).closest('button,input,textarea,[data-nodrag]')) return; turn(1); }} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", borderRadius: "3px 8px 8px 3px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.1) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 22px 0 34px -26px rgba(131,24,67,.5)" }}>
                         <div style={{ position: "absolute", inset: 0 }}>
                           <DiaryBookPage idx={spread * 2 + 1} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                         </div>
@@ -983,16 +983,12 @@ export default function DiaryPage() {
                       </div>
                     </>
                   )}
-                  {/* Mobile: single page — left half goes back, right half goes forward */}
+                  {/* Mobile: single page — navigation via corner-curl elements only */}
                   {narrow && (
                     <div style={{ position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.11) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 0 0 30px -18px rgba(131,24,67,.4)" }}>
                       <div style={{ position: "absolute", inset: 0 }}>
                         <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={pg === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
                       </div>
-                      {/* Left half: go back */}
-                      <div onClick={() => turn(-1)} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", zIndex: 2, cursor: open && !atStart ? "pointer" : "default" }} />
-                      {/* Right half: go forward */}
-                      <div onClick={() => turn(1)} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", zIndex: 2, cursor: open && !atEnd ? "pointer" : "default" }} />
                       <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 3 }}>· {pg + 1} / 6 ·</div>
                     </div>
                   )}
