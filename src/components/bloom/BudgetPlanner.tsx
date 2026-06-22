@@ -1408,9 +1408,8 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
       sub: "extra spends this month",
       bg: "from-rose-50 to-pink-50",
       badge: null,
-      planSub: realExpenses > 0
-        ? `${fmt(realExpenses, currency)} extra · ${fmt(plannedBudget, currency)} planned`
-        : `${fmt(plannedBudget, currency)} planned`,
+      planSub: fmt(plannedBudget, currency),
+      extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
     },
     {
       label: "Savings Bloom",
@@ -1430,7 +1429,11 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
-            <div className="mt-1 text-[9px] font-semibold text-[#9D5C7E] leading-tight truncate">{it.planSub}</div>
+            <div className="mt-1 flex items-center flex-wrap gap-x-0.5 text-[9px] font-semibold leading-tight">
+              {it.extraAmt && <span className="text-rose-500">{it.extraAmt} extra</span>}
+              {it.extraAmt && <span className="text-[#9D5C7E]">+</span>}
+              <span className="text-[#9D5C7E]">{it.planSub} planned</span>
+            </div>
           ) : it.badge ? (
             <span className={`mt-1 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
               {it.badge.text}
