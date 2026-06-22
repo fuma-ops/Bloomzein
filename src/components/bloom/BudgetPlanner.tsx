@@ -1165,7 +1165,7 @@ function DashboardTab(props: {
     { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
     { key: "setup",  label: "Set up your budget",   hint: "Pick spending categories & set monthly limits", done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
     { key: "goals",  label: "Add a savings goal",   hint: "A vacation, an emergency fund — dream big",     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
-    { key: "track",  label: "Log your first spend", hint: "Track where your money actually goes",          done: txns.length > 0,                                                    tab: "Reports"       as TabKey, Icon: FileBarChart },
+    { key: "track",  label: "Log your extra spends", hint: "Record any extra or unplanned expenses",        done: txns.filter(t => t.type === "expense").length > 0,              tab: "Reports"       as TabKey, Icon: FileBarChart },
   ];
   const completed = steps.filter(s => s.done).length;
   const nextStep  = steps.find(s => !s.done);
