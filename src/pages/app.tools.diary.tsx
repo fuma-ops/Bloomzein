@@ -193,10 +193,9 @@ const DIARY_CSS = `
   .dd-textarea{ scrollbar-width:none;-ms-overflow-style:none; }
   .dd-item .dd-del{ opacity:0;transition:opacity .18s ease; }
   .dd-item:hover .dd-del{ opacity:1; }
-  @keyframes dd-hscroll { from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
-  .dd-marquee { display:flex; width:max-content; animation:dd-hscroll 26s linear infinite; }
-  .dd-marquee:hover { animation-play-state:paused; }
-  .dd-hbox { overflow:hidden; }
+  .dd-marquee { display:flex; width:max-content; }
+  .dd-hbox { overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; }
+  .dd-hbox::-webkit-scrollbar { display:none; }
   @keyframes dd-curl-r { 0%,55%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(-1px -1px 3px rgba(131,24,67,.15)) } 75%{ transform:perspective(140px) rotateX(10deg) rotateY(-22deg) scale(1.08);filter:drop-shadow(-5px -5px 10px rgba(131,24,67,.35)) } 100%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(-1px -1px 3px rgba(131,24,67,.15)) } }
   @keyframes dd-curl-l { 0%,55%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(1px -1px 3px rgba(131,24,67,.15)) } 75%{ transform:perspective(140px) rotateX(10deg) rotateY(22deg) scale(1.08);filter:drop-shadow(5px -5px 10px rgba(131,24,67,.35)) } 100%{ transform:perspective(140px) rotateX(0deg) rotateY(0deg) scale(1);filter:drop-shadow(1px -1px 3px rgba(131,24,67,.15)) } }
   .dd-curl-r { animation:dd-curl-r 3s ease-in-out infinite; transform-origin:bottom right; }
@@ -318,10 +317,12 @@ interface DiaryBookPageProps {
   onPhotoRequest: () => void;
   viewEntry?: DiaryEntry | null;
   onClearView?: () => void;
+  onIdeaSelect?: (text: string) => void;
 }
 
-function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, viewEntry, onClearView }: DiaryBookPageProps) {
+function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, viewEntry, onClearView, onIdeaSelect }: DiaryBookPageProps) {
   const [items, setItems] = useState<DragItem[]>([]);
+  const [sizes, setSizes] = useState<Record<number, { w: number; h: number }>>({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [listening, setListening] = useState(false);
   const [micLabel, setMicLabel] = useState("Listening…");
@@ -335,6 +336,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   const [hiddenIdeas, setHiddenIdeas] = useState<number[]>([]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: number; dx: number; dy: number } | null>(null);
+  const resizeRef = useRef<{ id: number; startW: number; startH: number; startX: number; startY: number } | null>(null);
   const recRef = useRef<any>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
@@ -371,6 +373,25 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
   }, [items]);
+
+  const onResizeDown = useCallback((id: number, e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const it = items.find((i) => i.id === id);
+    if (!it) return;
+    const dflt = it.type === "photo" ? { w: 88, h: 68 } : { w: 52, h: 52 };
+    const cur = sizes[id] ?? dflt;
+    resizeRef.current = { id, startW: cur.w, startH: cur.h, startX: e.clientX, startY: e.clientY };
+    const onMove = (ev: PointerEvent) => {
+      if (!resizeRef.current) return;
+      const dx = ev.clientX - resizeRef.current.startX;
+      const dy = ev.clientY - resizeRef.current.startY;
+      setSizes((p) => ({ ...p, [id]: { w: Math.max(48, resizeRef.current!.startW + dx), h: Math.max(40, resizeRef.current!.startH + dy) } }));
+    };
+    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); resizeRef.current = null; };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }, [items, sizes]);
 
   const toggleMic = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -540,20 +561,26 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
           )}
         </div>
 
-        {/* Photos + stickers strip */}
+        {/* Draggable canvas zone — items positioned freely, text stays below */}
         {items.length > 0 && (
-          <div className="dd-textarea" style={{ flexShrink: 0, marginTop: 8, display: "flex", gap: 8, overflowX: "auto", padding: "6px 2px 4px", alignItems: "flex-end" }}>
-            {items.map((it) => (
-              <div key={it.id} className="dd-item" style={{ position: "relative", flexShrink: 0 }}>
-                <button className="dd-del" onClick={() => deleteItem(it.id)} style={{ position: "absolute", top: -7, right: -7, zIndex: 6, width: 18, height: 18, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✕</button>
-                {it.type === "photo" && it.src && (
-                  <img src={it.src} alt="diary photo" style={{ display: "block", width: 72, height: 56, objectFit: "cover", borderRadius: 8, boxShadow: "0 4px 14px rgba(131,24,67,.22)", transform: `rotate(${(it.id % 3 - 1) * 2.5}deg)` }} />
-                )}
-                {it.type === "sticker" && it.icon && (
-                  <div style={{ width: 44, height: 44, display: "grid", placeItems: "center", filter: "drop-shadow(0 2px 5px rgba(131,24,67,.2))" }}>{STICKER_ICONS[it.icon]}</div>
-                )}
-              </div>
-            ))}
+          <div ref={canvasRef} data-nodrag="1" style={{ position: "relative", flexShrink: 0, height: 136, marginTop: 8, borderRadius: 10, border: "1.5px dashed rgba(236,72,153,.22)", background: "rgba(255,248,252,.6)", overflow: "hidden" }}>
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontFamily: "'Caveat',cursive", fontSize: 13, color: "rgba(201,166,184,.45)", pointerEvents: "none", whiteSpace: "nowrap" }}>drag to arrange ✿</span>
+            {items.map((it) => {
+              const dflt = it.type === "photo" ? { w: 88, h: 68 } : { w: 52, h: 52 };
+              const sz = sizes[it.id] ?? dflt;
+              return (
+                <div key={it.id} className="dd-item" onPointerDown={(e) => onPointerDown(it.id, e)} style={{ position: "absolute", left: it.x, top: it.y, cursor: "grab", touchAction: "none", userSelect: "none", zIndex: 2 }}>
+                  {it.type === "photo" && it.src && (
+                    <img src={it.src} alt="diary photo" draggable={false} style={{ display: "block", width: sz.w, height: sz.h, objectFit: "cover", borderRadius: 8, boxShadow: "0 4px 14px rgba(131,24,67,.22)", transform: `rotate(${(it.id % 3 - 1) * 2.5}deg)`, pointerEvents: "none" }} />
+                  )}
+                  {it.type === "sticker" && it.icon && (
+                    <div style={{ width: sz.w, height: sz.h, display: "grid", placeItems: "center", filter: "drop-shadow(0 2px 5px rgba(131,24,67,.2))", pointerEvents: "none" }}>{STICKER_ICONS[it.icon]}</div>
+                  )}
+                  <button className="dd-del" onClick={(e) => { e.stopPropagation(); deleteItem(it.id); }} style={{ position: "absolute", top: -7, right: -7, zIndex: 6, width: 18, height: 18, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700, lineHeight: 1, pointerEvents: "auto" }}>✕</button>
+                  <div onPointerDown={(e) => onResizeDown(it.id, e)} style={{ position: "absolute", bottom: -5, right: -5, width: 14, height: 14, borderRadius: 3, background: "rgba(219,39,119,.6)", cursor: "nwse-resize", touchAction: "none", zIndex: 5 }} />
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -572,35 +599,38 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
       <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "18px 16px 16px" }}>
         {!allDismissed ? (
           <>
-            <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 9.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8", marginBottom: 12 }}>journaling ideas ✿</div>
+            <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 9.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8", marginBottom: 12 }}>tap an idea to start writing ✿</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto" }}>
               {visibleIdeas.map((idea) => (
-                <div key={idea.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, background: "linear-gradient(135deg,rgba(255,240,250,.85),rgba(252,231,243,.65))", border: "1px solid rgba(236,72,153,.12)", boxShadow: "0 4px 14px rgba(131,24,67,.07)" }}>
+                <div key={idea.id} onClick={() => onIdeaSelect?.(idea.label)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, background: "linear-gradient(135deg,rgba(255,240,250,.85),rgba(252,231,243,.65))", border: "1px solid rgba(236,72,153,.12)", boxShadow: "0 4px 14px rgba(131,24,67,.07)", cursor: "pointer" }}>
                   <span style={{ fontSize: 22, flexShrink: 0 }}>{idea.icon}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: "'Caveat',cursive", fontSize: 19, color: "#831843", lineHeight: 1.1 }}>{idea.label}</div>
                     <div style={{ fontFamily: "'Quicksand'", fontSize: 10.5, color: "#C9A6B8", fontWeight: 600 }}>{idea.desc}</div>
                   </div>
-                  <button onClick={() => setHiddenIdeas((h) => [...h, idea.id])} style={{ flexShrink: 0, width: 22, height: 22, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.12)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700 }}>✕</button>
+                  <button onClick={(e) => { e.stopPropagation(); setHiddenIdeas((h) => [...h, idea.id]); }} style={{ flexShrink: 0, width: 22, height: 22, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.12)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700 }}>✕</button>
                 </div>
               ))}
             </div>
           </>
         ) : (
-          <div style={{ position: "relative", flex: 1 }}>
-            <textarea
-              className="dd-textarea"
-              value={draft}
-              onChange={(e) => onDraft(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "#831843", overflowY: "auto" }}
-            />
-            {!draft && !focused && (
-              <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "rgba(201,166,184,.6)" }}>
-                tap here and bloom…
-              </div>
-            )}
+          <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ position: "relative", flex: 1 }}>
+              <textarea
+                className="dd-textarea"
+                value={draft}
+                onChange={(e) => onDraft(e.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "#831843", overflowY: "auto" }}
+              />
+              {!draft && !focused && (
+                <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "rgba(201,166,184,.6)" }}>
+                  tap here and bloom…
+                </div>
+              )}
+            </div>
+            <button onClick={() => setHiddenIdeas([])} style={{ flexShrink: 0, alignSelf: "center", border: "none", cursor: "pointer", padding: "6px 16px", borderRadius: 999, background: "rgba(236,72,153,.12)", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 11, color: "#DB2777" }}>✿ show ideas again</button>
           </div>
         )}
       </div>
@@ -703,6 +733,8 @@ export default function DiaryPage() {
   const bookRef = useRef<HTMLDivElement>(null);
   const moodBtnRef = useRef<HTMLButtonElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const memScrollRef = useRef<HTMLDivElement>(null);
+  const promptScrollRef = useRef<HTMLDivElement>(null);
 
   // Derived
   const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
@@ -785,6 +817,32 @@ export default function DiaryPage() {
   useEffect(() => () => {
     if (tiltTimerRef.current) clearTimeout(tiltTimerRef.current);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    const setup = (el: HTMLDivElement | null, speed: number) => {
+      if (!el) return () => {};
+      let raf = 0;
+      let paused = false;
+      const tick = () => {
+        if (!paused) {
+          el.scrollLeft += speed;
+          if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft = 0;
+        }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+      const pause = () => { paused = true; };
+      const resume = () => { paused = false; };
+      el.addEventListener("mouseenter", pause);
+      el.addEventListener("mouseleave", resume);
+      el.addEventListener("touchstart", pause, { passive: true });
+      el.addEventListener("touchend", () => setTimeout(resume, 1500), { passive: true });
+      return () => { cancelAnimationFrame(raf); el.removeEventListener("mouseenter", pause); el.removeEventListener("mouseleave", resume); };
+    };
+    const c1 = setup(memScrollRef.current, 0.4);
+    const c2 = setup(promptScrollRef.current, 0.35);
+    return () => { c1(); c2(); };
   }, []);
 
   const spread = Math.floor(pg / 2);
@@ -969,7 +1027,7 @@ export default function DiaryPage() {
                     <>
                       <div onClick={(e) => { if ((e.target as HTMLElement).closest('button,input,textarea,[data-nodrag]')) return; turn(-1); }} style={{ position: "absolute", top: 0, left: 0, width: "50%", height: "100%", borderRadius: "8px 3px 3px 8px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.12) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset -22px 0 34px -26px rgba(131,24,67,.5)" }}>
                         <div style={{ position: "absolute", inset: 0 }}>
-                          <DiaryBookPage idx={spread * 2} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={spread === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
+                          <DiaryBookPage idx={spread * 2} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={spread === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} onIdeaSelect={(text) => setDraft(text)} />
                         </div>
                         <div style={{ position: "absolute", left: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {spread * 2 + 1} ·</div>
                       </div>
@@ -977,7 +1035,7 @@ export default function DiaryPage() {
                       <div style={{ position: "absolute", top: 6, bottom: 6, left: "50%", transform: "translateX(-50%)", width: 16, zIndex: 3, background: "linear-gradient(90deg,rgba(131,24,67,.18),rgba(131,24,67,.03) 42%,rgba(255,255,255,.5) 50%,rgba(131,24,67,.03) 58%,rgba(131,24,67,.18))", boxShadow: "0 0 14px rgba(131,24,67,.18)" }} />
                       <div onClick={(e) => { if ((e.target as HTMLElement).closest('button,input,textarea,[data-nodrag]')) return; turn(1); }} style={{ position: "absolute", top: 0, right: 0, width: "50%", height: "100%", borderRadius: "3px 8px 8px 3px", overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.1) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 22px 0 34px -26px rgba(131,24,67,.5)" }}>
                         <div style={{ position: "absolute", inset: 0 }}>
-                          <DiaryBookPage idx={spread * 2 + 1} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
+                          <DiaryBookPage idx={spread * 2 + 1} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={null} onClearView={() => { setViewEntry(null); setDraft(""); }} onIdeaSelect={(text) => { setDraft(text); setPg(0); }} />
                         </div>
                         <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 2 }}>· {spread * 2 + 2} ·</div>
                       </div>
@@ -987,7 +1045,7 @@ export default function DiaryPage() {
                   {narrow && (
                     <div style={{ position: "absolute", inset: 0, borderRadius: 8, overflow: "hidden", background: "repeating-linear-gradient(transparent 0 28px,rgba(157,92,126,.11) 28px 29px),linear-gradient(180deg,#FCF6EE,#F7EBDD)", boxShadow: "inset 0 0 30px -18px rgba(131,24,67,.4)" }}>
                       <div style={{ position: "absolute", inset: 0 }}>
-                        <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={pg === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} />
+                        <DiaryBookPage idx={pg} mood={mood} draft={draft} onDraft={setDraft} onSave={onSave} onPhotoRequest={() => document.getElementById("dd-photo-input")?.click()} viewEntry={pg === 0 ? viewEntry : null} onClearView={() => { setViewEntry(null); setDraft(""); }} onIdeaSelect={(text) => { setDraft(text); setPg(0); }} />
                       </div>
                       <div style={{ position: "absolute", right: 16, bottom: 12, fontFamily: "'Quicksand'", fontSize: 10, color: "#C58CA8", zIndex: 3 }}>· {pg + 1} / 6 ·</div>
                     </div>
@@ -1081,7 +1139,7 @@ export default function DiaryPage() {
               </button>
             </div>
           </div>
-          <div className="dd-hbox" style={{ margin: "0 -22px", padding: "8px 22px 12px" }}>
+          <div ref={memScrollRef} className="dd-hbox" style={{ margin: "0 -22px", padding: "8px 22px 12px" }}>
             <div className="dd-marquee" style={{ gap: 18 }}>
               {[...filteredMems, ...filteredMems].map((entry, i) => {
                 const t = MEM_TINTS[i % MEM_TINTS.length];
@@ -1125,8 +1183,8 @@ export default function DiaryPage() {
             <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Prompts to bloom</span>
             <span style={{ fontSize: 16 }}>✿</span>
           </div>
-          <div className="dd-hbox" style={{ margin: "0 -22px", padding: "4px 22px 10px" }}>
-            <div className="dd-marquee" style={{ gap: 12, animationDuration: "32s" }}>
+          <div ref={promptScrollRef} className="dd-hbox" style={{ margin: "0 -22px", padding: "4px 22px 10px" }}>
+            <div className="dd-marquee" style={{ gap: 12 }}>
               {[...PROMPT_DATA, ...PROMPT_DATA].map((p, i) => (
                 <button key={i} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ flex: "0 0 auto", width: 230, display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.12)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 16px rgba(236,72,153,.08)", background: p.tint }}>
                   <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "#fff", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.12)" }}>
