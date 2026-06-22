@@ -603,6 +603,8 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {/* budget reference line — dashed */}
         <line x1={pL} y1={budgetY} x2={W - pR} y2={budgetY}
           stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
+        {/* white pill keeps label readable over any curve */}
+        <rect x={pL} y={budgetY - 13} width={106} height={12} rx="3" fill="white" fillOpacity="0.93" />
         <text x={pL + 2} y={budgetY - 4} fontSize="8"
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
           textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
@@ -753,6 +755,8 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
           const barX = pL + i * slotW + (slotW - barW) / 2;
           const barY = pT + plotH - barH;
           const cx = barX + barW / 2;
+          // clamp so label never overflows chart edges
+          const labelCx = Math.max(pL + 30, Math.min(W - pR - 30, cx));
           const showLabel = mo.isCurrent || mo.isOver;
           const labelY = Math.max(pT + 9, barY - 4);
           return (
@@ -762,8 +766,8 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
                 className="transition-all duration-500" />
               {showLabel && mo.totalSpend > 0 && (
                 <>
-                  <rect x={cx - 29} y={labelY - 8.5} width={58} height={10.5} rx="3" fill="white" fillOpacity="0.92" />
-                  <text x={cx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
+                  <rect x={labelCx - 30} y={labelY - 8.5} width={60} height={10.5} rx="3" fill="white" fillOpacity="0.92" />
+                  <text x={labelCx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
                     fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
                 </>
               )}
@@ -2423,14 +2427,14 @@ function DashboardTab(props: {
                   </span>
                 </div>
               </div>
-              {totalIncome === 0 && totalExpenses === 0 ? (
+              {totalIncome === 0 && effectiveSpend === 0 ? (
                 <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
               ) : (
                 <div className="flex items-center gap-4">
                   <div className="flex-1 flex items-end gap-3">
                     {(["income", "expenses"] as const).map(type => {
-                      const val = type === "income" ? totalIncome : totalExpenses;
-                      const maxVal = Math.max(totalIncome, totalExpenses, 1);
+                      const val = type === "income" ? totalIncome : effectiveSpend;
+                      const maxVal = Math.max(totalIncome, effectiveSpend, 1);
                       const barPx = Math.max(4, Math.round((val / maxVal) * 80));
                       const barColor = type === "income" ? "#EC4899" : expenseBarColor;
                       return (
@@ -2448,7 +2452,7 @@ function DashboardTab(props: {
                   {totalIncome > 0 && (
                     <div className="shrink-0 text-center">
                       <HealthRing
-                        pct={Math.min(100, (totalExpenses / totalIncome) * 100)}
+                        pct={Math.min(100, (effectiveSpend / totalIncome) * 100)}
                         label=""
                         tone={ringTone}
                         size={120}
