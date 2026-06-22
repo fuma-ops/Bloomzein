@@ -1355,8 +1355,14 @@ function DashboardTab(props: {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
         if (budgetedCats.length === 0) return null;
         const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
-        const totalActual  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-        const totalOverage = Math.max(0, totalActual - totalPlanned);
+        // EXTRA = sum of per-category overages + unplanned spends
+        // Under-budget categories do NOT offset overages in other categories
+        const totalOverage =
+          budgetedCats.reduce((s, k) => {
+            const actual = monthTxns.filter(t => t.type === "expense" && t.catKey === k).reduce((sum, t) => sum + t.amount, 0);
+            return s + Math.max(0, actual - (budget[k] ?? 0));
+          }, 0) +
+          monthTxns.filter(t => t.type === "expense" && !budgetedCats.includes(t.catKey)).reduce((s, t) => s + t.amount, 0);
         return (
           <Card>
             <div className="flex items-center justify-between mb-4">
