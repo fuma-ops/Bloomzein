@@ -1286,6 +1286,9 @@ export function BudgetPlanner() {
               bills={bills} setBills={setBills}
               allCats={allCats}
               currency={currency}
+              incomes={incomes}
+              budget={budget}
+              selectedCats={selectedCats}
             />
           )}
       </div>
@@ -2688,24 +2691,56 @@ function ReportsTab(props: {
   txns: Txn[]; setTxns: (v: Txn[] | ((p: Txn[]) => Txn[])) => void;
   bills: Bill[]; setBills: (v: Bill[] | ((p: Bill[]) => Bill[])) => void;
   allCats: Cat[]; currency: CurrencyKey;
+  incomes: Income[]; budget: Budget; selectedCats: string[];
 }) {
-  const { txns, setTxns, bills, setBills, allCats, currency } = props;
+  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats } = props;
   const now = new Date();
   const [month, setMonth] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [filterCat, setFilterCat] = useState("");
   const [filterMood, setFilterMood] = useState("");
 
-  const filtered = useMemo(() => {
-    let list = txns.filter(t => {
-      const d = new Date(t.date);
-      return d.getFullYear() === month.y && d.getMonth() === month.m;
+  type LKind = "income" | "planned" | "extra";
+  interface LedgerRow {
+    id: string; kind: LKind; date: string; catKey: string;
+    amount: number; description: string; mood?: MoodKey; type: "income" | "expense";
+  }
+
+  const ledger = useMemo((): LedgerRow[] => {
+    const monthFirst = `${month.y}-${String(month.m + 1).padStart(2, "0")}-01`;
+    const rows: LedgerRow[] = [];
+    incomes.forEach(inc => rows.push({
+      id: `vi_${inc.id}`, kind: "income", date: monthFirst,
+      catKey: "__income__", amount: toMonthly(inc), description: inc.source, type: "income",
+    }));
+    selectedCats.forEach(k => {
+      const amt = budget[k] ?? 0;
+      if (amt > 0) rows.push({
+        id: `vb_${k}`, kind: "planned", date: monthFirst,
+        catKey: k, amount: amt, description: "Planned budget", type: "expense",
+      });
     });
-    if (filterCat) list = list.filter(t => t.catKey === filterCat);
-    if (filterMood) list = list.filter(t => t.mood === filterMood);
+    txns.forEach(t => {
+      const d = new Date(t.date);
+      if (d.getFullYear() === month.y && d.getMonth() === month.m)
+        rows.push({ id: t.id, kind: "extra", date: t.date, catKey: t.catKey, amount: t.amount, description: t.description, mood: t.mood, type: t.type });
+    });
+    let list = rows;
+    if (filterCat) list = list.filter(e => e.catKey === filterCat);
+    if (filterMood) list = list.filter(e => e.kind !== "extra" || e.mood === filterMood);
     list.sort((a, b) => sortBy === "amount" ? b.amount - a.amount : (a.date < b.date ? 1 : -1));
     return list;
-  }, [txns, month, sortBy, filterCat, filterMood]);
+  }, [txns, month, sortBy, filterCat, filterMood, incomes, budget, selectedCats]);
+
+  const ledgerStats = useMemo(() => {
+    const incomeTotal = incomes.reduce((s, inc) => s + toMonthly(inc), 0);
+    const plannedTotal = selectedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+    const extraTotal = txns.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear() === month.y && d.getMonth() === month.m && t.type === "expense";
+    }).reduce((s, t) => s + t.amount, 0);
+    return { incomeTotal, plannedTotal, extraTotal };
+  }, [incomes, selectedCats, budget, txns, month]);
 
   function shiftMonth(dir: -1 | 1) {
     setMonth(({ y, m }) => {
@@ -2764,9 +2799,29 @@ function ReportsTab(props: {
 
       <Card>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="font-script text-xl text-[#831843]">Transactions</h3>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
+          <h3 className="font-script text-xl text-[#831843]">All Operations</h3>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{ledger.length} operation{ledger.length !== 1 ? "s" : ""}</span>
         </div>
+
+        {/* Monthly summary chips */}
+        <div className="flex gap-2 flex-wrap mb-3">
+          <div className="flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
+            <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+            <span className="text-[10px] font-bold text-emerald-700">{fmt(ledgerStats.incomeTotal, currency)}</span>
+            <span className="text-[9px] text-emerald-500">income</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1">
+            <span className="text-[9px] text-violet-500">✦</span>
+            <span className="text-[10px] font-bold text-violet-700">{fmt(ledgerStats.plannedTotal, currency)}</span>
+            <span className="text-[9px] text-violet-500">planned</span>
+          </div>
+          <div className="flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1">
+            <ArrowDownRight className="h-3 w-3 text-rose-500" />
+            <span className="text-[10px] font-bold text-rose-700">{fmt(ledgerStats.extraTotal, currency)}</span>
+            <span className="text-[9px] text-rose-400">extra</span>
+          </div>
+        </div>
+
         {/* filters — single scrollable row */}
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar mb-3 pb-0.5">
           <div className="shrink-0 w-28">
@@ -2775,52 +2830,81 @@ function ReportsTab(props: {
           </div>
           <div className="shrink-0 w-32">
             <PinkSelect value={filterCat} onChange={setFilterCat}
-              options={[{ value: "", label: "All categories" }, ...allCats.map(c => ({ value: c.key, label: c.label }))]} />
+              options={[
+                { value: "", label: "All operations" },
+                ...(incomes.length > 0 ? [{ value: "__income__", label: "💰 Income" }] : []),
+                ...allCats.map(c => ({ value: c.key, label: c.label })),
+              ]} />
           </div>
           <div className="shrink-0 w-24">
             <PinkSelect value={filterMood} onChange={setFilterMood}
               options={[{ value: "", label: "All moods" }, ...MOODS.map(m => ({ value: m.key, label: m.label }))]} />
           </div>
         </div>
-        {filtered.length === 0 ? (
-          <EmptyState Icon={Receipt} title="No transactions yet" text="Head to the Dashboard to log your first expense for this month." />
+
+        {ledger.length === 0 ? (
+          <EmptyState Icon={Receipt} title="No operations this month" text="Add income, set up your budget, or log a spend to see all operations here." />
         ) : (
           <ul className="divide-y divide-pink-100">
-            {filtered.map(t => {
-              const c = allCats.find(x => x.key === t.catKey);
-              const mood = MOODS.find(m => m.key === t.mood)!;
-              const isIncome = t.type === "income";
+            {ledger.map(entry => {
+              const c = allCats.find(x => x.key === entry.catKey);
+              const mood = entry.mood ? MOODS.find(m => m.key === entry.mood) : undefined;
+              const isIncome = entry.kind === "income";
+              const isPlanned = entry.kind === "planned";
+              const isExtra = entry.kind === "extra";
+              const iconBg = isIncome ? "bg-emerald-100" : isPlanned ? "bg-violet-100" : "bg-pink-100";
+              const iconColor = isIncome ? "text-emerald-600" : isPlanned ? "text-violet-500" : "text-[#EC4899]";
+              const amtColor = isIncome ? "text-emerald-700" : isPlanned ? "text-violet-700" : "text-[#831843]";
               return (
-                <li key={t.id} className="flex items-center gap-2.5 py-2.5">
-                  {/* category icon bubble */}
-                  <div className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-pink-100">
-                    {c ? <c.Icon className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> : <Wallet className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />}
+                <li key={entry.id} className="flex items-center gap-2.5 py-2.5">
+                  <div className={`shrink-0 grid h-8 w-8 place-items-center rounded-full ${iconBg}`}>
+                    {isIncome
+                      ? <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                      : c ? <c.Icon className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                        : <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />}
                   </div>
-                  {/* main info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-[#831843] truncate">{c?.label ?? t.catKey}</span>
-                      <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
-                        <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-[#831843] truncate">
+                        {isIncome ? entry.description : (c?.label ?? entry.catKey)}
                       </span>
+                      {isIncome && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          <ArrowUpRight className="h-2.5 w-2.5" />Income
+                        </span>
+                      )}
+                      {isPlanned && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-violet-50 text-violet-600 border-violet-200">
+                          ✦ Planned
+                        </span>
+                      )}
+                      {isExtra && mood && (
+                        <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
+                          <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] text-[#9D5C7E]">{t.date}</span>
-                      {t.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {t.description}</span>}
+                      <span className="text-[10px] text-[#9D5C7E]">{entry.date}</span>
+                      {isPlanned && <span className="text-[9px] text-violet-400">· monthly allocation</span>}
+                      {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {entry.description}</span>}
                     </div>
                   </div>
-                  {/* amount + type + delete */}
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
-                    <span className={`text-sm font-bold ${isIncome ? "text-emerald-700" : "text-[#831843]"}`}>
-                      {isIncome ? "+" : "-"}{fmt(t.amount, currency)}
+                    <span className={`text-sm font-bold ${amtColor}`}>
+                      {isIncome ? "+" : "-"}{fmt(entry.amount, currency)}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {isIncome
-                        ? <span className="inline-flex items-center text-emerald-600 text-[9px] font-semibold gap-0.5"><ArrowUpRight className="h-2.5 w-2.5" />Income</span>
-                        : <span className="inline-flex items-center text-rose-600 text-[9px] font-semibold gap-0.5"><ArrowDownRight className="h-2.5 w-2.5" />Expense</span>}
-                      <button onClick={() => setTxns(prev => prev.filter(x => x.id !== t.id))} className="text-rose-400 hover:text-rose-600 transition">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {isExtra && (
+                        <span className="inline-flex items-center text-rose-500 text-[9px] font-semibold gap-0.5">
+                          <ArrowDownRight className="h-2.5 w-2.5" />Extra
+                        </span>
+                      )}
+                      {isExtra && (
+                        <button onClick={() => setTxns(prev => prev.filter(x => x.id !== entry.id))} className="text-rose-400 hover:text-rose-600 transition">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>
