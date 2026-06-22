@@ -448,7 +448,8 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
     return extraTxns.filter(t => t.date <= iso).reduce((s, t) => s + t.amount, 0);
   });
 
-  const rawMax = Math.max(planned * 1.25, ...cumByDay.slice(0, today), 1);
+  // Allow spending to exceed budget line — give 30% headroom above max of planned vs actual
+  const rawMax = Math.max(planned * 1.3, ...cumByDay.slice(0, today).map(v => v * 1.15), 1);
   const magnitude = Math.pow(10, Math.floor(Math.log10(rawMax)));
   const maxY = Math.ceil(rawMax / magnitude) * magnitude;
 
@@ -482,6 +483,9 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
   const todayX = xp(today);
   const todayY = yp(todayVal);
 
+  const budgetY = yp(planned);
+  const isOverBudget = todayVal > planned;
+
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }}>
@@ -494,8 +498,21 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <stop offset="0%" stopColor="#F9A8D4" />
             <stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
+          {/* Danger gradient for over-budget zone: pink-poppy → red */}
+          <linearGradient id="dangerFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#EC4899" stopOpacity="0.15" />
+          </linearGradient>
+          {/* Clip path: only the region ABOVE the budget line */}
+          <clipPath id="aboveBudgetClip">
+            <rect x={pL} y={pT} width={plotW} height={Math.max(0, budgetY - pT)} />
+          </clipPath>
           <filter id="shGlow" x="-20%" y="-40%" width="140%" height="180%">
             <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="dangerGlow" x="-10%" y="-30%" width="120%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
@@ -504,7 +521,7 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
         <line x1={pL} y1={yp(maxY * 0.5)} x2={W - pR} y2={yp(maxY * 0.5)} stroke="#FCE7F3" strokeWidth="0.8" />
         <line x1={pL} y1={baseline} x2={W - pR} y2={baseline} stroke="#FCE7F3" strokeWidth="1" />
 
-        {/* today vertical marker — goes from top to baseline */}
+        {/* today vertical marker */}
         <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
           stroke="#EC4899" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
 
@@ -513,15 +530,23 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
           <path d={smoothPath(realPtsArr, true)} fill="url(#shFill)" />
         )}
 
-        {/* budget reference line — light pink dashed */}
-        <line x1={pL} y1={yp(planned)} x2={W - pR} y2={yp(planned)}
-          stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" />
-        <text x={W - pR - 2} y={yp(planned) - 4} fontSize="8" fill="#EC4899"
+        {/* Danger zone fill — above budget line, below the spending curve */}
+        {realPtsArr.length >= 2 && isOverBudget && (
+          <path d={smoothPath(realPtsArr, true)} fill="url(#dangerFill)"
+            clipPath="url(#aboveBudgetClip)" filter="url(#dangerGlow)" />
+        )}
+
+        {/* budget reference line — dashed */}
+        <line x1={pL} y1={budgetY} x2={W - pR} y2={budgetY}
+          stroke={isOverBudget ? "#F87171" : "#F9A8D4"} strokeWidth="2" strokeDasharray="6 4" />
+        <text x={W - pR - 2} y={budgetY - 4} fontSize="8"
+          fill={isOverBudget ? "#EF4444" : "#EC4899"}
           textAnchor="end" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
-        {/* spending curve — all pink */}
+        {/* spending curve — pink, red tint when over budget */}
         {realPtsArr.length >= 2 && (
-          <path d={smoothPath(realPtsArr)} fill="none" stroke="url(#shLine)"
+          <path d={smoothPath(realPtsArr)} fill="none"
+            stroke={isOverBudget ? "#F43F5E" : "url(#shLine)"}
             strokeWidth="3" strokeLinecap="round" filter="url(#shGlow)" />
         )}
 
@@ -960,8 +985,8 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
       bg: "from-pink-50 to-rose-50",
       badge: income > 0
         ? surplus >= 0
-          ? { text: `+${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
-          : { text: `-${fmt(Math.abs(surplus), currency)}`, color: "text-rose-600 bg-rose-100" }
+          ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
+          : { text: `Balance = -${fmt(Math.abs(surplus), currency)}`, color: "text-rose-600 bg-rose-100" }
         : null,
     },
     {
@@ -973,11 +998,11 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
     },
     {
       label: "Real Spending Petals",
-      v: totalSpend,
-      sub: "planned + extra logged",
+      v: realExpenses,
+      sub: "extra spends this month",
       bg: "from-rose-50 to-pink-50",
       badge: realExpenses > 0
-        ? { text: `+${fmt(realExpenses, currency)} extra`, color: "text-rose-600 bg-rose-100" }
+        ? { text: `Extra spends = ${fmt(realExpenses, currency)}`, color: "text-rose-600 bg-rose-100" }
         : null,
     },
     {
@@ -1625,7 +1650,7 @@ function DashboardTab(props: {
                     cursor: isCenter ? "default" : "pointer",
                   }}>
                   <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                    style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
                     <div className="flex items-center justify-between gap-3 p-4">
                       <div className="flex-1 min-w-0">
                         <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
@@ -1671,7 +1696,7 @@ function DashboardTab(props: {
               const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
               return (
                 <div key={goal.id} className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #FF6EB4 0%, #FF99CC 35%, #FFB6D9 65%, #FFD6EC 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
                   <div className="flex items-center justify-between gap-3 p-5">
                     <div className="flex-1 min-w-0">
                       <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
