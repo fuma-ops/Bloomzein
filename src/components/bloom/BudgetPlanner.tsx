@@ -601,7 +601,7 @@ function BudgetHistorique({ planned, extraTxns, currency }: {
             <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
             <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
             {/* value label above — clamped so it never clips at SVG edges */}
-            <text x={todayLabelX} y={todayLabelY} fontSize="9" fill="#EC4899"
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill="#EC4899"
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -1401,10 +1401,10 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
       v: plannedBudget + realExpenses,
       sub: "extra spends this month",
       bg: "from-rose-50 to-pink-50",
-      badge: realExpenses > 0
-        ? { text: `Extra spends = ${fmt(realExpenses, currency)}`, color: "text-rose-600 bg-rose-100" }
-        : null,
-      planSub: fmt(plannedBudget, currency),
+      badge: null,
+      planSub: realExpenses > 0
+        ? `${fmt(realExpenses, currency)} extra · ${fmt(plannedBudget, currency)} planned`
+        : `${fmt(plannedBudget, currency)} planned`,
     },
     {
       label: "Savings Bloom",
@@ -1424,14 +1424,7 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
-            <div className="mt-1 space-y-0.5">
-              <div className="text-[9px] font-semibold text-[#F9A8D4] leading-tight">{it.planSub} planned</div>
-              {it.badge && (
-                <span className={`inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
-                  {it.badge.text}
-                </span>
-              )}
-            </div>
+            <div className="mt-1 text-[9px] font-semibold text-[#9D5C7E] leading-tight truncate">{it.planSub}</div>
           ) : it.badge ? (
             <span className={`mt-1 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
               {it.badge.text}
