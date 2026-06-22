@@ -1066,9 +1066,12 @@ export function BudgetPlanner() {
   const totalSavings = totalIncome - totalExpenses;
   const totalBalance = totalIncome - totalExpenses;
 
+  // Show guide only when budget isn't set up yet; skipping sets the flag permanently
+  const hasSetup = incomes.length > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0);
+
   return (
     <div data-bp>
-      {!onboarded && (
+      {!onboarded && !hasSetup && (
         <OnboardingGuide
           onDone={() => setOnboarded(true)}
           setTab={setTab}
