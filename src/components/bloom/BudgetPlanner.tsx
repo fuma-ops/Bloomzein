@@ -1631,10 +1631,10 @@ function StatNumber({ value, currency }: { value: number; currency: CurrencyKey 
   return <>{fmt(v, currency)}</>;
 }
 
-function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, currency }: {
-  income: number; plannedBudget: number; realExpenses: number; goalsSaved: number; balance: number; currency: CurrencyKey;
+function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSaved, balance, currency }: {
+  income: number; plannedBudget: number; goalsMonthly: number; realExpenses: number; goalsSaved: number; balance: number; currency: CurrencyKey;
 }) {
-  const totalSpend = plannedBudget + realExpenses;
+  const totalSpend = plannedBudget + goalsMonthly + realExpenses;
   const surplus = income - totalSpend;
   const isOverIncome = income > 0 && surplus < 0;
 
@@ -1652,18 +1652,20 @@ function StatCards({ income, plannedBudget, realExpenses, goalsSaved, balance, c
     },
     {
       label: "Planned Budget",
-      v: plannedBudget,
-      sub: "committed this month",
+      v: plannedBudget + goalsMonthly,
+      sub: goalsMonthly > 0
+        ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
+        : "committed this month",
       bg: "from-fuchsia-50 to-purple-50",
       badge: null,
     },
     {
       label: "Real Spending Petals",
-      v: plannedBudget + realExpenses,
+      v: plannedBudget + goalsMonthly + realExpenses,
       sub: "extra spends this month",
       bg: isOverIncome ? "from-red-100 to-rose-100" : "from-rose-50 to-pink-50",
       badge: null,
-      planSub: fmt(plannedBudget, currency),
+      planSub: fmt(plannedBudget + goalsMonthly, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
     },
     {
@@ -1935,9 +1937,11 @@ function DashboardTab(props: {
   }, [filteredTxns, allCats]);
 
   // Effective totals for insights — use committed budget model
+  // goals.monthly is real committed money (like rent) and must be part of planned spend
   const plannedTotal   = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+  const goalsMonthly   = goals.reduce((s, g) => s + (g.monthly ?? 0), 0);
   const extraLogged    = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-  const effectiveSpend = plannedTotal + extraLogged;
+  const effectiveSpend = plannedTotal + goalsMonthly + extraLogged;
   const effectiveSave  = totalIncome > 0 ? totalIncome - effectiveSpend : 0;
 
   // Story insights reflecting actual budget state
@@ -2090,6 +2094,7 @@ function DashboardTab(props: {
           <StatCards
             income={totalIncome}
             plannedBudget={plannedBudget}
+            goalsMonthly={goalsMonthly}
             realExpenses={realExpenses}
             goalsSaved={goalsSaved}
             balance={totalBalance}
@@ -2101,8 +2106,8 @@ function DashboardTab(props: {
       {/* ③b BUDGET VS REALITY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-        if (budgetedCats.length === 0) return null;
-        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        if (budgetedCats.length === 0 && goalsMonthly === 0) return null;
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly;
         // EXTRA = ALL actual logged transactions (every "+ Spend" is extra on top of committed plan)
         const totalOverage = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         return (
@@ -2470,7 +2475,7 @@ function DashboardTab(props: {
       {/* SPENDING HISTORY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly;
         if (totalPlanned === 0) return null;
         return (
           <Card>
@@ -2507,7 +2512,7 @@ function DashboardTab(props: {
             </div>
             <MonthlyPatternsChart
               txns={txns}
-              plannedBudget={plannedBudget}
+              plannedBudget={plannedBudget + goalsMonthly}
               income={totalIncome}
               currency={currency}
             />
