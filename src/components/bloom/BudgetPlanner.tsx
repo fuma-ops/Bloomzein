@@ -2169,70 +2169,80 @@ function DashboardTab(props: {
       )}
 
 
-      {/* ⑥ THIS MONTH'S STORY (warm — never red) + INCOME VS EXPENSES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
-            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
-            {viewPeriod === "week" ? "This week's story" : "This month's story"}
-          </h3>
-          <ul className="space-y-3">
-            {insights.map((ins, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <span className="text-base leading-none mt-0.5 shrink-0">{ins.icon}</span>
-                <div>
-                  <p className="text-sm font-semibold text-[#831843] leading-snug">{ins.main}</p>
-                  <p className="text-[11px] text-[#9D5C7E]">{ins.sub}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-[#831843]">Income vs Expenses</h3>
-            <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#F9A8D4] inline-block" /> Expenses</span>
-            </div>
-          </div>
-          {totalIncome === 0 && totalExpenses === 0 ? (
-            <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
-          ) : (
-            <div className="flex items-center gap-4">
-              <div className="flex-1 flex items-end gap-3">
-                {(["income", "expenses"] as const).map(type => {
-                  const val = type === "income" ? totalIncome : totalExpenses;
-                  const maxVal = Math.max(totalIncome, totalExpenses, 1);
-                  const barPx = Math.max(4, Math.round((val / maxVal) * 80));
-                  return (
-                    <div key={type} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-[10px] font-bold text-[#831843]">{fmt(val, currency)}</span>
-                      <div className="relative w-full" style={{ height: 80 }}>
-                        <div className="absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-700"
-                          style={{ height: barPx, background: type === "income" ? "#EC4899" : "#F9A8D4" }} />
-                      </div>
-                      <span className="text-[10px] text-[#9D5C7E] font-semibold capitalize">{type}</span>
+      {/* ⑥ THIS MONTH'S STORY + INCOME VS EXPENSES */}
+      {(() => {
+        const storyOver = totalIncome > 0 && effectiveSpend > totalIncome;
+        const expenseBarColor = storyOver ? "#EF4444" : "#F9A8D4";
+        const ringTone = storyOver ? "#EF4444" : "#EC4899";
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
+                <Sparkles className={`h-4 w-4 ${storyOver ? "text-red-500" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                {viewPeriod === "week" ? "This week's story" : "This month's story"}
+              </h3>
+              <ul className="space-y-3">
+                {insights.map((ins, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="text-base leading-none mt-0.5 shrink-0">{ins.icon}</span>
+                    <div>
+                      <p className={`text-sm font-semibold leading-snug ${storyOver && i === 0 ? "text-red-700" : "text-[#831843]"}`}>{ins.main}</p>
+                      <p className={`text-[11px] ${storyOver && i === 0 ? "text-red-500" : "text-[#9D5C7E]"}`}>{ins.sub}</p>
                     </div>
-                  );
-                })}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+
+            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>Income vs Expenses</h3>
+                <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full inline-block transition-colors duration-500" style={{ background: expenseBarColor }} /> Expenses
+                  </span>
+                </div>
               </div>
-              {totalIncome > 0 && (
-                <div className="shrink-0 text-center">
-                  <HealthRing
-                    pct={Math.min(100, (totalExpenses / totalIncome) * 100)}
-                    label=""
-                    tone="#EC4899"
-                    size={120}
-                  />
-                  <p className="text-[10px] text-[#9D5C7E] font-semibold -mt-2">of income spent</p>
+              {totalIncome === 0 && totalExpenses === 0 ? (
+                <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 flex items-end gap-3">
+                    {(["income", "expenses"] as const).map(type => {
+                      const val = type === "income" ? totalIncome : totalExpenses;
+                      const maxVal = Math.max(totalIncome, totalExpenses, 1);
+                      const barPx = Math.max(4, Math.round((val / maxVal) * 80));
+                      const barColor = type === "income" ? "#EC4899" : expenseBarColor;
+                      return (
+                        <div key={type} className="flex-1 flex flex-col items-center gap-1">
+                          <span className={`text-[10px] font-bold ${storyOver && type === "expenses" ? "text-red-700" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
+                          <div className="relative w-full" style={{ height: 80 }}>
+                            <div className="absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-700"
+                              style={{ height: barPx, background: barColor }} />
+                          </div>
+                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-red-500" : "text-[#9D5C7E]"}`}>{type}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {totalIncome > 0 && (
+                    <div className="shrink-0 text-center">
+                      <HealthRing
+                        pct={Math.min(100, (totalExpenses / totalIncome) * 100)}
+                        label=""
+                        tone={ringTone}
+                        size={120}
+                      />
+                      <p className={`text-[10px] font-semibold -mt-2 ${storyOver ? "text-red-500" : "text-[#9D5C7E]"}`}>of income spent</p>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
-        </Card>
-      </div>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* SPENDING HISTORY */}
       {(() => {
