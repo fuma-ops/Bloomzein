@@ -870,6 +870,7 @@ export function BudgetPlanner() {
               selectedCats={selectedCats} setSelectedCats={setSelectedCats}
               budget={budget} setBudget={setBudget}
               customCats={customCats} setCustomCats={setCustomCats}
+              setTxns={setTxns}
               currency={currency}
               totalIncome={totalIncome}
               setTab={setTab}
@@ -1896,6 +1897,7 @@ function BudgetSetupTab(props: {
   allCats: Cat[]; selectedCats: string[]; setSelectedCats: (v: string[] | ((p: string[]) => string[])) => void;
   budget: Budget; setBudget: (v: Budget | ((p: Budget) => Budget)) => void;
   customCats: CustomCat[]; setCustomCats: (v: CustomCat[] | ((p: CustomCat[]) => CustomCat[])) => void;
+  setTxns: (v: Txn[]) => void;
   currency: CurrencyKey;
   totalIncome: number;
   setTab: (t: TabKey) => void;
@@ -2006,7 +2008,7 @@ function BudgetSetupTab(props: {
           <div className="flex items-center gap-2">
             {saved && <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>}
             <button
-              onClick={() => { if (window.confirm("Reset all budget amounts to zero?")) { setBudget({}); setSelectedCats([]); } }}
+              onClick={() => { if (window.confirm("Reset everything? This will clear your budget setup AND all recorded transactions.")) { setBudget({}); setSelectedCats([]); props.setTxns([]); } }}
               className="text-xs font-semibold text-[#9D5C7E] border border-pink-200 rounded-full px-3 py-1.5 hover:bg-pink-50 transition active:scale-95">
               Reset
             </button>
