@@ -1279,9 +1279,32 @@ export function BudgetPlanner() {
   const viewBudget       = viewMode === "present" ? budget       : (monthPlan?.budgetOverride       ?? budget);
   const viewSelectedCats = viewMode === "present" ? selectedCats : (monthPlan?.selectedCatsOverride ?? selectedCats);
   const viewGoals = useMemo(() => {
-    if (viewMode === "present" || !monthPlan?.goalsOverride) return goals;
-    return goals.map(g => ({ ...g, monthly: monthPlan.goalsOverride![g.id] ?? g.monthly }));
-  }, [goals, monthPlan, viewMode]);
+    if (viewMode === "present") return goals;
+
+    return goals.map(g => {
+      const monthlyOverride = monthPlan?.goalsOverride?.[g.id] ?? g.monthly;
+
+      if (viewMode === "past") {
+        // Past: only override monthly, leave saved as-is (historical total unknown)
+        return { ...g, monthly: monthlyOverride };
+      }
+
+      // Future: project saved = current + every activated month's contribution up to viewed month
+      let projected = g.saved;
+      const [nowY0, nowM1] = nowKey.split("-").map(Number);
+      let y = nowY0, m0 = nowM1 - 1; // m0 is 0-indexed
+      for (let i = 0; i < 24; i++) {
+        const next = new Date(y, m0 + 1, 1);
+        y = next.getFullYear(); m0 = next.getMonth();
+        const k = `${y}-${String(m0 + 1).padStart(2, "0")}`;
+        const planK = months[k];
+        const contrib = planK?.goalsOverride?.[g.id] ?? g.monthly;
+        if (planK?.activated || k === monthKey) projected += contrib;
+        if (k === monthKey) break;
+      }
+      return { ...g, monthly: monthlyOverride, saved: projected };
+    });
+  }, [goals, monthPlan, viewMode, monthKey, nowKey, months]);
   const [showGuide, setShowGuide] = useState(false);
 
   // State lifted from DashboardTab for hero placement before the tab bar
@@ -1301,8 +1324,8 @@ export function BudgetPlanner() {
     return () => clearTimeout(t);
   }, []);
 
-  const clampedHeroGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
-  const heroGoalPct = (() => { const g = goals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
+  const clampedHeroGoalIdx = viewGoals.length > 0 ? Math.min(goalIdx, viewGoals.length - 1) : 0;
+  const heroGoalPct = (() => { const g = viewGoals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
   const cycleTip = cyclePhase && cyclePhase !== "any" ? BP_CYCLE_TIPS[cyclePhase] : undefined;
   const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
