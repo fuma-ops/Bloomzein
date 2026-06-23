@@ -1274,6 +1274,15 @@ export function BudgetPlanner() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   })();
 
+  // Reset a planned month + all consecutive planned months after it
+  function resetPlannedMonth(fromKey: string) {
+    setMonths(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(k => { if (k >= fromKey) delete updated[k]; });
+      return updated;
+    });
+  }
+
   // Second source of truth — no overlap with base plan
   const viewIncomes      = viewMode === "present" ? incomes      : (monthPlan?.incomes             ?? incomes);
   const viewBudget       = viewMode === "present" ? budget       : (monthPlan?.budgetOverride       ?? budget);
@@ -1678,6 +1687,38 @@ export function BudgetPlanner() {
           </button>
         </div>
       )}
+
+      {/* Activated future month — show plan info + reset */}
+      {viewMode === "future" && monthPlan?.activated && (() => {
+        const monthName = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+        // Count how many months after this one are also planned (will also be reset)
+        const cascade = Object.keys(months).filter(k => k > monthKey && months[k]?.activated).length;
+        return (
+          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-violet-50 border border-violet-200/60 px-4 py-2.5">
+            <Flag className="h-4 w-4 text-violet-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-violet-700 font-semibold truncate">
+                {monthName} · Planifié ✓
+              </p>
+              {cascade > 0 && (
+                <p className="text-[10px] text-violet-500">
+                  + {cascade} mois suivant{cascade > 1 ? "s" : ""} planifié{cascade > 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                const label = cascade > 0
+                  ? `Réinitialiser ${monthName} et les ${cascade} mois planifié${cascade > 1 ? "s" : ""} après ?`
+                  : `Réinitialiser le plan de ${monthName} ?`;
+                if (window.confirm(label)) resetPlannedMonth(monthKey);
+              }}
+              className="ml-2 shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-full px-2.5 py-1 transition active:scale-95 whitespace-nowrap">
+              <XCircle className="h-3 w-3" /> Réinitialiser
+            </button>
+          </div>
+        );
+      })()}
 
       {/* ✦ GLOBAL CTA FAB — only on current month */}
       {viewMode === "present" && <button
