@@ -1249,19 +1249,30 @@ export function BudgetPlanner() {
   const [bills, setBills] = useLocal<Bill[]>("bp:bills", []);
   const [months, setMonths] = useLocal<Record<string, MonthPlan>>("bp:months", {});
   const [showExtraSpend, setShowExtraSpend] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
 
   // Month navigation (global — affects all tabs)
   const _now = new Date();
   const [month, setMonth] = useState({ y: _now.getFullYear(), m: _now.getMonth() });
-  function shiftMonth(dir: -1 | 1) {
-    setMonth(({ y, m }) => { const d = new Date(y, m + dir, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
-  }
   const monthKey = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
   const nowKey   = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}`;
   const viewMode: "past" | "present" | "future" =
     monthKey < nowKey ? "past" : monthKey > nowKey ? "future" : "present";
   const monthPlan  = months[monthKey];
   const isPlanning = viewMode === "future" && !monthPlan?.activated;
+
+  // Progressive: find last consecutive planned month, next available = +1
+  const nextPlannableKey = (() => {
+    let last = { y: _now.getFullYear(), m: _now.getMonth() };
+    for (let i = 1; i <= 24; i++) {
+      const d = new Date(_now.getFullYear(), _now.getMonth() + i, 1);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (months[k]?.activated) last = { y: d.getFullYear(), m: d.getMonth() };
+      else break;
+    }
+    const d = new Date(last.y, last.m + 1, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  })();
 
   // Second source of truth — no overlap with base plan
   const viewIncomes      = viewMode === "present" ? incomes      : (monthPlan?.incomes             ?? incomes);
@@ -1479,10 +1490,13 @@ export function BudgetPlanner() {
                 )}
                 <div className="mt-2 flex items-center gap-2">
                   {isDash && (
-                    <button onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+                    <button onClick={() => setShowMonthPicker(true)}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
                       <Calendar className="h-3 w-3" />
-                      {viewPeriod === "week" ? "This week" : "This month"}
+                      {viewMode === "present"
+                        ? "Ce mois"
+                        : new Date(month.y, month.m, 1).toLocaleString("default", { month: "short", year: "numeric" })}
+                      {viewMode === "future" && <span className="text-[9px] font-bold text-white/80">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
                       <ChevronDown className="h-3 w-3 opacity-70" />
                     </button>
                   )}
@@ -1506,36 +1520,6 @@ export function BudgetPlanner() {
           </div>
         );
       })()}
-
-      {/* Month navigation strip */}
-      <div className="flex items-center justify-between px-1 pt-2 pb-1">
-        <button onClick={() => shiftMonth(-1)}
-          className="flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-pink-200/60 px-3 py-1.5 text-xs text-[#9D5C7E] font-semibold hover:bg-white transition active:scale-95">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          {new Date(month.y, month.m - 1, 1).toLocaleString("default", { month: "short" })}
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-[#831843]">
-            {new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" })}
-          </span>
-          {viewMode === "future" && (
-            <span className="text-[10px] font-bold text-violet-600 bg-violet-100 rounded-full px-2 py-0.5">
-              {monthPlan?.activated ? "✓ Planifié" : "✦ Planning"}
-            </span>
-          )}
-          {viewMode === "past" && (
-            <span className="text-[10px] font-bold text-[#9D5C7E] bg-pink-100 rounded-full px-2 py-0.5">Passé</span>
-          )}
-          {viewMode === "present" && (
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5">En cours</span>
-          )}
-        </div>
-        <button onClick={() => shiftMonth(1)}
-          className="flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-pink-200/60 px-3 py-1.5 text-xs text-[#9D5C7E] font-semibold hover:bg-white transition active:scale-95">
-          {new Date(month.y, month.m + 1, 1).toLocaleString("default", { month: "short" })}
-          <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
 
       {/* Tabs */}
       <div className="sticky top-14 md:top-0 z-30 py-2">
@@ -1647,6 +1631,18 @@ export function BudgetPlanner() {
           />
         )}
       </div>
+
+      {/* Month picker modal */}
+      {showMonthPicker && (
+        <MonthPickerModal
+          month={month}
+          setMonth={m => { setMonth(m); setShowMonthPicker(false); }}
+          onClose={() => setShowMonthPicker(false)}
+          months={months}
+          nowKey={nowKey}
+          nextPlannableKey={nextPlannableKey}
+        />
+      )}
 
       {/* Past month read-only banner */}
       {viewMode === "past" && (
@@ -1983,6 +1979,115 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
             </button>
           </div>
         )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/* ============================================================
+   MONTH PICKER MODAL
+============================================================ */
+const MONTH_ABBR = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+
+function MonthPickerModal({
+  month, setMonth, onClose, months, nowKey, nextPlannableKey,
+}: {
+  month: { y: number; m: number };
+  setMonth: (v: { y: number; m: number }) => void;
+  onClose: () => void;
+  months: Record<string, MonthPlan>;
+  nowKey: string;
+  nextPlannableKey: string;
+}) {
+  const [pickerYear, setPickerYear] = useState(month.y);
+  const selectedKey = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(253,242,248,0.75)", backdropFilter: "blur(6px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-xs bg-white rounded-3xl shadow-2xl border border-pink-200 overflow-hidden"
+        style={{ animation: "fadeIn 0.25s ease-out" }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <h2 className="text-base font-bold text-[#831843]">Choisir un mois</h2>
+          <button onClick={onClose} className="text-[#9D5C7E] hover:text-[#831843] transition">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Year navigation */}
+        <div className="flex items-center justify-between px-5 pb-3">
+          <button onClick={() => setPickerYear(y => y - 1)}
+            className="rounded-full p-1.5 hover:bg-pink-50 text-[#9D5C7E] transition active:scale-95">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-bold text-[#831843]">{pickerYear}</span>
+          <button onClick={() => setPickerYear(y => y + 1)}
+            className="rounded-full p-1.5 hover:bg-pink-50 text-[#9D5C7E] transition active:scale-95">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Month grid */}
+        <div className="grid grid-cols-3 gap-2 px-4 pb-5">
+          {MONTH_ABBR.map((name, m) => {
+            const k = `${pickerYear}-${String(m + 1).padStart(2, "0")}`;
+            const isPast       = k < nowKey;
+            const isCurrent    = k === nowKey;
+            const isActivated  = !!months[k]?.activated;
+            const isNextPlan   = k === nextPlannableKey;
+            const isSelected   = k === selectedKey;
+            const isLocked     = !isPast && !isCurrent && !isActivated && !isNextPlan;
+
+            let cls = "rounded-2xl py-2.5 flex flex-col items-center gap-0.5 text-xs font-bold transition active:scale-95 ";
+            let badge = "";
+
+            if (isLocked) {
+              cls += "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50";
+              badge = "🔒";
+            } else if (isCurrent) {
+              cls += "bg-[#EC4899] text-white shadow-md shadow-pink-300/50";
+              badge = "●";
+            } else if (isActivated) {
+              cls += "bg-violet-100 text-violet-700 hover:bg-violet-200";
+              badge = "✓";
+            } else if (isNextPlan) {
+              cls += "bg-violet-50 text-violet-600 border-2 border-dashed border-violet-400 hover:bg-violet-100";
+              badge = "✦";
+            } else {
+              // past
+              cls += "bg-pink-50 text-[#9D5C7E] hover:bg-pink-100";
+              badge = "";
+            }
+
+            if (isSelected && !isLocked) cls += " ring-2 ring-offset-1 ring-[#EC4899]";
+
+            return (
+              <button key={m} disabled={isLocked}
+                onClick={() => setMonth({ y: pickerYear, m })}
+                className={cls}>
+                <span>{name}</span>
+                {badge && <span className="text-[9px] leading-none opacity-80">{badge}</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 px-5 pb-4 border-t border-pink-100 pt-3">
+          <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#EC4899]" /> En cours
+          </span>
+          <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-violet-200" /> Planifié ✓
+          </span>
+          <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
+            <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-violet-400" /> Planifier ✦
+          </span>
+        </div>
       </div>
     </div>,
     document.body
