@@ -354,23 +354,33 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   const onPointerDown = useCallback((id: number, e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button")) return;
     e.preventDefault();
+    e.stopPropagation();
     const it = items.find((i) => i.id === id);
-    if (!it || !canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    dragRef.current = { id, dx: e.clientX - (rect.left + it.x), dy: e.clientY - (rect.top + it.y) };
+    if (!it) return;
+    // Delta from pointer to element's current position — no container padding issues
+    const startClientX = e.clientX;
+    const startClientY = e.clientY;
+    const origX = it.x;
+    const origY = it.y;
+    const el = e.currentTarget as HTMLElement;
+    dragRef.current = { id, dx: 0, dy: 0 };
+    let finalX = origX;
+    let finalY = origY;
     const onMove = (ev: PointerEvent) => {
-      if (!dragRef.current || !canvasRef.current) return;
-      const r = canvasRef.current.getBoundingClientRect();
-      const x = Math.max(-8, Math.min(r.width - 44, ev.clientX - r.left - dragRef.current.dx));
-      const y = Math.max(-8, Math.min(r.height - 30, ev.clientY - r.top - dragRef.current.dy));
-      setItems((p) => p.map((i) => i.id === dragRef.current!.id ? { ...i, x, y } : i));
+      finalX = origX + ev.clientX - startClientX;
+      finalY = origY + ev.clientY - startClientY;
+      // Direct DOM update — zero React re-renders while dragging
+      el.style.left = finalX + "px";
+      el.style.top = finalY + "px";
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       dragRef.current = null;
+      // Single state update on drop
+      setItems((p) => p.map((i) => i.id === id ? { ...i, x: finalX, y: finalY } : i));
     };
-    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerup", onUp);
   }, [items]);
 
