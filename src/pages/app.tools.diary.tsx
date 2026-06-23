@@ -330,7 +330,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   const [titleFocused, setTitleFocused] = useState(false);
   const [nextId, setNextId] = useState(1);
   const [pageFull, setPageFull] = useState(false);
-  const [activePrompt] = useState(() => JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
+  const [activePrompt, setActivePrompt] = useState(() => JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
   const [promptDismissed, setPromptDismissed] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [hiddenIdeas, setHiddenIdeas] = useState<number[]>([]);
@@ -501,8 +501,10 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
         {/* Stickers — float freely on the full page, no background, just the icon */}
         {stickers.map((it) => (
           <div key={it.id} className="dd-item" onPointerDown={(e) => onPointerDown(it.id, e)} style={{ position: "absolute", left: it.x, top: it.y, zIndex: 4, touchAction: "none", userSelect: "none", cursor: "grab" }}>
-            <div style={{ pointerEvents: "none", filter: "drop-shadow(0 2px 8px rgba(131,24,67,.28))" }}>{STICKER_ICONS[it.icon!]}</div>
-            <button className="dd-del" onClick={(e) => { e.stopPropagation(); deleteItem(it.id); }} style={{ position: "absolute", top: -8, right: -8, zIndex: 6, width: 18, height: 18, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700, lineHeight: 1, pointerEvents: "auto" }}>✕</button>
+            <div style={{ width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", filter: "drop-shadow(0 3px 12px rgba(131,24,67,.3))" }}>
+              <div style={{ transform: "scale(4)", transformOrigin: "center" }}>{STICKER_ICONS[it.icon!]}</div>
+            </div>
+            <button className="dd-del" onClick={(e) => { e.stopPropagation(); deleteItem(it.id); }} style={{ position: "absolute", top: -8, right: -8, zIndex: 6, width: 20, height: 20, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, lineHeight: 1, pointerEvents: "auto" }}>✕</button>
           </div>
         ))}
 
@@ -585,15 +587,24 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
         {photos.length > 0 && (
           <div className="dd-textarea" style={{ flexShrink: 0, marginTop: 10, display: "flex", gap: 12, overflowX: "auto", padding: "10px 2px 6px", alignItems: "flex-end" }}>
             {photos.map((it) => (
-              <div key={it.id} className="dd-item" style={{ position: "relative", flexShrink: 0, background: "#fffdf9", borderRadius: 3, padding: "5px 5px 20px", boxShadow: "0 8px 22px rgba(131,24,67,.22)", transform: `rotate(${(it.id % 3 - 1) * 3}deg)` }}>
-                <img src={it.src!} alt="" draggable={false} style={{ display: "block", width: 78, height: 62, objectFit: "cover", borderRadius: 2, pointerEvents: "none" }} />
+              <div key={it.id} className="dd-item" style={{ position: "relative", flexShrink: 0, background: "#fffdf9", borderRadius: 3, padding: "6px 6px 26px", boxShadow: "0 8px 22px rgba(131,24,67,.22)", transform: `rotate(${(it.id % 3 - 1) * 3}deg)` }}>
+                <img src={it.src!} alt="" draggable={false} style={{ display: "block", width: 130, height: 104, objectFit: "cover", borderRadius: 2, pointerEvents: "none" }} />
                 <button className="dd-del" onClick={() => deleteItem(it.id)} style={{ position: "absolute", top: -7, right: -7, zIndex: 6, width: 18, height: 18, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700 }}>✕</button>
               </div>
             ))}
           </div>
         )}
 
-        <button onClick={() => onSave(photos.map((i) => i.src!))} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 8, flexShrink: 0, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12.5, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>Save entry ✿</button>
+        <button onClick={() => {
+          onSave(photos.map((i) => i.src!));
+          setItems([]);
+          setSizes({});
+          setTitleDraft("");
+          setPromptDismissed(false);
+          setActivePrompt(JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
+          setPageFull(false);
+          setPickerOpen(false);
+        }} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 8, flexShrink: 0, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12.5, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>Save entry ✿</button>
 
         <input id="dd-photo-input" type="file" accept="image/*" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const src = await compressImage(f); addPhoto(src); e.target.value = ""; }} />
       </div>
