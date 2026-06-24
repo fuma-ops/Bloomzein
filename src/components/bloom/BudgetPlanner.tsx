@@ -542,6 +542,22 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
     ? Math.min(baseline - 4, todayY + 17)
     : Math.max(pT + 8, todayY - 13);
 
+  // Top 3 spend days for labels — drawn last in SVG, never overlap the curve
+  const topSpendDays = dailyByDay
+    .map((amt, i) => ({ day: i + 1, amt }))
+    .filter(d => d.day <= today && d.amt > 0)
+    .sort((a, b) => b.amt - a.amt)
+    .slice(0, 3)
+    .sort((a, b) => a.day - b.day);
+
+  const spendLabels = topSpendDays.map((d, i) => {
+    const cx = Math.max(pL + 28, Math.min(W - pR - 28, xp(d.day)));
+    const dotY = yp(Math.min(d.amt, maxY));
+    const stagger = topSpendDays.length > 1 && i % 2 === 1 ? -14 : 0;
+    const labelY = Math.max(pT + 9, dotY - 11 + stagger);
+    return { day: d.day, amt: d.amt, cx, dotY, labelY };
+  });
+
   return (
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }} overflow="visible">
@@ -633,6 +649,28 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         <text x={pL + 3} y={12} fontSize="8"
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
           textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
+
+        {/* Top spend-day labels — small dot + amount above each peak */}
+        {spendLabels.map(({ day, amt, cx, dotY, labelY }) => {
+          const isToday = day === today;
+          const color = amt > dailyBudget ? "#EF4444" : "#9D5C7E";
+          const labelText = fmt(amt, currency);
+          const pillW = Math.min(62, 28 + labelText.length * 5.2);
+          return (
+            <g key={day}>
+              {/* small dot marker (skip if today — today already has a prominent dot) */}
+              {!isToday && (
+                <circle cx={cx} cy={dotY} r="3" fill={color} opacity="0.7" />
+              )}
+              {/* white pill + label */}
+              <rect x={cx - pillW / 2} y={labelY - 8} width={pillW} height={10} rx="3"
+                fill="white" fillOpacity="0.96" />
+              <text x={cx} y={labelY} fontSize="7" fill={color}
+                textAnchor="middle" fontWeight="700">{labelText}</text>
+            </g>
+          );
+        })}
+
         {/* Today value label */}
         {realPtsArr.length > 0 && (
           <>
@@ -1848,7 +1886,8 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Savings Bloom",
       v: goalsSaved,
       sub: "saved across all goals",
-      bg: "from-purple-50 to-pink-50",
+      bg: "from-emerald-50 to-teal-50",
+      numColor: "text-emerald-600",
       badge: null,
     },
   ];
@@ -1858,7 +1897,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       {cards.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
+          <div className={`mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none ${"numColor" in it ? it.numColor : "text-[#EC4899]"}`}>
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
