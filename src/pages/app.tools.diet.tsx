@@ -3,7 +3,6 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check,
 } from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
@@ -926,8 +925,7 @@ export default function DietPage() {
   }
 
   return (
-    <div className="relative animate-fade-in max-w-full overflow-x-hidden">
-      <BloomBubbles count={10} />
+    <div className="animate-fade-in max-w-full overflow-x-hidden">
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
