@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
+  Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
@@ -97,8 +98,8 @@ const EMPTY_DAY: DayMeals = { breakfast: null, lunch: null, dinner: null, snack:
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
 };
-const MEAL_EMOJIS: Record<MealType, string> = {
-  breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎",
+const MEAL_ICONS: Record<MealType, React.ElementType> = {
+  breakfast: Sunrise, lunch: Sun, dinner: Moon, snack: Apple,
 };
 
 const PHASE_RING: Record<DietPhase, string> = {
@@ -464,7 +465,9 @@ function CycleNutritionTab({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="font-script text-2xl text-hotpink mb-3">🌸 Your Cycle Phases</h3>
+        <h3 className="font-script text-2xl text-hotpink mb-3 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-hotpink" strokeWidth={1.6} /> Your Cycle Phases
+        </h3>
         <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
           {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
         </div>
@@ -472,7 +475,9 @@ function CycleNutritionTab({
 
       <Glass className="p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-script text-xl text-hotpink">⚙️ My Rules</h3>
+          <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
+            <SlidersHorizontal className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> My Rules
+          </h3>
           <button onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink hover:underline">
             <Pencil className="h-3 w-3" /> Edit
           </button>
@@ -542,9 +547,13 @@ function MealSlot({
     ).slice(0, 6);
   }, [query, candidates, type]);
 
+  const MealIcon = MEAL_ICONS[type];
   return (
     <Glass className="p-3 sm:p-4">
-      <p className="font-script text-lg text-hotpink leading-none mb-2">{MEAL_EMOJIS[type]} {MEAL_LABELS[type]}</p>
+      <p className="font-script text-lg text-hotpink leading-none mb-2 flex items-center gap-1.5">
+        <MealIcon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
+        {MEAL_LABELS[type]}
+      </p>
       {meal ? (
         <div className="mt-1.5 flex items-start justify-between gap-2">
           <div>
@@ -666,7 +675,9 @@ function TodayTab({
 
       {/* Macro rings */}
       <Glass className="p-4 sm:p-5">
-        <h3 className="font-script text-xl text-hotpink mb-3">📊 Today's Macros</h3>
+        <h3 className="font-script text-xl text-hotpink mb-3 flex items-center gap-1.5">
+          <Activity className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Today's Macros
+        </h3>
         <div className="grid grid-cols-4 gap-2 sm:gap-4">
           <RingProgress value={consumed.calories} target={targets.calories} label="Calories" sub="" colorClass={ringColor} />
           <RingProgress value={consumed.protein} target={targets.protein} label="Protein" sub="g" colorClass={ringColor} />
@@ -677,7 +688,9 @@ function TodayTab({
 
       {/* Micro bars */}
       <Glass className="p-4 sm:p-5 space-y-3">
-        <h3 className="font-script text-xl text-hotpink">🌿 Phase Nutrients</h3>
+        <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
+          <Leaf className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Phase Nutrients
+        </h3>
         {micros.map((m) => (
           <MicroBar key={m.key as string} label={m.label} value={consumed[m.key as keyof typeof consumed] ?? 0} target={m.target} unit={m.unit} />
         ))}
@@ -713,7 +726,9 @@ function TodayTab({
 
       {/* Meal slots — one per section */}
       <div>
-        <h3 className="font-script text-2xl text-hotpink mb-3">Your Meals Today</h3>
+        <h3 className="font-script text-2xl text-hotpink mb-3 flex items-center gap-2">
+          <UtensilsCrossed className="h-5 w-5 text-hotpink" strokeWidth={1.6} /> Your Meals Today
+        </h3>
         <div className="space-y-3">
           {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
             <MealSlot
