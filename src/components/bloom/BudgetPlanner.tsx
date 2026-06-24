@@ -636,24 +636,23 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
           </>
         )}
 
-        {/* ALL text labels drawn last — always above every graph element */}
-        {/* Budget label — anchored in top-padding area (above pT=18), never overlaps the curve */}
-        <rect x={pL} y={2} width={108} height={13} rx="3" fill="white" fillOpacity="0.95" />
-        <text x={pL + 3} y={12} fontSize="8"
-          fill={isOverBudget ? "#EF4444" : "#EC4899"}
-          textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
-        {/* Top spend-day labels — floated above peak, no background, red text */}
+        {/* Top spend-day labels — pinned in top-padding zone, guaranteed above curve */}
         {topSpendDays.map((d, i) => {
           const cx = Math.max(pL + 28, Math.min(W - pR - 28, xp(d.day)));
           const dotY = yp(Math.min(d.amt, maxY));
           const isToday = d.day === today;
-          const stagger = topSpendDays.length > 1 && i % 2 === 1 ? 10 : 0;
-          const labelY = Math.max(pT + 7, dotY - 16 - stagger);
+          const labelY = 6 + (i % 2) * 8;
           return (
             <g key={d.day}>
-              {!isToday && <circle cx={cx} cy={dotY} r="3" fill="#EF4444" opacity="0.7" />}
-              <text x={cx} y={labelY} fontSize="7.5" fill="#EF4444"
+              {!isToday && (
+                <>
+                  <line x1={cx} y1={dotY - 3} x2={cx} y2={labelY + 2}
+                    stroke="#EF4444" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.45" />
+                  <circle cx={cx} cy={dotY} r="2.5" fill="#EF4444" opacity="0.7" />
+                </>
+              )}
+              <text x={cx} y={labelY} fontSize="6.5" fill="#EF4444"
                 textAnchor="middle" fontWeight="700">{fmt(d.amt, currency)}</text>
             </g>
           );
@@ -683,7 +682,9 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
       <div className="flex items-center gap-4 mt-1.5 px-1">
         <div className="flex items-center gap-1.5">
           <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" /></svg>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">Budget</span>
+          <span className={`text-[10px] font-semibold ${isOverBudget ? "text-rose-500" : "text-[#9D5C7E]"}`}>
+            Budget · {fmt(planned, currency)}
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#EC4899" strokeWidth="2.5" /></svg>
