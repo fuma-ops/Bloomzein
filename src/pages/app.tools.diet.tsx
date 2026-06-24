@@ -3,6 +3,7 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
 } from "lucide-react";
+import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
@@ -95,6 +96,9 @@ const EMPTY_DAY: DayMeals = { breakfast: null, lunch: null, dinner: null, snack:
 
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
+};
+const MEAL_EMOJIS: Record<MealType, string> = {
+  breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎",
 };
 
 const PHASE_RING: Record<DietPhase, string> = {
@@ -459,13 +463,16 @@ function CycleNutritionTab({
   const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
   return (
     <div className="space-y-5">
-      <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
-        {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
+      <div>
+        <h3 className="font-script text-2xl text-hotpink mb-3">🌸 Your Cycle Phases</h3>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
+          {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
+        </div>
       </div>
 
-      <div className="px-1">
+      <Glass className="p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-script text-xl text-hotpink">My Rules</h3>
+          <h3 className="font-script text-xl text-hotpink">⚙️ My Rules</h3>
           <button onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink hover:underline">
             <Pencil className="h-3 w-3" /> Edit
           </button>
@@ -482,7 +489,7 @@ function CycleNutritionTab({
           </span>
         </div>
         <p className="mt-2 text-xs text-rose/60">These preferences filter your recipe library silently.</p>
-      </div>
+      </Glass>
     </div>
   );
 }
@@ -536,8 +543,8 @@ function MealSlot({
   }, [query, candidates, type]);
 
   return (
-    <div className="p-3 sm:p-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-rose/60">{MEAL_LABELS[type]}</p>
+    <Glass className="p-3 sm:p-4">
+      <p className="font-script text-lg text-hotpink leading-none mb-2">{MEAL_EMOJIS[type]} {MEAL_LABELS[type]}</p>
       {meal ? (
         <div className="mt-1.5 flex items-start justify-between gap-2">
           <div>
@@ -582,7 +589,7 @@ function MealSlot({
           </PinkBtn>
         </div>
       )}
-    </div>
+    </Glass>
   );
 }
 
@@ -649,35 +656,36 @@ function TodayTab({
   return (
     <div className="space-y-5">
       {/* Header row */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <Glass className="p-4 flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-sm font-bold text-magenta">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
           <p className="text-xs text-rose/60">Day {cycleDay} of your cycle</p>
         </div>
         <span className="rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-hotpink">{PHASE_INFO[phase].label}</span>
-      </div>
+      </Glass>
 
       {/* Macro rings */}
-      <div className="py-2">
+      <Glass className="p-4 sm:p-5">
+        <h3 className="font-script text-xl text-hotpink mb-3">📊 Today's Macros</h3>
         <div className="grid grid-cols-4 gap-2 sm:gap-4">
           <RingProgress value={consumed.calories} target={targets.calories} label="Calories" sub="" colorClass={ringColor} />
           <RingProgress value={consumed.protein} target={targets.protein} label="Protein" sub="g" colorClass={ringColor} />
           <RingProgress value={consumed.carbs} target={targets.carbs} label="Carbs" sub="g" colorClass={ringColor} />
           <RingProgress value={consumed.fat} target={targets.fat} label="Fat" sub="g" colorClass={ringColor} />
         </div>
-      </div>
+      </Glass>
 
       {/* Micro bars */}
-      <div className="space-y-3">
-        <h3 className="font-script text-lg text-hotpink">For your phase</h3>
+      <Glass className="p-4 sm:p-5 space-y-3">
+        <h3 className="font-script text-xl text-hotpink">🌿 Phase Nutrients</h3>
         {micros.map((m) => (
           <MicroBar key={m.key as string} label={m.label} value={consumed[m.key as keyof typeof consumed] ?? 0} target={m.target} unit={m.unit} />
         ))}
-      </div>
+      </Glass>
 
       {/* Post-workout card */}
       {showPostWorkout && pwRecipe && workoutToday && (
-        <div className="py-2">
+        <Glass className="p-4 sm:p-5 border-hotpink/30">
           <p className="text-sm font-bold text-magenta flex items-center gap-1.5">
             <Dumbbell className="h-4 w-4 text-hotpink" /> {workoutToday.sessionName} completed
           </p>
@@ -700,19 +708,22 @@ function TodayTab({
             <PinkBtn variant="outline" className="text-xs px-3 py-1.5" onClick={() => setPwIndex((i) => (i + 1) % Math.max(1, pwPool.length))}>See alternatives</PinkBtn>
             <PinkBtn variant="ghost" className="text-xs px-3 py-1.5" onClick={() => setDismissedPW((d) => ({ ...d, [todayISO()]: true }))}>Dismiss</PinkBtn>
           </div>
-        </div>
+        </Glass>
       )}
 
-      {/* Meal slots */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
-          <MealSlot
-            key={type} type={type} meal={dayMeals[type]}
-            onAddRecipe={(r) => assignMeal(type, r)}
-            onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
-            candidates={candidatesFor(type)}
-          />
-        ))}
+      {/* Meal slots — one per section */}
+      <div>
+        <h3 className="font-script text-2xl text-hotpink mb-3">Your Meals Today</h3>
+        <div className="space-y-3">
+          {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
+            <MealSlot
+              key={type} type={type} meal={dayMeals[type]}
+              onAddRecipe={(r) => assignMeal(type, r)}
+              onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
+              candidates={candidatesFor(type)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -933,7 +944,8 @@ export default function DietPage() {
   }
 
   return (
-    <div className="animate-fade-in max-w-full overflow-x-hidden">
+    <div className="relative animate-fade-in max-w-full overflow-x-hidden">
+      <BloomBubbles count={10} />
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
