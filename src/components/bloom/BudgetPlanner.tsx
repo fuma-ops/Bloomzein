@@ -907,8 +907,13 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   return (
     <div className="flex flex-col items-center gap-3">
       <svg viewBox="0 0 112 112" width="108" height="108">
-        {/* planned slice */}
-        <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        {/* planned slice — full ring when no extra (arc degenerates at 2π), arc otherwise */}
+        {!hasExtra ? (
+          <circle cx={cx} cy={cy} r={(R + ri) / 2} fill="none"
+            stroke={plannedColor} strokeWidth={R - ri} />
+        ) : (
+          <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        )}
         {/* extra slice */}
         {hasExtra && (
           <path d={arcPath(a0 + plannedSweep, extraSweep)} fill={extraColor} stroke="white" strokeWidth="1.5" />
