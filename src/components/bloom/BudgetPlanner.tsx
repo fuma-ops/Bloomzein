@@ -644,7 +644,6 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
           const isToday = d.day === today;
           const labelY = 8 + (i % 2) * 10;
           const labelText = fmt(d.amt, currency);
-          const pillW = Math.max(28, labelText.length * 5.5);
           return (
             <g key={d.day}>
               {!isToday && (
@@ -654,8 +653,6 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
                   <circle cx={cx} cy={dotY} r="2.5" fill="#EF4444" opacity="0.7" />
                 </>
               )}
-              <rect x={cx - pillW / 2} y={labelY - 7} width={pillW} height={9} rx="2.5"
-                fill="white" fillOpacity="0.9" />
               <text x={cx} y={labelY} fontSize="6.5" fill="#EF4444"
                 textAnchor="middle" fontWeight="700">{labelText}</text>
             </g>
