@@ -794,71 +794,73 @@ function RecipesTab({
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
-        <input
-          value={query} onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search recipes or ingredients..."
-          className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {PHASE_FILTERS.map((p) => (
-            <SelectPill key={p} active={phaseFilters.includes(p)} onClick={() => toggle(phaseFilters, p, setPhaseFilters)}>{PHASE_INFO[p].label}</SelectPill>
-          ))}
+      {/* Search + filters */}
+      <Glass className="p-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
+          <input
+            value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search recipes or ingredients..."
+            className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
+          />
         </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {MEAL_FILTERS.map((m) => (
-            <SelectPill key={m} active={mealFilters.includes(m)} onClick={() => toggle(mealFilters, m, setMealFilters)}>{MEAL_LABELS[m]}</SelectPill>
-          ))}
+        <div className="space-y-1.5">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {PHASE_FILTERS.map((p) => (
+              <SelectPill key={p} active={phaseFilters.includes(p)} onClick={() => toggle(phaseFilters, p, setPhaseFilters)}>{PHASE_INFO[p].label}</SelectPill>
+            ))}
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {MEAL_FILTERS.map((m) => (
+              <SelectPill key={m} active={mealFilters.includes(m)} onClick={() => toggle(mealFilters, m, setMealFilters)}>{MEAL_LABELS[m]}</SelectPill>
+            ))}
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {TIME_FILTERS.map((t) => (
+              <SelectPill key={t.key} active={timeFilter === t.key} onClick={() => setTimeFilter((cur) => (cur === t.key ? null : t.key))}>{t.label}</SelectPill>
+            ))}
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {GOAL_FILTERS.map((g) => (
+              <SelectPill key={g.key} active={goalFilters.includes(g.key)} onClick={() => toggle(goalFilters, g.key, setGoalFilters)}>{g.label}</SelectPill>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {TIME_FILTERS.map((t) => (
-            <SelectPill key={t.key} active={timeFilter === t.key} onClick={() => setTimeFilter((cur) => (cur === t.key ? null : t.key))}>{t.label}</SelectPill>
-          ))}
-        </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {GOAL_FILTERS.map((g) => (
-            <SelectPill key={g.key} active={goalFilters.includes(g.key)} onClick={() => toggle(goalFilters, g.key, setGoalFilters)}>{g.label}</SelectPill>
-          ))}
-        </div>
-      </div>
+      </Glass>
 
       {!!pwRecipes.length && !filtersActive && (
-        <div>
+        <Glass className="p-4">
           <p className="font-script text-lg text-hotpink mb-2">🏋️ Post-workout recipes — high protein · phase matched</p>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             {pwRecipes.map((r) => (
               <div key={r.id} className="w-40 shrink-0"><RecipeCard recipe={r} onOpen={() => onOpenRecipe(r)} /></div>
             ))}
           </div>
-        </div>
+        </Glass>
       )}
 
       {filtersActive ? (
-        <div>
+        <Glass className="p-4">
           <p className="font-script text-lg text-hotpink mb-2">{filtered.length} recipe{filtered.length === 1 ? "" : "s"}</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {filtered.map((r) => <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />)}
           </div>
           {filtered.length === 0 && <p className="text-sm text-rose/60">No recipes match — try fewer filters.</p>}
-        </div>
+        </Glass>
       ) : (
         <>
-          <div>
+          <Glass className="p-4">
             <p className="font-script text-lg text-hotpink mb-2">For your phase today</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {forYourPhase.map((r) => <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />)}
             </div>
-          </div>
-          <div>
+          </Glass>
+          <Glass className="p-4">
             <p className="font-script text-lg text-hotpink mb-2">Quick this week</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickThisWeek.map((r) => <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />)}
             </div>
-          </div>
+          </Glass>
         </>
       )}
     </div>
