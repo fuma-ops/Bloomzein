@@ -500,7 +500,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
   const maxY = dailyBudget * 1.6;
 
   // Same compact dimensions as the Income vs Expenses bar chart (h-28 ≈ 112px)
-  const W = 280, H = 100, pL = 8, pR = 8, pT = 18, pB = 20;
+  const W = 280, H = 110, pL = 8, pR = 8, pT = 28, pB = 20;
   const plotW = W - pL - pR, plotH = H - pT - pB;
   const xp = (d: number) => pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * plotW;
   const yp = (v: number) => pT + plotH - (v / maxY) * plotH;
@@ -553,7 +553,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }} overflow="visible">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 160 }} overflow="visible">
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
@@ -637,23 +637,27 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         )}
 
 
-        {/* Top spend-day labels — pinned in top-padding zone, guaranteed above curve */}
+        {/* Top spend-day labels — in expanded top-padding zone, white pill background */}
         {topSpendDays.map((d, i) => {
-          const cx = Math.max(pL + 28, Math.min(W - pR - 28, xp(d.day)));
+          const cx = Math.max(pL + 32, Math.min(W - pR - 32, xp(d.day)));
           const dotY = yp(Math.min(d.amt, maxY));
           const isToday = d.day === today;
-          const labelY = 6 + (i % 2) * 8;
+          const labelY = 8 + (i % 2) * 10;
+          const labelText = fmt(d.amt, currency);
+          const pillW = Math.max(28, labelText.length * 5.5);
           return (
             <g key={d.day}>
               {!isToday && (
                 <>
-                  <line x1={cx} y1={dotY - 3} x2={cx} y2={labelY + 2}
-                    stroke="#EF4444" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.45" />
+                  <line x1={cx} y1={dotY - 3} x2={cx} y2={labelY + 3}
+                    stroke="#EF4444" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.4" />
                   <circle cx={cx} cy={dotY} r="2.5" fill="#EF4444" opacity="0.7" />
                 </>
               )}
+              <rect x={cx - pillW / 2} y={labelY - 7} width={pillW} height={9} rx="2.5"
+                fill="white" fillOpacity="0.9" />
               <text x={cx} y={labelY} fontSize="6.5" fill="#EF4444"
-                textAnchor="middle" fontWeight="700">{fmt(d.amt, currency)}</text>
+                textAnchor="middle" fontWeight="700">{labelText}</text>
             </g>
           );
         })}
