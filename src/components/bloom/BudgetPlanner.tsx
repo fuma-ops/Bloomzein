@@ -643,15 +643,20 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
           fill={isOverBudget ? "#EF4444" : "#EC4899"}
           textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
 
-        {/* Top spend-day dot markers only — labels are in HTML below the chart */}
-        {topSpendDays.map((d) => {
+        {/* Top spend-day labels — floated above peak, no background, red text */}
+        {topSpendDays.map((d, i) => {
           const cx = Math.max(pL + 28, Math.min(W - pR - 28, xp(d.day)));
           const dotY = yp(Math.min(d.amt, maxY));
           const isToday = d.day === today;
-          const color = d.amt > dailyBudget ? "#EF4444" : "#9D5C7E";
-          return !isToday ? (
-            <circle key={d.day} cx={cx} cy={dotY} r="3.5" fill={color} opacity="0.8" />
-          ) : null;
+          const stagger = topSpendDays.length > 1 && i % 2 === 1 ? 10 : 0;
+          const labelY = Math.max(pT + 7, dotY - 16 - stagger);
+          return (
+            <g key={d.day}>
+              {!isToday && <circle cx={cx} cy={dotY} r="3" fill="#EF4444" opacity="0.7" />}
+              <text x={cx} y={labelY} fontSize="7.5" fill="#EF4444"
+                textAnchor="middle" fontWeight="700">{fmt(d.amt, currency)}</text>
+            </g>
+          );
         })}
 
         {/* Today value label */}
@@ -690,19 +695,6 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         </div>
       </div>
 
-      {/* Top spend days — HTML row, never touches the curve */}
-      {topSpendDays.length > 0 && (
-        <div className="flex items-center gap-2 mt-1.5 px-1 flex-wrap">
-          <span className="text-[9px] font-bold text-[#9D5C7E] uppercase tracking-widest">Top:</span>
-          {topSpendDays.map(({ day, amt }) => (
-            <span key={day}
-              className={`inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-2 py-0.5 ${amt > dailyBudget ? "bg-rose-50 text-rose-500" : "bg-pink-50 text-[#9D5C7E]"}`}>
-              <span className={amt > dailyBudget ? "text-rose-500" : "text-[#EC4899]"}>J{day}</span>
-              {fmt(amt, currency)}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -1898,17 +1890,17 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
-            <div className="mt-1 flex items-center flex-wrap gap-x-0.5 text-[10px] text-[#9D5C7E] leading-tight">
+            <div className="mt-0.5 flex items-center flex-wrap gap-x-0.5 text-[9px] text-[#9D5C7E] leading-tight">
               {it.extraAmt && <span className="text-rose-500">{it.extraAmt} extra</span>}
               {it.extraAmt && <span className="text-[#9D5C7E]">+</span>}
               <span className="text-[#9D5C7E]">{it.planSub} planned</span>
             </div>
           ) : it.badge ? (
-            <span className={`mt-1 inline-block text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
+            <span className={`mt-0.5 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
               {it.badge.text}
             </span>
           ) : (
-            <div className="mt-1 text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+            <div className="mt-0.5 text-[9px] text-[#9D5C7E] leading-tight">{it.sub}</div>
           )}
         </Card>
       ))}
