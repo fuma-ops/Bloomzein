@@ -97,6 +97,9 @@ const EMPTY_DAY: DayMeals = { breakfast: null, lunch: null, dinner: null, snack:
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
 };
+const MEAL_EMOJIS: Record<MealType, string> = {
+  breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎",
+};
 
 const PHASE_RING: Record<DietPhase, string> = {
   menstrual: "text-hotpink",
@@ -460,13 +463,16 @@ function CycleNutritionTab({
   const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
   return (
     <div className="space-y-5">
-      <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
-        {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
+      <div>
+        <h3 className="font-script text-2xl text-hotpink mb-3">🌸 Your Cycle Phases</h3>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
+          {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
+        </div>
       </div>
 
       <Glass className="p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-script text-xl text-hotpink">My Rules</h3>
+          <h3 className="font-script text-xl text-hotpink">⚙️ My Rules</h3>
           <button onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink hover:underline">
             <Pencil className="h-3 w-3" /> Edit
           </button>
@@ -538,7 +544,7 @@ function MealSlot({
 
   return (
     <Glass className="p-3 sm:p-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-rose/60">{MEAL_LABELS[type]}</p>
+      <p className="font-script text-lg text-hotpink leading-none mb-2">{MEAL_EMOJIS[type]} {MEAL_LABELS[type]}</p>
       {meal ? (
         <div className="mt-1.5 flex items-start justify-between gap-2">
           <div>
@@ -660,6 +666,7 @@ function TodayTab({
 
       {/* Macro rings */}
       <Glass className="p-4 sm:p-5">
+        <h3 className="font-script text-xl text-hotpink mb-3">📊 Today's Macros</h3>
         <div className="grid grid-cols-4 gap-2 sm:gap-4">
           <RingProgress value={consumed.calories} target={targets.calories} label="Calories" sub="" colorClass={ringColor} />
           <RingProgress value={consumed.protein} target={targets.protein} label="Protein" sub="g" colorClass={ringColor} />
@@ -670,7 +677,7 @@ function TodayTab({
 
       {/* Micro bars */}
       <Glass className="p-4 sm:p-5 space-y-3">
-        <h3 className="font-script text-lg text-hotpink">For your phase</h3>
+        <h3 className="font-script text-xl text-hotpink">🌿 Phase Nutrients</h3>
         {micros.map((m) => (
           <MicroBar key={m.key as string} label={m.label} value={consumed[m.key as keyof typeof consumed] ?? 0} target={m.target} unit={m.unit} />
         ))}
@@ -704,16 +711,19 @@ function TodayTab({
         </Glass>
       )}
 
-      {/* Meal slots */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
-          <MealSlot
-            key={type} type={type} meal={dayMeals[type]}
-            onAddRecipe={(r) => assignMeal(type, r)}
-            onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
-            candidates={candidatesFor(type)}
-          />
-        ))}
+      {/* Meal slots — one per section */}
+      <div>
+        <h3 className="font-script text-2xl text-hotpink mb-3">Your Meals Today</h3>
+        <div className="space-y-3">
+          {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
+            <MealSlot
+              key={type} type={type} meal={dayMeals[type]}
+              onAddRecipe={(r) => assignMeal(type, r)}
+              onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
+              candidates={candidatesFor(type)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
