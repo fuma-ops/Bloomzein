@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
@@ -243,7 +244,7 @@ function RecipeModal({
   const [date, setDate] = useState(todayISO());
   const [added, setAdded] = useState(false);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl">
         <div className="relative p-4 sm:p-6">
@@ -310,7 +311,8 @@ function RecipeModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
