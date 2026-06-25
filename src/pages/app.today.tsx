@@ -126,11 +126,11 @@ const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
 
 // Phase-tinted gradient for the hero
 const PHASE_GRADIENT: Record<Exclude<CyclePhase, "any">, string> = {
-  period:     "from-rose-200/60 via-white/30 to-transparent",
-  follicular: "from-pink-200/60 via-white/30 to-transparent",
-  fertile:    "from-fuchsia-200/60 via-white/30 to-transparent",
-  ovulation:  "from-hotpink/60 via-white/30 to-transparent",
-  luteal:     "from-purple-200/60 via-white/30 to-transparent",
+  period:     "from-rose-200/50 via-petal/20 to-transparent",
+  follicular: "from-pink-100/60 via-blush/20 to-transparent",
+  fertile:    "from-petal/60 via-blush/20 to-transparent",
+  ovulation:  "from-hotpink/40 via-petal/20 to-transparent",
+  luteal:     "from-petal/60 via-blush/20 to-transparent",
 };
 
 type PlanItem = { id: string; label: string; time: string; Icon: typeof Heart; tool: string };
@@ -504,13 +504,14 @@ export default function TodayPage() {
         style={{ animationDelay: "0ms" }}
       >
         <img src="/images/today-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
 
-        <div className="relative z-[2] px-4 py-5 pb-14 sm:px-12 sm:py-12 sm:pb-14 max-w-xl">
+        <div className="relative z-[2] px-4 py-5 pb-14 sm:px-12 sm:py-12 sm:pb-14 w-[68%] sm:max-w-xl">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
-          <h1 className="mt-2 sm:mt-3 animate-text-pop font-script text-4xl sm:text-7xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
+          <h1 className="mt-2 sm:mt-3 animate-text-pop font-script text-[2rem] sm:text-7xl text-hotpink leading-tight break-words drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
 
@@ -642,7 +643,7 @@ export default function TodayPage() {
               onClick={togglePill}
               aria-pressed={pillTaken}
               className={["flex items-center gap-3 rounded-2xl px-3 py-2.5 transition active:scale-95",
-                pillTaken ? "bg-petal/30 opacity-70" : "bg-white/70 hover:bg-blush/40"].join(" ")}
+                pillTaken ? "bg-blush/50 opacity-70" : "bg-white/70 hover:bg-blush/40"].join(" ")}
             >
               <span className={["clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white transition", pillTaken ? "" : "animate-icon-breathe"].join(" ")}>
                 <Pill className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -700,7 +701,7 @@ export default function TodayPage() {
 
             {/* Phase */}
             <div className="animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 sm:p-4 text-center shadow-sm"
-              style={{ animationDelay: "0.3s", background: "linear-gradient(150deg,#E9E3FF,#D9CCFF)" }}>
+              style={{ animationDelay: "0.3s", background: "linear-gradient(150deg,#FCE7F3,#FBCFE8)" }}>
               <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
                 <Flower2 className="h-4 w-4 animate-flower-bloom" strokeWidth={1.8} />
               </span>
@@ -716,7 +717,7 @@ export default function TodayPage() {
               aria-expanded={moodPickerOpen}
               className={["relative flex flex-col items-center gap-1 rounded-2xl p-2.5 sm:p-4 text-center shadow-sm transition active:scale-95",
                 !mood ? "animate-hint-glow" : "animate-selected-glow"].join(" ")}
-              style={{ animationDelay: "0.6s", background: "linear-gradient(150deg,#FFF4D6,#FFE8B8)" }}
+              style={{ animationDelay: "0.6s", background: "linear-gradient(150deg,#FFE3EE,#FBCFE8)" }}
             >
               <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
                 <MoodIcon className="h-4 w-4" strokeWidth={1.8} />
@@ -742,7 +743,7 @@ export default function TodayPage() {
             <div className="mt-2 sm:mt-3 grid grid-cols-2 gap-2">
               <a href="/app/tools/workout"
                 className="flex items-center gap-2 rounded-2xl p-2.5 sm:p-3 transition hover:-translate-y-0.5 animate-selected-glow"
-                style={{ background: "linear-gradient(150deg,#E8F8F0,#D4F0E4)" }}>
+                style={{ background: "linear-gradient(150deg,#FBCFE8,#F9A8D4)" }}>
                 <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
                   <Dumbbell className="h-3.5 w-3.5" strokeWidth={1.8} />
                 </span>
@@ -753,7 +754,7 @@ export default function TodayPage() {
               </a>
               <a href="/app/tools/yoga"
                 className="flex items-center gap-2 rounded-2xl p-2.5 sm:p-3 transition hover:-translate-y-0.5 animate-selected-glow"
-                style={{ animationDelay: "0.2s", background: "linear-gradient(150deg,#F0E8FF,#E4D4FF)" }}>
+                style={{ animationDelay: "0.2s", background: "linear-gradient(150deg,#FCE7F3,#F5D0E8)" }}>
                 <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
                   <Flower2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                 </span>
