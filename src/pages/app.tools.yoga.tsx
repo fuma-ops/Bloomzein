@@ -9,6 +9,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readTodayWaterCount } from "@/lib/crossToolData";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -569,6 +570,7 @@ export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "home" });
+  const [lowWater, setLowWater] = useState(false);
 
   useEffect(() => {
     try {
@@ -576,6 +578,10 @@ export default function YogaPage() {
       const s = Number(localStorage.getItem(STEP_KEY) || "1");
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
+    setLowWater(readTodayWaterCount() < 3);
+    const refresh = () => setLowWater(readTodayWaterCount() < 3);
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
   }, []);
 
   const advanceStep = (next: 1|2|3) => {
@@ -597,6 +603,20 @@ export default function YogaPage() {
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
+
+      {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
+      {lowWater && (
+        <div className="mb-3 rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100/80 px-4 py-3 flex items-center gap-3 animate-fade-in">
+          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
+            <Info className="h-4 w-4" strokeWidth={1.8} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-hotpink leading-tight">Hydrate before your flow ✿</p>
+            <p className="text-[11px] text-rose/70 leading-snug">You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective.</p>
+          </div>
+          <a href="/app/today#hydration" className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2">Log it</a>
+        </div>
+      )}
 
       {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <YogaHero
@@ -1425,6 +1445,7 @@ function SessionPlayer({
       else if (prev.lastISO && isYesterday(prev.lastISO)) next = { count: prev.count + 1, lastISO: today };
       else next = { count: 1, lastISO: today };
       localStorage.setItem(STREAK_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("bloom:yoga-updated"));
     } catch {}
     onDone();
   }

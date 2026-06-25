@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
+import { readTodayWaterCount } from "@/lib/crossToolData";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession,
@@ -303,6 +304,14 @@ export default function WorkoutPage() {
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
   const [view, setView] = useState<View>({ kind: "discover" });
   const [tab, setTab] = useState<"discover" | "program" | "library">("discover");
+  const [lowWater, setLowWater] = useState(false);
+
+  useEffect(() => {
+    setLowWater(readTodayWaterCount() < 3);
+    const refresh = () => setLowWater(readTodayWaterCount() < 3);
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
 
   if (!onboarded) {
     return (
@@ -347,6 +356,20 @@ export default function WorkoutPage() {
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
+
+      {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
+      {lowWater && (
+        <div className="mb-3 rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100/80 px-4 py-3 flex items-center gap-3 animate-fade-in">
+          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
+            <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-hotpink leading-tight">Drink water before you sweat ✿</p>
+            <p className="text-[11px] text-rose/70 leading-snug">You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery.</p>
+          </div>
+          <a href="/app/today#hydration" className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2">Log it</a>
+        </div>
+      )}
 
       {(view.kind === "discover" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
@@ -1338,7 +1361,10 @@ function SessionEnd({ session, elapsedSec, onDone }: { session: WorkoutSession; 
       durationMin: session.durationMin, calories, sessionName: session.name,
     };
     history.push(entry);
-    try { localStorage.setItem(WORKOUT_LOG_KEY, JSON.stringify(history)); } catch {}
+    try {
+      localStorage.setItem(WORKOUT_LOG_KEY, JSON.stringify(history));
+      window.dispatchEvent(new Event("bloom:workout-updated"));
+    } catch {}
 
     setStreak((s) => {
       if (s.lastISO === todayISO()) return s;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Pill, BookHeart, Wallet, type LucideIcon } from "lucide-react";
+import { Pill, BookHeart, Wallet, Dumbbell, Flower2, type LucideIcon } from "lucide-react";
 import { DIARY_STORAGE_KEY, moodMeta } from "@/pages/app.tools.diary";
+import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
 
 export interface ToolSnapshot {
   slug: string;
@@ -83,9 +84,33 @@ const SNAPSHOT_PROVIDERS: Provider[] = [
       Icon: Wallet,
     };
   },
+  () => {
+    const { count } = readWorkoutStreak();
+    if (count === 0) return null;
+    return {
+      slug: "workout",
+      label: "Workout",
+      value: `${count} day streak`,
+      note: count >= 3 ? "You're on fire 🔥 keep going!" : "Great start — keep showing up ✿",
+      href: "/app/tools/workout",
+      Icon: Dumbbell,
+    };
+  },
+  () => {
+    const { count } = readYogaStreak();
+    if (count === 0) return null;
+    return {
+      slug: "yoga",
+      label: "Yoga",
+      value: `${count} day streak`,
+      note: count >= 3 ? "Your flow is beautiful 🌸" : "Your practice is blooming ✿",
+      href: "/app/tools/yoga",
+      Icon: Flower2,
+    };
+  },
 ];
 
-const REFRESH_EVENTS = ["storage", "bloom:diary-updated", "bloom:notes-updated", "bloom:budget-updated"];
+const REFRESH_EVENTS = ["storage", "bloom:diary-updated", "bloom:notes-updated", "bloom:budget-updated", "bloom:workout-updated", "bloom:yoga-updated"];
 
 export function useToolSnapshots(): ToolSnapshot[] {
   const [snapshots, setSnapshots] = useState<ToolSnapshot[]>([]);

@@ -41,6 +41,7 @@ import {
 } from "@/components/bloom/meals/data";
 
 
+import { readTodaySymptoms } from "@/lib/crossToolData";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
 const MEAL_PHOTO_FALLBACK: Record<string, string> = {
@@ -264,6 +265,14 @@ export default function MealsPage() {
   const [step, setStep] = useLS<number>(LS.step, 0); // 0=welcome,1=pantry,2=vibe,3=ready
   const [phase, setPhase] = useLS<CyclePhase>(LS.phase as any, "any");
   const [openRecipe, setOpenRecipe] = useState<string | null>(null);
+  const [todaySymptoms, setTodaySymptoms] = useState<string[]>([]);
+
+  useEffect(() => {
+    setTodaySymptoms(readTodaySymptoms());
+    const refresh = () => setTodaySymptoms(readTodaySymptoms());
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
 
   const owned = useMemo(() => pantrySet(pantry), [pantry]);
   const planEmpty = Object.keys(plan).length === 0;
@@ -381,6 +390,21 @@ export default function MealsPage() {
           </div>
         </div>
       </div>
+
+      {/* Symptom-aware nudge — shown when user has logged cramps/bloating/nausea in Today */}
+      {todaySymptoms.some((s) => ["cramps", "bloated", "nausea", "backpain"].includes(s)) && (
+        <div className="mt-3 rounded-3xl bg-gradient-to-r from-rose/10 to-petal/20 border border-petal/60 px-4 py-3 flex items-center gap-3 animate-fade-in">
+          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
+            <Heart className="h-4 w-4" strokeWidth={1.8} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-hotpink leading-tight">Soothing meals for today ✿</p>
+            <p className="text-[11px] text-rose/70 leading-snug">
+              Based on your symptoms, look for anti-inflammatory recipes — ginger, turmeric, leafy greens and magnesium-rich foods can ease cramps and bloating.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Guided welcome (only on first visit) */}
       {step === 0 && (

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { readTodayMood, writeTodayMood } from "@/lib/crossToolData";
 
 /* ─── Types & persistence ─────────────────────────────────────────── */
 
@@ -732,8 +733,14 @@ export default function DiaryPage() {
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 860);
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
 
-  // UI state
-  const [mood, setMood] = useState("Calm");
+  // UI state — pre-populate mood from Today if user already logged one today
+  const [mood, setMood] = useState(() => {
+    const todayMood = readTodayMood();
+    if (!todayMood) return "Calm";
+    const DIARY_MOODS = ["Calm","Happy","Energetic","Sensitive","Dreamy","Tired"];
+    const match = DIARY_MOODS.find((m) => m.toLowerCase() === todayMood);
+    return match ?? "Calm";
+  });
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
   const [moodOpen, setMoodOpen] = useState(false);
@@ -832,6 +839,8 @@ export default function DiaryPage() {
     setToast(true);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast(false), 1800);
+    // Sync diary mood → Today page so Space Stats shows the same mood
+    writeTodayMood(mood.toLowerCase());
   };
 
   useEffect(() => () => {
