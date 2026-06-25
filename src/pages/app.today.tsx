@@ -133,52 +133,52 @@ const PHASE_GRADIENT: Record<Exclude<CyclePhase, "any">, string> = {
   luteal:     "from-petal/60 via-blush/20 to-transparent",
 };
 
-type PlanItem = { id: string; label: string; time: string; Icon: typeof Heart; tool: string };
+type PlanItem = { id: string; label: string; time: string; Icon: typeof Heart; tool: string; image: string; blurb: string };
 
 const PHASE_PLAN: Record<Exclude<CyclePhase, "any">, { yoga: string; pose: string; recBlurb: string } & { items: PlanItem[] }> = {
   period: {
     yoga: "Restorative Flow", pose: "/images/pose-childs-pose.webp",
     recBlurb: "Slow, supported stretches to soften cramps and ease tension.",
     items: [
-      { id: "yoga",    label: "Restorative Flow",      time: "18:00", Icon: Flower2,   tool: "/app/tools/yoga" },
-      { id: "meal",    label: "Iron-rich comfort bowl", time: "19:30", Icon: Heart,     tool: "/app/tools/diet" },
-      { id: "journal", label: "Journal: how I feel",    time: "21:00", Icon: BookHeart, tool: "/app/tools/diary" },
+      { id: "meal",    label: "Iron-rich bowl",          time: "12:30", Icon: Heart,     tool: "/app/tools/diet",    image: "/images/meal-stew.jpg",             blurb: "Replenish iron and comfort your body" },
+      { id: "yoga",    label: "Restorative Flow",        time: "18:00", Icon: Flower2,   tool: "/app/tools/yoga",    image: "/images/pose-childs-pose.webp",     blurb: "Ease cramps with gentle supported poses" },
+      { id: "journal", label: "Journal: how I feel",    time: "21:00", Icon: BookHeart, tool: "/app/tools/diary",   image: "/images/cycle-journal-hero.webp",   blurb: "Release emotions and reflect gently" },
     ],
   },
   follicular: {
     yoga: "Energizing Flow", pose: "/images/pose-warrior-2.webp",
     recBlurb: "Build heat and strength while your energy is on the rise.",
     items: [
-      { id: "yoga",    label: "Energizing Flow",    time: "08:00", Icon: Flower2,  tool: "/app/tools/yoga" },
-      { id: "workout", label: "Strength training",  time: "17:30", Icon: Dumbbell, tool: "/app/tools/workout" },
-      { id: "meal",    label: "Fresh, light lunch", time: "13:00", Icon: Heart,    tool: "/app/tools/diet" },
+      { id: "yoga",    label: "Energizing Flow",    time: "08:00", Icon: Flower2,  tool: "/app/tools/yoga",    image: "/images/pose-warrior-2.webp",        blurb: "Build heat as your energy rises" },
+      { id: "meal",    label: "Fresh, light lunch", time: "13:00", Icon: Heart,    tool: "/app/tools/diet",    image: "/images/meal-buddha.jpg",            blurb: "Fuel your comeback energy naturally" },
+      { id: "workout", label: "Strength training",  time: "17:30", Icon: Dumbbell, tool: "/app/tools/workout", image: "/images/workout-hero-session.png",   blurb: "Channel rising strength into progress" },
     ],
   },
   fertile: {
     yoga: "Balance & Strength Flow", pose: "/images/pose-tree.webp",
     recBlurb: "Channel your magnetic energy into balance and focus.",
     items: [
-      { id: "yoga",    label: "Balance & Strength Flow", time: "08:00", Icon: Flower2,   tool: "/app/tools/yoga" },
-      { id: "workout", label: "Cardio burst",            time: "17:30", Icon: Dumbbell,  tool: "/app/tools/workout" },
-      { id: "journal", label: "Journal: today's spark",  time: "21:00", Icon: BookHeart, tool: "/app/tools/diary" },
+      { id: "yoga",    label: "Balance & Strength Flow", time: "08:00", Icon: Flower2,   tool: "/app/tools/yoga",    image: "/images/pose-tree.webp",              blurb: "Channel magnetic energy into balance" },
+      { id: "meal",    label: "Antioxidant bowl",        time: "13:00", Icon: Heart,     tool: "/app/tools/diet",    image: "/images/meal-lunchbox.jpg",           blurb: "Support your body at peak phase" },
+      { id: "workout", label: "Cardio burst",            time: "17:30", Icon: Dumbbell,  tool: "/app/tools/workout", image: "/images/workout-hero-bestshape.webp", blurb: "You're at peak power — push it" },
     ],
   },
   ovulation: {
     yoga: "Power Flow", pose: "/images/pose-triangle.webp",
     recBlurb: "Make the most of peak energy with a powerful, open flow.",
     items: [
-      { id: "yoga",    label: "Power Flow",            time: "08:00", Icon: Flower2,   tool: "/app/tools/yoga" },
-      { id: "workout", label: "High-intensity session", time: "17:30", Icon: Dumbbell,  tool: "/app/tools/workout" },
-      { id: "meal",    label: "Protein-rich dinner",   time: "19:30", Icon: Heart,     tool: "/app/tools/diet" },
+      { id: "yoga",    label: "Power Flow",             time: "08:00", Icon: Flower2,  tool: "/app/tools/yoga",    image: "/images/pose-triangle.webp",        blurb: "Open and strong — your best flow" },
+      { id: "workout", label: "High-intensity session", time: "17:30", Icon: Dumbbell, tool: "/app/tools/workout", image: "/images/workout-hero-program.png",  blurb: "Make the most of your peak energy" },
+      { id: "meal",    label: "Protein-rich dinner",    time: "19:30", Icon: Heart,    tool: "/app/tools/diet",    image: "/images/meal-buddha.jpg",           blurb: "Recover and replenish tonight" },
     ],
   },
   luteal: {
     yoga: "Calming Flow", pose: "/images/pose-legs-up-wall.webp",
     recBlurb: "Wind down with grounding poses that ease tension and mood dips.",
     items: [
-      { id: "yoga",       label: "Calming Flow",    time: "18:00", Icon: Flower2,   tool: "/app/tools/yoga" },
-      { id: "meditation", label: "5-min meditation", time: "20:30", Icon: Sparkles,  tool: "/app/tools/yoga" },
-      { id: "journal",    label: "Journal: gratitude", time: "21:00", Icon: BookHeart, tool: "/app/tools/diary" },
+      { id: "meal",       label: "Magnesium-rich meal", time: "12:30", Icon: Heart,     tool: "/app/tools/diet",  image: "/images/meal-oats.jpg",            blurb: "Ease mood dips and cravings gently" },
+      { id: "yoga",       label: "Calming Flow",        time: "18:00", Icon: Flower2,   tool: "/app/tools/yoga",  image: "/images/pose-legs-up-wall.webp",   blurb: "Grounding poses for mind and body" },
+      { id: "meditation", label: "5-min meditation",    time: "20:30", Icon: Sparkles,  tool: "/app/tools/yoga",  image: "/images/pose-savasana.webp",       blurb: "A soft, still end to your day" },
     ],
   },
 };
@@ -523,12 +523,34 @@ export default function TodayPage() {
             <AnimatedWords text={`"${PHASE_QUOTES[phase]}"`} />
           </p>
 
-          <a
-            href="#bloom-today"
-            className="bloom-luxury-btn animate-cta-bounce mt-3 sm:mt-5 inline-flex items-center gap-1.5 px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-white"
-          >
-            Continue Blooming <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </a>
+          <div className="mt-3 sm:mt-5 flex items-center gap-3">
+            <button
+              ref={moodTileRef}
+              onClick={() => setMoodPickerOpen((v) => !v)}
+              aria-label="How are you feeling?"
+              aria-haspopup="dialog"
+              aria-expanded={moodPickerOpen}
+              className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
+            >
+              <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+              {!mood && (
+                <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm">
+                  <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
+                </span>
+              )}
+            </button>
+            <div className="text-left">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
+                {mood ? "Feeling" : "How are you?"}
+              </p>
+              <p
+                key={mood ?? `hint-${moodHintIdx}`}
+                className={["font-script text-lg leading-tight animate-fade-in", mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
+              >
+                {mood ? MOOD_LABEL[mood] : moodHint.label}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Streak badge */}
@@ -537,6 +559,14 @@ export default function TodayPage() {
           <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">days blooming</p>
         </div>
       </section>
+
+      {/* MoodPopover — portaled, triggered from hero circular button */}
+      <MoodPopover
+        open={moodPickerOpen}
+        onClose={() => setMoodPickerOpen(false)}
+        onPick={(key) => { pickMood(key); setMoodPickerOpen(false); }}
+        triggerRef={moodTileRef}
+      />
 
       {/* ── CYCLE SETUP NUDGE ─────────────────────────────────────────────────── */}
       {showCycleSetupBanner && (
@@ -554,7 +584,78 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* ── 2. YOUR BLOOM TODAY ─────────────────────────────────────────────── */}
+      {/* ── 2. TODAY'S BLOOM PLAN (image cards) ────────────────────────────── */}
+      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
+        <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Plan ✿</SectionTitle>
+        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none -mx-0.5 px-0.5">
+          {plan.items.map((item, i) => {
+            const done   = planDone.includes(item.id);
+            const timing = planItemTiming(item.time);
+            return (
+              <a
+                key={item.id}
+                href={item.tool}
+                className="snap-start shrink-0 w-44 sm:w-52 overflow-hidden rounded-[1.5rem] bloom-pearl-card pearl-sheen transition hover:-translate-y-1 active:scale-[0.97]"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                {/* Image */}
+                <div className="relative h-36 sm:h-44 overflow-hidden">
+                  <img src={item.image} alt="" className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/85 via-white/10 to-transparent" />
+                  {/* Time badge */}
+                  {item.time && (
+                    <div className="absolute top-2.5 left-2.5">
+                      <span className={[
+                        "rounded-full px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide shadow-sm",
+                        timing === "now"
+                          ? "bg-hotpink text-white animate-cta-bounce"
+                          : timing === "past"
+                          ? "bg-white/70 text-rose/40 backdrop-blur"
+                          : "bg-white/85 text-rose backdrop-blur",
+                      ].join(" ")}>
+                        {timing === "now" ? "Now ✿" : item.time}
+                      </span>
+                    </div>
+                  )}
+                  {/* Done overlay */}
+                  {done && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink text-white shadow-lg shadow-hotpink/30">
+                        <Check className="h-5 w-5" strokeWidth={3} />
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Content */}
+                <div className="px-3 pt-2.5 pb-3">
+                  <p className={["text-xs sm:text-sm font-bold leading-tight", done ? "text-rose/35 line-through" : "text-[#831843]"].join(" ")}>{item.label}</p>
+                  <p className="mt-0.5 text-[10px] sm:text-[11px] text-rose/60 leading-snug">{item.blurb}</p>
+                  <div className="mt-2.5 flex items-center justify-between">
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePlanItem(item.id); }}
+                      aria-label={done ? "Mark as not done" : "Mark as done"}
+                      className={[
+                        "grid h-6 w-6 place-items-center rounded-full border-2 transition active:scale-90",
+                        done ? "bg-hotpink border-hotpink text-white" : "border-petal text-transparent hover:border-hotpink/60",
+                      ].join(" ")}
+                    >
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </button>
+                    <span className="clay-blob grid h-6 w-6 place-items-center rounded-full text-white">
+                      <item.Icon className="h-3 w-3" strokeWidth={2} />
+                    </span>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+        <a href="/app/calendar" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
+          Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
+        </a>
+      </section>
+
+      {/* ── 3. YOUR BLOOM TODAY (ring + checklist) ─────────────────────────────────────────────── */}
       <section id="bloom-today" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
         <div className={[
           "bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5",
@@ -682,99 +783,6 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* ── 4. QUICK VITALS ─────────────────────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
-        <SectionTitle hint="your body today">
-          <span className="animate-text-glow">Vitals ✿</span>
-        </SectionTitle>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-3 sm:p-4">
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            {/* Next period */}
-            <div className="animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 sm:p-4 text-center shadow-sm"
-              style={{ background: "linear-gradient(150deg,#FFE3EE,#FFD1E3)" }}>
-              <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-                <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
-              </span>
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Next period</p>
-              <p className="font-script text-base sm:text-xl text-hotpink leading-none">{daysToPeriod}<span className="text-[9px] sm:text-sm text-rose/60"> d</span></p>
-            </div>
-
-            {/* Phase */}
-            <div className="animate-selected-glow flex flex-col items-center gap-1 rounded-2xl p-2.5 sm:p-4 text-center shadow-sm"
-              style={{ animationDelay: "0.3s", background: "linear-gradient(150deg,#FCE7F3,#FBCFE8)" }}>
-              <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-                <Flower2 className="h-4 w-4 animate-flower-bloom" strokeWidth={1.8} />
-              </span>
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Phase</p>
-              <p className="font-script text-base sm:text-xl text-hotpink leading-none">{PHASE_LABEL[phase]}</p>
-            </div>
-
-            {/* Mood — tap to set */}
-            <button
-              ref={moodTileRef}
-              onClick={() => setMoodPickerOpen((v) => !v)}
-              aria-haspopup="dialog"
-              aria-expanded={moodPickerOpen}
-              className={["relative flex flex-col items-center gap-1 rounded-2xl p-2.5 sm:p-4 text-center shadow-sm transition active:scale-95",
-                !mood ? "animate-hint-glow" : "animate-selected-glow"].join(" ")}
-              style={{ animationDelay: "0.6s", background: "linear-gradient(150deg,#FFE3EE,#FBCFE8)" }}
-            >
-              <span className="clay-blob grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full text-white">
-                <MoodIcon className="h-4 w-4" strokeWidth={1.8} />
-              </span>
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Mood</p>
-              <p
-                key={mood ?? `hint-${moodHintIdx}`}
-                className={["font-script text-base sm:text-xl leading-none animate-fade-in",
-                  mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
-              >
-                {mood ? MOOD_LABEL[mood] : moodHint.label}
-              </p>
-              {!mood && (
-                <span className="absolute -top-1 -right-1 grid h-4 w-4 place-items-center rounded-full bg-hotpink text-white shadow-sm">
-                  <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Activity streaks row — only when user has started tracking */}
-          {(workoutStreak > 0 || yogaStreak > 0) && (
-            <div className="mt-2 sm:mt-3 grid grid-cols-2 gap-2">
-              <a href="/app/tools/workout"
-                className="flex items-center gap-2 rounded-2xl p-2.5 sm:p-3 transition hover:-translate-y-0.5 animate-selected-glow"
-                style={{ background: "linear-gradient(150deg,#FBCFE8,#F9A8D4)" }}>
-                <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
-                  <Dumbbell className="h-3.5 w-3.5" strokeWidth={1.8} />
-                </span>
-                <div>
-                  <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Workout</p>
-                  <p className="font-script text-sm sm:text-base text-hotpink leading-none">{workoutStreak}<span className="text-[9px] text-rose/60"> day streak</span></p>
-                </div>
-              </a>
-              <a href="/app/tools/yoga"
-                className="flex items-center gap-2 rounded-2xl p-2.5 sm:p-3 transition hover:-translate-y-0.5 animate-selected-glow"
-                style={{ animationDelay: "0.2s", background: "linear-gradient(150deg,#FCE7F3,#F5D0E8)" }}>
-                <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
-                  <Flower2 className="h-3.5 w-3.5" strokeWidth={1.8} />
-                </span>
-                <div>
-                  <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Yoga</p>
-                  <p className="font-script text-sm sm:text-base text-hotpink leading-none">{yogaStreak}<span className="text-[9px] text-rose/60"> day streak</span></p>
-                </div>
-              </a>
-            </div>
-          )}
-        </div>
-
-        <MoodPopover
-          open={moodPickerOpen}
-          onClose={() => setMoodPickerOpen(false)}
-          onPick={(key) => { pickMood(key); setMoodPickerOpen(false); }}
-          triggerRef={moodTileRef}
-        />
-      </section>
-
       {/* ── 5. SYMPTOMS (collapsed) ─────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "150ms" }}>
         <button
@@ -870,81 +878,7 @@ export default function TodayPage() {
         </div>
       </section>
 
-      {/* ── 7. TODAY'S BLOOM PLAN ───────────────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "210ms" }}>
-        <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Bloom Plan</SectionTitle>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5">
-          <div className="flex flex-col gap-2">
-            {plan.items.map((item) => {
-              const done   = planDone.includes(item.id);
-              const timing = planItemTiming(item.time);
-              return (
-                <a
-                  key={item.id}
-                  href={item.tool}
-                  className="group flex items-center gap-2.5 rounded-2xl bg-white/70 hover:bg-blush/60 px-2.5 py-2 transition"
-                >
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePlanItem(item.id); }}
-                    aria-label={done ? "Mark as not done" : "Mark as done"}
-                    className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition",
-                      done ? "bg-hotpink text-white" : "bg-blush/60 text-transparent border border-petal/60"].join(" ")}
-                  >
-                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                  </button>
-                  <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
-                    <item.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className={["text-xs sm:text-sm font-bold truncate", done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>{item.label}</p>
-                    {item.time && (
-                      <p className="text-[10px] text-rose/50 flex items-center gap-1">
-                        {item.time}
-                        {timing === "now" && <span className="rounded-full bg-hotpink text-white px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide">Now</span>}
-                        {timing === "past" && <span className="text-rose/30">· past</span>}
-                      </p>
-                    )}
-                  </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-rose/30 shrink-0 group-hover:text-hotpink/60 transition" strokeWidth={2} />
-                </a>
-              );
-            })}
-          </div>
-          <a href="/app/calendar" className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
-            Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
-          </a>
-        </div>
-      </section>
-
-      {/* ── 8. RECOMMENDED FOR YOU ──────────────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "240ms" }}>
-        <SectionTitle hint="for your phase">Recommended</SectionTitle>
-        <a href="/app/tools/yoga" className="group flex items-stretch overflow-hidden rounded-3xl bloom-pearl-card pearl-sheen transition hover:-translate-y-0.5">
-          <div className="relative w-28 sm:w-44 shrink-0 overflow-hidden">
-            <img src={plan.pose} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-          </div>
-          <div className="p-3.5 sm:p-5 flex-1 flex flex-col">
-            <span className="inline-flex w-fit items-center rounded-full bg-blush text-hotpink text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border border-petal/60">
-              {PHASE_LABEL[phase]} phase
-            </span>
-            <h3 className="mt-2 font-script text-2xl sm:text-3xl text-hotpink leading-none">{plan.yoga}</h3>
-            <p className="mt-1.5 text-[11px] sm:text-sm text-rose/80 leading-snug">{plan.recBlurb}</p>
-            {/* Iron tip during period/luteal */}
-            {(phase === "period" || phase === "luteal") && ironRecipe && (
-              <p className="mt-1.5 text-[10px] text-rose/60 leading-snug">
-                Also: try <a href="/app/tools/diet" className="text-hotpink font-semibold hover:underline" onClick={(e) => e.stopPropagation()}>"{ironRecipe.name}"</a> from Diet for your iron needs today.
-              </p>
-            )}
-            <div className="mt-auto pt-2 sm:pt-3 flex items-center justify-end">
-              <span className="clay-blob inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white">
-                <Play className="h-3 w-3" fill="currentColor" strokeWidth={0} /> Start flow
-              </span>
-            </div>
-          </div>
-        </a>
-      </section>
-
-      {/* ── 9. BLOOM AFFIRMATION ────────────────────────────────────────────── */}
+      {/* ── 7. BLOOM AFFIRMATION ────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 mb-4 animate-card-pop-in" style={{ animationDelay: "280ms" }}>
         <div className="pearl-frame relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
           <img src="/images/tools-hero-affirmation.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
