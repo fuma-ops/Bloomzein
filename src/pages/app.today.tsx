@@ -11,6 +11,7 @@ import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
 import { RECIPES } from "@/components/bloom/recipes/data";
 import {
   getCurrentUserId,
@@ -253,6 +254,8 @@ export default function TodayPage() {
   const [waterGoal, setWaterGoal] = useState(8);
   const [waterModalOpen, setWaterModalOpen] = useState(false);
   const [streak, setStreak] = useState(7);
+  const [workoutStreak, setWorkoutStreak] = useState(0);
+  const [yogaStreak, setYogaStreak] = useState(0);
   const [planDone, setPlanDone] = useState<string[]>([]);
   const [affirmIdx, setAffirmIdx] = useState(0);
   const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
@@ -293,6 +296,10 @@ export default function TodayPage() {
       const raw = readJSON<{ date: string; taken: boolean }>(KEYS.pill, { date: "", taken: false });
       setPillTaken(raw.date === iso ? raw.taken : false);
     } catch {}
+
+    // Activity streaks from Workout and Yoga tools
+    setWorkoutStreak(readWorkoutStreak().count);
+    setYogaStreak(readYogaStreak().count);
 
     // Re-broadcast today's cycle phase so Yoga/Meals/Workout/Diet stay in sync
     // even if the user hasn't opened Cycle Tracker since their last visit.
@@ -818,6 +825,30 @@ export default function TodayPage() {
               </div>
             </button>
           </div>
+
+          {/* Activity streaks — shown once the user has done at least one session */}
+          {(workoutStreak > 0 || yogaStreak > 0) && (
+            <div className="mt-2 sm:mt-3 grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="animate-selected-glow flex items-center gap-2 rounded-2xl p-2.5 sm:p-3 shadow-sm" style={{ background: "linear-gradient(150deg, #E8F8F0, #D4F0E4)" }}>
+                <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
+                  <Dumbbell className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </span>
+                <div>
+                  <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Workout</p>
+                  <p className="font-script text-base sm:text-xl text-hotpink leading-none">{workoutStreak}<span className="text-[10px] sm:text-sm text-rose/60"> day streak</span></p>
+                </div>
+              </div>
+              <div className="animate-selected-glow flex items-center gap-2 rounded-2xl p-2.5 sm:p-3 shadow-sm" style={{ animationDelay: "0.2s", background: "linear-gradient(150deg, #F0E8FF, #E4D4FF)" }}>
+                <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white">
+                  <Flower2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                </span>
+                <div>
+                  <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">Yoga</p>
+                  <p className="font-script text-base sm:text-xl text-hotpink leading-none">{yogaStreak}<span className="text-[10px] sm:text-sm text-rose/60"> day streak</span></p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <MoodPopover
