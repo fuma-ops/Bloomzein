@@ -132,6 +132,13 @@ interface Txn { id: string; date: string; catKey: string; amount: number; descri
 interface Goal { id: string; name: string; target: number; saved: number; monthly: number; }
 interface Bill { id: string; name: string; due: string; amount: number; paid: boolean; }
 interface CustomCat { key: string; label: string; emoji: string; group: Need; }
+interface MonthPlan {
+  incomes: Income[];
+  budgetOverride: Record<string, number> | null;
+  selectedCatsOverride: string[] | null;
+  goalsOverride: Record<string, number> | null;
+  activated: boolean;
+}
 
 /* ============================================================
    PERSISTENCE
@@ -493,7 +500,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
   const maxY = dailyBudget * 1.6;
 
   // Same compact dimensions as the Income vs Expenses bar chart (h-28 ≈ 112px)
-  const W = 280, H = 100, pL = 8, pR = 8, pT = 18, pB = 20;
+  const W = 280, H = 110, pL = 8, pR = 8, pT = 28, pB = 20;
   const plotW = W - pL - pR, plotH = H - pT - pB;
   const xp = (d: number) => pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * plotW;
   const yp = (v: number) => pT + plotH - (v / maxY) * plotH;
@@ -535,9 +542,18 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
     ? Math.min(baseline - 4, todayY + 17)
     : Math.max(pT + 8, todayY - 13);
 
+  // Top 3 spend days for labels — drawn last in SVG, never overlap the curve
+  const topSpendDays = dailyByDay
+    .map((amt, i) => ({ day: i + 1, amt }))
+    .filter(d => d.day <= today && d.amt > 0)
+    .sort((a, b) => b.amt - a.amt)
+    .slice(0, 3)
+    .sort((a, b) => a.day - b.day);
+
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 150 }} overflow="visible">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 160 }} overflow="visible">
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
@@ -620,12 +636,29 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
           </>
         )}
 
-        {/* ALL text labels drawn last — always above every graph element */}
-        {/* Budget label — anchored in top-padding area (above pT=18), never overlaps the curve */}
-        <rect x={pL} y={2} width={108} height={13} rx="3" fill="white" fillOpacity="0.95" />
-        <text x={pL + 3} y={12} fontSize="8"
-          fill={isOverBudget ? "#EF4444" : "#EC4899"}
-          textAnchor="start" fontWeight="700">Budget · {fmt(planned, currency)}</text>
+
+        {/* Top spend-day labels — in expanded top-padding zone, white pill background */}
+        {topSpendDays.map((d, i) => {
+          const cx = Math.max(pL + 32, Math.min(W - pR - 32, xp(d.day)));
+          const dotY = yp(Math.min(d.amt, maxY));
+          const isToday = d.day === today;
+          const labelY = 8 + (i % 2) * 10;
+          const labelText = fmt(d.amt, currency);
+          return (
+            <g key={d.day}>
+              {!isToday && (
+                <>
+                  <line x1={cx} y1={dotY - 3} x2={cx} y2={labelY + 3}
+                    stroke="#EF4444" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.4" />
+                  <circle cx={cx} cy={dotY} r="2.5" fill="#EF4444" opacity="0.7" />
+                </>
+              )}
+              <text x={cx} y={labelY} fontSize="6.5" fill="#EF4444"
+                textAnchor="middle" fontWeight="700">{labelText}</text>
+            </g>
+          );
+        })}
+
         {/* Today value label */}
         {realPtsArr.length > 0 && (
           <>
@@ -650,7 +683,9 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
       <div className="flex items-center gap-4 mt-1.5 px-1">
         <div className="flex items-center gap-1.5">
           <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" /></svg>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">Budget</span>
+          <span className={`text-[10px] font-semibold ${isOverBudget ? "text-rose-500" : "text-[#9D5C7E]"}`}>
+            Budget · {fmt(planned, currency)}
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#EC4899" strokeWidth="2.5" /></svg>
@@ -661,6 +696,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
           <span className="text-[10px] font-semibold text-[#EC4899]">Today ({today})</span>
         </div>
       </div>
+
     </div>
   );
 }
@@ -872,8 +908,13 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   return (
     <div className="flex flex-col items-center gap-3">
       <svg viewBox="0 0 112 112" width="108" height="108">
-        {/* planned slice */}
-        <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        {/* planned slice — full ring when no extra (arc degenerates at 2π), arc otherwise */}
+        {!hasExtra ? (
+          <circle cx={cx} cy={cy} r={(R + ri) / 2} fill="none"
+            stroke={plannedColor} strokeWidth={R - ri} />
+        ) : (
+          <path d={arcPath(a0, plannedSweep)} fill={plannedColor} stroke="white" strokeWidth="1.5" />
+        )}
         {/* extra slice */}
         {hasExtra && (
           <path d={arcPath(a0 + plannedSweep, extraSweep)} fill={extraColor} stroke="white" strokeWidth="1.5" />
@@ -1240,7 +1281,73 @@ export function BudgetPlanner() {
   const [txns, setTxns] = useLocal<Txn[]>("bp:txns", []);
   const [goals, setGoals] = useLocal<Goal[]>("bp:goals", []);
   const [bills, setBills] = useLocal<Bill[]>("bp:bills", []);
+  const [months, setMonths] = useLocal<Record<string, MonthPlan>>("bp:months", {});
   const [showExtraSpend, setShowExtraSpend] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+
+  // Month navigation (global — affects all tabs)
+  const _now = new Date();
+  const [month, setMonth] = useState({ y: _now.getFullYear(), m: _now.getMonth() });
+  const monthKey = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
+  const nowKey   = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}`;
+  const viewMode: "past" | "present" | "future" =
+    monthKey < nowKey ? "past" : monthKey > nowKey ? "future" : "present";
+  const monthPlan  = months[monthKey];
+  const isPlanning = viewMode === "future" && !monthPlan?.activated;
+
+  // Progressive: find last consecutive planned month, next available = +1
+  const nextPlannableKey = (() => {
+    let last = { y: _now.getFullYear(), m: _now.getMonth() };
+    for (let i = 1; i <= 24; i++) {
+      const d = new Date(_now.getFullYear(), _now.getMonth() + i, 1);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (months[k]?.activated) last = { y: d.getFullYear(), m: d.getMonth() };
+      else break;
+    }
+    const d = new Date(last.y, last.m + 1, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  })();
+
+  // Reset a planned month + all consecutive planned months after it
+  function resetPlannedMonth(fromKey: string) {
+    setMonths(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(k => { if (k >= fromKey) delete updated[k]; });
+      return updated;
+    });
+  }
+
+  // Second source of truth — no overlap with base plan
+  const viewIncomes      = viewMode === "present" ? incomes      : (monthPlan?.incomes             ?? incomes);
+  const viewBudget       = viewMode === "present" ? budget       : (monthPlan?.budgetOverride       ?? budget);
+  const viewSelectedCats = viewMode === "present" ? selectedCats : (monthPlan?.selectedCatsOverride ?? selectedCats);
+  const viewGoals = useMemo(() => {
+    if (viewMode === "present") return goals;
+
+    return goals.map(g => {
+      const monthlyOverride = monthPlan?.goalsOverride?.[g.id] ?? g.monthly;
+
+      if (viewMode === "past") {
+        // Past: only override monthly, leave saved as-is (historical total unknown)
+        return { ...g, monthly: monthlyOverride };
+      }
+
+      // Future: project saved = current + every activated month's contribution up to viewed month
+      let projected = g.saved;
+      const [nowY0, nowM1] = nowKey.split("-").map(Number);
+      let y = nowY0, m0 = nowM1 - 1; // m0 is 0-indexed
+      for (let i = 0; i < 24; i++) {
+        const next = new Date(y, m0 + 1, 1);
+        y = next.getFullYear(); m0 = next.getMonth();
+        const k = `${y}-${String(m0 + 1).padStart(2, "0")}`;
+        const planK = months[k];
+        const contrib = planK?.goalsOverride?.[g.id] ?? g.monthly;
+        if (planK?.activated || k === monthKey) projected += contrib;
+        if (k === monthKey) break;
+      }
+      return { ...g, monthly: monthlyOverride, saved: projected };
+    });
+  }, [goals, monthPlan, viewMode, monthKey, nowKey, months]);
   const [showGuide, setShowGuide] = useState(false);
 
   // State lifted from DashboardTab for hero placement before the tab bar
@@ -1260,8 +1367,8 @@ export function BudgetPlanner() {
     return () => clearTimeout(t);
   }, []);
 
-  const clampedHeroGoalIdx = goals.length > 0 ? Math.min(goalIdx, goals.length - 1) : 0;
-  const heroGoalPct = (() => { const g = goals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
+  const clampedHeroGoalIdx = viewGoals.length > 0 ? Math.min(goalIdx, viewGoals.length - 1) : 0;
+  const heroGoalPct = (() => { const g = viewGoals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
   const cycleTip = cyclePhase && cyclePhase !== "any" ? BP_CYCLE_TIPS[cyclePhase] : undefined;
   const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
@@ -1275,15 +1382,17 @@ export function BudgetPlanner() {
     ...customCats.map(c => ({ ...c, Icon: Package })),
   ], [customCats]);
 
-  const totalIncome = useMemo(() => incomes.reduce((s, i) => s + toMonthly(i), 0), [incomes]);
+  const totalIncome = useMemo(() => viewIncomes.reduce((s, i) => s + toMonthly(i), 0), [viewIncomes]);
 
-  // Effective expenses: committed plan + ALL actual recorded transactions (every "+ Spend" is extra on top of the plan)
+  // Effective expenses: committed plan + actual transactions for the viewed month
   const totalExpenses = useMemo(() => {
-    const budgetedKeys = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-    const plannedTotal = budgetedKeys.reduce((s, k) => s + (budget[k] ?? 0), 0);
-    const actualTotal = txns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    const budgetedKeys = viewSelectedCats.filter(k => (viewBudget[k] ?? 0) > 0);
+    const plannedTotal = budgetedKeys.reduce((s, k) => s + (viewBudget[k] ?? 0), 0);
+    const actualTotal = txns
+      .filter(t => t.type === "expense" && new Date(t.date).getFullYear() === month.y && new Date(t.date).getMonth() === month.m)
+      .reduce((s, t) => s + t.amount, 0);
     return plannedTotal + actualTotal;
-  }, [txns, selectedCats, budget]);
+  }, [txns, viewSelectedCats, viewBudget, month]);
 
   const totalSavings = totalIncome - totalExpenses;
   const totalBalance = totalIncome - totalExpenses;
@@ -1447,10 +1556,13 @@ export function BudgetPlanner() {
                 )}
                 <div className="mt-2 flex items-center gap-2">
                   {isDash && (
-                    <button onClick={() => setViewPeriod(v => v === "week" ? "month" : "week")}
+                    <button onClick={() => setShowMonthPicker(true)}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
                       <Calendar className="h-3 w-3" />
-                      {viewPeriod === "week" ? "This week" : "This month"}
+                      {viewMode === "present"
+                        ? "Ce mois"
+                        : new Date(month.y, month.m, 1).toLocaleString("default", { month: "short", year: "numeric" })}
+                      {viewMode === "future" && <span className="text-[9px] font-bold text-white/80">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
                       <ChevronDown className="h-3 w-3 opacity-70" />
                     </button>
                   )}
@@ -1508,63 +1620,142 @@ export function BudgetPlanner() {
       </div>
 
       {/* Tab content */}
-      <div key={tab} className="mt-2 animate-fade-in">
-        {tab === "Dashboard" && (
-            <DashboardTab
-              currency={currency}
-              totalIncome={totalIncome}
-              totalExpenses={totalExpenses}
-              totalSavings={totalSavings}
-              totalBalance={totalBalance}
-              txns={txns} setTxns={setTxns}
-              budget={budget} setBudget={setBudget}
-              selectedCats={selectedCats} setSelectedCats={setSelectedCats}
-              allCats={allCats}
-              goals={goals}
-              bills={bills}
-              setTab={setTab}
-              incomes={incomes}
-              onCurrencyClick={() => setShowCurrencyPicker(true)}
-              viewPeriod={viewPeriod}
-              setViewPeriod={setViewPeriod}
-              goalIdx={goalIdx}
-              setGoalIdx={setGoalIdx}
-            />
-          )}
-          {tab === "Incomes" && (
-            <IncomesTab incomes={incomes} setIncomes={setIncomes} currency={currency} setTab={setTab} />
-          )}
-          {tab === "Budget Setup" && (
-            <BudgetSetupTab
-              allCats={allCats}
-              selectedCats={selectedCats} setSelectedCats={setSelectedCats}
-              budget={budget} setBudget={setBudget}
-              customCats={customCats} setCustomCats={setCustomCats}
-              setTxns={setTxns}
-              currency={currency}
-              totalIncome={totalIncome}
-              setTab={setTab}
-              suggestion={(catKey) => suggestionFor(catKey, totalIncome, selectedCats, allCats)}
-            />
-          )}
-          {tab === "Savings Goals" && (
-            <GoalsTab goals={goals} setGoals={setGoals} currency={currency} setTab={setTab} />
-          )}
-          {tab === "Reports" && (
-            <ReportsTab
-              txns={txns} setTxns={setTxns}
-              bills={bills} setBills={setBills}
-              allCats={allCats}
-              currency={currency}
-              incomes={incomes}
-              budget={budget}
-              selectedCats={selectedCats}
-            />
-          )}
+      <div className="relative">
+        <div key={tab} className={`mt-2 animate-fade-in transition-opacity duration-300 ${isPlanning ? "opacity-40 pointer-events-none select-none" : ""}`}>
+          {tab === "Dashboard" && (
+              <DashboardTab
+                currency={currency}
+                totalIncome={totalIncome}
+                totalExpenses={totalExpenses}
+                totalSavings={totalSavings}
+                totalBalance={totalBalance}
+                txns={txns} setTxns={setTxns}
+                budget={viewBudget} setBudget={setBudget}
+                selectedCats={viewSelectedCats} setSelectedCats={setSelectedCats}
+                allCats={allCats}
+                goals={viewGoals}
+                bills={bills}
+                setTab={setTab}
+                incomes={viewIncomes}
+                onCurrencyClick={() => setShowCurrencyPicker(true)}
+                viewPeriod={viewPeriod}
+                setViewPeriod={setViewPeriod}
+                goalIdx={goalIdx}
+                setGoalIdx={setGoalIdx}
+                month={month}
+                viewMode={viewMode}
+              />
+            )}
+            {tab === "Incomes" && (
+              <IncomesTab incomes={incomes} setIncomes={setIncomes} currency={currency} setTab={setTab} />
+            )}
+            {tab === "Budget Setup" && (
+              <BudgetSetupTab
+                allCats={allCats}
+                selectedCats={selectedCats} setSelectedCats={setSelectedCats}
+                budget={budget} setBudget={setBudget}
+                customCats={customCats} setCustomCats={setCustomCats}
+                setTxns={setTxns}
+                currency={currency}
+                totalIncome={totalIncome}
+                setTab={setTab}
+                suggestion={(catKey) => suggestionFor(catKey, totalIncome, selectedCats, allCats)}
+              />
+            )}
+            {tab === "Savings Goals" && (
+              <GoalsTab goals={goals} setGoals={setGoals} currency={currency} setTab={setTab} />
+            )}
+            {tab === "Reports" && (
+              <ReportsTab
+                txns={txns} setTxns={setTxns}
+                bills={bills} setBills={setBills}
+                allCats={allCats}
+                currency={currency}
+                incomes={viewIncomes}
+                budget={viewBudget}
+                selectedCats={viewSelectedCats}
+                month={month}
+                setMonth={setMonth}
+              />
+            )}
+        </div>
+
+        {/* Planning overlay — for future months not yet activated */}
+        {isPlanning && (
+          <PlanningOverlay
+            key={monthKey}
+            month={month}
+            monthKey={monthKey}
+            months={months}
+            setMonths={setMonths}
+            incomes={incomes}
+            budget={budget}
+            selectedCats={selectedCats}
+            goals={goals}
+            allCats={allCats}
+            currency={currency}
+          />
+        )}
       </div>
 
-      {/* ✦ GLOBAL CTA FAB — always visible on every tab */}
-      <button
+      {/* Month picker modal */}
+      {showMonthPicker && (
+        <MonthPickerModal
+          month={month}
+          setMonth={m => { setMonth(m); setShowMonthPicker(false); }}
+          onClose={() => setShowMonthPicker(false)}
+          months={months}
+          nowKey={nowKey}
+          nextPlannableKey={nextPlannableKey}
+        />
+      )}
+
+      {/* Past month read-only banner */}
+      {viewMode === "past" && (
+        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-pink-50 border border-pink-200/60 px-4 py-2.5">
+          <Calendar className="h-4 w-4 text-[#9D5C7E] shrink-0" />
+          <p className="text-xs text-[#9D5C7E] font-semibold">Historique — lecture seule. Dépenses non modifiables.</p>
+          <button onClick={() => setMonth({ y: _now.getFullYear(), m: _now.getMonth() })}
+            className="ml-auto shrink-0 text-[10px] font-bold text-[#EC4899] hover:underline whitespace-nowrap">
+            Mois en cours ›
+          </button>
+        </div>
+      )}
+
+      {/* Activated future month — show plan info + reset */}
+      {viewMode === "future" && monthPlan?.activated && (() => {
+        const monthName = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+        // Count how many months after this one are also planned (will also be reset)
+        const cascade = Object.keys(months).filter(k => k > monthKey && months[k]?.activated).length;
+        return (
+          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-violet-50 border border-violet-200/60 px-4 py-2.5">
+            <Flag className="h-4 w-4 text-violet-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-violet-700 font-semibold truncate">
+                {monthName} · Planifié ✓
+              </p>
+              {cascade > 0 && (
+                <p className="text-[10px] text-violet-500">
+                  + {cascade} mois suivant{cascade > 1 ? "s" : ""} planifié{cascade > 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                const label = cascade > 0
+                  ? `Réinitialiser ${monthName} et les ${cascade} mois planifié${cascade > 1 ? "s" : ""} après ?`
+                  : `Réinitialiser le plan de ${monthName} ?`;
+                if (window.confirm(label)) resetPlannedMonth(monthKey);
+              }}
+              className="ml-2 shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-full px-2.5 py-1 transition active:scale-95 whitespace-nowrap">
+              <XCircle className="h-3 w-3" /> Réinitialiser
+            </button>
+          </div>
+        );
+      })()}
+
+      {/* ✦ GLOBAL CTA FAB — only on current month */}
+      {viewMode === "present" && <button
         data-tour="spend-fab"
         onClick={() => setShowExtraSpend(true)}
         className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95 px-5 h-14"
@@ -1573,7 +1764,7 @@ export function BudgetPlanner() {
       >
         <Plus className="h-5 w-5" strokeWidth={2.5} />
         <span className="text-sm font-bold">Spend</span>
-      </button>
+      </button>}
 
       <ExtraSpendModal
         open={showExtraSpend}
@@ -1691,7 +1882,8 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Savings Bloom",
       v: goalsSaved,
       sub: "saved across all goals",
-      bg: "from-purple-50 to-pink-50",
+      bg: "from-emerald-50 to-teal-50",
+      numColor: "text-emerald-600",
       badge: null,
     },
   ];
@@ -1701,21 +1893,21 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       {cards.map((it) => (
         <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
+          <div className={`mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none ${"numColor" in it ? it.numColor : "text-[#EC4899]"}`}>
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
-            <div className="mt-1 flex items-center flex-wrap gap-x-0.5 text-[9px] font-semibold leading-tight">
+            <div className="mt-0.5 flex items-center flex-wrap gap-x-0.5 text-[9px] text-[#9D5C7E] leading-tight">
               {it.extraAmt && <span className="text-rose-500">{it.extraAmt} extra</span>}
               {it.extraAmt && <span className="text-[#9D5C7E]">+</span>}
               <span className="text-[#9D5C7E]">{it.planSub} planned</span>
             </div>
           ) : it.badge ? (
-            <span className={`mt-1 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
+            <span className={`mt-0.5 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
               {it.badge.text}
             </span>
           ) : (
-            <div className="mt-1 text-[9px] sm:text-[10px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+            <div className="mt-0.5 text-[9px] text-[#9D5C7E] leading-tight">{it.sub}</div>
           )}
         </Card>
       ))}
@@ -1893,6 +2085,272 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
 }
 
 /* ============================================================
+   MONTH PICKER MODAL
+============================================================ */
+const MONTH_ABBR = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+
+function MonthPickerModal({
+  month, setMonth, onClose, months, nowKey, nextPlannableKey,
+}: {
+  month: { y: number; m: number };
+  setMonth: (v: { y: number; m: number }) => void;
+  onClose: () => void;
+  months: Record<string, MonthPlan>;
+  nowKey: string;
+  nextPlannableKey: string;
+}) {
+  const [pickerYear, setPickerYear] = useState(month.y);
+  const selectedKey = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(253,242,248,0.75)", backdropFilter: "blur(6px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-xs bg-white rounded-3xl shadow-2xl border border-pink-200 overflow-hidden"
+        style={{ animation: "fadeIn 0.25s ease-out" }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <h2 className="text-base font-bold text-[#831843]">Choisir un mois</h2>
+          <button onClick={onClose} className="text-[#9D5C7E] hover:text-[#831843] transition">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Year navigation */}
+        <div className="flex items-center justify-between px-5 pb-3">
+          <button onClick={() => setPickerYear(y => y - 1)}
+            className="rounded-full p-1.5 hover:bg-pink-50 text-[#9D5C7E] transition active:scale-95">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-sm font-bold text-[#831843]">{pickerYear}</span>
+          <button onClick={() => setPickerYear(y => y + 1)}
+            className="rounded-full p-1.5 hover:bg-pink-50 text-[#9D5C7E] transition active:scale-95">
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Month grid */}
+        <div className="grid grid-cols-3 gap-2 px-4 pb-5">
+          {MONTH_ABBR.map((name, m) => {
+            const k = `${pickerYear}-${String(m + 1).padStart(2, "0")}`;
+            const isPast       = k < nowKey;
+            const isCurrent    = k === nowKey;
+            const isActivated  = !!months[k]?.activated;
+            const isNextPlan   = k === nextPlannableKey;
+            const isSelected   = k === selectedKey;
+            const isLocked     = !isPast && !isCurrent && !isActivated && !isNextPlan;
+
+            let cls = "rounded-2xl py-2.5 flex flex-col items-center gap-0.5 text-xs font-bold transition active:scale-95 ";
+            let badge = "";
+
+            if (isLocked) {
+              cls += "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50";
+              badge = "🔒";
+            } else if (isCurrent) {
+              cls += "bg-[#EC4899] text-white shadow-md shadow-pink-300/50";
+              badge = "●";
+            } else if (isActivated) {
+              cls += "bg-violet-100 text-violet-700 hover:bg-violet-200";
+              badge = "✓";
+            } else if (isNextPlan) {
+              cls += "bg-violet-50 text-violet-600 border-2 border-dashed border-violet-400 hover:bg-violet-100";
+              badge = "✦";
+            } else {
+              // past
+              cls += "bg-pink-50 text-[#9D5C7E] hover:bg-pink-100";
+              badge = "";
+            }
+
+            if (isSelected && !isLocked) cls += " ring-2 ring-offset-1 ring-[#EC4899]";
+
+            return (
+              <button key={m} disabled={isLocked}
+                onClick={() => setMonth({ y: pickerYear, m })}
+                className={cls}>
+                <span>{name}</span>
+                {badge && <span className="text-[9px] leading-none opacity-80">{badge}</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 px-5 pb-4 border-t border-pink-100 pt-3">
+          <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#EC4899]" /> En cours
+          </span>
+          <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-violet-200" /> Planifié ✓
+          </span>
+          <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
+            <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-violet-400" /> Planifier ✦
+          </span>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/* ============================================================
+   PLANNING OVERLAY — future month not yet activated
+============================================================ */
+function PlanningOverlay({
+  month, monthKey, months, setMonths,
+  incomes, budget, selectedCats, goals, allCats, currency,
+}: {
+  month: { y: number; m: number };
+  monthKey: string;
+  months: Record<string, MonthPlan>;
+  setMonths: (v: Record<string, MonthPlan> | ((p: Record<string, MonthPlan>) => Record<string, MonthPlan>)) => void;
+  incomes: Income[]; budget: Budget; selectedCats: string[];
+  goals: Goal[]; allCats: Cat[]; currency: CurrencyKey;
+}) {
+  const existing = months[monthKey];
+  const [draftIncomes, setDraftIncomes] = useState<Income[]>(() => existing?.incomes ?? incomes);
+  const [sameBudget, setSameBudget] = useState(!existing?.budgetOverride);
+  const [draftBudget, setDraftBudget] = useState<Record<string, number>>(() => existing?.budgetOverride ?? { ...budget });
+  const [draftGoals, setDraftGoals] = useState<Record<string, number>>(
+    () => existing?.goalsOverride ?? Object.fromEntries(goals.map(g => [g.id, g.monthly]))
+  );
+
+  const monthName = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+  const totalInc  = draftIncomes.reduce((s, i) => s + toMonthly(i), 0);
+  const totalBudg = selectedCats.filter(k => (sameBudget ? budget[k] : draftBudget[k]) ?? 0 > 0)
+    .reduce((s, k) => s + ((sameBudget ? budget[k] : draftBudget[k]) ?? 0), 0);
+  const totalGoal = goals.reduce((s, g) => s + (draftGoals[g.id] ?? g.monthly), 0);
+  const balance   = totalInc - totalBudg - totalGoal;
+
+  function activate() {
+    setMonths(prev => ({
+      ...prev,
+      [monthKey]: {
+        incomes: draftIncomes,
+        budgetOverride: sameBudget ? null : draftBudget,
+        selectedCatsOverride: null,
+        goalsOverride: draftGoals,
+        activated: true,
+      },
+    }));
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pb-8 overflow-y-auto"
+      style={{ background: "rgba(253,242,248,0.6)", backdropFilter: "blur(6px)" }}>
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-pink-200 overflow-hidden"
+        style={{ animation: "fadeIn 0.35s ease-out" }}>
+
+        {/* Header */}
+        <div className="p-5" style={{ background: "linear-gradient(135deg,#EC4899 0%,#8B5CF6 100%)" }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">✦ Planning mode</p>
+          <h2 className="font-script text-2xl text-white mt-0.5">{monthName}</h2>
+          <p className="text-xs text-white/80 mt-1">Confirme ou ajuste ton plan avant de commencer ce mois</p>
+          <div className={`mt-3 flex items-center gap-2 rounded-2xl px-3 py-2 ${balance >= 0 ? "bg-white/20" : "bg-red-400/30"}`}>
+            <span className="text-xs font-semibold text-white/80">Solde prévu</span>
+            <span className={`ml-auto text-sm font-bold tabular-nums ${balance >= 0 ? "text-white" : "text-red-200"}`}>
+              {balance >= 0 ? "+" : ""}{fmt(balance, currency)}
+            </span>
+          </div>
+        </div>
+
+        <div className="divide-y divide-pink-100">
+          {/* Incomes */}
+          <div className="p-4 space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
+              <Wallet className="h-3 w-3" /> Revenus · {fmt(totalInc, currency)}
+            </p>
+            {draftIncomes.map((inc, i) => (
+              <div key={inc.id} className="flex items-center gap-2">
+                <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{inc.source}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <input type="number" min={0} value={inc.amount}
+                    onChange={e => {
+                      const next = [...draftIncomes];
+                      next[i] = { ...inc, amount: Math.max(0, Number(e.target.value)) };
+                      setDraftIncomes(next);
+                    }}
+                    className="w-24 rounded-xl border border-pink-200 bg-pink-50 px-2 py-1 text-right text-xs font-bold text-[#831843] focus:outline-none focus:border-[#EC4899]"
+                  />
+                  <span className="text-[10px] text-[#9D5C7E] w-5">{CURRENCIES[currency].symbol}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Budget */}
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
+                <Receipt className="h-3 w-3" /> Budget · {fmt(totalBudg, currency)}
+              </p>
+              <button onClick={() => setSameBudget(v => !v)}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${sameBudget ? "bg-emerald-100 text-emerald-700" : "bg-violet-100 text-violet-700"}`}>
+                {sameBudget ? <><Check className="h-3 w-3" /> Même plan</> : <><Sparkles className="h-3 w-3" /> Ajuster</>}
+              </button>
+            </div>
+            {sameBudget ? (
+              <p className="text-[10px] text-[#9D5C7E] italic">
+                {selectedCats.filter(k => (budget[k] ?? 0) > 0).length} catégories reconduites sans changement
+              </p>
+            ) : selectedCats.filter(k => (budget[k] ?? 0) > 0).map(k => {
+              const cat = allCats.find(c => c.key === k);
+              return (
+                <div key={k} className="flex items-center gap-2">
+                  <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                  <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input type="number" min={0} value={draftBudget[k] ?? 0}
+                      onChange={e => setDraftBudget(prev => ({ ...prev, [k]: Math.max(0, Number(e.target.value)) }))}
+                      className="w-24 rounded-xl border border-pink-200 bg-pink-50 px-2 py-1 text-right text-xs font-bold text-[#831843] focus:outline-none focus:border-[#EC4899]"
+                    />
+                    <span className="text-[10px] text-[#9D5C7E] w-5">{CURRENCIES[currency].symbol}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Goals */}
+          {goals.length > 0 && (
+            <div className="p-4 space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
+                <Flag className="h-3 w-3" /> Objectifs · {fmt(totalGoal, currency)}/mo
+              </p>
+              {goals.map(g => (
+                <div key={g.id} className="flex items-center gap-2">
+                  <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <input type="number" min={0} value={draftGoals[g.id] ?? g.monthly}
+                      onChange={e => setDraftGoals(prev => ({ ...prev, [g.id]: Math.max(0, Number(e.target.value)) }))}
+                      className="w-24 rounded-xl border border-violet-200 bg-violet-50 px-2 py-1 text-right text-xs font-bold text-violet-700 focus:outline-none focus:border-violet-500"
+                    />
+                    <span className="text-[10px] text-[#9D5C7E]">/mo</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 bg-gradient-to-b from-white to-pink-50/50">
+          <button onClick={activate}
+            className="bloom-luxury-btn w-full py-3.5 text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-2">
+            <Check className="h-4 w-4" />
+            Activer {monthName} ✦
+          </button>
+          <p className="text-center text-[10px] text-[#9D5C7E] mt-2 opacity-70">
+            Modifiable à tout moment depuis les onglets Revenus, Budget Setup et Objectifs
+          </p>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/* ============================================================
    DASHBOARD TAB
 ============================================================ */
 function DashboardTab(props: {
@@ -1906,11 +2364,13 @@ function DashboardTab(props: {
   incomes: Income[]; onCurrencyClick: () => void;
   viewPeriod: "week"|"month"; setViewPeriod: React.Dispatch<React.SetStateAction<"week"|"month">>;
   goalIdx: number; setGoalIdx: React.Dispatch<React.SetStateAction<number>>;
+  month: { y: number; m: number };
+  viewMode: "past" | "present" | "future";
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
     txns, setTxns, selectedCats, setSelectedCats, allCats, goals, setTab, incomes,
     budget, setBudget, onCurrencyClick,
-    viewPeriod, setViewPeriod, goalIdx, setGoalIdx } = props;
+    viewPeriod, setViewPeriod, goalIdx, setGoalIdx, month, viewMode } = props;
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
@@ -1934,14 +2394,13 @@ function DashboardTab(props: {
     return txns.filter(t => new Date(t.date + "T00:00:00") >= cutoff);
   }, [txns, viewPeriod]);
 
-  // Current calendar-month transactions — used for Budget Plan bars regardless of the week/month toggle
+  // Transactions for the viewed month
   const monthTxns = useMemo(() => {
-    const now = new Date();
     return txns.filter(t => {
       const d = new Date(t.date + "T00:00:00");
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      return d.getFullYear() === month.y && d.getMonth() === month.m;
     });
-  }, [txns]);
+  }, [txns, month]);
 
   // Spending by category (filtered)
   const catSpend = useMemo(() => {
@@ -3032,10 +3491,10 @@ function ReportsTab(props: {
   bills: Bill[]; setBills: (v: Bill[] | ((p: Bill[]) => Bill[])) => void;
   allCats: Cat[]; currency: CurrencyKey;
   incomes: Income[]; budget: Budget; selectedCats: string[];
+  month: { y: number; m: number };
+  setMonth: (v: { y: number; m: number } | ((p: { y: number; m: number }) => { y: number; m: number })) => void;
 }) {
-  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats } = props;
-  const now = new Date();
-  const [month, setMonth] = useState({ y: now.getFullYear(), m: now.getMonth() });
+  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats, month, setMonth } = props;
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [filterCat, setFilterCat] = useState("");
   const [filterMood, setFilterMood] = useState("");

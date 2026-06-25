@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
-  ChevronRight, Pencil, Check,
+  ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
+  Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
@@ -96,6 +98,9 @@ const EMPTY_DAY: DayMeals = { breakfast: null, lunch: null, dinner: null, snack:
 
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
+};
+const MEAL_ICONS: Record<MealType, React.ElementType> = {
+  breakfast: Sunrise, lunch: Sun, dinner: Moon, snack: Apple,
 };
 
 const PHASE_RING: Record<DietPhase, string> = {
@@ -239,7 +244,7 @@ function RecipeModal({
   const [date, setDate] = useState(todayISO());
   const [added, setAdded] = useState(false);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl">
         <div className="relative p-4 sm:p-6">
@@ -306,7 +311,8 @@ function RecipeModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -460,13 +466,20 @@ function CycleNutritionTab({
   const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
   return (
     <div className="space-y-5">
-      <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
-        {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
+      <div>
+        <h3 className="font-script text-2xl text-hotpink mb-3 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-hotpink" strokeWidth={1.6} /> Your Cycle Phases
+        </h3>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
+          {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
+        </div>
       </div>
 
       <Glass className="p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-script text-xl text-hotpink">My Rules</h3>
+          <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
+            <SlidersHorizontal className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> My Rules
+          </h3>
           <button onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink hover:underline">
             <Pencil className="h-3 w-3" /> Edit
           </button>
@@ -536,9 +549,13 @@ function MealSlot({
     ).slice(0, 6);
   }, [query, candidates, type]);
 
+  const MealIcon = MEAL_ICONS[type];
   return (
     <Glass className="p-3 sm:p-4">
-      <p className="text-xs font-bold uppercase tracking-wide text-rose/60">{MEAL_LABELS[type]}</p>
+      <p className="font-script text-lg text-hotpink leading-none mb-2 flex items-center gap-1.5">
+        <MealIcon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
+        {MEAL_LABELS[type]}
+      </p>
       {meal ? (
         <div className="mt-1.5 flex items-start justify-between gap-2">
           <div>
@@ -660,6 +677,9 @@ function TodayTab({
 
       {/* Macro rings */}
       <Glass className="p-4 sm:p-5">
+        <h3 className="font-script text-xl text-hotpink mb-3 flex items-center gap-1.5">
+          <Activity className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Today's Macros
+        </h3>
         <div className="grid grid-cols-4 gap-2 sm:gap-4">
           <RingProgress value={consumed.calories} target={targets.calories} label="Calories" sub="" colorClass={ringColor} />
           <RingProgress value={consumed.protein} target={targets.protein} label="Protein" sub="g" colorClass={ringColor} />
@@ -670,7 +690,9 @@ function TodayTab({
 
       {/* Micro bars */}
       <Glass className="p-4 sm:p-5 space-y-3">
-        <h3 className="font-script text-lg text-hotpink">For your phase</h3>
+        <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
+          <Leaf className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Phase Nutrients
+        </h3>
         {micros.map((m) => (
           <MicroBar key={m.key as string} label={m.label} value={consumed[m.key as keyof typeof consumed] ?? 0} target={m.target} unit={m.unit} />
         ))}
@@ -704,16 +726,21 @@ function TodayTab({
         </Glass>
       )}
 
-      {/* Meal slots */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
-          <MealSlot
-            key={type} type={type} meal={dayMeals[type]}
-            onAddRecipe={(r) => assignMeal(type, r)}
-            onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
-            candidates={candidatesFor(type)}
-          />
-        ))}
+      {/* Meal slots — one per section */}
+      <div>
+        <h3 className="font-script text-2xl text-hotpink mb-3 flex items-center gap-2">
+          <UtensilsCrossed className="h-5 w-5 text-hotpink" strokeWidth={1.6} /> Your Meals Today
+        </h3>
+        <div className="space-y-3">
+          {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
+            <MealSlot
+              key={type} type={type} meal={dayMeals[type]}
+              onAddRecipe={(r) => assignMeal(type, r)}
+              onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
+              candidates={candidatesFor(type)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -794,71 +821,73 @@ function RecipesTab({
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
-        <input
-          value={query} onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search recipes or ingredients..."
-          className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {PHASE_FILTERS.map((p) => (
-            <SelectPill key={p} active={phaseFilters.includes(p)} onClick={() => toggle(phaseFilters, p, setPhaseFilters)}>{PHASE_INFO[p].label}</SelectPill>
-          ))}
+      {/* Search + filters */}
+      <Glass className="p-4 space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
+          <input
+            value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search recipes or ingredients..."
+            className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
+          />
         </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {MEAL_FILTERS.map((m) => (
-            <SelectPill key={m} active={mealFilters.includes(m)} onClick={() => toggle(mealFilters, m, setMealFilters)}>{MEAL_LABELS[m]}</SelectPill>
-          ))}
+        <div className="space-y-1.5">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {PHASE_FILTERS.map((p) => (
+              <SelectPill key={p} active={phaseFilters.includes(p)} onClick={() => toggle(phaseFilters, p, setPhaseFilters)}>{PHASE_INFO[p].label}</SelectPill>
+            ))}
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {MEAL_FILTERS.map((m) => (
+              <SelectPill key={m} active={mealFilters.includes(m)} onClick={() => toggle(mealFilters, m, setMealFilters)}>{MEAL_LABELS[m]}</SelectPill>
+            ))}
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {TIME_FILTERS.map((t) => (
+              <SelectPill key={t.key} active={timeFilter === t.key} onClick={() => setTimeFilter((cur) => (cur === t.key ? null : t.key))}>{t.label}</SelectPill>
+            ))}
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {GOAL_FILTERS.map((g) => (
+              <SelectPill key={g.key} active={goalFilters.includes(g.key)} onClick={() => toggle(goalFilters, g.key, setGoalFilters)}>{g.label}</SelectPill>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {TIME_FILTERS.map((t) => (
-            <SelectPill key={t.key} active={timeFilter === t.key} onClick={() => setTimeFilter((cur) => (cur === t.key ? null : t.key))}>{t.label}</SelectPill>
-          ))}
-        </div>
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {GOAL_FILTERS.map((g) => (
-            <SelectPill key={g.key} active={goalFilters.includes(g.key)} onClick={() => toggle(goalFilters, g.key, setGoalFilters)}>{g.label}</SelectPill>
-          ))}
-        </div>
-      </div>
+      </Glass>
 
       {!!pwRecipes.length && !filtersActive && (
-        <div>
+        <Glass className="p-4">
           <p className="font-script text-lg text-hotpink mb-2">🏋️ Post-workout recipes — high protein · phase matched</p>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             {pwRecipes.map((r) => (
               <div key={r.id} className="w-40 shrink-0"><RecipeCard recipe={r} onOpen={() => onOpenRecipe(r)} /></div>
             ))}
           </div>
-        </div>
+        </Glass>
       )}
 
       {filtersActive ? (
-        <div>
+        <Glass className="p-4">
           <p className="font-script text-lg text-hotpink mb-2">{filtered.length} recipe{filtered.length === 1 ? "" : "s"}</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {filtered.map((r) => <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />)}
           </div>
           {filtered.length === 0 && <p className="text-sm text-rose/60">No recipes match — try fewer filters.</p>}
-        </div>
+        </Glass>
       ) : (
         <>
-          <div>
+          <Glass className="p-4">
             <p className="font-script text-lg text-hotpink mb-2">For your phase today</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {forYourPhase.map((r) => <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />)}
             </div>
-          </div>
-          <div>
+          </Glass>
+          <Glass className="p-4">
             <p className="font-script text-lg text-hotpink mb-2">Quick this week</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickThisWeek.map((r) => <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />)}
             </div>
-          </div>
+          </Glass>
         </>
       )}
     </div>
@@ -868,11 +897,16 @@ function RecipesTab({
 /* ---------- Page ---------- */
 
 type TabKey = "cycle" | "today" | "recipes";
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "cycle", label: "Cycle Nutrition" },
-  { key: "today", label: "Today" },
-  { key: "recipes", label: "Recipes" },
+const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  { key: "cycle", label: "Cycle Nutrition", icon: Moon },
+  { key: "today", label: "Today",           icon: UtensilsCrossed },
+  { key: "recipes", label: "Recipes",       icon: BookOpen },
 ];
+const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
+  cycle:   { title: "Cycle Nutrition",  subtitle: "eat in sync with your cycle ✿" },
+  today:   { title: "Today's Meals",    subtitle: "nourish your bloom, one bite at a time 🌸" },
+  recipes: { title: "Recipes",          subtitle: "cook for your phase, glow all season 💫" },
+};
 
 export default function DietPage() {
   const [setupComplete, setSetupComplete] = useLS<boolean>(LS.setup, false);
@@ -881,6 +915,7 @@ export default function DietPage() {
   const [editingSetup, setEditingSetup] = useState(false);
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
   const [allMeals, setAllMeals] = useLS<Record<string, DayMeals>>(LS.todayMeals, {});
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const cyclePhase = useMemo(() => mapCyclePhase(readCyclePhase()), []);
   const cycleDay = useMemo(() => getCycleDay(), []);
@@ -933,39 +968,57 @@ export default function DietPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* HERO / HEADER — matches tools hub styling */}
-      <header className="mb-3 sm:mb-4 sticky top-0 z-30 -mx-3 px-3 pt-2 pb-2 sm:static sm:mx-0 sm:px-0 sm:pt-0 sm:pb-0 bg-blush/70 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none">
-        <div className="flex items-end justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2">
-              Diet Tool <Flame className="h-6 w-6 sm:h-9 sm:w-9 text-hotpink" />
+      {/* HERO — image with gradient + tab pills at bottom */}
+      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-hero-border-signal">
+        <img src="/images/meal-oats.jpg" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">
+          {/* Title block */}
+          <div className="flex-1 flex flex-col justify-center max-w-[55%] sm:max-w-[45%] lg:max-w-[38%]">
+            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: "0ms" }}>
+              {TAB_HERO[tab].title}
             </h1>
-            <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-rose/80">nourish your bloom, one bite at a time ✿</p>
+            <p className="animate-fade-in mt-1 text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-white/75 drop-shadow" style={{ animationDelay: "120ms" }}>
+              {PHASE_INFO[cyclePhase].label} phase
+            </p>
+            <p className="animate-fade-in mt-2 text-xs sm:text-sm italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: "200ms" }}>
+              {TAB_HERO[tab].subtitle}
+            </p>
           </div>
-          <div className="text-xs text-rose/70 hidden sm:block">phase: <b className="text-hotpink">{PHASE_INFO[cyclePhase].label}</b></div>
+          {/* Tab pills at bottom of hero */}
+          <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: "320ms" }}>
+            <div className="flex gap-1.5 w-max">
+              {TABS.map((t) => {
+                const active = tab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={[
+                      "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold transition whitespace-nowrap",
+                      active
+                        ? "bg-hotpink text-white shadow shadow-hotpink/40"
+                        : "bg-white/20 backdrop-blur-md border border-white/40 text-white hover:bg-white/30",
+                    ].join(" ")}
+                  >
+                    <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
+      </div>
 
-        <nav className="mt-3 -mx-3 px-3 pr-6 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth snap-x" style={{ scrollPaddingRight: "1.5rem", scrollPaddingLeft: "0.75rem" }}>
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={(e) => { setTab(t.key); (e.currentTarget as HTMLElement).scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" }); }}
-              className={[
-                "shrink-0 snap-start inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition border whitespace-nowrap",
-                tab === t.key ? "bg-hotpink text-white border-hotpink shadow shadow-hotpink/30" : "bg-white/80 text-rose border-petal/60 hover:bg-blush",
-              ].join(" ")}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </header>
-
-      {tab === "cycle" && <CycleNutritionTab phase={cyclePhase} profile={profile} onEdit={() => setEditingSetup(true)} />}
-      {tab === "today" && (
-        <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} setDayMeals={setDayMeals} />
-      )}
-      {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
+      <div className="space-y-4">
+        {tab === "cycle" && <CycleNutritionTab phase={cyclePhase} profile={profile} onEdit={() => setEditingSetup(true)} />}
+        {tab === "today" && (
+          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} setDayMeals={setDayMeals} />
+        )}
+        {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
+      </div>
 
       {openRecipe && <RecipeModal recipe={openRecipe} onClose={() => setOpenRecipe(null)} onAddToPlan={addToPlan} />}
     </div>
