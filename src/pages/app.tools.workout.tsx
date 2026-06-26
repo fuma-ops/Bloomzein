@@ -17,6 +17,7 @@ import {
   PROGRAMS, getProgram, computeWeekSession, weekMeta, sessionVolume,
   type Program, type ProgramSession,
 } from "@/components/bloom/workout/programs";
+import { getCoaching } from "@/components/bloom/workout/coaching";
 
 // ===================== STORAGE =====================
 
@@ -1518,7 +1519,9 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
 
 function Library() {
   const [zone, setZone] = useState<Zone>("glutes");
+  const [openSlug, setOpenSlug] = useState<string | null>(null);
   const exercises = ZONE_EXERCISES[zone];
+  const openExercise = openSlug ? exercises.find((e) => e.slug === openSlug) ?? null : null;
 
   return (
     <div className="space-y-4">
@@ -1539,22 +1542,85 @@ function Library() {
           ))}
         </div>
 
+        <p className="mb-3 text-[11px] text-rose/60">Tap any move for a how-to, form cues and the mistake to avoid. ✿</p>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
-            <div
+            <button
               key={ex.slug}
-              className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in"
+              onClick={() => setOpenSlug(ex.slug)}
+              className="text-left rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in transition hover:-translate-y-1 hover:shadow-lg active:scale-[0.98]"
               style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
+              <div className="relative">
+                <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
+                <span className="absolute bottom-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm">
+                  <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </span>
+              </div>
               <div className="p-2.5">
                 <p className="text-sm font-bold text-rose leading-tight">{ex.name}</p>
                 <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{ex.muscles}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </section>
+
+      {openExercise && (
+        <ExerciseDetailModal exercise={openExercise} zone={zone} onClose={() => setOpenSlug(null)} />
+      )}
+    </div>
+  );
+}
+
+function ExerciseDetailModal({ exercise, zone, onClose }: { exercise: Exercise; zone: Zone; onClose: () => void }) {
+  const coaching = getCoaching(exercise.slug);
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={onClose}>
+      <div
+        className="relative w-full max-w-md max-h-[88vh] overflow-y-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative">
+          <ExercisePhoto exercise={exercise} zone={zone} className="w-full aspect-[4/3] object-cover bg-blush/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90">
+            <X className="h-4 w-4" />
+          </button>
+          <div className="absolute bottom-3 left-4 right-4">
+            <h2 className="font-script text-3xl text-white leading-none drop-shadow">{exercise.name}</h2>
+            <p className="text-[11px] font-semibold text-white/90 drop-shadow">{exercise.muscles}</p>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 space-y-3.5">
+          {coaching ? (
+            <>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">How to do it</p>
+                <p className="text-sm text-rose/85 leading-snug">{coaching.howTo}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">Form cues</p>
+                <ul className="space-y-1">
+                  {coaching.cues.map((c) => (
+                    <li key={c} className="flex items-start gap-2 text-sm text-rose/85">
+                      <Check className="h-4 w-4 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-0.5">Avoid this</p>
+                <p className="text-xs text-rose/80 leading-snug">{coaching.mistake}</p>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-rose/70">{exercise.muscles}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1710,6 +1776,11 @@ function SessionActive({ session, onExit, onDone }: {
             <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-w-md mx-auto aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
             <h2 className="font-script text-4xl sm:text-6xl text-hotpink leading-none text-center">{exercise.name}</h2>
             <p className="text-base sm:text-xl text-rose/70 text-center">{exercise.muscles}</p>
+            {getCoaching(exercise.slug)?.cues[0] && (
+              <p className="max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 -mt-1 flex items-center justify-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
+              </p>
+            )}
             <CircularTimer totalSec={totalSec} remainingSec={remaining} size={160} />
           </>
         ) : (
