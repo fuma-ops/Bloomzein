@@ -306,7 +306,7 @@ type View =
   | { kind: "library" }
   | { kind: "best-shape" }
   | { kind: "program-detail"; programId: string }
-  | { kind: "program-session"; programId: string; week: number; sessionIndex: number }
+  | { kind: "program-session"; programId: string; week: number; sessionIndex: number; returnTo?: "detail" | "plan" }
   | { kind: "session-start"; session: WorkoutSession }
   | { kind: "session-active"; session: WorkoutSession }
   | { kind: "session-end"; session: WorkoutSession; elapsedSec: number };
@@ -366,7 +366,8 @@ export default function WorkoutPage() {
       <ProgramDetail
         programId={view.programId}
         onBack={() => setView({ kind: "programs" })}
-        onOpenSession={(week, sessionIndex) => setView({ kind: "program-session", programId: view.programId, week, sessionIndex })}
+        onOpenSession={(week, sessionIndex) => setView({ kind: "program-session", programId: view.programId, week, sessionIndex, returnTo: "detail" })}
+        onMakeMyPlan={() => { setTab("program"); setView({ kind: "program" }); }}
       />
     );
   }
@@ -376,7 +377,9 @@ export default function WorkoutPage() {
         programId={view.programId}
         week={view.week}
         sessionIndex={view.sessionIndex}
-        onBack={() => setView({ kind: "program-detail", programId: view.programId })}
+        onBack={() => view.returnTo === "plan"
+          ? setView({ kind: "program" })
+          : setView({ kind: "program-detail", programId: view.programId })}
       />
     );
   }
@@ -431,7 +434,12 @@ export default function WorkoutPage() {
         />
       )}
       {view.kind === "program" && (
-        <MyProgram profile={profile} onStartSession={(session) => setView({ kind: "session-start", session })} />
+        <MyProgram
+          profile={profile}
+          onStartSession={(session) => setView({ kind: "session-start", session })}
+          onOpenProgramSession={(programId, week, sessionIndex) => setView({ kind: "program-session", programId, week, sessionIndex, returnTo: "plan" })}
+          onBrowsePrograms={() => { setTab("programs"); setView({ kind: "programs" }); }}
+        />
       )}
       {view.kind === "library" && <Library />}
     </div>
@@ -451,6 +459,20 @@ function sessionTag(week: number, sessionIndex: number) { return `w${week}s${ses
 
 function loadProgramProgress(): ProgramProgress {
   try { return JSON.parse(localStorage.getItem(PROGRAM_PROGRESS_KEY) || "{}"); } catch { return {}; }
+}
+
+// The program the user has chosen as their active plan (drives "My Plan").
+const ACTIVE_PROGRAM_KEY = "bloom:workout-active-program";
+interface ActiveProgram { programId: string; week: number; startedISO: string; }
+
+function loadActiveProgram(): ActiveProgram | null {
+  try { return JSON.parse(localStorage.getItem(ACTIVE_PROGRAM_KEY) || "null"); } catch { return null; }
+}
+function saveActiveProgram(a: ActiveProgram | null) {
+  try {
+    if (a) localStorage.setItem(ACTIVE_PROGRAM_KEY, JSON.stringify(a));
+    else localStorage.removeItem(ACTIVE_PROGRAM_KEY);
+  } catch {}
 }
 
 function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
@@ -522,15 +544,24 @@ function Tag({ icon, children }: { icon?: React.ReactNode; children: React.React
   );
 }
 
-function ProgramDetail({ programId, onBack, onOpenSession }: {
+function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
   programId: string;
   onBack: () => void;
   onOpenSession: (week: number, sessionIndex: number) => void;
+  onMakeMyPlan: () => void;
 }) {
   const program = getProgram(programId);
   const [week, setWeek] = useState(1);
+  const [active, setActive] = useState(() => loadActiveProgram());
   const phase = readCyclePhase() ?? "any";
   if (!program) return null;
+
+  const isMyPlan = active?.programId === program.id;
+  const makeMyPlan = () => {
+    saveActiveProgram({ programId: program.id, week: 1, startedISO: todayISO() });
+    setActive(loadActiveProgram());
+    onMakeMyPlan();
+  };
 
   const progress = loadProgramProgress();
   const doneSet = new Set(progress[program.id] ?? []);
@@ -573,6 +604,22 @@ function ProgramDetail({ programId, onBack, onOpenSession }: {
           <Tag icon={<CalendarHeart className="h-3 w-3" />}>{program.daysPerWeek}×/week</Tag>
         </div>
         <p className="mt-3 text-xs text-rose/70"><span className="font-bold text-rose">Who it's for:</span> {program.whoFor}</p>
+
+        {/* Make this my plan */}
+        {isMyPlan ? (
+          <div className="mt-4 flex items-center gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3 py-2.5">
+            <Check className="h-4 w-4 text-hotpink shrink-0" strokeWidth={3} />
+            <p className="text-xs font-bold text-hotpink flex-1">This is your active plan ✿</p>
+            <button onClick={onMakeMyPlan} className="text-[11px] font-bold text-hotpink underline underline-offset-2">Go to My Plan</button>
+          </div>
+        ) : (
+          <button
+            onClick={makeMyPlan}
+            className="bloom-luxury-btn animate-cta-bounce mt-4 w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white"
+          >
+            <CalendarHeart className="h-4 w-4" strokeWidth={2} /> Make this my plan
+          </button>
+        )}
       </div>
 
       {/* Why it works */}
@@ -1403,13 +1450,124 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
 
 // ===================== MY PROGRAM =====================
 
-function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onStartSession: (s: WorkoutSession) => void }) {
+function ActiveProgramPlan({ program, week, phase, onOpenSession, onSetWeek, onLeave }: {
+  program: Program;
+  week: number;
+  phase: CyclePhase;
+  onOpenSession: (sessionIndex: number) => void;
+  onSetWeek: (week: number) => void;
+  onLeave: () => void;
+}) {
+  const meta = weekMeta(program, week);
+  const progress = loadProgramProgress();
+  const doneSet = new Set(progress[program.id] ?? []);
+  const weekDone = program.template.filter((_, i) => doneSet.has(sessionTag(week, i))).length;
+  const weekTotal = program.template.length;
+  const weekComplete = weekDone >= weekTotal;
+  const overallDone = (progress[program.id] ?? []).length;
+  const overallTotal = program.weeks * program.template.length;
+
+  return (
+    <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="relative h-28 overflow-hidden">
+        <img src={program.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10" />
+        <div className="absolute bottom-2 left-3 right-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">My plan · Week {week} of {program.weeks}</p>
+          <h2 className="font-script text-2xl text-white leading-none drop-shadow">{program.title}</h2>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Overall progress */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{meta.theme}{meta.isDeload ? " · recovery" : ""}</p>
+            <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} sessions</p>
+          </div>
+          <div className="h-1.5 rounded-full bg-blush overflow-hidden">
+            <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
+          </div>
+          <p className="mt-1.5 text-xs text-rose/75 leading-snug">{meta.note}</p>
+        </div>
+
+        {/* Week chips */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {Array.from({ length: program.weeks }, (_, i) => i + 1).map((w) => (
+            <button
+              key={w}
+              onClick={() => onSetWeek(w)}
+              className={[
+                "shrink-0 rounded-xl px-2.5 py-1 text-center transition border text-[11px] font-bold",
+                w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40",
+              ].join(" ")}
+            >W{w}</button>
+          ))}
+        </div>
+
+        {/* This week's sessions */}
+        <div className="space-y-2">
+          {program.template.map((_, i) => {
+            const s = computeWeekSession(program, i, week);
+            const done = doneSet.has(sessionTag(week, i));
+            const tip = phase !== "any" ? s.phaseTips?.[phase] : undefined;
+            return (
+              <button
+                key={i}
+                onClick={() => onOpenSession(i)}
+                className="w-full text-left rounded-2xl bg-blush/30 border border-petal/50 p-3 flex items-center gap-3 transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
+              >
+                <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", done ? "bg-hotpink text-white" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
+                  {done ? <Check className="h-5 w-5" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className={["text-sm font-bold leading-tight", done ? "text-rose/45 line-through" : "text-rose"].join(" ")}>{s.title}</p>
+                  <p className="text-[11px] text-rose/65 leading-snug">{s.focus}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <Tag icon={<Clock className="h-3 w-3" />}>{s.estMinutes} min</Tag>
+                    <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(s)} sets</Tag>
+                    {tip && <span className="text-[9px] font-bold uppercase tracking-wide text-hotpink">✿ {PHASE_LABEL[phase]} tip</span>}
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-rose/40 shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Advance / complete */}
+        {weekComplete && week < program.weeks && (
+          <button onClick={() => onSetWeek(week + 1)} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white">
+            <Trophy className="h-4 w-4" strokeWidth={2} /> Week {week} done — start Week {week + 1}
+          </button>
+        )}
+        {weekComplete && week === program.weeks && (
+          <div className="rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3 text-center">
+            <p className="font-script text-xl text-hotpink leading-none">Program complete ✿</p>
+            <p className="text-xs text-rose/75 mt-1">You finished all {program.weeks} weeks. Incredible work.</p>
+          </div>
+        )}
+
+        <button onClick={onLeave} className="w-full text-center text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave this program</button>
+      </div>
+    </section>
+  );
+}
+
+function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowsePrograms }: {
+  profile: WorkoutProfile;
+  onStartSession: (s: WorkoutSession) => void;
+  onOpenProgramSession: (programId: string, week: number, sessionIndex: number) => void;
+  onBrowsePrograms: () => void;
+}) {
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [program, setProgram] = useLS<Record<string, DayPlan | null> | null>(PROGRAM_KEY, null);
   const [programPhase, setProgramPhase] = useLS<CyclePhase | null>(PROGRAM_PHASE_KEY, null);
   const [bannerSeen, setBannerSeen] = useLS<boolean>(PROGRAM_BANNER_KEY, false);
   const [zoneFilter, setZoneFilter] = useState<Zone | "all">("all");
   const [intentionFilter, setIntentionFilter] = useState<WorkoutIntention | "all">("all");
+  const [active, setActive] = useState(() => loadActiveProgram());
 
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
 
@@ -1422,31 +1580,62 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
 
   const phaseChanged = !!program && programPhase !== null && programPhase !== phase;
 
+  const activeProgram = active ? getProgram(active.programId) : null;
+
   return (
     <div className="space-y-4">
 
-      {!program && (
+      {/* ── Active flagship program (chosen from Programs) ───────────────── */}
+      {active && activeProgram && (
+        <ActiveProgramPlan
+          program={activeProgram}
+          week={active.week}
+          phase={phase}
+          onOpenSession={(sessionIndex) => onOpenProgramSession(activeProgram.id, active.week, sessionIndex)}
+          onSetWeek={(w) => { const next = { ...active, week: w }; saveActiveProgram(next); setActive(next); }}
+          onLeave={() => { saveActiveProgram(null); setActive(null); }}
+        />
+      )}
+
+      {/* Browse / switch programs */}
+      {!active && (
+        <button onClick={onBrowsePrograms} className="w-full rounded-3xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-4 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+          <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
+            <Trophy className="h-5 w-5" strokeWidth={1.8} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-rose">Choose a flagship program ✿</p>
+            <p className="text-[11px] text-rose/70 leading-snug">Pick a structured multi-week journey and we'll make it your plan, week by week.</p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+        </button>
+      )}
+
+      {!active && !program && (
         <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <p className="font-bold text-rose mb-2">How My Program works</p>
-          <ol className="space-y-1.5 text-sm text-rose/85 list-decimal list-inside">
-            <li>We use your setup profile (level, goal, equipment, days/week) and your current cycle phase{phase !== "any" ? ` (${PHASE_LABEL[phase].toLowerCase()})` : ""}.</li>
-            <li>We propose a full week — a zone &amp; intention for each active day, rest days for the rest.</li>
-            <li>Tap <span className="font-bold">Validate</span> to accept it, <span className="font-bold">Adjust</span> to regenerate, or <span className="font-bold">Skip</span> to plan it yourself later.</li>
-            <li>Tap any day's card to start that session. Use the filters to browse by zone, intention, or equipment.</li>
-          </ol>
+          <p className="font-bold text-rose mb-2">Two ways to plan</p>
+          <p className="text-sm text-rose/85 mb-2"><span className="font-bold text-hotpink">1. A flagship program</span> — a structured multi-week journey with progressive overload. Tap "Choose a flagship program" above, then "Make this my plan".</p>
+          <p className="text-sm text-rose/85"><span className="font-bold text-hotpink">2. A freestyle week</span> — a one-tap auto plan from your profile (level, goal, days/week) and cycle phase. Generate it below.</p>
         </section>
       )}
 
-      {!program && !bannerSeen && (
+      {!active && !program && !bannerSeen && (
         <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Your weekly plan is ready</h2>
+          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Freestyle week</h2>
           <p className="text-sm text-rose/85 mb-3">Based on your profile{phase !== "any" ? ` and your ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}, here's a soft proposal for the week.</p>
           <div className="flex flex-wrap gap-2">
-            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Validate</button>
-            <button onClick={validate} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Adjust</button>
+            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Generate</button>
             <button onClick={skip} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Skip for now</button>
           </div>
         </section>
+      )}
+
+      {active && (
+        <div className="flex items-center gap-2 pt-1">
+          <div className="h-px flex-1 bg-petal/50" />
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50">Or a freestyle week</p>
+          <div className="h-px flex-1 bg-petal/50" />
+        </div>
       )}
 
       {phaseChanged && (
