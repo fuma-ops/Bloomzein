@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import type { Session, User } from "@supabase/supabase-js"
 import { supabase, type Profile } from "@/lib/supabase"
+import { initCloudSync, startCloudSync, stopCloudSync } from "@/lib/cloudSync"
 
 type AuthContextValue = {
   user: User | null
@@ -29,10 +30,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    // Install the localStorage interceptor early so writes are tracked even
+    // before the session resolves.
+    initCloudSync()
+    let syncedUserId: string | null = null
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
-      if (session?.user) loadProfile(session.user.id)
+      if (session?.user) {
+        loadProfile(session.user.id)
+        syncedUserId = session.user.id
+        void startCloudSync(session.user.id)
+      }
       setLoading(false)
     })
 
@@ -41,8 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       if (session?.user) {
         loadProfile(session.user.id)
+        // Only (re)start sync when the actual user changes, not on token refresh.
+        if (syncedUserId !== session.user.id) {
+          syncedUserId = session.user.id
+          void startCloudSync(session.user.id)
+        }
       } else {
         setProfile(null)
+        if (syncedUserId) {
+          syncedUserId = null
+          void stopCloudSync()
+        }
       }
     })
 

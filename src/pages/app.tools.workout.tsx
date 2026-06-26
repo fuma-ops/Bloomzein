@@ -2,16 +2,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
+  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readTodayWaterCount } from "@/lib/crossToolData";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
-  PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession,
+  PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
   type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
   type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
 } from "@/components/bloom/workout/data";
+import {
+  PROGRAMS, getProgram, computeWeekSession, weekMeta, sessionVolume,
+  type Program, type ProgramSession,
+} from "@/components/bloom/workout/programs";
+import { getCoaching } from "@/components/bloom/workout/coaching";
 
 // ===================== STORAGE =====================
 
@@ -206,11 +212,14 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
 
 // ===================== HERO HEADER (Workout Programs + tabs, on image) =====================
 
-const SECTION_META: Record<"discover" | "program" | "library", { title: string; subtitle: string }> = {
+const SECTION_META: Record<"discover" | "programs" | "program" | "library", { title: string; subtitle: string }> = {
   discover: { title: "Discover", subtitle: "Explore sessions, mini-tools, and find what fits your day." },
+  programs: { title: "Programs", subtitle: "Structured multi-week journeys with real progressive overload." },
   program: { title: "My Program", subtitle: "Your personalized weekly plan — built for you, adjustable anytime." },
   library: { title: "Library", subtitle: "Get familiar with every move — browse positions by zone." },
 };
+
+type WorkoutTab = "discover" | "programs" | "program" | "library";
 
 function HeroHeader({
   src,
@@ -220,8 +229,8 @@ function HeroHeader({
   sectionSubtitle,
 }: {
   src: string;
-  tab: "discover" | "program" | "library";
-  onPickTab: (t: "discover" | "program" | "library") => void;
+  tab: WorkoutTab;
+  onPickTab: (t: WorkoutTab) => void;
   sectionTitle: string;
   sectionSubtitle: string;
 }) {
@@ -243,7 +252,7 @@ function HeroHeader({
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
-            {(["discover", "program", "library"] as const).map((t) => (
+            {(["discover", "programs", "program", "library"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => onPickTab(t)}
@@ -253,7 +262,7 @@ function HeroHeader({
                   t === "discover" && tab === "discover" ? "animate-tab-glow-hint" : "",
                 ].join(" ")}
               >
-                {t === "discover" ? "Discover" : t === "program" ? "My Program" : "Library"}
+                {t === "discover" ? "Discover" : t === "programs" ? "Programs" : t === "program" ? "My Plan" : "Library"}
               </button>
             ))}
           </div>
@@ -292,9 +301,12 @@ function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number
 
 type View =
   | { kind: "discover" }
+  | { kind: "programs" }
   | { kind: "program" }
   | { kind: "library" }
   | { kind: "best-shape" }
+  | { kind: "program-detail"; programId: string }
+  | { kind: "program-session"; programId: string; week: number; sessionIndex: number }
   | { kind: "session-start"; session: WorkoutSession }
   | { kind: "session-active"; session: WorkoutSession }
   | { kind: "session-end"; session: WorkoutSession; elapsedSec: number };
@@ -303,7 +315,7 @@ export default function WorkoutPage() {
   const [onboarded, setOnboarded] = useLS<boolean>(ONBOARD_KEY, false);
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
   const [view, setView] = useState<View>({ kind: "discover" });
-  const [tab, setTab] = useState<"discover" | "program" | "library">("discover");
+  const [tab, setTab] = useState<WorkoutTab>("discover");
   const [lowWater, setLowWater] = useState(false);
 
   useEffect(() => {
@@ -349,6 +361,25 @@ export default function WorkoutPage() {
       />
     );
   }
+  if (view.kind === "program-detail") {
+    return (
+      <ProgramDetail
+        programId={view.programId}
+        onBack={() => setView({ kind: "programs" })}
+        onOpenSession={(week, sessionIndex) => setView({ kind: "program-session", programId: view.programId, week, sessionIndex })}
+      />
+    );
+  }
+  if (view.kind === "program-session") {
+    return (
+      <ProgramSessionView
+        programId={view.programId}
+        week={view.week}
+        sessionIndex={view.sessionIndex}
+        onBack={() => setView({ kind: "program-detail", programId: view.programId })}
+      />
+    );
+  }
 
   return (
     <div className="relative animate-fade-in">
@@ -359,7 +390,7 @@ export default function WorkoutPage() {
 
       {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
       {lowWater && (
-        <div className="mb-3 rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100/80 px-4 py-3 flex items-center gap-3 animate-fade-in">
+        <div className="mb-3 rounded-3xl bg-gradient-to-r from-blush/60 to-petal/40 border border-petal/70 px-4 py-3 flex items-center gap-3 animate-fade-in">
           <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
             <Sparkles className="h-4 w-4" strokeWidth={1.8} />
           </span>
@@ -371,9 +402,9 @@ export default function WorkoutPage() {
         </div>
       )}
 
-      {(view.kind === "discover" || view.kind === "program" || view.kind === "library") && (
+      {(view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
-          src={HERO_IMAGES[view.kind]}
+          src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
           tab={tab}
           onPickTab={(t) => { setTab(t); setView({ kind: t }); }}
           sectionTitle={SECTION_META[view.kind].title}
@@ -388,6 +419,9 @@ export default function WorkoutPage() {
           onBestShape={() => setView({ kind: "best-shape" })}
         />
       )}
+      {view.kind === "programs" && (
+        <ProgramsView onOpen={(programId) => setView({ kind: "program-detail", programId })} />
+      )}
       {view.kind === "best-shape" && (
         <BestShapeCalculator
           onBack={() => setView({ kind: "discover" })}
@@ -400,6 +434,374 @@ export default function WorkoutPage() {
         <MyProgram profile={profile} onStartSession={(session) => setView({ kind: "session-start", session })} />
       )}
       {view.kind === "library" && <Library />}
+    </div>
+  );
+}
+
+// ===================== FLAGSHIP PROGRAMS =====================
+
+const LEVEL_LABEL: Record<Level, string> = { Beginner: "Beginner", Intermediate: "Intermediate", Advanced: "Advanced" };
+const EQUIP_LABEL: Record<Equipment, string> = { none: "No equipment", mat: "Mat", bands: "Bands", dumbbells: "Dumbbells", gym: "Full gym" };
+
+// Track which (program · week · session) sessions the user has completed.
+const PROGRAM_PROGRESS_KEY = "bloom:workout-program-progress";
+type ProgramProgress = Record<string, string[]>; // programId -> ["w1s0", ...]
+
+function sessionTag(week: number, sessionIndex: number) { return `w${week}s${sessionIndex}`; }
+
+function loadProgramProgress(): ProgramProgress {
+  try { return JSON.parse(localStorage.getItem(PROGRAM_PROGRESS_KEY) || "{}"); } catch { return {}; }
+}
+
+function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
+  const progress = loadProgramProgress();
+  return (
+    <div className="animate-fade-in">
+      <p className="mb-3 text-sm text-rose/80">
+        Real coaching, not random sessions — each program builds week over week with
+        progressive overload, warm-ups, cool-downs and cycle-synced effort. ✿
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {PROGRAMS.map((p, i) => {
+          const done = (progress[p.id] ?? []).length;
+          const total = p.weeks * p.template.length;
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          return (
+            <button
+              key={p.id}
+              onClick={() => onOpen(p.id)}
+              className="group text-left overflow-hidden rounded-3xl border border-petal/60 bg-white/85 shadow-sm hover:shadow-xl hover:-translate-y-1 transition animate-scale-in"
+              style={{ animationDelay: `${i * 70}ms` }}
+            >
+              <div className="relative h-32 sm:h-36 overflow-hidden">
+                <img src={p.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                <div className="absolute top-2 left-2 flex gap-1.5">
+                  <span className="rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{p.weeks} weeks</span>
+                  {p.phaseSynced && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
+                </div>
+                <span className={[
+                  "absolute top-2 right-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
+                  p.tier === "premium" ? "bg-hotpink/90 text-white" : "bg-white/90 text-hotpink",
+                ].join(" ")}>
+                  {p.tier === "premium" ? <><Sparkles className="h-2.5 w-2.5" /> Premium</> : "Free"}
+                </span>
+                <div className="absolute bottom-2 left-3 right-3">
+                  <h3 className="font-script text-2xl text-white leading-none drop-shadow">{p.title}</h3>
+                </div>
+              </div>
+              <div className="p-3">
+                <p className="text-[11px] text-rose/75 leading-snug">{p.tagline}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Tag icon={<Gauge className="h-3 w-3" />}>{LEVEL_LABEL[p.level]}</Tag>
+                  <Tag icon={<Dumbbell className="h-3 w-3" />}>{EQUIP_LABEL[p.equipment]}</Tag>
+                  <Tag icon={<CalendarHeart className="h-3 w-3" />}>{p.daysPerWeek}×/week</Tag>
+                </div>
+                {done > 0 && (
+                  <div className="mt-2.5">
+                    <div className="h-1.5 rounded-full bg-blush overflow-hidden">
+                      <div className="h-full bg-hotpink transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <p className="mt-1 text-[10px] font-semibold text-hotpink">{pct}% complete</p>
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Tag({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-blush/70 text-rose/80 text-[10px] font-semibold px-2 py-0.5">
+      {icon}{children}
+    </span>
+  );
+}
+
+function ProgramDetail({ programId, onBack, onOpenSession }: {
+  programId: string;
+  onBack: () => void;
+  onOpenSession: (week: number, sessionIndex: number) => void;
+}) {
+  const program = getProgram(programId);
+  const [week, setWeek] = useState(1);
+  const phase = readCyclePhase() ?? "any";
+  if (!program) return null;
+
+  const progress = loadProgramProgress();
+  const doneSet = new Set(progress[program.id] ?? []);
+  const meta = weekMeta(program, week);
+
+  return (
+    <div className="relative animate-fade-in">
+      <BloomBubbles count={8} />
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
+        <ArrowLeft className="h-4 w-4" /> Programs
+      </button>
+
+      {/* Hero */}
+      <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-3xl overflow-hidden border border-petal/60 shadow-xl mb-4">
+        <img src={program.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="flex gap-1.5 mb-1.5">
+            <span className="rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">{program.weeks} weeks</span>
+            {program.phaseSynced && <span className="rounded-full bg-white/90 text-hotpink text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
+          </div>
+          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow">{program.title}</h1>
+          <p className="mt-1 text-xs sm:text-sm text-white/90 italic max-w-md drop-shadow">{program.tagline}</p>
+        </div>
+      </div>
+
+      {/* What you'll get */}
+      <div className="rounded-3xl bg-white/85 border border-petal/60 p-4 mb-3 shadow-sm">
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-2">What you'll get</h2>
+        <ul className="space-y-1.5">
+          {program.promise.map((b) => (
+            <li key={b} className="flex items-start gap-2 text-sm text-rose/85">
+              <Check className="h-4 w-4 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {b}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Tag icon={<Gauge className="h-3 w-3" />}>{LEVEL_LABEL[program.level]}</Tag>
+          <Tag icon={<Dumbbell className="h-3 w-3" />}>{EQUIP_LABEL[program.equipment]}</Tag>
+          <Tag icon={<CalendarHeart className="h-3 w-3" />}>{program.daysPerWeek}×/week</Tag>
+        </div>
+        <p className="mt-3 text-xs text-rose/70"><span className="font-bold text-rose">Who it's for:</span> {program.whoFor}</p>
+      </div>
+
+      {/* Why it works */}
+      <div className="rounded-3xl bg-blush/40 border border-petal/50 p-4 mb-4">
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-2 flex items-center gap-1.5">
+          <ShieldCheck className="h-5 w-5" strokeWidth={1.8} /> Why it works
+        </h2>
+        <ul className="space-y-1.5">
+          {program.whyItWorks.map((b) => (
+            <li key={b} className="flex items-start gap-2 text-xs sm:text-sm text-rose/80">
+              <Sparkles className="h-3.5 w-3.5 text-hotpink shrink-0 mt-0.5" /> {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Week selector */}
+      <div className="mb-3">
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Your {program.weeks}-week journey</h2>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {Array.from({ length: program.weeks }, (_, i) => i + 1).map((w) => {
+            const wmeta = weekMeta(program, w);
+            const active = w === week;
+            return (
+              <button
+                key={w}
+                onClick={() => setWeek(w)}
+                className={[
+                  "shrink-0 rounded-2xl px-3 py-2 text-center transition border",
+                  active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40",
+                ].join(" ")}
+              >
+                <p className="text-[9px] font-bold uppercase tracking-wide opacity-80">Week</p>
+                <p className="font-script text-xl leading-none">{w}</p>
+                {wmeta.isDeload && <p className="text-[8px] font-bold uppercase">Deload</p>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Week theme */}
+      <div className="rounded-2xl bg-gradient-to-r from-petal/40 to-blush/40 border border-petal/50 p-3 mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{meta.theme}{meta.isDeload ? " · recovery week" : ""}</p>
+        <p className="text-xs text-rose/80 leading-snug mt-0.5">{meta.note}</p>
+      </div>
+
+      {/* Sessions for the selected week */}
+      <div className="space-y-2.5">
+        {program.template.map((_, sIdx) => {
+          const s = computeWeekSession(program, sIdx, week);
+          const isDone = doneSet.has(sessionTag(week, sIdx));
+          const tip = phase !== "any" ? s.phaseTips?.[phase] : undefined;
+          return (
+            <button
+              key={sIdx}
+              onClick={() => onOpenSession(week, sIdx)}
+              className="w-full text-left rounded-3xl bg-white/85 border border-petal/60 p-3.5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition flex items-center gap-3"
+            >
+              <span className={[
+                "grid h-11 w-11 shrink-0 place-items-center rounded-full",
+                isDone ? "bg-hotpink text-white" : "bg-blush text-hotpink",
+              ].join(" ")}>
+                {isDone ? <Check className="h-5 w-5" strokeWidth={3} /> : <Dumbbell className="h-5 w-5" strokeWidth={1.8} />}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-rose leading-tight">{s.title}</p>
+                <p className="text-[11px] text-rose/65 leading-snug">{s.focus}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <Tag icon={<Clock className="h-3 w-3" />}>{s.estMinutes} min</Tag>
+                  <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(s)} sets</Tag>
+                  {tip && <span className="text-[9px] font-bold uppercase tracking-wide text-hotpink">✿ {PHASE_LABEL[phase]} tip</span>}
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-rose/40 shrink-0" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProgramSessionView({ programId, week, sessionIndex, onBack }: {
+  programId: string;
+  week: number;
+  sessionIndex: number;
+  onBack: () => void;
+}) {
+  const program = getProgram(programId);
+  const phase = readCyclePhase() ?? "any";
+  const [completed, setCompleted] = useState(false);
+
+  if (!program) return null;
+  const session = computeWeekSession(program, sessionIndex, week);
+  const tip = phase !== "any" ? session.phaseTips?.[phase] : undefined;
+  const meta = weekMeta(program, week);
+
+  const markComplete = () => {
+    if (completed) return;
+    setCompleted(true);
+    // 1. record program-level progress
+    try {
+      const prog = loadProgramProgress();
+      const list = new Set(prog[program.id] ?? []);
+      list.add(sessionTag(week, sessionIndex));
+      prog[program.id] = [...list];
+      localStorage.setItem(PROGRAM_PROGRESS_KEY, JSON.stringify(prog));
+    } catch {}
+    // 2. log to shared workout history (feeds Today/Me streaks & snapshots)
+    try {
+      const raw = localStorage.getItem(WORKOUT_LOG_KEY);
+      const history = raw ? JSON.parse(raw) : [];
+      history.push({
+        date: todayISO(),
+        zone: "full-body",
+        intention: "strengthen",
+        phase,
+        durationMin: session.estMinutes,
+        calories: Math.round(session.estMinutes * 6),
+        sessionName: `${program.title} — ${session.title}`,
+      });
+      localStorage.setItem(WORKOUT_LOG_KEY, JSON.stringify(history));
+      window.dispatchEvent(new Event("bloom:workout-updated"));
+    } catch {}
+    // 3. bump streak
+    try {
+      const raw = localStorage.getItem(STREAK_KEY);
+      const s = raw ? JSON.parse(raw) : { count: 0, lastISO: null };
+      if (s.lastISO !== todayISO()) {
+        const next = s.lastISO && isYesterday(s.lastISO) ? { count: s.count + 1, lastISO: todayISO() } : { count: 1, lastISO: todayISO() };
+        localStorage.setItem(STREAK_KEY, JSON.stringify(next));
+      }
+    } catch {}
+  };
+
+  return (
+    <div className="relative animate-fade-in">
+      <BloomBubbles count={8} />
+      <button onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
+        <ArrowLeft className="h-4 w-4" /> {program.title}
+      </button>
+
+      {/* Session header */}
+      <div className="rounded-3xl bg-gradient-to-br from-hotpink/15 to-petal/30 border border-petal/60 p-4 mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Week {week} · {meta.theme}</p>
+        <h1 className="font-script text-3xl text-hotpink leading-none mt-0.5">{session.title}</h1>
+        <p className="text-xs text-rose/75 mt-1">{session.focus}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          <Tag icon={<Clock className="h-3 w-3" />}>{session.estMinutes} min</Tag>
+          <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(session)} working sets</Tag>
+        </div>
+      </div>
+
+      {/* Cycle-sync tip */}
+      {tip && (
+        <div className="rounded-2xl bg-white/85 border border-petal/60 p-3 mb-3 flex items-start gap-2.5">
+          <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white">
+            <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+          </span>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{PHASE_LABEL[phase]} phase tip</p>
+            <p className="text-xs text-rose/80 leading-snug">{tip}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Blocks */}
+      <div className="space-y-4">
+        {session.blocks.map((block, bIdx) => (
+          <div key={bIdx}>
+            <div className="flex items-center justify-between mb-1.5">
+              <h2 className="font-script text-2xl text-hotpink leading-none">{block.label}</h2>
+              {(block.rounds ?? 1) > 1 && (
+                <span className="rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">
+                  {block.rounds} rounds
+                </span>
+              )}
+            </div>
+            <div className="space-y-2">
+              {block.exercises.map((ex, eIdx) => {
+                const meta = EXERCISES[ex.slug];
+                return (
+                  <div key={eIdx} className="rounded-2xl bg-white/85 border border-petal/50 overflow-hidden flex">
+                    <div className="relative w-20 sm:w-24 shrink-0 overflow-hidden bg-blush/40">
+                      {meta?.image && <img src={meta.image} alt="" className="h-full w-full object-cover" loading="lazy" />}
+                    </div>
+                    <div className="flex-1 min-w-0 p-2.5">
+                      <p className="text-sm font-bold text-rose leading-tight">{meta?.name ?? ex.slug}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full bg-hotpink/90 text-white text-[10px] font-bold px-2 py-0.5">{ex.sets} × {ex.reps}</span>
+                        {ex.tempo && <Tag icon={<Gauge className="h-3 w-3" />}>tempo {ex.tempo}</Tag>}
+                        {ex.restSec > 0 && <Tag icon={<Timer className="h-3 w-3" />}>{ex.restSec}s rest</Tag>}
+                      </div>
+                      {ex.loadNote && <p className="mt-1 text-[10px] text-hotpink font-semibold leading-snug">⚖ {ex.loadNote}</p>}
+                      {ex.cues.length > 0 && (
+                        <ul className="mt-1 space-y-0.5">
+                          {ex.cues.map((c) => (
+                            <li key={c} className="text-[10px] text-rose/65 leading-snug flex items-start gap-1">
+                              <span className="text-hotpink">·</span> {c}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Complete button */}
+      <button
+        onClick={markComplete}
+        disabled={completed}
+        className={[
+          "mt-5 w-full rounded-full py-3.5 text-sm font-bold text-white transition flex items-center justify-center gap-2",
+          completed ? "bg-hotpink/70" : "bloom-luxury-btn animate-cta-bounce",
+        ].join(" ")}
+      >
+        {completed ? <><Check className="h-5 w-5" strokeWidth={3} /> Logged — beautifully done ✿</> : <><Trophy className="h-5 w-5" strokeWidth={2} /> Mark session complete</>}
+      </button>
+      {completed && (
+        <button onClick={onBack} className="mt-2 w-full text-center text-sm font-semibold text-hotpink">
+          Back to program
+        </button>
+      )}
     </div>
   );
 }
@@ -1117,7 +1519,9 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
 
 function Library() {
   const [zone, setZone] = useState<Zone>("glutes");
+  const [openSlug, setOpenSlug] = useState<string | null>(null);
   const exercises = ZONE_EXERCISES[zone];
+  const openExercise = openSlug ? exercises.find((e) => e.slug === openSlug) ?? null : null;
 
   return (
     <div className="space-y-4">
@@ -1138,22 +1542,85 @@ function Library() {
           ))}
         </div>
 
+        <p className="mb-3 text-[11px] text-rose/60">Tap any move for a how-to, form cues and the mistake to avoid. ✿</p>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
-            <div
+            <button
               key={ex.slug}
-              className="rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in"
+              onClick={() => setOpenSlug(ex.slug)}
+              className="text-left rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in transition hover:-translate-y-1 hover:shadow-lg active:scale-[0.98]"
               style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
+              <div className="relative">
+                <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
+                <span className="absolute bottom-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm">
+                  <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </span>
+              </div>
               <div className="p-2.5">
                 <p className="text-sm font-bold text-rose leading-tight">{ex.name}</p>
                 <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{ex.muscles}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </section>
+
+      {openExercise && (
+        <ExerciseDetailModal exercise={openExercise} zone={zone} onClose={() => setOpenSlug(null)} />
+      )}
+    </div>
+  );
+}
+
+function ExerciseDetailModal({ exercise, zone, onClose }: { exercise: Exercise; zone: Zone; onClose: () => void }) {
+  const coaching = getCoaching(exercise.slug);
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={onClose}>
+      <div
+        className="relative w-full max-w-md max-h-[88vh] overflow-y-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative">
+          <ExercisePhoto exercise={exercise} zone={zone} className="w-full aspect-[4/3] object-cover bg-blush/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90">
+            <X className="h-4 w-4" />
+          </button>
+          <div className="absolute bottom-3 left-4 right-4">
+            <h2 className="font-script text-3xl text-white leading-none drop-shadow">{exercise.name}</h2>
+            <p className="text-[11px] font-semibold text-white/90 drop-shadow">{exercise.muscles}</p>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 space-y-3.5">
+          {coaching ? (
+            <>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">How to do it</p>
+                <p className="text-sm text-rose/85 leading-snug">{coaching.howTo}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">Form cues</p>
+                <ul className="space-y-1">
+                  {coaching.cues.map((c) => (
+                    <li key={c} className="flex items-start gap-2 text-sm text-rose/85">
+                      <Check className="h-4 w-4 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-0.5">Avoid this</p>
+                <p className="text-xs text-rose/80 leading-snug">{coaching.mistake}</p>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-rose/70">{exercise.muscles}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1309,6 +1776,11 @@ function SessionActive({ session, onExit, onDone }: {
             <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-w-md mx-auto aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
             <h2 className="font-script text-4xl sm:text-6xl text-hotpink leading-none text-center">{exercise.name}</h2>
             <p className="text-base sm:text-xl text-rose/70 text-center">{exercise.muscles}</p>
+            {getCoaching(exercise.slug)?.cues[0] && (
+              <p className="max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 -mt-1 flex items-center justify-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
+              </p>
+            )}
             <CircularTimer totalSec={totalSec} remainingSec={remaining} size={160} />
           </>
         ) : (
