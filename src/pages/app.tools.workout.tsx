@@ -1740,13 +1740,13 @@ function SessionActive({ session, onExit, onDone }: {
   const totalSec = phase === "exercise" ? step.workSec : step.restSec;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col">
+    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Progress bar */}
-      <div className="h-1.5 bg-white/60">
+      <div className="h-1.5 bg-white/60 shrink-0">
         <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
       </div>
 
-      <div className="flex items-center justify-between p-3">
+      <div className="flex items-center justify-between p-3 shrink-0">
         <button onClick={onExit} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60"><X className="h-5 w-5 sm:h-6 sm:w-6" /></button>
         <div className="text-center">
           <p className={[
@@ -1760,51 +1760,55 @@ function SessionActive({ session, onExit, onDone }: {
         </button>
       </div>
 
-      <div className="relative flex-1 flex flex-col items-center justify-center p-4 gap-4 overflow-y-auto">
+      <div className="relative flex-1 overflow-y-auto">
         {phase === "exercise" && next && remaining > 0 && remaining <= 5 && (
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-3 sm:p-4 pr-4 sm:pr-6 animate-fade-in">
-            <ExercisePhoto exercise={next} zone={session.zone} className="h-20 w-20 sm:h-28 sm:w-28 object-cover rounded-xl border border-petal/60" />
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-2.5 sm:p-4 pr-3 sm:pr-6 animate-fade-in">
+            <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-28 sm:w-28 object-cover rounded-xl border border-petal/60" />
             <div className="text-left">
               <p className="text-xs sm:text-sm font-bold uppercase tracking-wide text-hotpink/70 leading-none">Next up</p>
-              <p className="text-lg sm:text-2xl font-bold text-rose leading-tight mt-1">{next.name}</p>
+              <p className="text-base sm:text-2xl font-bold text-rose leading-tight mt-1">{next.name}</p>
             </div>
           </div>
         )}
-        {phase === "exercise" ? (
-          <>
-            <ExercisePhoto exercise={exercise} zone={session.zone} className="w-full max-w-md mx-auto aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
-            <h2 className="font-script text-4xl sm:text-6xl text-hotpink leading-none text-center">{exercise.name}</h2>
-            <p className="text-base sm:text-xl text-rose/70 text-center">{exercise.muscles}</p>
-            {getCoaching(exercise.slug)?.cues[0] && (
-              <p className="max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 -mt-1 flex items-center justify-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
-              </p>
-            )}
-            {step.repTarget && (
-              <span className="rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1 -mt-1">
-                {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
-              </span>
-            )}
-            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={160} />
-          </>
-        ) : (
-          <div className="w-full max-w-md rounded-3xl bg-white/90 border border-petal/60 p-6 sm:p-8 text-center shadow-md">
-            <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70 mb-2">Rest</p>
-            <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
-            {next && (
-              <div className="mt-4">
-                <p className="text-sm sm:text-lg font-semibold text-rose/70 mb-2">Next up</p>
-                <ExercisePhoto exercise={next} zone={session.zone} className="mx-auto h-24 w-24 sm:h-32 sm:w-32 object-cover rounded-2xl border border-petal/60" />
-                <p className="mt-2 text-lg sm:text-2xl font-bold text-rose">{next.name}</p>
-              </div>
-            )}
-            <button onClick={skipRest} className="mt-4 rounded-full bg-white/90 px-5 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-rose border border-petal/60">Skip rest</button>
-          </div>
-        )}
+        {/* min-h-full centers when there's room, but lets content scroll (and stay
+            reachable from the top) on shorter screens instead of clipping. */}
+        <div className="min-h-full flex flex-col items-center justify-center gap-2.5 sm:gap-4 p-4">
+          {phase === "exercise" ? (
+            <>
+              <ExercisePhoto exercise={exercise} zone={session.zone} className="w-auto max-w-full sm:max-w-md mx-auto max-h-[38vh] sm:max-h-[42vh] aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
+              <h2 className="font-script text-3xl sm:text-6xl text-hotpink leading-none text-center">{exercise.name}</h2>
+              <p className="text-sm sm:text-xl text-rose/70 text-center">{exercise.muscles}</p>
+              {getCoaching(exercise.slug)?.cues[0] && (
+                <p className="max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
+                </p>
+              )}
+              {step.repTarget && (
+                <span className="rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
+                  {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
+                </span>
+              )}
+              <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
+            </>
+          ) : (
+            <div className="w-full max-w-md rounded-3xl bg-white/90 border border-petal/60 p-6 sm:p-8 text-center shadow-md">
+              <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70 mb-2">Rest</p>
+              <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
+              {next && (
+                <div className="mt-4">
+                  <p className="text-sm sm:text-lg font-semibold text-rose/70 mb-2">Next up</p>
+                  <ExercisePhoto exercise={next} zone={session.zone} className="mx-auto h-24 w-24 sm:h-32 sm:w-32 object-cover rounded-2xl border border-petal/60" />
+                  <p className="mt-2 text-lg sm:text-2xl font-bold text-rose">{next.name}</p>
+                </div>
+              )}
+              <button onClick={skipRest} className="mt-4 rounded-full bg-white/90 px-5 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-rose border border-petal/60">Skip rest</button>
+            </div>
+          )}
+        </div>
       </div>
 
       {phase === "exercise" && (
-        <div className="grid grid-cols-3 gap-2 p-3 bg-white/60">
+        <div className="grid grid-cols-3 gap-2 p-3 bg-white/60 shrink-0">
           <button onClick={() => setPaused((p) => !p)} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
             {paused ? <Play className="h-5 w-5 sm:h-6 sm:w-6" /> : <Pause className="h-5 w-5 sm:h-6 sm:w-6" />} {paused ? "Resume" : "Pause"}
           </button>
