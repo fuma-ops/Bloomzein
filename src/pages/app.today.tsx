@@ -13,7 +13,7 @@ import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
-import { RECIPES } from "@/components/bloom/recipes/data";
+import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
 import {
   getCurrentUserId,
   doseConfirmToken,
@@ -232,6 +232,24 @@ function planItemTiming(time: string): "now" | "upcoming" | "past" | null {
   return "upcoming";
 }
 
+// ── Meal display helpers ─────────────────────────────────────────────────────
+const MEAL_PHOTO: Record<string, string> = {
+  breakfast: "/images/meal-oats.jpg",
+  lunch:     "/images/meal-buddha.jpg",
+  dinner:    "/images/meal-stew.jpg",
+  lunchbox:  "/images/meal-lunchbox.jpg",
+  snack:     "/images/meal-lunchbox.jpg",
+};
+const MEAL_SLOT_LABEL: Record<string, string> = {
+  breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", lunchbox: "Lunchbox", snack: "Snack",
+};
+const MEAL_SLOT_TIME: Record<string, string> = {
+  breakfast: "08:00", lunch: "13:00", dinner: "19:30", lunchbox: "12:00", snack: "16:00",
+};
+const CYCLE_TO_DIET: Record<string, "menstrual" | "follicular" | "ovulatory" | "luteal"> = {
+  period: "menstrual", follicular: "follicular", fertile: "ovulatory", ovulation: "ovulatory", luteal: "luteal",
+};
+
 // ── Minimal Reminder type (mirrors app.tools.notes) ─────────────────────────
 interface DueReminder {
   id: string;
@@ -289,6 +307,7 @@ export default function TodayPage() {
   const [yogaStreak,          setYogaStreak]          = useState(0);
   const [dueReminders,        setDueReminders]        = useState<DueReminder[]>([]);
   const [doneReminderIds,     setDoneReminderIds]     = useState<string[]>([]);
+  const [todayMeals,          setTodayMeals]          = useState<Record<string, string | null>>({});
 
   const moodTileRef = useRef<HTMLButtonElement>(null);
 
@@ -332,6 +351,11 @@ export default function TodayPage() {
     setWorkoutStreak(readWorkoutStreak().count);
     setYogaStreak(readYogaStreak().count);
     setDueReminders(loadDueTodayReminders());
+
+    try {
+      const mealPlan = readJSON<Record<string, Record<string, string | null>>>("bloom:meals-plan", {});
+      setTodayMeals(mealPlan[iso] ?? {});
+    } catch {}
 
     setShowCycleSetupBanner(!hasCycleSettings());
     broadcastCyclePhase();
@@ -584,10 +608,10 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* ── 2. TODAY'S BLOOM PLAN (image cards) ────────────────────────────── */}
+      {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) ───────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Plan ✿</SectionTitle>
-        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none -mx-0.5 px-0.5">
+        <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
           {plan.items.map((item, i) => {
             const done   = planDone.includes(item.id);
             const timing = planItemTiming(item.time);
@@ -595,57 +619,51 @@ export default function TodayPage() {
               <a
                 key={item.id}
                 href={item.tool}
-                className="snap-start shrink-0 w-44 sm:w-52 overflow-hidden rounded-[1.5rem] bloom-pearl-card pearl-sheen transition hover:-translate-y-1 active:scale-[0.97]"
-                style={{ animationDelay: `${i * 80}ms` }}
+                className="flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20 active:bg-blush/40 active:scale-[0.99]"
+                style={{ animationDelay: `${i * 60}ms` }}
               >
                 {/* Image */}
-                <div className="relative h-36 sm:h-44 overflow-hidden">
-                  <img src={item.image} alt="" className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/85 via-white/10 to-transparent" />
-                  {/* Time badge */}
-                  {item.time && (
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className={[
-                        "rounded-full px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide shadow-sm",
-                        timing === "now"
-                          ? "bg-hotpink text-white animate-cta-bounce"
-                          : timing === "past"
-                          ? "bg-white/70 text-rose/40 backdrop-blur"
-                          : "bg-white/85 text-rose backdrop-blur",
-                      ].join(" ")}>
-                        {timing === "now" ? "Now ✿" : item.time}
-                      </span>
-                    </div>
-                  )}
-                  {/* Done overlay */}
+                <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
+                  <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
                   {done && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm">
-                      <span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink text-white shadow-lg shadow-hotpink/30">
-                        <Check className="h-5 w-5" strokeWidth={3} />
-                      </span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+                      <Check className="h-5 w-5 text-hotpink" strokeWidth={3} />
                     </div>
                   )}
                 </div>
-                {/* Content */}
-                <div className="px-3 pt-2.5 pb-3">
-                  <p className={["text-xs sm:text-sm font-bold leading-tight", done ? "text-rose/35 line-through" : "text-[#831843]"].join(" ")}>{item.label}</p>
-                  <p className="mt-0.5 text-[10px] sm:text-[11px] text-rose/60 leading-snug">{item.blurb}</p>
-                  <div className="mt-2.5 flex items-center justify-between">
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePlanItem(item.id); }}
-                      aria-label={done ? "Mark as not done" : "Mark as done"}
-                      className={[
-                        "grid h-6 w-6 place-items-center rounded-full border-2 transition active:scale-90",
-                        done ? "bg-hotpink border-hotpink text-white" : "border-petal text-transparent hover:border-hotpink/60",
-                      ].join(" ")}
-                    >
-                      <Check className="h-3 w-3" strokeWidth={3} />
-                    </button>
-                    <span className="clay-blob grid h-6 w-6 place-items-center rounded-full text-white">
-                      <item.Icon className="h-3 w-3" strokeWidth={2} />
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className={["text-sm font-bold leading-snug", done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>
+                      {item.label}
+                    </p>
+                    {timing === "now" && (
+                      <span className="rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">
+                        Now
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-[10px] sm:text-[11px] text-rose/55 leading-snug">{item.blurb}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    {item.time && (
+                      <span className="text-[9px] font-semibold text-rose/40">{item.time}</span>
+                    )}
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
+                      ✿ {PHASE_LABEL[phase]} phase
                     </span>
                   </div>
                 </div>
+                {/* Checkbox */}
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePlanItem(item.id); }}
+                  aria-label={done ? "Mark as not done" : "Mark as done"}
+                  className={[
+                    "shrink-0 grid h-7 w-7 place-items-center rounded-full border-2 transition active:scale-90",
+                    done ? "bg-hotpink border-hotpink text-white" : "border-petal text-transparent hover:border-hotpink/60",
+                  ].join(" ")}
+                >
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                </button>
               </a>
             );
           })}
@@ -654,6 +672,91 @@ export default function TodayPage() {
           Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
         </a>
       </section>
+
+      {/* ── 2b. TODAY'S MEALS ────────────────────────────────────────────────── */}
+      {(() => {
+        const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
+        const dietPhase  = CYCLE_TO_DIET[phase];
+        const phaseMicros = PHASE_MICROS[dietPhase] ?? [];
+        const primaryMicro = phaseMicros[0];
+        const planned = MEAL_SLOTS.filter((s) => todayMeals[s]);
+
+        return (
+          <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "75ms" }}>
+            <SectionTitle hint="nutrition">Today's Meals ✿</SectionTitle>
+            {planned.length === 0 ? (
+              <a href="/app/tools/diet" className="bloom-pearl-card pearl-sheen rounded-3xl p-4 flex items-center gap-3 transition hover:-translate-y-0.5">
+                <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
+                  <Heart className="h-4 w-4" strokeWidth={1.8} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-[#831843]">Plan your meals ✿</p>
+                  <p className="text-[10px] text-rose/60 leading-snug">Let Diet suggest recipes tailored to your {PHASE_LABEL[phase]} phase</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
+              </a>
+            ) : (
+              <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
+                {planned.map((slot) => {
+                  const recipeId = todayMeals[slot];
+                  const recipe   = recipeId ? RECIPES.find((r) => r.id === recipeId) : null;
+                  if (!recipe) return null;
+                  const timing   = planItemTiming(MEAL_SLOT_TIME[slot]);
+                  const microVal = primaryMicro ? recipe.micros[primaryMicro.key] : undefined;
+                  return (
+                    <a
+                      key={slot}
+                      href="/app/tools/diet"
+                      className="flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20 active:scale-[0.99]"
+                    >
+                      {/* Meal image with slot label */}
+                      <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
+                        <img src={MEAL_PHOTO[slot]} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+                        <p className="absolute bottom-1 left-1.5 text-[8px] font-bold uppercase tracking-wide text-white drop-shadow">
+                          {MEAL_SLOT_LABEL[slot]}
+                        </p>
+                      </div>
+                      {/* Text + nutrition */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-sm font-bold text-[#831843] leading-snug truncate">{recipe.name}</p>
+                          {timing === "now" && (
+                            <span className="shrink-0 rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">
+                              Now
+                            </span>
+                          )}
+                        </div>
+                        {/* Nutrition pills */}
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-semibold text-rose/70 bg-blush/50 rounded-full px-2 py-0.5">
+                            {recipe.macros.calories} kcal
+                          </span>
+                          <span className="text-[9px] font-semibold text-rose/70 bg-blush/50 rounded-full px-2 py-0.5">
+                            {recipe.macros.protein}g protein
+                          </span>
+                          {microVal !== undefined && primaryMicro && (
+                            <span className="text-[9px] font-semibold text-hotpink bg-petal/40 rounded-full px-2 py-0.5">
+                              {microVal}{primaryMicro.unit} {primaryMicro.label}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
+                          ✿ {PHASE_LABEL[phase]} phase · {MEAL_SLOT_TIME[slot]}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-rose/30 shrink-0" strokeWidth={2} />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+            <a href="/app/tools/diet" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
+              Manage meals <ArrowRight className="h-3 w-3" strokeWidth={2} />
+            </a>
+          </section>
+        );
+      })()}
 
       {/* ── 3. YOUR BLOOM TODAY (ring + checklist) ─────────────────────────────────────────────── */}
       <section id="bloom-today" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
