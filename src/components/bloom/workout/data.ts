@@ -262,6 +262,18 @@ export const PHASE_OPTIMAL: Record<WorkoutIntention, CyclePhase[]> = {
 
 /* ==================== SESSION BUILDER ==================== */
 
+export type StepKind = "warmup" | "work" | "cooldown";
+
+/** One timed step in a session — its own work/rest, label and optional rep target. */
+export interface SessionStep {
+  exercise: Exercise;
+  kind: StepKind;
+  workSec: number;
+  restSec: number;
+  label: string;       // "Warm-up", "Round 2 · Move 1/4", "Cool-down"
+  repTarget?: string;  // coaching target shown to the user ("10–12 reps", "Hold")
+}
+
 export interface WorkoutSession {
   id: string;
   zone: Zone;
@@ -269,11 +281,16 @@ export interface WorkoutSession {
   name: string;
   level: Level;
   durationMin: number;
+  /** Structured, ordered steps: warm-up → circuit rounds → cool-down. */
+  steps: SessionStep[];
+  rounds: number;
+  /** Back-compat: the unique main-work exercises (used by previews/snapshots). */
   exercises: Exercise[];
   workSec: number;
   restSec: number;
   phaseOptimal: CyclePhase[];
   intensityNote: string | null;
+  structureNote: string;
 }
 
 const TIMING: Record<WorkoutIntention, { workSec: number; restSec: number }> = {
@@ -295,26 +312,113 @@ export const PHASE_INTENSITY: Record<CyclePhase, { workMult: number; restMult: n
   any: { workMult: 1, restMult: 1, note: null },
 };
 
-export function buildSession(zone: Zone, intention: WorkoutIntention, durationMin: 10 | 20 | 30, level: Level, phase: CyclePhase = "any"): WorkoutSession {
+// Level shapes the work itself, not just the duration: higher levels train
+// longer sets, rest a touch less, and run more circuit rounds.
+const LEVEL_TUNING: Record<Level, { workMult: number; restMult: number; rounds: number; repLabel: Record<WorkoutIntention, string> }> = {
+  Beginner:     { workMult: 0.9,  restMult: 1.15, rounds: 1, repLabel: { tonify: "10–12 reps", strengthen: "8–10 reps", stretch: "ease in & hold", recover: "slow & gentle" } },
+  Intermediate: { workMult: 1.0,  restMult: 1.0,  rounds: 2, repLabel: { tonify: "12–15 reps", strengthen: "10–12 reps", stretch: "hold & breathe", recover: "settle & soften" } },
+  Advanced:     { workMult: 1.1,  restMult: 0.85, rounds: 3, repLabel: { tonify: "15–20 reps", strengthen: "12–15 reps", stretch: "deepen & hold", recover: "fully release" } },
+};
+
+// ── Equipment awareness ──────────────────────────────────────────────────────
+// Availability tiers — a user with a higher tier can do everything below it.
+const EQUIP_RANK: Record<Equipment, number> = { none: 0, mat: 1, bands: 2, dumbbells: 3, gym: 4 };
+
+/** Infer what a move needs from its slug (no per-exercise data to maintain). */
+function equipmentNeeded(slug: string): Equipment {
+  if (/pull-up|kettlebell/.test(slug)) return "gym";
+  if (/banded|^band|lat-pulldown-band/.test(slug)) return "bands";
+  if (/weighted|deadlift|overhead-press|arnold-press|hammer-curl|lateral-raises|front-raises|bent-over-row|renegade-row|tricep-overhead-extension/.test(slug)) return "dumbbells";
+  if (/foam-roll/.test(slug)) return "mat";
+  return "none";
+}
+function equipmentAllows(have: Equipment, slug: string): boolean {
+  return EQUIP_RANK[have] >= EQUIP_RANK[equipmentNeeded(slug)];
+}
+
+// ── Warm-up & cool-down pools (all bodyweight, no equipment) ─────────────────
+const WARMUP_UPPER = ["shoulder-circles", "gentle-arm-swings", "wall-angels"];
+const WARMUP_LOWER = ["hip-circles", "cat-cow", "standing-leg-circles"];
+const COOLDOWN_UPPER = ["cross-body-shoulder-stretch", "overhead-tricep-stretch", "childs-pose"];
+const COOLDOWN_LOWER = ["figure-four-stretch", "seated-hamstring-stretch", "childs-pose"];
+const UPPER_ZONES: Zone[] = ["arms", "back"];
+
+function pick<T>(arr: T[], n: number): T[] { return arr.slice(0, Math.max(0, n)); }
+
+export function buildSession(
+  zone: Zone,
+  intention: WorkoutIntention,
+  durationMin: 10 | 20 | 30,
+  level: Level,
+  phase: CyclePhase = "any",
+  equipment: Equipment = "gym",
+): WorkoutSession {
   const key = `${zone}-${intention}`;
-  const slugs = ZONE_INTENTION_EXERCISES[key] ?? [];
+  const allSlugs = ZONE_INTENTION_EXERCISES[key] ?? [];
+
+  // 1. Equipment-aware pool (fall back to the full pool if filtering is too strict).
+  const filtered = allSlugs.filter((s) => equipmentAllows(equipment, s));
+  const pool = filtered.length >= 3 ? filtered : allSlugs;
+
+  // 2. Timing — intention × phase × level, rounded to clean 5s steps.
   const base = TIMING[intention];
-  const { workMult, restMult, note } = PHASE_INTENSITY[phase];
-  const workSec = Math.round((base.workSec * workMult) / 5) * 5;
-  const restSec = Math.round((base.restSec * restMult) / 5) * 5;
-  const cycleSec = workSec + restSec;
-  const count = Math.max(3, Math.min(slugs.length, Math.round((durationMin * 60) / cycleSec)));
-  // round-robin so short sessions still get variety across the available pool
-  const exercises: Exercise[] = [];
-  for (let i = 0; i < count; i++) exercises.push(EXERCISES[slugs[i % slugs.length]]);
+  const ph = PHASE_INTENSITY[phase];
+  const lv = LEVEL_TUNING[level];
+  const workSec = Math.max(15, Math.round((base.workSec * ph.workMult * lv.workMult) / 5) * 5);
+  const restSec = Math.max(10, Math.round((base.restSec * ph.restMult * lv.restMult) / 5) * 5);
+  const repTarget = lv.repLabel[intention];
+
+  // 3. Warm-up & cool-down (skip warm-up for pure recover/stretch — they're gentle already).
+  const isUpper = UPPER_ZONES.includes(zone);
+  const gentle = intention === "recover" || intention === "stretch";
+  const warmSlugs = gentle ? [] : pick(isUpper ? WARMUP_UPPER : WARMUP_LOWER, durationMin >= 20 ? 2 : 1);
+  const coolSlugs = pick(isUpper ? COOLDOWN_UPPER : COOLDOWN_LOWER, durationMin >= 20 ? 2 : 1);
+
+  // 4. Main circuit — distinct moves per round scale with duration, then repeat
+  //    as proper rounds (a circuit), never random duplicates.
+  const perRound = Math.min(pool.length, durationMin <= 10 ? 4 : durationMin <= 20 ? 5 : 6);
+  const distinct = pool.slice(0, perRound);
+
+  // Fit rounds to the remaining time budget after warm-up/cool-down.
+  const warmCost = warmSlugs.length * (30 + 10);
+  const coolCost = coolSlugs.length * (30 + 5);
+  const mainBudget = durationMin * 60 - warmCost - coolCost;
+  const perRoundCost = distinct.length * (workSec + restSec);
+  const fitRounds = Math.max(1, Math.round(mainBudget / Math.max(1, perRoundCost)));
+  const rounds = Math.min(Math.max(lv.rounds, 1), Math.max(1, fitRounds) + 1, 5);
+
+  // 5. Assemble ordered steps.
+  const steps: SessionStep[] = [];
+  warmSlugs.forEach((s) => steps.push({
+    exercise: EXERCISES[s], kind: "warmup", workSec: 30, restSec: 10, label: "Warm-up", repTarget: "loosen up",
+  }));
+  for (let r = 0; r < rounds; r++) {
+    distinct.forEach((s, i) => steps.push({
+      exercise: EXERCISES[s], kind: "work", workSec, restSec,
+      label: rounds > 1 ? `Round ${r + 1} · Move ${i + 1}/${distinct.length}` : `Move ${i + 1}/${distinct.length}`,
+      repTarget,
+    }));
+  }
+  coolSlugs.forEach((s) => steps.push({
+    exercise: EXERCISES[s], kind: "cooldown", workSec: 30, restSec: 5, label: "Cool-down", repTarget: "breathe & release",
+  }));
+
+  const structureNote = [
+    warmSlugs.length ? `${warmSlugs.length}-move warm-up` : null,
+    `${rounds} round${rounds > 1 ? "s" : ""} × ${distinct.length} moves`,
+    coolSlugs.length ? `${coolSlugs.length}-move cool-down` : null,
+  ].filter(Boolean).join(" · ");
 
   return {
-    id: `${key}-${durationMin}-${phase}`,
+    id: `${key}-${durationMin}-${level}-${phase}-${equipment}`,
     zone, intention, level, durationMin,
     name: SESSION_NAMES[key] ?? `${zone} · ${intention}`,
-    exercises, workSec, restSec,
+    steps, rounds,
+    exercises: distinct.map((s) => EXERCISES[s]),
+    workSec, restSec,
     phaseOptimal: PHASE_OPTIMAL[intention],
-    intensityNote: note,
+    intensityNote: ph.note,
+    structureNote,
   };
 }
 

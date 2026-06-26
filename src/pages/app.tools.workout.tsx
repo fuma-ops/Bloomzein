@@ -426,7 +426,7 @@ export default function WorkoutPage() {
         <BestShapeCalculator
           onBack={() => setView({ kind: "discover" })}
           onStartWith={(zone, intention) => {
-            setView({ kind: "session-start", session: buildSession(zone, intention, durationForLevel(profile.level), profile.level, readCyclePhase() ?? "any") });
+            setView({ kind: "session-start", session: buildSession(zone, intention, durationForLevel(profile.level), profile.level, readCyclePhase() ?? "any", profile.equipment) });
           }}
         />
       )}
@@ -1021,7 +1021,7 @@ function Discover({ profile, onStartSession, onBestShape }: {
   // sessions sorted with phase-optimal intention durations first
   const intentionList = useMemo(() => {
     if (!intention) return [];
-    return ([10, 20, 30] as const).map((d) => buildSession(zone!, intention, d, profile.level, phase));
+    return ([10, 20, 30] as const).map((d) => buildSession(zone!, intention, d, profile.level, phase, profile.equipment));
   }, [zone, intention, profile.level, phase]);
 
   return (
@@ -1161,8 +1161,8 @@ function Discover({ profile, onStartSession, onBestShape }: {
                 ].join(" ")}
               >
                 <p className="font-bold text-rose">{session.name}</p>
-                <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
-                <p className="mt-0.5 text-[11px] text-rose/60">{session.workSec}s work / {session.restSec}s rest</p>
+                <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.level} · {session.workSec}s work / {session.restSec}s rest</p>
+                <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70">{session.structureNote}</p>
                 {phase !== "any" && session.phaseOptimal.includes(phase) && (
                   <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
                     Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
@@ -1494,7 +1494,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
                     <div className="flex-1 grid place-items-center text-[11px] text-rose/40">Filtered</div>
                   ) : (
                     <button
-                      onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level, phase))}
+                      onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level, phase, profile.equipment))}
                       className="flex-1 rounded-xl bg-white/90 border border-petal/60 p-2 text-left shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-hotpink/40 active:scale-95 transition"
                     >
                       <p className="text-xs font-bold text-rose">{ZONES.find((z) => z.key === plan.zone)?.label}</p>
@@ -1616,6 +1616,8 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   const zone = ZONES.find((z) => z.key === session.zone);
   const intention = WORKOUT_INTENTIONS.find((i) => i.key === session.intention);
   const first = session.exercises[0];
+  const warmCount = session.steps.filter((s) => s.kind === "warmup").length;
+  const coolCount = session.steps.filter((s) => s.kind === "cooldown").length;
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
@@ -1624,7 +1626,8 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         <button onClick={onExit} className="absolute right-3 top-3 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
         <div className="p-6 sm:p-8">
         <h1 className="font-script text-4xl text-hotpink leading-none mb-2">{session.name}</h1>
-        <p className="text-sm text-rose/80 mb-4">{session.durationMin} min · {session.exercises.length} exercises · {session.level}</p>
+        <p className="text-sm text-rose/80 mb-1">{session.durationMin} min · {session.level} · {session.steps.length} steps</p>
+        <p className="text-[11px] font-semibold text-hotpink/70 mb-4">{session.structureNote}</p>
         <div className="flex justify-center gap-2 mb-4">
           {zone && <span className="rounded-full bg-blush/70 px-3 py-1 text-xs font-semibold text-rose">{zone.label}</span>}
           {intention && <span className="rounded-full bg-blush/70 px-3 py-1 text-xs font-semibold text-rose">{intention.label}</span>}
@@ -1632,10 +1635,14 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         {phase !== "any" && session.phaseOptimal.includes(phase) && (
           <p className="mb-4 text-xs font-bold uppercase tracking-wide text-hotpink">Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase</p>
         )}
+        {/* What's inside */}
         <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 mb-4 text-left">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1">First up</p>
-          <p className="font-bold text-rose">{first.name}</p>
-          <p className="text-xs text-rose/70">{first.muscles}</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">What's inside</p>
+          <ul className="space-y-1 text-xs text-rose/80">
+            {warmCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">1</span> Warm-up · {warmCount} move{warmCount > 1 ? "s" : ""}</li>}
+            <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold">{warmCount > 0 ? 2 : 1}</span> {session.rounds} round{session.rounds > 1 ? "s" : ""} × {session.exercises.length} moves · {session.workSec}s work / {session.restSec}s rest</li>
+            {coolCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">{warmCount > 0 ? 3 : 2}</span> Cool-down · {coolCount} stretch{coolCount > 1 ? "es" : ""}</li>}
+          </ul>
         </div>
         <button onClick={onStart} className="bloom-luxury-btn inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white">
           <Play className="h-5 w-5" /> Start
@@ -1653,16 +1660,19 @@ function SessionActive({ session, onExit, onDone }: {
   onExit: () => void;
   onDone: (elapsedSec: number) => void;
 }) {
+  const steps = session.steps;
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<ExercisePhase>("exercise");
-  const [remaining, setRemaining] = useState(session.workSec);
+  const [remaining, setRemaining] = useState(steps[0]?.workSec ?? session.workSec);
   const [paused, setPaused] = useState(false);
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);
   const [voice] = useLS<boolean>(VOICE_KEY, false);
   const elapsedRef = useRef(0);
 
-  const exercise = session.exercises[index];
-  const next = session.exercises[index + 1];
+  const step = steps[index];
+  const nextStepObj = steps[index + 1];
+  const exercise = step.exercise;
+  const next = nextStepObj?.exercise;
 
   // Keep the screen awake for the duration of the workout.
   useEffect(() => {
@@ -1695,50 +1705,56 @@ function SessionActive({ session, onExit, onDone }: {
         if (nr <= 0) {
           if (phase === "exercise") {
             if (sound) playTimerBip(true);
-            if (index === session.exercises.length - 1) {
+            if (index === steps.length - 1) {
               onDone(elapsedRef.current);
               return 0;
             }
             setPhase("rest");
             if (sound) playRestChime();
             if (voice && next) speakNext(`Next up: ${next.name}`);
-            return session.restSec;
+            return step.restSec;
           } else {
             setPhase("exercise");
             setIndex((i) => i + 1);
-            return session.workSec;
+            return nextStepObj?.workSec ?? step.workSec;
           }
         }
         return nr;
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [paused, phase, index, sound, voice, session, next]);
+  }, [paused, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
 
-  const repeat = () => { setRemaining(phase === "exercise" ? session.workSec : session.restSec); };
+  const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
     if (phase === "exercise") {
-      if (index === session.exercises.length - 1) { onDone(elapsedRef.current); return; }
-      setPhase("rest"); setRemaining(session.restSec);
+      if (index === steps.length - 1) { onDone(elapsedRef.current); return; }
+      setPhase("rest"); setRemaining(step.restSec);
       if (voice && next) speakNext(`Next up: ${next.name}`);
     } else {
-      setPhase("exercise"); setIndex((i) => i + 1); setRemaining(session.workSec);
+      setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec);
     }
   };
-  const skipRest = () => { setPhase("exercise"); setIndex((i) => i + 1); setRemaining(session.workSec); };
+  const skipRest = () => { setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec); };
 
-  const totalSec = phase === "exercise" ? session.workSec : session.restSec;
+  const totalSec = phase === "exercise" ? step.workSec : step.restSec;
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col">
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60">
-        <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / session.exercises.length) * 100}%` }} />
+        <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
       </div>
 
       <div className="flex items-center justify-between p-3">
         <button onClick={onExit} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60"><X className="h-5 w-5 sm:h-6 sm:w-6" /></button>
-        <p className="text-base sm:text-xl font-bold text-rose">{index + 1} / {session.exercises.length}</p>
+        <div className="text-center">
+          <p className={[
+            "text-[10px] sm:text-xs font-bold uppercase tracking-wider leading-none",
+            step.kind === "warmup" ? "text-hotpink/60" : step.kind === "cooldown" ? "text-hotpink/60" : "text-hotpink",
+          ].join(" ")}>{step.label}</p>
+          <p className="text-base sm:text-xl font-bold text-rose leading-tight">{index + 1} / {steps.length}</p>
+        </div>
         <button onClick={() => setSound((s) => !s)} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60">
           {sound ? <Volume2 className="h-5 w-5 sm:h-6 sm:w-6" /> : <VolumeX className="h-5 w-5 sm:h-6 sm:w-6" />}
         </button>
@@ -1763,6 +1779,11 @@ function SessionActive({ session, onExit, onDone }: {
               <p className="max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 -mt-1 flex items-center justify-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
               </p>
+            )}
+            {step.repTarget && (
+              <span className="rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1 -mt-1">
+                {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
+              </span>
             )}
             <CircularTimer totalSec={totalSec} remainingSec={remaining} size={160} />
           </>
