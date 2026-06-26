@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
-  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge,
+  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
@@ -1519,9 +1519,7 @@ function MyProgram({ profile, onStartSession }: { profile: WorkoutProfile; onSta
 
 function Library() {
   const [zone, setZone] = useState<Zone>("glutes");
-  const [openSlug, setOpenSlug] = useState<string | null>(null);
   const exercises = ZONE_EXERCISES[zone];
-  const openExercise = openSlug ? exercises.find((e) => e.slug === openSlug) ?? null : null;
 
   return (
     <div className="space-y-4">
@@ -1546,81 +1544,66 @@ function Library() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
-            <button
-              key={ex.slug}
-              onClick={() => setOpenSlug(ex.slug)}
-              className="text-left rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in transition hover:-translate-y-1 hover:shadow-lg active:scale-[0.98]"
-              style={{ animationDelay: `${i * 0.05}s` }}
-            >
-              <div className="relative">
-                <ExercisePhoto exercise={ex} zone={zone} className="aspect-square w-full object-cover" />
-                <span className="absolute bottom-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm">
-                  <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </span>
-              </div>
-              <div className="p-2.5">
-                <p className="text-sm font-bold text-rose leading-tight">{ex.name}</p>
-                <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{ex.muscles}</p>
-              </div>
-            </button>
+            <ExerciseLibraryCard key={ex.slug} exercise={ex} zone={zone} index={i} />
           ))}
         </div>
       </section>
-
-      {openExercise && (
-        <ExerciseDetailModal exercise={openExercise} zone={zone} onClose={() => setOpenSlug(null)} />
-      )}
     </div>
   );
 }
 
-function ExerciseDetailModal({ exercise, zone, onClose }: { exercise: Exercise; zone: Zone; onClose: () => void }) {
+function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zone: Zone; index: number }) {
+  const [open, setOpen] = useState(false);
   const coaching = getCoaching(exercise.slug);
   return (
-    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={onClose}>
-      <div
-        className="relative w-full max-w-md max-h-[88vh] overflow-y-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="relative">
-          <ExercisePhoto exercise={exercise} zone={zone} className="w-full aspect-[4/3] object-cover bg-blush/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90">
-            <X className="h-4 w-4" />
-          </button>
-          <div className="absolute bottom-3 left-4 right-4">
-            <h2 className="font-script text-3xl text-white leading-none drop-shadow">{exercise.name}</h2>
-            <p className="text-[11px] font-semibold text-white/90 drop-shadow">{exercise.muscles}</p>
+    <div
+      className={[
+        "rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border overflow-hidden shadow-md shadow-rose/10 animate-card-pop-in transition",
+        open ? "border-hotpink/50 shadow-lg col-span-2 sm:col-span-3 lg:col-span-4" : "border-petal/60 hover:-translate-y-1 hover:shadow-lg",
+      ].join(" ")}
+      style={{ animationDelay: `${index * 0.05}s` }}
+    >
+      <button onClick={() => setOpen((v) => !v)} className="block w-full text-left active:scale-[0.99] transition">
+        <div className={open ? "flex items-stretch gap-3" : ""}>
+          <div className={open ? "w-32 sm:w-44 shrink-0" : ""}>
+            <ExercisePhoto exercise={exercise} zone={zone} className="aspect-square w-full object-cover" />
+          </div>
+          <div className={open ? "flex-1 min-w-0 py-3 pr-3 flex flex-col justify-center" : "p-2.5"}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-sm font-bold text-rose leading-tight">{exercise.name}</p>
+                <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{exercise.muscles}</p>
+              </div>
+              {open
+                ? <ChevronDown className="h-4 w-4 text-hotpink shrink-0 rotate-180 transition" strokeWidth={2.5} />
+                : <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blush/70 text-hotpink"><ChevronDown className="h-3.5 w-3.5" strokeWidth={2.5} /></span>}
+            </div>
+            {open && coaching && (
+              <p className="mt-2 hidden sm:block text-xs text-rose/85 leading-snug">{coaching.howTo}</p>
+            )}
           </div>
         </div>
+      </button>
 
-        <div className="p-4 sm:p-5 space-y-3.5">
-          {coaching ? (
-            <>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">How to do it</p>
-                <p className="text-sm text-rose/85 leading-snug">{coaching.howTo}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">Form cues</p>
-                <ul className="space-y-1">
-                  {coaching.cues.map((c) => (
-                    <li key={c} className="flex items-start gap-2 text-sm text-rose/85">
-                      <Check className="h-4 w-4 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {c}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-0.5">Avoid this</p>
-                <p className="text-xs text-rose/80 leading-snug">{coaching.mistake}</p>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-rose/70">{exercise.muscles}</p>
-          )}
+      {open && coaching && (
+        <div className="border-t border-petal/40 px-3 sm:px-4 py-3 animate-fade-in space-y-3">
+          <p className="sm:hidden text-xs text-rose/85 leading-snug">{coaching.howTo}</p>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">Form cues</p>
+            <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
+              {coaching.cues.map((c) => (
+                <li key={c} className="flex items-start gap-2 text-xs text-rose/85 leading-snug">
+                  <Check className="h-3.5 w-3.5 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl bg-blush/50 border border-petal/50 px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-0.5">Avoid this</p>
+            <p className="text-xs text-rose/80 leading-snug">{coaching.mistake}</p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
