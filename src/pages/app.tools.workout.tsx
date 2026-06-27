@@ -553,15 +553,25 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
   const program = getProgram(programId);
   const [week, setWeek] = useState(1);
   const [active, setActive] = useState(() => loadActiveProgram());
+  const [confirmReplace, setConfirmReplace] = useState(false);
   const phase = readCyclePhase() ?? "any";
   if (!program) return null;
 
   const isMyPlan = active?.programId === program.id;
-  const makeMyPlan = () => {
+
+  // Is there an existing plan that this would replace?
+  const hasFreestyle = (() => { try { const v = localStorage.getItem(PROGRAM_KEY); return !!v && v !== "null"; } catch { return false; } })();
+  const replacesExisting = (!!active && active.programId !== program.id) || hasFreestyle;
+
+  const commitPlan = () => {
+    // One plan at a time: enrolling a program clears any freestyle week.
+    try { localStorage.removeItem(PROGRAM_KEY); localStorage.removeItem(PROGRAM_PHASE_KEY); } catch {}
     saveActiveProgram({ programId: program.id, week: 1, startedISO: todayISO() });
     setActive(loadActiveProgram());
+    setConfirmReplace(false);
     onMakeMyPlan();
   };
+  const makeMyPlan = () => { if (replacesExisting) setConfirmReplace(true); else commitPlan(); };
 
   const progress = loadProgramProgress();
   const doneSet = new Set(progress[program.id] ?? []);
@@ -699,6 +709,20 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
           );
         })}
       </div>
+
+      {/* Confirm: replacing an existing plan */}
+      {confirmReplace && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirmReplace(false)}>
+          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
+            <p className="text-sm text-rose/80 mb-4">Making <span className="font-bold">{program.title}</span> your plan will replace your current weekly plan.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmReplace(false)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
+              <button onClick={commitPlan} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1450,111 +1474,6 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
 
 // ===================== MY PROGRAM =====================
 
-function ActiveProgramPlan({ program, week, phase, onOpenSession, onSetWeek, onLeave }: {
-  program: Program;
-  week: number;
-  phase: CyclePhase;
-  onOpenSession: (sessionIndex: number) => void;
-  onSetWeek: (week: number) => void;
-  onLeave: () => void;
-}) {
-  const meta = weekMeta(program, week);
-  const progress = loadProgramProgress();
-  const doneSet = new Set(progress[program.id] ?? []);
-  const weekDone = program.template.filter((_, i) => doneSet.has(sessionTag(week, i))).length;
-  const weekTotal = program.template.length;
-  const weekComplete = weekDone >= weekTotal;
-  const overallDone = (progress[program.id] ?? []).length;
-  const overallTotal = program.weeks * program.template.length;
-
-  return (
-    <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="relative h-28 overflow-hidden">
-        <img src={program.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10" />
-        <div className="absolute bottom-2 left-3 right-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">My plan · Week {week} of {program.weeks}</p>
-          <h2 className="font-script text-2xl text-white leading-none drop-shadow">{program.title}</h2>
-        </div>
-      </div>
-
-      <div className="p-4 space-y-3">
-        {/* Overall progress */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{meta.theme}{meta.isDeload ? " · recovery" : ""}</p>
-            <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} sessions</p>
-          </div>
-          <div className="h-1.5 rounded-full bg-blush overflow-hidden">
-            <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
-          </div>
-          <p className="mt-1.5 text-xs text-rose/75 leading-snug">{meta.note}</p>
-        </div>
-
-        {/* Week chips */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {Array.from({ length: program.weeks }, (_, i) => i + 1).map((w) => (
-            <button
-              key={w}
-              onClick={() => onSetWeek(w)}
-              className={[
-                "shrink-0 rounded-xl px-2.5 py-1 text-center transition border text-[11px] font-bold",
-                w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40",
-              ].join(" ")}
-            >W{w}</button>
-          ))}
-        </div>
-
-        {/* This week's sessions */}
-        <div className="space-y-2">
-          {program.template.map((_, i) => {
-            const s = computeWeekSession(program, i, week);
-            const done = doneSet.has(sessionTag(week, i));
-            const tip = phase !== "any" ? s.phaseTips?.[phase] : undefined;
-            return (
-              <button
-                key={i}
-                onClick={() => onOpenSession(i)}
-                className="w-full text-left rounded-2xl bg-blush/30 border border-petal/50 p-3 flex items-center gap-3 transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
-              >
-                <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", done ? "bg-hotpink text-white" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
-                  {done ? <Check className="h-5 w-5" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className={["text-sm font-bold leading-tight", done ? "text-rose/45 line-through" : "text-rose"].join(" ")}>{s.title}</p>
-                  <p className="text-[11px] text-rose/65 leading-snug">{s.focus}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <Tag icon={<Clock className="h-3 w-3" />}>{s.estMinutes} min</Tag>
-                    <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(s)} sets</Tag>
-                    {tip && <span className="text-[9px] font-bold uppercase tracking-wide text-hotpink">✿ {PHASE_LABEL[phase]} tip</span>}
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-rose/40 shrink-0" />
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Advance / complete */}
-        {weekComplete && week < program.weeks && (
-          <button onClick={() => onSetWeek(week + 1)} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white">
-            <Trophy className="h-4 w-4" strokeWidth={2} /> Week {week} done — start Week {week + 1}
-          </button>
-        )}
-        {weekComplete && week === program.weeks && (
-          <div className="rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3 text-center">
-            <p className="font-script text-xl text-hotpink leading-none">Program complete ✿</p>
-            <p className="text-xs text-rose/75 mt-1">You finished all {program.weeks} weeks. Incredible work.</p>
-          </div>
-        )}
-
-        <button onClick={onLeave} className="w-full text-center text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave this program</button>
-      </div>
-    </section>
-  );
-}
-
 function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowsePrograms }: {
   profile: WorkoutProfile;
   onStartSession: (s: WorkoutSession) => void;
@@ -1564,142 +1483,196 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [program, setProgram] = useLS<Record<string, DayPlan | null> | null>(PROGRAM_KEY, null);
   const [programPhase, setProgramPhase] = useLS<CyclePhase | null>(PROGRAM_PHASE_KEY, null);
-  const [bannerSeen, setBannerSeen] = useLS<boolean>(PROGRAM_BANNER_KEY, false);
-  const [zoneFilter, setZoneFilter] = useState<Zone | "all">("all");
-  const [intentionFilter, setIntentionFilter] = useState<WorkoutIntention | "all">("all");
   const [active, setActive] = useState(() => loadActiveProgram());
+  const [confirmFreestyle, setConfirmFreestyle] = useState(false);
 
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
 
-  const validate = () => {
+  const activeProgram = active ? getProgram(active.programId) : null;
+  const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
+  const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
+
+  // Generate a freestyle week (replaces an active program after confirmation).
+  const generateFreestyle = () => {
+    if (activeProgram) { saveActiveProgram(null); setActive(null); }
     setProgram(generateWeeklyPlan(profile, phase));
     setProgramPhase(phase);
-    setBannerSeen(true);
+    setConfirmFreestyle(false);
   };
-  const skip = () => setBannerSeen(true);
+  const onGenerateClick = () => { if (activeProgram) setConfirmFreestyle(true); else generateFreestyle(); };
 
-  const phaseChanged = !!program && programPhase !== null && programPhase !== phase;
-
-  const activeProgram = active ? getProgram(active.programId) : null;
+  // ── Program → day mapping (sessions spread smartly across the week) ──────────
+  const progDoneSet = activeProgram ? new Set(loadProgramProgress()[activeProgram.id] ?? []) : new Set<string>();
+  const week = active?.week ?? 1;
+  const programDay: Record<string, number | null> = {};
+  if (activeProgram) {
+    const activeDays = ACTIVE_DAY_PATTERNS[(activeProgram.daysPerWeek as 2 | 3 | 4 | 5)] ?? ACTIVE_DAY_PATTERNS[3];
+    DAYS.forEach((d) => { programDay[d] = null; });
+    activeDays.forEach((d, i) => { if (i < activeProgram.template.length) programDay[d] = i; });
+  }
+  const weekComplete = activeProgram ? activeProgram.template.every((_, i) => progDoneSet.has(sessionTag(week, i))) : false;
+  const overallDone = activeProgram ? (loadProgramProgress()[activeProgram.id] ?? []).length : 0;
+  const overallTotal = activeProgram ? activeProgram.weeks * activeProgram.template.length : 0;
+  const wMeta = activeProgram ? weekMeta(activeProgram, week) : null;
 
   return (
     <div className="space-y-4">
 
-      {/* ── Active flagship program (chosen from Programs) ───────────────── */}
-      {active && activeProgram && (
-        <ActiveProgramPlan
-          program={activeProgram}
-          week={active.week}
-          phase={phase}
-          onOpenSession={(sessionIndex) => onOpenProgramSession(activeProgram.id, active.week, sessionIndex)}
-          onSetWeek={(w) => { const next = { ...active, week: w }; saveActiveProgram(next); setActive(next); }}
-          onLeave={() => { saveActiveProgram(null); setActive(null); }}
-        />
+      {/* ── Plan header ─────────────────────────────────────────────────────── */}
+      {source === "program" && activeProgram && (
+        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
+          <div className="relative h-24 overflow-hidden">
+            <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
+            <div className="absolute bottom-2 left-3 right-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
+              <h2 className="font-script text-2xl text-white leading-none drop-shadow">{activeProgram.title}</h2>
+            </div>
+          </div>
+          <div className="p-3.5 space-y-2.5">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{wMeta?.theme}</p>
+                <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
+              </div>
+              <div className="h-1.5 rounded-full bg-blush overflow-hidden">
+                <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
+              </div>
+            </div>
+            {wMeta?.note && <p className="text-xs text-rose/75 leading-snug">{wMeta.note}</p>}
+            {/* Week chips */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {Array.from({ length: activeProgram.weeks }, (_, i) => i + 1).map((w) => (
+                <button key={w} onClick={() => { const next = { ...active!, week: w }; saveActiveProgram(next); setActive(next); }}
+                  className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between pt-0.5">
+              <button onClick={onBrowsePrograms} className="text-[11px] font-bold text-hotpink">Change program</button>
+              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave program</button>
+            </div>
+          </div>
+        </section>
       )}
 
-      {/* Browse / switch programs */}
-      {!active && (
-        <button onClick={onBrowsePrograms} className="w-full rounded-3xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-4 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
-          <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
-            <Trophy className="h-5 w-5" strokeWidth={1.8} />
-          </span>
+      {source === "freestyle" && (
+        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm p-3.5 flex items-center gap-3">
+          <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-rose">Choose a flagship program ✿</p>
-            <p className="text-[11px] text-rose/70 leading-snug">Pick a structured multi-week journey and we'll make it your plan, week by week.</p>
+            <p className="text-sm font-bold text-rose leading-tight">My plan · Freestyle week</p>
+            <p className="text-[11px] text-rose/65 leading-snug">Auto-built from your profile{phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
-        </button>
-      )}
-
-      {!active && !program && (
-        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <p className="font-bold text-rose mb-2">Two ways to plan</p>
-          <p className="text-sm text-rose/85 mb-2"><span className="font-bold text-hotpink">1. A flagship program</span> — a structured multi-week journey with progressive overload. Tap "Choose a flagship program" above, then "Make this my plan".</p>
-          <p className="text-sm text-rose/85"><span className="font-bold text-hotpink">2. A freestyle week</span> — a one-tap auto plan from your profile (level, goal, days/week) and cycle phase. Generate it below.</p>
+          <button onClick={onGenerateClick} className="shrink-0 rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Regenerate</button>
         </section>
       )}
 
-      {!active && !program && !bannerSeen && (
-        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Freestyle week</h2>
-          <p className="text-sm text-rose/85 mb-3">Based on your profile{phase !== "any" ? ` and your ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}, here's a soft proposal for the week.</p>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Generate</button>
-            <button onClick={skip} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Skip for now</button>
+      {/* ── Empty state — choose how to plan ────────────────────────────────── */}
+      {source === "none" && (
+        <section className="rounded-3xl bg-white/85 border border-petal/60 p-4 sm:p-5 space-y-3">
+          <div>
+            <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Set up your weekly plan ✿</h2>
+            <p className="text-sm text-rose/80">Choose one — your sessions appear day by day below, ready to start.</p>
           </div>
+          <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Trophy className="h-5 w-5" strokeWidth={1.8} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-rose">Follow a flagship program</p>
+              <p className="text-[11px] text-rose/70 leading-snug">A structured multi-week journey, spread smartly across your week.</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+          </button>
+          <button onClick={onGenerateClick} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-rose">Generate a freestyle week</p>
+              <p className="text-[11px] text-rose/70 leading-snug">One-tap auto plan from your level, goal, days/week and phase.</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+          </button>
         </section>
       )}
 
-      {active && (
-        <div className="flex items-center gap-2 pt-1">
-          <div className="h-px flex-1 bg-petal/50" />
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50">Or a freestyle week</p>
-          <div className="h-px flex-1 bg-petal/50" />
-        </div>
-      )}
-
-      {phaseChanged && (
-        <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <p className="text-sm text-rose/85 mb-3">Your phase changed — want to update this week's intensity?</p>
-          <div className="flex gap-2">
-            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Yes, adjust</button>
-            <button onClick={() => setProgramPhase(phase)} className="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Keep as is</button>
-          </div>
-        </section>
-      )}
-
-      {/* Filter bar */}
-      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mb-3">Your week</h2>
-        <div className="flex flex-wrap gap-2 mb-2">
-          <button onClick={() => setZoneFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", zoneFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>All zones</button>
-          {ZONES.map((z) => (
-            <button key={z.key} onClick={() => setZoneFilter(z.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", zoneFilter === z.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>{z.label}</button>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setIntentionFilter("all")} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", intentionFilter === "all" ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>All intentions</button>
-          {WORKOUT_INTENTIONS.map((it) => (
-            <button key={it.key} onClick={() => setIntentionFilter(it.key)} className={["rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95", intentionFilter === it.key ? "bg-hotpink text-white border-transparent" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md"].join(" ")}>{it.label}</button>
-          ))}
-        </div>
-
-        {!program ? (
-          <div className="mt-4 text-sm text-rose/70">
-            <p className="mb-2">No plan yet — generate your personalized week in one tap.</p>
-            <button onClick={validate} className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white">Generate my week</button>
-          </div>
-        ) : (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-7 gap-2">
+      {/* ── The week, day by day (one unified view) ─────────────────────────── */}
+      {source !== "none" && (
+        <section className="rounded-3xl bg-white/85 border border-petal/60 p-3 sm:p-4">
+          <div className="flex flex-col gap-2">
             {DAYS.map((d) => {
-              const plan = program[d];
-              const hidden = plan && ((zoneFilter !== "all" && plan.zone !== zoneFilter) || (intentionFilter !== "all" && plan.intention !== intentionFilter));
+              const isToday = d === todayKey;
+              const sIdx = source === "program" ? programDay[d] : null;
+              const freeplan = source === "freestyle" ? program?.[d] ?? null : null;
+              const hasSession = sIdx !== null && sIdx !== undefined || !!freeplan;
+
+              // Program session for the day
+              let title = "", sub = "", mins = 0, done = false, onTap: (() => void) | null = null;
+              if (source === "program" && activeProgram && sIdx !== null && sIdx !== undefined) {
+                const s = computeWeekSession(activeProgram, sIdx, week);
+                title = s.title; sub = s.focus; mins = s.estMinutes;
+                done = progDoneSet.has(sessionTag(week, sIdx));
+                onTap = () => onOpenProgramSession(activeProgram.id, week, sIdx);
+              } else if (freeplan) {
+                title = ZONES.find((z) => z.key === freeplan.zone)?.label ?? freeplan.zone;
+                sub = WORKOUT_INTENTIONS.find((i) => i.key === freeplan.intention)?.label ?? "";
+                mins = freeplan.durationMin;
+                onTap = () => onStartSession(buildSession(freeplan.zone, freeplan.intention, freeplan.durationMin, profile.level, phase, profile.equipment));
+              }
+
               return (
-                <div key={d} className="rounded-2xl bg-blush/40 border border-petal/50 p-2 min-h-[110px] flex flex-col">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1">{d}</p>
-                  {!plan ? (
-                    <div className="flex-1 grid place-items-center text-[11px] font-semibold text-rose/50">Rest day</div>
-                  ) : hidden ? (
-                    <div className="flex-1 grid place-items-center text-[11px] text-rose/40">Filtered</div>
+                <div key={d} className={["rounded-2xl border p-2.5 sm:p-3 flex items-center gap-3 transition",
+                  isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
+                  {/* Day label */}
+                  <div className="w-12 shrink-0 text-center">
+                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                  </div>
+                  {/* Body */}
+                  {!hasSession ? (
+                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
                   ) : (
-                    <button
-                      onClick={() => onStartSession(buildSession(plan.zone, plan.intention, plan.durationMin, profile.level, phase, profile.equipment))}
-                      className="flex-1 rounded-xl bg-white/90 border border-petal/60 p-2 text-left shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-hotpink/40 active:scale-95 transition"
-                    >
-                      <p className="text-xs font-bold text-rose">{ZONES.find((z) => z.key === plan.zone)?.label}</p>
-                      <p className="text-[11px] text-rose/70">{WORKOUT_INTENTIONS.find((i) => i.key === plan.intention)?.label}</p>
-                      <p className="mt-1 text-[10px] text-rose/60">{plan.durationMin} min</p>
-                      {phase !== "any" && PHASE_OPTIMAL[plan.intention].includes(phase) && (
-                        <p className="mt-1 inline-block rounded-full bg-blush/70 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-hotpink">{PHASE_LABEL[phase]}</p>
-                      )}
+                    <button onClick={onTap ?? undefined} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
+                      <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-full", done ? "bg-hotpink text-white" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
+                        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className={["text-sm font-bold leading-tight truncate", done ? "text-rose/45 line-through" : "text-rose"].join(" ")}>{title}</p>
+                        <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-rose/35 shrink-0" />
                     </button>
                   )}
                 </div>
               );
             })}
           </div>
-        )}
-      </section>
+
+          {/* Program week complete → advance */}
+          {source === "program" && activeProgram && weekComplete && week < activeProgram.weeks && (
+            <button onClick={() => { const next = { ...active!, week: week + 1 }; saveActiveProgram(next); setActive(next); }}
+              className="bloom-luxury-btn animate-cta-bounce mt-3 w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white">
+              <Trophy className="h-4 w-4" strokeWidth={2} /> Week {week} done — start Week {week + 1}
+            </button>
+          )}
+          {source === "program" && activeProgram && weekComplete && week === activeProgram.weeks && (
+            <div className="mt-3 rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3 text-center">
+              <p className="font-script text-xl text-hotpink leading-none">Program complete ✿</p>
+              <p className="text-xs text-rose/75 mt-1">You finished all {activeProgram.weeks} weeks. Incredible work.</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Confirm: freestyle replaces an active program ───────────────────── */}
+      {confirmFreestyle && activeProgram && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
+          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
+            <p className="text-sm text-rose/80 mb-4">A freestyle week will replace your <span className="font-bold">{activeProgram.title}</span> plan. Your program progress is kept if you come back to it.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmFreestyle(false)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
+              <button onClick={generateFreestyle} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
