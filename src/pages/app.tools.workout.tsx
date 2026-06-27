@@ -136,26 +136,43 @@ function durationForLevel(level: Level): 10 | 20 | 30 {
 
 const INTENTION_ORDER: WorkoutIntention[] = ["tonify", "strengthen", "stretch", "recover"];
 
-function pickIntentionForPhase(phase: CyclePhase, goal: Goal, idx: number): WorkoutIntention {
+// Interleaves lower / core / full-body / upper so consecutive sessions never
+// hammer the same area — the balanced split premium apps use.
+const SMART_ZONE_CYCLE: Zone[] = ["glutes", "core", "full-body", "legs", "arms", "back"];
+
+const mod = (n: number, m: number) => ((n % m) + m) % m;
+
+// A well-spread set of distinct zones for the week, rotated by `seed`.
+function buildZoneWeek(n: number, seed: number): Zone[] {
+  const start = mod(seed, SMART_ZONE_CYCLE.length);
+  return Array.from({ length: n }, (_, i) => SMART_ZONE_CYCLE[(start + i) % SMART_ZONE_CYCLE.length]);
+}
+
+// A phase-aware, goal-biased, varied intention for each active day. Period &
+// luteal weeks always get a restorative day so the plan honours the body.
+function buildIntentionWeek(phase: CyclePhase, goal: Goal, n: number, seed: number): WorkoutIntention[] {
   const phaseFirst = INTENTION_ORDER.filter((i) => PHASE_OPTIMAL[i].includes(phase));
   const goalPick: WorkoutIntention = goal === "strengthen" ? "strengthen" : goal === "flexibility" ? "stretch" : "tonify";
   const pool = phaseFirst.length ? phaseFirst : INTENTION_ORDER;
-  const candidates = pool.includes(goalPick) ? [goalPick, ...pool.filter((p) => p !== goalPick)] : pool;
-  return candidates[idx % candidates.length];
+  const ordered = pool.includes(goalPick) ? [goalPick, ...pool.filter((p) => p !== goalPick)] : pool;
+  const out = Array.from({ length: n }, (_, i) => ordered[mod(i + seed, ordered.length)]);
+  if ((phase === "period" || phase === "luteal") && n >= 2 && !out.includes("recover")) {
+    out[n - 1] = "recover";
+  }
+  return out;
 }
 
-const ZONE_ROTATION: Zone[] = ["full-body", "glutes", "core", "legs", "arms", "back"];
-
-function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase): Record<string, DayPlan | null> {
+function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, seed = 0): Record<string, DayPlan | null> {
   const activeDays = ACTIVE_DAY_PATTERNS[profile.daysPerWeek];
   const durationMin = durationForLevel(profile.level);
+  const zones = buildZoneWeek(activeDays.length, seed);
+  const intentions = buildIntentionWeek(phase, profile.goal, activeDays.length, seed);
   const plan: Record<string, DayPlan | null> = {};
-  let zi = 0, ii = 0;
+  let k = 0;
   for (const d of DAYS) {
     if (activeDays.includes(d)) {
-      const intention = pickIntentionForPhase(phase, profile.goal, ii++);
-      const zone = ZONE_ROTATION[zi++ % ZONE_ROTATION.length];
-      plan[d] = { zone, intention, durationMin };
+      plan[d] = { zone: zones[k], intention: intentions[k], durationMin };
+      k++;
     } else {
       plan[d] = null;
     }
@@ -1594,6 +1611,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const [programPhase, setProgramPhase] = useLS<CyclePhase | null>(PROGRAM_PHASE_KEY, null);
   const [active, setActive] = useState(() => loadActiveProgram());
   const [confirmFreestyle, setConfirmFreestyle] = useState(false);
+  const [seed, setSeed] = useLS<number>("bloom:workout-freestyle-seed", 0);
 
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
 
@@ -1602,10 +1620,14 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
 
   // Generate a freestyle week (replaces an active program after confirmation).
+  // The seed advances each time so "Regenerate" always yields a fresh, varied
+  // — but still smart — week rather than the same deterministic plan.
   const generateFreestyle = () => {
     if (activeProgram) { saveActiveProgram(null); setActive(null); }
-    setProgram(generateWeeklyPlan(profile, phase));
+    const nextSeed = seed + 1;
+    setProgram(generateWeeklyPlan(profile, phase, nextSeed));
     setProgramPhase(phase);
+    setSeed(nextSeed);
     setConfirmFreestyle(false);
   };
   const onGenerateClick = () => { if (activeProgram) setConfirmFreestyle(true); else generateFreestyle(); };
