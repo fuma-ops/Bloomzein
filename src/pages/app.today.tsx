@@ -592,6 +592,9 @@ export default function TodayPage() {
       {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) ───────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Plan ✿</SectionTitle>
+        <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
+          Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.
+        </p>
         <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
           {planItems.map((item, i) => {
             const done   = planDone.includes(item.id);

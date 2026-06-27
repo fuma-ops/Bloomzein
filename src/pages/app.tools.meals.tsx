@@ -27,6 +27,7 @@ import {
   RECIPES,
   PANTRY,
   INTENTIONS,
+  PHASE_INFO,
   DAYS,
   KID_DAYS,
   STORAGE_TABLE,
@@ -36,9 +37,15 @@ import {
   type Recipe,
   type Intention,
   type CyclePhase,
+  type DietPhase,
   type PantryCategoryKey,
   type MealType,
 } from "@/components/bloom/meals/data";
+
+// Maps the app-wide cycle phase to the Diet model's 4 nutrition phases.
+const CYCLE_TO_DIET: Record<string, DietPhase> = {
+  period: "menstrual", follicular: "follicular", fertile: "ovulatory", ovulation: "ovulatory", luteal: "luteal",
+};
 
 
 import { readTodaySymptoms } from "@/lib/crossToolData";
@@ -188,9 +195,9 @@ function buildKidWeek(recipes: Recipe[], owned: Set<string>) {
 
 /* ---------- UI atoms ---------- */
 
-function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Glass({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={`rounded-[1.5rem] bg-white/85 backdrop-blur border border-petal/60 shadow-lg shadow-rose/10 ${className}`}>
+    <div className={`rounded-[1.5rem] bg-white/85 backdrop-blur border border-petal/60 shadow-lg shadow-rose/10 ${className}`} style={style}>
       {children}
     </div>
   );
@@ -667,6 +674,35 @@ function WeekTab({
         </div>
       </Glass>
 
+      {/* WHY THESE MEALS — explains the phase reasoning behind the plan */}
+      {phase !== "any" && CYCLE_TO_DIET[phase] && (() => {
+        const info = PHASE_INFO[CYCLE_TO_DIET[phase]];
+        return (
+          <Glass className="p-4 sm:p-5 border-petal/60">
+            <div className="flex items-start gap-3">
+              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
+                <Heart className="h-5 w-5" strokeWidth={1.8} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Why these meals · {info.label} phase</p>
+                <p className="text-sm text-rose/85 leading-snug mt-0.5">Right now {info.tone}. We pick recipes rich in these:</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {info.keyNutrients.map((n) => (
+                    <span key={n} className="rounded-full bg-blush/70 text-hotpink text-[10px] font-bold px-2.5 py-0.5">{n}</span>
+                  ))}
+                </div>
+                <p className="mt-2.5 text-[11px] text-rose/65 leading-snug">
+                  <span className="font-bold text-rose/80">Lean into:</span> {info.eat.slice(0, 5).join(", ")}.
+                </p>
+                <p className="mt-1 text-[11px] text-rose/65 leading-snug">
+                  <span className="font-bold text-rose/80">Go easy on:</span> {info.avoid.slice(0, 4).join(", ")}.
+                </p>
+              </div>
+            </div>
+          </Glass>
+        );
+      })()}
+
       {planEmpty ? (
         <EmptyState
           icon={Calendar}
@@ -676,10 +712,12 @@ function WeekTab({
         />
       ) : (
         <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {DAYS.map((d, di) => (
-            <Glass key={d} className="p-3 animate-scale-in" style={{ animationDelay: `${di * 60}ms` }}>
+          {DAYS.map((d, di) => {
+            const isToday = d === todayDayName();
+            return (
+            <Glass key={d} className={["p-3 animate-scale-in", isToday ? "ring-2 ring-hotpink/50" : ""].join(" ")} style={{ animationDelay: `${di * 60}ms` }}>
               <div className="flex items-center justify-between mb-2.5">
-                <p className="font-script text-xl text-hotpink">{d}</p>
+                <p className="font-script text-xl text-hotpink flex items-center gap-1.5">{d}{isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}</p>
                 <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
                   <RefreshCw className="h-3 w-3" /> redo day
                 </button>
@@ -748,7 +786,8 @@ function WeekTab({
                 })}
               </div>
             </Glass>
-          ))}
+            );
+          })}
         </div>
       )}
 

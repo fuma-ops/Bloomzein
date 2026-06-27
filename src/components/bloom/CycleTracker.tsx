@@ -1126,6 +1126,7 @@ export function CycleTracker() {
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
           <div style={{ ...cardStyle }} className="reveal-on-scroll lg:hidden">
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
+            <p className="reveal-on-scroll" data-reveal-delay="90ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>The same yoga, workout & meal proposed on your Today plan — tap to start.</p>
             {renderSuggestions()}
           </div>
 
@@ -1214,6 +1215,7 @@ export function CycleTracker() {
           {/* Suggestions */}
           <div className="mb-5">
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="0ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
+            <p className="reveal-on-scroll" data-reveal-delay="30ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>The same yoga, workout & meal proposed on your Today plan — tap to start.</p>
             {renderSuggestions()}
             <a
               href="/app/tools/yoga"
