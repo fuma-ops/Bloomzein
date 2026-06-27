@@ -331,7 +331,14 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   const [titleFocused, setTitleFocused] = useState(false);
   const [nextId, setNextId] = useState(1);
   const [pageFull, setPageFull] = useState(false);
-  const [activePrompt, setActivePrompt] = useState(() => JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
+  const [activePrompt, setActivePrompt] = useState(() => {
+    // A prompt handed in from Today's plan takes priority, then it's cleared.
+    try {
+      const handed = localStorage.getItem("bloom:diary-prompt");
+      if (handed) { localStorage.removeItem("bloom:diary-prompt"); return handed; }
+    } catch {}
+    return JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)];
+  });
   const [promptDismissed, setPromptDismissed] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [hiddenIdeas, setHiddenIdeas] = useState<number[]>([]);
