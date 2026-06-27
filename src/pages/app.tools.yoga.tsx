@@ -294,12 +294,65 @@ const FOCUS_PREVIEW: Record<string, { image: string; duration: string }> = {
 // Maps a scheduled focus label to a runnable flow (intention + duration + image),
 // so a day in the plan can be started in one tap.
 const FOCUS_META: Record<string, { intention: Intention; duration: number; image: string; blurb: string }> = {
-  "Morning energy": { intention: "morning",  duration: 15, image: "/images/pose-mountain.webp",              blurb: "Wake the body, light up the day" },
-  "Stress relief":  { intention: "stress",   duration: 15, image: "/images/pose-childs-pose.webp",           blurb: "Soft, slow — exhale the day away" },
-  "Sleep prep":     { intention: "sleep",    duration: 20, image: "/images/pose-legs-up-wall.webp",          blurb: "Gentle floor flow into deep rest" },
-  "Cycle sync":     { intention: "cycle",    duration: 20, image: "/images/pose-reclined-bound-angle.webp",  blurb: "Matched to today's phase" },
-  "Strength":       { intention: "strength", duration: 25, image: "/images/pose-plank.webp",                 blurb: "Build steady, mindful power" },
+  "Morning energy":     { intention: "morning",  duration: 15, image: "/images/pose-mountain.webp",              blurb: "Wake the body, light up the day" },
+  "Stress relief":      { intention: "stress",   duration: 15, image: "/images/pose-childs-pose.webp",           blurb: "Soft, slow — exhale the day away" },
+  "Sleep prep":         { intention: "sleep",    duration: 20, image: "/images/pose-legs-up-wall.webp",          blurb: "Gentle floor flow into deep rest" },
+  "Cycle sync":         { intention: "cycle",    duration: 20, image: "/images/pose-reclined-bound-angle.webp",  blurb: "Matched to today's phase" },
+  "Strength":           { intention: "strength", duration: 25, image: "/images/pose-plank.webp",                 blurb: "Build steady, mindful power" },
+  "Emotional release":  { intention: "release",  duration: 20, image: "/images/pose-pigeon.webp",                blurb: "Open hips & heart, let it move" },
 };
+
+// ── Curated weekly plans (yoga "programs") ──────────────────────────────────
+// Each applies a themed 7-day focus schedule to My Plan in one tap, reusing the
+// same schedule + Today-hero infrastructure.
+interface YogaProgram {
+  id: string;
+  title: string;
+  tagline: string;
+  image: string;
+  promise: string[];
+  whoFor: string;
+  focus: Record<string, string | null>; // Mon..Sun → FOCUS_META key or null (rest)
+}
+
+const YOGA_PROGRAMS: YogaProgram[] = [
+  {
+    id: "calm-reset",
+    title: "7-Day Calm Reset",
+    tagline: "Unwind the nervous system, sleep deeper.",
+    image: "/images/pose-legs-up-wall.webp",
+    promise: ["Daily soft flows to lower stress", "A gentle wind-down before sleep", "A calm, sustainable rhythm"],
+    whoFor: "Frazzled, over-stretched, or struggling to switch off at night.",
+    focus: { Mon: "Stress relief", Tue: "Sleep prep", Wed: null, Thu: "Stress relief", Fri: "Sleep prep", Sat: null, Sun: "Stress relief" },
+  },
+  {
+    id: "morning-glow",
+    title: "Morning Glow Week",
+    tagline: "Wake up bright, move with energy.",
+    image: "/images/pose-warrior-1.webp",
+    promise: ["Energizing morning flows", "Build steady, mindful strength", "Start every day lighter"],
+    whoFor: "You want to begin your days with movement and momentum.",
+    focus: { Mon: "Morning energy", Tue: "Strength", Wed: "Morning energy", Thu: null, Fri: "Strength", Sat: "Morning energy", Sun: null },
+  },
+  {
+    id: "cycle-synced",
+    title: "Cycle-Synced Week",
+    tagline: "Move with your hormones, not against them.",
+    image: "/images/pose-reclined-bound-angle.webp",
+    promise: ["Flows matched to each phase", "Honour your low-energy days", "Feel more in tune with your body"],
+    whoFor: "You want your practice to follow your cycle's natural rhythm.",
+    focus: { Mon: "Cycle sync", Tue: "Stress relief", Wed: null, Thu: "Cycle sync", Fri: "Sleep prep", Sat: null, Sun: "Cycle sync" },
+  },
+  {
+    id: "flex-release",
+    title: "Flexibility & Release",
+    tagline: "Open tight hips, release held tension.",
+    image: "/images/pose-pigeon.webp",
+    promise: ["Deep hip & heart openers", "Release stored tension", "Greater ease of movement"],
+    whoFor: "Tight hips, a stiff back, or a lot of sitting.",
+    focus: { Mon: "Emotional release", Tue: "Stress relief", Wed: "Emotional release", Thu: null, Fri: "Cycle sync", Sat: "Emotional release", Sun: null },
+  },
+];
 
 function buildFlow(opts: {
   intention: Intention; level: Level; durationMin: number; phase: Phase; mode: Mode;
@@ -646,6 +699,13 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onSetup={(preset) => setView({ kind: "setup", preset })}
           onStepGoTo={(s) => advanceStep(s)}
+          onApplyPlan={(p) => {
+            try {
+              localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ ...p.focus }));
+              window.dispatchEvent(new Event("bloom:yoga-updated"));
+            } catch {}
+            setView({ kind: "plan" });
+          }}
         />
       )}
 
@@ -777,12 +837,13 @@ function useYogaPhaseAndStreak() {
 }
 
 function YogaHome({
-  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo,
+  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo, onApplyPlan,
 }: {
   onboarded: boolean; step: 1|2|3;
   onBegin: () => void; onLibrary: () => void;
   onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
   onStepGoTo: (s: 1|2|3) => void;
+  onApplyPlan: (p: YogaProgram) => void;
 }) {
   return (
     <div className="space-y-2 yoga-fade">
@@ -818,6 +879,9 @@ function YogaHome({
             title="Eyes-closed audio" cta="Audio session" onClick={() => { onSetup(); }} />
         </div>
       </section>
+
+      {/* CURATED PLANS — themed weekly plans you can apply in one tap */}
+      <CuratedPlans onApply={onApplyPlan} />
 
       {/* FLOW SESSIONS — by moment / by intention carousels */}
       <FlowSessionsSection onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
@@ -974,6 +1038,67 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
   );
 }
 
+// ===================== CURATED PLANS (yoga programs) =====================
+
+function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
+  const [confirm, setConfirm] = useState<YogaProgram | null>(null);
+  return (
+    <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "220ms" }}>
+      <div className="mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Curated plans</p>
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">a week, set for you</h2>
+        <p className="mt-1 text-[11px] sm:text-xs text-rose/65">Pick a themed week — we'll lay it across your days, ready to start.</p>
+      </div>
+      <div className="space-y-3">
+        {YOGA_PROGRAMS.map((p, i) => {
+          const dayCount = Object.values(p.focus).filter(Boolean).length;
+          return (
+            <button
+              key={p.id}
+              onClick={() => setConfirm(p)}
+              className="group w-full text-left flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
+              style={{ animationDelay: `${i * 70}ms` }}
+            >
+              <div className="relative w-28 sm:w-36 shrink-0 overflow-hidden">
+                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
+              </div>
+              <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
+                <span className="self-start rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{dayCount} days / week</span>
+                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{p.title}</h3>
+                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{p.tagline}</p>
+                <span className="mt-auto pt-2 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink">Set as my week <ChevronRight className="h-3.5 w-3.5" /></span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {confirm && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirm(null)}>
+          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <img src={confirm.image} alt="" className="h-28 w-full object-cover object-top" />
+            <div className="p-5 text-center">
+              <p className="font-script text-2xl text-hotpink leading-none mb-1">{confirm.title}</p>
+              <p className="text-xs text-rose/75 mb-2">{confirm.tagline}</p>
+              <ul className="text-left space-y-1 mb-3">
+                {confirm.promise.map((b) => (
+                  <li key={b} className="flex items-start gap-1.5 text-[11px] text-rose/80"><Sparkles className="h-3 w-3 text-hotpink shrink-0 mt-0.5" /> {b}</li>
+                ))}
+              </ul>
+              <p className="text-[11px] text-rose/60 mb-4">This replaces your current weekly plan.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirm(null)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
+                <button onClick={() => { onApply(confirm); setConfirm(null); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Set as my week</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ===================== STREAK + CYCLE SYNC CARDS =====================
 
 function StreakCard({ streak }: { streak: Streak }) {
@@ -1106,7 +1231,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   }, [schedule, reminder]);
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength"];
+  const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Emotional release"];
   const todayKey = WEEKDAY_LABELS[new Date().getDay()];
   const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
   const todayFocus = schedule[todayKey];
@@ -1213,17 +1338,27 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
 
   return (
     <div className="relative space-y-4 yoga-fade">
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
-          <button key={lv} onClick={() => setActive(lv)}
-            className={[
-              "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold border transition",
-              active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60",
-            ].join(" ")}>
-            {lv}
-          </button>
-        ))}
-      </div>
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-3 mb-3">
+          <div>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Pose Library ✿</h2>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">Tap any pose to learn how to enter it and find your breath.</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{filtered.length} poses</span>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+          {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
+            <button key={lv} onClick={() => setActive(lv)}
+              className={[
+                "shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition active:scale-95",
+                active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
+              ].join(" ")}>
+              {lv}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div key={active} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {filtered.map((p, i) => <PoseCard key={p.slug} pose={p} index={i} />)}
@@ -1665,12 +1800,33 @@ function Summary({
 
   const intentionLabel = INTENTIONS.find((i) => i.id === intention)?.label || "Practice";
 
+  let streakCount = 0;
+  try { streakCount = (JSON.parse(localStorage.getItem(STREAK_KEY) || "{}")?.count) || 0; } catch {}
+
   return (
-    <div className="space-y-4 yoga-fade">
-      <div className="rounded-3xl bg-white/90 backdrop-blur border border-petal/60 p-5 sm:p-7 text-center">
-        <Sparkles className="h-6 w-6 text-hotpink mx-auto" />
-        <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-1">You bloomed.</h2>
-        <p className="text-sm text-rose/80 mt-1">{intentionLabel} · {durationMin} min · {flow.length} poses</p>
+    <div className="relative space-y-4 yoga-fade">
+      <BloomBubbles count={14} />
+      <div className="relative rounded-3xl bg-white/95 backdrop-blur border border-petal/60 p-5 sm:p-7 text-center shadow-md animate-scale-in">
+        <span className="clay-blob animate-selected-glow mx-auto grid place-items-center rounded-full text-white" style={{ width: "4.5rem", height: "4.5rem" }}>
+          <Flower className="h-9 w-9 animate-icon-breathe" strokeWidth={1.5} />
+        </span>
+        <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-3 animate-text-pop">You bloomed.</h2>
+        <p className="text-xs text-rose/60 italic mt-1">Your breath, your body, your quiet hour.</p>
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
+            <p className="font-script text-2xl text-hotpink leading-none">{durationMin}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">min</p>
+          </div>
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
+            <p className="font-script text-2xl text-hotpink leading-none">{flow.length}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">poses</p>
+          </div>
+          <div className="rounded-2xl bg-gradient-to-br from-hotpink/15 to-petal/40 border border-petal/60 p-2.5 animate-selected-glow">
+            <p className="font-script text-2xl text-hotpink leading-none">{streakCount}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">day streak</p>
+          </div>
+        </div>
+        <p className="mt-3 text-[11px] font-semibold text-rose/60">{intentionLabel}</p>
       </div>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
