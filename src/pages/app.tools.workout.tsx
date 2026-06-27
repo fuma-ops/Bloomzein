@@ -214,10 +214,10 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
 // ===================== HERO HEADER (Workout Programs + tabs, on image) =====================
 
 const SECTION_META: Record<"discover" | "programs" | "program" | "library", { title: string; subtitle: string }> = {
-  discover: { title: "Discover", subtitle: "Explore sessions, mini-tools, and find what fits your day." },
-  programs: { title: "Programs", subtitle: "Structured multi-week journeys with real progressive overload." },
-  program: { title: "My Program", subtitle: "Your personalized weekly plan — built for you, adjustable anytime." },
-  library: { title: "Library", subtitle: "Get familiar with every move — browse positions by zone." },
+  program: { title: "My Plan", subtitle: "Your week, day by day — start today's session in one tap." },
+  discover: { title: "Discover", subtitle: "A quick one-off session, matched to today's energy & phase." },
+  programs: { title: "Programs", subtitle: "Pick a structured multi-week journey to make your plan." },
+  library: { title: "Library", subtitle: "Every move explained — how-to, form cues & mistakes to avoid." },
 };
 
 type WorkoutTab = "discover" | "programs" | "program" | "library";
@@ -253,17 +253,16 @@ function HeroHeader({
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
-            {(["discover", "programs", "program", "library"] as const).map((t) => (
+            {(["program", "discover", "programs", "library"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => onPickTab(t)}
                 className={[
                   "rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold transition",
                   tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
-                  t === "discover" && tab === "discover" ? "animate-tab-glow-hint" : "",
                 ].join(" ")}
               >
-                {t === "discover" ? "Discover" : t === "programs" ? "Programs" : t === "program" ? "My Plan" : "Library"}
+                {t === "program" ? "My Plan" : t === "discover" ? "Discover" : t === "programs" ? "Programs" : "Library"}
               </button>
             ))}
           </div>
@@ -317,8 +316,8 @@ type ProgramRef = { programId: string; week: number; sessionIndex: number };
 export default function WorkoutPage() {
   const [onboarded, setOnboarded] = useLS<boolean>(ONBOARD_KEY, false);
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
-  const [view, setView] = useState<View>({ kind: "discover" });
-  const [tab, setTab] = useState<WorkoutTab>("discover");
+  const [view, setView] = useState<View>({ kind: "program" });
+  const [tab, setTab] = useState<WorkoutTab>("program");
   const [lowWater, setLowWater] = useState(false);
 
   useEffect(() => {
@@ -431,6 +430,7 @@ export default function WorkoutPage() {
           profile={profile}
           onStartSession={(session) => setView({ kind: "session-start", session })}
           onBestShape={() => setView({ kind: "best-shape" })}
+          onGoToPlan={() => { setTab("program"); setView({ kind: "program" }); }}
         />
       )}
       {view.kind === "programs" && (
@@ -1082,10 +1082,11 @@ function unlockedBadges(history: HistoryEntry[], streak: { count: number }): Set
   return ids;
 }
 
-function Discover({ profile, onStartSession, onBestShape }: {
+function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
   profile: WorkoutProfile;
   onStartSession: (s: WorkoutSession) => void;
   onBestShape: () => void;
+  onGoToPlan: () => void;
 }) {
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [energy, setEnergy] = useLS<{ date: string; level: EnergyLevel | null }>(ENERGY_KEY, { date: "", level: null });
@@ -1178,6 +1179,13 @@ function Discover({ profile, onStartSession, onBestShape }: {
 
   return (
     <div className="space-y-2">
+
+      {/* Quick context: this is a one-off; the plan lives in My Plan */}
+      <button onClick={onGoToPlan} className="w-full flex items-center gap-2 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 text-left transition hover:bg-blush/60 active:scale-[0.99]">
+        <CalendarHeart className="h-4 w-4 text-hotpink shrink-0" strokeWidth={1.8} />
+        <p className="flex-1 text-[11px] text-rose/75 leading-snug">A quick one-off session. Want your structured weekly plan instead?</p>
+        <span className="text-[11px] font-bold text-hotpink shrink-0">My Plan →</span>
+      </button>
 
       {/* Energy Check */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
@@ -1596,8 +1604,68 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const overallTotal = activeProgram ? activeProgram.weeks * activeProgram.template.length : 0;
   const wMeta = activeProgram ? weekMeta(activeProgram, week) : null;
 
+  // ── Today's session (the daily hero) ─────────────────────────────────────────
+  const todaySIdx = source === "program" ? programDay[todayKey] : null;
+  const todayFree = source === "freestyle" ? program?.[todayKey] ?? null : null;
+  let today: { title: string; sub: string; image: string; done: boolean; start: () => void } | null = null;
+  if (source === "program" && activeProgram && todaySIdx !== null && todaySIdx !== undefined) {
+    const s = computeWeekSession(activeProgram, todaySIdx, week);
+    today = {
+      title: s.title, sub: `${s.focus} · ${s.estMinutes} min`,
+      image: activeProgram.image,
+      done: progDoneSet.has(sessionTag(week, todaySIdx)),
+      start: () => onOpenProgramSession(activeProgram.id, week, todaySIdx),
+    };
+  } else if (todayFree) {
+    const zoneMeta = ZONES.find((z) => z.key === todayFree.zone);
+    today = {
+      title: zoneMeta?.label ?? todayFree.zone,
+      sub: `${WORKOUT_INTENTIONS.find((i) => i.key === todayFree.intention)?.label ?? ""} · ${todayFree.durationMin} min`,
+      image: zoneMeta?.image ?? HERO_IMAGES.session,
+      done: false,
+      start: () => onStartSession(buildSession(todayFree.zone, todayFree.intention, todayFree.durationMin, profile.level, phase, profile.equipment)),
+    };
+  }
+  const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
+
   return (
     <div className="space-y-4">
+
+      {/* ── TODAY hero — the daily one-tap entry ────────────────────────────── */}
+      {source !== "none" && (
+        <section className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-md animate-card-pop-in">
+          {today ? (
+            <>
+              <img src={today.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
+              <div className="relative z-[2] p-4 sm:p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">Today · {todayLong}</p>
+                <h2 className="font-script text-3xl sm:text-4xl text-white leading-none mt-0.5 drop-shadow">{today.title}</h2>
+                <p className="text-xs sm:text-sm text-white/90 mt-1 drop-shadow">{today.sub}</p>
+                {today.done ? (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-hotpink">
+                    <Check className="h-4 w-4" strokeWidth={3} /> Completed today ✿
+                  </div>
+                ) : (
+                  <button onClick={today.start} className="mt-3 bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white">
+                    <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Start today's session
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="bg-gradient-to-br from-blush/60 to-petal/40 p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Today · {todayLong}</p>
+              <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mt-0.5">Rest day ✿</h2>
+              <p className="text-xs sm:text-sm text-rose/75 mt-1">Recovery is part of the plan — let your body bloom.</p>
+              <button onClick={() => onStartSession(buildSession("full-body", "recover", 10, profile.level, phase, profile.equipment))}
+                className="mt-3 rounded-full bg-white/90 border border-petal/60 px-4 py-2 text-xs font-bold text-hotpink">
+                Or do a 10-min recovery flow
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ── Plan header ─────────────────────────────────────────────────────── */}
       {source === "program" && activeProgram && (
