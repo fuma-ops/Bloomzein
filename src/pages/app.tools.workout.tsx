@@ -214,10 +214,10 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
 // ===================== HERO HEADER (Workout Programs + tabs, on image) =====================
 
 const SECTION_META: Record<"discover" | "programs" | "program" | "library", { title: string; subtitle: string }> = {
-  discover: { title: "Discover", subtitle: "Explore sessions, mini-tools, and find what fits your day." },
-  programs: { title: "Programs", subtitle: "Structured multi-week journeys with real progressive overload." },
-  program: { title: "My Program", subtitle: "Your personalized weekly plan — built for you, adjustable anytime." },
-  library: { title: "Library", subtitle: "Get familiar with every move — browse positions by zone." },
+  program: { title: "My Plan", subtitle: "Your week, day by day — start today's session in one tap." },
+  discover: { title: "Discover", subtitle: "A quick one-off session, matched to today's energy & phase." },
+  programs: { title: "Programs", subtitle: "Pick a structured multi-week journey to make your plan." },
+  library: { title: "Library", subtitle: "Every move explained — how-to, form cues & mistakes to avoid." },
 };
 
 type WorkoutTab = "discover" | "programs" | "program" | "library";
@@ -253,17 +253,16 @@ function HeroHeader({
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
-            {(["discover", "programs", "program", "library"] as const).map((t) => (
+            {(["program", "discover", "programs", "library"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => onPickTab(t)}
                 className={[
                   "rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold transition",
                   tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
-                  t === "discover" && tab === "discover" ? "animate-tab-glow-hint" : "",
                 ].join(" ")}
               >
-                {t === "discover" ? "Discover" : t === "programs" ? "Programs" : t === "program" ? "My Plan" : "Library"}
+                {t === "program" ? "My Plan" : t === "discover" ? "Discover" : t === "programs" ? "Programs" : "Library"}
               </button>
             ))}
           </div>
@@ -317,8 +316,8 @@ type ProgramRef = { programId: string; week: number; sessionIndex: number };
 export default function WorkoutPage() {
   const [onboarded, setOnboarded] = useLS<boolean>(ONBOARD_KEY, false);
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
-  const [view, setView] = useState<View>({ kind: "discover" });
-  const [tab, setTab] = useState<WorkoutTab>("discover");
+  const [view, setView] = useState<View>({ kind: "program" });
+  const [tab, setTab] = useState<WorkoutTab>("program");
   const [lowWater, setLowWater] = useState(false);
 
   useEffect(() => {
@@ -431,6 +430,7 @@ export default function WorkoutPage() {
           profile={profile}
           onStartSession={(session) => setView({ kind: "session-start", session })}
           onBestShape={() => setView({ kind: "best-shape" })}
+          onGoToPlan={() => { setTab("program"); setView({ kind: "program" }); }}
         />
       )}
       {view.kind === "programs" && (
@@ -547,56 +547,65 @@ function programToTimerSession(program: Program, week: number, sessionIndex: num
 
 function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
   const progress = loadProgramProgress();
+  const activeId = loadActiveProgram()?.programId ?? null;
   return (
     <div className="animate-fade-in">
       <p className="mb-3 text-sm text-rose/80">
         Real coaching, not random sessions — each program builds week over week with
         progressive overload, warm-ups, cool-downs and cycle-synced effort. ✿
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
         {PROGRAMS.map((p, i) => {
           const done = (progress[p.id] ?? []).length;
           const total = p.weeks * p.template.length;
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const isActive = activeId === p.id;
           return (
             <button
               key={p.id}
               onClick={() => onOpen(p.id)}
-              className="group text-left overflow-hidden rounded-3xl border border-petal/60 bg-white/85 shadow-sm hover:shadow-xl hover:-translate-y-1 transition animate-scale-in"
+              className={[
+                "group w-full text-left flex items-stretch overflow-hidden rounded-3xl border bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in",
+                isActive ? "border-hotpink/60 ring-1 ring-hotpink/30" : "border-petal/60",
+              ].join(" ")}
               style={{ animationDelay: `${i * 70}ms` }}
             >
-              <div className="relative h-32 sm:h-36 overflow-hidden">
-                <img src={p.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                <div className="absolute top-2 left-2 flex gap-1.5">
-                  <span className="rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{p.weeks} weeks</span>
-                  {p.phaseSynced && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
-                </div>
+              {/* Photo — left */}
+              <div className="relative w-28 sm:w-40 shrink-0 overflow-hidden">
+                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
                 <span className={[
-                  "absolute top-2 right-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
+                  "absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm",
                   p.tier === "premium" ? "bg-hotpink/90 text-white" : "bg-white/90 text-hotpink",
                 ].join(" ")}>
                   {p.tier === "premium" ? <><Sparkles className="h-2.5 w-2.5" /> Premium</> : "Free"}
                 </span>
-                <div className="absolute bottom-2 left-3 right-3">
-                  <h3 className="font-script text-2xl text-white leading-none drop-shadow">{p.title}</h3>
-                </div>
+                {pct > 0 && (
+                  <div className="absolute bottom-0 inset-x-0 px-2 pb-2">
+                    <div className="h-1.5 rounded-full bg-white/40 overflow-hidden">
+                      <div className="h-full bg-hotpink transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="p-3">
-                <p className="text-[11px] text-rose/75 leading-snug">{p.tagline}</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+
+              {/* Info — right */}
+              <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{p.weeks} weeks</span>
+                    {p.phaseSynced && <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
+                  </div>
+                  {isActive && <span className="shrink-0 rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Your plan</span>}
+                </div>
+                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{p.title}</h3>
+                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{p.tagline}</p>
+                <div className="mt-auto pt-2 flex flex-wrap items-center gap-1.5">
                   <Tag icon={<Gauge className="h-3 w-3" />}>{LEVEL_LABEL[p.level]}</Tag>
                   <Tag icon={<Dumbbell className="h-3 w-3" />}>{EQUIP_LABEL[p.equipment]}</Tag>
                   <Tag icon={<CalendarHeart className="h-3 w-3" />}>{p.daysPerWeek}×/week</Tag>
+                  <ChevronRight className="h-4 w-4 text-rose/35 ml-auto shrink-0 group-hover:text-hotpink/70 transition" />
                 </div>
-                {done > 0 && (
-                  <div className="mt-2.5">
-                    <div className="h-1.5 rounded-full bg-blush overflow-hidden">
-                      <div className="h-full bg-hotpink transition-all" style={{ width: `${pct}%` }} />
-                    </div>
-                    <p className="mt-1 text-[10px] font-semibold text-hotpink">{pct}% complete</p>
-                  </div>
-                )}
               </div>
             </button>
           );
@@ -1082,10 +1091,11 @@ function unlockedBadges(history: HistoryEntry[], streak: { count: number }): Set
   return ids;
 }
 
-function Discover({ profile, onStartSession, onBestShape }: {
+function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
   profile: WorkoutProfile;
   onStartSession: (s: WorkoutSession) => void;
   onBestShape: () => void;
+  onGoToPlan: () => void;
 }) {
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [energy, setEnergy] = useLS<{ date: string; level: EnergyLevel | null }>(ENERGY_KEY, { date: "", level: null });
@@ -1178,6 +1188,13 @@ function Discover({ profile, onStartSession, onBestShape }: {
 
   return (
     <div className="space-y-2">
+
+      {/* Quick context: this is a one-off; the plan lives in My Plan */}
+      <button onClick={onGoToPlan} className="w-full flex items-center gap-2 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 text-left transition hover:bg-blush/60 active:scale-[0.99]">
+        <CalendarHeart className="h-4 w-4 text-hotpink shrink-0" strokeWidth={1.8} />
+        <p className="flex-1 text-[11px] text-rose/75 leading-snug">A quick one-off session. Want your structured weekly plan instead?</p>
+        <span className="text-[11px] font-bold text-hotpink shrink-0">My Plan →</span>
+      </button>
 
       {/* Energy Check */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
@@ -1300,29 +1317,37 @@ function Discover({ profile, onStartSession, onBestShape }: {
         )}
 
         {zone && intention && (
-          <div ref={sessionListRef} className="mt-3 grid sm:grid-cols-3 gap-2 scroll-mt-20">
+          <div ref={sessionListRef} className="mt-3 space-y-2 scroll-mt-20">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/50">Pick your length</p>
             {intentionList.map((session) => {
               const active = selectedSessionId === session.id;
+              const optimal = phase !== "any" && session.phaseOptimal.includes(phase);
               return (
               <button
                 key={session.id}
                 onClick={() => onPickSession(session)}
                 className={[
-                  "rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition text-left p-4",
-                  active ? "animate-selected-glow" : "animate-hint-glow",
+                  "w-full flex items-center gap-3 rounded-2xl bg-white/90 backdrop-blur border p-2.5 shadow-sm hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99] transition text-left",
+                  active ? "border-hotpink/60 ring-1 ring-hotpink/30 animate-selected-glow" : "border-petal/60",
                 ].join(" ")}
               >
-                <p className="font-bold text-rose">{session.name}</p>
-                <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.level} · {session.workSec}s work / {session.restSec}s rest</p>
-                <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70">{session.structureNote}</p>
-                {phase !== "any" && session.phaseOptimal.includes(phase) && (
-                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
-                    Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
-                  </p>
-                )}
-                {session.intensityNote && (
-                  <p className="mt-1.5 text-[11px] leading-snug text-rose/70">{session.intensityNote}</p>
-                )}
+                {/* Duration badge — left */}
+                <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blush/80 to-petal/60 grid place-content-center text-center border border-petal/50">
+                  <p className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{session.durationMin}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-rose/60">min</p>
+                </div>
+                {/* Info — right */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-bold text-rose leading-tight">{session.name}</p>
+                    {optimal && <span className="rounded-full bg-blush/70 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-hotpink">{PHASE_LABEL[phase]} ✿</span>}
+                  </div>
+                  <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70 leading-snug">{session.structureNote}</p>
+                  <p className="text-[10px] text-rose/55">{session.level} · {session.workSec}s work / {session.restSec}s rest</p>
+                </div>
+                <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white shadow-sm shadow-hotpink/30">
+                  <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />
+                </span>
               </button>
               );
             })}
@@ -1596,8 +1621,68 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const overallTotal = activeProgram ? activeProgram.weeks * activeProgram.template.length : 0;
   const wMeta = activeProgram ? weekMeta(activeProgram, week) : null;
 
+  // ── Today's session (the daily hero) ─────────────────────────────────────────
+  const todaySIdx = source === "program" ? programDay[todayKey] : null;
+  const todayFree = source === "freestyle" ? program?.[todayKey] ?? null : null;
+  let today: { title: string; sub: string; image: string; done: boolean; start: () => void } | null = null;
+  if (source === "program" && activeProgram && todaySIdx !== null && todaySIdx !== undefined) {
+    const s = computeWeekSession(activeProgram, todaySIdx, week);
+    today = {
+      title: s.title, sub: `${s.focus} · ${s.estMinutes} min`,
+      image: activeProgram.image,
+      done: progDoneSet.has(sessionTag(week, todaySIdx)),
+      start: () => onOpenProgramSession(activeProgram.id, week, todaySIdx),
+    };
+  } else if (todayFree) {
+    const zoneMeta = ZONES.find((z) => z.key === todayFree.zone);
+    today = {
+      title: zoneMeta?.label ?? todayFree.zone,
+      sub: `${WORKOUT_INTENTIONS.find((i) => i.key === todayFree.intention)?.label ?? ""} · ${todayFree.durationMin} min`,
+      image: zoneMeta?.image ?? HERO_IMAGES.session,
+      done: false,
+      start: () => onStartSession(buildSession(todayFree.zone, todayFree.intention, todayFree.durationMin, profile.level, phase, profile.equipment)),
+    };
+  }
+  const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
+
   return (
     <div className="space-y-4">
+
+      {/* ── TODAY hero — the daily one-tap entry ────────────────────────────── */}
+      {source !== "none" && (
+        <section className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-md animate-card-pop-in">
+          {today ? (
+            <>
+              <img src={today.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
+              <div className="relative z-[2] p-4 sm:p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">Today · {todayLong}</p>
+                <h2 className="font-script text-3xl sm:text-4xl text-white leading-none mt-0.5 drop-shadow">{today.title}</h2>
+                <p className="text-xs sm:text-sm text-white/90 mt-1 drop-shadow">{today.sub}</p>
+                {today.done ? (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-hotpink">
+                    <Check className="h-4 w-4" strokeWidth={3} /> Completed today ✿
+                  </div>
+                ) : (
+                  <button onClick={today.start} className="mt-3 bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white">
+                    <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Start today's session
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="bg-gradient-to-br from-blush/60 to-petal/40 p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Today · {todayLong}</p>
+              <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mt-0.5">Rest day ✿</h2>
+              <p className="text-xs sm:text-sm text-rose/75 mt-1">Recovery is part of the plan — let your body bloom.</p>
+              <button onClick={() => onStartSession(buildSession("full-body", "recover", 10, profile.level, phase, profile.equipment))}
+                className="mt-3 rounded-full bg-white/90 border border-petal/60 px-4 py-2 text-xs font-bold text-hotpink">
+                Or do a 10-min recovery flow
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ── Plan header ─────────────────────────────────────────────────────── */}
       {source === "program" && activeProgram && (
