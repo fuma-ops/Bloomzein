@@ -12,6 +12,7 @@ import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
 import {
@@ -133,64 +134,25 @@ const PHASE_GRADIENT: Record<Exclude<CyclePhase, "any">, string> = {
   luteal:     "from-petal/60 via-blush/20 to-transparent",
 };
 
-type PlanItem = { id: string; label: string; time: string; Icon: typeof Heart; tool: string; image: string; blurb: string; prompt?: string };
-
-// Every phase gets a full day: a meal to eat, a yoga flow, a workout (phase-
-// appropriate intensity) and a journaling prompt — ordered through the day.
-const PHASE_PLAN: Record<Exclude<CyclePhase, "any">, { yoga: string; pose: string; recBlurb: string } & { items: PlanItem[] }> = {
-  period: {
-    yoga: "Restorative Flow", pose: "/images/pose-childs-pose.webp",
-    recBlurb: "Slow, supported stretches to soften cramps and ease tension.",
-    items: [
-      { id: "meal",    label: "Iron-rich bowl",        time: "12:30", Icon: Heart,     tool: "/app/tools/diet",    image: "/images/meal-stew.jpg",           blurb: "Replenish iron and comfort your body" },
-      { id: "workout", label: "Gentle mobility",       time: "16:00", Icon: Dumbbell,  tool: "/app/tools/workout", image: "/images/zone-core.png",           blurb: "Light, easy movement — no pressure" },
-      { id: "yoga",    label: "Restorative Flow",      time: "18:00", Icon: Flower2,   tool: "/app/tools/yoga",    image: "/images/pose-childs-pose.webp",   blurb: "Ease cramps with gentle supported poses" },
-      { id: "journal", label: "Journal prompt",        time: "21:00", Icon: BookHeart, tool: "/app/tools/diary",   image: "/images/cycle-journal-hero.webp", blurb: "What is my body asking me for today?", prompt: "What is my body asking me for today?" },
-    ],
-  },
-  follicular: {
-    yoga: "Energizing Flow", pose: "/images/pose-warrior-2.webp",
-    recBlurb: "Build heat and strength while your energy is on the rise.",
-    items: [
-      { id: "yoga",    label: "Energizing Flow",    time: "08:00", Icon: Flower2,  tool: "/app/tools/yoga",    image: "/images/pose-warrior-2.webp",      blurb: "Build heat as your energy rises" },
-      { id: "meal",    label: "Fresh, light lunch", time: "13:00", Icon: Heart,    tool: "/app/tools/diet",    image: "/images/meal-buddha.jpg",          blurb: "Fuel your comeback energy naturally" },
-      { id: "workout", label: "Strength training",  time: "17:30", Icon: Dumbbell, tool: "/app/tools/workout", image: "/images/workout-hero-session.png", blurb: "Channel rising strength into progress" },
-      { id: "journal", label: "Journal prompt",     time: "21:00", Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/cycle-journal-hero.webp",  blurb: "What new thing do I want to begin?", prompt: "What new thing do I want to begin this cycle?" },
-    ],
-  },
-  fertile: {
-    yoga: "Balance & Strength Flow", pose: "/images/pose-tree.webp",
-    recBlurb: "Channel your magnetic energy into balance and focus.",
-    items: [
-      { id: "yoga",    label: "Balance & Strength Flow", time: "08:00", Icon: Flower2,   tool: "/app/tools/yoga",    image: "/images/pose-tree.webp",              blurb: "Channel magnetic energy into balance" },
-      { id: "meal",    label: "Antioxidant bowl",        time: "13:00", Icon: Heart,     tool: "/app/tools/diet",    image: "/images/meal-lunchbox.jpg",           blurb: "Support your body at peak phase" },
-      { id: "workout", label: "Cardio burst",            time: "17:30", Icon: Dumbbell,  tool: "/app/tools/workout", image: "/images/workout-hero-bestshape.webp", blurb: "You're at peak power — push it" },
-      { id: "journal", label: "Journal prompt",          time: "21:00", Icon: BookHeart, tool: "/app/tools/diary",   image: "/images/cycle-journal-hero.webp",     blurb: "Where do I feel most magnetic right now?", prompt: "Where do I feel most magnetic and alive right now?" },
-    ],
-  },
-  ovulation: {
-    yoga: "Power Flow", pose: "/images/pose-triangle.webp",
-    recBlurb: "Make the most of peak energy with a powerful, open flow.",
-    items: [
-      { id: "yoga",    label: "Power Flow",             time: "08:00", Icon: Flower2,  tool: "/app/tools/yoga",    image: "/images/pose-triangle.webp",       blurb: "Open and strong — your best flow" },
-      { id: "meal",    label: "Protein-rich lunch",     time: "13:00", Icon: Heart,    tool: "/app/tools/diet",    image: "/images/meal-buddha.jpg",          blurb: "Fuel and replenish at your peak" },
-      { id: "workout", label: "High-intensity session", time: "17:30", Icon: Dumbbell, tool: "/app/tools/workout", image: "/images/workout-hero-program.png", blurb: "Make the most of your peak energy" },
-      { id: "journal", label: "Journal prompt",         time: "21:00", Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/cycle-journal-hero.webp",  blurb: "What am I proud of about myself today?", prompt: "What am I genuinely proud of about myself today?" },
-    ],
-  },
-  luteal: {
-    yoga: "Calming Flow", pose: "/images/pose-legs-up-wall.webp",
-    recBlurb: "Wind down with grounding poses that ease tension and mood dips.",
-    items: [
-      { id: "meal",    label: "Magnesium-rich meal", time: "12:30", Icon: Heart,     tool: "/app/tools/diet",    image: "/images/meal-oats.jpg",          blurb: "Ease mood dips and cravings gently" },
-      { id: "workout", label: "Light toning",        time: "16:30", Icon: Dumbbell,  tool: "/app/tools/workout", image: "/images/zone-back.png",          blurb: "Soft, steady toning — honour the fatigue" },
-      { id: "yoga",    label: "Calming Flow",        time: "18:00", Icon: Flower2,   tool: "/app/tools/yoga",    image: "/images/pose-legs-up-wall.webp", blurb: "Grounding poses for mind and body" },
-      { id: "journal", label: "Journal prompt",      time: "21:00", Icon: BookHeart, tool: "/app/tools/diary",   image: "/images/cycle-journal-hero.webp", blurb: "What boundary do I need to honour today?", prompt: "What boundary do I need to honour today?" },
-    ],
-  },
+type PlanItem = {
+  id: string; label: string; time: string; Icon: typeof Heart; tool: string;
+  image: string; blurb: string; prompt?: string;
+  launch?: { key: string; val: unknown };
 };
 
-const DIARY_PROMPT_KEY = "bloom:diary-prompt";
+// Build today's plan items from the SHARED phase plan (same source the Cycle
+// Tracker uses), ordered by time. Yoga/workout carry a deep-link launch so a
+// tap opens that exact flow/session; the journal carries its prompt.
+function buildPlanItems(phase: Exclude<CyclePhase, "any">): PlanItem[] {
+  const p = SHARED_PHASE_PLAN[phase];
+  const items: PlanItem[] = [
+    { id: "meal",    label: p.meal.title,    time: p.meal.time,    Icon: Heart,     tool: "/app/tools/diet",    image: p.meal.image,    blurb: p.meal.blurb },
+    { id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell,  tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } },
+    { id: "yoga",    label: p.yoga.title,    time: p.yoga.time,    Icon: Flower2,   tool: "/app/tools/yoga",    image: p.yoga.image,    blurb: p.yoga.blurb,    launch: { key: LAUNCH_YOGA_KEY, val: p.yoga.launch } },
+    { id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt },
+  ];
+  return items.sort((a, b) => a.time.localeCompare(b.time));
+}
 
 const AFFIRMATIONS: Record<Exclude<CyclePhase, "any">, string[]> = {
   period:     ["Rest is a radical act of self-love.", "Your body is working hard. Let it.", "Softness is strength."],
@@ -500,22 +462,22 @@ export default function TodayPage() {
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
-  const plan      = PHASE_PLAN[phase];
+  const planItems = useMemo(() => buildPlanItems(phase), [phase]);
   const moodHint  = MOODS[moodHintIdx];
   const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
   const affirmPool = AFFIRMATIONS[phase];
   const affirmText = affirmPool[affirmIdx % affirmPool.length];
 
   const checklist = useMemo(() => {
-    const yogaItem    = plan.items.find((i) => i.id === "yoga" || i.id === "workout");
-    const journalItem = plan.items.find((i) => i.id === "journal" || i.id === "meditation");
+    const yogaItem    = planItems.find((i) => i.id === "yoga" || i.id === "workout");
+    const journalItem = planItems.find((i) => i.id === "journal" || i.id === "meditation");
     return [
       { key: "mood",    label: "Log your mood",  done: !!mood,                                                   href: "",                tool: "" },
       { key: "water",   label: "Hit water goal",  done: waterCount >= waterGoal,                                  href: "#hydration",      tool: "" },
       { key: "move",    label: yogaItem?.label ?? "Move",    done: yogaItem    ? planDone.includes(yogaItem.id)    : false, href: yogaItem?.tool    ?? "/app/tools/yoga",  tool: yogaItem?.tool    ?? "" },
       { key: "journal", label: "Write in diary",  done: journalItem ? planDone.includes(journalItem.id) : false, href: "/app/tools/diary", tool: "/app/tools/diary" },
     ];
-  }, [mood, waterCount, waterGoal, planDone, plan]);
+  }, [mood, waterCount, waterGoal, planDone, planItems]);
 
   const bloomPercent  = Math.round((checklist.filter((c) => c.done).length / checklist.length) * 100);
   const bloomFull     = bloomPercent === 100;
@@ -631,14 +593,17 @@ export default function TodayPage() {
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Plan ✿</SectionTitle>
         <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
-          {plan.items.map((item, i) => {
+          {planItems.map((item, i) => {
             const done   = planDone.includes(item.id);
             const timing = planItemTiming(item.time);
             return (
               <a
                 key={item.id}
                 href={item.tool}
-                onClick={() => { if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} } }}
+                onClick={() => {
+                  if (item.launch) writeLaunch(item.launch.key, item.launch.val);
+                  if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
+                }}
                 className="flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20 active:bg-blush/40 active:scale-[0.99]"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
