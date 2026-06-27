@@ -617,6 +617,12 @@ export default function TodayPage() {
         </section>
       )}
 
+      {/* ══ DESKTOP: 60% main content + 40% sticky smart panel (CLAUDE.md) ══ */}
+      <div className="lg:grid lg:grid-cols-5 lg:gap-x-6 lg:items-start">
+
+      {/* ── MAIN COLUMN (lg:col-span-3) ─────────────────────────────────────── */}
+      <div className="lg:col-span-3">
+
       {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) ───────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Plan ✿</SectionTitle>
@@ -767,6 +773,11 @@ export default function TodayPage() {
           </section>
         );
       })()}
+
+      </div>{/* /MAIN COLUMN */}
+
+      {/* ── SMART RIGHT PANEL (lg:col-span-2, sticky) ───────────────────────── */}
+      <aside className="lg:col-span-2 lg:sticky lg:top-4 self-start">
 
       {/* ── 3. YOUR BLOOM TODAY (ring + checklist) ─────────────────────────────────────────────── */}
       <section id="bloom-today" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
@@ -1009,6 +1020,9 @@ export default function TodayPage() {
           </div>
         </div>
       </section>
+
+      </aside>{/* /SMART RIGHT PANEL */}
+      </div>{/* /2-column grid */}
 
       {/* ── WATER GOAL MODAL ────────────────────────────────────────────────── */}
       {waterModalOpen && (
