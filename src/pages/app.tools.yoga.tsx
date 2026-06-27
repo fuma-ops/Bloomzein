@@ -291,6 +291,16 @@ const FOCUS_PREVIEW: Record<string, { image: string; duration: string }> = {
   "Strength":       { image: "/images/pose-plank.webp", duration: "20-30 min" },
 };
 
+// Maps a scheduled focus label to a runnable flow (intention + duration + image),
+// so a day in the plan can be started in one tap.
+const FOCUS_META: Record<string, { intention: Intention; duration: number; image: string; blurb: string }> = {
+  "Morning energy": { intention: "morning",  duration: 15, image: "/images/pose-mountain.webp",              blurb: "Wake the body, light up the day" },
+  "Stress relief":  { intention: "stress",   duration: 15, image: "/images/pose-childs-pose.webp",           blurb: "Soft, slow — exhale the day away" },
+  "Sleep prep":     { intention: "sleep",    duration: 20, image: "/images/pose-legs-up-wall.webp",          blurb: "Gentle floor flow into deep rest" },
+  "Cycle sync":     { intention: "cycle",    duration: 20, image: "/images/pose-reclined-bound-angle.webp",  blurb: "Matched to today's phase" },
+  "Strength":       { intention: "strength", duration: 25, image: "/images/pose-plank.webp",                 blurb: "Build steady, mindful power" },
+};
+
 function buildFlow(opts: {
   intention: Intention; level: Level; durationMin: number; phase: Phase; mode: Mode;
 }): Pose[] {
@@ -569,7 +579,7 @@ type View =
 export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [view, setView] = useState<View>({ kind: "home" });
+  const [view, setView] = useState<View>({ kind: "plan" });
   const [lowWater, setLowWater] = useState(false);
 
   useEffect(() => {
@@ -728,9 +738,9 @@ function YogaHero({
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
+            <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
             <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
             <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
-            <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
           </div>
         </div>
       </div>
@@ -821,15 +831,15 @@ function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; dura
   const { streak, phaseSuggestion } = useYogaPhaseAndStreak();
 
   return (
-    <div className="space-y-4 sm:space-y-6 yoga-fade">
+    <div className="space-y-4 yoga-fade">
+      {/* TODAY HERO + WEEK (day by day, tappable to start) */}
+      <Organizer phase={phaseSuggestion.phase} onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
+
       {/* STREAK + CYCLE SUGGESTION */}
       <section className="grid gap-3 sm:grid-cols-2">
         <StreakCard streak={streak} />
         <CycleSyncCard phase={phaseSuggestion.phase} label={phaseSuggestion.label} onClick={() => onSetup({ intention: "cycle", durationMin: 20 })} />
       </section>
-
-      {/* ORGANIZER */}
-      <Organizer phase={phaseSuggestion.phase} />
 
       {/* SAFETY */}
       <p className="animate-scale-in text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5" style={{ animationDelay: "640ms" }}>
@@ -1014,9 +1024,10 @@ function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string;
   );
 }
 
-function Organizer({ phase }: { phase: Phase }) {
+function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Intention, durationMin: number) => void }) {
   const [schedule, setSchedule] = useState<Record<string, string | null>>({});
   const [reminder, setReminder] = useState("07:30");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     try {
@@ -1096,48 +1107,101 @@ function Organizer({ phase }: { phase: Phase }) {
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength"];
+  const todayKey = WEEKDAY_LABELS[new Date().getDay()];
+  const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
+  const todayFocus = schedule[todayKey];
+  const todayMeta = todayFocus ? FOCUS_META[todayFocus] : null;
+
+  const startFocus = (focus: string | null | undefined) => {
+    if (!focus) return;
+    const meta = FOCUS_META[focus];
+    if (meta) onStart(meta.intention, meta.duration);
+  };
 
   return (
-    <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "160ms" }}>
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Organizer</p>
-          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">your soft week</h2>
-        </div>
-        <label className="inline-flex items-center gap-2 text-xs font-semibold text-rose">
-          <BellRing className="h-3.5 w-3.5" /> Reminder
-          <input type="time" value={reminder} onChange={(e) => updateReminder(e.target.value)}
-            className="rounded-full bg-blush/60 border border-petal/60 px-3 py-1 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
-        </label>
-      </div>
-      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-        {days.map((d, i) => {
-          const focus = schedule[d];
-          const preview = focus ? FOCUS_PREVIEW[focus] : undefined;
-          return (
-            <div key={d} className="animate-scale-in rounded-2xl bg-blush/40 border border-petal/50 p-2" style={{ animationDelay: `${220 + i * 60}ms` }}>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/70 mb-1">{d}</p>
-              <select
-                value={schedule[d] ?? ""}
-                onChange={(e) => update(d, e.target.value || null)}
-                className="w-full rounded-lg bg-white/90 border border-petal/60 px-2 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-              >
-                {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest"}</option>)}
-              </select>
-              {preview && (
-                <div className="animate-scale-in mt-1.5 flex items-center gap-1.5 rounded-xl bg-white/80 p-1">
-                  <img src={preview.image} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover object-top" />
-                  <div className="min-w-0 leading-tight">
-                    <p className="truncate text-[10px] font-bold text-rose">{focus}</p>
-                    <p className="text-[9px] font-semibold text-rose/60">{preview.duration}</p>
-                  </div>
-                </div>
-              )}
+    <div className="space-y-4">
+      {/* ── TODAY hero — one-tap entry ──────────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-md animate-scale-in">
+        {todayMeta ? (
+          <>
+            <img src={todayMeta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" />
+            <div className="relative z-[2] p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">Today · {todayLong}</p>
+              <h2 className="font-script text-3xl sm:text-4xl text-white leading-none mt-0.5 drop-shadow">{todayFocus}</h2>
+              <p className="text-xs sm:text-sm text-white/90 mt-1 drop-shadow">{todayMeta.blurb} · {todayMeta.duration} min</p>
+              <button onClick={() => startFocus(todayFocus)} className="mt-3 bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white">
+                <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Start today's flow
+              </button>
             </div>
-          );
-        })}
-      </div>
-    </section>
+          </>
+        ) : (
+          <div className="bg-gradient-to-br from-blush/60 to-petal/40 p-4 sm:p-5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Today · {todayLong}</p>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mt-0.5">Rest day ✿</h2>
+            <p className="text-xs sm:text-sm text-rose/75 mt-1">Stillness is part of the practice. Or flow gently if you feel called.</p>
+            <button onClick={() => onStart("stress", 10)} className="mt-3 rounded-full bg-white/90 border border-petal/60 px-4 py-2 text-xs font-bold text-hotpink">Or a 10-min calm flow</button>
+          </div>
+        )}
+      </section>
+
+      {/* ── The week, day by day ────────────────────────────────────────────── */}
+      <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
+            <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose">
+              <BellRing className="h-3.5 w-3.5" />
+              <input type="time" value={reminder} onChange={(e) => updateReminder(e.target.value)}
+                className="rounded-full bg-blush/60 border border-petal/60 px-2.5 py-1 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+            </label>
+            <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1 text-[11px] font-bold border transition", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60"].join(" ")}>
+              {editing ? "Done" : "Edit"}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {days.map((d) => {
+            const focus = schedule[d];
+            const meta = focus ? FOCUS_META[focus] : null;
+            const isToday = d === todayKey;
+            return (
+              <div key={d} className={["rounded-2xl border p-2.5 flex items-center gap-3 transition",
+                isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
+                <div className="w-12 shrink-0 text-center">
+                  <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                  {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                </div>
+                {editing ? (
+                  <select
+                    value={focus ?? ""}
+                    onChange={(e) => update(d, e.target.value || null)}
+                    className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                  >
+                    {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
+                  </select>
+                ) : !focus || !meta ? (
+                  <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                ) : (
+                  <button onClick={() => startFocus(focus)} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
+                    <img src={meta.image} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover object-top border border-petal/50" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-rose leading-tight truncate">{focus}</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                    </div>
+                    <span className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white shadow-sm"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </div>
   );
 }
 
