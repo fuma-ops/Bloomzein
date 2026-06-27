@@ -1950,34 +1950,65 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   const warmCount = session.steps.filter((s) => s.kind === "warmup").length;
   const coolCount = session.steps.filter((s) => s.kind === "cooldown").length;
 
+  // Unique moves across the whole session (warm-up → work → cool-down), in order.
+  const uniqueMoves = (() => {
+    const seen = new Set<string>();
+    return session.steps.filter((s) => { if (seen.has(s.exercise.slug)) return false; seen.add(s.exercise.slug); return true; });
+  })();
+
   return (
-    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-center p-4 overflow-y-auto">
-      <div className="relative w-full max-w-md rounded-3xl bg-white/95 border border-petal/60 shadow-2xl text-center overflow-hidden my-8">
-        <ExercisePhoto exercise={first} zone={session.zone} className="w-full aspect-square object-contain object-center bg-blush/20" />
-        <button onClick={onExit} className="absolute right-3 top-3 rounded-full bg-white/85 p-2 text-rose border border-petal/60"><X className="h-4 w-4" /></button>
-        <div className="p-6 sm:p-8">
-        <h1 className="font-script text-4xl text-hotpink leading-none mb-2">{session.name}</h1>
-        <p className="text-sm text-rose/80 mb-1">{session.durationMin} min · {session.level} · {session.steps.length} steps</p>
-        <p className="text-[11px] font-semibold text-hotpink/70 mb-4">{session.structureNote}</p>
-        <div className="flex justify-center gap-2 mb-4">
-          {zone && <span className="rounded-full bg-blush/70 px-3 py-1 text-xs font-semibold text-rose">{zone.label}</span>}
-          {intention && <span className="rounded-full bg-blush/70 px-3 py-1 text-xs font-semibold text-rose">{intention.label}</span>}
+    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-3 sm:p-4 overflow-y-auto" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+      <div className="relative w-full max-w-md rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden my-4 sm:my-8 animate-scale-in">
+        {/* Hero */}
+        <div className="relative aspect-[16/10] overflow-hidden">
+          <ExercisePhoto exercise={first} zone={session.zone} className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
+          <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90"><X className="h-4 w-4" /></button>
+          {phase !== "any" && session.phaseOptimal.includes(phase) && (
+            <span className="absolute top-3 left-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {PHASE_LABEL[phase]} optimized</span>
+          )}
+          <div className="absolute bottom-0 inset-x-0 p-4">
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {zone && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{zone.label}</span>}
+              {intention && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{intention.label}</span>}
+            </div>
+            <h1 className="font-script text-3xl sm:text-4xl text-white leading-none drop-shadow">{session.name}</h1>
+            <p className="text-[11px] sm:text-xs text-white/90 mt-1 drop-shadow">{session.durationMin} min · {session.level} · {session.structureNote}</p>
+          </div>
         </div>
-        {phase !== "any" && session.phaseOptimal.includes(phase) && (
-          <p className="mb-4 text-xs font-bold uppercase tracking-wide text-hotpink">Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase</p>
-        )}
-        {/* What's inside */}
-        <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 mb-4 text-left">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">What's inside</p>
-          <ul className="space-y-1 text-xs text-rose/80">
-            {warmCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">1</span> Warm-up · {warmCount} move{warmCount > 1 ? "s" : ""}</li>}
-            <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold">{warmCount > 0 ? 2 : 1}</span> {session.rounds} round{session.rounds > 1 ? "s" : ""} × {session.exercises.length} moves · {session.workSec}s work / {session.restSec}s rest</li>
-            {coolCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">{warmCount > 0 ? 3 : 2}</span> Cool-down · {coolCount} stretch{coolCount > 1 ? "es" : ""}</li>}
-          </ul>
-        </div>
-        <button onClick={onStart} className="bloom-luxury-btn inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white">
-          <Play className="h-5 w-5" /> Start
-        </button>
+
+        <div className="p-4 sm:p-5 space-y-4">
+          {/* What's inside */}
+          <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 text-left">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">What's inside</p>
+            <ul className="space-y-1 text-xs text-rose/80">
+              {warmCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">1</span> Warm-up · {warmCount} move{warmCount > 1 ? "s" : ""}</li>}
+              <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold">{warmCount > 0 ? 2 : 1}</span> {session.rounds} round{session.rounds > 1 ? "s" : ""} × {session.exercises.length} moves · {session.workSec}s work / {session.restSec}s rest</li>
+              {coolCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">{warmCount > 0 ? 3 : 2}</span> Cool-down · {coolCount} stretch{coolCount > 1 ? "es" : ""}</li>}
+            </ul>
+          </div>
+
+          {/* Moves preview */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-2">The moves · {uniqueMoves.length}</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {uniqueMoves.map((s, i) => (
+                <div key={`${s.exercise.slug}-${i}`} className="shrink-0 w-20 text-center">
+                  <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-petal/50">
+                    <ExercisePhoto exercise={s.exercise} zone={session.zone} className="h-full w-full object-cover" />
+                    {s.kind !== "work" && (
+                      <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[7px] font-bold uppercase tracking-wide py-0.5">{s.kind === "warmup" ? "Warm-up" : "Cool-down"}</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[9px] font-semibold text-rose/75 leading-tight line-clamp-2">{s.exercise.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={onStart} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3.5 text-base font-bold text-white">
+            <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start session
+          </button>
         </div>
       </div>
     </div>
