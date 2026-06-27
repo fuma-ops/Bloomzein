@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { readTodayMood, writeTodayMood } from "@/lib/crossToolData";
+import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 
 /* ─── Types & persistence ─────────────────────────────────────────── */
 
@@ -290,6 +291,24 @@ const JOURNAL_PROMPTS = [
   "What does your body need?",
 ];
 
+// Phase-aware prompts — the diary, like every tool, reflects the user's cycle.
+const PHASE_PROMPTS: Record<Exclude<CyclePhase, "any">, string[]> = {
+  period:     ["What is my body asking me for today?", "How can I be gentler with myself right now?", "What would rest look like today?"],
+  follicular: ["What new thing do I want to begin this cycle?", "What's sparking my curiosity lately?", "Where do I feel fresh energy rising?"],
+  fertile:    ["Where do I feel most magnetic and alive right now?", "What am I drawing toward me?", "How do I want to show up today?"],
+  ovulation:  ["What am I genuinely proud of about myself today?", "Where is my confidence shining?", "What do I want to say yes to?"],
+  luteal:     ["What boundary do I need to honour today?", "What's quietly asking for my attention?", "What can I let go of this evening?"],
+};
+
+function pickPhasePrompt(): string {
+  const phase = readCyclePhase();
+  if (phase && phase !== "any") {
+    const pool = PHASE_PROMPTS[phase];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  return JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)];
+}
+
 const JOURNALING_IDEAS = [
   { id: 0, icon: "🌸", label: "Morning pages", desc: "stream of consciousness, no filter" },
   { id: 1, icon: "✨", label: "Gratitude list", desc: "3 things that made you smile" },
@@ -337,7 +356,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
       const handed = localStorage.getItem("bloom:diary-prompt");
       if (handed) { localStorage.removeItem("bloom:diary-prompt"); return handed; }
     } catch {}
-    return JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)];
+    return pickPhasePrompt();
   });
   const [promptDismissed, setPromptDismissed] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -609,7 +628,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
           setSizes({});
           setTitleDraft("");
           setPromptDismissed(false);
-          setActivePrompt(JOURNAL_PROMPTS[Math.floor(Math.random() * JOURNAL_PROMPTS.length)]);
+          setActivePrompt(pickPhasePrompt());
           setPageFull(false);
           setPickerOpen(false);
         }} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 8, flexShrink: 0, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12.5, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>Save entry ✿</button>

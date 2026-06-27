@@ -12,7 +12,7 @@ import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
+import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
 import {
@@ -146,7 +146,7 @@ type PlanItem = {
 function buildPlanItems(phase: Exclude<CyclePhase, "any">): PlanItem[] {
   const p = SHARED_PHASE_PLAN[phase];
   const items: PlanItem[] = [
-    { id: "meal",    label: p.meal.title,    time: p.meal.time,    Icon: Heart,     tool: "/app/tools/diet",    image: p.meal.image,    blurb: p.meal.blurb },
+    { id: "meal",    label: p.meal.title,    time: p.meal.time,    Icon: Heart,     tool: "/app/tools/meals",   image: p.meal.image,    blurb: p.meal.blurb },
     { id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell,  tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } },
     { id: "yoga",    label: p.yoga.title,    time: p.yoga.time,    Icon: Flower2,   tool: "/app/tools/yoga",    image: p.yoga.image,    blurb: p.yoga.blurb,    launch: { key: LAUNCH_YOGA_KEY, val: p.yoga.launch } },
     { id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt },
@@ -670,13 +670,13 @@ export default function TodayPage() {
           <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "75ms" }}>
             <SectionTitle hint="nutrition">Today's Meals ✿</SectionTitle>
             {planned.length === 0 ? (
-              <a href="/app/tools/diet" className="bloom-pearl-card pearl-sheen rounded-3xl p-4 flex items-center gap-3 transition hover:-translate-y-0.5">
+              <a href="/app/tools/meals" className="bloom-pearl-card pearl-sheen rounded-3xl p-4 flex items-center gap-3 transition hover:-translate-y-0.5">
                 <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
                   <Heart className="h-4 w-4" strokeWidth={1.8} />
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-[#831843]">Plan your meals ✿</p>
-                  <p className="text-[10px] text-rose/60 leading-snug">Let Diet suggest recipes tailored to your {PHASE_LABEL[phase]} phase</p>
+                  <p className="text-[10px] text-rose/60 leading-snug">Generate a full day — breakfast, lunch, dinner & snack — for your {PHASE_LABEL[phase]} phase</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
               </a>
@@ -691,7 +691,8 @@ export default function TodayPage() {
                   return (
                     <a
                       key={slot}
-                      href="/app/tools/diet"
+                      href="/app/tools/meals"
+                      onClick={() => writeLaunch(LAUNCH_MEAL_KEY, recipe.id)}
                       className="flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20 active:scale-[0.99]"
                     >
                       {/* Meal image with slot label */}
@@ -736,7 +737,7 @@ export default function TodayPage() {
                 })}
               </div>
             )}
-            <a href="/app/tools/diet" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
+            <a href="/app/tools/meals" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
               Manage meals <ArrowRight className="h-3 w-3" strokeWidth={2} />
             </a>
           </section>
