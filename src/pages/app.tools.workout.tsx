@@ -1317,29 +1317,37 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
         )}
 
         {zone && intention && (
-          <div ref={sessionListRef} className="mt-3 grid sm:grid-cols-3 gap-2 scroll-mt-20">
+          <div ref={sessionListRef} className="mt-3 space-y-2 scroll-mt-20">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/50">Pick your length</p>
             {intentionList.map((session) => {
               const active = selectedSessionId === session.id;
+              const optimal = phase !== "any" && session.phaseOptimal.includes(phase);
               return (
               <button
                 key={session.id}
                 onClick={() => onPickSession(session)}
                 className={[
-                  "rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 transition text-left p-4",
-                  active ? "animate-selected-glow" : "animate-hint-glow",
+                  "w-full flex items-center gap-3 rounded-2xl bg-white/90 backdrop-blur border p-2.5 shadow-sm hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99] transition text-left",
+                  active ? "border-hotpink/60 ring-1 ring-hotpink/30 animate-selected-glow" : "border-petal/60",
                 ].join(" ")}
               >
-                <p className="font-bold text-rose">{session.name}</p>
-                <p className="mt-1 text-xs text-rose/70">{session.durationMin} min · {session.level} · {session.workSec}s work / {session.restSec}s rest</p>
-                <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70">{session.structureNote}</p>
-                {phase !== "any" && session.phaseOptimal.includes(phase) && (
-                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
-                    Optimized for your {PHASE_LABEL[phase].toLowerCase()} phase
-                  </p>
-                )}
-                {session.intensityNote && (
-                  <p className="mt-1.5 text-[11px] leading-snug text-rose/70">{session.intensityNote}</p>
-                )}
+                {/* Duration badge — left */}
+                <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blush/80 to-petal/60 grid place-content-center text-center border border-petal/50">
+                  <p className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{session.durationMin}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-rose/60">min</p>
+                </div>
+                {/* Info — right */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-bold text-rose leading-tight">{session.name}</p>
+                    {optimal && <span className="rounded-full bg-blush/70 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-hotpink">{PHASE_LABEL[phase]} ✿</span>}
+                  </div>
+                  <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70 leading-snug">{session.structureNote}</p>
+                  <p className="text-[10px] text-rose/55">{session.level} · {session.workSec}s work / {session.restSec}s rest</p>
+                </div>
+                <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white shadow-sm shadow-hotpink/30">
+                  <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />
+                </span>
               </button>
               );
             })}
