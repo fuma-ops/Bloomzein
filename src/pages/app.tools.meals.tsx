@@ -42,6 +42,8 @@ import {
 
 
 import { readTodaySymptoms } from "@/lib/crossToolData";
+import { readCyclePhase } from "@/components/bloom/cyclePhase";
+import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
 const MEAL_PHOTO_FALLBACK: Record<string, string> = {
@@ -271,7 +273,19 @@ export default function MealsPage() {
     setTodaySymptoms(readTodaySymptoms());
     const refresh = () => setTodaySymptoms(readTodaySymptoms());
     window.addEventListener("storage", refresh);
+
+    // Default to the user's real cycle phase so meals are phase-appropriate
+    // out of the box (instead of "any").
+    if (phase === "any") {
+      const real = readCyclePhase();
+      if (real && real !== "any") setPhase(real as CyclePhase);
+    }
+    // Deep-link from Today / Cycle: open the tapped recipe straight away.
+    const recipeId = readLaunch<string>(LAUNCH_MEAL_KEY);
+    if (recipeId) setOpenRecipe(recipeId);
+
     return () => window.removeEventListener("storage", refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const owned = useMemo(() => pantrySet(pantry), [pantry]);

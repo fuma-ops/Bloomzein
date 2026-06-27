@@ -14,6 +14,7 @@ import type { CyclePhase } from "./cyclePhase";
 
 export const LAUNCH_YOGA_KEY    = "bloom:launch-yoga";
 export const LAUNCH_WORKOUT_KEY = "bloom:launch-workout";
+export const LAUNCH_MEAL_KEY    = "bloom:launch-meal";   // value = recipe id to open
 export const DIARY_PROMPT_KEY   = "bloom:diary-prompt";
 
 export type YogaLaunch    = { intention: string; durationMin: number };
