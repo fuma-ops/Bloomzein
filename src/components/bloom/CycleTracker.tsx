@@ -853,6 +853,28 @@ export function CycleTracker() {
             </div>
           </div>
 
+          {/* ── TODAY FOR YOUR PHASE ── */}
+          <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")} style={cardStyle}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="grid place-items-center rounded-full" style={{ width: 24, height: 24, background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[currentPhase]} /></svg>
+              </span>
+              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>Today, in your {PHASE_LABEL[currentPhase].toLowerCase()} phase</h3>
+            </div>
+            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{PHASE_INSIGHT[currentPhase]}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-2.5">
+              {PHASE_TODAY_INSIGHTS[currentPhase].map((it) => (
+                <div key={it.label} className={["rounded-2xl p-2.5 flex flex-col gap-1", it.bg].join(" ")} style={{ border: '1px solid rgba(236,72,153,.08)' }}>
+                  <span className={["grid h-7 w-7 place-items-center rounded-full bg-white/70", it.color].join(" ")}>
+                    <it.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
+                  </span>
+                  <p style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{it.label}</p>
+                  <p className={["text-[12px] font-bold leading-tight", it.color].join(" ")}>{it.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* ── CALENDAR CARD ── */}
           <div style={{ ...cardStyle, position: 'relative' }}>
             {/* Setup overlay */}
