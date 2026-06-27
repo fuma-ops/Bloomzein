@@ -12,6 +12,7 @@ import {
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
   type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
   type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
+  type SessionStep,
 } from "@/components/bloom/workout/data";
 import {
   PROGRAMS, getProgram, computeWeekSession, weekMeta, sessionVolume,
@@ -307,9 +308,11 @@ type View =
   | { kind: "best-shape" }
   | { kind: "program-detail"; programId: string }
   | { kind: "program-session"; programId: string; week: number; sessionIndex: number; returnTo?: "detail" | "plan" }
-  | { kind: "session-start"; session: WorkoutSession }
-  | { kind: "session-active"; session: WorkoutSession }
-  | { kind: "session-end"; session: WorkoutSession; elapsedSec: number };
+  | { kind: "session-start"; session: WorkoutSession; programRef?: ProgramRef; returnTo?: WorkoutTab }
+  | { kind: "session-active"; session: WorkoutSession; programRef?: ProgramRef; returnTo?: WorkoutTab }
+  | { kind: "session-end"; session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; returnTo?: WorkoutTab };
+
+type ProgramRef = { programId: string; week: number; sessionIndex: number };
 
 export default function WorkoutPage() {
   const [onboarded, setOnboarded] = useLS<boolean>(ONBOARD_KEY, false);
@@ -341,14 +344,14 @@ export default function WorkoutPage() {
   }
 
   if (view.kind === "session-start") {
-    return <SessionStart session={view.session} onStart={() => setView({ kind: "session-active", session: view.session })} onExit={() => setView({ kind: tab })} />;
+    return <SessionStart session={view.session} onStart={() => setView({ kind: "session-active", session: view.session, programRef: view.programRef, returnTo: view.returnTo })} onExit={() => setView({ kind: view.returnTo ?? tab })} />;
   }
   if (view.kind === "session-active") {
     return (
       <SessionActive
         session={view.session}
-        onExit={() => setView({ kind: tab })}
-        onDone={(elapsedSec) => setView({ kind: "session-end", session: view.session, elapsedSec })}
+        onExit={() => setView({ kind: view.returnTo ?? tab })}
+        onDone={(elapsedSec) => setView({ kind: "session-end", session: view.session, elapsedSec, programRef: view.programRef, returnTo: view.returnTo })}
       />
     );
   }
@@ -357,7 +360,8 @@ export default function WorkoutPage() {
       <SessionEnd
         session={view.session}
         elapsedSec={view.elapsedSec}
-        onDone={() => setView({ kind: tab })}
+        programRef={view.programRef}
+        onDone={() => setView({ kind: view.returnTo ?? tab })}
       />
     );
   }
@@ -372,14 +376,21 @@ export default function WorkoutPage() {
     );
   }
   if (view.kind === "program-session") {
+    const psView = view;
     return (
       <ProgramSessionView
-        programId={view.programId}
-        week={view.week}
-        sessionIndex={view.sessionIndex}
-        onBack={() => view.returnTo === "plan"
+        programId={psView.programId}
+        week={psView.week}
+        sessionIndex={psView.sessionIndex}
+        onBack={() => psView.returnTo === "plan"
           ? setView({ kind: "program" })
-          : setView({ kind: "program-detail", programId: view.programId })}
+          : setView({ kind: "program-detail", programId: psView.programId })}
+        onStartTimer={(session) => setView({
+          kind: "session-start",
+          session,
+          programRef: { programId: psView.programId, week: psView.week, sessionIndex: psView.sessionIndex },
+          returnTo: psView.returnTo === "plan" ? "program" : "programs",
+        })}
       />
     );
   }
@@ -473,6 +484,65 @@ function saveActiveProgram(a: ActiveProgram | null) {
     if (a) localStorage.setItem(ACTIVE_PROGRAM_KEY, JSON.stringify(a));
     else localStorage.removeItem(ACTIVE_PROGRAM_KEY);
   } catch {}
+}
+
+// Estimate a work-timer duration for a rep prescription so program sessions can
+// run in the same chrono player as Discover ("30s" → 30s, "10–12 reps" → ~30s,
+// "Hold" → 40s).
+function repsToSeconds(reps: string): number {
+  const secMatch = reps.match(/(\d+)\s*s\b/);
+  if (secMatch) return Math.min(90, Math.max(15, parseInt(secMatch[1], 10)));
+  const n = parseInt(reps, 10);
+  if (isNaN(n)) return 40;
+  return Math.min(75, Math.max(25, Math.round((n * 3) / 5) * 5));
+}
+
+// Convert a structured program session into a timed WorkoutSession (steps) so it
+// plays in the SessionActive chrono with the same warm-up → work → cool-down feel.
+function programToTimerSession(program: Program, week: number, sessionIndex: number): WorkoutSession {
+  const ps = computeWeekSession(program, sessionIndex, week);
+  const steps: SessionStep[] = [];
+  for (const block of ps.blocks) {
+    const kind = block.kind === "warmup" ? "warmup" : block.kind === "cooldown" ? "cooldown" : "work";
+    const rounds = block.rounds ?? 1;
+    for (let r = 0; r < rounds; r++) {
+      for (const ex of block.exercises) {
+        const exercise = EXERCISES[ex.slug];
+        if (!exercise) continue;
+        for (let setNum = 0; setNum < ex.sets; setNum++) {
+          const labelParts: string[] = [];
+          if (block.kind === "warmup") labelParts.push("Warm-up");
+          else if (block.kind === "cooldown") labelParts.push("Cool-down");
+          else {
+            if (rounds > 1) labelParts.push(`Round ${r + 1}/${rounds}`);
+            if (ex.sets > 1) labelParts.push(`Set ${setNum + 1}/${ex.sets}`);
+            if (!labelParts.length) labelParts.push(block.label);
+          }
+          steps.push({
+            exercise, kind,
+            workSec: repsToSeconds(ex.reps),
+            restSec: ex.restSec,
+            label: labelParts.join(" · "),
+            repTarget: ex.reps,
+          });
+        }
+      }
+    }
+  }
+  const distinct: Exercise[] = [];
+  const seen = new Set<string>();
+  steps.forEach((s) => { if (s.kind === "work" && !seen.has(s.exercise.slug)) { seen.add(s.exercise.slug); distinct.push(s.exercise); } });
+
+  return {
+    id: `prog-${program.id}-w${week}-s${sessionIndex}`,
+    zone: "full-body", intention: "strengthen",
+    name: `${program.title} — ${ps.title}`,
+    level: program.level, durationMin: ps.estMinutes,
+    steps, rounds: 1, exercises: distinct,
+    workSec: steps[0]?.workSec ?? 40, restSec: steps[0]?.restSec ?? 20,
+    phaseOptimal: [], intensityNote: null,
+    structureNote: ps.focus,
+  };
 }
 
 function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
@@ -727,11 +797,12 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
   );
 }
 
-function ProgramSessionView({ programId, week, sessionIndex, onBack }: {
+function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTimer }: {
   programId: string;
   week: number;
   sessionIndex: number;
   onBack: () => void;
+  onStartTimer: (session: WorkoutSession) => void;
 }) {
   const program = getProgram(programId);
   const phase = readCyclePhase() ?? "any";
@@ -741,6 +812,8 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack }: {
   const session = computeWeekSession(program, sessionIndex, week);
   const tip = phase !== "any" ? session.phaseTips?.[phase] : undefined;
   const meta = weekMeta(program, week);
+
+  const startTimer = () => onStartTimer(programToTimerSession(program, week, sessionIndex));
 
   const markComplete = () => {
     if (completed) return;
@@ -857,20 +930,28 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack }: {
         ))}
       </div>
 
-      {/* Complete button */}
+      {/* Primary: start the guided chrono session (same player as Discover) */}
+      <button
+        onClick={startTimer}
+        className="mt-5 w-full bloom-luxury-btn animate-cta-bounce rounded-full py-3.5 text-sm font-bold text-white flex items-center justify-center gap-2"
+      >
+        <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start guided session
+      </button>
+
+      {/* Secondary: quick-log without the timer */}
       <button
         onClick={markComplete}
         disabled={completed}
         className={[
-          "mt-5 w-full rounded-full py-3.5 text-sm font-bold text-white transition flex items-center justify-center gap-2",
-          completed ? "bg-hotpink/70" : "bloom-luxury-btn animate-cta-bounce",
+          "mt-2 w-full rounded-full py-2.5 text-sm font-semibold transition flex items-center justify-center gap-2 border",
+          completed ? "bg-blush/50 text-hotpink border-petal/60" : "bg-white/90 text-rose border-petal/60 hover:border-hotpink/40",
         ].join(" ")}
       >
-        {completed ? <><Check className="h-5 w-5" strokeWidth={3} /> Logged — beautifully done ✿</> : <><Trophy className="h-5 w-5" strokeWidth={2} /> Mark session complete</>}
+        {completed ? <><Check className="h-4 w-4" strokeWidth={3} /> Logged as done ✿</> : <>Mark done without timer</>}
       </button>
       {completed && (
         <button onClick={onBack} className="mt-2 w-full text-center text-sm font-semibold text-hotpink">
-          Back to program
+          Back to my plan
         </button>
       )}
     </div>
@@ -1986,7 +2067,7 @@ function SessionActive({ session, onExit, onDone }: {
   );
 }
 
-function SessionEnd({ session, elapsedSec, onDone }: { session: WorkoutSession; elapsedSec: number; onDone: () => void }) {
+function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void }) {
   const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
   const calories = Math.round((elapsedSec / 60) * CALORIES_PER_MIN[session.intention]);
@@ -1996,6 +2077,17 @@ function SessionEnd({ session, elapsedSec, onDone }: { session: WorkoutSession; 
   useEffect(() => {
     const phase = readCyclePhase() ?? "any";
     const before = unlockedBadges(loadHistory(), streak);
+
+    // If this was a program session, mark it complete in the program tracker.
+    if (programRef) {
+      try {
+        const prog = loadProgramProgress();
+        const list = new Set(prog[programRef.programId] ?? []);
+        list.add(sessionTag(programRef.week, programRef.sessionIndex));
+        prog[programRef.programId] = [...list];
+        localStorage.setItem(PROGRAM_PROGRESS_KEY, JSON.stringify(prog));
+      } catch {}
+    }
 
     const history = loadHistory();
     const entry: HistoryEntry = {
