@@ -1851,27 +1851,43 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 function Library() {
   const [zone, setZone] = useState<Zone>("glutes");
   const exercises = ZONE_EXERCISES[zone];
+  const zoneMeta = ZONES.find((z) => z.key === zone);
 
   return (
     <div className="space-y-4">
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {ZONES.map((z) => (
-            <button
-              key={z.key}
-              onClick={() => setZone(z.key)}
-              className={[
-                "rounded-full px-3 py-1.5 text-xs font-semibold border shadow-sm transition active:scale-95",
-                zone === z.key ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
-              ].join(" ")}
-            >
-              {z.label}
-            </button>
-          ))}
+        {/* Header */}
+        <div className="flex items-end justify-between gap-3 mb-3">
+          <div>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Move Library ✿</h2>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">Tap any move for a how-to, form cues & the mistake to avoid.</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{exercises.length} moves</span>
         </div>
 
-        <p className="mb-3 text-[11px] text-rose/60">Tap any move for a how-to, form cues and the mistake to avoid. ✿</p>
+        {/* Zone chips with icons */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1.5 mb-4 scrollbar-none -mx-1 px-1">
+          {ZONES.map((z) => {
+            const Icon = z.icon;
+            const active = zone === z.key;
+            return (
+              <button
+                key={z.key}
+                onClick={() => setZone(z.key)}
+                className={[
+                  "shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
+                  active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
+                ].join(" ")}
+              >
+                <Icon className={["h-3.5 w-3.5", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
+                {z.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-hotpink/60">{zoneMeta?.label}</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
@@ -2153,17 +2169,29 @@ function SessionActive({ session, onExit, onDone }: {
               <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
             </>
           ) : (
-            <div className="w-full max-w-md rounded-3xl bg-white/90 border border-petal/60 p-6 sm:p-8 text-center shadow-md">
-              <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70 mb-2">Rest</p>
+            <div className="w-full max-w-md rounded-3xl bg-gradient-to-b from-white/95 to-blush/40 border border-petal/60 p-5 sm:p-7 text-center shadow-md">
+              <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
+              <p className="text-[11px] sm:text-xs text-rose/55 mb-3">Breathe in… and out. ✿</p>
               <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
               {next && (
-                <div className="mt-4">
-                  <p className="text-sm sm:text-lg font-semibold text-rose/70 mb-2">Next up</p>
-                  <ExercisePhoto exercise={next} zone={session.zone} className="mx-auto h-24 w-24 sm:h-32 sm:w-32 object-cover rounded-2xl border border-petal/60" />
-                  <p className="mt-2 text-lg sm:text-2xl font-bold text-rose">{next.name}</p>
+                <div className="mt-5">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                  <div className="flex items-center gap-3 rounded-2xl bg-white/85 border border-petal/50 p-2.5 text-left">
+                    <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 object-cover rounded-xl border border-petal/60" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base sm:text-lg font-bold text-rose leading-tight">{next.name}</p>
+                      {nextStepObj?.repTarget && (
+                        <span className="mt-1 inline-block rounded-full bg-hotpink/90 text-white text-[10px] font-bold px-2 py-0.5">
+                          {nextStepObj.kind === "work" ? `Aim: ${nextStepObj.repTarget}` : nextStepObj.repTarget}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
-              <button onClick={skipRest} className="mt-4 rounded-full bg-white/90 px-5 py-2 sm:px-6 sm:py-3 text-sm sm:text-base font-semibold text-rose border border-petal/60">Skip rest</button>
+              <button onClick={skipRest} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-5 py-2 sm:px-6 sm:py-2.5 text-sm font-semibold text-hotpink border border-petal/60 active:scale-95 transition">
+                <SkipForward className="h-4 w-4" /> Skip rest
+              </button>
             </div>
           )}
         </div>
