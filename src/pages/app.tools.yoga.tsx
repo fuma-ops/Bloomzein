@@ -9,6 +9,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
@@ -641,6 +642,11 @@ export default function YogaPage() {
       const s = Number(localStorage.getItem(STEP_KEY) || "1");
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
+    // Deep-link from Today / Cycle: open straight into the prescribed flow setup.
+    const launch = readLaunch<{ intention: string; durationMin: number }>(LAUNCH_YOGA_KEY);
+    if (launch) {
+      setView({ kind: "setup", preset: { intention: launch.intention as Intention, durationMin: launch.durationMin } });
+    }
     setLowWater(readTodayWaterCount() < 3);
     const refresh = () => setLowWater(readTodayWaterCount() < 3);
     window.addEventListener("storage", refresh);

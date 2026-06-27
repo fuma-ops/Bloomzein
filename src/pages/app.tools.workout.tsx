@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
+import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
@@ -341,7 +342,15 @@ export default function WorkoutPage() {
     setLowWater(readTodayWaterCount() < 3);
     const refresh = () => setLowWater(readTodayWaterCount() < 3);
     window.addEventListener("storage", refresh);
+    // Deep-link from Today / Cycle: build the prescribed session and open its
+    // preview straight away.
+    const launch = readLaunch<{ zone: string; intention: string }>(LAUNCH_WORKOUT_KEY);
+    if (launch) {
+      const s = buildSession(launch.zone as Zone, launch.intention as WorkoutIntention, durationForLevel(profile.level), profile.level, readCyclePhase() ?? "any", profile.equipment);
+      setView({ kind: "session-start", session: s });
+    }
     return () => window.removeEventListener("storage", refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!onboarded) {
