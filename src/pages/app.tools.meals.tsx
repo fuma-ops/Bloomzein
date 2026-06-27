@@ -274,12 +274,15 @@ export default function MealsPage() {
     const refresh = () => setTodaySymptoms(readTodaySymptoms());
     window.addEventListener("storage", refresh);
 
-    // Default to the user's real cycle phase so meals are phase-appropriate
-    // out of the box (instead of "any").
-    if (phase === "any") {
-      const real = readCyclePhase();
-      if (real && real !== "any") setPhase(real as CyclePhase);
-    }
+    // FIRST-USE ONLY: if the user has never chosen a phase, pre-select their
+    // real cycle phase so meals start phase-appropriate. Once they've made a
+    // choice (including "any"), it's theirs — we never override it again.
+    try {
+      if (localStorage.getItem(LS.phase) == null) {
+        const real = readCyclePhase();
+        if (real && real !== "any") setPhase(real as CyclePhase);
+      }
+    } catch {}
     // Deep-link from Today / Cycle: open the tapped recipe straight away.
     const recipeId = readLaunch<string>(LAUNCH_MEAL_KEY);
     if (recipeId) setOpenRecipe(recipeId);
