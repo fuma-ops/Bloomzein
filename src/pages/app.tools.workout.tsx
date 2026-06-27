@@ -693,21 +693,11 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
           <Tag icon={<CalendarHeart className="h-3 w-3" />}>{program.daysPerWeek}×/week</Tag>
         </div>
         <p className="mt-3 text-xs text-rose/70"><span className="font-bold text-rose">Who it's for:</span> {program.whoFor}</p>
-
-        {/* Make this my plan */}
-        {isMyPlan ? (
-          <div className="mt-4 flex items-center gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3 py-2.5">
-            <Check className="h-4 w-4 text-hotpink shrink-0" strokeWidth={3} />
-            <p className="text-xs font-bold text-hotpink flex-1">This is your active plan ✿</p>
-            <button onClick={onMakeMyPlan} className="text-[11px] font-bold text-hotpink underline underline-offset-2">Go to My Plan</button>
+        {isMyPlan && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blush/50 border border-petal/60 px-3 py-1">
+            <Check className="h-3.5 w-3.5 text-hotpink shrink-0" strokeWidth={3} />
+            <p className="text-[11px] font-bold text-hotpink">This is your active plan ✿</p>
           </div>
-        ) : (
-          <button
-            onClick={makeMyPlan}
-            className="bloom-luxury-btn animate-cta-bounce mt-4 w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white"
-          >
-            <CalendarHeart className="h-4 w-4" strokeWidth={2} /> Make this my plan
-          </button>
         )}
       </div>
 
@@ -787,6 +777,19 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
             </button>
           );
         })}
+      </div>
+
+      {/* Sticky primary CTA — always reachable while scrolling */}
+      <div className="sticky bottom-3 z-20 mt-4 pb-1">
+        {isMyPlan ? (
+          <button onClick={onMakeMyPlan} className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-white shadow-xl shadow-hotpink/30">
+            <CalendarHeart className="h-4 w-4" strokeWidth={2} /> Go to My Plan
+          </button>
+        ) : (
+          <button onClick={makeMyPlan} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-white shadow-xl shadow-hotpink/30">
+            <CalendarHeart className="h-4 w-4" strokeWidth={2} /> Make this my plan
+          </button>
+        )}
       </div>
 
       {/* Confirm: replacing an existing plan */}
