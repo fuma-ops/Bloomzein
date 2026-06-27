@@ -54,10 +54,10 @@ export { phaseForDay };
 
 export const PHASE_META: Record<Exclude<Phase, null>, { label: string; color: string; ring: string; Icon: LucideIcon }> = {
   period:     { label: "PERIOD",     color: "bg-hotpink text-white",           ring: "ring-hotpink/40",  Icon: Droplet },
-  follicular: { label: "FOLLICULAR", color: "bg-amber-100 text-amber-700",     ring: "ring-amber-200",   Icon: Sprout },
+  follicular: { label: "FOLLICULAR", color: "bg-pink-100 text-hotpink",     ring: "ring-pink-200",   Icon: Sprout },
   fertile:    { label: "FERTILE",    color: "bg-pink-100 text-hotpink",        ring: "ring-pink-200",    Icon: Flower2 },
   ovulation:  { label: "OVULATION",  color: "bg-rose-200 text-magenta",        ring: "ring-rose-400",    Icon: Star },
-  luteal:     { label: "LUTEAL",     color: "bg-violet-100 text-violet-500",   ring: "ring-violet-200",  Icon: Moon },
+  luteal:     { label: "LUTEAL",     color: "bg-rose-100 text-rose-500",   ring: "ring-rose-200",  Icon: Moon },
 };
 
 const PHASE_INSIGHT: Record<Exclude<Phase, null>, string> = {
@@ -79,33 +79,33 @@ const PHASE_SUBTITLE: Record<Exclude<Phase, null>, string> = {
 const PHASE_TODAY_INSIGHTS: Record<Exclude<Phase, null>, { label: string; value: string; Icon: LucideIcon; color: string; bg: string }[]> = {
   period: [
     { label: "Energy",    value: "Low",            Icon: Zap,      color: "text-rose-400",    bg: "bg-rose-50"    },
-    { label: "Hydration", value: "Stay Focused",   Icon: Droplets, color: "text-sky-400",     bg: "bg-sky-50"     },
-    { label: "Movement",  value: "Gentle Yoga",    Icon: Leaf,     color: "text-green-500",   bg: "bg-green-50"   },
-    { label: "Nutrition", value: "Iron-rich foods",Icon: Sprout,   color: "text-amber-500",   bg: "bg-amber-50"   },
+    { label: "Hydration", value: "Stay Focused",   Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: "Movement",  value: "Gentle Yoga",    Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: "Nutrition", value: "Iron-rich foods",Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
   ],
   follicular: [
-    { label: "Energy",    value: "Rising",         Icon: Zap,      color: "text-amber-500",   bg: "bg-amber-50"   },
-    { label: "Hydration", value: "Stay Active",    Icon: Droplets, color: "text-sky-400",     bg: "bg-sky-50"     },
-    { label: "Movement",  value: "Strength",       Icon: Dumbbell, color: "text-orange-500",  bg: "bg-orange-50"  },
-    { label: "Nutrition", value: "Protein-rich",   Icon: Sprout,   color: "text-green-500",   bg: "bg-green-50"   },
+    { label: "Energy",    value: "Rising",         Icon: Zap,      color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: "Hydration", value: "Stay Active",    Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: "Movement",  value: "Strength",       Icon: Dumbbell, color: "text-magenta",  bg: "bg-pink-50"  },
+    { label: "Nutrition", value: "Protein-rich",   Icon: Sprout,   color: "text-hotpink",   bg: "bg-pink-50"   },
   ],
   fertile: [
     { label: "Energy",    value: "High",           Icon: Zap,      color: "text-pink-500",    bg: "bg-pink-50"    },
-    { label: "Hydration", value: "Active day",     Icon: Droplets, color: "text-sky-400",     bg: "bg-sky-50"     },
+    { label: "Hydration", value: "Active day",     Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
     { label: "Movement",  value: "Power Flow",     Icon: Flame,    color: "text-rose-500",    bg: "bg-rose-50"    },
-    { label: "Nutrition", value: "Fresh & Light",  Icon: Leaf,     color: "text-green-500",   bg: "bg-green-50"   },
+    { label: "Nutrition", value: "Fresh & Light",  Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
   ],
   ovulation: [
-    { label: "Energy",    value: "Peak",           Icon: Zap,      color: "text-violet-500",  bg: "bg-violet-50"  },
-    { label: "Hydration", value: "Intense",        Icon: Droplets, color: "text-sky-400",     bg: "bg-sky-50"     },
-    { label: "Movement",  value: "HIIT",           Icon: Flame,    color: "text-red-500",     bg: "bg-red-50"     },
-    { label: "Nutrition", value: "Energizing",     Icon: Sprout,   color: "text-fuchsia-500", bg: "bg-fuchsia-50" },
+    { label: "Energy",    value: "Peak",           Icon: Zap,      color: "text-rose-500",  bg: "bg-rose-50"  },
+    { label: "Hydration", value: "Intense",        Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: "Movement",  value: "HIIT",           Icon: Flame,    color: "text-rose-500",     bg: "bg-rose-50"     },
+    { label: "Nutrition", value: "Energizing",     Icon: Sprout,   color: "text-hotpink", bg: "bg-pink-50" },
   ],
   luteal: [
-    { label: "Energy",    value: "Winding",        Icon: Zap,      color: "text-violet-400",  bg: "bg-violet-50"  },
-    { label: "Hydration", value: "Wind Down",      Icon: Droplets, color: "text-sky-400",     bg: "bg-sky-50"     },
-    { label: "Movement",  value: "Gentle Tone",    Icon: Leaf,     color: "text-purple-500",  bg: "bg-purple-50"  },
-    { label: "Nutrition", value: "Comforting",     Icon: Sprout,   color: "text-amber-500",   bg: "bg-amber-50"   },
+    { label: "Energy",    value: "Winding",        Icon: Zap,      color: "text-rose-400",  bg: "bg-rose-50"  },
+    { label: "Hydration", value: "Wind Down",      Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: "Movement",  value: "Gentle Tone",    Icon: Leaf,     color: "text-magenta",  bg: "bg-pink-50"  },
+    { label: "Nutrition", value: "Comforting",     Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
   ],
 };
 
@@ -149,25 +149,25 @@ const SYMPTOMS_LOG_KEY = "bloom:symptoms-log-v2";
 const PILL_LOG_KEY     = "bloom:pill-log-v2";
 
 const MOOD_BG_COLOR: Record<string, string> = {
-  calm:      "bg-sky-300",
+  calm:      "bg-rose-300",
   happy:     "bg-pink-300",
-  energetic: "bg-amber-300",
-  sensitive: "bg-fuchsia-200",
-  sad:       "bg-blue-200",
-  tired:     "bg-slate-300",
+  energetic: "bg-pink-300",
+  sensitive: "bg-petal",
+  sad:       "bg-rose-200",
+  tired:     "bg-pink-200",
   cramps:    "bg-rose-400",
-  bloated:   "bg-orange-300",
+  bloated:   "bg-pink-300",
 };
 
 const MOOD_TEXT_COLOR: Record<string, string> = {
-  calm:      "text-sky-400",
+  calm:      "text-rose-400",
   happy:     "text-pink-500",
-  energetic: "text-amber-500",
-  sensitive: "text-fuchsia-400",
-  sad:       "text-blue-400",
-  tired:     "text-slate-400",
+  energetic: "text-magenta",
+  sensitive: "text-hotpink",
+  sad:       "text-rose-400",
+  tired:     "text-rose-300",
   cramps:    "text-rose-500",
-  bloated:   "text-orange-400",
+  bloated:   "text-magenta",
 };
 
 // Wellbeing score for the mood line (1 = lowest, 8 = highest)
@@ -178,18 +178,18 @@ const MOOD_SCORE: Record<string, number> = {
 
 const PHASE_SVG_COLOR: Record<Exclude<Phase, null>, string> = {
   period:     "rgba(252,162,183,0.18)",
-  follicular: "rgba(253,230,138,0.15)",
+  follicular: "rgba(251,207,232,0.16)",
   fertile:    "rgba(251,207,232,0.18)",
-  ovulation:  "rgba(196,181,253,0.18)",
-  luteal:     "rgba(216,180,254,0.15)",
+  ovulation:  "rgba(244,114,182,0.18)",
+  luteal:     "rgba(251,207,232,0.18)",
 };
 const PHASE_SVG_LABEL: Record<Exclude<Phase, null>, string> = {
   period: "Period", follicular: "Follic.", fertile: "Fertile",
   ovulation: "Ovul.", luteal: "Luteal",
 };
 const PHASE_SVG_LABEL_COLOR: Record<Exclude<Phase, null>, string> = {
-  period: "#BE185D", follicular: "#D97706", fertile: "#EC4899",
-  ovulation: "#7C3AED", luteal: "#9333EA",
+  period: "#BE185D", follicular: "#DB2777", fertile: "#EC4899",
+  ovulation: "#DB2777", luteal: "#BE185D",
 };
 const PHASE_MOOD_EST: Record<Exclude<Phase, null>, number> = {
   period: 2, follicular: 6, fertile: 7, ovulation: 8, luteal: 4,
@@ -239,7 +239,7 @@ const PHASE_HEX: Record<Exclude<Phase, null>, string> = {
   follicular: '#FB7185',
   fertile:    '#F472B6',
   ovulation:  '#DB2777',
-  luteal:     '#C084FC',
+  luteal:     '#BE185D',
 };
 
 const PHASE_ICON_PATH: Record<Exclude<Phase, null>, string> = {
@@ -459,7 +459,7 @@ export function CycleTracker() {
       follicular: 'rgba(251,113,133,.08)',
       fertile:    'rgba(244,114,182,.12)',
       ovulation:  'rgba(219,39,119,.15)',
-      luteal:     'rgba(192,132,252,.10)',
+      luteal:     'rgba(190,24,93,.10)',
     };
 
     // Phase bands
@@ -549,7 +549,7 @@ export function CycleTracker() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px', marginBottom: '5px' }}>
           {[
             { color: '#EC4899', dash: false, label: 'Mood logged' },
-            { color: '#C084FC', dash: true,  label: 'Mood estimate' },
+            { color: '#DB2777', dash: true,  label: 'Mood estimate' },
             { color: '#FB7185', dash: false, label: 'Symptoms logged' },
             { color: '#FECDD3', dash: true,  label: 'Symptom estimate' },
           ].map((item) => (
@@ -570,7 +570,7 @@ export function CycleTracker() {
           {/* Future dashed estimate lines */}
           {futureSymptLine && <path d={futureSymptLine} fill="none" stroke="#FECDD3" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 5" opacity=".7" />}
-          {futureMoodLine && <path d={futureMoodLine} fill="none" stroke="#C084FC" strokeWidth="2"
+          {futureMoodLine && <path d={futureMoodLine} fill="none" stroke="#DB2777" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 6" opacity=".5" />}
           {/* Symptom hybrid past runs — rose tones */}
           {symptRuns.map((run, ri) => {
@@ -590,7 +590,7 @@ export function CycleTracker() {
             const d = smoothLinePath(run.pts);
             return d ? (
               <path key={`mr${ri}`} d={d} fill="none"
-                stroke={run.real ? '#EC4899' : '#C084FC'}
+                stroke={run.real ? '#EC4899' : '#DB2777'}
                 strokeWidth={run.real ? '3.5' : '2.5'}
                 strokeDasharray={run.real ? undefined : '3 5'}
                 strokeLinecap="round" strokeLinejoin="round"
@@ -601,9 +601,9 @@ export function CycleTracker() {
           {/* Today circle on mood line */}
           <circle cx={todayDotX} cy={todayDotY} r="5" fill="#fff" stroke="#EC4899" strokeWidth="3" />
           {/* Labels */}
-          <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#CC9999">Day 1</text>
+          <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day 1</text>
           <text x={todayDotX} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>
-          <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#CC9999">Day {cycleLen}</text>
+          <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day {cycleLen}</text>
         </svg>
         <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
           Both curves build as you log — solid lines are real, dashed are estimates.
@@ -617,7 +617,7 @@ export function CycleTracker() {
     const items = [
       { tag: "Yoga",    title: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899" },
       { tag: "Workout", title: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777" },
-      { tag: "Meal",    title: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals",   gradFrom: "#7ECAB9", gradTo: "#36A88F" },
+      { tag: "Meal",    title: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals",   gradFrom: "#F9A8D4", gradTo: "#BE185D" },
     ];
     return (
       <div className="flex flex-col gap-[9px] mt-3">
@@ -672,7 +672,7 @@ export function CycleTracker() {
     <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
       {/* Decorative background blobs — give glass cards something to blur through */}
       <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-      <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(192,132,252,.14) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(244,114,182,.14) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
       <div aria-hidden style={{ position: 'absolute', bottom: '12%', right: -50, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle,rgba(251,207,232,.28) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div className="relative z-10 lg:grid lg:grid-cols-5 lg:items-start lg:gap-6">
@@ -824,7 +824,7 @@ export function CycleTracker() {
               {/* Daily Pill */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
-                <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#36A88F' }}>
+                <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#BE185D' }}>
                   {pillTaken ? "Taken ✓" : "Log it"}
                 </p>
                 <div className="flex items-center gap-2 mt-[5px]">
@@ -835,7 +835,7 @@ export function CycleTracker() {
                       try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); } catch {}
                     }}
                     style={{
-                      background: pillTaken ? '#FCE7F3' : '#36A88F',
+                      background: pillTaken ? '#FCE7F3' : '#BE185D',
                       color: pillTaken ? '#DB2777' : 'white',
                       fontSize: '9.5px',
                       padding: '3px 8px',
@@ -934,7 +934,7 @@ export function CycleTracker() {
             {/* Weekday labels */}
             <div className="grid grid-cols-7 text-center mb-1.5">
               {["S","M","T","W","T","F","S"].map((d, i) => (
-                <div key={i} style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.06em', color: '#CC9999', textAlign: 'center' }}>{d}</div>
+                <div key={i} style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textAlign: 'center' }}>{d}</div>
               ))}
             </div>
 
@@ -998,7 +998,7 @@ export function CycleTracker() {
                     {(loggedMood || pillTakenDay || loggedSymptoms.length > 0) && (
                       <div className="flex items-center gap-[2px]">
                         {loggedMood && <span className="rounded-full" style={{ width: 4, height: 4, background: '#EC4899' }} />}
-                        {pillTakenDay && <span className="rounded-full" style={{ width: 4, height: 4, background: '#C084FC' }} />}
+                        {pillTakenDay && <span className="rounded-full" style={{ width: 4, height: 4, background: '#DB2777' }} />}
                         {loggedSymptoms.length > 0 && <span className="rounded-full" style={{ width: 4, height: 4, background: '#FB7185' }} />}
                       </div>
                     )}
