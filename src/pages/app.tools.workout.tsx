@@ -547,56 +547,65 @@ function programToTimerSession(program: Program, week: number, sessionIndex: num
 
 function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
   const progress = loadProgramProgress();
+  const activeId = loadActiveProgram()?.programId ?? null;
   return (
     <div className="animate-fade-in">
       <p className="mb-3 text-sm text-rose/80">
         Real coaching, not random sessions — each program builds week over week with
         progressive overload, warm-ups, cool-downs and cycle-synced effort. ✿
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
         {PROGRAMS.map((p, i) => {
           const done = (progress[p.id] ?? []).length;
           const total = p.weeks * p.template.length;
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const isActive = activeId === p.id;
           return (
             <button
               key={p.id}
               onClick={() => onOpen(p.id)}
-              className="group text-left overflow-hidden rounded-3xl border border-petal/60 bg-white/85 shadow-sm hover:shadow-xl hover:-translate-y-1 transition animate-scale-in"
+              className={[
+                "group w-full text-left flex items-stretch overflow-hidden rounded-3xl border bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in",
+                isActive ? "border-hotpink/60 ring-1 ring-hotpink/30" : "border-petal/60",
+              ].join(" ")}
               style={{ animationDelay: `${i * 70}ms` }}
             >
-              <div className="relative h-32 sm:h-36 overflow-hidden">
-                <img src={p.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                <div className="absolute top-2 left-2 flex gap-1.5">
-                  <span className="rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{p.weeks} weeks</span>
-                  {p.phaseSynced && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
-                </div>
+              {/* Photo — left */}
+              <div className="relative w-28 sm:w-40 shrink-0 overflow-hidden">
+                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
                 <span className={[
-                  "absolute top-2 right-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
+                  "absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm",
                   p.tier === "premium" ? "bg-hotpink/90 text-white" : "bg-white/90 text-hotpink",
                 ].join(" ")}>
                   {p.tier === "premium" ? <><Sparkles className="h-2.5 w-2.5" /> Premium</> : "Free"}
                 </span>
-                <div className="absolute bottom-2 left-3 right-3">
-                  <h3 className="font-script text-2xl text-white leading-none drop-shadow">{p.title}</h3>
-                </div>
+                {pct > 0 && (
+                  <div className="absolute bottom-0 inset-x-0 px-2 pb-2">
+                    <div className="h-1.5 rounded-full bg-white/40 overflow-hidden">
+                      <div className="h-full bg-hotpink transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="p-3">
-                <p className="text-[11px] text-rose/75 leading-snug">{p.tagline}</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+
+              {/* Info — right */}
+              <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{p.weeks} weeks</span>
+                    {p.phaseSynced && <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
+                  </div>
+                  {isActive && <span className="shrink-0 rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Your plan</span>}
+                </div>
+                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{p.title}</h3>
+                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{p.tagline}</p>
+                <div className="mt-auto pt-2 flex flex-wrap items-center gap-1.5">
                   <Tag icon={<Gauge className="h-3 w-3" />}>{LEVEL_LABEL[p.level]}</Tag>
                   <Tag icon={<Dumbbell className="h-3 w-3" />}>{EQUIP_LABEL[p.equipment]}</Tag>
                   <Tag icon={<CalendarHeart className="h-3 w-3" />}>{p.daysPerWeek}×/week</Tag>
+                  <ChevronRight className="h-4 w-4 text-rose/35 ml-auto shrink-0 group-hover:text-hotpink/70 transition" />
                 </div>
-                {done > 0 && (
-                  <div className="mt-2.5">
-                    <div className="h-1.5 rounded-full bg-blush overflow-hidden">
-                      <div className="h-full bg-hotpink transition-all" style={{ width: `${pct}%` }} />
-                    </div>
-                    <p className="mt-1 text-[10px] font-semibold text-hotpink">{pct}% complete</p>
-                  </div>
-                )}
               </div>
             </button>
           );
