@@ -519,6 +519,10 @@ export default function TodayPage() {
 
   const bloomPercent  = Math.round((checklist.filter((c) => c.done).length / checklist.length) * 100);
   const bloomFull     = bloomPercent === 100;
+  const bloomMessage  =
+    bloomPercent === 0  ? "Your day awaits — start with one small bloom ✿" :
+    bloomPercent < 50   ? "A lovely start — keep blooming, beautiful" :
+                          "More than halfway — you're glowing today ✿";
 
   // visible due reminders (not marked done this session)
   const visibleReminders = dueReminders.filter((r) => !doneReminderIds.includes(r.id));
@@ -819,8 +823,10 @@ export default function TodayPage() {
 
             {/* Checklist */}
             <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-              {bloomFull && (
+              {bloomFull ? (
                 <p className="text-xs font-bold text-hotpink animate-fade-in mb-1">✿ Fully Bloomed! You're amazing today</p>
+              ) : (
+                <p key={bloomPercent} className="text-[11px] font-semibold text-rose/60 leading-snug animate-fade-in mb-0.5">{bloomMessage}</p>
               )}
               {checklist.map((c) => {
                 const el = c.key === "mood" ? (
