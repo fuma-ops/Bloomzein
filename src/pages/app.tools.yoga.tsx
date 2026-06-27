@@ -1338,17 +1338,27 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
 
   return (
     <div className="relative space-y-4 yoga-fade">
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
-          <button key={lv} onClick={() => setActive(lv)}
-            className={[
-              "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold border transition",
-              active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60",
-            ].join(" ")}>
-            {lv}
-          </button>
-        ))}
-      </div>
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-3 mb-3">
+          <div>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Pose Library ✿</h2>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">Tap any pose to learn how to enter it and find your breath.</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{filtered.length} poses</span>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+          {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
+            <button key={lv} onClick={() => setActive(lv)}
+              className={[
+                "shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition active:scale-95",
+                active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
+              ].join(" ")}>
+              {lv}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div key={active} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {filtered.map((p, i) => <PoseCard key={p.slug} pose={p} index={i} />)}
@@ -1790,12 +1800,33 @@ function Summary({
 
   const intentionLabel = INTENTIONS.find((i) => i.id === intention)?.label || "Practice";
 
+  let streakCount = 0;
+  try { streakCount = (JSON.parse(localStorage.getItem(STREAK_KEY) || "{}")?.count) || 0; } catch {}
+
   return (
-    <div className="space-y-4 yoga-fade">
-      <div className="rounded-3xl bg-white/90 backdrop-blur border border-petal/60 p-5 sm:p-7 text-center">
-        <Sparkles className="h-6 w-6 text-hotpink mx-auto" />
-        <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-1">You bloomed.</h2>
-        <p className="text-sm text-rose/80 mt-1">{intentionLabel} · {durationMin} min · {flow.length} poses</p>
+    <div className="relative space-y-4 yoga-fade">
+      <BloomBubbles count={14} />
+      <div className="relative rounded-3xl bg-white/95 backdrop-blur border border-petal/60 p-5 sm:p-7 text-center shadow-md animate-scale-in">
+        <span className="clay-blob animate-selected-glow mx-auto grid place-items-center rounded-full text-white" style={{ width: "4.5rem", height: "4.5rem" }}>
+          <Flower className="h-9 w-9 animate-icon-breathe" strokeWidth={1.5} />
+        </span>
+        <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-3 animate-text-pop">You bloomed.</h2>
+        <p className="text-xs text-rose/60 italic mt-1">Your breath, your body, your quiet hour.</p>
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
+            <p className="font-script text-2xl text-hotpink leading-none">{durationMin}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">min</p>
+          </div>
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
+            <p className="font-script text-2xl text-hotpink leading-none">{flow.length}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">poses</p>
+          </div>
+          <div className="rounded-2xl bg-gradient-to-br from-hotpink/15 to-petal/40 border border-petal/60 p-2.5 animate-selected-glow">
+            <p className="font-script text-2xl text-hotpink leading-none">{streakCount}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">day streak</p>
+          </div>
+        </div>
+        <p className="mt-3 text-[11px] font-semibold text-rose/60">{intentionLabel}</p>
       </div>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
