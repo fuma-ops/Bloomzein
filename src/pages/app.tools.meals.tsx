@@ -57,6 +57,7 @@ const MEAL_PHOTO_FALLBACK: Record<string, string> = {
   breakfast: '/images/meal-oats.jpg',
   lunch:     '/images/meal-buddha.jpg',
   dinner:    '/images/meal-stew.jpg',
+  snack:     '/images/meal-lunchbox.jpg',
   lunchbox:  '/images/meal-lunchbox.jpg',
 };
 
@@ -131,14 +132,19 @@ function pickForSlot(
   if (!candidates.length) candidates = pool.filter((r) => r.mealType === type);
   if (!candidates.length) return null;
 
-  const ranked = [...candidates].sort((a, b) => {
-    const aLove = ratings[a.id] === "love" ? 0.2 : 0;
-    const bLove = ratings[b.id] === "love" ? 0.2 : 0;
-    const fresh = (id: string) => (used.has(id) ? -0.5 : 0);
-    return (scoreRecipe(b, owned) + bLove + fresh(b.id)) -
-           (scoreRecipe(a, owned) + aLove + fresh(a.id));
-  });
-  return ranked[0];
+  // Score by pantry match + a love bonus + a little randomness for variety,
+  // computed ONCE per recipe (a random tiebreak inside sort() would be unstable).
+  const scored = candidates.map((r) => ({
+    r,
+    s: scoreRecipe(r, owned) + (ratings[r.id] === "love" ? 0.3 : 0) + Math.random() * 0.25,
+  }));
+  scored.sort((a, b) => b.s - a.s);
+  const order = scored.map((x) => x.r);
+
+  // Crucial: never repeat a recipe already used this week while fresh ones exist
+  // — a high pantry score must not let the same dish win all 7 days.
+  const fresh = order.filter((r) => !used.has(r.id));
+  return (fresh.length ? fresh : order)[0];
 }
 
 function buildWeek(
@@ -153,7 +159,7 @@ function buildWeek(
   const plan: Record<string, Record<MealType, string | null>> = {};
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
-    (["breakfast", "lunch", "dinner"] as MealType[]).forEach((type) => {
+    (["breakfast", "lunch", "dinner", "snack"] as MealType[]).forEach((type) => {
       const slotIntention: Intention = d === proteinBoostDay && type === "dinner" ? "protein" : intention;
       const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings);
       if (r) { plan[d][type] = r.id; used.add(r.id); }
@@ -353,8 +359,14 @@ export default function MealsPage() {
   };
 
   const regenDay = (day: string) => {
+    // Seed "used" with every recipe already in the week (other days) so a
+    // re-rolled day doesn't duplicate what's elsewhere in the plan.
     const used = new Set<string>();
-    const slots: MealType[] = ["breakfast", "lunch", "dinner"];
+    Object.entries(plan).forEach(([d, meals]) => {
+      if (d === day || !meals) return;
+      Object.values(meals).forEach((id) => { if (id) used.add(id as string); });
+    });
+    const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
     const dayPlan: Record<MealType, string | null> = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     slots.forEach((type) => {
       const slotIntention: Intention = day === proteinBoostDay && type === "dinner" ? "protein" : intention;
@@ -722,8 +734,8 @@ function WeekTab({
                   <RefreshCw className="h-3 w-3" /> redo day
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {(["breakfast","lunch","dinner"] as MealType[]).map((slot) => {
+              <div className="grid grid-cols-4 gap-1.5">
+                {(["breakfast","lunch","dinner","snack"] as MealType[]).map((slot) => {
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
                   const proteinBoosted = d === proteinBoostDay && slot === "dinner";
