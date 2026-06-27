@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { PeriodSetup, type CycleSettings } from "./PeriodSetup";
 import { AnimatedWords } from "./AnimatedWords";
+import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, writeLaunch } from "./phasePlan";
 import {
   type CyclePhase,
   phaseForDay,
@@ -374,7 +375,6 @@ export function CycleTracker() {
 
   const isSelectedToday  = sameDay(selected, today);
   const selectedPhase    = useMemo(() => isSelectedToday ? currentPhase : phaseForDay(selected, settings), [selected, settings, isSelectedToday, currentPhase]);
-  const selectedRecommend= PHASE_RECOMMEND[selectedPhase];
 
   const pillLabel     = settings.contraceptiveMethod.charAt(0).toUpperCase() + settings.contraceptiveMethod.slice(1);
   const MoodIconToday = MOODS.find((m) => m.key === mood)?.Icon ?? Smile;
@@ -614,10 +614,12 @@ export function CycleTracker() {
 
   // ── Suggestions rows for both mobile card and desktop panel ──
   function renderSuggestions() {
+    // Same source of truth as the Today page so recommendations always match.
+    const sp = SHARED_PHASE_PLAN[selectedPhase];
     const items = [
-      { tag: "Yoga",    title: selectedRecommend.yoga.title,    img: selectedRecommend.yoga.img,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899" },
-      { tag: "Workout", title: selectedRecommend.workout.title,  img: selectedRecommend.workout.img,  href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777" },
-      { tag: "Meal",    title: selectedRecommend.meal.title,    img: selectedRecommend.meal.img,    href: "/app/tools/meals",   gradFrom: "#F9A8D4", gradTo: "#BE185D" },
+      { tag: "Yoga",    title: sp.yoga.title,    img: sp.yoga.image,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899", launch: { key: LAUNCH_YOGA_KEY, val: sp.yoga.launch } },
+      { tag: "Workout", title: sp.workout.title, img: sp.workout.image, href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777", launch: { key: LAUNCH_WORKOUT_KEY, val: sp.workout.launch } },
+      { tag: "Meal",    title: sp.meal.title,    img: sp.meal.image,    href: "/app/tools/diet",    gradFrom: "#F9A8D4", gradTo: "#BE185D", launch: null as null | { key: string; val: unknown } },
     ];
     return (
       <div className="flex flex-col gap-[9px] mt-3">
@@ -625,6 +627,7 @@ export function CycleTracker() {
           <a
             key={item.tag}
             href={item.href}
+            onClick={() => { if (item.launch) writeLaunch(item.launch.key, item.launch.val); }}
             className="reveal-on-scroll hover-scale flex items-center gap-[13px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
             data-reveal-delay={`${idx * 130}ms`}
             style={{ padding: '10px', background: 'rgba(255,245,249,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.45)' }}
