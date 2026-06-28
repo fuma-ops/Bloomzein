@@ -338,6 +338,22 @@ export default function MealsPage() {
   };
   const generateKids = () => setKidPlan(buildKidWeek(myRulesPool, owned));
 
+  // Auto-heal plans saved before the variety fix: if any slot repeats the same
+  // recipe on 3+ days, rebuild the week once with the new (no-repeat) logic.
+  useEffect(() => {
+    const days = Object.keys(plan);
+    if (days.length < 3) return;
+    const repetitive = (["breakfast", "lunch", "dinner", "snack"] as MealType[]).some((slot) => {
+      const counts: Record<string, number> = {};
+      days.forEach((d) => { const id = plan[d]?.[slot]; if (id) counts[id] = (counts[id] || 0) + 1; });
+      return Object.values(counts).some((c) => c >= 3);
+    });
+    if (repetitive) {
+      setPlan(buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDay ?? undefined));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const togglePantry = (cat: PantryCategoryKey, item: string) => {
     setPantry((p) => {
       const cur = p[cat] || [];
