@@ -650,9 +650,18 @@ function TodayTab({
   };
 
   const candidatesFor = (type: MealType): Recipe[] => {
-    return [...RECIPES]
+    const sorted = [...RECIPES]
       .filter((r) => r.mealType === type && r.phases.includes(phase) && passesMyRules(r, profile))
       .sort((a, b) => Math.abs(a.macros.protein * 4 - targets.protein) - Math.abs(b.macros.protein * 4 - targets.protein));
+    // Rotate the macro-relevant shortlist by the day of the month so the top
+    // suggestion isn't the identical recipe every single day.
+    const top = sorted.slice(0, 8);
+    const rest = sorted.slice(8);
+    if (top.length > 1) {
+      const off = new Date().getDate() % top.length;
+      return [...top.slice(off), ...top.slice(0, off), ...rest];
+    }
+    return sorted;
   };
 
   const mealType = mealTypeForHour(new Date().getHours());
