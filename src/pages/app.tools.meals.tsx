@@ -120,29 +120,37 @@ function pickForSlot(
   used: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
 ): Recipe | null {
-  let candidates = pool.filter((r) => r.mealType === type && ratings[r.id] !== "never");
+  const base = pool.filter((r) => r.mealType === type && ratings[r.id] !== "never");
+  let candidates = base;
+
+  // Only HARD-narrow the pool when doing so still leaves enough recipes for a
+  // full week of DISTINCT meals (≥ 7). Otherwise keep the whole pool — narrowing
+  // to 1–3 recipes is exactly what made the same dish repeat every morning.
   if (intention === "cycle") {
-    candidates = candidates.filter((r) => r.cyclePhase.includes(phase) || r.cyclePhase.includes("any"));
+    const m = base.filter((r) => r.cyclePhase.includes(phase) || r.cyclePhase.includes("any"));
+    if (m.length >= 7) candidates = m;
   } else if (intention === "quick") {
-    candidates = candidates.filter((r) => r.prepMin + r.cookMin <= 20);
-  } else {
-    const filtered = candidates.filter((r) => r.intention.includes(intention));
-    if (filtered.length) candidates = filtered;
+    const m = base.filter((r) => r.prepMin + r.cookMin <= 20);
+    if (m.length >= 7) candidates = m;
   }
   if (!candidates.length) candidates = pool.filter((r) => r.mealType === type);
   if (!candidates.length) return null;
 
-  // Score by pantry match + a love bonus + a little randomness for variety,
-  // computed ONCE per recipe (a random tiebreak inside sort() would be unstable).
+  // Named vibes (light / protein / energy …) are a SOFT preference: they BOOST
+  // matching recipes but never collapse the pool to a single dish. Combined with
+  // pantry match, a love bonus and a little randomness — computed once per recipe.
+  const softIntention = intention !== "cycle" && intention !== "quick";
   const scored = candidates.map((r) => ({
     r,
-    s: scoreRecipe(r, owned) + (ratings[r.id] === "love" ? 0.3 : 0) + Math.random() * 0.25,
+    s: scoreRecipe(r, owned)
+      + (ratings[r.id] === "love" ? 0.3 : 0)
+      + (softIntention && r.intention.includes(intention) ? 0.4 : 0)
+      + Math.random() * 0.3,
   }));
   scored.sort((a, b) => b.s - a.s);
   const order = scored.map((x) => x.r);
 
-  // Crucial: never repeat a recipe already used this week while fresh ones exist
-  // — a high pantry score must not let the same dish win all 7 days.
+  // Crucial: never repeat a recipe already used this week while fresh ones exist.
   const fresh = order.filter((r) => !used.has(r.id));
   return (fresh.length ? fresh : order)[0];
 }
