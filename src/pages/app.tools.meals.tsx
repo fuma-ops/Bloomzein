@@ -344,6 +344,17 @@ export default function MealsPage() {
     setStep(3);
     setTab("week");
   };
+  // One-tap "make it match my phase": switch the vibe to Cycle-sync, lock the
+  // real phase and build — passing values explicitly to avoid stale state.
+  const generatePhasePlan = () => {
+    const real = readCyclePhase();
+    const ph = (real && real !== "any" ? real : phase) as CyclePhase;
+    setIntention("cycle");
+    setPhase(ph);
+    setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDay ?? undefined));
+    setStep(3);
+    setTab("week");
+  };
   const generateKids = () => setKidPlan(buildKidWeek(myRulesPool, owned));
 
   // Auto-heal plans saved before the variety fix. We read localStorage DIRECTLY
@@ -489,6 +500,7 @@ export default function MealsPage() {
             phase={phase} setPhase={setPhase}
             plan={plan} planEmpty={planEmpty}
             onGenerate={generateWeek}
+            onGeneratePhase={generatePhasePlan}
             onOpen={setOpenRecipe}
             onSwap={swapMeal}
             onRegen={regenDay}
@@ -606,12 +618,16 @@ function GuidedWelcome({ onStart }: { onStart: () => void }) {
 /* ---------- This Week ---------- */
 
 function WeekTab({
-  intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate,
+  intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
   onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDay,
 }: any) {
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
+
+  // The user's real cycle phase (for the attention-grabbing banner).
+  const realPhase = useMemo(() => readCyclePhase(), []);
+  const phaseSynced = intention === "cycle" && phase !== "any";
 
   const handleGenerate = () => {
     setGenerating(true);
@@ -621,9 +637,48 @@ function WeekTab({
       planRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 400);
   };
+  const handleGeneratePhase = () => {
+    setGenerating(true);
+    onGeneratePhase();
+    setTimeout(() => {
+      setGenerating(false);
+      planRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  };
 
   return (
     <>
+      {/* ── PHASE NUDGE — eye-catching banner with a one-tap CTA ─────────────── */}
+      {realPhase && realPhase !== "any" && CYCLE_TO_DIET[realPhase] && (() => {
+        const info = PHASE_INFO[CYCLE_TO_DIET[realPhase]];
+        return (
+          <div className="relative overflow-hidden rounded-[1.5rem] mb-3 animate-scale-in shadow-lg shadow-hotpink/20"
+            style={{ background: 'linear-gradient(120deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)' }}>
+            <span aria-hidden className="absolute inset-0 pointer-events-none"
+              style={{ background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.18) 50%,transparent 80%)', backgroundSize: '200% 100%', animation: 'bloom-shimmer 3s linear infinite' }} />
+            <div className="relative flex items-center gap-3 p-3.5 sm:p-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/20 border border-white/40 text-white animate-icon-breathe">
+                <Heart className="h-5 w-5" strokeWidth={1.8} fill="currentColor" />
+              </span>
+              <div className="flex-1 min-w-0 text-white">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">You're in your {info.label.toLowerCase()} phase</p>
+                <p className="text-sm font-semibold leading-snug">{phaseSynced ? "Your plan is synced to your cycle ✿" : "Want meals tailored to it?"}</p>
+              </div>
+              {phaseSynced ? (
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/90 text-hotpink text-[11px] font-bold px-3 py-1.5">
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} /> Synced
+                </span>
+              ) : (
+                <button onClick={handleGeneratePhase} disabled={generating}
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white text-hotpink text-xs font-bold px-3.5 py-2 shadow-md active:scale-95 transition animate-cta-bounce">
+                  <Sparkles className="h-3.5 w-3.5" /> Generate
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Intention picker */}
       <Glass className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2 mb-2">
