@@ -346,18 +346,29 @@ export default function MealsPage() {
   };
   const generateKids = () => setKidPlan(buildKidWeek(myRulesPool, owned));
 
-  // Auto-heal plans saved before the variety fix: if any slot repeats the same
-  // recipe on 3+ days, rebuild the week once with the new (no-repeat) logic.
+  // Auto-heal plans saved before the variety fix. We read localStorage DIRECTLY
+  // here because useLS hydrates its state asynchronously — at mount the `plan`
+  // state is still empty, so checking it would always skip the heal.
   useEffect(() => {
-    const days = Object.keys(plan);
+    const readLS = <T,>(k: string, fb: T): T => {
+      try { const r = localStorage.getItem(k); return r ? (JSON.parse(r) as T) : fb; } catch { return fb; }
+    };
+    const saved = readLS<Record<string, Record<MealType, string | null>>>(LS.plan, {});
+    const days = Object.keys(saved);
     if (days.length < 3) return;
     const repetitive = (["breakfast", "lunch", "dinner", "snack"] as MealType[]).some((slot) => {
       const counts: Record<string, number> = {};
-      days.forEach((d) => { const id = plan[d]?.[slot]; if (id) counts[id] = (counts[id] || 0) + 1; });
+      days.forEach((d) => { const id = saved[d]?.[slot]; if (id) counts[id] = (counts[id] || 0) + 1; });
       return Object.values(counts).some((c) => c >= 3);
     });
-    if (repetitive) {
-      setPlan(buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDay ?? undefined));
+    // Also heal plans that simply have no snack yet (saved before snacks existed).
+    const missingSnack = days.some((d) => !saved[d]?.snack);
+    if (repetitive || missingSnack) {
+      const savedIntention = readLS<Intention>(LS.intention, "light");
+      const savedPhase = readLS<CyclePhase>(LS.phase, "any");
+      const savedOwned = pantrySet(readLS<Record<string, string[]>>(LS.pantry, {}));
+      const savedRatings = readLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
+      setPlan(buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDay ?? undefined));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
