@@ -56,7 +56,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
             })}
           </nav>
         </div>
-        <p className="hidden px-2 font-script text-sm text-[#831843] lg:block">stay soft, bloom on 🌸</p>
+        <p className="hidden px-2 font-script text-sm text-[#831843] lg:block">stay soft, bloom on ✿</p>
       </aside>
 
       {/* Mobile Top App Bar */}
@@ -64,7 +64,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
         <div className="scale-90 origin-left">
           <BloomLogo />
         </div>
-        <p className="font-script text-sm text-[#831843]">stay soft, bloom on 🌸</p>
+        <p className="font-script text-sm text-[#831843]">stay soft, bloom on ✿</p>
       </header>
 
       {/* Main container */}
