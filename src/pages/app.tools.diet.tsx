@@ -94,13 +94,13 @@ interface LoggedMeal {
   micros?: Recipe["micros"];
 }
 type DayMeals = Record<MealType, LoggedMeal | null>;
-const EMPTY_DAY: DayMeals = { breakfast: null, lunch: null, dinner: null, snack: null };
+const EMPTY_DAY: DayMeals = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
 
 const MEAL_LABELS: Record<MealType, string> = {
-  breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack",
+  breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack", lunchbox: "Lunchbox",
 };
 const MEAL_ICONS: Record<MealType, React.ElementType> = {
-  breakfast: Sunrise, lunch: Sun, dinner: Moon, snack: Apple,
+  breakfast: Sunrise, lunch: Sun, dinner: Moon, snack: Apple, lunchbox: Apple,
 };
 
 const PHASE_RING: Record<DietPhase, string> = {

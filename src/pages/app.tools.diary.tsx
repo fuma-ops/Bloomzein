@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Cloud, Smile, Zap, Heart, Moon, Battery, type LucideIcon } from "lucide-react";
 import { readTodayMood, writeTodayMood } from "@/lib/crossToolData";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 
@@ -19,10 +20,13 @@ export interface DiaryEntry {
 export const DIARY_STORAGE_KEY = "bloom:diary";
 
 // Backward-compat export used by toolSnapshots
-export function moodMeta(key: string): { label: string } {
+const MOOD_ICONS: Record<string, LucideIcon> = {
+  calm: Cloud, happy: Smile, energetic: Zap, sensitive: Heart, dreamy: Moon, tired: Battery,
+};
+export function moodMeta(key: string): { label: string; Icon: LucideIcon } {
   const known = ["Calm","Happy","Energetic","Sensitive","Dreamy","Tired"];
   const match = known.find((n) => n.toLowerCase() === key.toLowerCase());
-  return { label: match ?? key };
+  return { label: match ?? key, Icon: MOOD_ICONS[(match ?? key).toLowerCase()] ?? Cloud };
 }
 
 function loadEntries(): DiaryEntry[] {
