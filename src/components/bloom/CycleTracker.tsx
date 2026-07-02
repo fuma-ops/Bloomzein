@@ -44,6 +44,9 @@ import {
   CYCLE_SETTINGS_KEY,
   CYCLE_PHASE_KEY,
 } from "./cyclePhase";
+import { CycleOnboarding } from "./CycleOnboarding";
+
+const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
 /** @deprecated use DEFAULT_CYCLE_SETTINGS / readCycleSettings from "./cyclePhase" — kept for existing imports */
 export const DEFAULT_SETTINGS: CycleSettings = DEFAULT_CYCLE_SETTINGS;
@@ -273,6 +276,16 @@ export function CycleTracker() {
   const [setupOpen,      setSetupOpen]      = useState(false);
   const [isSetup,        setIsSetup]        = useState(() => hasCycleSettings());
   const [showResetMenu,  setShowResetMenu]  = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // First visit to the Cycle Tracker → play the "Meet your cycle" tour once.
+  useEffect(() => {
+    try { if (!localStorage.getItem(CYCLE_ONBOARDED_KEY)) setShowOnboarding(true); } catch {}
+  }, []);
+  const finishOnboarding = () => {
+    try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
+    setShowOnboarding(false);
+  };
 
   function resetAllData() {
     try {
@@ -673,6 +686,7 @@ export function CycleTracker() {
 
   return (
     <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
+      {showOnboarding && <CycleOnboarding onDone={finishOnboarding} />}
       {/* Decorative background blobs — give glass cards something to blur through */}
       <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
       <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(244,114,182,.14) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
@@ -685,8 +699,9 @@ export function CycleTracker() {
 
           {/* ── PHASE HERO CARD ── */}
           <div
+            data-tour="phase"
             className="relative overflow-hidden rounded-[22px]"
-            style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px' }}
+            style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px', scrollMarginTop: 90, scrollMarginBottom: 90 }}
           >
             {/* Background photo — full-width, masked to fade left→right seamlessly */}
             <img
@@ -857,7 +872,7 @@ export function CycleTracker() {
           </div>
 
           {/* ── TODAY FOR YOUR PHASE ── */}
-          <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")} style={cardStyle}>
+          <div data-tour="today" className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")} style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }}>
             <div className="flex items-center gap-2 mb-1">
               <span className="grid place-items-center rounded-full" style={{ width: 24, height: 24, background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[currentPhase]} /></svg>
@@ -879,7 +894,7 @@ export function CycleTracker() {
           </div>
 
           {/* ── CALENDAR CARD ── */}
-          <div style={{ ...cardStyle, position: 'relative' }}>
+          <div data-tour="calendar" style={{ ...cardStyle, position: 'relative', scrollMarginTop: 90, scrollMarginBottom: 90 }}>
             {/* Setup overlay */}
             {!isSetup && (
               <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-[22px] animate-fade-in" style={{ background: 'rgba(255,255,255,.92)' }}>
@@ -1058,7 +1073,7 @@ export function CycleTracker() {
           </div>
 
           {/* ── MOOD CARD (mobile/tablet, lg:hidden in desktop right panel) ── */}
-          <div style={{ ...cardStyle }} className="lg:hidden">
+          <div data-tour="checkin" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="lg:hidden">
             <h3 className="font-script" style={{ fontSize: '23px', color: '#DB2777' }}>How are you feeling?</h3>
             <div className="grid grid-cols-4 gap-[7px] mt-3">
               {MOODS.map((m) => {
@@ -1124,7 +1139,7 @@ export function CycleTracker() {
           </div>
 
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
-          <div style={{ ...cardStyle }} className="reveal-on-scroll lg:hidden">
+          <div data-tour="recommend" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="reveal-on-scroll lg:hidden">
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
             <p className="reveal-on-scroll" data-reveal-delay="90ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>The same yoga, workout & meal proposed on your Today plan — tap to start.</p>
             {renderSuggestions()}
@@ -1173,7 +1188,7 @@ export function CycleTracker() {
           }}
         >
           {/* Mood picker */}
-          <div className="mb-5">
+          <div data-tour="checkin" className="mb-5" style={{ scrollMarginTop: 90, scrollMarginBottom: 90 }}>
             <h3 className="font-script mb-3" style={{ fontSize: '21px', color: '#DB2777' }}>How are you feeling?</h3>
             <div className="grid grid-cols-4 gap-[7px]">
               {MOODS.map((m) => {
@@ -1213,7 +1228,7 @@ export function CycleTracker() {
           </div>
 
           {/* Suggestions */}
-          <div className="mb-5">
+          <div data-tour="recommend" className="mb-5" style={{ scrollMarginTop: 90, scrollMarginBottom: 90 }}>
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="0ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
             <p className="reveal-on-scroll" data-reveal-delay="30ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>The same yoga, workout & meal proposed on your Today plan — tap to start.</p>
             {renderSuggestions()}
