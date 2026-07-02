@@ -8,6 +8,77 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToolSnapshots } from "@/lib/toolSnapshots";
+import { readCyclePhase, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+
+// ── Real data helpers ─────────────────────────────────────────────────────────
+function readJSON<T>(key: string, fb: T): T {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fb; } catch { return fb; }
+}
+function last7ISO(): string[] {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+  }
+  return out;
+}
+
+const PHASE_DESC: Record<Exclude<CyclePhase, "any">, string> = {
+  period:     "Rest and renew — your body is doing powerful work.",
+  follicular: "Fresh energy is rising. A great day to begin.",
+  fertile:    "You're glowing — bright, open and magnetic.",
+  ovulation:  "Peak energy. Channel it into something bold.",
+  luteal:     "Wind down gently — softness is your strength.",
+};
+
+interface MeStats {
+  phase: Exclude<CyclePhase, "any"> | null;
+  streak: number;
+  moodDays: number; moveDays: number; journalCount: number;
+  waterToday: number; waterGoal: number;
+  weekDots: boolean[];
+  level: number; pct: number;
+}
+
+function computeMeStats(): MeStats {
+  const days = last7ISO();
+  const daySet = new Set(days);
+  const todayISO = days[0];
+
+  const moodLog = readJSON<Record<string, string>>("bloom:mood-log-v2", {});
+  const todayMood = (() => { try { return localStorage.getItem("bloom:today-mood"); } catch { return null; } })();
+  const moodDays = days.filter((d) => moodLog[d] || (d === todayISO && todayMood)).length;
+
+  const workoutHist = readJSON<{ date: string }[]>("bloom:workout-history", []);
+  const yoga = readJSON<{ count: number; lastISO: string | null }>("bloom:yoga-streak", { count: 0, lastISO: null });
+  const moveSet = new Set(workoutHist.filter((h) => daySet.has(h.date)).map((h) => h.date));
+  if (yoga.lastISO && daySet.has(yoga.lastISO)) moveSet.add(yoga.lastISO);
+
+  const diary = readJSON<{ date: string }[]>("bloom:diary", []);
+  const journalCount = diary.filter((e) => daySet.has(e.date)).length;
+
+  const water = readJSON<{ date: string; count: number }>("bloom:today-water", { date: "", count: 0 });
+  const waterGoal = (() => { const g = Number(localStorage.getItem("bloom:today-water-goal")); return g > 0 ? g : 8; })();
+  const waterToday = water.date === todayISO ? water.count : 0;
+
+  const streak = (() => { const s = Number(localStorage.getItem("bloom:streak-days")); return s > 0 ? s : 0; })();
+
+  // A day "blooms" if she logged a mood, moved, or journaled. Ordered Mon→Sun-ish (oldest→newest).
+  const weekDots = [...days].reverse().map((d) => !!moodLog[d] || moveSet.has(d) || diary.some((e) => e.date === d));
+
+  // Level grows with total real activity — honest, not decorative.
+  const total = Object.keys(moodLog).length + workoutHist.length + diary.length + yoga.count;
+  const level = Math.floor(total / 12) + 1;
+  const pct = Math.round(((total % 12) / 12) * 100);
+
+  const phase = readCyclePhase();
+  return {
+    phase: phase && phase !== "any" ? phase : null,
+    streak, moodDays, moveDays: moveSet.size, journalCount,
+    waterToday, waterGoal, weekDots, level, pct,
+  };
+}
 
 /** Shared, bidirectional with the Diet tool — drives the "tailored for you" recommendations. */
 const ME_GOAL_KEY = "bloom:me-goal";
@@ -90,12 +161,21 @@ export default function MePage() {
   }
 
   const [goal, setGoal] = useState<MeGoal>("maintain");
+  const [stats, setStats] = useState<MeStats | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   useEffect(() => {
     try {
       const g = localStorage.getItem(ME_GOAL_KEY);
       if (g === "lose" || g === "maintain" || g === "gain") setGoal(g);
     } catch {}
+    setStats(computeMeStats());
   }, []);
+
+  const memberSince = (() => {
+    const iso = profile?.created_at;
+    if (!iso) return null;
+    try { return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch { return null; }
+  })();
 
   function chooseGoal(g: MeGoal) {
     setGoal(g);
@@ -121,7 +201,7 @@ export default function MePage() {
                 className="relative h-16 w-16 sm:h-28 sm:w-28 rounded-full border-2 sm:border-4 border-white object-cover shadow-xl shadow-hotpink/30"
                 referrerPolicy="no-referrer"
               />
-              <button className="absolute -bottom-1 -right-1 grid h-6 w-6 sm:h-8 sm:w-8 place-items-center rounded-full bg-white text-hotpink border border-petal/60 shadow-md transition hover:scale-105">
+              <button onClick={() => setEditOpen(true)} aria-label="Edit profile" className="absolute -bottom-1 -right-1 grid h-6 w-6 sm:h-8 sm:w-8 place-items-center rounded-full bg-white text-hotpink border border-petal/60 shadow-md transition hover:scale-105 active:scale-95">
                 <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={1.8} />
               </button>
             </div>
@@ -133,20 +213,20 @@ export default function MePage() {
               <span className="mt-1.5 sm:mt-2 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
                 <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2} /> Soft Soul
               </span>
-              <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs text-rose/80">Blooming since June 2026 ✿</p>
+              {memberSince && <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs text-rose/80">Blooming since {memberSince} ✿</p>}
 
               <div className="mt-2 sm:mt-3 max-w-xs">
                 <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-hotpink">
-                  <span>Level 7</span>
-                  <span>78%</span>
+                  <span>Level {stats?.level ?? 1}</span>
+                  <span>{stats?.pct ?? 0}%</span>
                 </div>
                 <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/70 border border-petal/60 overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: "78%" }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${stats?.pct ?? 0}%` }} />
                 </div>
-                <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70">22% to next bloom</p>
+                <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70">{100 - (stats?.pct ?? 0)}% to next bloom</p>
               </div>
 
-              <button className="mt-2.5 sm:mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold text-hotpink shadow-md transition hover:bg-white hover:-translate-y-0.5">
+              <button onClick={() => setEditOpen(true)} className="mt-2.5 sm:mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold text-hotpink shadow-md transition hover:bg-white hover:-translate-y-0.5 active:scale-95">
                 <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={1.8} /> Edit profile
               </button>
             </div>
@@ -164,20 +244,26 @@ export default function MePage() {
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
         <SectionTitle hint="this week">Your Bloom journey</SectionTitle>
         <div className="grid grid-cols-2 gap-2.5 sm:gap-4 sm:grid-cols-4">
-          <JourneyCard
-            index={0}
-            Icon={Droplet}
-            eyebrow="Cycle Phase"
-            title="Luteal Phase"
-            desc="Your body is asking for softness today."
-          />
+          {stats?.phase ? (
+            <JourneyCard
+              index={0}
+              Icon={Droplet}
+              eyebrow="Cycle Phase"
+              title={`${PHASE_LABEL[stats.phase]} Phase`}
+              desc={PHASE_DESC[stats.phase]}
+            />
+          ) : (
+            <a href="/app/tools/cycle" className="block">
+              <JourneyCard index={0} Icon={Droplet} eyebrow="Cycle Phase" title="Set up ✿" desc="Tap to sync your cycle." />
+            </a>
+          )}
           <JourneyCard
             index={1}
             Icon={Flame}
-            eyebrow="Streak"
-            title="7 days"
-            desc="Your longest streak this month!"
-            extra={<WeekDots filled={[true, true, true, true, true, true, false]} />}
+            eyebrow="Bloom Streak"
+            title={`${stats?.streak ?? 0} ${(stats?.streak ?? 0) === 1 ? "day" : "days"}`}
+            desc={(stats?.streak ?? 0) > 0 ? "Keep the soft momentum going ✿" : "Log something today to begin."}
+            extra={<WeekDots filled={stats?.weekDots ?? [false, false, false, false, false, false, false]} />}
           />
           {snapshots.map((s, i) => (
             <JourneyCard key={s.slug} index={i + 2} Icon={s.Icon} eyebrow={s.label} title={s.value} desc={s.note} />
@@ -190,10 +276,10 @@ export default function MePage() {
         <SectionTitle>This week's bloom</SectionTitle>
         <div className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <div className="flex-1 w-full grid grid-cols-2 gap-3 sm:gap-5">
-            <WeeklyMetric Icon={Smile} label="Mood" value={5} total={7} unit="days" />
-            <WeeklyMetric Icon={Droplet} label="Water" value={5} total={7} unit="days" />
-            <WeeklyMetric Icon={Dumbbell} label="Movement" value={2} total={5} unit="days" />
-            <WeeklyMetric Icon={PenLine} label="Journal" value={2} total={5} unit="entries" />
+            <WeeklyMetric Icon={Smile} label="Mood" value={stats?.moodDays ?? 0} total={7} unit="days" />
+            <WeeklyMetric Icon={Droplet} label="Water" value={stats?.waterToday ?? 0} total={stats?.waterGoal ?? 8} unit="today" />
+            <WeeklyMetric Icon={Dumbbell} label="Movement" value={stats?.moveDays ?? 0} total={7} unit="days" />
+            <WeeklyMetric Icon={PenLine} label="Journal" value={stats?.journalCount ?? 0} total={7} unit="entries" />
           </div>
           <div className="clay-blob pearl-sheen grid h-28 w-28 sm:h-36 sm:w-36 shrink-0 place-items-center rounded-full text-white text-center px-5">
             <div>
@@ -347,6 +433,80 @@ export default function MePage() {
         </div>
         <p className="mt-6 text-center font-script text-lg text-rose/70">stay soft, bloom on ✿</p>
       </section>
+
+      {editOpen && (
+        <EditProfileModal
+          initialName={profile?.name ?? ""}
+          initialAge={profile?.age ?? null}
+          initialWeight={profile?.weight ?? null}
+          initialUnit={profile?.weight_unit ?? "kg"}
+          onClose={() => setEditOpen(false)}
+          onSave={updateProfile}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditProfileModal({
+  initialName, initialAge, initialWeight, initialUnit, onClose, onSave,
+}: {
+  initialName: string; initialAge: number | null; initialWeight: number | null; initialUnit: "kg" | "lbs";
+  onClose: () => void;
+  onSave: (patch: { name?: string | null; age?: number | null; weight?: number | null; weight_unit?: "kg" | "lbs" }) => Promise<{ error: string | null }>;
+}) {
+  const [name, setName] = useState(initialName);
+  const [age, setAge] = useState(initialAge != null ? String(initialAge) : "");
+  const [weight, setWeight] = useState(initialWeight != null ? String(initialWeight) : "");
+  const [unit, setUnit] = useState<"kg" | "lbs">(initialUnit);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async () => {
+    setSaving(true); setErr(null);
+    const { error } = await onSave({
+      name: name.trim() || null,
+      age: age ? Math.max(0, Math.min(120, parseInt(age, 10))) : null,
+      weight: weight ? Math.max(0, parseFloat(weight)) : null,
+      weight_unit: unit,
+    });
+    setSaving(false);
+    if (error) setErr(error); else onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 sm:p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-script text-3xl text-hotpink leading-none">Edit profile ✿</h2>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-blush text-rose/70 active:scale-90"><ChevronRight className="h-4 w-4 rotate-90" /></button>
+        </div>
+        <label className="block mb-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Name</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
+            className="mt-1 w-full rounded-2xl bg-white border border-petal/60 px-3 py-2.5 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+        </label>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Age</span>
+            <input value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="—"
+              className="mt-1 w-full rounded-2xl bg-white border border-petal/60 px-3 py-2.5 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+          </label>
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Weight</span>
+            <div className="mt-1 flex items-stretch rounded-2xl border border-petal/60 overflow-hidden bg-white">
+              <input value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" placeholder="—"
+                className="flex-1 min-w-0 px-3 py-2.5 text-sm text-rose outline-none" />
+              <button onClick={() => setUnit(unit === "kg" ? "lbs" : "kg")} className="px-2.5 text-xs font-bold text-hotpink bg-blush/60 border-l border-petal/60">{unit}</button>
+            </div>
+          </label>
+        </div>
+        {err && <p className="text-[11px] text-magenta mb-2">{err}</p>}
+        <button onClick={save} disabled={saving} className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white disabled:opacity-60">
+          {saving ? "Saving…" : <><Check className="h-4 w-4" strokeWidth={3} /> Save changes</>}
+        </button>
+        <p className="mt-2 text-center text-[10px] text-rose/50">Syncs to your Diet plan & profile ✿</p>
+      </div>
     </div>
   );
 }
