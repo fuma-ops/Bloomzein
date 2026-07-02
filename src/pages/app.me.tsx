@@ -9,6 +9,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToolSnapshots } from "@/lib/toolSnapshots";
 import { readCyclePhase, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { RECIPES } from "@/components/bloom/recipes/data";
 
 // ── Real data helpers ─────────────────────────────────────────────────────────
 function readJSON<T>(key: string, fb: T): T {
@@ -109,40 +110,57 @@ function PrimaryBtn({ children, href }: { children: React.ReactNode; href: strin
   );
 }
 
-/* ---------- Sample data ---------- */
-const favorites = [
+/* ---------- Favorites — real saved recipes, else curated reads ---------- */
+type FavItem = { title: string; tag: string; img: string; href: string };
+const CURATED_READS: FavItem[] = [
   { title: "Cycle syncing 101", tag: "Wellness", img: "/images/read-cycle.png", href: "/app/read" },
   { title: "Soft girl morning ritual", tag: "Lifestyle", img: "/images/read-selfcare.png", href: "/app/read" },
   { title: "Pink budgeting that works", tag: "Money", img: "/images/read-money.png", href: "/budget" },
 ];
+function readFavorites(): { items: FavItem[]; isReal: boolean } {
+  const favIds = readJSON<string[]>("bloom:meals-favorites", []);
+  const ratings = readJSON<Record<string, string>>("bloom:meals-ratings", {});
+  const lovedIds = Object.entries(ratings).filter(([, v]) => v === "love").map(([k]) => k);
+  const ids = [...new Set([...favIds, ...lovedIds])];
+  const recs = ids.map((id) => RECIPES.find((r) => r.id === id)).filter(Boolean) as (typeof RECIPES)[number][];
+  if (!recs.length) return { items: CURATED_READS, isReal: false };
+  return {
+    isReal: true,
+    items: recs.slice(0, 8).map((r) => ({
+      title: r.name,
+      tag: r.mealType,
+      img: r.photo ? `/images/recipes/${r.photo}` : "/images/meal-buddha.jpg",
+      href: "/app/tools/meals",
+    })),
+  };
+}
 
-const goals = [
-  { title: "Drink 2L water daily", pct: 72 },
-  { title: "Save $500 this month", pct: 45 },
-  { title: "Yoga 4x a week", pct: 60 },
-];
 
-const achievements = [
-  { label: "First Bloom", Icon: Flower2 },
-  { label: "Journal Lover", Icon: BookOpen },
-  { label: "Hydration Queen", Icon: Droplet },
-  { label: "Cycle Master", Icon: Moon },
-  { label: "Self Care Star", Icon: Star },
-];
+function achievementsFor(s: MeStats | null) {
+  return [
+    { label: "First Bloom",     Icon: Flower2, unlocked: !!s && (s.streak > 0 || s.moodDays > 0 || s.moveDays > 0 || s.journalCount > 0) },
+    { label: "Journal Lover",   Icon: BookOpen, unlocked: !!s && s.journalCount >= 3 },
+    { label: "Hydration Queen", Icon: Droplet,  unlocked: !!s && s.waterToday >= s.waterGoal },
+    { label: "Cycle Master",    Icon: Moon,     unlocked: !!s && s.phase !== null },
+    { label: "7-Day Streak",    Icon: Star,     unlocked: !!s && s.streak >= 7 },
+  ];
+}
 
-const settingsGroups: { items: { Icon: typeof User; label: string; href?: string }[]; danger?: boolean }[] = [
+type SettingAction = "edit" | "logout" | "replay";
+type SettingItem = { Icon: typeof User; label: string; href?: string; action?: SettingAction; soon?: boolean };
+const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
   {
     items: [
-      { Icon: User, label: "Account & profile" },
-      { Icon: Crown, label: "Bloom Premium" },
-      { Icon: Bell, label: "Notifications & reminders" },
-      { Icon: SettingsIcon, label: "Preferences" },
-      { Icon: Shield, label: "Privacy & data" },
-      { Icon: LifeBuoy, label: "Help & support" },
-      { Icon: RotateCcw, label: "Replay welcome tour" },
+      { Icon: User, label: "Account & profile", action: "edit" },
+      { Icon: Bell, label: "Notifications & reminders", href: "/app/tools/notes" },
+      { Icon: Wallet, label: "Budget & money", href: "/budget" },
+      { Icon: Crown, label: "Bloom Premium", soon: true },
+      { Icon: Shield, label: "Privacy & data", soon: true },
+      { Icon: LifeBuoy, label: "Help & support", href: "mailto:hello@bloomzein.app" },
+      { Icon: RotateCcw, label: "Replay welcome tour", action: "replay" },
     ],
   },
-  { items: [{ Icon: LogOut, label: "Log out" }], danger: true },
+  { items: [{ Icon: LogOut, label: "Log out", action: "logout" }], danger: true },
 ];
 
 export default function MePage() {
@@ -163,12 +181,14 @@ export default function MePage() {
   const [goal, setGoal] = useState<MeGoal>("maintain");
   const [stats, setStats] = useState<MeStats | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [favs, setFavs] = useState<{ items: FavItem[]; isReal: boolean }>({ items: CURATED_READS, isReal: false });
   useEffect(() => {
     try {
       const g = localStorage.getItem(ME_GOAL_KEY);
       if (g === "lose" || g === "maintain" || g === "gain") setGoal(g);
     } catch {}
     setStats(computeMeStats());
+    setFavs(readFavorites());
   }, []);
 
   const memberSince = (() => {
@@ -293,29 +313,38 @@ export default function MePage() {
       </section>
 
       {/* ACHIEVEMENTS */}
-      <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
-        <SectionTitle hint="View all →">Achievements</SectionTitle>
-        <div className="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1">
-          {achievements.map((a, i) => (
-            <div
-              key={a.label}
-              style={{ animationDelay: `${i * 60}ms` }}
-              className="flex flex-col items-center gap-1.5 sm:gap-2 shrink-0 w-16 sm:w-20 animate-card-pop-in"
-            >
-              <span className="clay-blob animate-icon-breathe grid h-12 w-12 sm:h-16 sm:w-16 place-items-center rounded-full text-white">
-                <a.Icon className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.6} />
-              </span>
-              <span className="text-[10px] sm:text-xs font-semibold text-rose text-center leading-tight">{a.label}</span>
+      {(() => {
+        const items = achievementsFor(stats);
+        const earned = items.filter((a) => a.unlocked).length;
+        return (
+          <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
+            <SectionTitle hint={`${earned}/${items.length} earned`}>Achievements</SectionTitle>
+            <div className="flex gap-3 sm:gap-5 overflow-x-auto no-scrollbar pb-1">
+              {items.map((a, i) => (
+                <div
+                  key={a.label}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  className="flex flex-col items-center gap-1.5 sm:gap-2 shrink-0 w-16 sm:w-20 animate-card-pop-in"
+                >
+                  <span className={[
+                    "grid h-12 w-12 sm:h-16 sm:w-16 place-items-center rounded-full",
+                    a.unlocked ? "clay-blob animate-icon-breathe text-white" : "bg-blush/60 text-rose/30 border border-petal/40",
+                  ].join(" ")}>
+                    <a.Icon className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.6} />
+                  </span>
+                  <span className={["text-[10px] sm:text-xs font-semibold text-center leading-tight", a.unlocked ? "text-rose" : "text-rose/40"].join(" ")}>{a.label}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
+        );
+      })()}
 
       {/* FAVORITES */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "240ms" }}>
-        <SectionTitle hint="View all →">Favorites & saved</SectionTitle>
+        <SectionTitle hint={favs.isReal ? "your saved recipes" : "picked for you"}>Favorites & saved</SectionTitle>
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
-          {favorites.map((f, i) => (
+          {favs.items.map((f, i) => (
             <a
               key={f.title}
               href={f.href}
@@ -368,29 +397,6 @@ export default function MePage() {
           </div>
           <p className="mt-2.5 text-[11px] text-rose/70">This tailors your Diet plan's portions & recipe picks ✿</p>
         </div>
-        {goals.length === 0 ? (
-          <EmptyCard text="Set your first intention" cta="Create a goal" href="/app/tools" Icon={Target} />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {goals.map((g) => (
-              <div key={g.title} className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl p-4 sm:p-5">
-                <div className="flex items-center gap-2 text-rose">
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink">
-                    <Target className="h-4 w-4" strokeWidth={1.6} />
-                  </span>
-                  <span className="text-sm font-semibold">{g.title}</span>
-                </div>
-                <div className="mt-3 h-2 rounded-full bg-blush overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${g.pct}%` }} />
-                </div>
-                <div className="mt-1.5 flex items-center justify-between text-[11px] text-rose/70">
-                  <span>{g.pct}% there</span>
-                  <span className="font-script text-base text-hotpink">keep blooming ✿</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* SETTINGS */}
@@ -402,32 +408,31 @@ export default function MePage() {
               key={gi}
               className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl overflow-hidden"
             >
-              {group.items.map((item, i) => (
-                <button
-                  key={item.label}
-                  onClick={
-                    item.label === "Log out"
-                      ? () => signOut()
-                      : item.label === "Replay welcome tour"
-                      ? () => replayOnboarding()
-                      : undefined
-                  }
-                  className={[
-                    "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-blush/60",
-                    i > 0 ? "border-t border-petal/40" : "",
-                    group.danger ? "text-magenta" : "text-rose",
-                  ].join(" ")}
-                >
-                  <span className={[
-                    "grid h-9 w-9 place-items-center rounded-full",
-                    group.danger ? "bg-magenta/10 text-magenta" : "bg-blush text-hotpink",
-                  ].join(" ")}>
-                    <item.Icon className="h-4 w-4" strokeWidth={1.6} />
-                  </span>
-                  <span className="flex-1 text-sm font-semibold">{item.label}</span>
-                  {!group.danger && <ChevronRight className="h-4 w-4 text-rose/50" strokeWidth={1.6} />}
-                </button>
-              ))}
+              {group.items.map((item, i) => {
+                const cls = [
+                  "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-blush/60",
+                  i > 0 ? "border-t border-petal/40" : "",
+                  group.danger ? "text-magenta" : "text-rose",
+                  item.soon ? "opacity-70" : "",
+                ].join(" ");
+                const inner = (
+                  <>
+                    <span className={["grid h-9 w-9 place-items-center rounded-full", group.danger ? "bg-magenta/10 text-magenta" : "bg-blush text-hotpink"].join(" ")}>
+                      <item.Icon className="h-4 w-4" strokeWidth={1.6} />
+                    </span>
+                    <span className="flex-1 text-sm font-semibold">{item.label}</span>
+                    {item.soon
+                      ? <span className="rounded-full bg-blush text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Soon</span>
+                      : !group.danger && <ChevronRight className="h-4 w-4 text-rose/50" strokeWidth={1.6} />}
+                  </>
+                );
+                if (item.href) return <a key={item.label} href={item.href} className={cls}>{inner}</a>;
+                const onClick = item.action === "logout" ? () => signOut()
+                  : item.action === "replay" ? () => replayOnboarding()
+                  : item.action === "edit" ? () => setEditOpen(true)
+                  : undefined;
+                return <button key={item.label} onClick={onClick} disabled={item.soon} className={cls}>{inner}</button>;
+              })}
             </div>
           ))}
         </div>
