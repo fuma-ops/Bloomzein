@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
-  CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
+  Sparkles, Flower2, Heart, ArrowRight, Sun, Moon,
+  Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
   Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, ChevronUp, AlarmClock, Star,
@@ -84,12 +84,12 @@ function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, u
 
 // ── Mood ─────────────────────────────────────────────────────────────────────
 const MOODS = [
-  { key: "calm",      label: "Calm",      Icon: Cloud },
-  { key: "happy",     label: "Happy",     Icon: Smile },
-  { key: "energetic", label: "Energetic", Icon: Sparkles },
-  { key: "sensitive", label: "Sensitive", Icon: Heart },
-  { key: "sad",       label: "Sad",       Icon: CloudRain },
-  { key: "tired",     label: "Tired",     Icon: Battery },
+  { key: "calm",      label: "Calm",      emoji: "😌" },
+  { key: "happy",     label: "Happy",     emoji: "😊" },
+  { key: "energetic", label: "Energetic", emoji: "✨" },
+  { key: "sensitive", label: "Sensitive", emoji: "🥺" },
+  { key: "sad",       label: "Sad",       emoji: "🥀" },
+  { key: "tired",     label: "Tired",     emoji: "😴" },
 ] as const;
 
 const MOOD_LABEL: Record<string, string> = {
@@ -112,13 +112,56 @@ const SYMPTOMS = [
   { key: "acne",      label: "Acne",        Icon: Meh },
 ] as const;
 
+// ── Bloom streak ─────────────────────────────────────────────────────────────
+function ymdLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+/**
+ * Real "days blooming" streak: consecutive days (ending today, with a one-day
+ * grace) on which she logged *anything* — a mood, a journal entry, a workout or
+ * yoga. Honest, not a decorative hardcoded number.
+ */
+function computeBloomStreak(): number {
+  try {
+    const active = new Set<string>();
+    const addArrDates = (key: string) => {
+      try {
+        const a = JSON.parse(localStorage.getItem(key) || "[]");
+        if (Array.isArray(a)) a.forEach((e: { date?: string }) => { if (e?.date) active.add(e.date); });
+      } catch {}
+    };
+    try {
+      const mood = JSON.parse(localStorage.getItem("bloom:mood-log-v2") || "{}");
+      if (mood && typeof mood === "object") Object.keys(mood).forEach((d) => active.add(d));
+    } catch {}
+    addArrDates("bloom:diary");
+    addArrDates("bloom:workout-history");
+    try {
+      const yoga = JSON.parse(localStorage.getItem("bloom:yoga-streak") || "{}");
+      if (yoga?.lastISO) active.add(yoga.lastISO);
+    } catch {}
+    const today = new Date();
+    if (localStorage.getItem("bloom:today-mood")) active.add(ymdLocal(today));
+
+    const cursor = new Date(today);
+    // Grace: if nothing logged yet today, start counting from yesterday so the
+    // streak doesn't visually reset first thing in the morning.
+    if (!active.has(ymdLocal(cursor))) cursor.setDate(cursor.getDate() - 1);
+    let streak = 0;
+    while (active.has(ymdLocal(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+    return streak;
+  } catch {
+    return 0;
+  }
+}
+
 // ── Phase content ────────────────────────────────────────────────────────────
 const PHASE_QUOTES: Record<Exclude<CyclePhase, "any">, string> = {
-  period:     "Rest is productive. Your body is doing powerful work today.",
-  follicular: "Fresh energy is waking up in you. What will you create?",
-  fertile:    "You're in your magnetic era. Bright and open.",
-  ovulation:  "You are radiant — the world feels it.",
-  luteal:     "Your sensitivity is wisdom, not weakness. Be gentle.",
+  period:     "Curl up and go slow, lovely — your body's doing something beautiful. 🌸",
+  follicular: "Something fresh is blooming in you. Follow the little spark. ✿",
+  fertile:    "You're glowing today — soft, open and oh-so magnetic. ✨",
+  ovulation:  "Peak sparkle, gorgeous. Let yourself shine bright. 💗",
+  luteal:     "Be extra gentle with yourself today, sweet thing. 🌷",
 };
 
 const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
@@ -159,7 +202,7 @@ const AFFIRMATIONS: Record<Exclude<CyclePhase, "any">, string[]> = {
   follicular: ["I choose myself, every single day.", "Fresh starts live inside of me.", "What I begin today, I will grow."],
   fertile:    ["I am magnetic. I draw what I need.", "My energy is a gift I share wisely.", "I bloom in my own time, beautifully."],
   ovulation:  ["I am radiant — the world feels it.", "My body is wise, and I trust its rhythm.", "Every phase of my cycle has its gift."],
-  luteal:     ["I am allowed to rest without earning it.", "My sensitivity is wisdom, not weakness.", "Soft is strong. I move at my own pace."],
+  luteal:     ["I am allowed to rest without earning it.", "Being tender is a soft kind of strength.", "I move at my own gentle pace."],
 };
 
 function greeting() {
@@ -265,7 +308,7 @@ export default function TodayPage() {
   const [waterCount,          setWaterCount]          = useState(0);
   const [waterGoal,           setWaterGoal]           = useState(8);
   const [waterModalOpen,      setWaterModalOpen]      = useState(false);
-  const [streak,              setStreak]              = useState(7);
+  const [streak,              setStreak]              = useState(0);
   const [planDone,            setPlanDone]            = useState<string[]>([]);
   const [affirmIdx,           setAffirmIdx]           = useState(0);
   const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
@@ -292,7 +335,7 @@ export default function TodayPage() {
     const iso = todayISO();
 
     try { setMood(localStorage.getItem(KEYS.mood)); } catch {}
-    try { setStreak(Number(localStorage.getItem(KEYS.streak)) || 7); } catch {}
+    setStreak(computeBloomStreak());
 
     try {
       const raw = readJSON<{ date: string; list: string[] }>(KEYS.symptoms, { date: "", list: [] });
@@ -402,6 +445,7 @@ export default function TodayPage() {
   const pickMood = (key: string) => {
     setMood(key);
     try { localStorage.setItem(KEYS.mood, key); } catch {}
+    setStreak(computeBloomStreak()); // logging today keeps the bloom streak alive
   };
 
   const toggleSymptom = (key: string) => {
@@ -463,8 +507,8 @@ export default function TodayPage() {
   // ── Derived ──────────────────────────────────────────────────────────────────
 
   const planItems = useMemo(() => buildPlanItems(phase), [phase]);
-  const moodHint  = MOODS[moodHintIdx];
-  const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
+  const moodHint   = MOODS[moodHintIdx];
+  const moodEmoji  = mood ? (MOODS.find((m) => m.key === mood)?.emoji ?? "🌸") : moodHint.emoji;
   const affirmPool = AFFIRMATIONS[phase];
   const affirmText = affirmPool[affirmIdx % affirmPool.length];
 
@@ -531,7 +575,7 @@ export default function TodayPage() {
               aria-expanded={moodPickerOpen}
               className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
             >
-              <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+              <span className="text-2xl sm:text-3xl leading-none drop-shadow-sm" aria-hidden>{moodEmoji}</span>
               {!mood && (
                 <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm">
                   <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
@@ -552,10 +596,19 @@ export default function TodayPage() {
           </div>
         </div>
 
-        {/* Streak badge */}
+        {/* Streak badge — real consecutive active days, honest about a fresh start */}
         <div className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 z-[2] rounded-2xl bg-white/55 backdrop-blur px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-center border border-petal/40 shadow-md">
-          <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">{streak}</p>
-          <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">days blooming</p>
+          {streak > 0 ? (
+            <>
+              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">{streak}🔥</p>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{streak === 1 ? "day blooming" : "days blooming"}</p>
+            </>
+          ) : (
+            <>
+              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">✿</p>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">fresh start</p>
+            </>
+          )}
         </div>
       </section>
 
@@ -1078,9 +1131,7 @@ function MoodPopover({
             className="group flex flex-col items-center gap-1 rounded-2xl border border-transparent bg-transparent py-1.5 px-0.5 transition hover:bg-blush/60 hover:border-hotpink/20 active:scale-95"
             style={{ animationDelay: `${i * 0.05}s` }}
           >
-            <span className="clay-blob animate-icon-breathe grid h-8 w-8 place-items-center rounded-full text-white">
-              <m.Icon className="h-4 w-4" strokeWidth={1.8} />
-            </span>
+            <span className="text-2xl leading-none transition-transform group-hover:scale-110" aria-hidden>{m.emoji}</span>
             <span className="text-[10px] font-semibold text-rose">{m.label}</span>
           </button>
         ))}

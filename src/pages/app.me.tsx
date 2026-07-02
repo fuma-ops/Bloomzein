@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   Pencil, Sparkles, Wallet,
-  Heart, Flower2, Target, ChevronRight,
+  Flower2, ChevronRight,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
-  Check, Sprout, Wind,
+  Check,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,15 +31,6 @@ function computeMeStats(): MeStats {
 
   return { level: Math.floor(total / 12) + 1, pct: Math.round(((total % 12) / 12) * 100) };
 }
-
-/** Shared, bidirectional with the Diet tool — drives the "tailored for you" recommendations. */
-const ME_GOAL_KEY = "bloom:me-goal";
-type MeGoal = "lose" | "maintain" | "gain";
-const GOAL_OPTIONS: { key: MeGoal; label: string; Icon: typeof Heart }[] = [
-  { key: "lose", label: "Lose weight", Icon: Wind },
-  { key: "maintain", label: "Feel balanced", Icon: Heart },
-  { key: "gain", label: "Gain strength", Icon: Sprout },
-];
 
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
@@ -106,15 +97,10 @@ export default function MePage() {
     window.location.href = "/app/today";
   }
 
-  const [goal, setGoal] = useState<MeGoal>("maintain");
   const [stats, setStats] = useState<MeStats | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [favs, setFavs] = useState<{ items: FavItem[]; isReal: boolean }>({ items: CURATED_READS, isReal: false });
   useEffect(() => {
-    try {
-      const g = localStorage.getItem(ME_GOAL_KEY);
-      if (g === "lose" || g === "maintain" || g === "gain") setGoal(g);
-    } catch {}
     setStats(computeMeStats());
     setFavs(readFavorites());
   }, []);
@@ -124,11 +110,6 @@ export default function MePage() {
     if (!iso) return null;
     try { return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch { return null; }
   })();
-
-  function chooseGoal(g: MeGoal) {
-    setGoal(g);
-    try { localStorage.setItem(ME_GOAL_KEY, g); } catch {}
-  }
 
   return (
     <div className="relative animate-fade-in">
@@ -210,40 +191,6 @@ export default function MePage() {
               </div>
             </a>
           ))}
-        </div>
-      </section>
-
-      {/* GOALS */}
-      <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
-        <SectionTitle hint="syncs with Diet">My goals & intentions</SectionTitle>
-        <div className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl p-4 sm:p-5 mb-3">
-          <div className="flex items-center gap-2 text-rose">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink">
-              <Target className="h-4 w-4" strokeWidth={1.6} />
-            </span>
-            <span className="text-sm font-semibold">Wellness goal</span>
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {GOAL_OPTIONS.map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                onClick={() => chooseGoal(key)}
-                className={[
-                  "flex flex-col items-center gap-1.5 rounded-2xl p-2.5 text-center transition-all duration-200 active:scale-95",
-                  goal === key ? "bg-hotpink/10 ring-2 ring-hotpink" : "bg-blush/60 hover:bg-petal/70",
-                ].join(" ")}
-              >
-                <span className={[
-                  "grid h-8 w-8 place-items-center rounded-full",
-                  goal === key ? "bg-hotpink text-white" : "bg-white text-hotpink ring-1 ring-petal",
-                ].join(" ")}>
-                  <Icon className="h-4 w-4" strokeWidth={1.8} />
-                </span>
-                <span className={`text-[10px] font-semibold ${goal === key ? "text-hotpink" : "text-rose"}`}>{label}</span>
-              </button>
-            ))}
-          </div>
-          <p className="mt-2.5 text-[11px] text-rose/70">This tailors your Diet plan's portions & recipe picks ✿</p>
         </div>
       </section>
 
