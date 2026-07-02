@@ -203,7 +203,8 @@ function moodForDate(entries: DiaryEntry[], date: Date) {
   const dateStr = fmtLocalDate(date);
   const matches = entries.filter((e) => e.date === dateStr);
   if (!matches.length) return null;
-  matches.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  // Legacy diary entries can miss createdAt — coerce so the sort never throws.
+  matches.sort((a, b) => String(b.createdAt ?? "").localeCompare(String(a.createdAt ?? "")));
   return moodMeta(matches[0].mood);
 }
 
