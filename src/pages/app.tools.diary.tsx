@@ -24,9 +24,11 @@ const MOOD_ICONS: Record<string, LucideIcon> = {
   calm: Cloud, happy: Smile, energetic: Zap, sensitive: Heart, dreamy: Moon, tired: Battery,
 };
 export function moodMeta(key: string): { label: string; Icon: LucideIcon } {
+  // Legacy/partial diary entries can carry a missing or non-string mood — never let that throw.
+  const safe = typeof key === "string" && key.trim() ? key : "Calm";
   const known = ["Calm","Happy","Energetic","Sensitive","Dreamy","Tired"];
-  const match = known.find((n) => n.toLowerCase() === key.toLowerCase());
-  return { label: match ?? key, Icon: MOOD_ICONS[(match ?? key).toLowerCase()] ?? Cloud };
+  const match = known.find((n) => n.toLowerCase() === safe.toLowerCase());
+  return { label: match ?? safe, Icon: MOOD_ICONS[(match ?? safe).toLowerCase()] ?? Cloud };
 }
 
 function loadEntries(): DiaryEntry[] {

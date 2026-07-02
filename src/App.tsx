@@ -17,6 +17,7 @@ import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGate } from "./components/bloom/AuthGate";
+import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
 import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
@@ -142,7 +143,10 @@ function AppContent() {
     return (
       <>
         <AppShell currentPath={path}>
-          {isProtected ? <AuthGate>{content}</AuthGate> : content}
+          {/* key={path} resets the boundary on navigation so one bad page never traps the user */}
+          <ErrorBoundary key={path}>
+            {isProtected ? <AuthGate>{content}</AuthGate> : content}
+          </ErrorBoundary>
         </AppShell>
         <InstallPrompt />
       </>
