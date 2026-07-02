@@ -27,6 +27,12 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Null-safe string compare — legacy/partial entries can miss date/time/createdAt,
+// and `undefined.localeCompare(...)` would throw and blank the page.
+function cmp(a: unknown, b: unknown) {
+  return String(a ?? "").localeCompare(String(b ?? ""));
+}
+
 /**
  * Each provider reads its tool's own storage and returns a small summary card,
  * or null to stay hidden. Add a tool here once and it appears on Today & Me automatically.
@@ -35,7 +41,7 @@ const SNAPSHOT_PROVIDERS: Provider[] = [
   () => {
     const reminders = readJSON<{ id: string; title: string; date: string; time: string; done: boolean }[]>("bloom:reminders", []);
     const due = reminders.filter((r) => !r.done && r.date <= todayISO());
-    const next = [...due].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))[0];
+    const next = [...due].sort((a, b) => cmp(a.date, b.date) || cmp(a.time, b.time))[0];
     return {
       slug: "notes",
       label: "Reminders",
@@ -57,7 +63,7 @@ const SNAPSHOT_PROVIDERS: Provider[] = [
         Icon: BookHeart,
       };
     }
-    const latest = [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+    const latest = [...entries].sort((a, b) => cmp(b.createdAt, a.createdAt))[0];
     const mood = moodMeta(latest.mood);
     return {
       slug: "diary",
