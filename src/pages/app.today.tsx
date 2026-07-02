@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  Sparkles, Flower2, Heart, ArrowRight, Sun, Moon,
-  Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
+  Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
+  CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
   Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, ChevronUp, AlarmClock, Star,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
@@ -84,12 +83,12 @@ function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, u
 
 // ── Mood ─────────────────────────────────────────────────────────────────────
 const MOODS = [
-  { key: "calm",      label: "Calm",      emoji: "😌" },
-  { key: "happy",     label: "Happy",     emoji: "😊" },
-  { key: "energetic", label: "Energetic", emoji: "✨" },
-  { key: "sensitive", label: "Sensitive", emoji: "🥺" },
-  { key: "sad",       label: "Sad",       emoji: "🥀" },
-  { key: "tired",     label: "Tired",     emoji: "😴" },
+  { key: "calm",      label: "Calm",      Icon: Cloud },
+  { key: "happy",     label: "Happy",     Icon: Smile },
+  { key: "energetic", label: "Energetic", Icon: Sparkles },
+  { key: "sensitive", label: "Sensitive", Icon: Heart },
+  { key: "sad",       label: "Sad",       Icon: CloudRain },
+  { key: "tired",     label: "Tired",     Icon: Battery },
 ] as const;
 
 const MOOD_LABEL: Record<string, string> = {
@@ -157,11 +156,11 @@ function computeBloomStreak(): number {
 
 // ── Phase content ────────────────────────────────────────────────────────────
 const PHASE_QUOTES: Record<Exclude<CyclePhase, "any">, string> = {
-  period:     "Curl up and go slow, lovely — your body's doing something beautiful. 🌸",
-  follicular: "Something fresh is blooming in you. Follow the little spark. ✿",
-  fertile:    "You're glowing today — soft, open and oh-so magnetic. ✨",
-  ovulation:  "Peak sparkle, gorgeous. Let yourself shine bright. 💗",
-  luteal:     "Be extra gentle with yourself today, sweet thing. 🌷",
+  period:     "Curl up and go slow, lovely — your body's doing something beautiful.",
+  follicular: "Something fresh is blooming in you. Follow the little spark.",
+  fertile:    "You're glowing today — soft, open and oh-so magnetic.",
+  ovulation:  "Peak sparkle, gorgeous. Let yourself shine bright.",
+  luteal:     "Be extra gentle with yourself today, sweet thing.",
 };
 
 const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
@@ -507,8 +506,8 @@ export default function TodayPage() {
   // ── Derived ──────────────────────────────────────────────────────────────────
 
   const planItems = useMemo(() => buildPlanItems(phase), [phase]);
-  const moodHint   = MOODS[moodHintIdx];
-  const moodEmoji  = mood ? (MOODS.find((m) => m.key === mood)?.emoji ?? "🌸") : moodHint.emoji;
+  const moodHint  = MOODS[moodHintIdx];
+  const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
   const affirmPool = AFFIRMATIONS[phase];
   const affirmText = affirmPool[affirmIdx % affirmPool.length];
 
@@ -562,8 +561,8 @@ export default function TodayPage() {
             ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
           </div>
 
-          <p className="mt-2 sm:mt-4 text-xs sm:text-base text-rose italic leading-snug max-w-xs animate-text-glow">
-            <AnimatedWords text={`"${PHASE_QUOTES[phase]}"`} />
+          <p className="mt-2 sm:mt-4 text-xs sm:text-base text-rose/90 leading-snug max-w-xs">
+            {PHASE_QUOTES[phase]}
           </p>
 
           <div className="mt-3 sm:mt-5 flex items-center gap-3">
@@ -575,7 +574,7 @@ export default function TodayPage() {
               aria-expanded={moodPickerOpen}
               className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
             >
-              <span className="text-2xl sm:text-3xl leading-none drop-shadow-sm" aria-hidden>{moodEmoji}</span>
+              <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
               {!mood && (
                 <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm">
                   <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
@@ -600,7 +599,7 @@ export default function TodayPage() {
         <div className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 z-[2] rounded-2xl bg-white/55 backdrop-blur px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-center border border-petal/40 shadow-md">
           {streak > 0 ? (
             <>
-              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">{streak}🔥</p>
+              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">{streak}</p>
               <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{streak === 1 ? "day blooming" : "days blooming"}</p>
             </>
           ) : (
@@ -1131,7 +1130,9 @@ function MoodPopover({
             className="group flex flex-col items-center gap-1 rounded-2xl border border-transparent bg-transparent py-1.5 px-0.5 transition hover:bg-blush/60 hover:border-hotpink/20 active:scale-95"
             style={{ animationDelay: `${i * 0.05}s` }}
           >
-            <span className="text-2xl leading-none transition-transform group-hover:scale-110" aria-hidden>{m.emoji}</span>
+            <span className="clay-blob animate-icon-breathe grid h-8 w-8 place-items-center rounded-full text-white">
+              <m.Icon className="h-4 w-4" strokeWidth={1.8} />
+            </span>
             <span className="text-[10px] font-semibold text-rose">{m.label}</span>
           </button>
         ))}
