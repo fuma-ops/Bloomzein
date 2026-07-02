@@ -1,8 +1,8 @@
 import { AppIcon } from "./AppIcon"
 
-export function BloomLogo({ to = "/" }: { to?: string }) {
+export function BloomLogo({ to = "/", className = "" }: { to?: string; className?: string }) {
   return (
-    <a href={to} className="flex items-center gap-2.5 group">
+    <a href={to} className={`flex items-center gap-2.5 group ${className}`}>
       <div className="transition-transform group-hover:scale-105 shrink-0">
         <AppIcon size={38} />
       </div>
