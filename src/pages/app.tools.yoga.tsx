@@ -13,7 +13,7 @@ import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
-import { FuelCard, yogaIntensity } from "@/components/bloom/trainingFuel";
+import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -1165,8 +1165,9 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   // suggest after each planned flow (falls back to the yoga phase suggestion).
   const goal = readDietProfile().goal;
   const realPhase = readCyclePhase();
-  const fuelPhase: CyclePhase =
-    realPhase && realPhase !== "any" ? realPhase : phase === "menstrual" ? "period" : phase;
+  const fuelPhase = normalizePhase(
+    realPhase && realPhase !== "any" ? realPhase : phase === "menstrual" ? "period" : phase,
+  );
 
   useEffect(() => {
     try {
@@ -1315,6 +1316,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                 {!editing && focus && meta && (
                   <FuelCard
                     ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                    day={d}
                     className="border-hotpink/20"
                   />
                 )}
