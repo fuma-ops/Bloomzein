@@ -8,6 +8,9 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
+import { HydrationNudge } from "@/components/bloom/HydrationNudge";
+import { readDietProfile } from "@/components/bloom/recipes/data";
+import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -427,20 +430,6 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
-      {lowWater && (
-        <div className="mb-3 rounded-3xl bg-gradient-to-r from-blush/60 to-petal/40 border border-petal/70 px-4 py-3 flex items-center gap-3 animate-fade-in">
-          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
-            <Sparkles className="h-4 w-4" strokeWidth={1.8} />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-hotpink leading-tight">Drink water before you sweat ✿</p>
-            <p className="text-[11px] text-rose/70 leading-snug">You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery.</p>
-          </div>
-          <a href="/app/today#hydration" className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2">Log it</a>
-        </div>
-      )}
-
       {(view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
@@ -448,6 +437,18 @@ export default function WorkoutPage() {
           onPickTab={(t) => { setTab(t); setView({ kind: t }); }}
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
+        />
+      )}
+
+      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
+          logged today. Dismissible via the ✕ button or by swiping it away. */}
+      {lowWater && (
+        <HydrationNudge
+          storageKey="bloom:hydrate-nudge-workout"
+          className="mt-3 bg-gradient-to-r from-blush/60 to-petal/40 border-petal/70"
+          icon={<Sparkles className="h-4 w-4" strokeWidth={1.8} />}
+          title="Drink water before you sweat ✿"
+          body="You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery."
         />
       )}
 
@@ -1624,6 +1625,9 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
 
+  // Body goal drives which recovery meals we surface after each session.
+  const goal = readDietProfile().goal;
+
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
@@ -1804,40 +1808,66 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
               // Program session for the day
               let title = "", sub = "", mins = 0, done = false, onTap: (() => void) | null = null;
+              let intensity: Intensity = "moderate";
+              let image: string = HERO_IMAGES.session;
               if (source === "program" && activeProgram && sIdx !== null && sIdx !== undefined) {
                 const s = computeWeekSession(activeProgram, sIdx, week);
                 title = s.title; sub = s.focus; mins = s.estMinutes;
                 done = progDoneSet.has(sessionTag(week, sIdx));
                 onTap = () => onOpenProgramSession(activeProgram.id, week, sIdx);
+                intensity = workoutIntensity(s.title, s.focus);
+                image = activeProgram.image;
               } else if (freeplan) {
                 title = ZONES.find((z) => z.key === freeplan.zone)?.label ?? freeplan.zone;
                 sub = WORKOUT_INTENTIONS.find((i) => i.key === freeplan.intention)?.label ?? "";
                 mins = freeplan.durationMin;
                 onTap = () => onStartSession(buildSession(freeplan.zone, freeplan.intention, freeplan.durationMin, profile.level, phase, profile.equipment));
+                intensity = workoutIntensity(freeplan.intention, title);
+                image = ZONES.find((z) => z.key === freeplan.zone)?.image ?? HERO_IMAGES.session;
               }
 
+              // One card per day: the session (with its image) and — right below,
+              // in the SAME card — the meals to eat after THAT session.
               return (
-                <div key={d} className={["rounded-2xl border p-2.5 sm:p-3 flex items-center gap-3 transition",
-                  isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
-                  {/* Day label */}
-                  <div className="w-12 shrink-0 text-center">
-                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                  </div>
-                  {/* Body */}
+                <div key={d} className={["rounded-2xl border overflow-hidden transition",
+                  isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10 animate-selected-glow" : "border-petal/50"].join(" ")}>
                   {!hasSession ? (
-                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
-                  ) : (
-                    <button onClick={onTap ?? undefined} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
-                      <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-full", done ? "bg-hotpink text-white" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
-                        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className={["text-sm font-bold leading-tight truncate", done ? "text-rose/45 line-through" : "text-rose"].join(" ")}>{title}</p>
-                        <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
+                    <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                      <div className="w-12 shrink-0 text-center">
+                        <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                        {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
                       </div>
-                      <ChevronRight className="h-5 w-5 text-rose/35 shrink-0" />
-                    </button>
+                      <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Session — image banner, tappable to start */}
+                      <button onClick={onTap ?? undefined} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
+                        <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+                        <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
+                            <p className={["text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate", done ? "line-through opacity-80" : ""].join(" ")}>{title}</p>
+                            <p className="text-[11px] text-white/85 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
+                          </div>
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow">
+                            {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
+                          </span>
+                        </div>
+                      </button>
+                      {/* Recovery fuel — SAME card, explicitly tied to this session */}
+                      {!done && (
+                        <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
+                          <FuelCard
+                            ctx={{ goal, phase: normalizePhase(phase), kind: "workout", intensity, activityLabel: title }}
+                            day={d}
+                            heading={`After your ${title}`}
+                            embedded
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );

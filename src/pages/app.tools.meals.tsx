@@ -21,7 +21,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import {
   RECIPES,
@@ -48,9 +47,11 @@ const CYCLE_TO_DIET: Record<string, DietPhase> = {
 };
 
 
-import { readTodaySymptoms } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras } from "@/lib/crossToolData";
+import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
+import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
 const MEAL_PHOTO_FALLBACK: Record<string, string> = {
@@ -272,6 +273,16 @@ const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
   favs:     { title: "My Favourites",   subtitle: "your most-loved recipes ♥" },
 };
 
+/* ---------- Onboarding — shared bright "Barbie-luxe" sparkle tour (same as Cycle Tracker) ---------- */
+const MEALS_GUIDE_CONTENT: SparkleContent = {
+  eyebrow: "✦ your meals ✦",
+  titleLines: ["Let's plan", "your week"],
+  subtitle: "A soft little tour of your pantry, your vibe & your whole week of meals.",
+  ctaLabel: "Show me my week",
+  finaleLines: ["You're all set,", "gorgeous"],
+  finaleSubtitle: "Your softest week is ready. ✿",
+};
+
 /* ---------- Page ---------- */
 
 export default function MealsPage() {
@@ -289,6 +300,12 @@ export default function MealsPage() {
   const [phase, setPhase] = useLS<CyclePhase>(LS.phase as any, "any");
   const [openRecipe, setOpenRecipe] = useState<string | null>(null);
   const [todaySymptoms, setTodaySymptoms] = useState<string[]>([]);
+  const [onboarded, setOnboarded] = useLS<boolean>("bloom:meals-onboarded", false);
+  const [showGuide, setShowGuide] = useState(false);
+  // useLS hydrates from localStorage in an effect (async), so wait one tick
+  // before auto-showing the tour — otherwise returning users flash the welcome.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
 
   useEffect(() => {
     setTodaySymptoms(readTodaySymptoms());
@@ -314,6 +331,11 @@ export default function MealsPage() {
 
   const owned = useMemo(() => pantrySet(pantry), [pantry]);
   const planEmpty = Object.keys(plan).length === 0;
+  const hasSetup = owned.size > 0 || !planEmpty;
+
+  // Auto-show the spotlight tour on first visit (nothing set up yet); also on
+  // manual trigger via the hero "Guide" button.
+  const guideVisible = showGuide || (hydrated && !onboarded && !hasSetup);
 
   // Scroll-hint on hero tabs: peek right then snap back so user sees there are more tabs
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -429,23 +451,32 @@ export default function MealsPage() {
   return (
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
-      <BloomBubbles count={10} />
-
-      {/* HERO */}
-      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
-        <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-center" />
+      {/* HERO — compact, matches Budget Planner height */}
+      <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+        <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">
-          {/* Title block — vertically centered in the available space, left-anchored */}
-          <div className="flex-1 flex flex-col justify-center max-w-[55%] sm:max-w-[45%] lg:max-w-[38%]">
-            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
-            {phase !== "any" && tab === "week" && (
-              <p className="animate-fade-in mt-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
-                {phase} phase
-              </p>
-            )}
-            <p className="animate-fade-in mt-2 text-xs sm:text-sm lg:text-base italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
+        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
+          {/* Title block — left-anchored */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="max-w-[62%]">
+              <h1 className="animate-fade-in font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
+              {phase !== "any" && tab === "week" && (
+                <p className="animate-fade-in mt-1 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
+                  {phase} phase
+                </p>
+              )}
+              <p className="animate-fade-in mt-1 text-[11px] sm:text-xs italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
+            </div>
+            {/* Guide button — reopens the spotlight tour */}
+            <button
+              onClick={() => setShowGuide(true)}
+              className="animate-fade-in shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+              style={{ animationDelay: '260ms' }}
+            >
+              <Sparkles className="h-3 w-3" />
+              Guide
+            </button>
           </div>
           {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
           <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: '320ms' }}>
@@ -455,6 +486,7 @@ export default function MealsPage() {
                 return (
                   <button
                     key={t.key}
+                    data-tour={`meals-tab-${t.key}`}
                     onClick={() => setTab(t.key)}
                     className={[
                       "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold transition whitespace-nowrap",
@@ -488,9 +520,12 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* Guided welcome (only on first visit) */}
-      {step === 0 && (
-        <GuidedWelcome onStart={() => { setStep(1); setTab("pantry"); }} />
+      {/* Spotlight onboarding tour (first visit + manual "Guide" button) */}
+      {guideVisible && (
+        <MealsGuide
+          setTab={setTab}
+          onDone={() => { setOnboarded(true); setShowGuide(false); }}
+        />
       )}
 
       <div className="mt-4 space-y-4">
@@ -568,51 +603,40 @@ export default function MealsPage() {
   );
 }
 
-/* ---------- Guided Welcome ---------- */
+/* ---------- Onboarding — bright "Barbie-luxe" sparkle tour (shared with Cycle Tracker) ---------- */
 
-function GuidedWelcome({ onStart }: { onStart: () => void }) {
-  return (
-    <Glass className="overflow-hidden">
-      <div className="grid sm:grid-cols-[1fr_320px] items-stretch min-h-[280px] sm:min-h-[340px]">
-        <div className="p-5 sm:p-8 flex flex-col justify-between min-h-[280px] sm:min-h-[340px]">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-rose/70 font-semibold">welcome</p>
-            <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-tight mt-1">
-              Cook your softest week ever
-            </h2>
-            <p className="mt-3 text-sm text-rose/80 leading-relaxed">
-              Three little steps and you're sorted: tell me what's in your kitchen, pick your vibe,
-              and I'll plan all 7 days from what you already have.
-            </p>
-          </div>
-          <ol className="space-y-2.5 text-sm text-rose">
-            <li className="flex items-center gap-2">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink text-white text-[11px] font-bold shrink-0">1</span>
-              Build your pantry
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink text-white text-[11px] font-bold shrink-0">2</span>
-              Pick this week's vibe
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink text-white text-[11px] font-bold shrink-0">3</span>
-              Get your week ✨
-            </li>
-          </ol>
-          <div>
-            <PinkBtn onClick={onStart} className="animate-cta-bounce">
-              Start here <ChevronRight className="h-4 w-4" />
-            </PinkBtn>
-          </div>
-        </div>
-        <div
-          className="hidden sm:block bg-cover bg-center min-h-[280px] sm:min-h-[340px]"
-          style={{ backgroundImage: "url(/images/meals-hero.jpg)" }}
-          aria-hidden
-        />
-      </div>
-    </Glass>
-  );
+function MealsGuide({ onDone, setTab }: { onDone: () => void; setTab: (t: TabKey) => void }) {
+  const steps: SparkleStep[] = [
+    {
+      key: "pantry",
+      selector: "[data-tour='meals-tab-pantry']",
+      onEnter: () => setTab("pantry"),
+      title: "Build your pantry",
+      desc: "Tap everything you already have — your whole week is planned from what's in your kitchen.",
+    },
+    {
+      key: "vibe",
+      selector: "[data-tour='meals-vibe']",
+      onEnter: () => setTab("week"),
+      title: "Pick this week's vibe",
+      desc: "Light, protein-rich, comfort, or synced to your cycle — choose how you want to feel.",
+    },
+    {
+      key: "plan",
+      selector: "[data-tour='meals-plan']",
+      onEnter: () => setTab("week"),
+      title: "Plan my week",
+      desc: "One tap builds all 7 days — breakfast, lunch and dinner — from what you own first.",
+    },
+    {
+      key: "shop",
+      selector: "[data-tour='meals-tab-shop']",
+      onEnter: () => setTab("shop"),
+      title: "Auto shopping list",
+      desc: "Everything you're missing, grouped by store aisle and ready to share on WhatsApp.",
+    },
+  ];
+  return <SparkleOnboarding steps={steps} content={MEALS_GUIDE_CONTENT} onDone={onDone} />;
 }
 
 /* ---------- This Week ---------- */
@@ -648,6 +672,28 @@ function WeekTab({
 
   return (
     <>
+      {/* ── TRAINING AWARENESS — Meals knows your sport & yoga plan ──────────── */}
+      {(() => {
+        const comment = trainingAwarenessComment({
+          workoutDays: readWorkoutPlanDays().length,
+          yogaDays: readYogaPlanDays().length,
+          phase: normalizePhase(realPhase),
+          goal: readDietProfile().goal,
+        });
+        if (!comment) return null;
+        return (
+          <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-petal/70 bg-gradient-to-r from-blush/50 to-petal/25 px-3.5 py-3 animate-fade-in">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white">
+              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Synced with your training</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-rose/80">{comment}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── PHASE NUDGE — eye-catching banner with a one-tap CTA ─────────────── */}
       {realPhase && realPhase !== "any" && CYCLE_TO_DIET[realPhase] && (() => {
         const info = PHASE_INFO[CYCLE_TO_DIET[realPhase]];
@@ -685,7 +731,7 @@ function WeekTab({
           <p className="font-script text-2xl text-hotpink">This week's vibe</p>
           <PhasePill phase={phase} setPhase={setPhase} />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+        <div data-tour="meals-vibe" className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
           {INTENTIONS.map((i) => {
             const active = intention === i.key;
             const recommended = i.key === "cycle" && phase !== "any";
@@ -750,6 +796,7 @@ function WeekTab({
 
           {/* Plan my week — pink gradient primary */}
           <button
+            data-tour="meals-plan"
             onClick={handleGenerate}
             disabled={generating}
             className="relative overflow-hidden flex flex-col items-center justify-center gap-1.5 rounded-xl py-3 px-2 font-semibold text-[11px] text-white active:scale-[.97] transition-all"
@@ -1065,6 +1112,8 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
 /* ---------- Shopping ---------- */
 
 function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
+  // Ingredients pushed here from the cross-tool Recovery Fuel cards.
+  const extras = useMemo(() => readShoppingExtras(), []);
   const items = useMemo(() => {
     const map = new Map<string, { item: string; qty: string; section: string; missing: boolean }>();
     Object.values(plan as Record<string, Record<MealType, string | null>>).forEach((day) => {
@@ -1080,6 +1129,12 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
         });
       });
     });
+    // Recovery add-ons — ingredients sent from Workout/Yoga fuel cards.
+    extras.forEach((it: string) => {
+      if (!owned.has(it.toLowerCase()) && !map.has(it)) {
+        map.set(it, { item: it, qty: "", section: "Recovery add-ons", missing: true });
+      }
+    });
     // staples checklist (home needs + key categories)
     PANTRY.forEach((cat) => {
       cat.items.forEach((it) => {
@@ -1090,7 +1145,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
       });
     });
     return Array.from(map.values());
-  }, [plan, owned]);
+  }, [plan, owned, extras]);
 
   const grouped = useMemo(() => {
     const g: Record<string, typeof items> = {};

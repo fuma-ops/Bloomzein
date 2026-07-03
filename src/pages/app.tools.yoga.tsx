@@ -11,6 +11,9 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
+import { HydrationNudge } from "@/components/bloom/HydrationNudge";
+import { readDietProfile } from "@/components/bloom/recipes/data";
+import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -673,20 +676,6 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
-      {lowWater && (
-        <div className="mb-3 rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100/80 px-4 py-3 flex items-center gap-3 animate-fade-in">
-          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
-            <Info className="h-4 w-4" strokeWidth={1.8} />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-hotpink leading-tight">Hydrate before your flow ✿</p>
-            <p className="text-[11px] text-rose/70 leading-snug">You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective.</p>
-          </div>
-          <a href="/app/today#hydration" className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2">Log it</a>
-        </div>
-      )}
-
       {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <YogaHero
           active={view.kind}
@@ -694,6 +683,18 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
+        />
+      )}
+
+      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
+          logged today. Dismissible via the ✕ button or by swiping it away. */}
+      {lowWater && (
+        <HydrationNudge
+          storageKey="bloom:hydrate-nudge-yoga"
+          className="mt-3 bg-gradient-to-r from-sky-50 to-blue-50 border-blue-100/80"
+          icon={<Info className="h-4 w-4" strokeWidth={1.8} />}
+          title="Hydrate before your flow ✿"
+          body="You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective."
         />
       )}
 
@@ -1160,6 +1161,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const [reminder, setReminder] = useState("07:30");
   const [editing, setEditing] = useState(false);
 
+  // Cross-tool fuel: her body goal + real cycle phase decide the meals we
+  // suggest after each planned flow (falls back to the yoga phase suggestion).
+  const goal = readDietProfile().goal;
+  const realPhase = readCyclePhase();
+  const fuelPhase = normalizePhase(
+    realPhase && realPhase !== "any" ? realPhase : phase === "menstrual" ? "period" : phase,
+  );
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SCHEDULE_KEY);
@@ -1300,32 +1309,58 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             const focus = schedule[d];
             const meta = focus ? FOCUS_META[focus] : null;
             const isToday = d === todayKey;
+            // One card per day: the flow (with its image) and — right below, in
+            // the SAME card — the meals to eat after THAT flow.
             return (
-              <div key={d} className={["rounded-2xl border p-2.5 flex items-center gap-3 transition",
-                isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
-                <div className="w-12 shrink-0 text-center">
-                  <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                  {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                </div>
+              <div key={d} className={["rounded-2xl border overflow-hidden transition",
+                isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10 animate-selected-glow" : "border-petal/50"].join(" ")}>
                 {editing ? (
-                  <select
-                    value={focus ?? ""}
-                    onChange={(e) => update(d, e.target.value || null)}
-                    className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-                  >
-                    {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
-                  </select>
-                ) : !focus || !meta ? (
-                  <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
-                ) : (
-                  <button onClick={() => startFocus(focus)} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
-                    <img src={meta.image} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover object-top border border-petal/50" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-rose leading-tight truncate">{focus}</p>
-                      <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                    <div className="w-12 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
                     </div>
-                    <span className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white shadow-sm"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
-                  </button>
+                    <select
+                      value={focus ?? ""}
+                      onChange={(e) => update(d, e.target.value || null)}
+                      className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                    >
+                      {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
+                    </select>
+                  </div>
+                ) : !focus || !meta ? (
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                    <div className="w-12 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    </div>
+                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Flow — image banner, tappable to start */}
+                    <button onClick={() => startFocus(focus)} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
+                      <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+                      <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
+                          <p className="text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate">{focus}</p>
+                          <p className="text-[11px] text-white/85 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                        </div>
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
+                      </div>
+                    </button>
+                    {/* Recovery fuel — SAME card, explicitly tied to this flow */}
+                    <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
+                      <FuelCard
+                        ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                        day={d}
+                        heading={`After your ${focus}`}
+                        embedded
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             );
