@@ -1579,9 +1579,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Income Garden",
       v: income,
       sub: "your monthly earnings",
-      glow: null as Glow | null,          // no ring
-      textGlow: null as TGlow | null,     // rest of the text stays normal
-      numGlow: (income > 0 ? (surplus >= 0 ? "green" : "red") : null) as TGlow | null, // glow only behind the number
+      glow: null as Glow | null,          // no ring, no glow
+      textGlow: null as TGlow | null,
+      numGlow: null as TGlow | null,
+      growthIcon: false,
       badge: income > 0
         ? surplus >= 0
           ? { text: `Balance +${fmt(surplus, currency)}`, tone: "green" as const }
@@ -1597,6 +1598,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       glow: null as Glow | null,
       textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,
+      growthIcon: false,
       badge: null,
     },
     {
@@ -1607,6 +1609,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       // A soft red glow behind all the card's text the moment there's extra spend
       textGlow: (realExpenses > 0 ? "red" : null) as TGlow | null,
       numGlow: null as TGlow | null,
+      growthIcon: false,
       badge: null,
       planSub: fmt(plannedBudget + goalsMonthly, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1616,8 +1619,9 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       v: goalsSaved,
       sub: "across all goals · incl. this month",
       glow: null as Glow | null,
-      textGlow: "green" as TGlow | null,
+      textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,
+      growthIcon: true, // cute green growth arrow instead of a glow
       badge: null,
     },
   ];
@@ -1630,9 +1634,13 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
           style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
         >
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]"
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899] flex items-center gap-1.5"
             style={it.numGlow ? { textShadow: TEXT_GLOW[it.numGlow] } : undefined}>
             <StatNumber value={it.v} currency={currency} />
+            {it.growthIcon && (
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 shrink-0" strokeWidth={2.5}
+                style={{ filter: "drop-shadow(0 0 5px rgba(34,197,94,0.65))" }} />
+            )}
           </div>
           {"planSub" in it ? (
             <div className="mt-0.5 flex items-center flex-wrap gap-x-0.5 text-[9px] text-[#9D5C7E] leading-tight">
