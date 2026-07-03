@@ -959,6 +959,13 @@ export function CycleTracker() {
                         Edit settings
                       </button>
                       <button
+                        onClick={() => { setShowResetMenu(false); setShowOnboarding(true); }}
+                        className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition border-t flex items-center gap-1.5"
+                        style={{ color: '#DB2777', borderColor: 'rgba(236,72,153,.08)' }}
+                      >
+                        <Sparkles className="h-3 w-3" /> Replay tour
+                      </button>
+                      <button
                         onClick={resetAllData}
                         className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-rose-50 transition border-t"
                         style={{ color: '#EC4899', borderColor: 'rgba(236,72,153,.08)' }}
