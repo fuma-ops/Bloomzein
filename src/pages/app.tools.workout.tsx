@@ -8,8 +8,9 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
+import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -1720,6 +1721,9 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   return (
     <div className="space-y-4">
+
+      {/* Cute motivation strip — real movement level + streak */}
+      <LevelStreak streak={readWorkoutStreak().count} />
 
       {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (
