@@ -1,9 +1,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import {
   ArrowLeft,
-  ArrowRight,
   Sparkles,
   ChevronRight,
   Check,
@@ -23,7 +21,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import {
   RECIPES,
@@ -53,6 +50,7 @@ const CYCLE_TO_DIET: Record<string, DietPhase> = {
 import { readTodaySymptoms } from "@/lib/crossToolData";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
+import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
 const MEAL_PHOTO_FALLBACK: Record<string, string> = {
@@ -274,41 +272,15 @@ const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
   favs:     { title: "My Favourites",   subtitle: "your most-loved recipes ♥" },
 };
 
-/* ---------- Onboarding guide steps (spotlight tour, like Budget Planner) ---------- */
-const GUIDE_STEPS: { key: string; tab: TabKey; selector: string; icon: string; title: string; desc: string }[] = [
-  {
-    key: "pantry",
-    tab: "pantry",
-    selector: "[data-tour='meals-tab-pantry']",
-    icon: "🧺",
-    title: "Build your pantry",
-    desc: "Tap everything you already have at home. Your whole week is planned from what's in your kitchen — less waste, less shopping.",
-  },
-  {
-    key: "vibe",
-    tab: "week",
-    selector: "[data-tour='meals-vibe']",
-    icon: "✿",
-    title: "Pick this week's vibe",
-    desc: "Light, protein-rich, comfort, or synced to your cycle — choose how you want to feel and every meal adapts.",
-  },
-  {
-    key: "plan",
-    tab: "week",
-    selector: "[data-tour='meals-plan']",
-    icon: "🌸",
-    title: "Plan my week",
-    desc: "One tap builds all 7 days — breakfast, lunch and dinner — using what you own first. Swap any meal you like.",
-  },
-  {
-    key: "shop",
-    tab: "shop",
-    selector: "[data-tour='meals-tab-shop']",
-    icon: "🛒",
-    title: "Auto shopping list",
-    desc: "Everything you're missing is gathered here, grouped by store aisle and ready to share on WhatsApp.",
-  },
-];
+/* ---------- Onboarding — shared bright "Barbie-luxe" sparkle tour (same as Cycle Tracker) ---------- */
+const MEALS_GUIDE_CONTENT: SparkleContent = {
+  eyebrow: "✦ your meals ✦",
+  titleLines: ["Let's plan", "your week"],
+  subtitle: "A soft little tour of your pantry, your vibe & your whole week of meals.",
+  ctaLabel: "Show me my week",
+  finaleLines: ["You're all set,", "gorgeous"],
+  finaleSubtitle: "Your softest week is ready. ✿",
+};
 
 /* ---------- Page ---------- */
 
@@ -478,14 +450,12 @@ export default function MealsPage() {
   return (
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
-      <BloomBubbles count={10} />
-
       {/* HERO — compact, matches Budget Planner height */}
       <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
-        <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[144px]">
+        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
           {/* Title block — left-anchored */}
           <div className="flex items-start justify-between gap-2">
             <div className="max-w-[62%]">
@@ -632,339 +602,40 @@ export default function MealsPage() {
   );
 }
 
-/* ---------- Onboarding Guide (spotlight tour, mirrors Budget Planner) ---------- */
+/* ---------- Onboarding — bright "Barbie-luxe" sparkle tour (shared with Cycle Tracker) ---------- */
 
 function MealsGuide({ onDone, setTab }: { onDone: () => void; setTab: (t: TabKey) => void }) {
-  const [phase, setPhase] = useState<"welcome" | "steps" | "finishing">("welcome");
-  const [stepIdx, setStepIdx] = useState(0);
-  const [spotRect, setSpotRect] = useState<DOMRect | null>(null);
-  const [timerPct, setTimerPct] = useState(0);
-  const [fadeIn, setFadeIn] = useState(false);
-
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const stepIdxRef = useRef(stepIdx);
-  stepIdxRef.current = stepIdx;
-
-  const clearTimers = () => {
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    if (autoRef.current) { clearTimeout(autoRef.current); autoRef.current = null; }
-  };
-
-  useEffect(() => {
-    const t = setTimeout(() => setFadeIn(true), 60);
-    return () => clearTimeout(t);
-  }, []);
-
-  const particles = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
-    x: 3 + ((i * 19 + 7) % 94),
-    y: ((i * 29 + 11) % 100),
-    size: 3 + (i % 6),
-    dur: 2.5 + (i % 4) * 0.85,
-    delay: (i * 0.33) % 3.3,
-    color: i % 4 === 0 ? '#EC4899' : i % 4 === 1 ? '#F9A8D4' : i % 4 === 2 ? '#C084FC' : 'rgba(255,255,255,0.55)',
-  })), []);
-
-  const finish = () => {
-    clearTimers();
-    setPhase("finishing");
-    setTimeout(() => onDone(), 1300);
-  };
-
-  const advanceRef = useRef<() => void>(() => {});
-  advanceRef.current = () => {
-    clearTimers();
-    if (stepIdxRef.current < GUIDE_STEPS.length - 1) {
-      setStepIdx(stepIdxRef.current + 1);
-    } else {
-      finish();
-    }
-  };
-  const advance = () => advanceRef.current();
-
-  // Welcome: auto-advance after 5.5s
-  useEffect(() => {
-    if (phase !== "welcome") return;
-    setTimerPct(0);
-    const total = 5500, tick = 50;
-    timerRef.current = setInterval(() => setTimerPct(p => Math.min(100, p + 100 / (total / tick))), tick);
-    autoRef.current = setTimeout(() => { clearTimers(); setPhase("steps"); }, total);
-    return clearTimers;
-  }, [phase]);
-
-  // Steps: switch tab → find element → spotlight + timer
-  useEffect(() => {
-    if (phase !== "steps") return;
-    const s = GUIDE_STEPS[stepIdx];
-    setTab(s.tab);
-    setSpotRect(null);
-    setTimerPct(0);
-    clearTimers();
-
-    const findTimeout = setTimeout(() => {
-      const el = document.querySelector(s.selector);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        setTimeout(() => {
-          setSpotRect(el.getBoundingClientRect());
-          const dur = 5000;
-          timerRef.current = setInterval(() => setTimerPct(p => Math.min(100, p + 100 / (dur / 50))), 50);
-          autoRef.current = setTimeout(() => advanceRef.current(), dur);
-        }, 350);
-      } else {
-        // Element not found (tab still mounting) — advance gracefully after a beat
-        autoRef.current = setTimeout(() => advanceRef.current(), 1200);
-      }
-    }, 420);
-
-    return () => { clearTimeout(findTimeout); clearTimers(); };
-  }, [phase, stepIdx]); // eslint-disable-line
-
-  const currentStep = GUIDE_STEPS[stepIdx];
-
-  const tooltipPos = useMemo(() => {
-    if (!spotRect) return null;
-    const vp = { w: window.innerWidth, h: window.innerHeight };
-    const cardW = Math.min(vp.w * 0.88, 340);
-    const cardH = 195;
-    let top: number, left: number;
-    left = Math.max(12, Math.min(spotRect.left + spotRect.width / 2 - cardW / 2, vp.w - cardW - 12));
-    const belowTop = spotRect.bottom + 14;
-    const aboveTop = spotRect.top - cardH - 14;
-    if (belowTop + cardH < vp.h - 12) {
-      top = belowTop;
-    } else if (aboveTop > 56) {
-      top = aboveTop;
-    } else {
-      top = vp.h / 2 - cardH / 2;
-      if (spotRect.left > vp.w / 2) left = 12;
-    }
-    return { top, left, width: cardW };
-  }, [spotRect]);
-
-  return createPortal(
-    <>
-      {/* ── WELCOME ── */}
-      {phase === "welcome" && (
-        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center overflow-hidden select-none"
-          style={{ background: 'radial-gradient(ellipse at 50% -8%, #C084FC 0%, #831843 35%, #480a28 65%, #0d0110 100%)' }}>
-
-          {/* Ambient glow orb */}
-          <div className="absolute pointer-events-none" style={{
-            width: 480, height: 480,
-            background: 'radial-gradient(circle, rgba(236,72,153,0.38) 0%, transparent 70%)',
-            filter: 'blur(35px)',
-            top: '50%', left: '50%',
-            transform: 'translate(-50%,-50%)',
-            animation: 'mealsGuideOrb 4s ease-in-out infinite alternate',
-          }} />
-
-          {/* Floating particles */}
-          {particles.map((p, i) => (
-            <div key={i} className="absolute rounded-full pointer-events-none" style={{
-              width: p.size, height: p.size,
-              background: p.color,
-              opacity: 0.22,
-              left: `${p.x}%`, top: `${p.y}%`,
-              animation: `mealsTourFloat ${p.dur}s ease-in-out ${p.delay}s infinite alternate`,
-              filter: p.size > 5 ? 'blur(1px)' : 'none',
-            }} />
-          ))}
-
-          {/* Content */}
-          <div className={`relative z-10 flex flex-col items-center text-center px-8 max-w-sm transition-all duration-1000 ease-out ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-
-            <div className="text-[9px] font-bold tracking-[0.5em] text-white/30 uppercase mb-6">✦ bloomzein meals ✦</div>
-
-            <h1 className="font-script leading-none mb-3" style={{
-              fontSize: 'clamp(3.5rem,14vw,5.5rem)',
-              color: 'white',
-              textShadow: '0 0 55px rgba(236,72,153,1), 0 0 110px rgba(192,132,252,0.55), 0 2px 14px rgba(0,0,0,0.45)',
-            }}>
-              Welcome
-            </h1>
-
-            <p className="text-white/60 text-[13px] font-light leading-relaxed max-w-[250px] mb-9 italic"
-              style={{ animation: 'mealsFadeInUp 0.7s ease-out 0.5s both' }}>
-              In 4 steps, your week of meals will plan itself
-            </p>
-
-            {/* 4-step preview icons */}
-            <div className="flex gap-4 mb-10">
-              {GUIDE_STEPS.map((s, i) => (
-                <div key={s.key} className="flex flex-col items-center gap-2"
-                  style={{ animation: `mealsFadeInUp 0.5s ease-out ${0.65 + i * 0.12}s both` }}>
-                  <div className="flex items-center justify-center rounded-2xl border border-white/12"
-                    style={{ width: 46, height: 46, fontSize: '1.3rem', background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(10px)', boxShadow: '0 4px 16px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                    {s.icon}
-                  </div>
-                  <span className="text-white/30 text-[9px] font-bold tracking-widest">{i + 1}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <button
-              onClick={() => { clearTimers(); setPhase("steps"); }}
-              className="flex items-center gap-2 px-8 py-3.5 rounded-full text-white font-bold text-[15px] active:scale-95 transition-transform"
-              style={{
-                background: 'linear-gradient(135deg, #BE185D 0%, #EC4899 55%, #F472B6 100%)',
-                boxShadow: '0 8px 32px rgba(236,72,153,0.58), 0 0 0 1px rgba(255,255,255,0.08)',
-                animation: 'ctaBreathe 2.5s ease-in-out infinite',
-              }}>
-              Begin your journey
-              <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-            </button>
-
-            {/* Auto-timer bar */}
-            <div className="mt-6 w-32">
-              <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-white/28 rounded-full" style={{ width: `${timerPct}%`, transition: 'none' }} />
-              </div>
-              <p className="text-white/18 text-[10px] text-center mt-1.5">starting automatically…</p>
-            </div>
-
-            <button onClick={finish} className="mt-4 text-white/18 text-[11px] hover:text-white/45 transition-colors font-light">
-              skip guide
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEPS ── */}
-      {phase === "steps" && (
-        <>
-          {/* Transparent click-catcher — advances on tap anywhere outside the tooltip */}
-          <div className="fixed inset-0 cursor-pointer" style={{ zIndex: 9998 }} onClick={advance} />
-
-          {/* Spotlight ring — box-shadow creates the dark overlay; interior is transparent so the element shows through */}
-          {spotRect && (
-            <div className="fixed pointer-events-none" style={{
-              zIndex: 10001,
-              top: spotRect.top - 10,
-              left: spotRect.left - 10,
-              width: spotRect.width + 20,
-              height: spotRect.height + 20,
-              borderRadius: Math.min(spotRect.height * 0.55, 24),
-              border: '3px solid rgba(236,72,153,1)',
-              animation: 'mealsSpotPulse 2s ease-in-out infinite',
-            }} />
-          )}
-
-          {/* Tooltip card */}
-          {tooltipPos && (
-            <div className="fixed" style={{ zIndex: 10002, top: tooltipPos.top, left: tooltipPos.left, width: tooltipPos.width }}>
-              <div className="rounded-[1.5rem] border border-pink-200/40 p-5" style={{
-                background: 'rgba(255,255,255,0.97)',
-                backdropFilter: 'blur(24px)',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.48), 0 0 0 1px rgba(236,72,153,0.07)',
-                animation: 'mealsGuideCardIn 0.38s cubic-bezier(0.34,1.56,0.64,1) both',
-              }}>
-
-                {/* Step counter + progress dots */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-black tracking-[0.3em] text-[#9D5C7E]">
-                    STEP {stepIdx + 1} / {GUIDE_STEPS.length}
-                  </span>
-                  <div className="flex gap-1.5 items-center">
-                    {GUIDE_STEPS.map((_, i) => (
-                      <div key={i} className="rounded-full" style={{
-                        width: i === stepIdx ? 18 : 6,
-                        height: 6,
-                        background: i <= stepIdx ? '#EC4899' : '#FCE7F3',
-                        transition: 'all 0.35s ease',
-                      }} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Icon + text */}
-                <div className="flex gap-3 items-start mb-4">
-                  <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl border" style={{ background: 'linear-gradient(135deg,#FDF2F8,#FCE7F3)', borderColor: 'rgba(236,72,153,0.15)' }}>
-                    {currentStep.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#831843] text-[14px] leading-tight mb-1">{currentStep.title}</h3>
-                    <p className="text-[#9D5C7E] text-[12px] leading-relaxed">{currentStep.desc}</p>
-                  </div>
-                </div>
-
-                {/* Timer bar */}
-                <div className="h-[3px] bg-pink-100 rounded-full overflow-hidden mb-4">
-                  <div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#BE185D,#EC4899,#F472B6)', width: `${timerPct}%`, transition: 'none' }} />
-                </div>
-
-                {/* Buttons */}
-                <div className="flex items-center justify-between">
-                  <button onClick={finish} className="text-[#C4B0BE] text-[11px] hover:text-[#9D5C7E] transition-colors px-1 py-1">
-                    skip guide
-                  </button>
-                  <button onClick={advance}
-                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-white text-[13px] font-bold active:scale-95 transition-transform"
-                    style={{ background: 'linear-gradient(135deg,#BE185D 0%,#EC4899 100%)', boxShadow: '0 4px 16px rgba(236,72,153,0.42)' }}>
-                    {stepIdx < GUIDE_STEPS.length - 1 ? (
-                      <><span>Next</span><ArrowRight className="h-3.5 w-3.5" /></>
-                    ) : (
-                      <><Sparkles className="h-3.5 w-3.5" /><span>Start cooking</span></>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ── FINISHING ── */}
-      {phase === "finishing" && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at center, #831843 0%, #0d0110 100%)', animation: 'mealsGuideFadeOut 1.3s ease-in-out forwards' }}>
-          <div className="text-center" style={{ animation: 'mealsFadeInUp 0.5s ease-out both' }}>
-            <div className="text-6xl mb-4">🌸</div>
-            <h2 className="font-script text-5xl text-white mb-2" style={{ textShadow: '0 0 35px rgba(236,72,153,0.85)' }}>
-              You&apos;re all set!
-            </h2>
-            <p className="text-white/50 text-sm">Your softest week of meals is ready to bloom.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Guide-only keyframes */}
-      <style>{`
-        @keyframes mealsTourFloat {
-          from { transform: translateY(0px) scale(1); opacity: 0.22; }
-          to   { transform: translateY(-20px) scale(1.1); opacity: 0.1; }
-        }
-        @keyframes mealsGuideOrb {
-          from { transform: translate(-50%,-50%) scale(1);   opacity: 0.18; }
-          to   { transform: translate(-50%,-50%) scale(1.35); opacity: 0.38; }
-        }
-        @keyframes mealsSpotPulse {
-          0%,100% {
-            box-shadow: 0 0 0 9999px rgba(5,1,13,0.87), 0 0 22px 6px rgba(236,72,153,0.55);
-            border-color: rgba(236,72,153,0.92);
-          }
-          50% {
-            box-shadow: 0 0 0 9999px rgba(5,1,13,0.87), 0 0 44px 14px rgba(236,72,153,0.82);
-            border-color: rgba(236,72,153,1);
-          }
-        }
-        @keyframes mealsGuideCardIn {
-          from { transform: scale(0.86) translateY(10px); opacity: 0; }
-          to   { transform: scale(1)    translateY(0);    opacity: 1; }
-        }
-        @keyframes mealsGuideFadeOut {
-          0%   { opacity: 1; }
-          55%  { opacity: 1; }
-          100% { opacity: 0; pointer-events: none; }
-        }
-        @keyframes mealsFadeInUp {
-          from { transform: translateY(14px); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
-        }
-      `}</style>
-    </>,
-    document.body
-  );
+  const steps: SparkleStep[] = [
+    {
+      key: "pantry",
+      selector: "[data-tour='meals-tab-pantry']",
+      onEnter: () => setTab("pantry"),
+      title: "Build your pantry",
+      desc: "Tap everything you already have — your whole week is planned from what's in your kitchen.",
+    },
+    {
+      key: "vibe",
+      selector: "[data-tour='meals-vibe']",
+      onEnter: () => setTab("week"),
+      title: "Pick this week's vibe",
+      desc: "Light, protein-rich, comfort, or synced to your cycle — choose how you want to feel.",
+    },
+    {
+      key: "plan",
+      selector: "[data-tour='meals-plan']",
+      onEnter: () => setTab("week"),
+      title: "Plan my week",
+      desc: "One tap builds all 7 days — breakfast, lunch and dinner — from what you own first.",
+    },
+    {
+      key: "shop",
+      selector: "[data-tour='meals-tab-shop']",
+      onEnter: () => setTab("shop"),
+      title: "Auto shopping list",
+      desc: "Everything you're missing, grouped by store aisle and ready to share on WhatsApp.",
+    },
+  ];
+  return <SparkleOnboarding steps={steps} content={MEALS_GUIDE_CONTENT} onDone={onDone} />;
 }
 
 /* ---------- This Week ---------- */
