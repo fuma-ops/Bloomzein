@@ -1122,15 +1122,18 @@ export function BudgetPlanner() {
 
   const totalIncome = useMemo(() => viewIncomes.reduce((s, i) => s + toMonthly(i), 0), [viewIncomes]);
 
-  // Effective expenses: committed plan + actual transactions for the viewed month
+  // Effective expenses: committed plan + planned bills + actual transactions for the viewed month
   const totalExpenses = useMemo(() => {
     const budgetedKeys = viewSelectedCats.filter(k => (viewBudget[k] ?? 0) > 0);
     const plannedTotal = budgetedKeys.reduce((s, k) => s + (viewBudget[k] ?? 0), 0);
+    const plannedBillsTotal = bills
+      .filter(b => b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === monthKey)
+      .reduce((s, b) => s + b.amount, 0);
     const actualTotal = txns
       .filter(t => t.type === "expense" && new Date(t.date).getFullYear() === month.y && new Date(t.date).getMonth() === month.m)
       .reduce((s, t) => s + t.amount, 0);
-    return plannedTotal + actualTotal;
-  }, [txns, viewSelectedCats, viewBudget, month]);
+    return plannedTotal + plannedBillsTotal + actualTotal;
+  }, [txns, viewSelectedCats, viewBudget, month, bills, monthKey]);
 
   const totalSavings = totalIncome - totalExpenses;
   const totalBalance = totalIncome - totalExpenses;
@@ -2114,6 +2117,11 @@ function DashboardTab(props: {
     budget, setBudget, onCurrencyClick,
     viewPeriod, setViewPeriod, goalIdx, setGoalIdx, month, viewMode } = props;
   const monthKey = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
+  // Bills flagged "add to this month's budget" (due this month, unpaid) → counted as planned budget everywhere.
+  const plannedBills = useMemo(
+    () => bills.filter(b => b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === monthKey).reduce((s, b) => s + b.amount, 0),
+    [bills, monthKey],
+  );
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
@@ -2308,8 +2316,6 @@ function DashboardTab(props: {
 
       {/* ③ STAT CARDS */}
       {(() => {
-        // Bills flagged "add to this month's budget" (due this month, unpaid) count as planned budget.
-        const plannedBills  = bills.filter(b => b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === monthKey).reduce((s, b) => s + b.amount, 0);
         const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0) + plannedBills;
         const realExpenses  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         const goalsSaved    = goals.reduce((s, g) => s + (g.saved ?? 0), 0) + goalsMonthly; // incl. this month's contributions
@@ -2329,8 +2335,8 @@ function DashboardTab(props: {
       {/* ③b BUDGET VS REALITY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-        if (budgetedCats.length === 0 && goalsMonthly === 0) return null;
-        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly;
+        if (budgetedCats.length === 0 && goalsMonthly === 0 && plannedBills === 0) return null;
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly + plannedBills;
         // EXTRA = ALL actual logged transactions (every "+ Spend" is extra on top of committed plan)
         const totalOverage = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         return (
