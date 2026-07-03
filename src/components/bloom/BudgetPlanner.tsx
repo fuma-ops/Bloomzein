@@ -1532,16 +1532,23 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   const surplus = income - totalSpend;
   const isOverIncome = income > 0 && surplus < 0;
 
+  // Pink base everywhere; state reads as a soft coloured GLOW, not a loud fill.
+  const GLOW = {
+    green: "ring-1 ring-emerald-300/50 shadow-[0_0_22px_-2px_rgba(34,197,94,0.42)]",
+    red:   "ring-1 ring-rose-300/60 shadow-[0_0_22px_-2px_rgba(244,63,94,0.5)] animate-card-breathe",
+  } as const;
+  type Glow = keyof typeof GLOW;
+
   const cards = [
     {
       label: "Income Garden",
       v: income,
       sub: "your monthly earnings",
-      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-pink-50 to-rose-50",
+      glow: (income > 0 ? (surplus >= 0 ? "green" : "red") : null) as Glow | null,
       badge: income > 0
         ? surplus >= 0
-          ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
-          : { text: `⚠ −${fmt(Math.abs(surplus), currency)}`, color: "text-red-700 bg-red-100" }
+          ? { text: `Balance +${fmt(surplus, currency)}`, tone: "green" as const }
+          : { text: `Over −${fmt(Math.abs(surplus), currency)}`, tone: "red" as const }
         : null,
     },
     {
@@ -1550,16 +1557,15 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       sub: goalsMonthly > 0
         ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
         : "committed this month",
-      bg: "from-fuchsia-50 to-purple-50",
+      glow: null as Glow | null,
       badge: null,
     },
     {
       label: "Real Spending Petals",
       v: plannedBudget + goalsMonthly + realExpenses,
       sub: "extra spends this month",
-      // Petals turn red the moment there's any extra spend on top of the plan
-      bg: realExpenses > 0 ? "from-red-100 to-rose-100" : "from-rose-50 to-pink-50",
-      numColor: realExpenses > 0 ? "text-red-600" : "text-[#EC4899]",
+      // A soft red glow the moment there's any extra spend on top of the plan
+      glow: (realExpenses > 0 ? "red" : null) as Glow | null,
       badge: null,
       planSub: fmt(plannedBudget + goalsMonthly, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1568,8 +1574,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Savings Bloom",
       v: goalsSaved,
       sub: "across all goals · incl. this month",
-      bg: "from-emerald-50 to-teal-50",
-      numColor: "text-emerald-600",
+      glow: "green" as Glow | null,
       badge: null,
     },
   ];
@@ -1577,19 +1582,20 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {cards.map((it) => (
-        <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br ${it.bg}`}>
+        <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br from-pink-50 to-rose-50 ${it.glow ? GLOW[it.glow] : ""}`}>
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className={`mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none ${"numColor" in it ? it.numColor : "text-[#EC4899]"}`}>
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
             <div className="mt-0.5 flex items-center flex-wrap gap-x-0.5 text-[9px] text-[#9D5C7E] leading-tight">
-              {it.extraAmt && <span className="text-red-600 font-bold">{it.extraAmt} extra</span>}
+              {it.extraAmt && <span className="text-rose-600 font-bold">{it.extraAmt} extra</span>}
               {it.extraAmt && <span className="text-[#9D5C7E]">+</span>}
               <span className="text-[#9D5C7E]">{it.planSub} planned</span>
             </div>
           ) : it.badge ? (
-            <span className={`mt-0.5 inline-block text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight ${it.badge.color}`}>
+            <span className={`mt-0.5 inline-flex items-center gap-1 text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight bg-white/70 ${it.badge.tone === "green" ? "text-emerald-600" : "text-rose-600"}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${it.badge.tone === "green" ? "bg-emerald-500" : "bg-rose-500"}`} />
               {it.badge.text}
             </span>
           ) : (
