@@ -341,6 +341,9 @@ export const STORAGE_KEYS = {
 
 export default function NotesPage() {
   const [tab, setTab] = useState<"notes" | "reminders">("notes");
+  // Which card is expanded (accordion). Uniform compact cards; tap to reveal the full note/reminder.
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const toggleCard = (id: string) => setExpandedCardId((cur) => (cur === id ? null : id));
 
   // Notes state
   const [notes, setNotes] = useState<Note[]>(() => {
@@ -1437,20 +1440,22 @@ export default function NotesPage() {
                 </div>
               ) : (
                 <>
-                  <div className="columns-2 lg:columns-3 gap-3">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
                     {filteredNotes.map((note, idx) => {
                       const shade = NOTE_COLORS.find((col) => col.key === note.color) || NOTE_COLORS[0];
                       const tagEmoji = TAG_EMOJI[note.tag] || "✨";
+                      const expanded = expandedCardId === note.id;
                       return (
                         <div
                           key={note.id}
-                          className="break-inside-avoid mb-3 group"
+                          className="group"
                           style={{ animationDelay: `${idx * 60}ms` }}
                         >
                           <div
-                            onClick={() => handleEditNote(note)}
+                            onClick={() => toggleCard(note.id)}
                             className={[
-                              "relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden cursor-pointer",
+                              "relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg duration-200 animate-scale-in overflow-hidden cursor-pointer",
+                              expanded ? "" : "h-44",
                               shade.bg,
                               shade.border,
                             ].join(" ")}
@@ -1462,7 +1467,7 @@ export default function NotesPage() {
                             </span>
 
                             {/* Top row: emoji + date + pin */}
-                            <div className="flex items-start justify-between relative z-10">
+                            <div className="flex items-start justify-between relative z-10 shrink-0">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-sm leading-none">{tagEmoji}</span>
                                 <span className={["text-[9px] font-bold tracking-tight leading-none mt-0.5", shade.dark ? "text-white/50" : "text-rose/50"].join(" ")}>
@@ -1485,13 +1490,13 @@ export default function NotesPage() {
                             </div>
 
                             {/* Title */}
-                            <h4 className={["font-script text-xl leading-tight relative z-10", shade.text].join(" ")}>
+                            <h4 className={["font-script text-xl leading-tight relative z-10 shrink-0", expanded ? "" : "line-clamp-1", shade.text].join(" ")}>
                               {note.title}
                             </h4>
 
                             {/* Body */}
                             {isTodoNote(note) ? (
-                              <div className="space-y-1.5 relative z-10">
+                              <div className={["space-y-1.5 relative z-10 flex-1 min-h-0", expanded ? "overflow-y-auto" : "overflow-hidden [mask-image:linear-gradient(to_bottom,#000_62%,transparent)]"].join(" ")}>
                                 {parseTodoItems(note.text).map((item) => (
                                   <button
                                     key={item.lineIndex}
@@ -1508,7 +1513,7 @@ export default function NotesPage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className={["text-xs font-medium whitespace-pre-wrap leading-relaxed line-clamp-5 relative z-10", shade.body].join(" ")}>
+                              <p className={["text-xs font-medium whitespace-pre-wrap leading-relaxed relative z-10 flex-1 min-h-0", expanded ? "" : "overflow-hidden [mask-image:linear-gradient(to_bottom,#000_60%,transparent)]", shade.body].join(" ")}>
                                 {note.tag === "Ideas" && "💡 "}
                                 {note.tag === "Love" && "💕 "}
                                 {note.text}
@@ -1516,7 +1521,7 @@ export default function NotesPage() {
                             )}
 
                             {/* Footer */}
-                            <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10", shade.dark ? "border-white/10" : "border-pink-200/25"].join(" ")}>
+                            <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10 shrink-0", shade.dark ? "border-white/10" : "border-pink-200/25"].join(" ")}>
                               <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", shade.dark ? "text-white/60 bg-white/10 border-white/10" : "text-rose/50 bg-white/70 border-pink-100"].join(" ")}>
                                 {tagEmoji} {note.tag}
                               </span>
@@ -1571,11 +1576,12 @@ export default function NotesPage() {
                 </div>
               ) : (
                 <>
-                  <div className="columns-2 lg:columns-3 gap-3">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 items-start">
                     {sortedReminders.map((rem, idx) => {
                       const style = reminderCardStyle(rem);
                       const visual = reminderVisual(rem);
                       const age = turningAge(rem);
+                      const expanded = expandedCardId === rem.id;
                       const dateLabel = rem.kind === "medication"
                         ? [...rem.times].sort().join(" · ")
                         : rem.kind === "birthday"
@@ -1584,13 +1590,13 @@ export default function NotesPage() {
                             ? `${prettyDate(rem.date)} → ${prettyDate(rem.endDate)}`
                             : prettyDate(rem.date);
                       return (
-                        <div key={rem.id} className="break-inside-avoid mb-3 group" style={{ animationDelay: `${idx * 60}ms` }}>
-                          <div onClick={() => handleEditReminder(rem)} className={["relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg hover:-translate-y-1 duration-200 animate-scale-in overflow-hidden cursor-pointer", style.bg, style.border].join(" ")}>
+                        <div key={rem.id} className="group" style={{ animationDelay: `${idx * 60}ms` }}>
+                          <div onClick={() => toggleCard(rem.id)} className={["relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg duration-200 animate-scale-in overflow-hidden cursor-pointer", expanded ? "" : "h-44", style.bg, style.border].join(" ")}>
                             {/* Cherry blossom decorator */}
                             <span className="absolute -top-2 -right-2 text-6xl opacity-10 pointer-events-none select-none rotate-12 leading-none">🌸</span>
 
                             {/* Top: kind emoji + date */}
-                            <div className="flex items-start justify-between relative z-10">
+                            <div className="flex items-start justify-between relative z-10 shrink-0">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-sm leading-none">{style.bloom}</span>
                                 <span className={["text-[9px] font-bold tracking-tight leading-none mt-0.5", style.body].join(" ")}>
@@ -1608,13 +1614,13 @@ export default function NotesPage() {
                             </div>
 
                             {/* Title */}
-                            <h4 className={["font-script text-xl leading-tight relative z-10", style.text].join(" ")}>
+                            <h4 className={["font-script text-xl leading-tight relative z-10 shrink-0", expanded ? "" : "line-clamp-1", style.text].join(" ")}>
                               {rem.title}
                               {age !== null && <span className="font-normal text-sm ml-1">· turning {age} ✿</span>}
                             </h4>
 
                             {/* Detail line */}
-                            <p className={["text-xs font-medium leading-relaxed relative z-10", style.body].join(" ")}>
+                            <p className={["text-xs font-medium leading-relaxed relative z-10 flex-1 min-h-0", expanded ? "" : "overflow-hidden", style.body].join(" ")}>
                               {rem.kind === "medication"
                                 ? `${weekdaysLabel(rem.weekdays)} · ${rem.times.length} dose${rem.times.length > 1 ? "s" : ""}/day`
                                 : rem.kind === "birthday"
@@ -1627,7 +1633,7 @@ export default function NotesPage() {
                             </p>
 
                             {/* Footer */}
-                            <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10 border-current/10"].join(" ")}>
+                            <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10 border-current/10 shrink-0"].join(" ")}>
                               <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full", visual.color].join(" ")}>
                                 <visual.Icon className="h-2.5 w-2.5" /> {visual.label}
                               </span>
