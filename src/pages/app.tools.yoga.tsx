@@ -1,5 +1,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
@@ -1081,9 +1082,9 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
         })}
       </div>
 
-      {confirm && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirm(null)}>
-          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {confirm && createPortal(
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirm(null)}>
+          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <img src={confirm.image} alt="" className="h-28 w-full object-cover object-top" />
             <div className="p-5 text-center">
               <p className="font-script text-2xl text-hotpink leading-none mb-1">{confirm.title}</p>
@@ -1100,7 +1101,8 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
