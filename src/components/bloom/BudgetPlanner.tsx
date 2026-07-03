@@ -8,7 +8,7 @@ import {
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
   Building2, LineChart as LineIcon, Calendar, Download, Filter, ArrowUpRight,
   ArrowDownRight, ArrowRight, CheckCircle2, CircleDot, Coins, Receipt,
-  Flag, FileBarChart, AlertTriangle, XCircle, Sprout, Flower2, type LucideIcon,
+  Flag, FileBarChart, AlertTriangle, XCircle, Sprout, Flower2, Bell, type LucideIcon,
 } from "lucide-react";
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
@@ -142,7 +142,33 @@ interface Income { id: string; source: string; amount: number; frequency: Freque
 interface Budget { [catKey: string]: number; } // monthly amount per selected cat
 interface Txn { id: string; date: string; catKey: string; amount: number; description: string; mood: MoodKey; type: "income" | "expense"; }
 interface Goal { id: string; name: string; target: number; saved: number; monthly: number; }
-interface Bill { id: string; name: string; due: string; amount: number; paid: boolean; }
+interface Bill {
+  id: string; name: string; due: string; amount: number; paid: boolean;
+  plannedThisMonth?: boolean; // count toward this month's planned budget (dashboard + stat cards)
+  remind?: boolean;           // also create a reminder in the Reminders tool
+  remindDays?: number;        // how many days before the due date to be nudged
+}
+
+/** Mirror a bill into the Reminders tool (bloom:reminders) so it shows there and
+ *  schedules a phone/tablet notification `remindDays` before it's due. */
+function syncBillReminder(bill: Bill): void {
+  try {
+    const KEY = "bloom:reminders";
+    const list: any[] = JSON.parse(localStorage.getItem(KEY) || "[]");
+    const rid = `bill-${bill.id}`;
+    const rest = Array.isArray(list) ? list.filter((r) => r?.id !== rid) : [];
+    if (bill.remind && !bill.paid) {
+      rest.push({
+        id: rid, kind: "event", title: `${bill.name} bill due`, category: "Bills",
+        date: bill.due, time: "09:00", times: [], weekdays: [],
+        leadDays: Math.max(0, bill.remindDays ?? 3), done: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    localStorage.setItem(KEY, JSON.stringify(rest));
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("bloom:notes-updated"));
+  } catch { /* non-fatal */ }
+}
 interface CustomCat { key: string; label: string; emoji: string; group: Need; }
 interface MonthPlan {
   incomes: Income[];
@@ -2057,9 +2083,10 @@ function DashboardTab(props: {
   viewMode: "past" | "present" | "future";
 }) {
   const { currency, totalIncome, totalExpenses, totalSavings, totalBalance,
-    txns, setTxns, selectedCats, setSelectedCats, allCats, goals, setTab, incomes,
+    txns, setTxns, selectedCats, setSelectedCats, allCats, goals, bills, setTab, incomes,
     budget, setBudget, onCurrencyClick,
     viewPeriod, setViewPeriod, goalIdx, setGoalIdx, month, viewMode } = props;
+  const monthKey = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
 
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
@@ -2254,7 +2281,9 @@ function DashboardTab(props: {
 
       {/* ③ STAT CARDS */}
       {(() => {
-        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+        // Bills flagged "add to this month's budget" (due this month, unpaid) count as planned budget.
+        const plannedBills  = bills.filter(b => b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === monthKey).reduce((s, b) => s + b.amount, 0);
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0) + plannedBills;
         const realExpenses  = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
         const goalsSaved    = goals.reduce((s, g) => s + (g.saved ?? 0), 0) + goalsMonthly; // incl. this month's contributions
         return (
@@ -3261,14 +3290,35 @@ function ReportsTab(props: {
   const [bName, setBName] = useState("");
   const [bDate, setBDate] = useState(todayISO());
   const [bAmt, setBAmt] = useState("");
+  const [bPlanned, setBPlanned] = useState(true);
+  const [bRemind, setBRemind] = useState(true);
+  const [bRemindDays, setBRemindDays] = useState(3);
 
   function addBill() {
     if (!bName || !bAmt) return;
-    setBills(prev => [...prev, { id: uid(), name: bName, due: bDate, amount: parseFloat(bAmt) || 0, paid: false }]);
-    setBName(""); setBAmt(""); setBDate(todayISO()); setBillOpen(false);
+    const bill: Bill = {
+      id: uid(), name: bName, due: bDate, amount: parseFloat(bAmt) || 0, paid: false,
+      plannedThisMonth: bPlanned, remind: bRemind, remindDays: bRemindDays,
+    };
+    setBills(prev => [...prev, bill]);
+    syncBillReminder(bill);
+    setBName(""); setBAmt(""); setBDate(todayISO()); setBPlanned(true); setBRemind(true); setBRemindDays(3); setBillOpen(false);
   }
-  function toggleBill(id: string) { setBills(prev => prev.map(b => b.id === id ? { ...b, paid: !b.paid } : b)); }
-  function removeBill(id: string) { setBills(prev => prev.filter(b => b.id !== id)); }
+  function toggleBill(id: string) {
+    setBills(prev => prev.map(b => {
+      if (b.id !== id) return b;
+      const next = { ...b, paid: !b.paid };
+      syncBillReminder(next); // a paid bill no longer needs a reminder
+      return next;
+    }));
+  }
+  function removeBill(id: string) {
+    setBills(prev => {
+      const b = prev.find(x => x.id === id);
+      if (b) syncBillReminder({ ...b, remind: false }); // drop its reminder
+      return prev.filter(x => x.id !== id);
+    });
+  }
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
@@ -3408,11 +3458,42 @@ function ReportsTab(props: {
           <GhostBtn onClick={() => setBillOpen(v => !v)}><Plus className="h-4 w-4" /> Add Bill</GhostBtn>
         </div>
         {billOpen && (
-          <div className="mb-3 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
-            <Input placeholder="Bill name" value={bName} onChange={(e) => setBName(e.target.value)} className="sm:col-span-4" />
-            <div className="sm:col-span-3"><PinkDatePicker value={bDate} onChange={setBDate} className="w-full" /></div>
-            <Input type="number" placeholder="Amount" value={bAmt} onChange={(e) => setBAmt(e.target.value)} className="sm:col-span-3" />
-            <PrimaryBtn onClick={addBill} className="sm:col-span-2">Add</PrimaryBtn>
+          <div className="mb-3 rounded-2xl bg-pink-50/60 p-3 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <Input placeholder="Bill name" value={bName} onChange={(e) => setBName(e.target.value)} className="sm:col-span-5" />
+              <div className="sm:col-span-4"><PinkDatePicker value={bDate} onChange={setBDate} className="w-full" /></div>
+              <Input type="number" placeholder="Amount" value={bAmt} onChange={(e) => setBAmt(e.target.value)} className="sm:col-span-3" />
+            </div>
+            {/* Count this bill in this month's budget (dashboard + stat cards) */}
+            <label className="flex items-start gap-2 cursor-pointer select-none">
+              <input type="checkbox" checked={bPlanned} onChange={(e) => setBPlanned(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#EC4899]" />
+              <span className="text-[12px] text-[#831843] leading-snug">
+                <b>Add to this month's budget</b>
+                <span className="text-[#9D5C7E]"> — it counts as planned budget and shows on your dashboard & stat cards.</span>
+              </span>
+            </label>
+            {/* Reminder */}
+            <label className="flex items-start gap-2 cursor-pointer select-none">
+              <input type="checkbox" checked={bRemind} onChange={(e) => setBRemind(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#EC4899]" />
+              <span className="text-[12px] text-[#831843] leading-snug">
+                <b>Remind me</b>
+                <span className="text-[#9D5C7E]"> — added to your Reminders tool + a phone notification.</span>
+              </span>
+            </label>
+            {bRemind && (
+              <div className="flex items-center gap-2 pl-6 text-[12px] text-[#9D5C7E]">
+                <span>Nudge me</span>
+                <div className="inline-flex items-center rounded-full bg-white border border-pink-200 overflow-hidden">
+                  <button type="button" onClick={() => setBRemindDays(d => Math.max(0, d - 1))} className="px-2.5 py-1 text-[#EC4899] font-bold hover:bg-pink-50">−</button>
+                  <span className="px-2 min-w-[2.5rem] text-center font-bold text-[#831843] tabular-nums">{bRemindDays}</span>
+                  <button type="button" onClick={() => setBRemindDays(d => Math.min(30, d + 1))} className="px-2.5 py-1 text-[#EC4899] font-bold hover:bg-pink-50">+</button>
+                </div>
+                <span>day{bRemindDays === 1 ? "" : "s"} before it's due</span>
+              </div>
+            )}
+            <div className="flex justify-end">
+              <PrimaryBtn onClick={addBill}>Add bill</PrimaryBtn>
+            </div>
           </div>
         )}
         {bills.length === 0 ? (
@@ -3434,6 +3515,10 @@ function ReportsTab(props: {
                   <div>
                     <div className="font-semibold text-[#831843]">{b.name}</div>
                     <div className="text-xs text-[#9D5C7E]">{b.due} · in {d} days · {fmt(b.amount, currency)}</div>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {b.plannedThisMonth && !b.paid && <span className="rounded-full bg-[#FCE7F3] text-[#DB2777] text-[10px] font-bold px-2 py-0.5">In budget</span>}
+                      {b.remind && !b.paid && <span className="inline-flex items-center gap-1 rounded-full bg-white border border-pink-200 text-[#9D5C7E] text-[10px] font-bold px-2 py-0.5"><Bell className="h-2.5 w-2.5" />{b.remindDays ?? 3}d before</span>}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
