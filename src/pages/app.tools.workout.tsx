@@ -13,6 +13,7 @@ import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
+import { WorkoutOnboarding, type WorkoutTourTab } from "@/components/bloom/WorkoutOnboarding";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -29,6 +30,7 @@ import { getCoaching } from "@/components/bloom/workout/coaching";
 // ===================== STORAGE =====================
 
 const ONBOARD_KEY = "bloom:workout-onboarded";
+const TOUR_KEY = "bloom:workout-tour-done";
 const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
@@ -251,12 +253,14 @@ function HeroHeader({
   onPickTab,
   sectionTitle,
   sectionSubtitle,
+  onGuide,
 }: {
   src: string;
   tab: WorkoutTab;
   onPickTab: (t: WorkoutTab) => void;
   sectionTitle: string;
   sectionSubtitle: string;
+  onGuide?: () => void;
 }) {
   const [broken, setBroken] = useState(false);
   return (
@@ -269,6 +273,14 @@ function HeroHeader({
         <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
+      {onGuide && (
+        <button
+          onClick={onGuide}
+          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+        >
+          <Sparkles className="h-3 w-3" /> Guide
+        </button>
+      )}
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
           <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
@@ -279,6 +291,7 @@ function HeroHeader({
             {(["program", "discover", "programs", "library"] as const).map((t) => (
               <button
                 key={t}
+                data-tour={`wk-tab-${t}`}
                 onClick={() => onPickTab(t)}
                 className={[
                   "rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold transition",
@@ -342,6 +355,12 @@ export default function WorkoutPage() {
   const [view, setView] = useState<View>({ kind: "program" });
   const [tab, setTab] = useState<WorkoutTab>("program");
   const [lowWater, setLowWater] = useState(false);
+  // Guided sparkle tour — auto on first visit (after profile setup), replayable.
+  const [tourDone, setTourDone] = useLS<boolean>(TOUR_KEY, false);
+  const [showTour, setShowTour] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+  const goTourTab = (t: WorkoutTourTab) => { setTab(t); setView({ kind: t }); };
 
   useEffect(() => {
     setLowWater(readTodayWaterCount() < 3);
@@ -425,9 +444,19 @@ export default function WorkoutPage() {
     );
   }
 
+  const tourVisible = showTour || (hydrated && onboarded && !tourDone);
+
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
+
+      {tourVisible && (
+        <WorkoutOnboarding
+          onTab={goTourTab}
+          onDone={() => { setTourDone(true); setShowTour(false); }}
+        />
+      )}
+
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
@@ -439,6 +468,7 @@ export default function WorkoutPage() {
           onPickTab={(t) => { setTab(t); setView({ kind: t }); }}
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
+          onGuide={() => setShowTour(true)}
         />
       )}
 
@@ -1806,6 +1836,15 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       {/* ── The week, day by day — image LEFT · info RIGHT (vignette, not banner) ── */}
       {source !== "none" && (
         <section className="rounded-3xl bg-white/85 border border-petal/60 p-3 sm:p-4">
+          {/* Edit-mode instruction — helps first-timers build their own week */}
+          {editing && source === "freestyle" && (
+            <div className="mb-2.5 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+              <p className="text-[11px] text-rose/80 leading-snug">
+                Tap any day to pick its <b className="font-bold text-hotpink">zone</b>, <b className="font-bold text-hotpink">feel</b> &amp; <b className="font-bold text-hotpink">length</b>. Choose <b className="font-bold text-hotpink">Rest day</b> to clear one. Tap <b className="font-bold text-hotpink">Done</b> when it's yours.
+              </p>
+            </div>
+          )}
           <div className="flex flex-col gap-2.5">
             {DAYS.map((d) => {
               const isToday = d === todayKey;
