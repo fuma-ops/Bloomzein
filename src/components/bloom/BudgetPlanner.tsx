@@ -2764,7 +2764,7 @@ function DashboardTab(props: {
       {/* SPENDING HISTORY */}
       {(() => {
         const budgetedCats = selectedCats.filter(k => (budget[k] ?? 0) > 0);
-        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly;
+        const totalPlanned = budgetedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + goalsMonthly + plannedBills;
         if (totalPlanned === 0) return null;
         return (
           <Card>
@@ -2788,8 +2788,8 @@ function DashboardTab(props: {
       })()}
 
       {/* 6-MONTH OVERVIEW */}
-      {(txns.length > 0 || totalIncome > 0 || selectedCats.some(k => (budget[k] ?? 0) > 0)) && (() => {
-        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+      {(txns.length > 0 || totalIncome > 0 || bills.some(b => b.plannedThisMonth && !b.paid) || selectedCats.some(k => (budget[k] ?? 0) > 0)) && (() => {
+        const plannedBudget = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0) + plannedBills;
         return (
           <Card>
             <div className="flex items-center justify-between mb-3">
