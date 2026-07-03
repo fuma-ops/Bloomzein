@@ -8,7 +8,7 @@ import {
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
   Building2, LineChart as LineIcon, Calendar, Download, Filter, ArrowUpRight,
   ArrowDownRight, ArrowRight, CheckCircle2, CircleDot, Coins, Receipt,
-  Flag, FileBarChart, AlertTriangle, XCircle, type LucideIcon,
+  Flag, FileBarChart, AlertTriangle, XCircle, Sprout, Flower2, type LucideIcon,
 } from "lucide-react";
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
@@ -38,6 +38,12 @@ type Need = "need" | "want" | "savings";
 
 interface Cat { key: string; label: string; Icon: LucideIcon; emoji: string; group: Need; }
 
+/** Category icon — always the lucide icon in palette pink, never a colored emoji. */
+function CatIcon({ cat, className = "h-3.5 w-3.5", color = "#EC4899" }: { cat?: Cat | null; className?: string; color?: string }) {
+  const I = cat?.Icon ?? Wallet;
+  return <I className={`${className} shrink-0`} strokeWidth={1.8} style={{ color }} />;
+}
+
 const DEFAULT_CATS: Cat[] = [
   { key: "rent",    label: "Rent/Mortgage",      Icon: HomeIcon,        emoji: "🏠", group: "need" },
   { key: "food",    label: "Food & Groceries",   Icon: ShoppingCart,    emoji: "🛒", group: "need" },
@@ -65,7 +71,7 @@ const FREQUENCIES = ["Monthly","Weekly","Bi-weekly","One-time"] as const;
 type Frequency = typeof FREQUENCIES[number];
 
 const MOODS = [
-  { key: "planned",   label: "Planned",   Icon: Target,       tone: "bg-mint/30 text-emerald-700 border-emerald-200" },
+  { key: "planned",   label: "Planned",   Icon: Target,       tone: "bg-[#FCE7F3] text-[#DB2777] border-[#FBCFE8]" },
   { key: "necessary", label: "Necessary", Icon: CheckCircle2, tone: "bg-pink-100 text-hotpink border-pink-200" },
   { key: "impulsive", label: "Impulsive", Icon: Zap,          tone: "bg-rose-100 text-magenta border-rose-200" },
 ] as const;
@@ -73,20 +79,29 @@ type MoodKey = typeof MOODS[number]["key"];
 
 const PRESET_GOALS = ["Emergency Fund","Vacation","New Device","Investment","Wedding","Home","Education","Car"];
 
-const BP_CYCLE_TIPS: Partial<Record<string, { emoji: string; headline: string; sub: string; grad: string }>> = {
-  luteal:     { emoji: "🌙", headline: "Luteal phase — your inner PMS budget",  sub: "Budget a little extra self-care this week. Cravings are real.",       grad: "from-purple-50 to-pink-50" },
-  period:     { emoji: "🌸", headline: "Period week — gentle care first",        sub: "Rest & warmth over everything. You deserve every cent of it.",         grad: "from-pink-50 to-rose-50" },
-  follicular: { emoji: "🌱", headline: "Follicular — rising energy mode",        sub: "Great week for big financial decisions. Your mind is clear.",           grad: "from-emerald-50 to-pink-50" },
-  ovulation:  { emoji: "✨", headline: "Ovulation peak — full power mode",       sub: "Your best week to tackle financial goals. Go for it.",                 grad: "from-yellow-50 to-pink-50" },
-  fertile:    { emoji: "💐", headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-purple-50" },
+const BP_CYCLE_TIPS: Partial<Record<string, { Icon: LucideIcon; headline: string; sub: string; grad: string }>> = {
+  luteal:     { Icon: Moon,     headline: "Luteal phase — your inner PMS budget",  sub: "Budget a little extra self-care this week. Cravings are real.",       grad: "from-[#FDF2F8] to-pink-50" },
+  period:     { Icon: Heart,    headline: "Period week — gentle care first",        sub: "Rest & warmth over everything. You deserve every cent of it.",         grad: "from-pink-50 to-rose-50" },
+  follicular: { Icon: Sprout,   headline: "Follicular — rising energy mode",        sub: "Great week for big financial decisions. Your mind is clear.",           grad: "from-[#FCE7F3] to-pink-50" },
+  ovulation:  { Icon: Sparkles, headline: "Ovulation peak — full power mode",       sub: "Your best week to tackle financial goals. Go for it.",                 grad: "from-[#FDF2F8] to-pink-50" },
+  fertile:    { Icon: Flower2,  headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-[#FDF2F8]" },
 };
 
 const HERO_CONFIG: Record<string, { title: string; sub: string }> = {
   Dashboard:       { title: "You're blooming",         sub: "Your budget. Your dreams. Your future." },
-  Incomes:         { title: "Your income garden 🌱",   sub: "Grow every stream, bloom every month." },
+  Incomes:         { title: "Your income garden ✿",    sub: "Grow every stream, bloom every month." },
   "Budget Setup":  { title: "Build your plan ✦",       sub: "A clear budget is your map to every dream." },
-  "Savings Goals": { title: "Dream big, save smart 💎",sub: "Every dirham saved brings you closer." },
-  Reports:         { title: "Know your numbers ✨",     sub: "Clarity is the first step to financial freedom." },
+  "Savings Goals": { title: "Dream big, save smart ✦", sub: "Every dirham saved brings you closer." },
+  Reports:         { title: "Know your numbers ✦",     sub: "Clarity is the first step to financial freedom." },
+};
+
+const BUDGET_GUIDE_CONTENT: SparkleContent = {
+  eyebrow: "✦ your budget ✦",
+  titleLines: ["Meet your", "money"],
+  subtitle: "A soft little tour of your income, budget & dreamy savings goals.",
+  ctaLabel: "Show me around",
+  finaleLines: ["You're all set,", "gorgeous"],
+  finaleSubtitle: "Your money garden is ready to bloom. ✿",
 };
 
 const BUDGET_GUIDE_CONTENT: SparkleContent = {
@@ -103,7 +118,6 @@ const GUIDE_STEPS = [
     key: "income",
     tab: "Incomes" as TabKey,
     selector: "[data-tour='incomes-tab']",
-    icon: "🌱",
     title: "Add your income",
     desc: "Your salary, freelance income, or any stream of money — this is where your garden gets its water.",
   },
@@ -111,7 +125,6 @@ const GUIDE_STEPS = [
     key: "budget",
     tab: "Budget Setup" as TabKey,
     selector: "[data-tour='budget-tab']",
-    icon: "✦",
     title: "Plan your budget",
     desc: "Pick life categories and set monthly amounts. A clear plan becomes your map to every dream.",
   },
@@ -119,7 +132,6 @@ const GUIDE_STEPS = [
     key: "goals",
     tab: "Savings Goals" as TabKey,
     selector: "[data-tour='goals-tab']",
-    icon: "💎",
     title: "Set your dream goals",
     desc: "Give your savings a name — a vacation, an emergency fund, a new chapter of life.",
   },
@@ -127,7 +139,6 @@ const GUIDE_STEPS = [
     key: "spend",
     tab: "Dashboard" as TabKey,
     selector: "[data-tour='spend-fab']",
-    icon: "🌸",
     title: "Log extra spends",
     desc: "Whenever you spend outside your plan, tap this button. Your dashboard adapts instantly.",
   },
@@ -579,13 +590,13 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
           </linearGradient>
           {/* Vertical gradient for the spend curve: light pink at 0, pink at budget, red above */}
           <linearGradient id="spendLineGrad" x1="0" y1={pT} x2="0" y2={baseline} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#EF4444" />
+            <stop offset="0%" stopColor="#9D174D" />
             <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#EC4899" />
             <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0.7" />
           </linearGradient>
           {/* Danger gradient for over-budget zone: pink-poppy → red */}
           <linearGradient id="dangerFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.55" />
+            <stop offset="0%" stopColor="#9D174D" stopOpacity="0.55" />
             <stop offset="100%" stopColor="#EC4899" stopOpacity="0.15" />
           </linearGradient>
           {/* Clip path: only the region ABOVE the budget line */}
@@ -659,11 +670,11 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
               {!isToday && (
                 <>
                   <line x1={cx} y1={dotY - 3} x2={cx} y2={labelY + 3}
-                    stroke="#EF4444" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.4" />
-                  <circle cx={cx} cy={dotY} r="2.5" fill="#EF4444" opacity="0.7" />
+                    stroke="#9D174D" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.4" />
+                  <circle cx={cx} cy={dotY} r="2.5" fill="#9D174D" opacity="0.7" />
                 </>
               )}
-              <text x={cx} y={labelY} fontSize="6.5" fill="#EF4444"
+              <text x={cx} y={labelY} fontSize="6.5" fill="#9D174D"
                 textAnchor="middle" fontWeight="700">{labelText}</text>
             </g>
           );
@@ -673,7 +684,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {realPtsArr.length > 0 && (
           <>
             <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.95" />
-            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#EF4444" : "#EC4899"}
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#9D174D" : "#EC4899"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -773,7 +784,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
             <stop offset="100%" stopColor="#F9A8D4" stopOpacity="0.35" />
           </linearGradient>
           <linearGradient id="mpBarOver" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
+            <stop offset="0%" stopColor="#9D174D" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#FCA5A5" stopOpacity="0.35" />
           </linearGradient>
           <filter id="mpGlow" x="-20%" y="-40%" width="140%" height="180%">
@@ -794,7 +805,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         {/* income line (line only — label drawn last) */}
         {incomeY !== null && (
           <line x1={pL} y1={incomeY} x2={W - pR} y2={incomeY}
-            stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.75" />
+            stroke="#EC4899" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.75" />
         )}
 
         {/* bars — rect only, labels drawn after trend line */}
@@ -824,7 +835,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
           if (!mo) return null;
           return (
             <circle key={i} cx={x} cy={y} r={mo?.isCurrent ? 4.5 : 3}
-              fill={mo?.isOver ? "#EF4444" : "#EC4899"}
+              fill={mo?.isOver ? "#9D174D" : "#EC4899"}
               stroke="white" strokeWidth="1.5" style={{ opacity: mo?.isCurrent ? 1 : 0.6 }} />
           );
         })}
@@ -834,7 +845,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         {incomeY !== null && (
           <>
             <rect x={pL} y={incomeY - 11} width={36} height={10} rx="2.5" fill="white" fillOpacity="0.92" />
-            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">Income</text>
+            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#EC4899" fontWeight="700">Income</text>
           </>
         )}
         {/* Bar value labels + month labels */}
@@ -852,7 +863,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
                 <>
                   <rect x={labelCx - 30} y={labelY - 8.5} width={60} height={10.5} rx="3" fill="white" fillOpacity="0.95" />
                   <text x={labelCx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
-                    fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
+                    fill={mo.isOver ? "#9D174D" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
                 </>
               )}
               <text x={cx} y={H - 3} fontSize="7.5" textAnchor="middle"
@@ -871,7 +882,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         </div>
         {income > 0 && (
           <div className="flex items-center gap-1.5">
-            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
+            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
             <span className="text-[10px] font-semibold text-[#9D5C7E]">Income</span>
           </div>
         )}
@@ -912,7 +923,7 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
     return `M ${f(ix1)} ${f(iy1)} L ${f(x1)} ${f(y1)} A ${R} ${R} 0 ${la} 1 ${f(x2)} ${f(y2)} L ${f(ix2)} ${f(iy2)} A ${ri} ${ri} 0 ${la} 0 ${f(ix1)} ${f(iy1)} Z`;
   };
 
-  const plannedColor = isOverIncome ? "#EF4444" : "#EC4899";
+  const plannedColor = isOverIncome ? "#9D174D" : "#EC4899";
   const extraColor   = isOverIncome ? "#F87171" : "#F9A8D4";
 
   return (
@@ -932,10 +943,10 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
         {/* center label */}
         {isOverIncome ? (
           <>
-            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EF4444" fontWeight="700">
+            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#9D174D" fontWeight="700">
               −{fmt(Math.abs(income - total), currency)}
             </text>
-            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#EF4444">over income ⚠</text>
+            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#9D174D">over income</text>
           </>
         ) : hasExtra ? (
           <>
@@ -957,16 +968,16 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
-            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-[#9D174D]" : "text-[#9D5C7E]"}`}>PLANNED</span>
           </div>
-          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-[#9D174D]" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
-            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-[#9D174D]" : "text-[#9D5C7E]"}`}>EXTRA</span>
           </div>
-          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
+          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-[#9D174D]" : "text-[#F472B6]"}`}>
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -1121,9 +1132,9 @@ export function BudgetPlanner() {
     setSelectedCats(["rent","food","transp","elec","phone","health","rest","shop"]);
     setBudget({ rent: 3200, food: 1500, transp: 600, elec: 300, phone: 250, health: 300, rest: 700, shop: 900 });
     setGoals([
-      { id: "dg1", name: "Emergency Fund 🌿", target: 20000, saved: 6500, monthly: 1200 },
-      { id: "dg2", name: "Morocco Road Trip ✈️", target: 8000, saved: 2400, monthly: 600 },
-      { id: "dg3", name: "New MacBook 💻", target: 12000, saved: 3800, monthly: 800 },
+      { id: "dg1", name: "Emergency Fund ✿", target: 20000, saved: 6500, monthly: 1200 },
+      { id: "dg2", name: "Morocco Road Trip ✦", target: 8000, saved: 2400, monthly: 600 },
+      { id: "dg3", name: "New MacBook ✦", target: 12000, saved: 3800, monthly: 800 },
     ]);
     setTxns([
       // June 2026
@@ -1142,7 +1153,7 @@ export function BudgetPlanner() {
       { id: "dt12", date: "2026-05-29", catKey: "travel", amount: 650,  description: "Weekend getaway deposit",        mood: "impulsive", type: "expense" },
       // April 2026
       { id: "dt13", date: "2026-04-02", catKey: "food",   amount: 180,  description: "Easter special groceries",       mood: "planned",   type: "expense" },
-      { id: "dt14", date: "2026-04-10", catKey: "travel", amount: 3200, description: "Trip to Marrakech 🌴",           mood: "impulsive", type: "expense" },
+      { id: "dt14", date: "2026-04-10", catKey: "travel", amount: 3200, description: "Trip to Marrakech ✦",           mood: "impulsive", type: "expense" },
       { id: "dt15", date: "2026-04-18", catKey: "shop",   amount: 870,  description: "Spring wardrobe refresh",        mood: "impulsive", type: "expense" },
       { id: "dt16", date: "2026-04-24", catKey: "health", amount: 250,  description: "Dental checkup",                 mood: "necessary", type: "expense" },
       // March 2026
@@ -1259,7 +1270,7 @@ export function BudgetPlanner() {
                 {isDash && cycleTip ? (
                   <div className="mt-1 space-y-0.5">
                     <div className="inline-flex items-center gap-1.5">
-                      <span className="text-sm leading-none" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }}>{cycleTip.emoji}</span>
+                      <cycleTip.Icon className="h-3.5 w-3.5 text-white shrink-0" strokeWidth={2} style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }} />
                       <span className="text-[11px] font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
                     </div>
                     <p className="text-[10px] text-white/85 italic leading-snug pl-0.5">{cycleTip.sub}</p>
@@ -1441,14 +1452,14 @@ export function BudgetPlanner() {
         // Count how many months after this one are also planned (will also be reset)
         const cascade = Object.keys(months).filter(k => k > monthKey && months[k]?.activated).length;
         return (
-          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-violet-50 border border-violet-200/60 px-4 py-2.5">
-            <Flag className="h-4 w-4 text-violet-500 shrink-0" />
+          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-[#FDF2F8] border border-[#FBCFE8]/60 px-4 py-2.5">
+            <Flag className="h-4 w-4 text-[#EC4899] shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-violet-700 font-semibold truncate">
+              <p className="text-xs text-[#9D174D] font-semibold truncate">
                 {monthName} · Planifié ✓
               </p>
               {cascade > 0 && (
-                <p className="text-[10px] text-violet-500">
+                <p className="text-[10px] text-[#EC4899]">
                   + {cascade} mois suivant{cascade > 1 ? "s" : ""} planifié{cascade > 1 ? "s" : ""}
                 </p>
               )}
@@ -1535,11 +1546,11 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Income Garden",
       v: income,
       sub: "your monthly earnings",
-      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-pink-50 to-rose-50",
+      bg: isOverIncome ? "from-[#FBCFE8] to-rose-100" : "from-pink-50 to-rose-50",
       badge: income > 0
         ? surplus >= 0
-          ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-emerald-600 bg-emerald-100" }
-          : { text: `⚠ −${fmt(Math.abs(surplus), currency)}`, color: "text-red-700 bg-red-100" }
+          ? { text: `Balance = ${fmt(surplus, currency)}`, color: "text-[#DB2777] bg-[#FCE7F3]" }
+          : { text: `−${fmt(Math.abs(surplus), currency)}`, color: "text-[#831843] bg-[#FBCFE8]" }
         : null,
     },
     {
@@ -1548,14 +1559,14 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       sub: goalsMonthly > 0
         ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
         : "committed this month",
-      bg: "from-fuchsia-50 to-purple-50",
+      bg: "from-fuchsia-50 to-[#FDF2F8]",
       badge: null,
     },
     {
       label: "Real Spending Petals",
       v: plannedBudget + goalsMonthly + realExpenses,
       sub: "extra spends this month",
-      bg: isOverIncome ? "from-red-100 to-rose-100" : "from-rose-50 to-pink-50",
+      bg: isOverIncome ? "from-[#FBCFE8] to-rose-100" : "from-rose-50 to-pink-50",
       badge: null,
       planSub: fmt(plannedBudget + goalsMonthly, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1564,8 +1575,8 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Savings Bloom",
       v: goalsSaved,
       sub: "saved across all goals",
-      bg: "from-emerald-50 to-teal-50",
-      numColor: "text-emerald-600",
+      bg: "from-[#FCE7F3] to-[#FDF2F8]",
+      numColor: "text-[#DB2777]",
       badge: null,
     },
   ];
@@ -1614,13 +1625,12 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
   const [saved, setSaved] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
   const [newCatLabel, setNewCatLabel] = useState("");
-  const [newCatEmoji, setNewCatEmoji] = useState("💰");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setAmount(""); setDesc(""); setSaved(false); setShowAddCat(false);
-      setDate(todayISO()); setNewCatLabel(""); setNewCatEmoji("💰");
+      setDate(todayISO()); setNewCatLabel("");
       setTimeout(() => inputRef.current?.focus(), 80);
     }
   }, [open]);
@@ -1636,10 +1646,10 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
   function addCustomCat() {
     if (!newCatLabel.trim()) return;
     const key = `custom_${Date.now()}`;
-    setCustomCats(prev => [...prev, { key, label: newCatLabel.trim(), emoji: newCatEmoji, group: "need" as Need }]);
+    setCustomCats(prev => [...prev, { key, label: newCatLabel.trim(), emoji: "✿", group: "need" as Need }]);
     setCatKey(key);
     setShowAddCat(false);
-    setNewCatLabel(""); setNewCatEmoji("💰");
+    setNewCatLabel("");
   }
 
   if (!open) return null;
@@ -1666,7 +1676,7 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
 
         {saved ? (
           <div className="py-12 flex flex-col items-center gap-3 animate-fade-in">
-            <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
+            <div className="grid h-16 w-16 place-items-center rounded-full bg-[#EC4899] text-white shadow-lg shadow-[#F9A8D4]/40 animate-scale-in">
               <Check className="h-8 w-8" strokeWidth={3} />
             </div>
             <p className="font-script text-3xl text-[#831843]">Saved ✿</p>
@@ -1686,7 +1696,7 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
                         ? "bg-[#EC4899] text-white border-transparent shadow-md shadow-pink-400/30 scale-[1.04]"
                         : "bg-pink-50/80 text-[#9D5C7E] border-pink-100 hover:border-pink-300"
                     ].join(" ")}>
-                    <span className="text-base">{c.emoji}</span>
+                    <c.Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
                     <span className="text-[9px] font-semibold leading-tight line-clamp-2">{c.label}</span>
                   </button>
                 ))}
@@ -1702,12 +1712,8 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
             {showAddCat && (
               <div className="rounded-2xl border border-pink-200 bg-pink-50/60 p-3 space-y-2 animate-fade-in">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">New Category</p>
-                <div className="flex gap-2">
-                  <input value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} maxLength={2}
-                    className="w-12 rounded-xl bg-white border border-pink-200 text-center text-lg p-2 outline-none focus:ring-1 focus:ring-pink-400" />
-                  <input value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} placeholder="Category name"
-                    className="flex-1 rounded-xl bg-white border border-pink-200 px-3 py-2 text-sm font-medium text-[#831843] outline-none focus:ring-1 focus:ring-pink-400" />
-                </div>
+                <input value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} placeholder="Category name"
+                  className="w-full rounded-xl bg-white border border-pink-200 px-3 py-2 text-sm font-medium text-[#831843] outline-none focus:ring-1 focus:ring-pink-400" />
                 <div className="flex gap-2">
                   <button onClick={() => setShowAddCat(false)} className="flex-1 rounded-xl border border-pink-200 py-1.5 text-xs font-semibold text-[#9D5C7E]">Cancel</button>
                   <button onClick={addCustomCat} className="flex-1 rounded-xl bg-[#EC4899] text-white py-1.5 text-xs font-bold hover:bg-[#DB2777] transition">Add</button>
@@ -1827,16 +1833,16 @@ function MonthPickerModal({
             let badge = "";
 
             if (isLocked) {
-              cls += "bg-gray-100 text-gray-400 cursor-not-allowed opacity-50";
-              badge = "🔒";
+              cls += "bg-[#FDF2F8] text-[#F9A8D4] cursor-not-allowed opacity-60";
+              badge = "○";
             } else if (isCurrent) {
               cls += "bg-[#EC4899] text-white shadow-md shadow-pink-300/50";
               badge = "●";
             } else if (isActivated) {
-              cls += "bg-violet-100 text-violet-700 hover:bg-violet-200";
+              cls += "bg-[#FCE7F3] text-[#9D174D] hover:bg-[#FBCFE8]";
               badge = "✓";
             } else if (isNextPlan) {
-              cls += "bg-violet-50 text-violet-600 border-2 border-dashed border-violet-400 hover:bg-violet-100";
+              cls += "bg-[#FDF2F8] text-[#DB2777] border-2 border-dashed border-[#F472B6] hover:bg-[#FCE7F3]";
               badge = "✦";
             } else {
               // past
@@ -1863,10 +1869,10 @@ function MonthPickerModal({
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#EC4899]" /> En cours
           </span>
           <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-violet-200" /> Planifié ✓
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#FBCFE8]" /> Planifié ✓
           </span>
           <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
-            <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-violet-400" /> Planifier ✦
+            <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-[#F472B6]" /> Planifier ✦
           </span>
         </div>
       </div>
@@ -1924,13 +1930,13 @@ function PlanningOverlay({
         style={{ animation: "fadeIn 0.35s ease-out" }}>
 
         {/* Header */}
-        <div className="p-5" style={{ background: "linear-gradient(135deg,#EC4899 0%,#8B5CF6 100%)" }}>
+        <div className="p-5" style={{ background: "linear-gradient(135deg,#EC4899 0%,#F472B6 100%)" }}>
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">✦ Planning mode</p>
           <h2 className="font-script text-2xl text-white mt-0.5">{monthName}</h2>
           <p className="text-xs text-white/80 mt-1">Confirme ou ajuste ton plan avant de commencer ce mois</p>
-          <div className={`mt-3 flex items-center gap-2 rounded-2xl px-3 py-2 ${balance >= 0 ? "bg-white/20" : "bg-red-400/30"}`}>
+          <div className={`mt-3 flex items-center gap-2 rounded-2xl px-3 py-2 ${balance >= 0 ? "bg-white/20" : "bg-[#DB2777]/30"}`}>
             <span className="text-xs font-semibold text-white/80">Solde prévu</span>
-            <span className={`ml-auto text-sm font-bold tabular-nums ${balance >= 0 ? "text-white" : "text-red-200"}`}>
+            <span className={`ml-auto text-sm font-bold tabular-nums ${balance >= 0 ? "text-white" : "text-[#F9A8D4]"}`}>
               {balance >= 0 ? "+" : ""}{fmt(balance, currency)}
             </span>
           </div>
@@ -1967,7 +1973,7 @@ function PlanningOverlay({
                 <Receipt className="h-3 w-3" /> Budget · {fmt(totalBudg, currency)}
               </p>
               <button onClick={() => setSameBudget(v => !v)}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${sameBudget ? "bg-emerald-100 text-emerald-700" : "bg-violet-100 text-violet-700"}`}>
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${sameBudget ? "bg-[#FCE7F3] text-[#DB2777]" : "bg-[#FCE7F3] text-[#9D174D]"}`}>
                 {sameBudget ? <><Check className="h-3 w-3" /> Même plan</> : <><Sparkles className="h-3 w-3" /> Ajuster</>}
               </button>
             </div>
@@ -1979,7 +1985,7 @@ function PlanningOverlay({
               const cat = allCats.find(c => c.key === k);
               return (
                 <div key={k} className="flex items-center gap-2">
-                  <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                  <CatIcon cat={cat} />
                   <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
                   <div className="flex items-center gap-1 shrink-0">
                     <input type="number" min={0} value={draftBudget[k] ?? 0}
@@ -2005,7 +2011,7 @@ function PlanningOverlay({
                   <div className="flex items-center gap-1 shrink-0">
                     <input type="number" min={0} value={draftGoals[g.id] ?? g.monthly}
                       onChange={e => setDraftGoals(prev => ({ ...prev, [g.id]: Math.max(0, Number(e.target.value)) }))}
-                      className="w-24 rounded-xl border border-violet-200 bg-violet-50 px-2 py-1 text-right text-xs font-bold text-violet-700 focus:outline-none focus:border-violet-500"
+                      className="w-24 rounded-xl border border-[#FBCFE8] bg-[#FDF2F8] px-2 py-1 text-right text-xs font-bold text-[#9D174D] focus:outline-none focus:border-[#EC4899]"
                     />
                     <span className="text-[10px] text-[#9D5C7E]">/mo</span>
                   </div>
@@ -2108,15 +2114,15 @@ function DashboardTab(props: {
   const insights = useMemo(() => {
     const r: { icon: string; main: string; sub: string }[] = [];
     if (totalIncome > 0 && effectiveSpend > totalIncome)
-      r.push({ icon: "💗", main: "Over income this month", sub: `Committed ${fmt(effectiveSpend, currency)} vs ${fmt(totalIncome, currency)} income — review your plan 🌸` });
+      r.push({ icon: "♥", main: "Over income this month", sub: `Committed ${fmt(effectiveSpend, currency)} vs ${fmt(totalIncome, currency)} income — review your plan ✿` });
     else if (extraLogged > 0)
-      r.push({ icon: "🌸", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} still available` : "Budget is tight — take a soft pause ✿" });
+      r.push({ icon: "✿", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} still available` : "Budget is tight — take a soft pause ✿" });
     else if (plannedTotal > 0)
-      r.push({ icon: "🌷", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} available after plan` : "Income fully allocated" });
+      r.push({ icon: "✿", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} available after plan` : "Income fully allocated" });
     if (goals.length > 0)
-      r.push({ icon: "✨", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: "You are amazing!" });
+      r.push({ icon: "✦", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: "You are amazing!" });
     if (r.length === 0)
-      r.push({ icon: "🌸", main: "Start tracking to see your story", sub: "bloom here ✿" });
+      r.push({ icon: "✿", main: "Start tracking to see your story", sub: "bloom here ✿" });
     return r.slice(0, 3);
   }, [effectiveSpend, extraLogged, effectiveSave, plannedTotal, goals, totalIncome, currency]);
 
@@ -2132,7 +2138,7 @@ function DashboardTab(props: {
       <div className="space-y-3 animate-fade-in">
         <Card className="relative overflow-hidden">
           <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-purple-200/30 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-[#FBCFE8]/30 blur-2xl" />
           <div className="relative">
             <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold tracking-widest text-[#9D5C7E]">
               <Sparkles className="h-3 w-3 text-[#EC4899]" /> WELCOME TO YOUR BUDGET
@@ -2144,7 +2150,7 @@ function DashboardTab(props: {
             <div className="mt-5 flex items-center gap-3">
               <div className="flex-1 h-2.5 rounded-full bg-pink-100 overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#F472B6,#EC4899)" }} />
               </div>
               <span className="shrink-0 text-xs font-bold tracking-widest text-[#9D5C7E]">{completed}/{steps.length} done</span>
             </div>
@@ -2165,16 +2171,16 @@ function DashboardTab(props: {
               return (
                 <li key={s.key}
                   className={["flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-300 border-[0.5px]",
-                    s.done ? "bg-emerald-50/80 border-emerald-200/60"
-                    : isNext ? "bg-gradient-to-r from-pink-50 to-purple-50/50 border-pink-300/60 shadow-sm"
+                    s.done ? "bg-[#FCE7F3]/80 border-[#FBCFE8]/60"
+                    : isNext ? "bg-gradient-to-r from-pink-50 to-[#FDF2F8]/50 border-pink-300/60 shadow-sm"
                     : "bg-white/60 border-pink-100/60"].join(" ")}>
                   <div className={["grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition-all duration-300",
-                    s.done ? "bg-emerald-500 text-white" : isNext ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30" : "bg-pink-100 text-[#C4A0CE]"].join(" ")}>
+                    s.done ? "bg-[#EC4899] text-white" : isNext ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/30" : "bg-pink-100 text-[#C4A0CE]"].join(" ")}>
                     {s.done ? <Check className="h-5 w-5" strokeWidth={2.5} /> : <s.Icon className="h-4 w-4" strokeWidth={1.8} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[9px] font-bold tracking-widest text-[#C4A0CE] uppercase">Step {i + 1}</div>
-                    <div className={["text-sm font-semibold truncate", s.done ? "text-emerald-700 line-through decoration-emerald-300/60" : "text-[#831843]"].join(" ")}>{s.label}</div>
+                    <div className={["text-sm font-semibold truncate", s.done ? "text-[#DB2777] line-through decoration-[#F9A8D4]/60" : "text-[#831843]"].join(" ")}>{s.label}</div>
                     {!s.done && <div className="text-[10px] text-[#9D5C7E] mt-0.5 leading-snug">{s.hint}</div>}
                   </div>
                   {isNext && (
@@ -2183,7 +2189,7 @@ function DashboardTab(props: {
                       Go <ArrowRight className="h-3 w-3" />
                     </button>
                   )}
-                  {s.done && <span className="shrink-0 text-[11px] font-bold text-emerald-600">✓ Done</span>}
+                  {s.done && <span className="shrink-0 text-[11px] font-bold text-[#DB2777]">✓ Done</span>}
                 </li>
               );
             })}
@@ -2199,7 +2205,7 @@ function DashboardTab(props: {
 
       {/* Smart guide banner */}
       {!allDone && nextStep && (
-        <div className="relative overflow-hidden rounded-2xl border border-pink-200/60 bg-gradient-to-r from-pink-50 via-white to-purple-50/40 px-4 py-4 shadow-sm">
+        <div className="relative overflow-hidden rounded-2xl border border-pink-200/60 bg-gradient-to-r from-pink-50 via-white to-[#FDF2F8]/40 px-4 py-4 shadow-sm">
           <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-pink-200/30 blur-2xl" />
           <div className="relative flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
@@ -2217,7 +2223,7 @@ function DashboardTab(props: {
               <div className="hidden sm:flex gap-1">
                 {steps.map(s => (
                   <div key={s.key} className={["h-2 rounded-full transition-all duration-300",
-                    s.done ? "w-2 bg-emerald-400" : s === nextStep ? "w-4 bg-[#EC4899]" : "w-2 bg-pink-200"].join(" ")} />
+                    s.done ? "w-2 bg-[#F472B6]" : s === nextStep ? "w-4 bg-[#EC4899]" : "w-2 bg-pink-200"].join(" ")} />
                 ))}
               </div>
               <PrimaryBtn onClick={() => setTab(nextStep.tab)}>
@@ -2228,17 +2234,17 @@ function DashboardTab(props: {
         </div>
       )}
       {allDone && !setupDismissed && (
-        <div className="rounded-2xl border border-emerald-200/60 bg-emerald-50/60 px-4 py-3 flex items-center gap-3">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm shrink-0">
+        <div className="rounded-2xl border border-[#FBCFE8]/60 bg-[#FCE7F3]/60 px-4 py-3 flex items-center gap-3">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#EC4899] text-white shadow-sm shrink-0">
             <Check className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-emerald-800">Setup complete — you're blooming! 🌸</p>
-            <p className="text-[11px] text-emerald-600">Log extra spends to track what you bought on top of your plan.</p>
+            <p className="text-sm font-bold text-[#9D174D]">Setup complete — you're blooming! ✿</p>
+            <p className="text-[11px] text-[#DB2777]">Log extra spends to track what you bought on top of your plan.</p>
           </div>
           <button
             onClick={() => setSetupDismissed(true)}
-            className="grid h-8 w-8 place-items-center rounded-full hover:bg-emerald-100 text-emerald-600 transition shrink-0"
+            className="grid h-8 w-8 place-items-center rounded-full hover:bg-[#FCE7F3] text-[#DB2777] transition shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -2303,7 +2309,7 @@ function DashboardTab(props: {
                       <div key={k}>
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                            <CatIcon cat={cat} />
                             <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
                             {status === "over" && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
                           </div>
@@ -2324,7 +2330,7 @@ function DashboardTab(props: {
                           return (
                             <div className="flex h-3.5 rounded-full overflow-hidden">
                               <div className="h-full transition-all duration-700"
-                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#F472B6,#EC4899)" }} />
                               {actual > 0 && (
                                 <div className="h-full transition-all duration-700"
                                   style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F43F5E)" }} />
@@ -2355,7 +2361,7 @@ function DashboardTab(props: {
                             <div key={k}>
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-1.5 min-w-0">
-                                  <span className="text-sm shrink-0">{cat?.emoji ?? "💰"}</span>
+                                  <CatIcon cat={cat} />
                                   <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
                                   <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">New</span>
                                 </div>
@@ -2388,18 +2394,18 @@ function DashboardTab(props: {
                     <div key={g.id}>
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="shrink-0 text-[9px] font-bold text-violet-600 bg-violet-100 rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
+                          <span className="shrink-0 text-[9px] font-bold text-[#DB2777] bg-[#FCE7F3] rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
                           <span className="text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0 ml-2 tabular-nums text-[11px]">
-                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}/mo</span>
+                          <span className="font-bold text-[#DB2777]">{fmt(g.monthly, currency)}/mo</span>
                           <span className="text-[#9D5C7E] mx-0.5">·</span>
                           <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
                         </div>
                       </div>
-                      <div className="relative h-3.5 rounded-full overflow-hidden bg-violet-100/50">
+                      <div className="relative h-3.5 rounded-full overflow-hidden bg-[#FCE7F3]/50">
                         <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#8B5CF6)" }} />
+                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F472B6,#F472B6)" }} />
                       </div>
                     </div>
                   );
@@ -2442,22 +2448,22 @@ function DashboardTab(props: {
               return (
                 <div key={key} className="shrink-0 flex flex-col items-center gap-1 w-16">
                   <div className={["grid h-11 w-11 place-items-center rounded-2xl text-xl shadow-sm border",
-                    isOver ? "bg-rose-50 border-rose-200" : isUnplanned ? "bg-amber-50 border-amber-200" : "bg-pink-50 border-pink-100"
+                    isOver ? "bg-rose-50 border-rose-200" : isUnplanned ? "bg-[#FDF2F8] border-[#FBCFE8]" : "bg-pink-50 border-pink-100"
                   ].join(" ")}>
-                    {cat?.emoji ?? "💰"}
+                    <CatIcon cat={cat} className="h-5 w-5" color={isOver ? "#9D174D" : "#EC4899"} />
                   </div>
                   <p className="text-[9px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
                   {/* two-part bar */}
                   <div className="flex w-full h-1.5 rounded-full overflow-hidden bg-pink-100">
                     {isUnplanned
-                      ? <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
+                      ? <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(90deg,#FCD34D,#DB2777)" }} />
                       : <>
                           <div className="h-full transition-all duration-700"
-                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
-                          {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
+                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#F472B6,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                          {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#9D174D)" }} />}
                         </>}
                   </div>
-                  <p className={["text-[9px] font-bold", isOver ? "text-rose-500" : isUnplanned ? "text-amber-500" : "text-emerald-600"].join(" ")}>
+                  <p className={["text-[9px] font-bold", isOver ? "text-rose-500" : isUnplanned ? "text-[#EC4899]" : "text-[#DB2777]"].join(" ")}>
                     {isUnplanned ? "New" : isOver ? `+${overPct}%` : "✓ Plan"}
                   </p>
                 </div>
@@ -2512,7 +2518,7 @@ function DashboardTab(props: {
                     cursor: isCenter ? "default" : "pointer",
                   }}>
                   <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
+                    style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #F472B6 100%)" }}>
                     <div className="flex items-center justify-between gap-3 p-4">
                       <div className="flex-1 min-w-0">
                         <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
@@ -2558,7 +2564,7 @@ function DashboardTab(props: {
               const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
               return (
                 <div key={goal.id} className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #F472B6 100%)" }}>
                   <div className="flex items-center justify-between gap-3 p-5">
                     <div className="flex-1 min-w-0">
                       <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
@@ -2592,31 +2598,31 @@ function DashboardTab(props: {
       {/* ⑥ THIS MONTH'S STORY + INCOME VS EXPENSES */}
       {(() => {
         const storyOver = totalIncome > 0 && effectiveSpend > totalIncome;
-        const expenseBarColor = storyOver ? "#EF4444" : "#F9A8D4";
-        const ringTone = storyOver ? "#EF4444" : "#EC4899";
+        const expenseBarColor = storyOver ? "#9D174D" : "#F9A8D4";
+        const ringTone = storyOver ? "#9D174D" : "#EC4899";
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+            <Card className={storyOver ? "bg-gradient-to-br from-[#FCE7F3] to-rose-100 border-[#F9A8D4]" : ""}>
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
-                <Sparkles className={`h-4 w-4 ${storyOver ? "text-red-500" : "text-[#EC4899]"}`} strokeWidth={1.6} />
+                <Sparkles className={`h-4 w-4 ${storyOver ? "text-[#9D174D]" : "text-[#EC4899]"}`} strokeWidth={1.6} />
                 {viewPeriod === "week" ? "This week's story" : "This month's story"}
               </h3>
               <ul className="space-y-3">
                 {insights.map((ins, i) => (
                   <li key={i} className="flex items-start gap-2.5">
-                    <span className="text-base leading-none mt-0.5 shrink-0">{ins.icon}</span>
+                    <span className="text-base leading-none mt-0.5 shrink-0 text-[#EC4899]">{ins.icon}</span>
                     <div>
-                      <p className={`text-sm font-semibold leading-snug ${storyOver && i === 0 ? "text-red-700" : "text-[#831843]"}`}>{ins.main}</p>
-                      <p className={`text-[11px] ${storyOver && i === 0 ? "text-red-500" : "text-[#9D5C7E]"}`}>{ins.sub}</p>
+                      <p className={`text-sm font-semibold leading-snug ${storyOver && i === 0 ? "text-[#831843]" : "text-[#831843]"}`}>{ins.main}</p>
+                      <p className={`text-[11px] ${storyOver && i === 0 ? "text-[#9D174D]" : "text-[#9D5C7E]"}`}>{ins.sub}</p>
                     </div>
                   </li>
                 ))}
               </ul>
             </Card>
 
-            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+            <Card className={storyOver ? "bg-gradient-to-br from-[#FCE7F3] to-rose-100 border-[#F9A8D4]" : ""}>
               <div className="flex items-center justify-between mb-3">
-                <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>Income vs Expenses</h3>
+                <h3 className={`text-sm font-bold ${storyOver ? "text-[#831843]" : "text-[#831843]"}`}>Income vs Expenses</h3>
                 <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
                   <span className="flex items-center gap-1">
@@ -2636,12 +2642,12 @@ function DashboardTab(props: {
                       const barColor = type === "income" ? "#EC4899" : expenseBarColor;
                       return (
                         <div key={type} className="flex-1 flex flex-col items-center gap-1">
-                          <span className={`text-[10px] font-bold ${storyOver && type === "expenses" ? "text-red-700" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
+                          <span className={`text-[10px] font-bold ${storyOver && type === "expenses" ? "text-[#831843]" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
                           <div className="relative w-full" style={{ height: 80 }}>
                             <div className="absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-700"
                               style={{ height: barPx, background: barColor }} />
                           </div>
-                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-red-500" : "text-[#9D5C7E]"}`}>{type}</span>
+                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-[#9D174D]" : "text-[#9D5C7E]"}`}>{type}</span>
                         </div>
                       );
                     })}
@@ -2654,7 +2660,7 @@ function DashboardTab(props: {
                         tone={ringTone}
                         size={120}
                       />
-                      <p className={`text-[10px] font-semibold -mt-2 ${storyOver ? "text-red-500" : "text-[#9D5C7E]"}`}>of income spent</p>
+                      <p className={`text-[10px] font-semibold -mt-2 ${storyOver ? "text-[#9D174D]" : "text-[#9D5C7E]"}`}>of income spent</p>
                     </div>
                   )}
                 </div>
@@ -2746,7 +2752,7 @@ function AddTxnForm({ amount, setAmount, catKey, setCatKey, desc, setDesc, date,
       <div className="flex gap-2">
         <button onClick={() => setShowCatModal(true)}
           className="flex-1 flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left">
-          <span className="text-base">{currentCat?.emoji ?? "💰"}</span>
+          <CatIcon cat={currentCat} className="h-4 w-4" />
           <span className="flex-1 truncate font-medium">{currentCat?.label ?? catKey}</span>
           <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0" />
         </button>
@@ -2761,7 +2767,7 @@ function AddTxnForm({ amount, setAmount, catKey, setCatKey, desc, setDesc, date,
       {/* Save */}
       <div className="flex items-center justify-between pt-1">
         {txnSaved ? (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 animate-fade-in">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-[#DB2777] animate-fade-in">
             <Check className="h-4 w-4" /> Saved ✿
           </span>
         ) : <span />}
@@ -2877,7 +2883,6 @@ function BudgetSetupTab(props: {
   const { allCats, selectedCats, setSelectedCats, budget, setBudget, customCats, setCustomCats, currency, totalIncome, setTab, suggestion } = props;
   const [showCustom, setShowCustom] = useState(false);
   const [customName, setCustomName] = useState("");
-  const [customEmoji, setCustomEmoji] = useState("✨");
   const [customGroup, setCustomGroup] = useState<Need>("want");
   const [saved, setSaved] = useState(false);
 
@@ -2888,9 +2893,9 @@ function BudgetSetupTab(props: {
     const name = customName.trim();
     if (!name) return;
     const key = "cu-" + uid();
-    setCustomCats(prev => [...prev, { key, label: name, emoji: customEmoji, group: customGroup }]);
+    setCustomCats(prev => [...prev, { key, label: name, emoji: "✿", group: customGroup }]);
     setSelectedCats(prev => [...prev, key]);
-    setCustomName(""); setCustomEmoji("✨");
+    setCustomName("");
   }
   function save() {
     setSaved(true);
@@ -2962,8 +2967,7 @@ function BudgetSetupTab(props: {
 
         {showCustom && (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
-            <Input placeholder="Category name" value={customName} onChange={(e) => setCustomName(e.target.value)} className="sm:col-span-5" />
-            <Input placeholder="Emoji" maxLength={2} value={customEmoji} onChange={(e) => setCustomEmoji(e.target.value)} className="sm:col-span-2" />
+            <Input placeholder="Category name" value={customName} onChange={(e) => setCustomName(e.target.value)} className="sm:col-span-7" />
             <div className="sm:col-span-3">
               <PinkSelect value={customGroup} onChange={(v) => setCustomGroup(v as Need)}
                 options={[{ value: "need", label: "Need" }, { value: "want", label: "Want" }, { value: "savings", label: "Savings" }]} />
@@ -2977,7 +2981,7 @@ function BudgetSetupTab(props: {
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E]">STEP 2 · SET AMOUNTS</h3>
           <div className="flex items-center gap-2">
-            {saved && <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>}
+            {saved && <span className="text-xs font-semibold text-[#DB2777] inline-flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>}
             <button
               onClick={() => { if (window.confirm("Reset everything? This will clear your budget setup AND all recorded transactions.")) { setBudget({}); setSelectedCats([]); props.setTxns([]); } }}
               className="text-xs font-semibold text-[#9D5C7E] border border-pink-200 rounded-full px-3 py-1.5 hover:bg-pink-50 transition active:scale-95">
@@ -3108,7 +3112,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
             const remaining = Math.max(0, g.target - g.saved);
             const months = g.monthly > 0 ? Math.ceil(remaining / g.monthly) : null;
             const status = pct >= 100 ? { l: "Achieved", c: "bg-pink-100 text-hotpink" }
-              : g.saved > 0 ? { l: "On Track", c: "bg-emerald-100 text-emerald-700" }
+              : g.saved > 0 ? { l: "On Track", c: "bg-[#FCE7F3] text-[#DB2777]" }
               : { l: "Not Started", c: "bg-slate-100 text-slate-600" };
             return (
               <Card key={g.id}>
@@ -3122,7 +3126,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
                 <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
                 <div className="mt-3 relative h-3 rounded-full bg-pink-100 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                    style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F472B6,#EC4899)" }} />
                   <span className="absolute inset-0 text-center text-[10px] font-bold text-[#831843] leading-3 pt-0.5">{Math.round(pct)}%</span>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
@@ -3286,15 +3290,15 @@ function ReportsTab(props: {
 
         {/* Monthly summary chips */}
         <div className="flex gap-2 flex-wrap mb-3">
-          <div className="flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
-            <ArrowUpRight className="h-3 w-3 text-emerald-600" />
-            <span className="text-[10px] font-bold text-emerald-700">{fmt(ledgerStats.incomeTotal, currency)}</span>
-            <span className="text-[9px] text-emerald-500">income</span>
+          <div className="flex items-center gap-1 rounded-full bg-[#FCE7F3] border border-[#FBCFE8] px-2.5 py-1">
+            <ArrowUpRight className="h-3 w-3 text-[#DB2777]" />
+            <span className="text-[10px] font-bold text-[#DB2777]">{fmt(ledgerStats.incomeTotal, currency)}</span>
+            <span className="text-[9px] text-[#EC4899]">income</span>
           </div>
-          <div className="flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1">
-            <span className="text-[9px] text-violet-500">✦</span>
-            <span className="text-[10px] font-bold text-violet-700">{fmt(ledgerStats.plannedTotal, currency)}</span>
-            <span className="text-[9px] text-violet-500">planned</span>
+          <div className="flex items-center gap-1 rounded-full bg-[#FDF2F8] border border-[#FBCFE8] px-2.5 py-1">
+            <span className="text-[9px] text-[#EC4899]">✦</span>
+            <span className="text-[10px] font-bold text-[#9D174D]">{fmt(ledgerStats.plannedTotal, currency)}</span>
+            <span className="text-[9px] text-[#EC4899]">planned</span>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1">
             <ArrowDownRight className="h-3 w-3 text-rose-500" />
@@ -3313,7 +3317,7 @@ function ReportsTab(props: {
             <PinkSelect value={filterCat} onChange={setFilterCat}
               options={[
                 { value: "", label: "All operations" },
-                ...(incomes.length > 0 ? [{ value: "__income__", label: "💰 Income" }] : []),
+                ...(incomes.length > 0 ? [{ value: "__income__", label: "Income" }] : []),
                 ...allCats.map(c => ({ value: c.key, label: c.label })),
               ]} />
           </div>
@@ -3333,9 +3337,9 @@ function ReportsTab(props: {
               const isIncome = entry.kind === "income";
               const isPlanned = entry.kind === "planned";
               const isExtra = entry.kind === "extra";
-              const iconBg = isIncome ? "bg-emerald-100" : isPlanned ? "bg-violet-100" : "bg-pink-100";
-              const iconColor = isIncome ? "text-emerald-600" : isPlanned ? "text-violet-500" : "text-[#EC4899]";
-              const amtColor = isIncome ? "text-emerald-700" : isPlanned ? "text-violet-700" : "text-[#831843]";
+              const iconBg = isIncome ? "bg-[#FCE7F3]" : isPlanned ? "bg-[#FCE7F3]" : "bg-pink-100";
+              const iconColor = isIncome ? "text-[#DB2777]" : isPlanned ? "text-[#EC4899]" : "text-[#EC4899]";
+              const amtColor = isIncome ? "text-[#DB2777]" : isPlanned ? "text-[#9D174D]" : "text-[#831843]";
               return (
                 <li key={entry.id} className="flex items-center gap-2.5 py-2.5">
                   <div className={`shrink-0 grid h-8 w-8 place-items-center rounded-full ${iconBg}`}>
@@ -3350,12 +3354,12 @@ function ReportsTab(props: {
                         {isIncome ? entry.description : (c?.label ?? entry.catKey)}
                       </span>
                       {isIncome && (
-                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-[#FCE7F3] text-[#DB2777] border-[#FBCFE8]">
                           <ArrowUpRight className="h-2.5 w-2.5" />Income
                         </span>
                       )}
                       {isPlanned && (
-                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-violet-50 text-violet-600 border-violet-200">
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-[#FDF2F8] text-[#DB2777] border-[#FBCFE8]">
                           ✦ Planned
                         </span>
                       )}
@@ -3367,7 +3371,7 @@ function ReportsTab(props: {
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[10px] text-[#9D5C7E]">{entry.date}</span>
-                      {isPlanned && <span className="text-[9px] text-violet-400">· monthly allocation</span>}
+                      {isPlanned && <span className="text-[9px] text-[#F472B6]">· monthly allocation</span>}
                       {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {entry.description}</span>}
                     </div>
                   </div>
@@ -3420,9 +3424,9 @@ function ReportsTab(props: {
           <ul className="space-y-2">
             {bills.map(b => {
               const d = daysUntil(b.due);
-              const status = b.paid ? { l: "Paid", c: "bg-emerald-100 text-emerald-700" }
-                : d < 0 ? { l: "Overdue", c: "bg-red-100 text-red-700" }
-                : { l: "Upcoming", c: "bg-amber-100 text-amber-700" };
+              const status = b.paid ? { l: "Paid", c: "bg-[#FCE7F3] text-[#DB2777]" }
+                : d < 0 ? { l: "Overdue", c: "bg-[#FBCFE8] text-[#831843]" }
+                : { l: "Upcoming", c: "bg-[#FCE7F3] text-[#9D174D]" };
               return (
                 <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-pink-50/40 px-3 py-2">
                   <div>
