@@ -4,13 +4,13 @@ import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
-  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info,
+  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
@@ -1168,6 +1168,9 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const fuelPhase = normalizePhase(
     realPhase && realPhase !== "any" ? realPhase : phase === "menstrual" ? "period" : phase,
   );
+  // Shared preference: show recovery meals inside the plan, or keep it simple.
+  const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
+  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   useEffect(() => {
     try {
@@ -1304,54 +1307,83 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        {/* Fuel toggle — meals in the plan, or just the flows */}
+        {!editing && (
+          <button
+            onClick={toggleFuel}
+            className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 mb-3 text-left active:scale-[0.99] transition"
+          >
+            <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-full", fuelInPlan ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
+              <Utensils className="h-4 w-4" strokeWidth={1.9} />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-[12px] font-bold text-rose leading-tight">Recovery meals in plan</span>
+              <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? "Each flow shows what to eat after ✿" : "Plan shows flows only"}</span>
+            </span>
+            <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
+              <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "1.125rem" : "0.125rem" }} />
+            </span>
+          </button>
+        )}
+
+        <div className="flex flex-col gap-2.5">
           {days.map((d) => {
             const focus = schedule[d];
             const meta = focus ? FOCUS_META[focus] : null;
             const isToday = d === todayKey;
-            // One card per day: the flow (with its image) and — right below, in
-            // the SAME card — the meals to eat after THAT flow.
+            const showFuel = fuelInPlan && !!focus && !!meta;
+
+            // Editing → simple row with a dropdown
+            if (editing) {
+              return (
+                <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/70 p-2.5">
+                  <div className="w-11 shrink-0 text-center">
+                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                  </div>
+                  <select
+                    value={focus ?? ""}
+                    onChange={(e) => update(d, e.target.value || null)}
+                    className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                  >
+                    {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
+                  </select>
+                </div>
+              );
+            }
+
+            // Rest day → simple compact row
+            if (!focus || !meta) {
+              return (
+                <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/60 p-2.5">
+                  <div className="w-11 shrink-0 text-center">
+                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                  </div>
+                  <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                </div>
+              );
+            }
+
+            // Flow day → image LEFT, info (+ optional meals) RIGHT
             return (
-              <div key={d} className={["rounded-2xl border overflow-hidden transition",
-                isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10 animate-selected-glow" : "border-petal/50"].join(" ")}>
-                {editing ? (
-                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
-                    <div className="w-12 shrink-0 text-center">
-                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                    </div>
-                    <select
-                      value={focus ?? ""}
-                      onChange={(e) => update(d, e.target.value || null)}
-                      className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-                    >
-                      {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
-                    </select>
-                  </div>
-                ) : !focus || !meta ? (
-                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
-                    <div className="w-12 shrink-0 text-center">
-                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                    </div>
-                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Flow — image banner, tappable to start */}
-                    <button onClick={() => startFocus(focus)} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
-                      <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-                      <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
-                          <p className="text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate">{focus}</p>
-                          <p className="text-[11px] text-white/85 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
-                        </div>
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
-                      </div>
-                    </button>
-                    {/* Recovery fuel — SAME card, explicitly tied to this flow */}
+              <div key={d} className={["flex rounded-2xl border overflow-hidden transition",
+                isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10" : "border-petal/50"].join(" ")}>
+                {/* LEFT — flow vignette */}
+                <button onClick={() => startFocus(focus)} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-left active:scale-[0.99] transition">
+                  <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                  <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white/95 bg-black/35 rounded-full px-1.5 py-0.5">{d}{isToday ? " ·today" : ""}</span>
+                  <span className="absolute bottom-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
+                </button>
+
+                {/* RIGHT — flow title + (optional) meals */}
+                <div className="flex-1 min-w-0 bg-white/70">
+                  <button onClick={() => startFocus(focus)} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
+                    <p className="text-sm font-bold leading-tight text-rose truncate">{focus}</p>
+                    <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                  </button>
+                  {showFuel && (
                     <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
                       <FuelCard
                         ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
@@ -1360,8 +1392,8 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                         embedded
                       />
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}

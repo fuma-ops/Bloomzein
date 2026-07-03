@@ -169,3 +169,25 @@ export function addIngredientsToShopping(items: string[]): void {
 export function readShoppingExtras(): string[] {
   return readJSON<string[]>(MEALS_SHOP_EXTRA_KEY, []);
 }
+
+// ── "Show recovery meals inside the plan" preference (shared Workout/Yoga) ────
+
+export const FUEL_IN_PLAN_KEY = "bloom:fuel-in-plan";
+export const FUEL_IN_PLAN_EVENT = "bloom:fuel-in-plan";
+
+/** Whether the plan should show recovery meals under each session. Default on. */
+export function readFuelInPlan(): boolean {
+  try {
+    const v = localStorage.getItem(FUEL_IN_PLAN_KEY);
+    return v === null ? true : v === "true";
+  } catch {
+    return true;
+  }
+}
+
+export function writeFuelInPlan(v: boolean): void {
+  try {
+    localStorage.setItem(FUEL_IN_PLAN_KEY, String(v));
+    window.dispatchEvent(new Event(FUEL_IN_PLAN_EVENT));
+  } catch {}
+}
