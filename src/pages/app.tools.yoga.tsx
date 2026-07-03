@@ -15,6 +15,7 @@ import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan } from "@/lib/cros
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
+import { PickerField } from "@/components/bloom/PickerField";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -436,6 +437,7 @@ const STEP_KEY = "bloom:yoga-step"; // 1 learn, 2 visual, 3 audio
 const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
 export const REMINDER_KEY = "bloom:yoga-reminder";
+export const YOGA_DURATIONS_KEY = "bloom:yoga-durations";
 interface Streak { count: number; lastISO: string | null; }
 
 /** Maps the app-wide 5-phase cycle to Yoga's 4-phase model. */
@@ -1160,6 +1162,7 @@ function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string;
 
 function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Intention, durationMin: number) => void }) {
   const [schedule, setSchedule] = useState<Record<string, string | null>>({});
+  const [durations, setDurations] = useState<Record<string, number>>({});
   const [reminder, setReminder] = useState("07:30");
   const [editing, setEditing] = useState(false);
 
@@ -1189,6 +1192,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         localStorage.setItem(SCHEDULE_KEY, JSON.stringify(defaults));
       }
       const r = localStorage.getItem(REMINDER_KEY); if (r) setReminder(r);
+      const dr = localStorage.getItem(YOGA_DURATIONS_KEY); if (dr) setDurations(JSON.parse(dr));
     } catch {}
   }, [phase]);
 
@@ -1207,6 +1211,11 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     setSchedule(next);
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
     if (val) askForNotifications();
+  };
+  const setDuration = (day: string, n: number) => {
+    const next = { ...durations, [day]: n };
+    setDurations(next);
+    try { localStorage.setItem(YOGA_DURATIONS_KEY, JSON.stringify(next)); } catch {}
   };
   const updateReminder = (v: string) => {
     setReminder(v);
@@ -1254,10 +1263,10 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Emotional release"];
   const todayKey = WEEKDAY_LABELS[new Date().getDay()];
 
-  const startFocus = (focus: string | null | undefined) => {
+  const startFocus = (focus: string | null | undefined, day?: string) => {
     if (!focus) return;
     const meta = FOCUS_META[focus];
-    if (meta) onStart(meta.intention, meta.duration);
+    if (meta) onStart(meta.intention, (day ? durations[day] : undefined) ?? meta.duration);
   };
 
   return (
@@ -1307,21 +1316,34 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             const isToday = d === todayKey;
             const showFuel = fuelInPlan && !!focus && !!meta;
 
-            // Editing → simple row with a dropdown
+            // Editing → hand-pick focus + length per day (app-styled pickers)
             if (editing) {
               return (
-                <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/70 p-2.5">
-                  <div className="w-11 shrink-0 text-center">
-                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                <div key={d} className="rounded-2xl border border-petal/50 bg-white/70 p-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    </div>
+                    <PickerField
+                      title="Choose a focus"
+                      className="flex-1 min-w-0"
+                      value={focus ?? "rest"}
+                      options={options.map((o) => ({ value: o ?? "rest", label: o ?? "Rest day" }))}
+                      onChange={(v) => update(d, v === "rest" ? null : v)}
+                    />
                   </div>
-                  <select
-                    value={focus ?? ""}
-                    onChange={(e) => update(d, e.target.value || null)}
-                    className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-                  >
-                    {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
-                  </select>
+                  {focus && meta && (
+                    <div className="mt-1.5 pl-11">
+                      <PickerField
+                        title="How long?"
+                        className="w-[6.5rem]"
+                        value={String(durations[d] ?? meta.duration)}
+                        options={[10, 15, 20, 25, 30].map((m) => ({ value: String(m), label: `${m} min` }))}
+                        onChange={(v) => setDuration(d, Number(v))}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -1344,7 +1366,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               <div key={d} className={["flex rounded-2xl border overflow-hidden transition",
                 isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10" : "border-petal/50"].join(" ")}>
                 {/* LEFT — flow vignette */}
-                <button onClick={() => startFocus(focus)} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-left active:scale-[0.99] transition">
+                <button onClick={() => startFocus(focus, d)} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-left active:scale-[0.99] transition">
                   <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
                   <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white/95 bg-black/35 rounded-full px-1.5 py-0.5">{d}{isToday ? " ·today" : ""}</span>
@@ -1353,9 +1375,9 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
 
                 {/* RIGHT — flow title + (optional) meals */}
                 <div className="flex-1 min-w-0 bg-white/70">
-                  <button onClick={() => startFocus(focus)} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
+                  <button onClick={() => startFocus(focus, d)} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
                     <p className="text-sm font-bold leading-tight text-rose truncate">{focus}</p>
-                    <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                    <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {durations[d] ?? meta.duration} min</p>
                   </button>
                   {showFuel && (
                     <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">

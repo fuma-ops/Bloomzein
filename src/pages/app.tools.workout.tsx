@@ -12,6 +12,7 @@ import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan } from "@/lib/cros
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
+import { PickerField } from "@/components/bloom/PickerField";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -1816,39 +1817,39 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               if (editing && source === "freestyle") {
                 const fp = freeplan;
                 return (
-                  <div key={d} className="flex items-center gap-1.5 rounded-2xl border border-petal/50 bg-white/70 p-2 sm:p-2.5">
-                    <div className="w-9 sm:w-10 shrink-0 text-center">
-                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                  <div key={d} className="rounded-2xl border border-petal/50 bg-white/70 p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 shrink-0 text-center">
+                        <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      </div>
+                      <PickerField
+                        title="Choose a zone"
+                        className="flex-1 min-w-0"
+                        value={fp?.zone ?? "rest"}
+                        options={[{ value: "rest", label: "Rest day" }, ...ZONES.map((z) => ({ value: z.key, label: z.label }))]}
+                        onChange={(z) => {
+                          if (z === "rest") setDayPlan(d, null);
+                          else setDayPlan(d, { zone: z as Zone, intention: fp?.intention ?? "tonify", durationMin: fp?.durationMin ?? 20 });
+                        }}
+                      />
                     </div>
-                    <select
-                      value={fp?.zone ?? "rest"}
-                      onChange={(e) => {
-                        const z = e.target.value;
-                        if (z === "rest") setDayPlan(d, null);
-                        else setDayPlan(d, { zone: z as Zone, intention: fp?.intention ?? "tonify", durationMin: fp?.durationMin ?? 20 });
-                      }}
-                      className="flex-1 min-w-0 rounded-lg bg-white/90 border border-petal/60 px-2 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-                    >
-                      <option value="rest">Rest day</option>
-                      {ZONES.map((z) => <option key={z.key} value={z.key}>{z.label}</option>)}
-                    </select>
                     {fp && (
-                      <>
-                        <select
+                      <div className="mt-1.5 flex items-center gap-2 pl-11">
+                        <PickerField
+                          title="How should it feel?"
+                          className="flex-1 min-w-0"
                           value={fp.intention}
-                          onChange={(e) => setDayPlan(d, { ...fp, intention: e.target.value as WorkoutIntention })}
-                          className="w-[5.5rem] shrink-0 rounded-lg bg-white/90 border border-petal/60 px-1.5 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-                        >
-                          {WORKOUT_INTENTIONS.map((i) => <option key={i.key} value={i.key}>{i.label}</option>)}
-                        </select>
-                        <select
-                          value={fp.durationMin}
-                          onChange={(e) => setDayPlan(d, { ...fp, durationMin: Number(e.target.value) as 10 | 20 | 30 })}
-                          className="w-[3.4rem] shrink-0 rounded-lg bg-white/90 border border-petal/60 px-1 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
-                        >
-                          {[10, 20, 30].map((m) => <option key={m} value={m}>{m}m</option>)}
-                        </select>
-                      </>
+                          options={WORKOUT_INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+                          onChange={(v) => setDayPlan(d, { ...fp, intention: v as WorkoutIntention })}
+                        />
+                        <PickerField
+                          title="How long?"
+                          className="w-[5.6rem] shrink-0"
+                          value={String(fp.durationMin)}
+                          options={[10, 20, 30].map((m) => ({ value: String(m), label: `${m} min` }))}
+                          onChange={(v) => setDayPlan(d, { ...fp, durationMin: Number(v) as 10 | 20 | 30 })}
+                        />
+                      </div>
                     )}
                   </div>
                 );
