@@ -2166,8 +2166,9 @@ function DashboardTab(props: {
   }, [filteredTxns, allCats]);
 
   // Effective totals for insights — use committed budget model
-  // goals.monthly is real committed money (like rent) and must be part of planned spend
-  const plannedTotal   = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0);
+  // goals.monthly is real committed money (like rent) and must be part of planned spend;
+  // bills flagged into this month's budget are committed spend too.
+  const plannedTotal   = selectedCats.filter(k => (budget[k] ?? 0) > 0).reduce((s, k) => s + (budget[k] ?? 0), 0) + plannedBills;
   const goalsMonthly   = goals.reduce((s, g) => s + (g.monthly ?? 0), 0);
   const extraLogged    = monthTxns.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const effectiveSpend = plannedTotal + goalsMonthly + extraLogged;
@@ -3296,6 +3297,14 @@ function ReportsTab(props: {
         catKey: k, amount: amt, description: "Planned budget", type: "expense",
       });
     });
+    // Bills flagged into this month's budget count as planned expense operations too.
+    bills.forEach(b => {
+      if (b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === monthFirst.slice(0, 7))
+        rows.push({
+          id: `bill_${b.id}`, kind: "planned", date: b.due,
+          catKey: "__bill__", amount: b.amount, description: b.name, type: "expense",
+        });
+    });
     txns.forEach(t => {
       const d = new Date(t.date);
       if (d.getFullYear() === month.y && d.getMonth() === month.m)
@@ -3306,17 +3315,19 @@ function ReportsTab(props: {
     if (filterMood) list = list.filter(e => e.kind !== "extra" || e.mood === filterMood);
     list.sort((a, b) => sortBy === "amount" ? b.amount - a.amount : (a.date < b.date ? 1 : -1));
     return list;
-  }, [txns, month, sortBy, filterCat, filterMood, incomes, budget, selectedCats]);
+  }, [txns, month, sortBy, filterCat, filterMood, incomes, budget, selectedCats, bills]);
 
   const ledgerStats = useMemo(() => {
+    const mk = `${month.y}-${String(month.m + 1).padStart(2, "0")}`;
     const incomeTotal = incomes.reduce((s, inc) => s + toMonthly(inc), 0);
-    const plannedTotal = selectedCats.reduce((s, k) => s + (budget[k] ?? 0), 0);
+    const plannedBillsTotal = bills.filter(b => b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === mk).reduce((s, b) => s + b.amount, 0);
+    const plannedTotal = selectedCats.reduce((s, k) => s + (budget[k] ?? 0), 0) + plannedBillsTotal;
     const extraTotal = txns.filter(t => {
       const d = new Date(t.date);
       return d.getFullYear() === month.y && d.getMonth() === month.m && t.type === "expense";
     }).reduce((s, t) => s + t.amount, 0);
     return { incomeTotal, plannedTotal, extraTotal };
-  }, [incomes, selectedCats, budget, txns, month]);
+  }, [incomes, selectedCats, budget, txns, month, bills]);
 
   function shiftMonth(dir: -1 | 1) {
     setMonth(({ y, m }) => {
@@ -3446,6 +3457,7 @@ function ReportsTab(props: {
             {ledger.map(entry => {
               const c = allCats.find(x => x.key === entry.catKey);
               const mood = entry.mood ? MOODS.find(m => m.key === entry.mood) : undefined;
+              const isBill = entry.catKey === "__bill__";
               const isIncome = entry.kind === "income";
               const isPlanned = entry.kind === "planned";
               const isExtra = entry.kind === "extra";
@@ -3457,13 +3469,14 @@ function ReportsTab(props: {
                   <div className={`shrink-0 grid h-8 w-8 place-items-center rounded-full ${iconBg}`}>
                     {isIncome
                       ? <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
+                      : isBill ? <Bell className={`h-4 w-4 ${iconColor}`} strokeWidth={1.8} />
                       : c ? <c.Icon className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />
                         : <Wallet className={`h-4 w-4 ${iconColor}`} strokeWidth={1.6} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-bold text-[#831843] truncate">
-                        {isIncome ? entry.description : (c?.label ?? entry.catKey)}
+                        {(isIncome || isBill) ? entry.description : (c?.label ?? entry.catKey)}
                       </span>
                       {isIncome && (
                         <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -3472,7 +3485,7 @@ function ReportsTab(props: {
                       )}
                       {isPlanned && (
                         <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-violet-50 text-violet-600 border-violet-200">
-                          ✦ Planned
+                          {isBill ? "Bill" : "✦ Planned"}
                         </span>
                       )}
                       {isExtra && mood && (
@@ -3483,7 +3496,7 @@ function ReportsTab(props: {
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[10px] text-[#9D5C7E]">{entry.date}</span>
-                      {isPlanned && <span className="text-[9px] text-violet-400">· monthly allocation</span>}
+                      {isPlanned && <span className="text-[9px] text-violet-400">· {isBill ? "bill due" : "monthly allocation"}</span>}
                       {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {entry.description}</span>}
                     </div>
                   </div>
