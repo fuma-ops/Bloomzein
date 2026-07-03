@@ -2412,6 +2412,33 @@ function DashboardTab(props: {
                     </button>
                   )}
 
+                  {/* Bills flagged into this month's budget — each shows as its own planned bar
+                      so the bars sum matches the total (which already counts them). */}
+                  {(() => {
+                    const billBars = bills.filter(b => b.plannedThisMonth && !b.paid && b.due.slice(0, 7) === monthKey);
+                    if (billBars.length === 0) return null;
+                    return (
+                      <div className="pt-2 border-t border-pink-100 space-y-3">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">Bills in this budget</p>
+                        {billBars.map(bl => (
+                          <div key={bl.id}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <Bell className="h-3.5 w-3.5 text-[#EC4899] shrink-0" strokeWidth={1.8} />
+                                <span className="text-[11px] font-semibold text-[#831843] truncate">{bl.name}</span>
+                                <span className="shrink-0 text-[9px] font-bold text-[#DB2777] bg-[#FCE7F3] rounded-full px-1.5 py-0.5">Bill</span>
+                              </div>
+                              <span className="text-[11px] font-semibold text-[#9D5C7E] tabular-nums shrink-0 ml-2">{fmt(bl.amount, currency)}</span>
+                            </div>
+                            <div className="flex h-3.5 rounded-full overflow-hidden">
+                              <div className="h-full w-full transition-all duration-700" style={{ background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
                   {unplannedEntries.length > 0 && (
                     <div className="pt-2 border-t border-pink-100 space-y-3">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">Unplanned spends</p>
