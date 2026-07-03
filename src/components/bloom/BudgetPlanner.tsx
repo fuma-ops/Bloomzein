@@ -225,10 +225,11 @@ function daysUntil(dateISO: string): number {
 /* ============================================================
    ATOMIC UI
 ============================================================ */
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Card({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div
       className={`rounded-2xl bg-white/85 backdrop-blur p-2.5 sm:p-4 lg:p-5 shadow-[0_8px_24px_-12px_rgba(236,72,153,0.25)] border-[0.5px] border-pink-300/30 transition-all duration-200 ${className}`}
+      style={style}
     >
       {children}
     </div>
@@ -1560,12 +1561,18 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   const isOverIncome = income > 0 && surplus < 0;
 
   // Pink base everywhere; state reads as a soft coloured GLOW, not a loud fill.
-  // Static soft glow-shadow behind the card (no whole-card animation).
+  // Income Garden keeps its ring; the two flagged cards instead get a soft
+  // coloured glow behind ALL their text (green = saving, red = extra).
   const GLOW = {
     green: "ring-1 ring-emerald-300/45 shadow-[0_6px_26px_-4px_rgba(34,197,94,0.5)]",
     red:   "ring-1 ring-rose-300/55 shadow-[0_6px_26px_-4px_rgba(244,63,94,0.55)]",
   } as const;
   type Glow = keyof typeof GLOW;
+  const TEXT_GLOW = {
+    green: "0 0 12px rgba(34,197,94,0.6), 0 0 3px rgba(34,197,94,0.45)",
+    red:   "0 0 12px rgba(244,63,94,0.65), 0 0 3px rgba(244,63,94,0.5)",
+  } as const;
+  type TGlow = keyof typeof TEXT_GLOW;
 
   const cards = [
     {
@@ -1573,6 +1580,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       v: income,
       sub: "your monthly earnings",
       glow: (income > 0 ? (surplus >= 0 ? "green" : "red") : null) as Glow | null,
+      textGlow: null as TGlow | null,
       badge: income > 0
         ? surplus >= 0
           ? { text: `Balance +${fmt(surplus, currency)}`, tone: "green" as const }
@@ -1586,14 +1594,16 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
         ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
         : "committed this month",
       glow: null as Glow | null,
+      textGlow: null as TGlow | null,
       badge: null,
     },
     {
       label: "Real Spending Petals",
       v: plannedBudget + goalsMonthly + realExpenses,
       sub: "extra spends this month",
-      // A soft red glow the moment there's any extra spend on top of the plan
-      glow: (realExpenses > 0 ? "red" : null) as Glow | null,
+      glow: null as Glow | null,
+      // A soft red glow behind all the card's text the moment there's extra spend
+      textGlow: (realExpenses > 0 ? "red" : null) as TGlow | null,
       badge: null,
       planSub: fmt(plannedBudget + goalsMonthly, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1602,7 +1612,8 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Savings Bloom",
       v: goalsSaved,
       sub: "across all goals · incl. this month",
-      glow: "green" as Glow | null,
+      glow: null as Glow | null,
+      textGlow: "green" as TGlow | null,
       badge: null,
     },
   ];
@@ -1610,7 +1621,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
       {cards.map((it) => (
-        <Card key={it.label} className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br from-pink-50 to-rose-50 ${it.glow ? GLOW[it.glow] : ""}`}>
+        <Card key={it.label}
+          className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br from-pink-50 to-rose-50 ${it.glow ? GLOW[it.glow] : ""}`}
+          style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
+        >
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
           <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
             <StatNumber value={it.v} currency={currency} />
