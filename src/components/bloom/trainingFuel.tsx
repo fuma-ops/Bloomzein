@@ -300,6 +300,8 @@ export function FuelCard({
   owned,
   count = 2,
   day,
+  heading,
+  embedded = false,
   className = "",
   onOpenRecipe,
 }: {
@@ -308,27 +310,32 @@ export function FuelCard({
   count?: number;
   /** Weekday (Mon..Sun) the "+ My plan" button writes the meal into. */
   day?: string;
+  /** Ties the fuel to a specific session, e.g. "After your Lower Body Sculpt". */
+  heading?: string;
+  /** When nested inside a day card, drop the standalone shell (border/bg). */
+  embedded?: boolean;
   className?: string;
   onOpenRecipe?: (id: string) => void;
 }) {
   const recipes = useMemo(() => pickFuelRecipes(ctx, owned, count), [ctx, owned, count]);
-  const chips = fuelChips(ctx);
   if (!recipes.length) return null;
 
+  const shell = embedded
+    ? ""
+    : "rounded-2xl border border-petal/70 bg-gradient-to-br from-blush/50 to-petal/25";
+
   return (
-    <div
-      className={`rounded-2xl border border-petal/70 bg-gradient-to-br from-blush/50 to-petal/25 p-2.5 sm:p-3 animate-fade-in ${className}`}
-    >
-      {/* header chips — the "we know exactly where you are" signal */}
+    <div className={`${shell} p-2.5 sm:p-3 animate-fade-in ${className}`}>
+      {/* header — explicitly tied to THIS session & day */}
       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-        <span className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wide">
-          <Utensils className="h-2.5 w-2.5" /> Recovery fuel
+        <span className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wide shrink-0">
+          <Utensils className="h-2.5 w-2.5" /> Eat after
         </span>
-        {chips.map((c) => (
-          <span key={c} className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">
-            ↳ {c}
-          </span>
-        ))}
+        {heading && <span className="text-[10.5px] font-bold text-hotpink leading-tight">{heading}</span>}
+        {ctx.phase !== "any" && (
+          <span className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">{PHASE_LABEL[ctx.phase]} phase</span>
+        )}
+        <span className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">{GOAL_LABEL[ctx.goal]}</span>
       </div>
 
       {/* the human comment */}

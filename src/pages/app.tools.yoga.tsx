@@ -1309,24 +1309,17 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             const focus = schedule[d];
             const meta = focus ? FOCUS_META[focus] : null;
             const isToday = d === todayKey;
+            // One card per day: the flow (with its image) and — right below, in
+            // the SAME card — the meals to eat after THAT flow.
             return (
-              <div key={d} className="flex flex-col gap-2">
-                {/* Recovery fuel — what she needs after THIS flow, tuned to her
-                    goal & cycle phase. Only on days with a planned session. */}
-                {!editing && focus && meta && (
-                  <FuelCard
-                    ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
-                    day={d}
-                    className="border-hotpink/20"
-                  />
-                )}
-                <div className={["rounded-2xl border p-2.5 flex items-center gap-3 transition",
-                  isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
-                  <div className="w-12 shrink-0 text-center">
-                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                  </div>
-                  {editing ? (
+              <div key={d} className={["rounded-2xl border overflow-hidden transition",
+                isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10 animate-selected-glow" : "border-petal/50"].join(" ")}>
+                {editing ? (
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                    <div className="w-12 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    </div>
                     <select
                       value={focus ?? ""}
                       onChange={(e) => update(d, e.target.value || null)}
@@ -1334,19 +1327,41 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     >
                       {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
                     </select>
-                  ) : !focus || !meta ? (
+                  </div>
+                ) : !focus || !meta ? (
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                    <div className="w-12 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    </div>
                     <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
-                  ) : (
-                    <button onClick={() => startFocus(focus)} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
-                      <img src={meta.image} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover object-top border border-petal/50" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-rose leading-tight truncate">{focus}</p>
-                        <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Flow — image banner, tappable to start */}
+                    <button onClick={() => startFocus(focus)} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
+                      <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+                      <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
+                          <p className="text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate">{focus}</p>
+                          <p className="text-[11px] text-white/85 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                        </div>
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
                       </div>
-                      <span className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white shadow-sm"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
                     </button>
-                  )}
-                </div>
+                    {/* Recovery fuel — SAME card, explicitly tied to this flow */}
+                    <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
+                      <FuelCard
+                        ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                        day={d}
+                        heading={`After your ${focus}`}
+                        embedded
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
