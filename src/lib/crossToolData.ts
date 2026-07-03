@@ -130,3 +130,42 @@ export function readWorkoutPlanDays(): string[] {
   }
   return [];
 }
+
+// ── Write-backs from the cross-tool Fuel cards ───────────────────────────────
+
+export const MEALS_PLAN_KEY       = "bloom:meals-plan";
+export const MEALS_SHOP_EXTRA_KEY = "bloom:meals-shop-extra";
+
+type PlanSlot = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
+
+/** Drop a recipe into the Meals weekly plan at day + slot (from a Fuel card). */
+export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlot): void {
+  try {
+    const plan = readJSON<Record<string, Record<string, string | null>>>(MEALS_PLAN_KEY, {});
+    const dayPlan = plan[day] ?? { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
+    dayPlan[slot] = recipeId;
+    plan[day] = dayPlan;
+    localStorage.setItem(MEALS_PLAN_KEY, JSON.stringify(plan));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
+/** Merge a recipe's ingredients into the Meals shopping list "extras" bucket. */
+export function addIngredientsToShopping(items: string[]): void {
+  try {
+    const cur = readJSON<string[]>(MEALS_SHOP_EXTRA_KEY, []);
+    const seen = new Set(cur.map((s) => s.toLowerCase()));
+    const merged = [...cur];
+    items.forEach((i) => {
+      const key = i.trim().toLowerCase();
+      if (key && !seen.has(key)) { merged.push(i.trim()); seen.add(key); }
+    });
+    localStorage.setItem(MEALS_SHOP_EXTRA_KEY, JSON.stringify(merged));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
+/** Extra shopping items added outside the plan (read by the Meals shop tab). */
+export function readShoppingExtras(): string[] {
+  return readJSON<string[]>(MEALS_SHOP_EXTRA_KEY, []);
+}

@@ -10,7 +10,7 @@ import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
-import { FuelCard, workoutIntensity, type Intensity } from "@/components/bloom/trainingFuel";
+import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -1829,7 +1829,8 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                       to her goal & cycle phase. Collapses once the session is done. */}
                   {hasSession && !done && (
                     <FuelCard
-                      ctx={{ goal, phase, kind: "workout", intensity, activityLabel: title }}
+                      ctx={{ goal, phase: normalizePhase(phase), kind: "workout", intensity, activityLabel: title }}
+                      day={d}
                       className="border-hotpink/25"
                     />
                   )}

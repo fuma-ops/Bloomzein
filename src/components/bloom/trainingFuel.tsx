@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Utensils, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Utensils, Sparkles, Plus, ShoppingBag, Check } from "lucide-react";
 import {
   RECIPES,
   passesMyRules,
@@ -9,6 +9,7 @@ import {
   type CyclePhase,
   type MealType,
 } from "@/components/bloom/recipes/data";
+import { addRecipeToMealPlan, addIngredientsToShopping } from "@/lib/crossToolData";
 
 /* ============================================================
    Training ↔ Fuel — the shared thread that lets the Workout,
@@ -30,6 +31,22 @@ export interface FuelCtx {
   kind: ActivityKind;      // workout | yoga
   intensity: Intensity;    // how demanding the planned session is
   activityLabel: string;   // e.g. "Lower Body Sculpt" / "Strength flow"
+}
+
+/** Map the app-wide cycle phase (which has a distinct "fertile" window) onto
+ *  the recipe database's phase set, so meal filtering & copy line up. */
+export function normalizePhase(p: string | null | undefined): CyclePhase {
+  switch (p) {
+    case "period":
+    case "follicular":
+    case "ovulation":
+    case "luteal":
+      return p;
+    case "fertile":
+      return "ovulation";
+    default:
+      return "any";
+  }
 }
 
 /* ---------- Intensity inference (each tool speaks its own language) ---------- */
@@ -192,34 +209,55 @@ function recipePhoto(r: Recipe): string {
   return MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.jpg";
 }
 
-/* ---------- Mini meal card — image + macro chips (Diet-style) ---------- */
+/* ---------- Mini meal card — image + macro chips + actions (Diet-style) ---------- */
 
-function MiniMealCard({ r, onOpen }: { r: Recipe; onOpen?: (id: string) => void }) {
+const PLAN_SLOTS = ["breakfast", "lunch", "dinner", "snack", "lunchbox"] as const;
+function planSlotFor(r: Recipe): (typeof PLAN_SLOTS)[number] {
+  return (PLAN_SLOTS as readonly string[]).includes(r.mealType) ? (r.mealType as (typeof PLAN_SLOTS)[number]) : "dinner";
+}
+
+function MiniMealCard({ r, day, onOpen }: { r: Recipe; day?: string; onOpen?: (id: string) => void }) {
   const fallback = MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.jpg";
+  const [planned, setPlanned] = useState(false);
+  const [listed, setListed] = useState(false);
   const macros = [
     { k: "kcal", v: r.macros.calories, cls: "text-hotpink" },
     { k: "P", v: `${r.macros.protein}g`, cls: "text-amber-600" },
     { k: "C", v: `${r.macros.carbs}g`, cls: "text-rose-500" },
     { k: "F", v: `${r.macros.fat}g`, cls: "text-violet-500" },
   ];
+
+  const addToPlan = () => {
+    // No day (e.g. a Meals-side card) → default to today's weekday label.
+    const target = day ?? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
+    addRecipeToMealPlan(r.id, target, planSlotFor(r));
+    setPlanned(true);
+  };
+  const addToShopping = () => {
+    addIngredientsToShopping(r.ingredients.map((i) => i.item));
+    setListed(true);
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => onOpen?.(r.id)}
-      className="group text-left rounded-2xl overflow-hidden border border-petal/60 bg-white/85 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all"
-    >
-      <div className="relative h-20 sm:h-24 overflow-hidden">
-        <img
-          src={recipePhoto(r)}
-          alt={r.name}
-          className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-        <p className="absolute bottom-1.5 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2 drop-shadow">
-          {r.name}
-        </p>
-      </div>
+    <div className="rounded-2xl overflow-hidden border border-petal/60 bg-white/85 shadow-sm transition-all">
+      <button
+        type="button"
+        onClick={() => onOpen?.(r.id)}
+        className="group block w-full text-left"
+      >
+        <div className="relative h-20 sm:h-24 overflow-hidden">
+          <img
+            src={recipePhoto(r)}
+            alt={r.name}
+            className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          <p className="absolute bottom-1.5 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2 drop-shadow">
+            {r.name}
+          </p>
+        </div>
+      </button>
       <div className="grid grid-cols-4 gap-0.5 p-1.5">
         {macros.map((m) => (
           <div key={m.k} className="rounded-lg bg-blush/50 py-1 text-center">
@@ -228,7 +266,30 @@ function MiniMealCard({ r, onOpen }: { r: Recipe; onOpen?: (id: string) => void 
           </div>
         ))}
       </div>
-    </button>
+      {/* Actions — make the linkage actionable */}
+      <div className="grid grid-cols-2 gap-1 px-1.5 pb-1.5">
+        <button
+          type="button"
+          onClick={addToPlan}
+          disabled={planned}
+          className={`inline-flex items-center justify-center gap-1 rounded-lg px-1.5 py-1.5 text-[9px] font-bold transition active:scale-95 ${
+            planned ? "bg-hotpink/15 text-hotpink" : "bg-hotpink text-white hover:brightness-105"
+          }`}
+        >
+          {planned ? <><Check className="h-2.5 w-2.5" strokeWidth={3} /> Planned</> : <><Plus className="h-2.5 w-2.5" strokeWidth={3} /> My plan</>}
+        </button>
+        <button
+          type="button"
+          onClick={addToShopping}
+          disabled={listed}
+          className={`inline-flex items-center justify-center gap-1 rounded-lg border px-1.5 py-1.5 text-[9px] font-bold transition active:scale-95 ${
+            listed ? "border-hotpink/30 bg-hotpink/10 text-hotpink" : "border-hotpink/50 text-hotpink hover:bg-hotpink/10"
+          }`}
+        >
+          {listed ? <><Check className="h-2.5 w-2.5" strokeWidth={3} /> Added</> : <><ShoppingBag className="h-2.5 w-2.5" strokeWidth={2.4} /> To list</>}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -238,12 +299,15 @@ export function FuelCard({
   ctx,
   owned,
   count = 2,
+  day,
   className = "",
   onOpenRecipe,
 }: {
   ctx: FuelCtx;
   owned?: Set<string>;
   count?: number;
+  /** Weekday (Mon..Sun) the "+ My plan" button writes the meal into. */
+  day?: string;
   className?: string;
   onOpenRecipe?: (id: string) => void;
 }) {
@@ -276,7 +340,7 @@ export function FuelCard({
       {/* the meals */}
       <div className="grid grid-cols-2 gap-2">
         {recipes.map((r) => (
-          <MiniMealCard key={r.id} r={r} onOpen={onOpenRecipe} />
+          <MiniMealCard key={r.id} r={r} day={day} onOpen={onOpenRecipe} />
         ))}
       </div>
     </div>

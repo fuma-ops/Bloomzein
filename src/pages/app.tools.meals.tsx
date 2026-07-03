@@ -47,8 +47,8 @@ const CYCLE_TO_DIET: Record<string, DietPhase> = {
 };
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays } from "@/lib/crossToolData";
-import { trainingAwarenessComment } from "@/components/bloom/trainingFuel";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras } from "@/lib/crossToolData";
+import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
@@ -677,7 +677,7 @@ function WeekTab({
         const comment = trainingAwarenessComment({
           workoutDays: readWorkoutPlanDays().length,
           yogaDays: readYogaPlanDays().length,
-          phase: realPhase ?? "any",
+          phase: normalizePhase(realPhase),
           goal: readDietProfile().goal,
         });
         if (!comment) return null;
@@ -1112,6 +1112,8 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
 /* ---------- Shopping ---------- */
 
 function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
+  // Ingredients pushed here from the cross-tool Recovery Fuel cards.
+  const extras = useMemo(() => readShoppingExtras(), []);
   const items = useMemo(() => {
     const map = new Map<string, { item: string; qty: string; section: string; missing: boolean }>();
     Object.values(plan as Record<string, Record<MealType, string | null>>).forEach((day) => {
@@ -1127,6 +1129,12 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
         });
       });
     });
+    // Recovery add-ons — ingredients sent from Workout/Yoga fuel cards.
+    extras.forEach((it: string) => {
+      if (!owned.has(it.toLowerCase()) && !map.has(it)) {
+        map.set(it, { item: it, qty: "", section: "Recovery add-ons", missing: true });
+      }
+    });
     // staples checklist (home needs + key categories)
     PANTRY.forEach((cat) => {
       cat.items.forEach((it) => {
@@ -1137,7 +1145,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
       });
     });
     return Array.from(map.values());
-  }, [plan, owned]);
+  }, [plan, owned, extras]);
 
   const grouped = useMemo(() => {
     const g: Record<string, typeof items> = {};
