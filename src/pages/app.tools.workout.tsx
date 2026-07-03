@@ -9,6 +9,8 @@ import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
+import { readDietProfile } from "@/components/bloom/recipes/data";
+import { FuelCard, workoutIntensity, type Intensity } from "@/components/bloom/trainingFuel";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -1623,6 +1625,9 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
 
+  // Body goal drives which recovery meals we surface after each session.
+  const goal = readDietProfile().goal;
+
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
@@ -1803,41 +1808,54 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
               // Program session for the day
               let title = "", sub = "", mins = 0, done = false, onTap: (() => void) | null = null;
+              let intensity: Intensity = "moderate";
               if (source === "program" && activeProgram && sIdx !== null && sIdx !== undefined) {
                 const s = computeWeekSession(activeProgram, sIdx, week);
                 title = s.title; sub = s.focus; mins = s.estMinutes;
                 done = progDoneSet.has(sessionTag(week, sIdx));
                 onTap = () => onOpenProgramSession(activeProgram.id, week, sIdx);
+                intensity = workoutIntensity(s.title, s.focus);
               } else if (freeplan) {
                 title = ZONES.find((z) => z.key === freeplan.zone)?.label ?? freeplan.zone;
                 sub = WORKOUT_INTENTIONS.find((i) => i.key === freeplan.intention)?.label ?? "";
                 mins = freeplan.durationMin;
                 onTap = () => onStartSession(buildSession(freeplan.zone, freeplan.intention, freeplan.durationMin, profile.level, phase, profile.equipment));
+                intensity = workoutIntensity(freeplan.intention, title);
               }
 
               return (
-                <div key={d} className={["rounded-2xl border p-2.5 sm:p-3 flex items-center gap-3 transition",
-                  isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
-                  {/* Day label */}
-                  <div className="w-12 shrink-0 text-center">
-                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                  </div>
-                  {/* Body */}
-                  {!hasSession ? (
-                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
-                  ) : (
-                    <button onClick={onTap ?? undefined} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
-                      <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-full", done ? "bg-hotpink text-white" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
-                        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className={["text-sm font-bold leading-tight truncate", done ? "text-rose/45 line-through" : "text-rose"].join(" ")}>{title}</p>
-                        <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-rose/35 shrink-0" />
-                    </button>
+                <div key={d} className="flex flex-col gap-2">
+                  {/* Recovery fuel — the meals she needs after THIS session, tuned
+                      to her goal & cycle phase. Collapses once the session is done. */}
+                  {hasSession && !done && (
+                    <FuelCard
+                      ctx={{ goal, phase, kind: "workout", intensity, activityLabel: title }}
+                      className="border-hotpink/25"
+                    />
                   )}
+                  <div className={["rounded-2xl border p-2.5 sm:p-3 flex items-center gap-3 transition",
+                    isToday ? "border-hotpink/50 bg-blush/40 animate-selected-glow" : "border-petal/50 bg-white/70"].join(" ")}>
+                    {/* Day label */}
+                    <div className="w-12 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    </div>
+                    {/* Body */}
+                    {!hasSession ? (
+                      <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                    ) : (
+                      <button onClick={onTap ?? undefined} className="flex-1 min-w-0 flex items-center gap-3 text-left active:scale-[0.99] transition">
+                        <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-full", done ? "bg-hotpink text-white" : "bg-white text-hotpink border border-petal/60"].join(" ")}>
+                          {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={["text-sm font-bold leading-tight truncate", done ? "text-rose/45 line-through" : "text-rose"].join(" ")}>{title}</p>
+                          <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-rose/35 shrink-0" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}

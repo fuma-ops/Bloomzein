@@ -47,7 +47,8 @@ const CYCLE_TO_DIET: Record<string, DietPhase> = {
 };
 
 
-import { readTodaySymptoms } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays } from "@/lib/crossToolData";
+import { trainingAwarenessComment } from "@/components/bloom/trainingFuel";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
@@ -671,6 +672,28 @@ function WeekTab({
 
   return (
     <>
+      {/* ── TRAINING AWARENESS — Meals knows your sport & yoga plan ──────────── */}
+      {(() => {
+        const comment = trainingAwarenessComment({
+          workoutDays: readWorkoutPlanDays().length,
+          yogaDays: readYogaPlanDays().length,
+          phase: realPhase ?? "any",
+          goal: readDietProfile().goal,
+        });
+        if (!comment) return null;
+        return (
+          <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-petal/70 bg-gradient-to-r from-blush/50 to-petal/25 px-3.5 py-3 animate-fade-in">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white">
+              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Synced with your training</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-rose/80">{comment}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── PHASE NUDGE — eye-catching banner with a one-tap CTA ─────────────── */}
       {realPhase && realPhase !== "any" && CYCLE_TO_DIET[realPhase] && (() => {
         const info = PHASE_INFO[CYCLE_TO_DIET[realPhase]];
