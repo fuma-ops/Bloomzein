@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
@@ -819,10 +820,11 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
         )}
       </div>
 
-      {/* Confirm: replacing an existing plan */}
-      {confirmReplace && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirmReplace(false)}>
-          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* Confirm: replacing an existing plan — portaled so it's always centered
+          in the viewport (never trapped/cropped by a transformed ancestor). */}
+      {confirmReplace && createPortal(
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmReplace(false)}>
+          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
             <p className="text-sm text-rose/80 mb-4">Making <span className="font-bold">{program.title}</span> your plan will replace your current weekly plan.</p>
             <div className="flex gap-2">
@@ -830,7 +832,8 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
               <button onClick={commitPlan} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -1856,10 +1859,10 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
         </section>
       )}
 
-      {/* ── Confirm: freestyle replaces an active program ───────────────────── */}
-      {confirmFreestyle && activeProgram && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
-          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* ── Confirm: freestyle replaces an active program — portaled & centered ── */}
+      {confirmFreestyle && activeProgram && createPortal(
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
+          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
             <p className="text-sm text-rose/80 mb-4">A freestyle week will replace your <span className="font-bold">{activeProgram.title}</span> plan. Your program progress is kept if you come back to it.</p>
             <div className="flex gap-2">
@@ -1867,7 +1870,8 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <button onClick={generateFreestyle} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
