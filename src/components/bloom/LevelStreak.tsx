@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Flame } from "lucide-react";
 import { readMovementLevel, readSeenLevel, writeSeenLevel } from "@/lib/crossToolData";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
 
 /* ============================================================
    LevelStreak — a slim, cute motivation strip + a level-up 🎉.
@@ -43,9 +44,9 @@ export function LevelStreak({ streak, className = "" }: { streak: number; classN
   return (
     <>
       <div className={`flex items-center gap-2.5 rounded-2xl border border-petal/60 bg-white/85 px-3 py-2 shadow-sm shadow-rose/5 ${className}`}>
-        {/* Level medallion */}
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-[17px] shadow-sm shadow-hotpink/30">
-          {lvl.icon}
+        {/* Level medallion — the brand flower */}
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose shadow-sm shadow-hotpink/30">
+          <BloomFlower size={20} />
         </span>
 
         {/* Level name + progress to next */}
@@ -121,9 +122,9 @@ function LevelUpCelebration({ info, onClose }: {
       >
         <div
           className="mx-auto mb-3 grid place-items-center rounded-full"
-          style={{ width: 92, height: 92, fontSize: 42, background: "linear-gradient(135deg,#F472B6,#DB2777)", boxShadow: "0 14px 40px rgba(236,72,153,0.5), inset 0 1px 0 rgba(255,255,255,0.4)", animation: "luFloat 2s ease-in-out infinite alternate" }}
+          style={{ width: 92, height: 92, background: "linear-gradient(135deg,#F472B6,#DB2777)", boxShadow: "0 14px 40px rgba(236,72,153,0.5), inset 0 1px 0 rgba(255,255,255,0.4)", animation: "luFloat 2s ease-in-out infinite alternate" }}
         >
-          {info.icon}
+          <BloomFlower size={52} />
         </div>
         <p className="text-[10px] font-black tracking-[0.42em] uppercase" style={{ color: "#DB2777", opacity: 0.7 }}>Level up</p>
         <h2 className="font-script leading-none mt-1" style={{ fontSize: "clamp(2rem,8vw,2.75rem)", color: "#DB2777", filter: "drop-shadow(0 3px 10px rgba(236,72,153,0.25))" }}>
