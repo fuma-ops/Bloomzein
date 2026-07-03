@@ -1391,6 +1391,7 @@ export function BudgetPlanner() {
                 selectedCats={viewSelectedCats}
                 month={month}
                 setMonth={setMonth}
+                setTab={setTab}
               />
             )}
         </div>
@@ -1533,9 +1534,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   const isOverIncome = income > 0 && surplus < 0;
 
   // Pink base everywhere; state reads as a soft coloured GLOW, not a loud fill.
+  // Static soft glow-shadow behind the card (no whole-card animation).
   const GLOW = {
-    green: "ring-1 ring-emerald-300/50 shadow-[0_0_22px_-2px_rgba(34,197,94,0.42)]",
-    red:   "ring-1 ring-rose-300/60 shadow-[0_0_22px_-2px_rgba(244,63,94,0.5)] animate-card-breathe",
+    green: "ring-1 ring-emerald-300/45 shadow-[0_6px_26px_-4px_rgba(34,197,94,0.5)]",
+    red:   "ring-1 ring-rose-300/55 shadow-[0_6px_26px_-4px_rgba(244,63,94,0.55)]",
   } as const;
   type Glow = keyof typeof GLOW;
 
@@ -3178,8 +3180,9 @@ function ReportsTab(props: {
   incomes: Income[]; budget: Budget; selectedCats: string[];
   month: { y: number; m: number };
   setMonth: (v: { y: number; m: number } | ((p: { y: number; m: number }) => { y: number; m: number })) => void;
+  setTab: (t: TabKey) => void;
 }) {
-  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats, month, setMonth } = props;
+  const { txns, setTxns, bills, setBills, allCats, currency, incomes, budget, selectedCats, month, setMonth, setTab } = props;
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [filterCat, setFilterCat] = useState("");
   const [filterMood, setFilterMood] = useState("");
@@ -3453,6 +3456,17 @@ function ReportsTab(props: {
         <div className="flex flex-wrap gap-2">
           <PrimaryBtn onClick={exportCSV}><Download className="h-4 w-4" /> Export to CSV</PrimaryBtn>
           <GhostBtn onClick={exportSummary}><Download className="h-4 w-4" /> Export Budget Summary</GhostBtn>
+        </div>
+      </Card>
+
+      {/* All-set → send them to the Dashboard to see the whole setup come together */}
+      <Card className="text-center bg-gradient-to-br from-pink-50 to-rose-50">
+        <p className="font-script text-2xl text-[#831843] leading-tight">That's your whole plan ✿</p>
+        <p className="mt-1 text-sm text-[#9D5C7E] max-w-md mx-auto">See it all bloom together — income, budget, goals & spending — on your dashboard.</p>
+        <div className="mt-3 flex justify-center">
+          <PrimaryBtn onClick={() => { setTab("Dashboard"); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} className="shadow-lg shadow-pink-400/40">
+            View my dashboard <ArrowRight className="h-4 w-4" />
+          </PrimaryBtn>
         </div>
       </Card>
     </div>
