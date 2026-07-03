@@ -104,15 +104,6 @@ const BUDGET_GUIDE_CONTENT: SparkleContent = {
   finaleSubtitle: "Your money garden is ready to bloom. ✿",
 };
 
-const BUDGET_GUIDE_CONTENT: SparkleContent = {
-  eyebrow: "✦ your budget ✦",
-  titleLines: ["Meet your", "money"],
-  subtitle: "A soft little tour of your income, budget & dreamy savings goals.",
-  ctaLabel: "Show me around",
-  finaleLines: ["You're all set,", "gorgeous"],
-  finaleSubtitle: "Your money garden is ready to bloom. ✿",
-};
-
 const GUIDE_STEPS = [
   {
     key: "income",
