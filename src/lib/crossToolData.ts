@@ -254,3 +254,20 @@ export function readMovementLevel(): MovementLevel {
     isMax: !next,
   };
 }
+
+// ── Level-up detection (remember the last level the user has seen) ───────────
+
+export const MOVEMENT_LEVEL_SEEN_KEY = "bloom:movement-level-seen";
+
+/** The last level we celebrated for her, or null if never recorded. */
+export function readSeenLevel(): number | null {
+  try {
+    const v = localStorage.getItem(MOVEMENT_LEVEL_SEEN_KEY);
+    return v == null ? null : Number(v);
+  } catch {
+    return null;
+  }
+}
+export function writeSeenLevel(n: number): void {
+  try { localStorage.setItem(MOVEMENT_LEVEL_SEEN_KEY, String(n)); } catch {}
+}
