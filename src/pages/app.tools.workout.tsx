@@ -8,6 +8,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
+import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -427,18 +428,16 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
+      {/* Hydration nudge — shown when fewer than 3 glasses logged today.
+          Dismissible via the ✕ button or by swiping it away. */}
       {lowWater && (
-        <div className="mb-3 rounded-3xl bg-gradient-to-r from-blush/60 to-petal/40 border border-petal/70 px-4 py-3 flex items-center gap-3 animate-fade-in">
-          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
-            <Sparkles className="h-4 w-4" strokeWidth={1.8} />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-hotpink leading-tight">Drink water before you sweat ✿</p>
-            <p className="text-[11px] text-rose/70 leading-snug">You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery.</p>
-          </div>
-          <a href="/app/today#hydration" className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2">Log it</a>
-        </div>
+        <HydrationNudge
+          storageKey="bloom:hydrate-nudge-workout"
+          className="bg-gradient-to-r from-blush/60 to-petal/40 border-petal/70"
+          icon={<Sparkles className="h-4 w-4" strokeWidth={1.8} />}
+          title="Drink water before you sweat ✿"
+          body="You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery."
+        />
       )}
 
       {(view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (

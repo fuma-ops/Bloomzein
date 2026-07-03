@@ -11,6 +11,7 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount } from "@/lib/crossToolData";
+import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -673,18 +674,16 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Hydration nudge — shown when fewer than 3 glasses logged today */}
+      {/* Hydration nudge — shown when fewer than 3 glasses logged today.
+          Dismissible via the ✕ button or by swiping it away. */}
       {lowWater && (
-        <div className="mb-3 rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100/80 px-4 py-3 flex items-center gap-3 animate-fade-in">
-          <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white">
-            <Info className="h-4 w-4" strokeWidth={1.8} />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-hotpink leading-tight">Hydrate before your flow ✿</p>
-            <p className="text-[11px] text-rose/70 leading-snug">You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective.</p>
-          </div>
-          <a href="/app/today#hydration" className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2">Log it</a>
-        </div>
+        <HydrationNudge
+          storageKey="bloom:hydrate-nudge-yoga"
+          className="bg-gradient-to-r from-sky-50 to-blue-50 border-blue-100/80"
+          icon={<Info className="h-4 w-4" strokeWidth={1.8} />}
+          title="Hydrate before your flow ✿"
+          body="You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective."
+        />
       )}
 
       {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
