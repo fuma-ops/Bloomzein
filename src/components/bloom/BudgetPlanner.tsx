@@ -1579,8 +1579,9 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       label: "Income Garden",
       v: income,
       sub: "your monthly earnings",
-      glow: (income > 0 ? (surplus >= 0 ? "green" : "red") : null) as Glow | null,
-      textGlow: null as TGlow | null,
+      glow: null as Glow | null,          // no ring
+      textGlow: null as TGlow | null,     // rest of the text stays normal
+      numGlow: (income > 0 ? (surplus >= 0 ? "green" : "red") : null) as TGlow | null, // glow only behind the number
       badge: income > 0
         ? surplus >= 0
           ? { text: `Balance +${fmt(surplus, currency)}`, tone: "green" as const }
@@ -1595,6 +1596,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
         : "committed this month",
       glow: null as Glow | null,
       textGlow: null as TGlow | null,
+      numGlow: null as TGlow | null,
       badge: null,
     },
     {
@@ -1604,6 +1606,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       glow: null as Glow | null,
       // A soft red glow behind all the card's text the moment there's extra spend
       textGlow: (realExpenses > 0 ? "red" : null) as TGlow | null,
+      numGlow: null as TGlow | null,
       badge: null,
       planSub: fmt(plannedBudget + goalsMonthly, currency),
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
@@ -1614,6 +1617,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       sub: "across all goals · incl. this month",
       glow: null as Glow | null,
       textGlow: "green" as TGlow | null,
+      numGlow: null as TGlow | null,
       badge: null,
     },
   ];
@@ -1626,7 +1630,8 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
           style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
         >
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]">
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899]"
+            style={it.numGlow ? { textShadow: TEXT_GLOW[it.numGlow] } : undefined}>
             <StatNumber value={it.v} currency={currency} />
           </div>
           {"planSub" in it ? (
