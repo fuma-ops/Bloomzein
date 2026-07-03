@@ -11,7 +11,8 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak } from "@/lib/crossToolData";
+import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
@@ -1300,6 +1301,9 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
 
   return (
     <div className="space-y-4">
+      {/* Cute motivation strip — real movement level + streak */}
+      <LevelStreak streak={readYogaStreak().count} />
+
       {/* ── The week, day by day ────────────────────────────────────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
@@ -1754,6 +1758,7 @@ function SessionPlayer({
       localStorage.setItem(STREAK_KEY, JSON.stringify(next));
       window.dispatchEvent(new Event("bloom:yoga-updated"));
     } catch {}
+    incrementYogaSession(); // feeds the movement level (logical, real count)
     onDone();
   }
 
