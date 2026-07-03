@@ -1634,9 +1634,30 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
   const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
+  // Build-your-own-week: hand-pick a zone/intensity/duration per day.
+  const [editing, setEditing] = useState(false);
+
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
+
+  // Start a blank custom week (leaves any active program) and open the editor.
+  const buildMyOwn = () => {
+    if (activeProgram) { saveActiveProgram(null); setActive(null); }
+    const empty: Record<string, DayPlan | null> = {};
+    DAYS.forEach((d) => { empty[d] = null; });
+    setProgram(empty);
+    setProgramPhase(phase);
+    setEditing(true);
+  };
+  const clearWeek = () => {
+    const empty: Record<string, DayPlan | null> = {};
+    DAYS.forEach((d) => { empty[d] = null; });
+    setProgram(empty);
+  };
+  const setDayPlan = (d: string, dp: DayPlan | null) => {
+    setProgram({ ...(program ?? {}), [d]: dp });
+  };
 
   // Generate a freestyle week (replaces an active program after confirmation).
   // The seed advances each time so "Regenerate" always yields a fresh, varied
@@ -1700,6 +1721,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <div className="flex items-center justify-between pt-0.5">
               <button onClick={onBrowsePrograms} className="text-[11px] font-bold text-hotpink">Change program</button>
+              <button onClick={buildMyOwn} className="text-[11px] font-bold text-hotpink">Build my own</button>
               <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave program</button>
             </div>
           </div>
@@ -1710,10 +1732,20 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
         <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm p-3.5 flex items-center gap-3">
           <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-rose leading-tight">My plan · Freestyle week</p>
-            <p className="text-[11px] text-rose/65 leading-snug">Auto-built from your profile{phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}</p>
+            <p className="text-sm font-bold text-rose leading-tight">My plan · {editing ? "Edit your week" : "Freestyle week"}</p>
+            <p className="text-[11px] text-rose/65 leading-snug">{editing ? "Pick a zone, feel & length for each day." : `Auto-built from your profile${phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}`}</p>
           </div>
-          <button onClick={onGenerateClick} className="shrink-0 rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Regenerate</button>
+          {editing ? (
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
+              <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1.5 text-[11px] font-bold shadow-sm">Done</button>
+            </div>
+          ) : (
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button onClick={() => setEditing(true)} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Edit</button>
+              <button onClick={onGenerateClick} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Regenerate</button>
+            </div>
+          )}
         </section>
       )}
 
@@ -1737,6 +1769,14 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-rose">Generate a freestyle week</p>
               <p className="text-[11px] text-rose/70 leading-snug">One-tap auto plan from your level, goal, days/week and phase.</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+          </button>
+          <button onClick={buildMyOwn} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Dumbbell className="h-5 w-5" strokeWidth={1.8} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-rose">Build my own week</p>
+              <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day — e.g. glutes Mon, legs Wed, abs Fri.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
           </button>
@@ -1771,6 +1811,48 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               const sIdx = source === "program" ? programDay[d] : null;
               const freeplan = source === "freestyle" ? program?.[d] ?? null : null;
               const hasSession = sIdx !== null && sIdx !== undefined || !!freeplan;
+
+              // EDIT MODE — hand-pick zone · feel · length for this day
+              if (editing && source === "freestyle") {
+                const fp = freeplan;
+                return (
+                  <div key={d} className="flex items-center gap-1.5 rounded-2xl border border-petal/50 bg-white/70 p-2 sm:p-2.5">
+                    <div className="w-9 sm:w-10 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                    </div>
+                    <select
+                      value={fp?.zone ?? "rest"}
+                      onChange={(e) => {
+                        const z = e.target.value;
+                        if (z === "rest") setDayPlan(d, null);
+                        else setDayPlan(d, { zone: z as Zone, intention: fp?.intention ?? "tonify", durationMin: fp?.durationMin ?? 20 });
+                      }}
+                      className="flex-1 min-w-0 rounded-lg bg-white/90 border border-petal/60 px-2 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                    >
+                      <option value="rest">Rest day</option>
+                      {ZONES.map((z) => <option key={z.key} value={z.key}>{z.label}</option>)}
+                    </select>
+                    {fp && (
+                      <>
+                        <select
+                          value={fp.intention}
+                          onChange={(e) => setDayPlan(d, { ...fp, intention: e.target.value as WorkoutIntention })}
+                          className="w-[5.5rem] shrink-0 rounded-lg bg-white/90 border border-petal/60 px-1.5 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                        >
+                          {WORKOUT_INTENTIONS.map((i) => <option key={i.key} value={i.key}>{i.label}</option>)}
+                        </select>
+                        <select
+                          value={fp.durationMin}
+                          onChange={(e) => setDayPlan(d, { ...fp, durationMin: Number(e.target.value) as 10 | 20 | 30 })}
+                          className="w-[3.4rem] shrink-0 rounded-lg bg-white/90 border border-petal/60 px-1 py-1.5 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                        >
+                          {[10, 20, 30].map((m) => <option key={m} value={m}>{m}m</option>)}
+                        </select>
+                      </>
+                    )}
+                  </div>
+                );
+              }
 
               // Program session for the day
               let title = "", sub = "", mins = 0, done = false, onTap: (() => void) | null = null;
