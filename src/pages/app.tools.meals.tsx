@@ -23,7 +23,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import {
   RECIPES,
@@ -478,8 +477,6 @@ export default function MealsPage() {
   return (
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
-      <BloomBubbles count={10} />
-
       {/* HERO — compact, matches Budget Planner height */}
       <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
         <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-center" />
