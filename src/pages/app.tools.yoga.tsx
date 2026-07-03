@@ -674,18 +674,6 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Hydration nudge — shown when fewer than 3 glasses logged today.
-          Dismissible via the ✕ button or by swiping it away. */}
-      {lowWater && (
-        <HydrationNudge
-          storageKey="bloom:hydrate-nudge-yoga"
-          className="bg-gradient-to-r from-sky-50 to-blue-50 border-blue-100/80"
-          icon={<Info className="h-4 w-4" strokeWidth={1.8} />}
-          title="Hydrate before your flow ✿"
-          body="You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective."
-        />
-      )}
-
       {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <YogaHero
           active={view.kind}
@@ -693,6 +681,18 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
+        />
+      )}
+
+      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
+          logged today. Dismissible via the ✕ button or by swiping it away. */}
+      {lowWater && (
+        <HydrationNudge
+          storageKey="bloom:hydrate-nudge-yoga"
+          className="mt-3 bg-gradient-to-r from-sky-50 to-blue-50 border-blue-100/80"
+          icon={<Info className="h-4 w-4" strokeWidth={1.8} />}
+          title="Hydrate before your flow ✿"
+          body="You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective."
         />
       )}
 

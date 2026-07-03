@@ -428,18 +428,6 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Hydration nudge — shown when fewer than 3 glasses logged today.
-          Dismissible via the ✕ button or by swiping it away. */}
-      {lowWater && (
-        <HydrationNudge
-          storageKey="bloom:hydrate-nudge-workout"
-          className="bg-gradient-to-r from-blush/60 to-petal/40 border-petal/70"
-          icon={<Sparkles className="h-4 w-4" strokeWidth={1.8} />}
-          title="Drink water before you sweat ✿"
-          body="You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery."
-        />
-      )}
-
       {(view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
@@ -447,6 +435,18 @@ export default function WorkoutPage() {
           onPickTab={(t) => { setTab(t); setView({ kind: t }); }}
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
+        />
+      )}
+
+      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
+          logged today. Dismissible via the ✕ button or by swiping it away. */}
+      {lowWater && (
+        <HydrationNudge
+          storageKey="bloom:hydrate-nudge-workout"
+          className="mt-3 bg-gradient-to-r from-blush/60 to-petal/40 border-petal/70"
+          icon={<Sparkles className="h-4 w-4" strokeWidth={1.8} />}
+          title="Drink water before you sweat ✿"
+          body="You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery."
         />
       )}
 
