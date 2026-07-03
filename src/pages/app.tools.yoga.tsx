@@ -16,6 +16,7 @@ import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
+import { YogaOnboarding, type YogaTourTab } from "@/components/bloom/YogaOnboarding";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -433,6 +434,7 @@ const CLOSING: Record<Lang, string> = {
 // ===================== STORAGE / STATE KEYS =====================
 
 const ONBOARD_KEY = "bloom:yoga-onboarded";
+const YOGA_TOUR_KEY = "bloom:yoga-tour-done";
 const STEP_KEY = "bloom:yoga-step"; // 1 learn, 2 visual, 3 audio
 const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
@@ -641,13 +643,20 @@ export default function YogaPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "plan" });
   const [lowWater, setLowWater] = useState(false);
+  // Guided sparkle tour — auto on first visit, replayable via the hero Guide chip.
+  const [tourDone, setTourDone] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const goTourTab = (t: YogaTourTab) => setView({ kind: t === "discover" ? "home" : t === "library" ? "library" : "plan" });
 
   useEffect(() => {
     try {
       setOnboarded(localStorage.getItem(ONBOARD_KEY) === "1");
+      setTourDone(localStorage.getItem(YOGA_TOUR_KEY) === "1");
       const s = Number(localStorage.getItem(STEP_KEY) || "1");
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
+    setHydrated(true);
     // Deep-link from Today / Cycle: open straight into the prescribed flow setup.
     const launch = readLaunch<{ intention: string; durationMin: number }>(LAUNCH_YOGA_KEY);
     if (launch) {
@@ -671,9 +680,19 @@ export default function YogaPage() {
     advanceStep(1);
   };
 
+  const finishTour = () => {
+    try { localStorage.setItem(YOGA_TOUR_KEY, "1"); } catch {}
+    setTourDone(true);
+    setShowTour(false);
+  };
+  const isTabbed = view.kind === "plan" || view.kind === "home" || view.kind === "library";
+  const tourVisible = showTour || (hydrated && !tourDone && isTabbed);
+
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
+
+      {tourVisible && <YogaOnboarding onTab={goTourTab} onDone={finishTour} />}
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
@@ -686,6 +705,7 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
+          onGuide={() => setShowTour(true)}
         />
       )}
 
@@ -780,13 +800,14 @@ const HERO_CONTENT: Record<"home" | "library" | "plan", { title: string; subtitl
 };
 
 function YogaHero({
-  active, onDiscover, onLibrary, onMyPlan, onTryFlow,
+  active, onDiscover, onLibrary, onMyPlan, onTryFlow, onGuide,
 }: {
   active: "home" | "library" | "plan";
   onDiscover: () => void;
   onLibrary: () => void;
   onMyPlan: () => void;
   onTryFlow: () => void;
+  onGuide?: () => void;
 }) {
   const tabClass = (isActive: boolean) =>
     [
@@ -801,6 +822,14 @@ function YogaHero({
       <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+      {onGuide && (
+        <button
+          onClick={onGuide}
+          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+        >
+          <Sparkles className="h-3 w-3" /> Guide
+        </button>
+      )}
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div key={active} className="animate-scale-in">
           <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">{title}</h1>
@@ -808,9 +837,9 @@ function YogaHero({
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
-            <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
-            <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
-            <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
+            <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
+            <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
+            <button data-tour="yg-tab-library" onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
           </div>
         </div>
       </div>
@@ -1289,6 +1318,16 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             </button>
           </div>
         </div>
+
+        {/* Edit-mode instruction — helps first-timers build their own week */}
+        {editing && (
+          <div className="mb-3 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
+            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+            <p className="text-[11px] text-rose/80 leading-snug">
+              Tap any day to choose its <b className="font-bold text-hotpink">focus</b> and <b className="font-bold text-hotpink">length</b>. Pick <b className="font-bold text-hotpink">Rest day</b> to clear one. Tap <b className="font-bold text-hotpink">Done</b> when your week feels right.
+            </p>
+          </div>
+        )}
 
         {/* Fuel toggle — meals in the plan, or just the flows */}
         {!editing && (
