@@ -1251,9 +1251,6 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Emotional release"];
   const todayKey = WEEKDAY_LABELS[new Date().getDay()];
-  const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
-  const todayFocus = schedule[todayKey];
-  const todayMeta = todayFocus ? FOCUS_META[todayFocus] : null;
 
   const startFocus = (focus: string | null | undefined) => {
     if (!focus) return;
@@ -1263,31 +1260,6 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
 
   return (
     <div className="space-y-4">
-      {/* ── TODAY hero — one-tap entry ──────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-md animate-scale-in">
-        {todayMeta ? (
-          <>
-            <img src={todayMeta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" />
-            <div className="relative z-[2] p-4 sm:p-5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">Today · {todayLong}</p>
-              <h2 className="font-script text-3xl sm:text-4xl text-white leading-none mt-0.5 drop-shadow">{todayFocus}</h2>
-              <p className="text-xs sm:text-sm text-white/90 mt-1 drop-shadow">{todayMeta.blurb} · {todayMeta.duration} min</p>
-              <button onClick={() => startFocus(todayFocus)} className="mt-3 bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white">
-                <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Start today's flow
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="bg-gradient-to-br from-blush/60 to-petal/40 p-4 sm:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Today · {todayLong}</p>
-            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mt-0.5">Rest day ✿</h2>
-            <p className="text-xs sm:text-sm text-rose/75 mt-1">Stillness is part of the practice. Or flow gently if you feel called.</p>
-            <button onClick={() => onStart("stress", 10)} className="mt-3 rounded-full bg-white/90 border border-petal/60 px-4 py-2 text-xs font-bold text-hotpink">Or a 10-min calm flow</button>
-          </div>
-        )}
-      </section>
-
       {/* ── The week, day by day ────────────────────────────────────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
