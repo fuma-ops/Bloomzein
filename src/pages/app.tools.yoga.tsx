@@ -5,14 +5,15 @@ import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
-  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils,
+  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
@@ -707,6 +708,12 @@ export default function YogaPage() {
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
           onGuide={() => setShowTour(true)}
+          onReset={() => {
+            if (window.confirm("Reset the Yoga tool to a fresh start? This clears your week, sessions and progress here so you can see the first-time experience.")) {
+              resetToolState("yoga");
+              window.location.reload();
+            }
+          }}
         />
       )}
 
@@ -801,7 +808,7 @@ const HERO_CONTENT: Record<"home" | "library" | "plan", { title: string; subtitl
 };
 
 function YogaHero({
-  active, onDiscover, onLibrary, onMyPlan, onTryFlow, onGuide,
+  active, onDiscover, onLibrary, onMyPlan, onTryFlow, onGuide, onReset,
 }: {
   active: "home" | "library" | "plan";
   onDiscover: () => void;
@@ -809,6 +816,7 @@ function YogaHero({
   onMyPlan: () => void;
   onTryFlow: () => void;
   onGuide?: () => void;
+  onReset?: () => void;
 }) {
   const tabClass = (isActive: boolean) =>
     [
@@ -823,14 +831,26 @@ function YogaHero({
       <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-      {onGuide && (
-        <button
-          onClick={onGuide}
-          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
-        >
-          <Sparkles className="h-3 w-3" /> Guide
-        </button>
-      )}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+        {onReset && (
+          <button
+            onClick={onReset}
+            aria-label="Reset tool"
+            title="Reset — preview the first-time experience"
+            className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+          >
+            <RotateCcw className="h-3 w-3" /> Reset
+          </button>
+        )}
+        {onGuide && (
+          <button
+            onClick={onGuide}
+            className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+          >
+            <Sparkles className="h-3 w-3" /> Guide
+          </button>
+        )}
+      </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div key={active} className="animate-scale-in">
           <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">{title}</h1>
@@ -1303,6 +1323,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     <div className="space-y-4">
       {/* Cute motivation strip — real movement level + streak */}
       <LevelStreak streak={readYogaStreak().count} />
+
+      {/* Post-tour guidance — keeps her guided until her first flow */}
+      {!editing && readYogaSessionCount() === 0 && (
+        <NextStepBanner
+          label="Begin your first flow"
+          hint="Tap the glowing ▶ on today's card — or Edit to shape the week your way ✿"
+        />
+      )}
 
       {/* ── The week, day by day ────────────────────────────────────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">

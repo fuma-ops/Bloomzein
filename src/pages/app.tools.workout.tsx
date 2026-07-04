@@ -8,9 +8,10 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -255,6 +256,7 @@ function HeroHeader({
   sectionTitle,
   sectionSubtitle,
   onGuide,
+  onReset,
 }: {
   src: string;
   tab: WorkoutTab;
@@ -262,6 +264,7 @@ function HeroHeader({
   sectionTitle: string;
   sectionSubtitle: string;
   onGuide?: () => void;
+  onReset?: () => void;
 }) {
   const [broken, setBroken] = useState(false);
   return (
@@ -274,14 +277,26 @@ function HeroHeader({
         <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
-      {onGuide && (
-        <button
-          onClick={onGuide}
-          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
-        >
-          <Sparkles className="h-3 w-3" /> Guide
-        </button>
-      )}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+        {onReset && (
+          <button
+            onClick={onReset}
+            aria-label="Reset tool"
+            title="Reset — preview the first-time experience"
+            className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+          >
+            <RotateCcw className="h-3 w-3" /> Reset
+          </button>
+        )}
+        {onGuide && (
+          <button
+            onClick={onGuide}
+            className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+          >
+            <Sparkles className="h-3 w-3" /> Guide
+          </button>
+        )}
+      </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
           <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
@@ -470,6 +485,12 @@ export default function WorkoutPage() {
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
           onGuide={() => setShowTour(true)}
+          onReset={() => {
+            if (window.confirm("Reset the Workout tool to a fresh start? This clears your plan, sessions and progress here so you can see the first-time experience.")) {
+              resetToolState("workout");
+              window.location.reload();
+            }
+          }}
         />
       )}
 
@@ -1724,6 +1745,14 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* Cute motivation strip — real movement level + streak */}
       <LevelStreak streak={readWorkoutStreak().count} />
+
+      {/* Post-tour guidance — keeps her guided until her first session */}
+      {source !== "none" && !editing && readWorkoutSessionCount() === 0 && (
+        <NextStepBanner
+          label="Start your first session"
+          hint="Tap the glowing ▶ on today's card below — your first bloom begins here ✿"
+        />
+      )}
 
       {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (

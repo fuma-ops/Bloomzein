@@ -271,3 +271,19 @@ export function readSeenLevel(): number | null {
 export function writeSeenLevel(n: number): void {
   try { localStorage.setItem(MOVEMENT_LEVEL_SEEN_KEY, String(n)); } catch {}
 }
+
+// ── Reset a tool to a fresh first-time state (for previewing / starting over) ─
+
+/** Clears every localStorage key a tool owns (bloom:<tool>-*) plus the shared
+ *  movement-level marker, so the next load looks like a brand-new user. */
+export function resetToolState(tool: "workout" | "yoga"): void {
+  try {
+    const kill: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(`bloom:${tool}-`)) kill.push(k);
+    }
+    kill.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem(MOVEMENT_LEVEL_SEEN_KEY);
+  } catch {}
+}
