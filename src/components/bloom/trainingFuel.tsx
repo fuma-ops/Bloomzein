@@ -328,7 +328,7 @@ export function FuelCard({
     <div className={`${shell} p-2.5 sm:p-3 animate-fade-in ${className}`}>
       {/* header — explicitly tied to THIS session & day */}
       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-        <span className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wide shrink-0">
+        <span className="animate-soft-zoom inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wide shrink-0">
           <Utensils className="h-2.5 w-2.5" /> Eat after
         </span>
         {heading && <span className="text-[10.5px] font-bold text-hotpink leading-tight">{heading}</span>}
@@ -340,7 +340,7 @@ export function FuelCard({
 
       {/* the human comment */}
       <p className="flex items-start gap-1 text-[11px] leading-snug text-rose/85 mb-2">
-        <Sparkles className="h-3 w-3 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+        <Sparkles className="animate-icon-breathe h-3 w-3 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
         <span>{fuelComment(ctx)}</span>
       </p>
 

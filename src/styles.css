@@ -740,6 +740,15 @@
   animation: icon-breathe 3.2s ease-in-out infinite;
 }
 
+/* Soft zoom in / out — a gentle scale pulse, no rotation. */
+@keyframes soft-zoom {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+@utility animate-soft-zoom {
+  animation: soft-zoom 2.4s ease-in-out infinite;
+}
+
 @keyframes hero-breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.07); }
