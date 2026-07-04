@@ -1232,21 +1232,24 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SCHEDULE_KEY);
-      if (raw) {
-        setSchedule(JSON.parse(raw));
-      } else {
-        // Pre-fill the week from the current cycle phase — the user can still change it.
-        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-        const plan = PHASE_DEFAULT_PLAN[phase];
-        const defaults: Record<string, string | null> = {};
-        days.forEach((d, i) => { defaults[d] = plan[i]; });
-        setSchedule(defaults);
-        localStorage.setItem(SCHEDULE_KEY, JSON.stringify(defaults));
-      }
+      if (raw) setSchedule(JSON.parse(raw));
+      // else: leave the week empty — a first-time user chooses "Sync to my
+      // cycle" or "Build my own week" from the empty state below.
       const r = localStorage.getItem(REMINDER_KEY); if (r) setReminder(r);
       const dr = localStorage.getItem(YOGA_DURATIONS_KEY); if (dr) setDurations(JSON.parse(dr));
     } catch {}
   }, [phase]);
+
+  // Fill the week with flows matched to the current cycle phase (opt-in).
+  const syncToCycle = () => {
+    const dayList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const plan = PHASE_DEFAULT_PLAN[phase];
+    const next: Record<string, string | null> = {};
+    dayList.forEach((d, i) => { next[d] = plan[i] ?? null; });
+    setSchedule(next);
+    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    askForNotifications();
+  };
 
   // A schedule is only useful if we can actually nudge her — ask right when
   // she picks a practice day (a real user gesture), not via a banner she may dismiss.
@@ -1314,6 +1317,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Emotional release"];
   const todayKey = WEEKDAY_LABELS[new Date().getDay()];
+  const weekEmpty = days.every((d) => !schedule[d]);
 
   const startFocus = (focus: string | null | undefined, day?: string) => {
     if (!focus) return;
@@ -1326,8 +1330,8 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
       {/* Cute motivation strip — real movement level + streak */}
       <LevelStreak streak={readYogaStreak().count} />
 
-      {/* Post-tour guidance — keeps her guided until her first flow */}
-      {!editing && readYogaSessionCount() === 0 && (
+      {/* Post-tour guidance — once a week exists but no flow done yet */}
+      {!editing && !weekEmpty && readYogaSessionCount() === 0 && (
         <NextStepBanner
           label="Begin your first flow"
           hint="Tap the glowing ▶ on today's card — or Edit to shape the week your way ✿"
@@ -1363,8 +1367,8 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           </div>
         )}
 
-        {/* Fuel toggle — meals in the plan, or just the flows */}
-        {!editing && (
+        {/* Fuel toggle — meals in the plan, or just the flows (once a week exists) */}
+        {!editing && !weekEmpty && (
           <button
             onClick={toggleFuel}
             className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 mb-3 text-left active:scale-[0.99] transition"
@@ -1382,6 +1386,31 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           </button>
         )}
 
+        {/* Empty week (first-time / after reset) → choose how to start */}
+        {!editing && weekEmpty ? (
+          <div className="space-y-2.5">
+            <div>
+              <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Set up your soft week ✿</h3>
+              <p className="text-[12px] text-rose/70">Choose how to start — you can always change it.</p>
+            </div>
+            <button onClick={syncToCycle} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-rose">Sync to my cycle</p>
+                <p className="text-[11px] text-rose/70 leading-snug">Auto-fill the week with flows matched to your {phase} phase.</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+            </button>
+            <button onClick={() => setEditing(true)} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-rose">Build my own week</p>
+                <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day's focus &amp; length — e.g. Strength Mon, Sleep prep Fri.</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+            </button>
+          </div>
+        ) : (
         <div className="flex flex-col gap-2.5">
           {days.map((d) => {
             const focus = schedule[d];
@@ -1467,6 +1496,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             );
           })}
         </div>
+        )}
       </section>
     </div>
   );
