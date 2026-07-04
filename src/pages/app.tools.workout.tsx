@@ -12,6 +12,7 @@ import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { NextStepBanner } from "@/components/bloom/NextStepBanner";
+import { flushCloudSync } from "@/lib/cloudSync";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -485,9 +486,10 @@ export default function WorkoutPage() {
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
           onGuide={() => setShowTour(true)}
-          onReset={() => {
+          onReset={async () => {
             if (window.confirm("Reset the Workout tool to a fresh start? This clears your plan, sessions and progress here so you can see the first-time experience.")) {
               resetToolState("workout");
+              await flushCloudSync(); // push the deletions before reload, else cloud restores them
               window.location.reload();
             }
           }}

@@ -14,6 +14,7 @@ import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { NextStepBanner } from "@/components/bloom/NextStepBanner";
+import { flushCloudSync } from "@/lib/cloudSync";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
@@ -708,9 +709,10 @@ export default function YogaPage() {
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
           onGuide={() => setShowTour(true)}
-          onReset={() => {
+          onReset={async () => {
             if (window.confirm("Reset the Yoga tool to a fresh start? This clears your week, sessions and progress here so you can see the first-time experience.")) {
               resetToolState("yoga");
+              await flushCloudSync(); // push the deletions before reload, else cloud restores them
               window.location.reload();
             }
           }}
