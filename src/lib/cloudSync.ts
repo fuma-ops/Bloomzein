@@ -193,3 +193,10 @@ export async function stopCloudSync() {
   await flush();
   currentUserId = null;
 }
+
+/** Force-push pending local changes to the cloud right now (awaitable).
+ *  Used before a hard reload (e.g. tool reset) so deletions actually land
+ *  and aren't restored by the next pull. No-op when signed out. */
+export async function flushCloudSync() {
+  await flush();
+}
