@@ -169,3 +169,121 @@ export function addIngredientsToShopping(items: string[]): void {
 export function readShoppingExtras(): string[] {
   return readJSON<string[]>(MEALS_SHOP_EXTRA_KEY, []);
 }
+
+// ── "Show recovery meals inside the plan" preference (shared Workout/Yoga) ────
+
+export const FUEL_IN_PLAN_KEY = "bloom:fuel-in-plan";
+export const FUEL_IN_PLAN_EVENT = "bloom:fuel-in-plan";
+
+/** Whether the plan should show recovery meals under each session. Default on. */
+export function readFuelInPlan(): boolean {
+  try {
+    const v = localStorage.getItem(FUEL_IN_PLAN_KEY);
+    return v === null ? true : v === "true";
+  } catch {
+    return true;
+  }
+}
+
+export function writeFuelInPlan(v: boolean): void {
+  try {
+    localStorage.setItem(FUEL_IN_PLAN_KEY, String(v));
+    window.dispatchEvent(new Event(FUEL_IN_PLAN_EVENT));
+  } catch {}
+}
+
+// ── Movement level (logical, from real completed sessions) ───────────────────
+
+export const YOGA_SESSIONS_KEY = "bloom:yoga-sessions";
+
+/** Total workout sessions ever completed (length of the real history log). */
+export function readWorkoutSessionCount(): number {
+  const h = readJSON<unknown[]>(WORKOUT_LOG_KEY, []);
+  return Array.isArray(h) ? h.length : 0;
+}
+/** Total yoga flows ever completed (a counter bumped on each finish). */
+export function readYogaSessionCount(): number {
+  const n = readJSON<number>(YOGA_SESSIONS_KEY, 0);
+  return typeof n === "number" && n > 0 ? n : 0;
+}
+/** Bump the yoga completed-flows counter by one (called when a flow finishes). */
+export function incrementYogaSession(): void {
+  try { localStorage.setItem(YOGA_SESSIONS_KEY, String(readYogaSessionCount() + 1)); } catch {}
+}
+
+// A gentle, bloom-themed ladder. Thresholds ramp up so each level feels earned.
+const MOVEMENT_LEVELS: { min: number; name: string; icon: string }[] = [
+  { min: 0,   name: "Seedling", icon: "🌱" },
+  { min: 3,   name: "Sprout",   icon: "🌿" },
+  { min: 8,   name: "Bud",      icon: "🌷" },
+  { min: 16,  name: "Bloom",    icon: "🌸" },
+  { min: 28,  name: "Blossom",  icon: "🌺" },
+  { min: 45,  name: "Radiant",  icon: "🌟" },
+  { min: 70,  name: "Luminous", icon: "💫" },
+  { min: 100, name: "Icon",     icon: "👑" },
+];
+
+export interface MovementLevel {
+  total: number;   // combined workout + yoga sessions completed
+  level: number;   // 1-based level number
+  name: string;
+  icon: string;
+  toNext: number;  // sessions remaining to the next level (0 at max)
+  pct: number;     // 0-100 progress within the current level
+  isMax: boolean;
+}
+
+/** The user's overall movement level, derived from every session she's done. */
+export function readMovementLevel(): MovementLevel {
+  const total = readWorkoutSessionCount() + readYogaSessionCount();
+  let i = 0;
+  for (let k = 0; k < MOVEMENT_LEVELS.length; k++) {
+    if (total >= MOVEMENT_LEVELS[k].min) i = k;
+  }
+  const cur = MOVEMENT_LEVELS[i];
+  const next = MOVEMENT_LEVELS[i + 1];
+  const span = next ? next.min - cur.min : 1;
+  const inLevel = total - cur.min;
+  return {
+    total,
+    level: i + 1,
+    name: cur.name,
+    icon: cur.icon,
+    toNext: next ? next.min - total : 0,
+    pct: next ? Math.min(100, Math.round((inLevel / span) * 100)) : 100,
+    isMax: !next,
+  };
+}
+
+// ── Level-up detection (remember the last level the user has seen) ───────────
+
+export const MOVEMENT_LEVEL_SEEN_KEY = "bloom:movement-level-seen";
+
+/** The last level we celebrated for her, or null if never recorded. */
+export function readSeenLevel(): number | null {
+  try {
+    const v = localStorage.getItem(MOVEMENT_LEVEL_SEEN_KEY);
+    return v == null ? null : Number(v);
+  } catch {
+    return null;
+  }
+}
+export function writeSeenLevel(n: number): void {
+  try { localStorage.setItem(MOVEMENT_LEVEL_SEEN_KEY, String(n)); } catch {}
+}
+
+// ── Reset a tool to a fresh first-time state (for previewing / starting over) ─
+
+/** Clears every localStorage key a tool owns (bloom:<tool>-*) plus the shared
+ *  movement-level marker, so the next load looks like a brand-new user. */
+export function resetToolState(tool: "workout" | "yoga"): void {
+  try {
+    const kill: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(`bloom:${tool}-`)) kill.push(k);
+    }
+    kill.forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem(MOVEMENT_LEVEL_SEEN_KEY);
+  } catch {}
+}

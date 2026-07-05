@@ -1,16 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
-  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown,
+  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
+import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { NextStepBanner } from "@/components/bloom/NextStepBanner";
+import { flushCloudSync } from "@/lib/cloudSync";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
+import { PickerField } from "@/components/bloom/PickerField";
+import { WorkoutOnboarding, type WorkoutTourTab } from "@/components/bloom/WorkoutOnboarding";
 import {
   ZONES, WORKOUT_INTENTIONS, ENERGY_OPTIONS, WEEKLY_CHALLENGES, BADGES, BODY_TYPES,
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
@@ -27,6 +33,7 @@ import { getCoaching } from "@/components/bloom/workout/coaching";
 // ===================== STORAGE =====================
 
 const ONBOARD_KEY = "bloom:workout-onboarded";
+const TOUR_KEY = "bloom:workout-tour-done";
 const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
@@ -249,12 +256,16 @@ function HeroHeader({
   onPickTab,
   sectionTitle,
   sectionSubtitle,
+  onGuide,
+  onReset,
 }: {
   src: string;
   tab: WorkoutTab;
   onPickTab: (t: WorkoutTab) => void;
   sectionTitle: string;
   sectionSubtitle: string;
+  onGuide?: () => void;
+  onReset?: () => void;
 }) {
   const [broken, setBroken] = useState(false);
   return (
@@ -267,6 +278,26 @@ function HeroHeader({
         <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+        {onReset && (
+          <button
+            onClick={onReset}
+            aria-label="Reset tool"
+            title="Reset — preview the first-time experience"
+            className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+          >
+            <RotateCcw className="h-3 w-3" /> Reset
+          </button>
+        )}
+        {onGuide && (
+          <button
+            onClick={onGuide}
+            className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+          >
+            <Sparkles className="h-3 w-3" /> Guide
+          </button>
+        )}
+      </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
           <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
@@ -277,6 +308,7 @@ function HeroHeader({
             {(["program", "discover", "programs", "library"] as const).map((t) => (
               <button
                 key={t}
+                data-tour={`wk-tab-${t}`}
                 onClick={() => onPickTab(t)}
                 className={[
                   "rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold transition",
@@ -340,6 +372,12 @@ export default function WorkoutPage() {
   const [view, setView] = useState<View>({ kind: "program" });
   const [tab, setTab] = useState<WorkoutTab>("program");
   const [lowWater, setLowWater] = useState(false);
+  // Guided sparkle tour — auto on first visit (after profile setup), replayable.
+  const [tourDone, setTourDone] = useLS<boolean>(TOUR_KEY, false);
+  const [showTour, setShowTour] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+  const goTourTab = (t: WorkoutTourTab) => { setTab(t); setView({ kind: t }); };
 
   useEffect(() => {
     setLowWater(readTodayWaterCount() < 3);
@@ -423,9 +461,19 @@ export default function WorkoutPage() {
     );
   }
 
+  const tourVisible = showTour || (hydrated && onboarded && !tourDone);
+
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
+
+      {tourVisible && (
+        <WorkoutOnboarding
+          onTab={goTourTab}
+          onDone={() => { setTourDone(true); setShowTour(false); }}
+        />
+      )}
+
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
@@ -437,6 +485,14 @@ export default function WorkoutPage() {
           onPickTab={(t) => { setTab(t); setView({ kind: t }); }}
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
+          onGuide={() => setShowTour(true)}
+          onReset={async () => {
+            if (window.confirm("Reset the Workout tool to a fresh start? This clears your plan, sessions and progress here so you can see the first-time experience.")) {
+              resetToolState("workout");
+              await flushCloudSync(); // push the deletions before reload, else cloud restores them
+              window.location.reload();
+            }
+          }}
         />
       )}
 
@@ -819,10 +875,11 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
         )}
       </div>
 
-      {/* Confirm: replacing an existing plan */}
-      {confirmReplace && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirmReplace(false)}>
-          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* Confirm: replacing an existing plan — portaled so it's always centered
+          in the viewport (never trapped/cropped by a transformed ancestor). */}
+      {confirmReplace && createPortal(
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmReplace(false)}>
+          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
             <p className="text-sm text-rose/80 mb-4">Making <span className="font-bold">{program.title}</span> your plan will replace your current weekly plan.</p>
             <div className="flex gap-2">
@@ -830,7 +887,8 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
               <button onClick={commitPlan} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -1627,10 +1685,34 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   // Body goal drives which recovery meals we surface after each session.
   const goal = readDietProfile().goal;
+  // Shared preference: show recovery meals inside the plan, or keep it simple.
+  const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
+  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+
+  // Build-your-own-week: hand-pick a zone/intensity/duration per day.
+  const [editing, setEditing] = useState(false);
 
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
+
+  // Start a blank custom week (leaves any active program) and open the editor.
+  const buildMyOwn = () => {
+    if (activeProgram) { saveActiveProgram(null); setActive(null); }
+    const empty: Record<string, DayPlan | null> = {};
+    DAYS.forEach((d) => { empty[d] = null; });
+    setProgram(empty);
+    setProgramPhase(phase);
+    setEditing(true);
+  };
+  const clearWeek = () => {
+    const empty: Record<string, DayPlan | null> = {};
+    DAYS.forEach((d) => { empty[d] = null; });
+    setProgram(empty);
+  };
+  const setDayPlan = (d: string, dp: DayPlan | null) => {
+    setProgram({ ...(program ?? {}), [d]: dp });
+  };
 
   // Generate a freestyle week (replaces an active program after confirmation).
   // The seed advances each time so "Regenerate" always yields a fresh, varied
@@ -1659,84 +1741,36 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const overallTotal = activeProgram ? activeProgram.weeks * activeProgram.template.length : 0;
   const wMeta = activeProgram ? weekMeta(activeProgram, week) : null;
 
-  // ── Today's session (the daily hero) ─────────────────────────────────────────
-  const todaySIdx = source === "program" ? programDay[todayKey] : null;
-  const todayFree = source === "freestyle" ? program?.[todayKey] ?? null : null;
-  let today: { title: string; sub: string; image: string; done: boolean; start: () => void } | null = null;
-  if (source === "program" && activeProgram && todaySIdx !== null && todaySIdx !== undefined) {
-    const s = computeWeekSession(activeProgram, todaySIdx, week);
-    today = {
-      title: s.title, sub: `${s.focus} · ${s.estMinutes} min`,
-      image: activeProgram.image,
-      done: progDoneSet.has(sessionTag(week, todaySIdx)),
-      start: () => onOpenProgramSession(activeProgram.id, week, todaySIdx),
-    };
-  } else if (todayFree) {
-    const zoneMeta = ZONES.find((z) => z.key === todayFree.zone);
-    today = {
-      title: zoneMeta?.label ?? todayFree.zone,
-      sub: `${WORKOUT_INTENTIONS.find((i) => i.key === todayFree.intention)?.label ?? ""} · ${todayFree.durationMin} min`,
-      image: zoneMeta?.image ?? HERO_IMAGES.session,
-      done: false,
-      start: () => onStartSession(buildSession(todayFree.zone, todayFree.intention, todayFree.durationMin, profile.level, phase, profile.equipment)),
-    };
-  }
-  const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
 
   return (
     <div className="space-y-4">
 
-      {/* ── TODAY hero — the daily one-tap entry ────────────────────────────── */}
-      {source !== "none" && (
-        <section className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-md animate-card-pop-in">
-          {today ? (
-            <>
-              <img src={today.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
-              <div className="relative z-[2] p-4 sm:p-5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">Today · {todayLong}</p>
-                <h2 className="font-script text-3xl sm:text-4xl text-white leading-none mt-0.5 drop-shadow">{today.title}</h2>
-                <p className="text-xs sm:text-sm text-white/90 mt-1 drop-shadow">{today.sub}</p>
-                {today.done ? (
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-bold text-hotpink">
-                    <Check className="h-4 w-4" strokeWidth={3} /> Completed today ✿
-                  </div>
-                ) : (
-                  <button onClick={today.start} className="mt-3 bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white">
-                    <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Start today's session
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="bg-gradient-to-br from-blush/60 to-petal/40 p-4 sm:p-5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Today · {todayLong}</p>
-              <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mt-0.5">Rest day ✿</h2>
-              <p className="text-xs sm:text-sm text-rose/75 mt-1">Recovery is part of the plan — let your body bloom.</p>
-              <button onClick={() => onStartSession(buildSession("full-body", "recover", 10, profile.level, phase, profile.equipment))}
-                className="mt-3 rounded-full bg-white/90 border border-petal/60 px-4 py-2 text-xs font-bold text-hotpink">
-                Or do a 10-min recovery flow
-              </button>
-            </div>
-          )}
-        </section>
+      {/* Cute motivation strip — real movement level + streak */}
+      <LevelStreak streak={readWorkoutStreak().count} />
+
+      {/* Post-tour guidance — keeps her guided until her first session */}
+      {source !== "none" && !editing && readWorkoutSessionCount() === 0 && (
+        <NextStepBanner
+          label="Start your first session"
+          hint="Tap the glowing ▶ on today's card below — your first bloom begins here ✿"
+        />
       )}
 
-      {/* ── Plan header ─────────────────────────────────────────────────────── */}
+      {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (
-        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
-          <div className="relative h-24 overflow-hidden">
+        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden flex">
+          <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden">
             <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10" />
-            <div className="absolute bottom-2 left-3 right-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/90">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
-              <h2 className="font-script text-2xl text-white leading-none drop-shadow">{activeProgram.title}</h2>
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
           </div>
-          <div className="p-3.5 space-y-2.5">
+          <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
+              <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{activeProgram.title}</h2>
+            </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{wMeta?.theme}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{wMeta?.theme}</p>
                 <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
               </div>
               <div className="h-1.5 rounded-full bg-blush overflow-hidden">
@@ -1753,6 +1787,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <div className="flex items-center justify-between pt-0.5">
               <button onClick={onBrowsePrograms} className="text-[11px] font-bold text-hotpink">Change program</button>
+              <button onClick={buildMyOwn} className="text-[11px] font-bold text-hotpink">Build my own</button>
               <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave program</button>
             </div>
           </div>
@@ -1763,10 +1798,20 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
         <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm p-3.5 flex items-center gap-3">
           <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-rose leading-tight">My plan · Freestyle week</p>
-            <p className="text-[11px] text-rose/65 leading-snug">Auto-built from your profile{phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}</p>
+            <p className="text-sm font-bold text-rose leading-tight">My plan · {editing ? "Edit your week" : "Freestyle week"}</p>
+            <p className="text-[11px] text-rose/65 leading-snug">{editing ? "Pick a zone, feel & length for each day." : `Auto-built from your profile${phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}`}</p>
           </div>
-          <button onClick={onGenerateClick} className="shrink-0 rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Regenerate</button>
+          {editing ? (
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
+              <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1.5 text-[11px] font-bold shadow-sm">Done</button>
+            </div>
+          ) : (
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button onClick={() => setEditing(true)} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Edit</button>
+              <button onClick={onGenerateClick} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Regenerate</button>
+            </div>
+          )}
         </section>
       )}
 
@@ -1793,18 +1838,96 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
           </button>
+          <button onClick={buildMyOwn} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Dumbbell className="h-5 w-5" strokeWidth={1.8} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-rose">Build my own week</p>
+              <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day — e.g. glutes Mon, legs Wed, abs Fri.</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+          </button>
         </section>
       )}
 
-      {/* ── The week, day by day (one unified view) ─────────────────────────── */}
+      {/* ── Fuel toggle — show recovery meals in the plan, or keep it simple ──── */}
+      {source !== "none" && (
+        <button
+          onClick={toggleFuel}
+          className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 text-left active:scale-[0.99] transition"
+        >
+          <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-full", fuelInPlan ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
+            <Utensils className="h-4 w-4" strokeWidth={1.9} />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-[12px] font-bold text-rose leading-tight">Recovery meals in plan</span>
+            <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? "Each session shows what to eat after ✿" : "Plan shows sessions only"}</span>
+          </span>
+          <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
+            <span className={["absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all", fuelInPlan ? "left-4.5" : "left-0.5"].join(" ")} style={{ left: fuelInPlan ? "1.125rem" : "0.125rem" }} />
+          </span>
+        </button>
+      )}
+
+      {/* ── The week, day by day — image LEFT · info RIGHT (vignette, not banner) ── */}
       {source !== "none" && (
         <section className="rounded-3xl bg-white/85 border border-petal/60 p-3 sm:p-4">
-          <div className="flex flex-col gap-2">
+          {/* Edit-mode instruction — helps first-timers build their own week */}
+          {editing && source === "freestyle" && (
+            <div className="mb-2.5 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+              <p className="text-[11px] text-rose/80 leading-snug">
+                Tap any day to pick its <b className="font-bold text-hotpink">zone</b>, <b className="font-bold text-hotpink">feel</b> &amp; <b className="font-bold text-hotpink">length</b>. Choose <b className="font-bold text-hotpink">Rest day</b> to clear one. Tap <b className="font-bold text-hotpink">Done</b> when it's yours.
+              </p>
+            </div>
+          )}
+          <div className="flex flex-col gap-2.5">
             {DAYS.map((d) => {
               const isToday = d === todayKey;
               const sIdx = source === "program" ? programDay[d] : null;
               const freeplan = source === "freestyle" ? program?.[d] ?? null : null;
               const hasSession = sIdx !== null && sIdx !== undefined || !!freeplan;
+
+              // EDIT MODE — hand-pick zone · feel · length for this day
+              if (editing && source === "freestyle") {
+                const fp = freeplan;
+                return (
+                  <div key={d} className="rounded-2xl border border-petal/50 bg-white/70 p-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 shrink-0 text-center">
+                        <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      </div>
+                      <PickerField
+                        title="Choose a zone"
+                        className="flex-1 min-w-0"
+                        value={fp?.zone ?? "rest"}
+                        options={[{ value: "rest", label: "Rest day" }, ...ZONES.map((z) => ({ value: z.key, label: z.label }))]}
+                        onChange={(z) => {
+                          if (z === "rest") setDayPlan(d, null);
+                          else setDayPlan(d, { zone: z as Zone, intention: fp?.intention ?? "tonify", durationMin: fp?.durationMin ?? 20 });
+                        }}
+                      />
+                    </div>
+                    {fp && (
+                      <div className="mt-1.5 flex items-center gap-2 pl-11">
+                        <PickerField
+                          title="How should it feel?"
+                          className="flex-1 min-w-0"
+                          value={fp.intention}
+                          options={WORKOUT_INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+                          onChange={(v) => setDayPlan(d, { ...fp, intention: v as WorkoutIntention })}
+                        />
+                        <PickerField
+                          title="How long?"
+                          className="w-[5.6rem] shrink-0"
+                          value={String(fp.durationMin)}
+                          options={[10, 20, 30].map((m) => ({ value: String(m), label: `${m} min` }))}
+                          onChange={(v) => setDayPlan(d, { ...fp, durationMin: Number(v) as 10 | 20 | 30 })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              }
 
               // Program session for the day
               let title = "", sub = "", mins = 0, done = false, onTap: (() => void) | null = null;
@@ -1826,49 +1949,52 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                 image = ZONES.find((z) => z.key === freeplan.zone)?.image ?? HERO_IMAGES.session;
               }
 
-              // One card per day: the session (with its image) and — right below,
-              // in the SAME card — the meals to eat after THAT session.
-              return (
-                <div key={d} className={["rounded-2xl border overflow-hidden transition",
-                  isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10 animate-selected-glow" : "border-petal/50"].join(" ")}>
-                  {!hasSession ? (
-                    <div className="flex items-center gap-3 p-2.5 bg-white/70">
-                      <div className="w-12 shrink-0 text-center">
-                        <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                        {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
-                      </div>
-                      <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+              const showFuel = fuelInPlan && hasSession && !done;
+
+              // Rest day → simple compact row
+              if (!hasSession) {
+                return (
+                  <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/60 p-2.5">
+                    <div className="w-11 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
                     </div>
-                  ) : (
-                    <>
-                      {/* Session — image banner, tappable to start */}
-                      <button onClick={onTap ?? undefined} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
-                        <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-                        <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
-                            <p className={["text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate", done ? "line-through opacity-80" : ""].join(" ")}>{title}</p>
-                            <p className="text-[11px] text-white/85 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
-                          </div>
-                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow">
-                            {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />}
-                          </span>
-                        </div>
-                      </button>
-                      {/* Recovery fuel — SAME card, explicitly tied to this session */}
-                      {!done && (
-                        <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
-                          <FuelCard
-                            ctx={{ goal, phase: normalizePhase(phase), kind: "workout", intensity, activityLabel: title }}
-                            day={d}
-                            heading={`After your ${title}`}
-                            embedded
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
+                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                  </div>
+                );
+              }
+
+              // Session day → image LEFT, info (+ optional meals) RIGHT
+              return (
+                <div key={d} className={["flex rounded-2xl border overflow-hidden transition",
+                  isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10" : "border-petal/50"].join(" ")}>
+                  {/* LEFT — session vignette (full height), tappable to start */}
+                  <button onClick={onTap ?? undefined} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-left active:scale-[0.99] transition">
+                    <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                    <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white/95 bg-black/35 rounded-full px-1.5 py-0.5">{d}{isToday ? " ·today" : ""}</span>
+                    <span className={["absolute bottom-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow", isToday && !done ? "animate-soft-zoom" : ""].join(" ")}>
+                      {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />}
+                    </span>
+                  </button>
+
+                  {/* RIGHT — session title + (optional) meals */}
+                  <div className="flex-1 min-w-0 bg-white/70">
+                    <button onClick={onTap ?? undefined} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
+                      <p className={["text-sm font-bold leading-tight text-rose truncate", done ? "line-through text-rose/45" : ""].join(" ")}>{title}</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
+                    </button>
+                    {showFuel && (
+                      <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
+                        <FuelCard
+                          ctx={{ goal, phase: normalizePhase(phase), kind: "workout", intensity, activityLabel: title }}
+                          day={d}
+                          heading={`After your ${title}`}
+                          embedded
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1890,10 +2016,10 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
         </section>
       )}
 
-      {/* ── Confirm: freestyle replaces an active program ───────────────────── */}
-      {confirmFreestyle && activeProgram && (
-        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
-          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* ── Confirm: freestyle replaces an active program — portaled & centered ── */}
+      {confirmFreestyle && activeProgram && createPortal(
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
+          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
             <p className="text-sm text-rose/80 mb-4">A freestyle week will replace your <span className="font-bold">{activeProgram.title}</span> plan. Your program progress is kept if you come back to it.</p>
             <div className="flex gap-2">
@@ -1901,7 +2027,8 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <button onClick={generateFreestyle} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
