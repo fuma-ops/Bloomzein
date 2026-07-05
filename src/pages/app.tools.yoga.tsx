@@ -4,13 +4,13 @@ import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
-  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info,
+  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, FUEL_IN_PLAN_EVENT } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
@@ -1160,6 +1160,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const [schedule, setSchedule] = useState<Record<string, string | null>>({});
   const [reminder, setReminder] = useState("07:30");
   const [editing, setEditing] = useState(false);
+  // Recovery meals in the plan — on by default; user can switch it off (shared with Workout).
+  const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
+  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+  useEffect(() => {
+    const sync = () => setFuelInPlan(readFuelInPlan());
+    window.addEventListener(FUEL_IN_PLAN_EVENT, sync);
+    return () => window.removeEventListener(FUEL_IN_PLAN_EVENT, sync);
+  }, []);
 
   // Cross-tool fuel: her body goal + real cycle phase decide the meals we
   // suggest after each planned flow (falls back to the yoga phase suggestion).
@@ -1304,6 +1312,20 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           </div>
         </div>
 
+        {/* Recovery meals in plan — on by default, tap to switch off */}
+        <button onClick={toggleFuel} className="w-full mb-3 flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 text-left active:scale-[0.99] transition">
+          <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-full", fuelInPlan ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
+            <Utensils className="h-4 w-4" strokeWidth={1.9} />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-[12px] font-bold text-rose leading-tight">Recovery meals in plan</span>
+            <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? "Each flow shows what to eat after ✿" : "Plan shows flows only"}</span>
+          </span>
+          <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
+            <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "1.125rem" : "0.125rem" }} />
+          </span>
+        </button>
+
         <div className="flex flex-col gap-2">
           {days.map((d) => {
             const focus = schedule[d];
@@ -1356,16 +1378,18 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                       </button>
                       {/* RIGHT — flow title + recovery meals on a soft translucent panel */}
                       <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-md p-2.5 sm:p-3">
-                        <div className="mb-1.5">
+                        <div className={fuelInPlan ? "mb-1.5" : ""}>
                           <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{focus}</p>
                           <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {meta.duration} min</p>
                         </div>
-                        <FuelCard
-                          ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
-                          day={d}
-                          heading={`After your ${focus}`}
-                          embedded
-                        />
+                        {fuelInPlan && (
+                          <FuelCard
+                            ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                            day={d}
+                            heading={`After your ${focus}`}
+                            embedded
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
