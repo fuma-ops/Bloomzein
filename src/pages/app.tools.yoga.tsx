@@ -1,25 +1,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
-  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw,
+  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
-import { LevelStreak } from "@/components/bloom/LevelStreak";
-import { NextStepBanner } from "@/components/bloom/NextStepBanner";
-import { flushCloudSync } from "@/lib/cloudSync";
+import { readTodayWaterCount } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
-import { PickerField } from "@/components/bloom/PickerField";
-import { YogaOnboarding, type YogaTourTab } from "@/components/bloom/YogaOnboarding";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 
 // ===================== DATA =====================
@@ -437,12 +431,10 @@ const CLOSING: Record<Lang, string> = {
 // ===================== STORAGE / STATE KEYS =====================
 
 const ONBOARD_KEY = "bloom:yoga-onboarded";
-const YOGA_TOUR_KEY = "bloom:yoga-tour-done";
 const STEP_KEY = "bloom:yoga-step"; // 1 learn, 2 visual, 3 audio
 const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
 export const REMINDER_KEY = "bloom:yoga-reminder";
-export const YOGA_DURATIONS_KEY = "bloom:yoga-durations";
 interface Streak { count: number; lastISO: string | null; }
 
 /** Maps the app-wide 5-phase cycle to Yoga's 4-phase model. */
@@ -646,20 +638,13 @@ export default function YogaPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "plan" });
   const [lowWater, setLowWater] = useState(false);
-  // Guided sparkle tour — auto on first visit, replayable via the hero Guide chip.
-  const [tourDone, setTourDone] = useState(false);
-  const [showTour, setShowTour] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-  const goTourTab = (t: YogaTourTab) => setView({ kind: t === "discover" ? "home" : t === "library" ? "library" : "plan" });
 
   useEffect(() => {
     try {
       setOnboarded(localStorage.getItem(ONBOARD_KEY) === "1");
-      setTourDone(localStorage.getItem(YOGA_TOUR_KEY) === "1");
       const s = Number(localStorage.getItem(STEP_KEY) || "1");
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
-    setHydrated(true);
     // Deep-link from Today / Cycle: open straight into the prescribed flow setup.
     const launch = readLaunch<{ intention: string; durationMin: number }>(LAUNCH_YOGA_KEY);
     if (launch) {
@@ -683,19 +668,9 @@ export default function YogaPage() {
     advanceStep(1);
   };
 
-  const finishTour = () => {
-    try { localStorage.setItem(YOGA_TOUR_KEY, "1"); } catch {}
-    setTourDone(true);
-    setShowTour(false);
-  };
-  const isTabbed = view.kind === "plan" || view.kind === "home" || view.kind === "library";
-  const tourVisible = showTour || (hydrated && !tourDone && isTabbed);
-
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
-
-      {tourVisible && <YogaOnboarding onTab={goTourTab} onDone={finishTour} />}
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
@@ -708,14 +683,6 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
-          onGuide={() => setShowTour(true)}
-          onReset={async () => {
-            if (window.confirm("Reset the Yoga tool to a fresh start? This clears your week, sessions and progress here so you can see the first-time experience.")) {
-              resetToolState("yoga");
-              await flushCloudSync(); // push the deletions before reload, else cloud restores them
-              window.location.reload();
-            }
-          }}
         />
       )}
 
@@ -810,15 +777,13 @@ const HERO_CONTENT: Record<"home" | "library" | "plan", { title: string; subtitl
 };
 
 function YogaHero({
-  active, onDiscover, onLibrary, onMyPlan, onTryFlow, onGuide, onReset,
+  active, onDiscover, onLibrary, onMyPlan, onTryFlow,
 }: {
   active: "home" | "library" | "plan";
   onDiscover: () => void;
   onLibrary: () => void;
   onMyPlan: () => void;
   onTryFlow: () => void;
-  onGuide?: () => void;
-  onReset?: () => void;
 }) {
   const tabClass = (isActive: boolean) =>
     [
@@ -833,26 +798,6 @@ function YogaHero({
       <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
-        {onReset && (
-          <button
-            onClick={onReset}
-            aria-label="Reset tool"
-            title="Reset — preview the first-time experience"
-            className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
-          >
-            <RotateCcw className="h-3 w-3" /> Reset
-          </button>
-        )}
-        {onGuide && (
-          <button
-            onClick={onGuide}
-            className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
-          >
-            <Sparkles className="h-3 w-3" /> Guide
-          </button>
-        )}
-      </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div key={active} className="animate-scale-in">
           <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">{title}</h1>
@@ -860,9 +805,9 @@ function YogaHero({
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
-            <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
-            <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
-            <button data-tour="yg-tab-library" onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
+            <button onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
+            <button onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
+            <button onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
           </div>
         </div>
       </div>
@@ -1136,9 +1081,9 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
         })}
       </div>
 
-      {confirm && createPortal(
-        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirm(null)}>
-          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {confirm && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={() => setConfirm(null)}>
+          <div className="w-full max-w-xs rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <img src={confirm.image} alt="" className="h-28 w-full object-cover object-top" />
             <div className="p-5 text-center">
               <p className="font-script text-2xl text-hotpink leading-none mb-1">{confirm.title}</p>
@@ -1155,8 +1100,7 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
               </div>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </section>
   );
@@ -1214,7 +1158,6 @@ function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string;
 
 function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Intention, durationMin: number) => void }) {
   const [schedule, setSchedule] = useState<Record<string, string | null>>({});
-  const [durations, setDurations] = useState<Record<string, number>>({});
   const [reminder, setReminder] = useState("07:30");
   const [editing, setEditing] = useState(false);
 
@@ -1225,31 +1168,24 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const fuelPhase = normalizePhase(
     realPhase && realPhase !== "any" ? realPhase : phase === "menstrual" ? "period" : phase,
   );
-  // Shared preference: show recovery meals inside the plan, or keep it simple.
-  const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
-  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(SCHEDULE_KEY);
-      if (raw) setSchedule(JSON.parse(raw));
-      // else: leave the week empty — a first-time user chooses "Sync to my
-      // cycle" or "Build my own week" from the empty state below.
+      if (raw) {
+        setSchedule(JSON.parse(raw));
+      } else {
+        // Pre-fill the week from the current cycle phase — the user can still change it.
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const plan = PHASE_DEFAULT_PLAN[phase];
+        const defaults: Record<string, string | null> = {};
+        days.forEach((d, i) => { defaults[d] = plan[i]; });
+        setSchedule(defaults);
+        localStorage.setItem(SCHEDULE_KEY, JSON.stringify(defaults));
+      }
       const r = localStorage.getItem(REMINDER_KEY); if (r) setReminder(r);
-      const dr = localStorage.getItem(YOGA_DURATIONS_KEY); if (dr) setDurations(JSON.parse(dr));
     } catch {}
   }, [phase]);
-
-  // Fill the week with flows matched to the current cycle phase (opt-in).
-  const syncToCycle = () => {
-    const dayList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const plan = PHASE_DEFAULT_PLAN[phase];
-    const next: Record<string, string | null> = {};
-    dayList.forEach((d, i) => { next[d] = plan[i] ?? null; });
-    setSchedule(next);
-    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
-    askForNotifications();
-  };
 
   // A schedule is only useful if we can actually nudge her — ask right when
   // she picks a practice day (a real user gesture), not via a banner she may dismiss.
@@ -1266,11 +1202,6 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     setSchedule(next);
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
     if (val) askForNotifications();
-  };
-  const setDuration = (day: string, n: number) => {
-    const next = { ...durations, [day]: n };
-    setDurations(next);
-    try { localStorage.setItem(YOGA_DURATIONS_KEY, JSON.stringify(next)); } catch {}
   };
   const updateReminder = (v: string) => {
     setReminder(v);
@@ -1317,26 +1248,42 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Emotional release"];
   const todayKey = WEEKDAY_LABELS[new Date().getDay()];
-  const weekEmpty = days.every((d) => !schedule[d]);
+  const todayLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
+  const todayFocus = schedule[todayKey];
+  const todayMeta = todayFocus ? FOCUS_META[todayFocus] : null;
 
-  const startFocus = (focus: string | null | undefined, day?: string) => {
+  const startFocus = (focus: string | null | undefined) => {
     if (!focus) return;
     const meta = FOCUS_META[focus];
-    if (meta) onStart(meta.intention, (day ? durations[day] : undefined) ?? meta.duration);
+    if (meta) onStart(meta.intention, meta.duration);
   };
 
   return (
     <div className="space-y-4">
-      {/* Cute motivation strip — real movement level + streak */}
-      <LevelStreak streak={readYogaStreak().count} />
-
-      {/* Post-tour guidance — once a week exists but no flow done yet */}
-      {!editing && !weekEmpty && readYogaSessionCount() === 0 && (
-        <NextStepBanner
-          label="Begin your first flow"
-          hint="Tap the glowing ▶ on today's card — or Edit to shape the week your way ✿"
-        />
-      )}
+      {/* ── TODAY hero — one-tap entry ──────────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-md animate-scale-in">
+        {todayMeta ? (
+          <>
+            <img src={todayMeta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" />
+            <div className="relative z-[2] p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">Today · {todayLong}</p>
+              <h2 className="font-script text-3xl sm:text-4xl text-white leading-none mt-0.5 drop-shadow">{todayFocus}</h2>
+              <p className="text-xs sm:text-sm text-white/90 mt-1 drop-shadow">{todayMeta.blurb} · {todayMeta.duration} min</p>
+              <button onClick={() => startFocus(todayFocus)} className="mt-3 bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white">
+                <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Start today's flow
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="bg-gradient-to-br from-blush/60 to-petal/40 p-4 sm:p-5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Today · {todayLong}</p>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none mt-0.5">Rest day ✿</h2>
+            <p className="text-xs sm:text-sm text-rose/75 mt-1">Stillness is part of the practice. Or flow gently if you feel called.</p>
+            <button onClick={() => onStart("stress", 10)} className="mt-3 rounded-full bg-white/90 border border-petal/60 px-4 py-2 text-xs font-bold text-hotpink">Or a 10-min calm flow</button>
+          </div>
+        )}
+      </section>
 
       {/* ── The week, day by day ────────────────────────────────────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
@@ -1357,146 +1304,76 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           </div>
         </div>
 
-        {/* Edit-mode instruction — helps first-timers build their own week */}
-        {editing && (
-          <div className="mb-3 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-            <p className="text-[11px] text-rose/80 leading-snug">
-              Tap any day to choose its <b className="font-bold text-hotpink">focus</b> and <b className="font-bold text-hotpink">length</b>. Pick <b className="font-bold text-hotpink">Rest day</b> to clear one. Tap <b className="font-bold text-hotpink">Done</b> when your week feels right.
-            </p>
-          </div>
-        )}
-
-        {/* Fuel toggle — meals in the plan, or just the flows (once a week exists) */}
-        {!editing && !weekEmpty && (
-          <button
-            onClick={toggleFuel}
-            className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 mb-3 text-left active:scale-[0.99] transition"
-          >
-            <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-full", fuelInPlan ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
-              <Utensils className="h-4 w-4" strokeWidth={1.9} />
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-[12px] font-bold text-rose leading-tight">Recovery meals in plan</span>
-              <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? "Each flow shows what to eat after ✿" : "Plan shows flows only"}</span>
-            </span>
-            <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
-              <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "1.125rem" : "0.125rem" }} />
-            </span>
-          </button>
-        )}
-
-        {/* Empty week (first-time / after reset) → choose how to start */}
-        {!editing && weekEmpty ? (
-          <div className="space-y-2.5">
-            <div>
-              <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Set up your soft week ✿</h3>
-              <p className="text-[12px] text-rose/70">Choose how to start — you can always change it.</p>
-            </div>
-            <button onClick={syncToCycle} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
-              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose">Sync to my cycle</p>
-                <p className="text-[11px] text-rose/70 leading-snug">Auto-fill the week with flows matched to your {phase} phase.</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
-            </button>
-            <button onClick={() => setEditing(true)} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
-              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose">Build my own week</p>
-                <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day's focus &amp; length — e.g. Strength Mon, Sleep prep Fri.</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
-            </button>
-          </div>
-        ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2">
           {days.map((d) => {
             const focus = schedule[d];
             const meta = focus ? FOCUS_META[focus] : null;
             const isToday = d === todayKey;
-            const showFuel = fuelInPlan && !!focus && !!meta;
-
-            // Editing → hand-pick focus + length per day (app-styled pickers)
-            if (editing) {
-              return (
-                <div key={d} className="rounded-2xl border border-petal/50 bg-white/70 p-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 shrink-0 text-center">
+            // One card per day: the flow (with its image) and — right below, in
+            // the SAME card — the meals to eat after THAT flow.
+            return (
+              <div key={d} className={["rounded-2xl border overflow-hidden transition",
+                isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10 animate-selected-glow" : "border-petal/50"].join(" ")}>
+                {editing ? (
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                    <div className="w-12 shrink-0 text-center">
                       <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
                       {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
                     </div>
-                    <PickerField
-                      title="Choose a focus"
-                      className="flex-1 min-w-0"
-                      value={focus ?? "rest"}
-                      options={options.map((o) => ({ value: o ?? "rest", label: o ?? "Rest day" }))}
-                      onChange={(v) => update(d, v === "rest" ? null : v)}
-                    />
+                    <select
+                      value={focus ?? ""}
+                      onChange={(e) => update(d, e.target.value || null)}
+                      className="flex-1 rounded-lg bg-white/90 border border-petal/60 px-2 py-2 text-xs font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30"
+                    >
+                      {options.map((o) => <option key={o ?? "rest"} value={o ?? ""}>{o ?? "Rest day"}</option>)}
+                    </select>
                   </div>
-                  {focus && meta && (
-                    <div className="mt-1.5 pl-11">
-                      <PickerField
-                        title="How long?"
-                        className="w-[6.5rem]"
-                        value={String(durations[d] ?? meta.duration)}
-                        options={[10, 15, 20, 25, 30].map((m) => ({ value: String(m), label: `${m} min` }))}
-                        onChange={(v) => setDuration(d, Number(v))}
-                      />
+                ) : !focus || !meta ? (
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70">
+                    <div className="w-12 shrink-0 text-center">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
                     </div>
-                  )}
-                </div>
-              );
-            }
-
-            // Rest day → simple compact row
-            if (!focus || !meta) {
-              return (
-                <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/60 p-2.5">
-                  <div className="w-11 shrink-0 text-center">
-                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
                   </div>
-                  <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
-                </div>
-              );
-            }
-
-            // Flow day → image LEFT, info (+ optional meals) RIGHT
-            return (
-              <div key={d} className={["flex rounded-2xl border overflow-hidden transition",
-                isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10" : "border-petal/50"].join(" ")}>
-                {/* LEFT — flow vignette */}
-                <button onClick={() => startFocus(focus, d)} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-left active:scale-[0.99] transition">
-                  <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                  <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white/95 bg-black/35 rounded-full px-1.5 py-0.5">{d}{isToday ? " ·today" : ""}</span>
-                  <span className={["absolute bottom-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow", isToday ? "animate-soft-zoom" : ""].join(" ")}><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
-                </button>
-
-                {/* RIGHT — flow title + (optional) meals */}
-                <div className="flex-1 min-w-0 bg-white/70">
-                  <button onClick={() => startFocus(focus, d)} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
-                    <p className="text-sm font-bold leading-tight text-rose truncate">{focus}</p>
-                    <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {durations[d] ?? meta.duration} min</p>
-                  </button>
-                  {showFuel && (
-                    <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
-                      <FuelCard
-                        ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
-                        day={d}
-                        heading={`After your ${focus}`}
-                        embedded
-                      />
+                ) : (
+                  // One big photo behind the whole day: fully visible on the left,
+                  // content on a translucent veil on the right so the photo peeks through.
+                  <div className="relative">
+                    <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+                    {/* keep the left edge crisp, softly veil toward the content side */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent from-[26%] via-white/45 to-white/70" />
+                    <div className="relative z-10 flex items-stretch">
+                      {/* LEFT — the image stays visible; tap to start the flow */}
+                      <button onClick={() => startFocus(focus)} aria-label={`Start ${focus}`}
+                        className="relative w-[30%] sm:w-[25%] shrink-0 flex flex-col justify-between p-2.5 text-left active:scale-[0.98] transition">
+                        <span className="w-fit rounded-full bg-black/40 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                          {d}{isToday ? " · Today" : ""}
+                        </span>
+                        <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-hotpink shadow-lg shadow-hotpink/30">
+                          <Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
+                        </span>
+                      </button>
+                      {/* RIGHT — flow title + recovery meals on a soft translucent panel */}
+                      <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-md p-2.5 sm:p-3">
+                        <div className="mb-1.5">
+                          <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{focus}</p>
+                          <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {meta.duration} min</p>
+                        </div>
+                        <FuelCard
+                          ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                          day={d}
+                          heading={`After your ${focus}`}
+                          embedded
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
-        )}
       </section>
     </div>
   );
@@ -1818,7 +1695,6 @@ function SessionPlayer({
       localStorage.setItem(STREAK_KEY, JSON.stringify(next));
       window.dispatchEvent(new Event("bloom:yoga-updated"));
     } catch {}
-    incrementYogaSession(); // feeds the movement level (logical, real count)
     onDone();
   }
 
