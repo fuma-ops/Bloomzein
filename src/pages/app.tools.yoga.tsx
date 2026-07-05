@@ -1358,9 +1358,23 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     </div>
                     <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
                   </div>
+                ) : !fuelInPlan ? (
+                  // Meals off → a compact flow vignette (image banner with the title)
+                  <button onClick={() => startFocus(focus)} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
+                    <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+                    <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
+                        <p className="text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate">{focus}</p>
+                        <p className="text-[11px] text-white/85 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                      </div>
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
+                    </div>
+                  </button>
                 ) : (
-                  // One big photo behind the whole day: fully visible on the left,
-                  // content on a translucent veil on the right so the photo peeks through.
+                  // Meals on → one big photo behind the whole day: fully visible on the
+                  // left, content on a translucent veil on the right so the photo peeks through.
                   <div className="relative">
                     <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
                     {/* keep the left edge crisp, softly veil toward the content side */}
