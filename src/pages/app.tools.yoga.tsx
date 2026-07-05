@@ -1337,30 +1337,38 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
                   </div>
                 ) : (
-                  <>
-                    {/* Flow — image banner, tappable to start */}
-                    <button onClick={() => startFocus(focus)} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
-                      <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-                      <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
-                          <p className="text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate">{focus}</p>
-                          <p className="text-[11px] text-white/85 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                  // One big photo behind the whole day: fully visible on the left,
+                  // content on a translucent veil on the right so the photo peeks through.
+                  <div className="relative">
+                    <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+                    {/* keep the left edge crisp, softly veil toward the content side */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent from-[26%] via-white/45 to-white/70" />
+                    <div className="relative z-10 flex items-stretch">
+                      {/* LEFT — the image stays visible; tap to start the flow */}
+                      <button onClick={() => startFocus(focus)} aria-label={`Start ${focus}`}
+                        className="relative w-[30%] sm:w-[25%] shrink-0 flex flex-col justify-between p-2.5 text-left active:scale-[0.98] transition">
+                        <span className="w-fit rounded-full bg-black/40 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                          {d}{isToday ? " · Today" : ""}
+                        </span>
+                        <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-hotpink shadow-lg shadow-hotpink/30">
+                          <Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
+                        </span>
+                      </button>
+                      {/* RIGHT — flow title + recovery meals on a soft translucent panel */}
+                      <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-md p-2.5 sm:p-3">
+                        <div className="mb-1.5">
+                          <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{focus}</p>
+                          <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {meta.duration} min</p>
                         </div>
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
+                        <FuelCard
+                          ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                          day={d}
+                          heading={`After your ${focus}`}
+                          embedded
+                        />
                       </div>
-                    </button>
-                    {/* Recovery fuel — SAME card, explicitly tied to this flow */}
-                    <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
-                      <FuelCard
-                        ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
-                        day={d}
-                        heading={`After your ${focus}`}
-                        embedded
-                      />
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             );
