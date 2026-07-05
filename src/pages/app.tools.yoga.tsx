@@ -1359,18 +1359,17 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
                   </div>
                 ) : !fuelInPlan ? (
-                  // Meals off → a compact flow vignette (image banner with the title)
-                  <button onClick={() => startFocus(focus)} className="relative block w-full h-24 sm:h-28 overflow-hidden text-left active:scale-[0.99] transition">
-                    <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-                    <div className="relative z-10 flex h-full items-center justify-between gap-2 p-3">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-white/85">{d}{isToday ? " · Today" : ""}</p>
-                        <p className="text-sm sm:text-base font-bold leading-tight text-white drop-shadow truncate">{focus}</p>
-                        <p className="text-[11px] text-white/85 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
-                      </div>
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-hotpink shadow"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
+                  // Meals off → a small left thumbnail showing the WHOLE image (not cropped) + title beside it
+                  <button onClick={() => startFocus(focus)} className="flex items-center gap-3 p-2.5 w-full text-left bg-white/70 active:scale-[0.99] transition hover:bg-blush/25">
+                    <div className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden grid place-items-center bg-gradient-to-br from-blush/60 to-petal/40">
+                      <img src={meta.image} alt="" className="h-full w-full object-contain" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}{isToday ? " · Today" : ""}</p>
+                      <p className="text-sm sm:text-base font-bold leading-tight text-hotpink truncate">{focus}</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {meta.duration} min</p>
+                    </div>
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
                   </button>
                 ) : (
                   // Meals on → one big photo behind the whole day: fully visible on the
@@ -1392,18 +1391,16 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                       </button>
                       {/* RIGHT — flow title + recovery meals on a soft translucent panel */}
                       <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-md p-2.5 sm:p-3">
-                        <div className={fuelInPlan ? "mb-1.5" : ""}>
+                        <div className="mb-1.5">
                           <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{focus}</p>
                           <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {meta.duration} min</p>
                         </div>
-                        {fuelInPlan && (
-                          <FuelCard
-                            ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
-                            day={d}
-                            heading={`After your ${focus}`}
-                            embedded
-                          />
-                        )}
+                        <FuelCard
+                          ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
+                          day={d}
+                          heading={`After your ${focus}`}
+                          embedded
+                        />
                       </div>
                     </div>
                   </div>
