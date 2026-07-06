@@ -791,8 +791,22 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
 
-  // Live daily energy balance — recomputes when meals change or profile changes.
-  const energy = useMemo(() => energyBalance(), [mealsVersion, profile]);
+  // Refresh when a workout/yoga is logged so burned calories flow in live.
+  const [trainTick, setTrainTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setTrainTick((t) => t + 1);
+    window.addEventListener("bloom:workout-updated", bump);
+    window.addEventListener("bloom:yoga-updated", bump);
+    window.addEventListener("storage", bump);
+    return () => {
+      window.removeEventListener("bloom:workout-updated", bump);
+      window.removeEventListener("bloom:yoga-updated", bump);
+      window.removeEventListener("storage", bump);
+    };
+  }, []);
+  // Live daily energy balance — recomputes when meals change, a session is
+  // logged, or the profile changes.
+  const energy = useMemo(() => energyBalance(), [mealsVersion, trainTick, profile]);
   // Real weight projection (pace from the calorie plan) for the chart.
   const weightProjection = useMemo(() => goalProjection(), [profile]);
 

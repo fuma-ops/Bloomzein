@@ -22,6 +22,7 @@ import {
   ChevronUp,
   RotateCcw,
   Dumbbell,
+  Flame,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -709,6 +710,12 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
           <Dumbbell className="h-3 w-3 shrink-0" /> {movementFoodLine(t)}
         </p>
       )}
+      {/* Eat-back: calories actually burned today are added to the target */}
+      {t.eatBack > 0 && (
+        <p className="mt-1.5 flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-1 text-[10.5px] font-black text-amber-700 w-fit">
+          <Flame className="h-3 w-3 shrink-0" /> +{t.eatBack} kcal burned today — added to your target
+        </p>
+      )}
       {/* Guided instruction — helps her understand the number from day one */}
       <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
         <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How to use</span>
@@ -764,9 +771,21 @@ function WeekTab({
   }, [fromDiet]);
 
   // Premium: a real, personalised daily nutrition target (body + goal +
-  // training load + cycle phase). Recompute when the plan changes so the
-  // eat-back and training-day count stay live.
-  const targets: TargetBreakdown = useMemo(() => computeTargets(true), [plan]);
+  // training load + cycle phase). Recompute when the plan changes OR a
+  // workout/yoga is logged, so the eat-back flows in live.
+  const [trainTick, setTrainTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setTrainTick((t) => t + 1);
+    window.addEventListener("bloom:workout-updated", bump);
+    window.addEventListener("bloom:yoga-updated", bump);
+    window.addEventListener("storage", bump);
+    return () => {
+      window.removeEventListener("bloom:workout-updated", bump);
+      window.removeEventListener("bloom:yoga-updated", bump);
+      window.removeEventListener("storage", bump);
+    };
+  }, []);
+  const targets: TargetBreakdown = useMemo(() => computeTargets(true), [plan, trainTick]);
   // Yoga-only days (yoga planned, no workout) get a gentle recovery-food cue.
   const yogaDaySet = useMemo(() => new Set(readYogaPlanDays()), []);
 
