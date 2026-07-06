@@ -1184,15 +1184,15 @@ export default function DietPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* HERO — image with gradient + tab pills at bottom */}
-      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-hero-border-signal">
+      {/* HERO — compact fixed height (stays small on desktop, like the Budget hero) */}
+      <div className="relative w-full min-h-[150px] sm:min-h-[166px] lg:min-h-[178px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-hero-border-signal">
         <img src="/images/meal-oats.jpg" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">
           {/* Title block */}
           <div className="flex-1 flex flex-col justify-center max-w-[55%] sm:max-w-[45%] lg:max-w-[38%]">
-            <h1 className="animate-fade-in font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md" style={{ animationDelay: "0ms" }}>
+            <h1 className="animate-fade-in font-script text-2xl sm:text-3xl lg:text-4xl text-white leading-none drop-shadow-md" style={{ animationDelay: "0ms" }}>
               {TAB_HERO[tab].title}
             </h1>
             <p className="animate-fade-in mt-1 text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-white/75 drop-shadow" style={{ animationDelay: "120ms" }}>
