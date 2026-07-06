@@ -2345,7 +2345,7 @@ function SessionActive({ session, onExit, onDone }: {
                   overlaid on it (as yoga overlays its breath pacer) so the
                   photo keeps the whole section instead of sharing it. */}
               <div className="relative flex-1 min-h-0 w-full rounded-3xl overflow-hidden border border-petal/60 shadow-md bg-[oklch(0.96_0.04_350)]">
-                <ExercisePhoto exercise={exercise} zone={session.zone} className="absolute inset-0 w-full h-full object-cover" />
+                <ExercisePhoto exercise={exercise} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
                 <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 rounded-full bg-white/85 backdrop-blur p-1.5 shadow-lg">
                   <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} />
                 </div>
