@@ -23,6 +23,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
+import { PickerField } from "@/components/bloom/PickerField";
 import {
   RECIPES,
   PANTRY,
@@ -317,11 +318,10 @@ export default function MealsPage() {
     const refresh = () => setTodaySymptoms(readTodaySymptoms());
     window.addEventListener("storage", refresh);
 
-    // FIRST-USE ONLY: if the user has never chosen a phase, pre-select their
-    // real cycle phase so meals start phase-appropriate. Once they've made a
-    // choice (including "any"), it's theirs — we never override it again.
+    // Default the phase from the Cycle Tracker: whenever meals opens on "any",
+    // pre-select the user's real current phase so meals start phase-appropriate.
     try {
-      if (localStorage.getItem(LS.phase) == null) {
+      if (phase === "any") {
         const real = readCyclePhase();
         if (real && real !== "any") setPhase(real as CyclePhase);
       }
@@ -456,13 +456,6 @@ export default function MealsPage() {
   return (
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
-      {fromDiet && (
-        <div className="mb-3 flex items-center gap-3 rounded-2xl bg-hotpink/10 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Sparkles className="h-4 w-4" /></span>
-          <p className="flex-1 text-[12px] text-rose/80 leading-snug">We set up your week to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</p>
-          <button onClick={dismissFromDiet} aria-label="Dismiss" className="text-rose/50 hover:text-hotpink"><X className="h-4 w-4" /></button>
-        </div>
-      )}
       {/* HERO — compact, matches Budget Planner height */}
       <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
         <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
@@ -568,6 +561,7 @@ export default function MealsPage() {
             onRegen={regenDay}
             owned={owned}
             proteinBoostDay={proteinBoostDay}
+            fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
           />
@@ -670,7 +664,7 @@ function MealsGuide({ onDone, setTab }: { onDone: () => void; setTab: (t: TabKey
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDay,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDay, fromDiet, onDismissFromDiet,
 }: any) {
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
@@ -752,101 +746,59 @@ function WeekTab({
         );
       })()}
 
-      {/* Intention picker */}
+      {/* This week's vibe — compact app-styled pickers + guided actions */}
       <Glass className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <p className="font-script text-2xl text-hotpink">This week's vibe</p>
-          <PhasePill phase={phase} setPhase={setPhase} />
-        </div>
-        <div data-tour="meals-vibe" className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
-          {INTENTIONS.map((i) => {
-            const active = intention === i.key;
-            const recommended = i.key === "cycle" && phase !== "any";
-            return (
-              <button
-                key={i.key} onClick={() => setIntention(i.key)}
-                className={[
-                  "relative text-left rounded-xl sm:rounded-2xl border p-2 sm:p-3 transition active:scale-[0.98]",
-                  active
-                    ? "bg-hotpink text-white border-hotpink shadow shadow-hotpink/30"
-                    : "bg-white/80 border-petal/60 text-rose hover:bg-blush",
-                ].join(" ")}
-              >
-                <div className="text-xs sm:text-sm font-semibold leading-tight">{i.label}</div>
-                <div className={`text-[10px] sm:text-[11px] mt-0.5 leading-tight ${active ? "text-white/80" : "text-rose/60"}`}>{i.blurb}</div>
-                {recommended && !active && (
-                  <span
-                    className="absolute top-1 right-1 text-[8px] sm:text-[9px] font-bold uppercase rounded-full px-1 sm:px-1.5 py-0.5"
-                    style={{
-                      background: 'linear-gradient(135deg,#EC4899,#DB2777)',
-                      color: 'white',
-                      animation: 'ctaBreathe 2.2s ease-in-out infinite',
-                      boxShadow: '0 0 8px rgba(236,72,153,.55)',
-                    }}
-                  >For you</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        {/* Action buttons — always 3 equal columns */}
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          {/* Regenerate */}
-          <button
-            onClick={handleGenerate}
-            disabled={planEmpty || generating}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border py-3 px-2 font-semibold text-[11px] active:scale-[.97] transition-all disabled:opacity-35"
-            style={{
-              borderColor: 'rgba(236,72,153,.35)',
-              color: '#EC4899',
-              background: 'rgba(236,72,153,.06)',
-            }}
-          >
-            <RefreshCw className="h-4 w-4 animate-spin" style={{ animationDuration: '3s' }} />
-            Regenerate
-          </button>
-
-          {/* Build pantry — pink + bouncing Apple */}
-          <button
-            onClick={goPantry}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 py-3 px-2 font-semibold text-[11px] active:scale-[.97] transition-all"
-            style={{
-              borderColor: '#EC4899',
-              color: '#EC4899',
-              background: 'rgba(236,72,153,.08)',
-              boxShadow: '0 2px 10px rgba(236,72,153,.18)',
-            }}
-          >
-            <Apple className="h-4 w-4 animate-bounce" style={{ animationDuration: '1.2s' }} />
-            Build pantry
-          </button>
-
-          {/* Plan my week — pink gradient primary */}
-          <button
-            data-tour="meals-plan"
-            onClick={handleGenerate}
-            disabled={generating}
-            className="relative overflow-hidden flex flex-col items-center justify-center gap-1.5 rounded-xl py-3 px-2 font-semibold text-[11px] text-white active:scale-[.97] transition-all"
-            style={{
-              background: generating
-                ? 'linear-gradient(135deg,#DB2777,#9D174D)'
-                : 'linear-gradient(135deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)',
-              boxShadow: '0 4px 14px rgba(236,72,153,.35)',
-              animation: generating ? 'none' : 'ctaBreathe 3s ease-in-out infinite',
-            }}
-          >
-            <span aria-hidden className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.15) 50%,transparent 80%)',
-                backgroundSize: '200% 100%',
-                animation: 'bloom-shimmer 2.4s linear infinite',
-              }}
+        <p className="font-script text-2xl text-hotpink mb-3">This week's vibe</p>
+        <div data-tour="meals-vibe" className="flex flex-wrap gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Cycle phase</p>
+            <PickerField
+              value={phase} title="Cycle phase"
+              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+              onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[8.5rem] !text-sm !py-2 !rounded-full"
             />
-            {generating
-              ? <RefreshCw className="h-4 w-4 animate-spin relative z-10" />
-              : <Sparkles className="h-4 w-4 relative z-10 opacity-90" />}
-            <span className="relative z-10">{generating ? 'Building…' : 'Plan my week'}</span>
-          </button>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Vibe</p>
+            <PickerField
+              value={intention} title="This week's vibe"
+              options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+              onChange={(v) => setIntention(v as Intention)} className="min-w-[9.5rem] !text-sm !py-2 !rounded-full"
+            />
+          </div>
+        </div>
+        <p className="mt-2.5 text-[12px] text-rose/70 leading-snug">
+          <span className="italic">{INTENTIONS.find((i) => i.key === intention)?.blurb}</span>
+          {phase !== "any" && intention !== "cycle" && <> · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">match my {phase} phase</button></>}
+          {phaseSynced && <span className="text-hotpink font-semibold"> · synced to your phase ✿</span>}
+        </p>
+
+        {/* Next-step banner — green + pink, recommends what to do next */}
+        <div className="mt-3 flex items-center gap-2.5 rounded-2xl p-2.5 text-white shadow-md" style={{ background: "linear-gradient(90deg,#10B981 0%,#EC4899 100%)" }}>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/25">{planEmpty ? <Sparkles className="h-4 w-4" /> : <Check className="h-4 w-4" strokeWidth={3} />}</span>
+          <p className="flex-1 text-[12px] font-semibold leading-snug">{planEmpty ? (owned.size ? "You're set — tap Plan my week to build it ✿" : "Next: build your pantry, then plan your week ✿") : "Your week is planned ✿ — scroll down to see it."}</p>
+        </div>
+
+        {/* 3 vignettes — clear choices with descriptions */}
+        <div className="mt-3 space-y-2">
+          {[
+            { key: "pantry", Icon: Apple, title: "Build my pantry", desc: "Tell me what you already own — I plan from your shelves.", cta: "Set up", onClick: goPantry, primary: false, disabled: false, done: owned.size > 0 },
+            { key: "plan", Icon: Sparkles, title: "Plan my week", desc: "Generate a full week from your vibe & phase.", cta: generating ? "Building…" : "Plan", onClick: handleGenerate, primary: true, disabled: generating, done: !planEmpty },
+            { key: "regen", Icon: RefreshCw, title: "Regenerate", desc: "Not feeling it? Shuffle a fresh week.", cta: "Shuffle", onClick: handleGenerate, primary: false, disabled: planEmpty || generating, done: false },
+          ].map((v) => (
+            <button
+              key={v.key} onClick={v.onClick} disabled={v.disabled}
+              data-tour={v.key === "plan" ? "meals-plan" : undefined}
+              className={["w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.99] disabled:opacity-40", v.primary ? "border-transparent bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow-lg shadow-hotpink/30 animate-cta-bounce" : "border-petal/60 bg-white/80 hover:bg-blush"].join(" ")}
+            >
+              <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", v.primary ? "bg-white/25 text-white" : "bg-hotpink/10 text-hotpink"].join(" ")}><v.Icon className="h-5 w-5" /></span>
+              <span className="flex-1 min-w-0">
+                <span className={["flex items-center gap-1 text-sm font-bold leading-tight", v.primary ? "text-white" : "text-hotpink"].join(" ")}>{v.title}{v.done && <Check className={["h-3.5 w-3.5", v.primary ? "text-white" : "text-emerald-500"].join(" ")} strokeWidth={3} />}</span>
+                <span className={["block text-[11px] leading-snug", v.primary ? "text-white/85" : "text-rose/60"].join(" ")}>{v.desc}</span>
+              </span>
+              <span className={["shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold", v.primary ? "bg-white/25 text-white" : "bg-hotpink/10 text-hotpink"].join(" ")}>{v.cta} <ChevronRight className="h-3.5 w-3.5" /></span>
+            </button>
+          ))}
         </div>
       </Glass>
 
@@ -878,6 +830,15 @@ function WeekTab({
           </Glass>
         );
       })()}
+
+      {/* Diet-synced banner — green + pink, right before the week's meals */}
+      {fromDiet && (
+        <div className="flex items-center gap-3 rounded-2xl p-3 text-white shadow-lg shadow-emerald-300/30 animate-fade-in" style={{ background: "linear-gradient(90deg,#10B981 0%,#DB2777 100%)" }}>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><Sparkles className="h-5 w-5" /></span>
+          <p className="flex-1 text-[12.5px] font-semibold leading-snug">We set up your week to match your <b className="underline">{fromDiet}</b> diet ✿</p>
+          <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-white/80 hover:text-white"><X className="h-4 w-4" /></button>
+        </div>
+      )}
 
       {planEmpty ? (
         <EmptyState
