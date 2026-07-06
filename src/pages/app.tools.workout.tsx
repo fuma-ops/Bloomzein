@@ -2305,7 +2305,7 @@ function SessionActive({ session, onExit, onDone }: {
 
   const totalSec = phase === "exercise" ? step.workSec : step.restSec;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60 shrink-0">
@@ -2400,7 +2400,8 @@ function SessionActive({ session, onExit, onDone }: {
           </button>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 
