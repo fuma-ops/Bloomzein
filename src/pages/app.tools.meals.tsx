@@ -289,6 +289,9 @@ const MEALS_GUIDE_CONTENT: SparkleContent = {
 
 export default function MealsPage() {
   const [tab, setTab] = useState<TabKey>("week");
+  // Banner shown when the week was just set up from the Diet tool.
+  const [fromDiet, setFromDiet] = useState<string | null>(() => { try { return localStorage.getItem("bloom:meals-from-diet"); } catch { return null; } });
+  const dismissFromDiet = () => { try { localStorage.removeItem("bloom:meals-from-diet"); } catch {} setFromDiet(null); };
   const [pantry, setPantry] = useLS<Record<string, string[]>>(LS.pantry, {});
   const [extra, setExtra] = useLS<Record<string, string>>(LS.extra, {});
   const [intention, setIntention] = useLS<Intention>(LS.intention, "light");
@@ -453,6 +456,13 @@ export default function MealsPage() {
   return (
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
+      {fromDiet && (
+        <div className="mb-3 flex items-center gap-3 rounded-2xl bg-hotpink/10 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Sparkles className="h-4 w-4" /></span>
+          <p className="flex-1 text-[12px] text-rose/80 leading-snug">We set up your week to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</p>
+          <button onClick={dismissFromDiet} aria-label="Dismiss" className="text-rose/50 hover:text-hotpink"><X className="h-4 w-4" /></button>
+        </div>
+      )}
       {/* HERO — compact, matches Budget Planner height */}
       <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
         <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
