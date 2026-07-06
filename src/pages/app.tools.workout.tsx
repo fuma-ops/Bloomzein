@@ -2305,7 +2305,7 @@ function SessionActive({ session, onExit, onDone }: {
 
   const totalSec = phase === "exercise" ? step.workSec : step.restSec;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60 shrink-0">
@@ -2341,22 +2341,30 @@ function SessionActive({ session, onExit, onDone }: {
         <div className="h-full flex flex-col items-center justify-center gap-1.5 sm:gap-3 px-3 py-2">
           {phase === "exercise" ? (
             <>
-              <div className="flex-1 min-h-0 w-full flex items-center justify-center">
-                <ExercisePhoto exercise={exercise} zone={session.zone} className="max-h-full max-w-full aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
+              {/* IMAGE — big & full-width like the yoga session; the timer is
+                  overlaid on it (as yoga overlays its breath pacer) so the
+                  photo keeps the whole section instead of sharing it. */}
+              <div className="relative flex-1 min-h-0 w-full rounded-3xl overflow-hidden border border-petal/60 shadow-md bg-[oklch(0.96_0.04_350)]">
+                <ExercisePhoto exercise={exercise} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
+                <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 rounded-full bg-white/85 backdrop-blur p-1.5 shadow-lg">
+                  <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} />
+                </div>
               </div>
-              <h2 className="shrink-0 font-script text-2xl sm:text-5xl text-hotpink leading-none text-center">{exercise.name}</h2>
-              <p className="shrink-0 text-xs sm:text-lg text-rose/70 text-center line-clamp-1">{exercise.muscles}</p>
-              {getCoaching(exercise.slug)?.cues[0] && (
-                <p className="shrink-0 max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2 line-clamp-1">
-                  <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
-                </p>
-              )}
-              {step.repTarget && (
-                <span className="shrink-0 rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
-                  {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
-                </span>
-              )}
-              <div className="shrink-0"><CircularTimer totalSec={totalSec} remainingSec={remaining} size={120} /></div>
+              {/* INFO — compact block below the photo */}
+              <div className="shrink-0 w-full text-center">
+                <h2 className="font-script text-2xl sm:text-4xl text-hotpink leading-none">{exercise.name}</h2>
+                <p className="mt-0.5 text-xs sm:text-base text-rose/70 line-clamp-1">{exercise.muscles}</p>
+                {getCoaching(exercise.slug)?.cues[0] && (
+                  <p className="mt-1 max-w-md mx-auto text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2 line-clamp-1">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
+                  </p>
+                )}
+                {step.repTarget && (
+                  <span className="mt-1.5 inline-block rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
+                    {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
+                  </span>
+                )}
+              </div>
             </>
           ) : (
             <div className="w-full max-w-md rounded-3xl bg-gradient-to-b from-white/95 to-blush/40 border border-petal/60 p-5 sm:p-7 text-center shadow-md">
@@ -2400,7 +2408,8 @@ function SessionActive({ session, onExit, onDone }: {
           </button>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 

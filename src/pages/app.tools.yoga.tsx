@@ -1913,7 +1913,7 @@ function SessionPlayer({
   const progress = ((idx + 1) / flow.length) * 100;
   const dim = mode === "audio" && !peek;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col p-3 sm:p-4"
       style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
       {/* TOP BAR */}
@@ -2012,7 +2012,8 @@ function SessionPlayer({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
