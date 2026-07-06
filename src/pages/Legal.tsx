@@ -4,12 +4,11 @@ import { AppIcon } from "@/components/bloom/AppIcon";
 /* ------------------------------------------------------------------ *
  * Legal pages — Privacy Policy & Terms of Service.
  *
- * NOTE FOR LAUNCH: search for the [BRACKETED] placeholders below and
- * replace them with your real details before going live:
- *   [Company / legal entity]  ·  [Country/State jurisdiction]
- *   [contact email]  ·  [Supabase hosting region]
- * Then have the final text reviewed by a lawyer — this is a solid,
- * GDPR-aware starting point, not certified legal advice.
+ * Operator is intentionally kept as the "Bloom & Zein" brand (solo
+ * developer) and governing law is phrased neutrally, so no personal
+ * name or country is exposed. This is a solid, GDPR-aware starting
+ * point — have it reviewed by a lawyer before scaling, and if you later
+ * register a company, put its legal name in ENTITY below.
  * ------------------------------------------------------------------ */
 
 const LAST_UPDATED = "July 6, 2026";
@@ -65,7 +64,8 @@ export function PrivacyPage() {
           Bloom &amp; Zein to keep your data yours — we never sell it.
         </P>
         <P>
-          The data controller is <b>{ENTITY}</b> [Company / legal entity], reachable at{" "}
+          Bloom &amp; Zein is operated by an independent developer. The data controller responsible
+          for your information is the <b>{ENTITY}</b> team, reachable at{" "}
           <a className="font-semibold text-[#EC4899]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </P>
       </section>
@@ -105,7 +105,7 @@ export function PrivacyPage() {
         <H>Where your data lives &amp; how we protect it</H>
         <P>
           Your account and synced data are stored with our hosting provider, <b>Supabase</b>
-          (PostgreSQL), in the [Supabase hosting region] region. Data is encrypted in transit (HTTPS)
+          (PostgreSQL), on secure managed cloud infrastructure. Data is encrypted in transit (HTTPS)
           and protected by row-level security so each account can only access its own records. Some
           data is also cached on your device (local storage) so the app works quickly and offline.
         </P>
@@ -244,7 +244,11 @@ export function TermsPage() {
 
       <section>
         <H>Governing law</H>
-        <P>These Terms are governed by the laws of [Country/State jurisdiction], without regard to conflict-of-law rules.</P>
+        <P>
+          These Terms are governed by the laws applicable at the operator’s principal place of
+          business. Nothing here removes the mandatory consumer-protection or data-protection rights
+          you have under the laws of your own country of residence.
+        </P>
       </section>
 
       <section>
