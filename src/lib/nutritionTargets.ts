@@ -18,18 +18,17 @@
  *     the loop quantitatively, not just with a nice sentence.
  */
 
-import { readDietProfile, type DietGoal } from "@/components/bloom/recipes/data";
+import { readDietProfile, RECIPES, type DietGoal } from "@/components/bloom/recipes/data";
 import {
   readWorkoutPlanDays,
   readYogaPlanDays,
   readWorkoutCaloriesToday,
   readTrainingCaloriesToday,
   readSessionsThisWeek,
+  readTodayPlannedDay,
+  readEatenToday,
 } from "@/lib/crossToolData";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
-
-const MEALS_LOG_KEY = "bloom:diet-today-meals";
-function todayISO() { return new Date().toISOString().slice(0, 10); }
 
 export interface MacroTargets {
   calories: number;
@@ -172,25 +171,23 @@ export function calorieVerdict(total: number, target: number): "under" | "on" | 
    & yoga). One source of truth so Diet, Today and Meals never disagree.
 ============================================================================ */
 
-interface LoggedMacros { calories: number; protein: number; carbs: number; fat: number }
-
-/** Sum of macros the user has actually logged for today (from the Diet tool). */
+/** Sum of macros for today's PLANNED meals the user has ticked as eaten. One
+ *  store: the meals live in the shared weekly plan; "eaten" is a thin marker. */
 export function eatenToday(): MacroTargets {
   const empty = { calories: 0, protein: 0, carbs: 0, fat: 0 };
   try {
-    const raw = localStorage.getItem(MEALS_LOG_KEY);
-    if (!raw) return empty;
-    const all = JSON.parse(raw) as Record<string, Record<string, { macros?: LoggedMacros } | null>>;
-    const day = all[todayISO()];
-    if (!day) return empty;
-    return Object.values(day).reduce<MacroTargets>((acc, meal) => {
-      const m = meal?.macros;
-      if (!m) return acc;
+    const planned = readTodayPlannedDay();
+    const eaten = new Set(readEatenToday());
+    return (["breakfast", "lunch", "dinner", "snack"] as const).reduce<MacroTargets>((acc, slot) => {
+      if (!eaten.has(slot)) return acc;
+      const id = planned[slot];
+      const r = id ? RECIPES.find((x) => x.id === id) : undefined;
+      if (!r) return acc;
       return {
-        calories: acc.calories + (m.calories || 0),
-        protein: acc.protein + (m.protein || 0),
-        carbs: acc.carbs + (m.carbs || 0),
-        fat: acc.fat + (m.fat || 0),
+        calories: acc.calories + (r.macros.calories || 0),
+        protein: acc.protein + (r.macros.protein || 0),
+        carbs: acc.carbs + (r.macros.carbs || 0),
+        fat: acc.fat + (r.macros.fat || 0),
       };
     }, empty);
   } catch {

@@ -136,7 +136,7 @@ export function readWorkoutPlanDays(): string[] {
 export const MEALS_PLAN_KEY       = "bloom:meals-plan";
 export const MEALS_SHOP_EXTRA_KEY = "bloom:meals-shop-extra";
 
-type PlanSlot = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
+export type PlanSlot = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
 
 // ── The ONE weekly meal plan — single source of truth for proposed meals ─────
 // Keyed by weekday label (Mon..Sun), slot → recipeId. Every tool that shows or
@@ -168,6 +168,11 @@ export function readTodayPlannedDay(): PlannedDay {
 
 /** Drop a recipe into the Meals weekly plan at day + slot (from a Fuel card). */
 export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlot): void {
+  setMealPlanSlot(day, slot, recipeId);
+}
+
+/** Set (or clear, with null) one slot of the weekly plan — the single writer. */
+export function setMealPlanSlot(day: string, slot: PlanSlot, recipeId: string | null): void {
   try {
     const plan = readJSON<Record<string, Record<string, string | null>>>(MEALS_PLAN_KEY, {});
     const dayPlan = plan[day] ?? { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
@@ -176,6 +181,30 @@ export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlo
     localStorage.setItem(MEALS_PLAN_KEY, JSON.stringify(plan));
     window.dispatchEvent(new Event("storage"));
   } catch {}
+}
+
+// ── Meal "eaten" markers — what she actually ate, per date + slot ────────────
+// Thin layer over the ONE plan: the plan holds the meals; this records which of
+// today's planned meals she's ticked off, so "eaten" energy is truthful.
+
+export const MEALS_EATEN_KEY = "bloom:diet-eaten";
+
+/** Which slots she has marked eaten today (subset of breakfast/lunch/dinner/snack). */
+export function readEatenToday(): PlanSlot[] {
+  const all = readJSON<Record<string, PlanSlot[]>>(MEALS_EATEN_KEY, {});
+  const v = all[todayISO()];
+  return Array.isArray(v) ? v : [];
+}
+/** Toggle a slot's eaten state for today; returns the new eaten list. */
+export function toggleEatenToday(slot: PlanSlot): PlanSlot[] {
+  const all = readJSON<Record<string, PlanSlot[]>>(MEALS_EATEN_KEY, {});
+  const today = todayISO();
+  const cur = new Set(all[today] ?? []);
+  if (cur.has(slot)) cur.delete(slot); else cur.add(slot);
+  const next = [...cur];
+  all[today] = next;
+  try { localStorage.setItem(MEALS_EATEN_KEY, JSON.stringify(all)); window.dispatchEvent(new Event("storage")); } catch {}
+  return next;
 }
 
 /** Merge a recipe's ingredients into the Meals shopping list "extras" bucket. */
