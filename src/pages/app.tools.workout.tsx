@@ -2342,7 +2342,7 @@ function SessionActive({ session, onExit, onDone }: {
           {phase === "exercise" ? (
             <>
               <div className="flex-1 min-h-0 w-full flex items-center justify-center">
-                <ExercisePhoto exercise={exercise} zone={session.zone} className="max-h-full max-w-full aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
+                <ExercisePhoto exercise={exercise} zone={session.zone} className="h-full w-auto max-w-full aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
               </div>
               <h2 className="shrink-0 font-script text-2xl sm:text-5xl text-hotpink leading-none text-center">{exercise.name}</h2>
               <p className="shrink-0 text-xs sm:text-lg text-rose/70 text-center line-clamp-1">{exercise.muscles}</p>
