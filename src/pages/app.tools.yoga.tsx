@@ -829,8 +829,8 @@ function YogaHero({
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
-      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-center" />
+    <div className="relative w-full rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
+      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
       <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
@@ -853,10 +853,10 @@ function YogaHero({
           </button>
         )}
       </div>
-      <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
-        <div key={active} className="animate-scale-in">
-          <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">{title}</h1>
-          <p className="mt-1 max-w-[10rem] sm:max-w-xs lg:max-w-sm text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+      <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
+        <div key={active} className="animate-scale-in max-w-[62%]">
+          <h1 className="font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
+          <p className="mt-1 text-[11px] sm:text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
