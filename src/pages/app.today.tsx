@@ -14,7 +14,7 @@ import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, 
 import { energyBalance } from "@/lib/nutritionTargets";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
 import {
   getCurrentUserId,
@@ -364,9 +364,10 @@ export default function TodayPage() {
     setYogaStreak(readYogaStreak().count);
     setDueReminders(loadDueTodayReminders());
 
+    // Today's meals come from the ONE weekly plan (keyed by weekday), so Today,
+    // the Meals Planner and the Diet tool always show the same meals.
     try {
-      const mealPlan = readJSON<Record<string, Record<string, string | null>>>("bloom:meals-plan", {});
-      setTodayMeals(mealPlan[iso] ?? {});
+      setTodayMeals(readTodayPlannedDay());
     } catch {}
 
     setShowCycleSetupBanner(!hasCycleSettings());

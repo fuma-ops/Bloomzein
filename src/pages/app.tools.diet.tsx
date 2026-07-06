@@ -10,7 +10,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
@@ -1207,11 +1207,16 @@ function TodayTab({
     // suggestion isn't the identical recipe every single day.
     const top = sorted.slice(0, 8);
     const rest = sorted.slice(8);
-    if (top.length > 1) {
-      const off = new Date().getDate() % top.length;
-      return [...top.slice(off), ...top.slice(0, off), ...rest];
-    }
-    return sorted;
+    const shuffled = top.length > 1
+      ? (() => { const off = new Date().getDate() % top.length; return [...top.slice(off), ...top.slice(0, off), ...rest]; })()
+      : sorted;
+    // SINGLE SOURCE OF TRUTH: whatever the weekly Meals plan proposes for this
+    // slot today wins the top spot, so "From my plan" adds the exact same meal
+    // shown in the Meals Planner & Today — never a divergent pick.
+    const plannedId = readTodayPlannedDay()[type as "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox"];
+    const planned = plannedId ? RECIPES.find((r) => r.id === plannedId) : undefined;
+    if (planned) return [planned, ...shuffled.filter((r) => r.id !== planned.id)];
+    return shuffled;
   };
 
   const mealType = mealTypeForHour(new Date().getHours());
@@ -1530,15 +1535,22 @@ export default function DietPage() {
 
   const cycleReady = hasCycleSettings();
 
-  // Auto-fill today's meals from a recipe predicate (best match per slot), then open Today.
+  // Fill today's LOG. SINGLE SOURCE OF TRUTH: if the one weekly Meals plan
+  // already proposes meals for today, copy THOSE (so Diet mirrors the Planner &
+  // Today). Only fall back to picking when a slot has nothing planned yet.
   const fillToday = (pred: (r: Recipe) => boolean) => {
     const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+    const planned = readTodayPlannedDay();
     setAllMeals((all) => {
       const day: DayMeals = { ...EMPTY_DAY };
       slots.forEach((slot, i) => {
-        const primary = RECIPES.filter((r) => r.mealType === slot && pred(r));
-        const pool = primary.length ? primary : RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
-        const r = pool.length ? pool[(i * 3) % pool.length] : undefined;
+        const plannedId = planned[slot as "breakfast" | "lunch" | "dinner" | "snack"];
+        let r = plannedId ? RECIPES.find((x) => x.id === plannedId) : undefined;
+        if (!r) {
+          const primary = RECIPES.filter((x) => x.mealType === slot && pred(x));
+          const pool = primary.length ? primary : RECIPES.filter((x) => x.mealType === slot && passesMyRules(x, profile));
+          r = pool.length ? pool[(i * 3) % pool.length] : undefined;
+        }
         if (r) day[slot] = { name: r.name, recipeId: r.id, macros: r.macros, micros: r.micros };
       });
       return { ...all, [today]: day };

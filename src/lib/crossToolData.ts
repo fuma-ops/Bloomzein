@@ -138,6 +138,34 @@ export const MEALS_SHOP_EXTRA_KEY = "bloom:meals-shop-extra";
 
 type PlanSlot = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
 
+// ── The ONE weekly meal plan — single source of truth for proposed meals ─────
+// Keyed by weekday label (Mon..Sun), slot → recipeId. Every tool that shows or
+// proposes "today's / this week's meals" (Meals Planner, Today, Diet) reads
+// THROUGH here so they can never disagree. See CLAUDE.md § Meal data contract.
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** Today's weekday label (Mon..Sun) — the key into the weekly plan. */
+export function todayWeekday(): string {
+  return WEEKDAYS[new Date().getDay()];
+}
+
+export type PlannedDay = Record<PlanSlot, string | null>;
+const EMPTY_PLANNED_DAY: PlannedDay = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
+
+/** The whole weekly plan (weekday → slot → recipeId). */
+export function readMealPlan(): Record<string, PlannedDay> {
+  return readJSON<Record<string, PlannedDay>>(MEALS_PLAN_KEY, {});
+}
+/** The planned recipes for one weekday (Mon..Sun) — slot → recipeId. */
+export function readPlannedDay(day: string): PlannedDay {
+  const plan = readMealPlan();
+  return { ...EMPTY_PLANNED_DAY, ...(plan[day] ?? {}) };
+}
+/** The planned recipes for TODAY — what every tool should show as today's meals. */
+export function readTodayPlannedDay(): PlannedDay {
+  return readPlannedDay(todayWeekday());
+}
+
 /** Drop a recipe into the Meals weekly plan at day + slot (from a Fuel card). */
 export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlot): void {
   try {
