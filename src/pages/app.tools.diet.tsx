@@ -655,6 +655,7 @@ function WeightChart({ history, target, projection }: {
   const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const lastReal = history[history.length - 1];
   const lastDay = dayOf(lastReal.date);
+  const loseDir = target != null && target < lastReal.kg; // goal is below current
 
   // ── Real projection: extend from the last logged weight along the pace the
   //    plan actually produces (kg/week ÷ 7 per day), capped for readability.
@@ -708,22 +709,33 @@ function WeightChart({ history, target, projection }: {
         {/* kg unit tag */}
         <text x={padL - 5} y={padT - 3} fontSize="8" fill="#C4849F" textAnchor="end" fontWeight="700">kg</text>
 
+        {/* Soft band showing the journey from where she is now → her goal */}
         {target != null && (
-          <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#F9A8D4" strokeWidth="1.2" strokeDasharray="3 3" />
+          <rect
+            x={padL} y={Math.min(Y(lastReal.kg), Y(target))}
+            width={w - padR - padL} height={Math.abs(Y(target) - Y(lastReal.kg))}
+            fill={loseDir ? "#ECFDF5" : "#FFF1F2"} opacity={0.7}
+          />
+        )}
+        {target != null && (
+          <>
+            <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#DB2777" strokeWidth="1.4" strokeDasharray="4 3" />
+            <text x={w - padR} y={Y(target) + (Y(target) > Y(lastReal.kg) ? 12 : -5)} fontSize="9" fontWeight="800" fill="#DB2777" textAnchor="end">🎯 goal {target}kg</text>
+          </>
         )}
         {hasProj && (
-          <>
-            <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(lastDay + projDays)} ${Y(projEndKg)}`} fill="none" stroke="#DB2777" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
-            <circle cx={X(lastDay + projDays)} cy={Y(projEndKg)} r="3.5" fill="none" stroke="#DB2777" strokeWidth="2" />
-          </>
+          <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(lastDay + projDays)} ${Y(projEndKg)}`} fill="none" stroke="#DB2777" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" opacity={0.7} />
         )}
         <path d={realD} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {history.map((r, i) => <circle key={i} cx={X(dayOf(r.date))} cy={Y(r.kg)} r="2.6" fill="#EC4899" />)}
+        {/* "You are here" — the latest weight, labelled so it's never confused with the goal */}
+        <circle cx={X(lastDay)} cy={Y(lastReal.kg)} r="4.5" fill="#EC4899" stroke="#fff" strokeWidth="1.5" />
+        <text x={X(lastDay) + 7} y={Y(lastReal.kg) + (Y(lastReal.kg) < Y(target) ? -5 : 12)} fontSize="9.5" fontWeight="800" fill="#EC4899" textAnchor="start">{lastReal.kg}kg now</text>
       </svg>
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-bold text-rose/60">
-        <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#EC4899]" /> Real weight</span>
-        {hasProj && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> Projected pace (~{Math.abs(projection!.weeklyRateKg)}kg/wk)</span>}
-        {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg,#F9A8D4 0 2px,transparent 2px 4px)" }} /> Goal {target}kg</span>}
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899]" /> You now · {lastReal.kg}kg</span>
+        {hasProj && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> Projected (~{Math.abs(projection!.weeklyRateKg)}kg/wk)</span>}
+        {target != null && <span className="inline-flex items-center gap-1">🎯 Goal · {target}kg {target < lastReal.kg ? "(below)" : target > lastReal.kg ? "(above)" : ""}</span>}
       </div>
     </div>
   );
