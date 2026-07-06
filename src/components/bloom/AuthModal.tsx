@@ -1,14 +1,15 @@
 import { useState } from "react"
-import { X } from "lucide-react"
+import { X, Mail } from "lucide-react"
 import { AppIcon } from "./AppIcon"
 import { useAuth } from "@/contexts/AuthContext"
 
 export function AuthModal({ onClose }: { onClose?: () => void }) {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth()
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth()
   const [mode, setMode] = useState<"signin" | "signup">("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [agreed, setAgreed] = useState(false)
 
@@ -20,11 +21,24 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
     if (consentNeeded) { setError("Please agree to the Privacy Policy and Terms to continue."); return }
     setError(null)
     setLoading(true)
-    const { error } = mode === "signin"
-      ? await signInWithEmail(email, password)
-      : await signUpWithEmail(email, password)
-    setLoading(false)
+    if (mode === "signin") {
+      const { error } = await signInWithEmail(email, password)
+      setLoading(false)
+      if (error) setError(error)
+    } else {
+      const { error, needsConfirm } = await signUpWithEmail(email, password)
+      setLoading(false)
+      if (error) setError(error)
+      else if (needsConfirm) setNotice(`We sent a confirmation link to ${email}. Tap it to activate your account, then sign in.`)
+    }
+  }
+
+  const handleForgot = async () => {
+    if (!email) { setError("Enter your email above first, then tap “Forgot password?”"); return }
+    setError(null)
+    const { error } = await resetPassword(email)
     if (error) setError(error)
+    else setNotice(`We sent a password-reset link to ${email}. Check your inbox to set a new password.`)
   }
 
   const handleGoogle = () => {
@@ -44,6 +58,22 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
           </button>
         )}
 
+        {notice ? (
+          <div className="flex flex-col items-center text-center py-2">
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-[#FCE7F3] text-[#EC4899]">
+              <Mail className="h-7 w-7" />
+            </div>
+            <h2 className="mt-3 font-script text-2xl text-[#831843]">Check your inbox ✿</h2>
+            <p className="mt-2 text-sm text-[#9D5C7E] leading-snug">{notice}</p>
+            <button
+              onClick={() => { setNotice(null); setMode("signin"); setPassword("") }}
+              className="mt-5 rounded-full bg-[#EC4899] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-[#EC4899]/30 hover:bg-[#DB2777] transition"
+            >
+              Back to sign in
+            </button>
+          </div>
+        ) : (
+        <>
         <div className="flex flex-col items-center text-center">
           <AppIcon size={56} />
           <h2 className="mt-3 font-script text-3xl text-[#831843]">
@@ -120,6 +150,15 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
           </button>
         </form>
 
+        {mode === "signin" && (
+          <button
+            onClick={handleForgot}
+            className="mt-2.5 w-full text-center text-xs font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
+          >
+            Forgot password?
+          </button>
+        )}
+
         <p className="mt-4 text-center text-xs text-[#9D5C7E]">
           {mode === "signin" ? "Don’t have an account yet?" : "Already have an account?"}{" "}
           <button
@@ -135,6 +174,8 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
             <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#EC4899] hover:text-[#DB2777] underline">Privacy Policy</a>{" "}&amp;{" "}
             <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#EC4899] hover:text-[#DB2777] underline">Terms</a>.
           </p>
+        )}
+        </>
         )}
       </div>
     </div>

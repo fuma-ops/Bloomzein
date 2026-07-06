@@ -75,7 +75,7 @@ const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
       { Icon: Bell, label: "Notifications & reminders", href: "/app/tools/notes" },
       { Icon: Wallet, label: "Budget & money", href: "/budget" },
       { Icon: Crown, label: "Bloom Premium", soon: true },
-      { Icon: Shield, label: "Privacy & data", soon: true },
+      { Icon: Shield, label: "Privacy & data", href: "/privacy" },
       { Icon: LifeBuoy, label: "Help & support", href: "mailto:hello@bloomzein.app" },
       { Icon: RotateCcw, label: "Replay welcome tour", action: "replay" },
     ],

@@ -40,23 +40,23 @@ export function InstallPrompt() {
           <Download className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#831843]">Installe l'appli ✿</p>
+          <p className="text-sm font-bold text-[#831843]">Install the app ✿</p>
           {ios ? (
             <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">
-              Appuie sur <span className="font-semibold">Partager</span> puis{" "}
-              <span className="font-semibold">Sur l'écran d'accueil</span>
+              Tap <span className="font-semibold">Share</span> then{" "}
+              <span className="font-semibold">Add to Home Screen</span>
             </p>
           ) : (
             <>
               <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">
-                Accède à Bloom & Zein directement depuis ton écran d'accueil.
+                Get Bloom & Zein right from your home screen.
               </p>
               {hasPrompt && (
                 <button
                   onClick={handleInstall}
                   className="mt-2 rounded-full bg-[#EC4899] px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-[#EC4899]/30 hover:bg-[#DB2777] transition"
                 >
-                  Installer
+                  Install
                 </button>
               )}
             </>

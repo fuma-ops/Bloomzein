@@ -75,7 +75,7 @@ function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, u
       const data = userId
         ? { url: "/app/today", kind: "water" as const, reminderId: "water", doseKey, dedupePrefix: doseKey, confirmToken: doseConfirmToken(userId, "water", doseKey) }
         : undefined;
-      out.push({ dedupeKey: doseKey, fireAt, body: `Encore ${left} verre${left > 1 ? "s" : ""} pour atteindre tes ${waterGoal} verres aujourd'hui 💧`, data });
+      out.push({ dedupeKey: doseKey, fireAt, body: `${left} more glass${left > 1 ? "es" : ""} to reach your ${waterGoal} glasses today 💧`, data });
     }
   }
   return out;

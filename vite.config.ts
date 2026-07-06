@@ -39,6 +39,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Split the stable framework code into its own long-cached chunk so
+        // app updates don't force users to re-download React on every deploy.
+        manualChunks: {
+          "react-vendor": ["react", "react-dom"],
+        },
+      },
+    },
+  },
   server: {
     hmr: process.env.DISABLE_HMR !== 'true',
     watch: process.env.DISABLE_HMR === 'true' ? null : {},

@@ -10,7 +10,8 @@ type AuthContextValue = {
   loading: boolean
   signInWithGoogle: () => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null; needsConfirm?: boolean }>
+  resetPassword: (email: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   updateProfile: (patch: Partial<Profile>) => Promise<{ error: string | null }>
@@ -81,7 +82,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUpWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin + "/app/today" },
+    })
+    // When email confirmation is enabled, sign-up succeeds but returns no
+    // session — the user must click the link in their inbox first.
+    return { error: error?.message ?? null, needsConfirm: !error && !data.session }
+  }
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/app/me",
+    })
     return { error: error?.message ?? null }
   }
 
@@ -102,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut, refreshProfile, updateProfile }}
+      value={{ user, session, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, signOut, refreshProfile, updateProfile }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,0 +1,6 @@
+# Bloom & Zein
+User-agent: *
+Allow: /
+Disallow: /app/
+
+Sitemap: https://bloomzein.app/sitemap.xml
