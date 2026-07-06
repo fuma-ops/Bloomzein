@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
+  Dumbbell,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -49,7 +50,7 @@ import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
-import { computeTargets, targetRationale, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
+import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
@@ -702,6 +703,12 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
         <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
         <span>Tuned from your body &amp; {targetRationale(t)}.</span>
       </p>
+      {/* Movement → food: the training plan's real effect on the target */}
+      {movementFoodLine(t) && (
+        <p className="mt-1.5 flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 text-[10.5px] font-bold text-emerald-700 w-fit">
+          <Dumbbell className="h-3 w-3 shrink-0" /> {movementFoodLine(t)}
+        </p>
+      )}
       {/* Guided instruction — helps her understand the number from day one */}
       <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
         <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How to use</span>
@@ -760,6 +767,8 @@ function WeekTab({
   // training load + cycle phase). Recompute when the plan changes so the
   // eat-back and training-day count stay live.
   const targets: TargetBreakdown = useMemo(() => computeTargets(true), [plan]);
+  // Yoga-only days (yoga planned, no workout) get a gentle recovery-food cue.
+  const yogaDaySet = useMemo(() => new Set(readYogaPlanDays()), []);
 
   // The user's real cycle phase (for the attention-grabbing banner).
   const realPhase = useMemo(() => readCyclePhase(), []);
@@ -910,7 +919,13 @@ function WeekTab({
             return (
             <Glass key={d} className={["p-3 animate-scale-in", isToday ? "ring-2 ring-hotpink/50" : ""].join(" ")} style={{ animationDelay: `${di * 60}ms` }}>
               <div className="flex items-center justify-between mb-2.5">
-                <p className="font-script text-xl text-hotpink flex items-center gap-1.5">{d}{isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}</p>
+                <p className="font-script text-xl text-hotpink flex items-center gap-1.5">
+                  {d}
+                  {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}
+                  {yogaDaySet.has(d) && !proteinBoostDays?.has(d) && (
+                    <span className="rounded-full bg-violet-50 border border-violet-200 text-violet-600 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5" title="Yoga day — keep it light, hydrating & anti-inflammatory">🧘 recovery</span>
+                  )}
+                </p>
                 <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
                   <RefreshCw className="h-3 w-3" /> redo day
                 </button>

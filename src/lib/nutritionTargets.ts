@@ -41,11 +41,16 @@ export interface TargetBreakdown extends MacroTargets {
   bmr: number;
   tdee: number;
   trainingDays: number;   // distinct planned workout+yoga days this week
+  workoutDays: number;    // planned workout days
+  yogaDays: number;       // planned yoga days
+  trainingKcal: number;   // kcal/day the planned movement adds vs sedentary
   activityFactor: number;
   goal: DietGoal;
   lutealBump: boolean;    // luteal +5 % applied
   eatBack: number;        // calories added back from today's logged workouts
 }
+
+const SEDENTARY_FACTOR = 1.35; // baseline when nothing is planned
 
 /** Sensible fallbacks for the two body inputs we don't always collect. */
 const DEFAULT_HEIGHT_CM = 165;
@@ -70,7 +75,7 @@ export function trainingDaySet(): Set<string> {
  * "moderately active" (1.60) so the maths stays honest.
  */
 function activityFactor(trainingDays: number): number {
-  return Math.min(1.6, 1.35 + trainingDays * 0.045);
+  return Math.min(1.6, SEDENTARY_FACTOR + trainingDays * 0.045);
 }
 
 const GOAL_DELTA: Record<DietGoal, number> = {
@@ -100,9 +105,14 @@ export function computeTargets(forToday = false): TargetBreakdown {
   // Mifflin-St Jeor (female): 10·kg + 6.25·cm − 5·age − 161
   const bmr = Math.round(10 * weight + 6.25 * height - 5 * age - 161);
 
+  const workoutDays = readWorkoutPlanDays().length;
+  const yogaDays = readYogaPlanDays().length;
   const trainingDays = plannedTrainingDays();
   const factor = activityFactor(trainingDays);
   const tdee = Math.round(bmr * factor);
+  // How many kcal/day the planned movement adds vs a sedentary baseline —
+  // so the yoga/workout ↔ food link is a real, visible number.
+  const trainingKcal = Math.round(bmr * (factor - SEDENTARY_FACTOR));
 
   const phase = readCyclePhase();
   const lutealBump = phase === "luteal";
@@ -122,7 +132,8 @@ export function computeTargets(forToday = false): TargetBreakdown {
 
   return {
     calories, protein, carbs, fat,
-    bmr, tdee, trainingDays, activityFactor: factor, goal, lutealBump, eatBack,
+    bmr, tdee, trainingDays, workoutDays, yogaDays, trainingKcal,
+    activityFactor: factor, goal, lutealBump, eatBack,
   };
 }
 
@@ -138,6 +149,16 @@ export function targetRationale(t: TargetBreakdown): string {
   if (t.lutealBump) parts.push("+5% luteal");
   if (t.eatBack > 0) parts.push(`+${t.eatBack} kcal you burned today`);
   return parts.join(" · ");
+}
+
+/** A plain sentence spelling out the movement → food link, e.g.
+ *  "2 workouts + 3 yoga planned this week → +180 kcal/day to eat." */
+export function movementFoodLine(t: TargetBreakdown): string | null {
+  if (t.trainingKcal <= 0 || (t.workoutDays === 0 && t.yogaDays === 0)) return null;
+  const bits: string[] = [];
+  if (t.workoutDays) bits.push(`${t.workoutDays} workout${t.workoutDays > 1 ? "s" : ""}`);
+  if (t.yogaDays) bits.push(`${t.yogaDays} yoga`);
+  return `${bits.join(" + ")} planned this week → +${t.trainingKcal} kcal/day to eat`;
 }
 
 /* ---------- Day totals (sum a day's chosen recipes) ---------- */

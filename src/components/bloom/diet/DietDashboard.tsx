@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
+  computeTargets, movementFoodLine,
   type EnergyBalance,
 } from "@/lib/nutritionTargets";
 
@@ -48,6 +49,7 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 /* ============================ 1 · TODAY'S ENERGY ============================ */
 export function EnergyTodayCard({ e }: { e: EnergyBalance }) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
+  const moveLine = movementFoodLine(computeTargets(true));
   const verdictText =
     e.verdict === "start" ? "Log a meal to start tracking today"
     : e.verdict === "over" ? "A little over — an easy dinner evens it out"
@@ -85,6 +87,12 @@ export function EnergyTodayCard({ e }: { e: EnergyBalance }) {
       <p className={`mt-2.5 flex items-center gap-1.5 text-[11.5px] font-semibold ${verdictCls}`}>
         <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
       </p>
+      {/* Movement → food: shows the yoga/workout plan's effect on the target */}
+      {moveLine && (
+        <p className="mt-1.5 flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 text-[10.5px] font-bold text-emerald-700 w-fit">
+          <Dumbbell className="h-3 w-3 shrink-0" /> {moveLine}
+        </p>
+      )}
       <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
         <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How it works</span>
         <span>Your goal <b>+ what you burn</b> in Workout &amp; Yoga = what you can eat. Log meals in <b className="text-hotpink">My day</b> and watch the ring fill.</span>
