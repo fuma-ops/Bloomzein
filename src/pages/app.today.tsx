@@ -10,7 +10,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
-import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
@@ -258,9 +258,6 @@ const MEAL_SLOT_LABEL: Record<string, string> = {
 };
 const MEAL_SLOT_TIME: Record<string, string> = {
   breakfast: "08:00", lunch: "13:00", dinner: "19:30", lunchbox: "12:00", snack: "16:00",
-};
-const CYCLE_TO_DIET: Record<string, "menstrual" | "follicular" | "ovulatory" | "luteal"> = {
-  period: "menstrual", follicular: "follicular", fertile: "ovulatory", ovulation: "ovulatory", luteal: "luteal",
 };
 
 // ── Minimal Reminder type (mirrors app.tools.notes) ─────────────────────────
@@ -716,8 +713,8 @@ export default function TodayPage() {
       {/* ── 2b. TODAY'S MEALS ────────────────────────────────────────────────── */}
       {(() => {
         const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
-        const dietPhase  = CYCLE_TO_DIET[phase];
-        const phaseMicros = PHASE_MICROS[dietPhase] ?? [];
+        const dietPhase  = toDietPhase(phase);
+        const phaseMicros = dietPhase ? PHASE_MICROS[dietPhase] ?? [] : [];
         const primaryMicro = phaseMicros[0];
         const planned = MEAL_SLOTS.filter((s) => todayMeals[s]);
 

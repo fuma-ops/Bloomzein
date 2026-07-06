@@ -89,6 +89,57 @@ export function broadcastCyclePhase(): void {
   } catch {}
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * Canonical phase mappings — the SINGLE source of truth every tool imports.
+ *
+ * The cycle has 5 phases (with a distinct fertile window). Meals recipes,
+ * Yoga flows and training content use a 4-phase model. Rather than each tool
+ * re-deriving its own mapping (which is how they drifted apart — Yoga once
+ * treated "fertile" as follicular while Meals treated it as ovulation), every
+ * tool now collapses through these functions. DECISION: the fertile window
+ * maps onto OVULATION everywhere — peri-ovulatory energy, nutrition and
+ * training needs are equivalent — so no tool can disagree again.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** The 4-phase content model (Meals / Yoga / Workout share this shape). */
+export type ContentPhase = "period" | "follicular" | "ovulation" | "luteal" | "any";
+
+/** Collapse the 5-phase cycle to the 4-phase content model (fertile → ovulation). */
+export function toContentPhase(p: CyclePhase | null | undefined): ContentPhase {
+  switch (p) {
+    case "period":
+    case "follicular":
+    case "ovulation":
+    case "luteal":
+      return p;
+    case "fertile":
+      return "ovulation";
+    default:
+      return "any";
+  }
+}
+
+/** The recipe database's phase vocabulary. */
+export type DietPhaseKey = "menstrual" | "follicular" | "ovulatory" | "luteal";
+/** Cycle phase → recipe DB phase (null for "any"). */
+export function toDietPhase(p: CyclePhase | null | undefined): DietPhaseKey | null {
+  switch (toContentPhase(p)) {
+    case "period":     return "menstrual";
+    case "follicular": return "follicular";
+    case "ovulation":  return "ovulatory";
+    case "luteal":     return "luteal";
+    default:           return null;
+  }
+}
+
+/** The Yoga tool's phase vocabulary. */
+export type YogaPhaseKey = "menstrual" | "follicular" | "ovulation" | "luteal";
+/** Cycle phase → Yoga phase (fertile → ovulation; "any" → follicular default). */
+export function toYogaPhase(p: CyclePhase | null | undefined): YogaPhaseKey {
+  const c = toContentPhase(p);
+  return c === "period" ? "menstrual" : c === "any" ? "follicular" : c;
+}
+
 /** Reads the cycle phase emitted by the Cycle Tracker (read-only for other tools). */
 export function readCyclePhase(): CyclePhase | null {
   try {

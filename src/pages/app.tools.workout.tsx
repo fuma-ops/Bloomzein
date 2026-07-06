@@ -128,9 +128,21 @@ function speakNext(text: string) {
 
 // ===================== HELPERS =====================
 
-const CALORIES_PER_MIN: Record<WorkoutIntention, number> = {
-  tonify: 4, strengthen: 6, stretch: 2.5, recover: 2,
+// Real energy expenditure: MET × 3.5 × bodyweight(kg) / 200 = kcal/min.
+// MET values follow the Compendium of Physical Activities for each intention.
+const MET_BY_INTENTION: Record<WorkoutIntention, number> = {
+  tonify: 5.0,      // general resistance / toning circuit
+  strengthen: 6.0,  // vigorous resistance training
+  stretch: 2.5,     // stretching / mobility
+  recover: 2.3,     // light restorative movement
 };
+
+/** kcal burned for a session, scaled by the user's real bodyweight. */
+function sessionCalories(intention: WorkoutIntention, elapsedSec: number): number {
+  const weight = readDietProfile().weight || 65;
+  const kcalPerMin = (MET_BY_INTENTION[intention] * 3.5 * weight) / 200;
+  return Math.round((elapsedSec / 60) * kcalPerMin);
+}
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -2416,7 +2428,7 @@ function SessionActive({ session, onExit, onDone }: {
 function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void }) {
   const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
-  const calories = Math.round((elapsedSec / 60) * CALORIES_PER_MIN[session.intention]);
+  const calories = sessionCalories(session.intention, elapsedSec);
   const minutes = Math.floor(elapsedSec / 60);
   const seconds = elapsedSec % 60;
 
