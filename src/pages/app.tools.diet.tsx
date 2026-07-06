@@ -810,11 +810,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   const delta = +(latest - first).toFixed(1);
 
   const target = profile.targetWeight;
-  const setTarget = (v: number | undefined) => setProfile((p) => ({ ...p, targetWeight: v }));
-  const toGo = target ? +(latest - target).toFixed(1) : null;
-  const targetPct = target && first !== target
-    ? Math.max(0, Math.min(100, Math.round(((first - latest) / (first - target)) * 100)))
-    : 0;
 
   const adherence = useMemo(() => {
     const cutoff = Date.now() - 7 * 864e5;
@@ -832,13 +827,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
     return { logged, onPlan, pct: logged ? Math.round((onPlan / logged) * 100) : 0 };
   }, [allMeals, profile]);
 
-  const sessions = useMemo(() => {
-    const cutoff = Date.now() - 7 * 864e5;
-    return loadWorkoutHistory().filter((h) => {
-      const t = new Date((h.date ?? "") + "T00:00:00").getTime();
-      return !isNaN(t) && t >= cutoff;
-    }).length;
-  }, []);
 
   const nToday = todayISO();
   const mealsToday = Object.values(allMeals[nToday] ?? {}).some(Boolean);
@@ -892,15 +880,53 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         />
       )}
 
-      {/* STEP 1 — your eating plan */}
+      {/* ── Manage & track — the detail behind the numbers above ── */}
+      <div className="flex items-center gap-2 pt-1">
+        <div className="h-px flex-1 bg-petal/50" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-rose/40">Manage &amp; track</span>
+        <div className="h-px flex-1 bg-petal/50" />
+      </div>
+
+      {/* Weight & progress — the detail behind your goal path */}
+      <div id="diet-weight">
+        <Glass className="p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Weight &amp; progress</p>
+                <p className="font-script text-2xl text-hotpink leading-none">{latest} kg</p>
+              </div>
+            </div>
+            {history.length > 1 && (
+              <span className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
+                {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                {delta > 0 ? "+" : ""}{delta} kg
+              </span>
+            )}
+          </div>
+          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the dashed line projects the pace your calorie plan actually produces. Set your goal weight from the <b className="text-hotpink">✎ on your goal path</b> above.</p>
+          <WeightChart history={history} target={target} projection={weightProjection} />
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
+              <button onClick={() => setWeightInput((w) => (Math.max(0, (parseFloat(w) || 0) - 0.1)).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">−</button>
+              <input value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none" />
+              <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
+              <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
+            </div>
+            <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log today</PinkBtn>
+          </div>
+        </Glass>
+      </div>
+
+      {/* Your eating plan — the detail behind your nutrition */}
       <div id="diet-plan">
-        <StepHeader step={1} title="Your eating plan" sub="or choose your own diet" />
         <Glass className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-5 w-5" /></span>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Diet plan</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Your eating plan</p>
                 <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label}</p>
               </div>
             </div>
@@ -926,67 +952,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
           <button onClick={onDietWeek} className="w-full mt-2 inline-flex items-center justify-center gap-1 rounded-full border border-hotpink/50 text-hotpink text-sm font-semibold py-2 hover:bg-hotpink/10 active:scale-95 transition">See my week in Meals Planner <ChevronRight className="h-4 w-4" /></button>
         </Glass>
       </div>
-
-      {/* STEP 2 — weight */}
-      <div id="diet-weight">
-        <StepHeader step={2} title="Track your weight" sub="follow your progress & real-pace projection" />
-        <Glass className="p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 capitalize">Weight · goal {profile.goal}</p>
-                <p className="font-script text-2xl text-hotpink leading-none">{latest} kg</p>
-              </div>
-            </div>
-            {history.length > 1 && (
-              <span className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
-                {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                {delta > 0 ? "+" : ""}{delta} kg
-              </span>
-            )}
-          </div>
-          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the graph draws your real weight and a dashed projection at the pace your current calorie plan actually produces (not a guess).</p>
-          <WeightChart history={history} target={target} projection={weightProjection} />
-          <div className="mt-2.5 rounded-2xl bg-blush/50 border border-petal/50 p-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-bold text-rose/70">Goal weight</span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setTarget(+(Math.max(0, (target ?? latest) - 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">−</button>
-                <span className="min-w-[3.6rem] text-center text-sm font-bold text-hotpink">{target != null ? `${target} kg` : "set ✿"}</span>
-                <button onClick={() => setTarget(+(((target ?? latest) + 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">+</button>
-              </div>
-            </div>
-            {target != null && (
-              <>
-                <div className="mt-2 h-2 rounded-full bg-white overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${targetPct}%` }} /></div>
-                <p className="mt-1 text-[10.5px] text-rose/60">{toGo === 0 ? "You hit your goal ✿" : `${Math.abs(toGo ?? 0)} kg to ${((toGo ?? 0) > 0) ? "lose" : "gain"} · ${targetPct}% there`}</p>
-              </>
-            )}
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
-              <button onClick={() => setWeightInput((w) => (Math.max(0, (parseFloat(w) || 0) - 0.1)).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">−</button>
-              <input value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none" />
-              <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
-              <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
-            </div>
-            <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log</PinkBtn>
-          </div>
-        </Glass>
-      </div>
-
-      {/* Movement this week */}
-      <Glass className="p-4 sm:p-5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Dumbbell className="h-5 w-5" /></span>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Movement · this week</p>
-            <p className="font-script text-xl text-hotpink leading-none">{sessions} session{sessions === 1 ? "" : "s"}</p>
-          </div>
-        </div>
-        <a href="/app/tools/workout" className="text-xs font-bold text-hotpink hover:underline inline-flex items-center gap-0.5 shrink-0">Workout <ChevronRight className="h-3.5 w-3.5" /></a>
-      </Glass>
 
       <div className="flex items-center justify-center gap-4 pt-1">
         <button onClick={onEdit} className="text-xs font-semibold text-rose/60 hover:text-hotpink">Edit my diet setup ✿</button>
