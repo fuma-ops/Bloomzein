@@ -4,6 +4,7 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
   Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
+  Scale, TrendingUp, TrendingDown, Minus,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
@@ -11,8 +12,9 @@ import { readCyclePhase, readCycleSettings, type CyclePhase } from "@/components
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, calculateDailyTargets, passesMyRules,
+  DIET_REGIMES, dietRegimeInfo, regimeToDietType,
   type Recipe, type DietProfile, type DietPhase, type DietGoal, type MealType,
-  type DietType, type Allergy, type CookingFrequency,
+  type DietType, type Allergy, type CookingFrequency, type DietRegime,
 } from "@/components/bloom/diet/data";
 
 /* ---------- localStorage ---------- */
@@ -44,9 +46,11 @@ function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] 
 const DEFAULT_PROFILE: DietProfile & { weight: number } = {
   goal: "maintain",
   dietType: "omnivore",
+  regime: "balanced",
   allergies: [],
   cookingFrequency: "normal",
   weight: 65,
+  weightHistory: [],
 };
 
 /* ---------- shared helpers ---------- */
@@ -347,7 +351,7 @@ function SetupScreen({
   initial, onDone,
 }: { initial: DietProfile & { weight: number }; onDone: (p: DietProfile & { weight: number }) => void }) {
   const [goal, setGoal] = useState<DietGoal>(initial.goal);
-  const [dietType, setDietType] = useState<DietType>(initial.dietType);
+  const [regime, setRegime] = useState<DietRegime>(initial.regime ?? "balanced");
   const [allergies, setAllergies] = useState<Allergy[]>(initial.allergies);
   const [cooking, setCooking] = useState<CookingFrequency>(initial.cookingFrequency);
 
@@ -377,12 +381,13 @@ function SetupScreen({
         </div>
 
         <div>
-          <h2 className="font-script text-xl text-hotpink mb-2">Diet type</h2>
+          <h2 className="font-script text-xl text-hotpink mb-2">Your eating plan</h2>
           <div className="flex flex-wrap gap-2">
-            {DIET_TYPE_OPTIONS.map((o) => (
-              <SelectPill key={o.key} active={dietType === o.key} onClick={() => setDietType(o.key)}>{o.label}</SelectPill>
+            {DIET_REGIMES.map((o) => (
+              <SelectPill key={o.key} active={regime === o.key} onClick={() => setRegime(o.key)}>{o.label}</SelectPill>
             ))}
           </div>
+          <p className="mt-2 text-[12px] text-rose/70 leading-snug">{dietRegimeInfo(regime).blurb}</p>
         </div>
 
         <div>
@@ -406,7 +411,7 @@ function SetupScreen({
 
         <PinkBtn
           className="w-full justify-center"
-          onClick={() => onDone({ goal, dietType, allergies, cookingFrequency: cooking, weight: initial.weight })}
+          onClick={() => onDone({ goal, regime, dietType: regimeToDietType(regime), allergies, cookingFrequency: cooking, weight: initial.weight, weightHistory: initial.weightHistory ?? [] })}
         >
           Save & start blooming <Sparkles className="h-4 w-4" />
         </PinkBtn>
@@ -456,6 +461,150 @@ function PhaseCard({ phase, active }: { phase: DietPhase; active: boolean }) {
       </div>
 
       <p className="mt-3 text-xs text-rose/80"><b>Snack idea:</b> {info.snack}</p>
+    </div>
+  );
+}
+
+/* ---------- Profile / home dashboard ---------- */
+
+function WeightSparkline({ history }: { history: { date: string; kg: number }[] }) {
+  if (history.length < 2) return <p className="text-[11px] text-rose/50 italic">Log your weight a few days to see your trend ✿</p>;
+  const pts = history.slice(-14);
+  const w = 300, h = 44, pad = 4;
+  const min = Math.min(...pts.map((p) => p.kg)), max = Math.max(...pts.map((p) => p.kg));
+  const span = max - min || 1;
+  const x = (i: number) => pad + (i / (pts.length - 1)) * (w - pad * 2);
+  const y = (v: number) => pad + (1 - (v - min) / span) * (h - pad * 2);
+  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.kg).toFixed(1)}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-11">
+      <path d={d} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {pts.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.kg)} r="2.5" fill="#EC4899" />)}
+    </svg>
+  );
+}
+
+function ProfileTab({ phase, cycleDay, profile, setProfile, onEdit, goTo }: {
+  phase: DietPhase; cycleDay: number;
+  profile: DietProfile & { weight: number };
+  setProfile: (v: (DietProfile & { weight: number }) | ((p: DietProfile & { weight: number }) => DietProfile & { weight: number })) => void;
+  onEdit: () => void;
+  goTo: (t: TabKey) => void;
+}) {
+  const info = PHASE_INFO[phase];
+  const regime = dietRegimeInfo(profile.regime ?? "balanced");
+  const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
+
+  const history = profile.weightHistory ?? [];
+  const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
+  const logWeight = () => {
+    const kg = parseFloat(weightInput);
+    if (!kg || kg <= 0) return;
+    const today = todayISO();
+    setProfile((p) => {
+      const h = (p.weightHistory ?? []).filter((e) => e.date !== today);
+      h.push({ date: today, kg });
+      h.sort((a, b) => (a.date < b.date ? -1 : 1));
+      return { ...p, weight: kg, weightHistory: h };
+    });
+  };
+  const first = history[0]?.kg ?? profile.weight;
+  const latest = history.length ? history[history.length - 1].kg : profile.weight;
+  const delta = +(latest - first).toFixed(1);
+
+  const sessions = useMemo(() => {
+    const cutoff = Date.now() - 7 * 864e5;
+    return loadWorkoutHistory().filter((h) => {
+      const t = new Date((h.date ?? "") + "T00:00:00").getTime();
+      return !isNaN(t) && t >= cutoff;
+    }).length;
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      {/* Cycle focus — always on, we know her cycle */}
+      <Glass className="p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-5 w-5" /></span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Cycle · Day {cycleDay}</p>
+              <p className="font-script text-xl text-hotpink leading-none truncate">{info.label} phase</p>
+            </div>
+          </div>
+          <PinkBtn variant="outline" onClick={() => goTo("cycle")} className="!px-3 !py-1 shrink-0 text-xs">Nutrition <ChevronRight className="h-3.5 w-3.5" /></PinkBtn>
+        </div>
+        <p className="mt-2 text-[12px] text-rose/70 leading-snug italic">{info.tone}.</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {info.eat.slice(0, 5).map((f) => (
+            <span key={f} className="rounded-full bg-blush text-hotpink text-[10px] font-bold px-2 py-0.5 border border-petal/60">{f}</span>
+          ))}
+        </div>
+      </Glass>
+
+      {/* Your eating plan — prominent, changeable, drives the recipes */}
+      <Glass className="p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-5 w-5" /></span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Your eating plan</p>
+              <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label}</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-blush text-hotpink text-[11px] font-bold px-2.5 py-1 border border-petal/60 shrink-0">{matchCount} recipes</span>
+        </div>
+        <p className="text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
+        <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
+          {DIET_REGIMES.map((r) => (
+            <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
+          ))}
+        </div>
+        <PinkBtn onClick={() => goTo("recipes")} className="w-full justify-center mt-3">Browse {regime.label} recipes <ChevronRight className="h-4 w-4" /></PinkBtn>
+      </Glass>
+
+      {/* Weight tracker */}
+      <Glass className="p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 capitalize">Weight · goal {profile.goal}</p>
+              <p className="font-script text-2xl text-hotpink leading-none">{latest} kg</p>
+            </div>
+          </div>
+          {history.length > 1 && (
+            <span className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
+              {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+              {delta > 0 ? "+" : ""}{delta} kg
+            </span>
+          )}
+        </div>
+        <WeightSparkline history={history} />
+        <div className="mt-3 flex items-center gap-2">
+          <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
+            <button onClick={() => setWeightInput((w) => (Math.max(0, (parseFloat(w) || 0) - 0.1)).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">−</button>
+            <input value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none" />
+            <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
+            <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
+          </div>
+          <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log</PinkBtn>
+        </div>
+      </Glass>
+
+      {/* Movement this week */}
+      <Glass className="p-4 sm:p-5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Dumbbell className="h-5 w-5" /></span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Movement · this week</p>
+            <p className="font-script text-xl text-hotpink leading-none">{sessions} session{sessions === 1 ? "" : "s"}</p>
+          </div>
+        </div>
+        <a href="/app/tools/workout" className="text-xs font-bold text-hotpink hover:underline inline-flex items-center gap-0.5 shrink-0">Workout <ChevronRight className="h-3.5 w-3.5" /></a>
+      </Glass>
+
+      <button onClick={onEdit} className="w-full text-center text-xs font-semibold text-rose/60 hover:text-hotpink py-1">Edit my diet setup ✿</button>
     </div>
   );
 }
@@ -905,13 +1054,15 @@ function RecipesTab({
 
 /* ---------- Page ---------- */
 
-type TabKey = "cycle" | "today" | "recipes";
+type TabKey = "profile" | "cycle" | "today" | "recipes";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  { key: "profile", label: "My Diet",        icon: Activity },
   { key: "cycle", label: "Cycle Nutrition", icon: Moon },
   { key: "today", label: "Today",           icon: UtensilsCrossed },
   { key: "recipes", label: "Recipes",       icon: BookOpen },
 ];
 const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
+  profile: { title: "My Diet",          subtitle: "your plan, your weight, your cycle — all in one ✿" },
   cycle:   { title: "Cycle Nutrition",  subtitle: "eat in sync with your cycle ✿" },
   today:   { title: "Today's Meals",    subtitle: "nourish your bloom, one bite at a time 🌸" },
   recipes: { title: "Recipes",          subtitle: "cook for your phase, glow all season 💫" },
@@ -920,7 +1071,7 @@ const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
 export default function DietPage() {
   const [setupComplete, setSetupComplete] = useLS<boolean>(LS.setup, false);
   const [profile, setProfile] = useLS<DietProfile & { weight: number }>(LS.profile, DEFAULT_PROFILE);
-  const [tab, setTab] = useLS<TabKey>(LS.tab, "cycle");
+  const [tab, setTab] = useLS<TabKey>(LS.tab, "profile");
   const [editingSetup, setEditingSetup] = useState(false);
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
   const [allMeals, setAllMeals] = useLS<Record<string, DayMeals>>(LS.todayMeals, {});
@@ -944,7 +1095,7 @@ export default function DietPage() {
     setProfile(p);
     setSetupComplete(true);
     setEditingSetup(false);
-    setTab("cycle");
+    setTab("profile");
     try { localStorage.setItem(LS.meGoal, p.goal); } catch {}
   };
 
@@ -1022,6 +1173,12 @@ export default function DietPage() {
       </div>
 
       <div className="space-y-4">
+        {tab === "profile" && (
+          <ProfileTab
+            phase={cyclePhase} cycleDay={cycleDay} profile={profile}
+            setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
+          />
+        )}
         {tab === "cycle" && <CycleNutritionTab phase={cyclePhase} profile={profile} onEdit={() => setEditingSetup(true)} />}
         {tab === "today" && (
           <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} setDayMeals={setDayMeals} />
