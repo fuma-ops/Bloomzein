@@ -6,7 +6,7 @@
  */
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
-  Sparkles, ChevronRight, Activity, Trophy, Pencil,
+  Sparkles, ChevronRight, Activity, Trophy, Pencil, Check,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
@@ -47,16 +47,21 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e }: { e: EnergyBalance }) {
+export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals, onPlanMovement }: {
+  e: EnergyBalance;
+  mealsPlanned: boolean;
+  movementPlanned: boolean;
+  onPlanMeals: () => void;
+  onPlanMovement: () => void;
+}) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
+  const coach = coachRecommendation();
   const verdictText =
-    e.verdict === "start" ? "Log a meal to start tracking today"
-    : e.verdict === "over" ? "A little over — an easy dinner evens it out"
+    e.verdict === "over" ? "A little over — an easy dinner evens it out"
     : e.verdict === "close" ? "Almost there — you're right on target ✿"
     : "On track — keep going ✿";
-  const verdictCls =
-    e.verdict === "over" ? "text-rose-500" : e.verdict === "start" ? "text-rose/60" : "text-emerald-600";
+  const verdictCls = e.verdict === "over" ? "text-rose-500" : "text-emerald-600";
 
   return (
     <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
@@ -84,8 +89,10 @@ export function EnergyTodayCard({ e }: { e: EnergyBalance }) {
         <MacroBar label="Carbs" eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
         <MacroBar label="Fat" eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
       </div>
-      <p className={`mt-2.5 flex items-center gap-1.5 text-[11.5px] font-semibold ${verdictCls}`}>
-        <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
+      {/* Coach in one line — the goal guidance, folded in (no separate card) */}
+      <p className="mt-2.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-rose/80">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+        <span><b className="text-hotpink">{coach.headline}.</b> Aim ~{coach.targetCalories.toLocaleString()} kcal, {coach.workoutsPerWeek} workouts + {coach.yogaPerWeek} yoga.</span>
       </p>
       {/* Movement → food: shows the yoga/workout plan's effect on the target */}
       {moveLine && (
@@ -93,11 +100,41 @@ export function EnergyTodayCard({ e }: { e: EnergyBalance }) {
           <Dumbbell className="h-3 w-3 shrink-0" /> {moveLine}
         </p>
       )}
-      <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
-        <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How it works</span>
-        <span>Your goal <b>+ what you burn</b> in Workout &amp; Yoga = what you can eat. Log meals in <b className="text-hotpink">My day</b> and watch the ring fill.</span>
+      {/* Two guided setup CTAs — check off once you've built each plan */}
+      <div className="mt-3 grid gap-2">
+        <SetupCta done={mealsPlanned} Icon={Utensils} todo="Plan my meals for my goal" done_label="Meals planned — view →" onClick={onPlanMeals} href="/app/tools/meals" />
+        <SetupCta done={movementPlanned} Icon={Dumbbell} todo="Plan my movement for my goal" done_label="Movement planned — view →" onClick={onPlanMovement} href="/app/tools/workout" />
       </div>
+      {/* Once she's eating, the daily verdict */}
+      {e.logged && (
+        <p className={`mt-2.5 flex items-center gap-1.5 text-[11.5px] font-semibold ${verdictCls}`}>
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
+        </p>
+      )}
     </div>
+  );
+}
+
+/** A guided setup step: soft dashed CTA when not done → green checked link when done. */
+function SetupCta({ done, Icon, todo, done_label, onClick, href }: {
+  done: boolean; Icon: typeof Utensils; todo: string; done_label: string; onClick: () => void; href: string;
+}) {
+  if (done) {
+    return (
+      <button onClick={go(href)} className="w-full inline-flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-[12px] font-bold text-emerald-700 active:scale-[0.99] transition">
+        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-3 w-3" strokeWidth={3} /></span>
+        <span className="flex-1 text-left">{done_label}</span>
+        <ChevronRight className="h-4 w-4 shrink-0" />
+      </button>
+    );
+  }
+  return (
+    <button onClick={onClick} className="w-full inline-flex items-center gap-2 rounded-2xl border-2 border-dashed border-hotpink/40 bg-hotpink/5 px-3 py-2 text-[12px] font-bold text-hotpink active:scale-[0.99] transition hover:bg-hotpink/10">
+      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-hotpink/40" />
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="flex-1 text-left">{todo}</span>
+      <ChevronRight className="h-4 w-4 shrink-0" />
+    </button>
   );
 }
 

@@ -10,12 +10,12 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
-import { EnergyTodayCard, GoalPathCard, WeekBalanceCard, CoachCard } from "@/components/bloom/diet/DietDashboard";
+import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
@@ -819,6 +819,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
   // App-style edit popup (opened from the Goal-path card) for body & goal.
   const [bodyEditOpen, setBodyEditOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(false);
   const logWeight = () => {
     const kg = parseFloat(weightInput);
     if (!kg || kg <= 0) return;
@@ -852,36 +853,28 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mealsVersion, profile]);
 
-  const mealsToday = Object.values(readTodayPlannedDay()).some(Boolean);
-  const weighedThisWeek = history.some((e) => Date.now() - new Date(e.date + "T00:00:00").getTime() < 7 * 864e5);
-  const next = !cycleReady
-    ? { Icon: Moon, text: "Sync your cycle to unlock your plan", cta: "Set up" as string | null, act: () => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; } }
-    : !mealsToday
-    ? { Icon: UtensilsCrossed, text: "See your cycle-synced plan", cta: "Cycle Nutrition" as string | null, act: () => goTo("cycle") }
-    : !weighedThisWeek
-    ? { Icon: Scale, text: "Time for your weekly weigh-in", cta: "Log weight" as string | null, act: () => document.getElementById("diet-weight")?.scrollIntoView({ behavior: "smooth", block: "center" }) }
-    : { Icon: Sparkles, text: "You're on a roll — all on track", cta: null as string | null, act: () => {} };
+  // What the user has already set up — drives the checked/unchecked CTAs.
+  const mealsPlanned = useMemo(
+    () => Object.values(readMealPlan()).some((day) => Object.values(day).some(Boolean)),
+    [mealsVersion],
+  );
+  const movementPlanned = readWorkoutPlanDays().length > 0 || readYogaPlanDays().length > 0;
 
   return (
     <div className="space-y-4">
-      {/* Next-step banner — the guiding thread */}
-      <button onClick={next.act} className="w-full flex items-center gap-3 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white p-3.5 shadow-lg shadow-hotpink/30 active:scale-[0.99] transition text-left">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><next.Icon className="h-5 w-5" /></span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-[10px] font-bold uppercase tracking-widest text-white/70">Next step</span>
-          <span className="block text-sm font-bold leading-tight">{next.text}</span>
-        </span>
-        {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
-      </button>
-
-      {/* ── Daily command center — gathers every tool (phase · workout · yoga ·
-             body · goal) into the numbers she checks each day ── */}
-      <EnergyTodayCard e={energy} />
+      {/* ── Daily command center — the hub. The two setup CTAs + folded coach
+             line live inside Today's energy, so there's one place, not many. ── */}
+      <EnergyTodayCard
+        e={energy}
+        mealsPlanned={mealsPlanned}
+        movementPlanned={movementPlanned}
+        onPlanMeals={onDietWeek}
+        onPlanMovement={onSetupWorkouts}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
         <WeekBalanceCard />
       </div>
-      <CoachCard onSetupWorkouts={onSetupWorkouts} onPlanMeals={onDietWeek} />
       {bodyEditOpen && (
         <BodyGoalEditModal
           profile={profile}
@@ -942,37 +935,32 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
         </Glass>
       </div>
 
-      {/* Your eating plan — the detail behind your nutrition */}
+      {/* Your eating plan — already set (from setup); shows as done + Edit */}
       <div id="diet-plan">
         <Glass className="p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-5 w-5" /></span>
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-4 w-4" strokeWidth={3} /></span>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Your eating plan</p>
-                <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Your eating plan · set</p>
+                <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label} <span className="text-rose/40 text-sm font-sans">· {matchCount} recipes</span></p>
               </div>
             </div>
-            <span className="rounded-full bg-blush text-hotpink text-[11px] font-bold px-2.5 py-1 border border-petal/60 shrink-0">{matchCount} recipes</span>
+            <button onClick={() => setEditingPlan((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink active:scale-95 transition">
+              <Pencil className="h-3 w-3" /> {editingPlan ? "Done" : "Edit"}
+            </button>
           </div>
-          <p className="text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
-          {adherence.logged > 0 && (
-            <div className="mt-2.5">
-              <div className="flex items-center justify-between text-[11px] font-bold text-rose/70 mb-1">
-                <span>On-plan meals · this week</span>
-                <span className="text-hotpink">{adherence.onPlan}/{adherence.logged} · {adherence.pct}%</span>
+          {editingPlan && (
+            <div className="mt-3 animate-fade-in">
+              <p className="text-[11px] text-rose/60 mb-1.5">Pick the diet every recipe is filtered to:</p>
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
+                {DIET_REGIMES.map((r) => (
+                  <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
+                ))}
               </div>
-              <div className="h-2 rounded-full bg-blush overflow-hidden"><div className="h-full rounded-full bg-hotpink transition-all" style={{ width: `${adherence.pct}%` }} /></div>
+              <p className="mt-2 text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
             </div>
           )}
-          <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
-            {DIET_REGIMES.map((r) => (
-              <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] text-rose/55 leading-snug flex items-start gap-1"><Sparkles className="h-3 w-3 mt-0.5 shrink-0 text-hotpink" /> Your diet is applied to your whole week in the Meals Planner.</p>
-          <PinkBtn onClick={onDietToday} className="w-full justify-center mt-2.5">My plan for today <ChevronRight className="h-4 w-4" /></PinkBtn>
-          <button onClick={onDietWeek} className="w-full mt-2 inline-flex items-center justify-center gap-1 rounded-full border border-hotpink/50 text-hotpink text-sm font-semibold py-2 hover:bg-hotpink/10 active:scale-95 transition">See my week in Meals Planner <ChevronRight className="h-4 w-4" /></button>
         </Glass>
       </div>
 
