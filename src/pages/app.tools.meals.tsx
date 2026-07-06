@@ -694,7 +694,7 @@ function WeekTab({
 
   return (
     <>
-      {/* ── TRAINING AWARENESS — Meals knows your sport & yoga plan ──────────── */}
+      {/* ── YOUR SYNCED PLAN — training + phase nutrition in ONE green-bordered note ── */}
       {(() => {
         const comment = trainingAwarenessComment({
           workoutDays: readWorkoutPlanDays().length,
@@ -702,11 +702,23 @@ function WeekTab({
           phase: normalizePhase(realPhase),
           goal: readDietProfile().goal,
         });
-        if (!comment) return null;
+        const dp = phase !== "any" ? CYCLE_TO_DIET[phase] : null;
+        const info = dp ? PHASE_INFO[dp] : null;
+        if (!comment && !info) return null;
         return (
-          <div className="mb-3 flex items-start gap-2 text-[11.5px] leading-snug text-rose/80 animate-fade-in">
-            <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" strokeWidth={2} />
-            <p className="flex-1"><span className="font-bold text-rose-500 uppercase text-[10px] tracking-wide">Synced with training · </span>{comment}</p>
+          <div className="mb-3 rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Your synced plan{info ? ` · ${info.label} phase` : ""}
+            </p>
+            {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
+            {info && (
+              <>
+                <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
+                </div>
+              </>
+            )}
           </div>
         );
       })()}
@@ -768,34 +780,6 @@ function WeekTab({
         </div>
       </Glass>
 
-      {/* WHY THESE MEALS — explains the phase reasoning behind the plan */}
-      {phase !== "any" && CYCLE_TO_DIET[phase] && (() => {
-        const info = PHASE_INFO[CYCLE_TO_DIET[phase]];
-        return (
-          <Glass className="p-4 sm:p-5 border-petal/60">
-            <div className="flex items-start gap-3">
-              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
-                <Heart className="h-5 w-5" strokeWidth={1.8} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Why these meals · {info.label} phase</p>
-                <p className="text-sm text-rose/85 leading-snug mt-0.5">Right now {info.tone}. We pick recipes rich in these:</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {info.keyNutrients.map((n) => (
-                    <span key={n} className="rounded-full bg-blush/70 text-hotpink text-[10px] font-bold px-2.5 py-0.5">{n}</span>
-                  ))}
-                </div>
-                <p className="mt-2.5 text-[11px] text-rose/65 leading-snug">
-                  <span className="font-bold text-rose/80">Lean into:</span> {info.eat.slice(0, 5).join(", ")}.
-                </p>
-                <p className="mt-1 text-[11px] text-rose/65 leading-snug">
-                  <span className="font-bold text-rose/80">Go easy on:</span> {info.avoid.slice(0, 4).join(", ")}.
-                </p>
-              </div>
-            </div>
-          </Glass>
-        );
-      })()}
 
       {/* Diet-synced note — light, just an icon + text, right before the week's meals */}
       {fromDiet && (
