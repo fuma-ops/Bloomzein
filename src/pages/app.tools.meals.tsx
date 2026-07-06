@@ -20,6 +20,7 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  RotateCcw,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import {
@@ -47,7 +48,8 @@ const CYCLE_TO_DIET: Record<string, DietPhase> = {
 };
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState } from "@/lib/crossToolData";
+import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
@@ -468,15 +470,30 @@ export default function MealsPage() {
               )}
               <p className="animate-fade-in mt-1 text-[11px] sm:text-xs italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
             </div>
-            {/* Guide button — reopens the spotlight tour */}
-            <button
-              onClick={() => setShowGuide(true)}
-              className="animate-fade-in shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
-              style={{ animationDelay: '260ms' }}
-            >
-              <Sparkles className="h-3 w-3" />
-              Guide
-            </button>
+            {/* Reset + Guide chips */}
+            <div className="animate-fade-in shrink-0 flex items-center gap-1.5" style={{ animationDelay: '260ms' }}>
+              <button
+                onClick={async () => {
+                  if (window.confirm("Reset the Meal Planner to a fresh start? This clears your pantry, plan, favourites and progress here so you can see the first-time experience.")) {
+                    resetToolState("meals");
+                    await flushCloudSync();
+                    window.location.reload();
+                  }
+                }}
+                aria-label="Reset tool"
+                title="Reset — preview the first-time experience"
+                className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+              >
+                <RotateCcw className="h-3 w-3" /> Reset
+              </button>
+              <button
+                onClick={() => setShowGuide(true)}
+                className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+              >
+                <Sparkles className="h-3 w-3" />
+                Guide
+              </button>
+            </div>
           </div>
           {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
           <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: '320ms' }}>
