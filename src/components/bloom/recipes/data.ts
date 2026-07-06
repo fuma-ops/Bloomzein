@@ -21,6 +21,10 @@ export type DietPhase = "menstrual" | "follicular" | "ovulatory" | "luteal";
 export type DietGoal = "lose" | "maintain" | "gain";
 export type MealType = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
 export type DietType = "omnivore" | "vegetarian" | "vegan" | "gluten-free" | "halal";
+/** Real, recognised eating plans the Diet tool filters recipes by. */
+export type DietRegime =
+  | "balanced" | "mediterranean" | "high-protein" | "low-carb"
+  | "vegetarian" | "vegan" | "pescatarian" | "gluten-free" | "halal";
 export type Allergy = "dairy" | "nuts" | "eggs" | "soy" | "shellfish";
 export type CookingFrequency = "quick" | "normal" | "love";
 
@@ -37,11 +41,17 @@ export type Intention =
 export type Vibe = "Light" | "Balanced" | "Protein-rich" | "Energizing";
 export type Difficulty = "quick" | "easy" | "elaborate" | "medium" | "hard";
 
+export interface WeightEntry { date: string; kg: number }
+
 export interface DietProfile {
   goal: DietGoal;
   dietType: DietType;
+  /** The chosen eating plan — drives which recipes are shown. */
+  regime: DietRegime;
   allergies: Allergy[];
   cookingFrequency: CookingFrequency;
+  /** Weight log over time (kg), oldest → newest. */
+  weightHistory: WeightEntry[];
 }
 
 export const DIET_PROFILE_KEY = "bloom:diet-profile";
@@ -49,9 +59,11 @@ export const DIET_PROFILE_KEY = "bloom:diet-profile";
 export const DEFAULT_DIET_PROFILE: DietProfile & { weight: number } = {
   goal: "maintain",
   dietType: "omnivore",
+  regime: "balanced",
   allergies: [],
   cookingFrequency: "normal",
   weight: 65,
+  weightHistory: [],
 };
 
 export function readDietProfile(): DietProfile & { weight: number } {
@@ -277,7 +289,44 @@ export function calculateDailyTargets(opts: {
 export function passesMyRules(r: Recipe, profile: DietProfile): boolean {
   if (r.allergens.some((a) => profile.allergies.includes(a))) return false;
   if (profile.dietType !== "omnivore" && !r.dietTags.includes(profile.dietType)) return false;
+  if (profile.regime && !regimeMatches(r, profile.regime)) return false;
   return true;
+}
+
+/* ---------- Real eating plans (regimes) — each filters recipes for real ---------- */
+
+export interface DietRegimeInfo {
+  key: DietRegime;
+  label: string;
+  blurb: string;
+  match: (r: Recipe) => boolean;
+}
+
+export const DIET_REGIMES: DietRegimeInfo[] = [
+  { key: "balanced",      label: "Balanced",        blurb: "A varied, sensible mix — every recipe, no restrictions.",         match: () => true },
+  { key: "mediterranean", label: "Mediterranean",   blurb: "Plants, fish & good fats — the most-studied heart-healthy diet.", match: (r) => r.dietTags.some((t) => t === "vegetarian" || t === "vegan" || t === "pescatarian") },
+  { key: "high-protein",  label: "High-Protein",    blurb: "Protein-forward for muscle, tone & staying full.",               match: (r) => r.macros.protein >= 25 },
+  { key: "low-carb",      label: "Low-Carb / Keto", blurb: "Minimises carbs, leans on protein & healthy fats.",              match: (r) => r.macros.carbs <= 25 },
+  { key: "vegetarian",    label: "Vegetarian",      blurb: "No meat or fish.",                                              match: (r) => r.dietTags.some((t) => t === "vegetarian" || t === "vegan") },
+  { key: "vegan",         label: "Vegan",           blurb: "100% plant-based.",                                             match: (r) => r.dietTags.includes("vegan") },
+  { key: "pescatarian",   label: "Pescatarian",     blurb: "Plants plus fish & seafood, no meat.",                          match: (r) => r.dietTags.some((t) => t === "pescatarian" || t === "vegetarian" || t === "vegan") },
+  { key: "gluten-free",   label: "Gluten-Free",     blurb: "No gluten — coeliac & sensitivity friendly.",                   match: (r) => r.dietTags.includes("gluten-free") },
+  { key: "halal",         label: "Halal",           blurb: "Halal-friendly recipes only.",                                  match: (r) => r.dietTags.includes("halal") },
+];
+
+export function dietRegimeInfo(regime: DietRegime): DietRegimeInfo {
+  return DIET_REGIMES.find((x) => x.key === regime) ?? DIET_REGIMES[0];
+}
+export function regimeMatches(r: Recipe, regime: DietRegime | undefined): boolean {
+  if (!regime || regime === "balanced") return true;
+  return dietRegimeInfo(regime).match(r);
+}
+export function regimeToDietType(regime: DietRegime): DietType {
+  if (regime === "vegan") return "vegan";
+  if (regime === "vegetarian") return "vegetarian";
+  if (regime === "gluten-free") return "gluten-free";
+  if (regime === "halal") return "halal";
+  return "omnivore";
 }
 
 /* ---------- Recipe shape ---------- */
