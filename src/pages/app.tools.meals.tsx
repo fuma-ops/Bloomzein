@@ -143,12 +143,19 @@ function pickForSlot(
   // Named vibes (light / protein / energy …) are a SOFT preference: they BOOST
   // matching recipes but never collapse the pool to a single dish. Combined with
   // pantry match, a love bonus and a little randomness — computed once per recipe.
+  //  · vibe boost is 0.6 so the chosen mood actually beats pantry-only picks;
+  //  · phase boost (0.35) STACKS on ANY vibe, so "High protein · Luteal" is both
+  //    protein-forward AND phase-aware (phase used to be ignored unless vibe=cycle);
+  //  · "budget" has no recipe tag — it scores the real cost field instead.
   const softIntention = intention !== "cycle" && intention !== "quick";
+  const phaseAware = phase !== "any";
   const scored = candidates.map((r) => ({
     r,
     s: scoreRecipe(r, owned)
       + (ratings[r.id] === "love" ? 0.3 : 0)
-      + (softIntention && r.intention.includes(intention) ? 0.4 : 0)
+      + (softIntention && intention !== "budget" && r.intention.includes(intention) ? 0.6 : 0)
+      + (intention === "budget" && r.cost === "$" ? 0.6 : 0)
+      + (phaseAware && (r.cyclePhase.includes(phase) || r.cyclePhase.includes("any")) ? 0.35 : 0)
       + Math.random() * 0.3,
   }));
   scored.sort((a, b) => b.s - a.s);
@@ -756,9 +763,17 @@ function WeekTab({
         </div>
         <p className="mt-2.5 text-[12px] text-rose/70 leading-snug">
           <span className="italic">{INTENTIONS.find((i) => i.key === intention)?.blurb}</span>
-          {phase !== "any" && intention !== "cycle" && <> · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">match my {phase} phase</button></>}
-          {phaseSynced && <span className="text-hotpink font-semibold"> · synced to your phase ✿</span>}
+          {phase !== "any" && intention !== "cycle" && <> · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">focus fully on my {phase} phase</button></>}
         </p>
+        {/* Confirms BOTH picks are live — the plan leans to the vibe AND the phase. */}
+        {phase !== "any" && (
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600">
+            <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.6} />
+            {intention === "cycle"
+              ? <span>Fully synced to your <b className="capitalize">{phase}</b> phase ✿</span>
+              : <span><span className="capitalize">{INTENTIONS.find((i) => i.key === intention)?.label}</span>-leaning, tuned to your <b className="capitalize">{phase}</b> phase</span>}
+          </p>
+        )}
 
         {/* Next-step hint — light, just an icon + instruction */}
         <div className="mt-3 flex items-start gap-2 text-[12px] leading-snug text-rose/80">
