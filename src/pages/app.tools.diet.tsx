@@ -75,7 +75,7 @@ function getCycleDay(): number {
   const ms = 1000 * 60 * 60 * 24;
   const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / ms);
   const day = ((diff % s.cycleLength) + s.cycleLength) % s.cycleLength;
-  return day + 1;
+  return Number.isFinite(day) ? day + 1 : 1;
 }
 
 function loadWorkoutHistory(): HistoryEntry[] {
