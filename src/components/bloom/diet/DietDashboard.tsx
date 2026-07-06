@@ -6,7 +6,7 @@
  */
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
-  Sparkles, ChevronRight, Activity, Trophy,
+  Sparkles, ChevronRight, Activity, Trophy, Pencil,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
@@ -94,11 +94,11 @@ export function EnergyTodayCard({ e }: { e: EnergyBalance }) {
 }
 
 /* ============================ 2 · GOAL PATH ============================ */
-export function GoalPathCard() {
+export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
   const p = goalProjection();
   if (!p) {
     return (
-      <button onClick={go("/app/tools/diet#diet-weight")} className="w-full text-left rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 animate-fade-in active:scale-[0.99] transition">
+      <button onClick={onEdit ?? go("/app/tools/diet#diet-weight")} className="w-full text-left rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 animate-fade-in active:scale-[0.99] transition">
         <p className="flex items-center gap-1.5 font-script text-xl text-hotpink"><Target className="h-4 w-4" /> Your goal path</p>
         <p className="mt-1 text-[12px] text-rose/70">Set a <b className="text-hotpink">goal weight</b> to see your timeline and how your plan gets you there.</p>
       </button>
@@ -106,8 +106,11 @@ export function GoalPathCard() {
   }
   const losing = p.direction === "lose";
   return (
-    <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
-      <div className="flex items-center justify-between mb-2">
+    <div className="relative rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
+      {onEdit && (
+        <button onClick={onEdit} title="Edit weight & height" className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full bg-blush/70 text-hotpink border border-petal/50 active:scale-90 transition"><Pencil className="h-3.5 w-3.5" /></button>
+      )}
+      <div className="flex items-center justify-between mb-2 pr-8">
         <p className="flex items-center gap-1.5 font-script text-2xl text-hotpink"><Target className="h-5 w-5" /> Your goal path</p>
         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide border ${losing ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-rose-50 text-rose-500 border-rose-200"}`}>
           {losing ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />} {Math.abs(p.toGo)}kg to {losing ? "lose" : "gain"}
@@ -160,7 +163,7 @@ export function WeekBalanceCard() {
 }
 
 /* ============================ 4 · COACH ============================ */
-export function CoachCard() {
+export function CoachCard({ onSetupWorkouts, onPlanMeals }: { onSetupWorkouts?: () => void; onPlanMeals?: () => void }) {
   const c = coachRecommendation();
   return (
     <div className="rounded-3xl border-2 border-hotpink/25 bg-gradient-to-br from-blush/60 to-petal/25 shadow-sm p-4 sm:p-5 animate-fade-in">
@@ -175,8 +178,8 @@ export function CoachCard() {
         ))}
       </ol>
       <div className="grid grid-cols-2 gap-2">
-        <button onClick={go("/app/tools/workout")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-hotpink text-white px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Dumbbell className="h-3.5 w-3.5" /> Set my workouts</button>
-        <button onClick={go("/app/tools/meals")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white/90 border border-hotpink/40 text-hotpink px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Utensils className="h-3.5 w-3.5" /> Plan my meals</button>
+        <button onClick={onSetupWorkouts ?? go("/app/tools/workout")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-hotpink text-white px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Dumbbell className="h-3.5 w-3.5" /> Set my workouts</button>
+        <button onClick={onPlanMeals ?? go("/app/tools/meals")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white/90 border border-hotpink/40 text-hotpink px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Utensils className="h-3.5 w-3.5" /> Plan my meals</button>
       </div>
     </div>
   );

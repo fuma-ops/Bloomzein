@@ -1706,6 +1706,21 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
+
+  // Coming from the Diet coach ("Set my workouts") → generate a proposed,
+  // phase-aware week on arrival so she lands on a real plan, not an empty tool.
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("bloom:workout-autoplan")) return;
+      localStorage.removeItem("bloom:workout-autoplan");
+      if (activeProgram || program) return; // never overwrite an existing plan
+      const ph = readCyclePhase() ?? "any";
+      setProgram(generateWeeklyPlan(profile, ph, seed + 1));
+      setProgramPhase(ph);
+      setSeed(seed + 1);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
 
   // Start a blank custom week (leaves any active program) and open the editor.

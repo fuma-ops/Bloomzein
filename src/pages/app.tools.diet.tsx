@@ -362,6 +362,49 @@ const COOKING_OPTIONS: { key: CookingFrequency; label: string }[] = [
   { key: "love", label: "Love cooking" },
 ];
 
+/** App-style popup to edit body & goal (weight · height · goal weight),
+ *  opened from the Goal-path card. Portaled so it's never clipped. */
+function BodyGoalEditModal({ profile, onClose, onSave }: {
+  profile: DietProfile & { weight: number };
+  onClose: () => void;
+  onSave: (v: { weight?: number; heightCm?: number; targetWeight?: number }) => void;
+}) {
+  const [weight, setWeight] = useState(profile.weight ? String(profile.weight) : "");
+  const [height, setHeight] = useState(profile.heightCm != null ? String(profile.heightCm) : "");
+  const [target, setTarget] = useState(profile.targetWeight != null ? String(profile.targetWeight) : "");
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
+      <div className="relative w-full max-w-sm rounded-3xl bg-white border border-petal/60 shadow-2xl shadow-rose/20 p-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-script text-2xl text-hotpink">Edit your body &amp; goal</h3>
+          <button onClick={onClose} aria-label="Close" className="rounded-full bg-blush/70 p-1.5 text-rose active:scale-90 transition"><X className="h-4 w-4" /></button>
+        </div>
+        <p className="text-[11px] text-rose/60 leading-snug mb-4">These keep your calorie target &amp; timeline accurate.</p>
+        <div className="space-y-2.5">
+          <SetupNumber label="Weight" unit="kg" value={weight} onChange={setWeight} placeholder="65" autoFocus />
+          <SetupNumber label="Height" unit="cm" value={height} onChange={setHeight} placeholder="165" />
+          <SetupNumber label="Goal weight" unit="kg" value={target} onChange={setTarget} placeholder="60" />
+        </div>
+        <div className="mt-5 flex items-center gap-2">
+          <button onClick={onClose} className="rounded-full bg-white border border-petal/60 px-4 py-2.5 text-sm font-semibold text-rose active:scale-95 transition">Cancel</button>
+          <PinkBtn
+            className="flex-1 justify-center"
+            onClick={() => onSave({
+              weight: parseFloat(weight) > 0 ? parseFloat(weight) : undefined,
+              heightCm: parseFloat(height) > 0 ? parseFloat(height) : undefined,
+              targetWeight: parseFloat(target) > 0 ? parseFloat(target) : undefined,
+            })}
+          >
+            Save <Check className="h-4 w-4" />
+          </PinkBtn>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 /** Small numeric field for the setup wizard. */
 function SetupNumber({ label, unit, value, onChange, placeholder, autoFocus }: {
   label: string; unit: string; value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean;
@@ -741,13 +784,16 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   // Real weight projection (pace from the calorie plan) for the chart.
   const weightProjection = useMemo(() => goalProjection(), [profile]);
 
+  // Coach CTA → land the user on a *generated* workout week, not an empty tool.
+  const onSetupWorkouts = () => {
+    try { localStorage.setItem("bloom:workout-autoplan", "1"); } catch {}
+    window.location.href = "/app/tools/workout";
+  };
+
   const history = profile.weightHistory ?? [];
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
-  // Body basics for an accurate calorie target (BMR). Persist as the user types.
-  const [heightInput, setHeightInput] = useState(profile.heightCm != null ? String(profile.heightCm) : "");
-  const [ageInput, setAgeInput] = useState(profile.age != null ? String(profile.age) : "");
-  const saveHeight = (v: string) => { setHeightInput(v); const n = parseFloat(v); setProfile((p) => ({ ...p, heightCm: n > 0 ? n : undefined })); };
-  const saveAge = (v: string) => { setAgeInput(v); const n = parseInt(v, 10); setProfile((p) => ({ ...p, age: n > 0 ? n : undefined })); };
+  // App-style edit popup (opened from the Goal-path card) for body & goal.
+  const [bodyEditOpen, setBodyEditOpen] = useState(false);
   const logWeight = () => {
     const kg = parseFloat(weightInput);
     if (!kg || kg <= 0) return;
@@ -821,10 +867,30 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
              body · goal) into the numbers she checks each day ── */}
       <EnergyTodayCard e={energy} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <GoalPathCard />
+        <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
         <WeekBalanceCard />
       </div>
-      <CoachCard />
+      <CoachCard onSetupWorkouts={onSetupWorkouts} onPlanMeals={onDietWeek} />
+      {bodyEditOpen && (
+        <BodyGoalEditModal
+          profile={profile}
+          onClose={() => setBodyEditOpen(false)}
+          onSave={({ weight, heightCm, targetWeight }) => {
+            setProfile((p) => {
+              const next = { ...p, heightCm, targetWeight };
+              if (weight && weight > 0 && weight !== p.weight) {
+                next.weight = weight;
+                const hist = (p.weightHistory ?? []).filter((e) => e.date !== todayISO());
+                hist.push({ date: todayISO(), kg: weight });
+                hist.sort((a, b) => (a.date < b.date ? -1 : 1));
+                next.weightHistory = hist;
+              }
+              return next;
+            });
+            setBodyEditOpen(false);
+          }}
+        />
+      )}
 
       {/* STEP 1 — your eating plan */}
       <div id="diet-plan">
@@ -906,26 +972,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
               <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
             </div>
             <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log</PinkBtn>
-          </div>
-
-          {/* Body basics → accurate calorie target */}
-          <div className="mt-3 rounded-2xl bg-blush/50 border border-petal/50 p-3">
-            <p className="flex items-start gap-1.5 text-[11px] leading-snug text-rose/70 mb-2">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-              <span>Add your height &amp; age once — it lets us calculate your <b className="text-hotpink">exact daily calorie target</b> in Meals (instead of an estimate).</span>
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
-                <span className="pl-3 pr-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/50">Height</span>
-                <input value={heightInput} onChange={(e) => saveHeight(e.target.value.replace(/[^\d.]/g, ""))} inputMode="numeric" placeholder="165" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none py-2" />
-                <span className="pr-3 text-[11px] font-bold text-rose/50">cm</span>
-              </label>
-              <label className="flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
-                <span className="pl-3 pr-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/50">Age</span>
-                <input value={ageInput} onChange={(e) => saveAge(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" placeholder="30" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none py-2" />
-                <span className="pr-3 text-[11px] font-bold text-rose/50">yr</span>
-              </label>
-            </div>
           </div>
         </Glass>
       </div>
