@@ -10,6 +10,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
+import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, calculateDailyTargets, passesMyRules,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
@@ -25,8 +26,25 @@ const LS = {
   tab: "bloom:diet-tab",
   todayMeals: "bloom:diet-today-meals",
   dismissedPW: "bloom:diet-dismissed-pw",
+  onboarded: "bloom:diet-onboarded",
   meGoal: "bloom:me-goal", // shared, bidirectional with Me page
 };
+
+/* ---------- Guided tour (reuses the shared SparkleOnboarding) ---------- */
+const DIET_TOUR_CONTENT: SparkleContent = {
+  eyebrow: "✦ your diet ✦",
+  titleLines: ["Meet your", "plan"],
+  subtitle: "A soft little tour of your plan, your cycle & your weight.",
+  ctaLabel: "Show me around",
+  finaleLines: ["You're all set,", "gorgeous"],
+  finaleSubtitle: "Eat in sync, bloom all month. ✿",
+};
+const DIET_TOUR_STEPS: SparkleStep[] = [
+  { key: "plan",   selector: "#diet-plan",   title: "Your eating plan",   desc: "Pick a real diet — every recipe is filtered to match it." },
+  { key: "cycle",  selector: "#diet-cycle",  title: "Synced to your cycle", desc: "Your phase shapes what to eat today — it's always here." },
+  { key: "weight", selector: "#diet-weight", title: "Track your weight",  desc: "Log your weight, set a goal, and watch the trend." },
+  { key: "tabs",   selector: "#diet-tabs",   title: "Log & browse",       desc: "Today logs your meals · Recipes browses your filtered library." },
+];
 
 function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
   const [v, setV] = useState<T>(() => {
@@ -116,9 +134,9 @@ const PHASE_RING: Record<DietPhase, string> = {
 
 /* ---------- UI atoms ---------- */
 
-function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Glass({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
   return (
-    <div className={`rounded-[1.5rem] bg-white/85 backdrop-blur border border-petal/60 shadow-lg shadow-rose/10 ${className}`}>
+    <div id={id} className={`rounded-[1.5rem] bg-white/85 backdrop-blur border border-petal/60 shadow-lg shadow-rose/10 ${className}`}>
       {children}
     </div>
   );
@@ -484,13 +502,14 @@ function WeightSparkline({ history }: { history: { date: string; kg: number }[] 
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, goTo }: {
+function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, goTo, onReplayTour }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   allMeals: Record<string, DayMeals>;
   setProfile: (v: (DietProfile & { weight: number }) | ((p: DietProfile & { weight: number }) => DietProfile & { weight: number })) => void;
   onEdit: () => void;
   goTo: (t: TabKey) => void;
+  onReplayTour: () => void;
 }) {
   const info = PHASE_INFO[phase];
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
@@ -546,10 +565,28 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
     }).length;
   }, []);
 
+  const nToday = todayISO();
+  const mealsToday = Object.values(allMeals[nToday] ?? {}).some(Boolean);
+  const weighedThisWeek = history.some((e) => Date.now() - new Date(e.date + "T00:00:00").getTime() < 7 * 864e5);
+  const next = !mealsToday
+    ? { Icon: UtensilsCrossed, text: "Add your first meal today", cta: "Pick a recipe" as string | null, act: () => goTo("recipes") }
+    : !weighedThisWeek
+    ? { Icon: Scale, text: "Time for your weekly weigh-in", cta: "Log weight" as string | null, act: () => document.getElementById("diet-weight")?.scrollIntoView({ behavior: "smooth", block: "center" }) }
+    : { Icon: Sparkles, text: "You're on a roll — all on track", cta: null as string | null, act: () => {} };
+
   return (
     <div className="space-y-4">
+      {/* Next-step banner — the guiding thread */}
+      <button onClick={next.act} className="w-full flex items-center gap-3 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white p-3.5 shadow-lg shadow-hotpink/30 active:scale-[0.99] transition text-left">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><next.Icon className="h-5 w-5" /></span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-[10px] font-bold uppercase tracking-widest text-white/70">Next step</span>
+          <span className="block text-sm font-bold leading-tight">{next.text}</span>
+        </span>
+        {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
+      </button>
       {/* Cycle focus — always on, we know her cycle */}
-      <Glass className="p-4 sm:p-5">
+      <Glass id="diet-cycle" className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-5 w-5" /></span>
@@ -569,7 +606,7 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
       </Glass>
 
       {/* Your eating plan — prominent, changeable, drives the recipes */}
-      <Glass className="p-4 sm:p-5">
+      <Glass id="diet-plan" className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-5 w-5" /></span>
@@ -601,7 +638,7 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
       </Glass>
 
       {/* Weight tracker */}
-      <Glass className="p-4 sm:p-5">
+      <Glass id="diet-weight" className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
@@ -660,7 +697,11 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         <a href="/app/tools/workout" className="text-xs font-bold text-hotpink hover:underline inline-flex items-center gap-0.5 shrink-0">Workout <ChevronRight className="h-3.5 w-3.5" /></a>
       </Glass>
 
-      <button onClick={onEdit} className="w-full text-center text-xs font-semibold text-rose/60 hover:text-hotpink py-1">Edit my diet setup ✿</button>
+      <div className="flex items-center justify-center gap-4 pt-1">
+        <button onClick={onEdit} className="text-xs font-semibold text-rose/60 hover:text-hotpink">Edit my diet setup ✿</button>
+        <span className="text-rose/30">·</span>
+        <button onClick={onReplayTour} className="text-xs font-semibold text-rose/60 hover:text-hotpink">Replay tour</button>
+      </div>
     </div>
   );
 }
@@ -1131,6 +1172,8 @@ export default function DietPage() {
   const [editingSetup, setEditingSetup] = useState(false);
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
   const [allMeals, setAllMeals] = useLS<Record<string, DayMeals>>(LS.todayMeals, {});
+  const [onboarded, setOnboarded] = useLS<boolean>(LS.onboarded, false);
+  const [replayTour, setReplayTour] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const cyclePhase = useMemo(() => mapCyclePhase(readCyclePhase()), []);
@@ -1176,8 +1219,17 @@ export default function DietPage() {
     return <SetupScreen initial={profile} onDone={handleSetupDone} />;
   }
 
+  const showTour = tab === "profile" && (!onboarded || replayTour);
+
   return (
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
+      {showTour && (
+        <SparkleOnboarding
+          steps={DIET_TOUR_STEPS}
+          content={DIET_TOUR_CONTENT}
+          onDone={() => { setOnboarded(true); setReplayTour(false); }}
+        />
+      )}
       <BloomBubbles count={10} />
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
@@ -1203,7 +1255,7 @@ export default function DietPage() {
             </p>
           </div>
           {/* Tab pills at bottom of hero */}
-          <div ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: "320ms" }}>
+          <div id="diet-tabs" ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: "320ms" }}>
             <div className="flex gap-1.5 w-max">
               {TABS.map((t) => {
                 const active = tab === t.key;
@@ -1233,6 +1285,7 @@ export default function DietPage() {
           <ProfileTab
             phase={cyclePhase} cycleDay={cycleDay} profile={profile} allMeals={allMeals}
             setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
+            onReplayTour={() => setReplayTour(true)}
           />
         )}
         {tab === "cycle" && <CycleNutritionTab phase={cyclePhase} profile={profile} onEdit={() => setEditingSetup(true)} />}
