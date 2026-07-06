@@ -10,7 +10,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
@@ -775,10 +775,10 @@ function PhaseCarousel({ phase, cycleDay, onSyncedPlan }: { phase: DietPhase; cy
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek }: {
+function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
-  allMeals: Record<string, DayMeals>;
+  mealsVersion: number;
   setProfile: (v: (DietProfile & { weight: number }) | ((p: DietProfile & { weight: number }) => DietProfile & { weight: number })) => void;
   onEdit: () => void;
   goTo: (t: TabKey) => void;
@@ -791,8 +791,8 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
 
-  // Live daily energy balance — recomputes when meals logged or profile changes.
-  const energy = useMemo(() => energyBalance(), [allMeals, profile]);
+  // Live daily energy balance — recomputes when meals change or profile changes.
+  const energy = useMemo(() => energyBalance(), [mealsVersion, profile]);
   // Real weight projection (pace from the calorie plan) for the chart.
   const weightProjection = useMemo(() => goalProjection(), [profile]);
 
@@ -823,25 +823,23 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
 
   const target = profile.targetWeight;
 
+  // How on-plan the whole week's meals are (from the ONE shared plan).
   const adherence = useMemo(() => {
-    const cutoff = Date.now() - 7 * 864e5;
+    const plan = readMealPlan();
     let logged = 0, onPlan = 0;
-    for (const [date, day] of Object.entries(allMeals)) {
-      const t = new Date(date + "T00:00:00").getTime();
-      if (isNaN(t) || t < cutoff) continue;
-      for (const meal of Object.values(day)) {
-        if (!meal) continue;
+    for (const day of Object.values(plan)) {
+      for (const id of Object.values(day)) {
+        if (!id) continue;
         logged++;
-        const rec = meal.recipeId ? RECIPES.find((r) => r.id === meal.recipeId) : undefined;
+        const rec = RECIPES.find((r) => r.id === id);
         if (rec && passesMyRules(rec, profile)) onPlan++;
       }
     }
     return { logged, onPlan, pct: logged ? Math.round((onPlan / logged) * 100) : 0 };
-  }, [allMeals, profile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mealsVersion, profile]);
 
-
-  const nToday = todayISO();
-  const mealsToday = Object.values(allMeals[nToday] ?? {}).some(Boolean);
+  const mealsToday = Object.values(readTodayPlannedDay()).some(Boolean);
   const weighedThisWeek = history.some((e) => Date.now() - new Date(e.date + "T00:00:00").getTime() < 7 * 864e5);
   const next = !cycleReady
     ? { Icon: Moon, text: "Sync your cycle to unlock your plan", cta: "Set up" as string | null, act: () => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; } }
@@ -1082,9 +1080,10 @@ function bestPostWorkoutRecipe(phase: DietPhase, profile: DietProfile, mealType:
 }
 
 function MealSlot({
-  type, meal, onAddRecipe, onRemove, candidates,
+  type, meal, eaten, onToggleEaten, onAddRecipe, onRemove, candidates,
 }: {
   type: MealType; meal: LoggedMeal | null;
+  eaten: boolean; onToggleEaten: () => void;
   onAddRecipe: (r: Recipe) => void; onRemove: () => void;
   candidates: Recipe[];
 }) {
@@ -1108,13 +1107,22 @@ function MealSlot({
         {MEAL_LABELS[type]}
       </p>
       {meal ? (
-        <div className="mt-1.5 flex items-start justify-between gap-2">
-          <div>
-            <p className="text-sm font-bold text-magenta">{meal.name}</p>
-            <p className="text-xs text-rose/70">{fmtMacroLine(meal.macros)}</p>
+        <div className="mt-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-sm font-bold text-magenta">{meal.name}</p>
+              <p className="text-xs text-rose/70">{fmtMacroLine(meal.macros)}</p>
+            </div>
+            <button onClick={onRemove} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
-          <button onClick={onRemove} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
-            <X className="h-3.5 w-3.5" />
+          {/* Tick when eaten → feeds today's macros & energy card */}
+          <button
+            onClick={onToggleEaten}
+            className={["mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition active:scale-95", eaten ? "bg-emerald-500 text-white" : "bg-white border border-petal/60 text-rose/70"].join(" ")}
+          >
+            <Check className="h-3.5 w-3.5" strokeWidth={3} /> {eaten ? "Eaten ✓" : "I ate this"}
           </button>
         </div>
       ) : searching ? (
@@ -1156,11 +1164,14 @@ function MealSlot({
 }
 
 function TodayTab({
-  phase, cycleDay, profile, dayMeals, setDayMeals,
+  phase, cycleDay, profile, dayMeals, eatenSlots, onSetSlot, onToggleEaten,
 }: {
   phase: DietPhase; cycleDay: number; profile: DietProfile & { weight: number };
-  dayMeals: DayMeals; setDayMeals: (d: DayMeals | ((p: DayMeals) => DayMeals)) => void;
+  dayMeals: DayMeals; eatenSlots: PlanSlot[];
+  onSetSlot: (slot: MealType, recipe: Recipe | null) => void;
+  onToggleEaten: (slot: MealType) => void;
 }) {
+  const eaten = new Set(eatenSlots);
   const [dismissedPW, setDismissedPW] = useLS<Record<string, boolean>>(LS.dismissedPW, {});
   const [pwIndex, setPwIndex] = useState(0);
 
@@ -1174,8 +1185,13 @@ function TodayTab({
 
   const proteinBoostTarget = workoutToday ? Math.round(profile.weight * 1.8) : targets.protein;
 
+  // Consumed = only meals ticked as eaten, matching the energy card.
   const consumed = useMemo(() => {
-    return (Object.values(dayMeals).filter(Boolean) as LoggedMeal[]).reduce(
+    const eatenMeals = (["breakfast", "lunch", "dinner", "snack", "lunchbox"] as MealType[])
+      .filter((s) => eaten.has(s as PlanSlot))
+      .map((s) => dayMeals[s])
+      .filter(Boolean) as LoggedMeal[];
+    return eatenMeals.reduce(
       (acc, m) => ({
         calories: acc.calories + m.macros.calories,
         protein: acc.protein + m.macros.protein,
@@ -1190,13 +1206,14 @@ function TodayTab({
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0, iron: 0, magnesium: 0, omega3: 0, fibre: 0, vitaminB6: 0, vitaminC: 0 },
     );
-  }, [dayMeals]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayMeals, eatenSlots]);
 
   const ringColor = PHASE_RING[phase];
   const micros = PHASE_MICROS[phase];
 
   const assignMeal = (type: MealType, r: Recipe) => {
-    setDayMeals((d) => ({ ...d, [type]: { name: r.name, recipeId: r.id, macros: r.macros, micros: r.micros } }));
+    onSetSlot(type, r);
   };
 
   const candidatesFor = (type: MealType): Recipe[] => {
@@ -1299,8 +1316,10 @@ function TodayTab({
           {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
             <MealSlot
               key={type} type={type} meal={dayMeals[type]}
+              eaten={eaten.has(type as PlanSlot)}
+              onToggleEaten={() => onToggleEaten(type)}
               onAddRecipe={(r) => assignMeal(type, r)}
-              onRemove={() => setDayMeals((d) => ({ ...d, [type]: null }))}
+              onRemove={() => onSetSlot(type, null)}
               candidates={candidatesFor(type)}
             />
           ))}
@@ -1489,7 +1508,12 @@ export default function DietPage() {
   const [tab, setTab] = useLS<TabKey>(LS.tab, "profile");
   const [editingSetup, setEditingSetup] = useState(false);
   const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
-  const [allMeals, setAllMeals] = useLS<Record<string, DayMeals>>(LS.todayMeals, {});
+  // Today's meals ARE the one shared weekly plan (bloom:meals-plan). We mirror
+  // it in state and re-read after every write so edits here == the Planner.
+  const [todayPlan, setTodayPlan] = useState(() => readTodayPlannedDay());
+  const [eatenSlots, setEatenSlots] = useState<PlanSlot[]>(() => readEatenToday());
+  const [mealsVersion, setMealsVersion] = useState(0);
+  const refreshMeals = () => { setTodayPlan(readTodayPlannedDay()); setMealsVersion((v) => v + 1); };
   const [onboarded, setOnboarded] = useLS<boolean>(LS.onboarded, false);
   const [replayTour, setReplayTour] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -1516,45 +1540,49 @@ export default function DietPage() {
     try { localStorage.setItem(LS.meGoal, p.goal); } catch {}
   };
 
-  const today = todayISO();
-  const dayMeals = allMeals[today] ?? EMPTY_DAY;
-  const setDayMeals = (d: DayMeals | ((p: DayMeals) => DayMeals)) => {
-    setAllMeals((all) => {
-      const cur = all[today] ?? EMPTY_DAY;
-      const next = typeof d === "function" ? (d as (p: DayMeals) => DayMeals)(cur) : d;
-      return { ...all, [today]: next };
+  // Today's meals, derived from the shared plan (recipeId → full meal).
+  const dayMeals: DayMeals = useMemo(() => {
+    const d: DayMeals = { ...EMPTY_DAY };
+    (["breakfast", "lunch", "dinner", "snack", "lunchbox"] as MealType[]).forEach((slot) => {
+      const id = todayPlan[slot as PlanSlot];
+      const r = id ? RECIPES.find((x) => x.id === id) : undefined;
+      d[slot] = r ? { name: r.name, recipeId: r.id, macros: r.macros, micros: r.micros } : null;
     });
-  };
+    return d;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayPlan]);
+  const mealsToday = Object.values(dayMeals).some(Boolean);
 
+  // Set/clear a slot → writes the ONE plan for today's weekday.
+  const onSetSlot = (slot: MealType, recipe: Recipe | null) => {
+    setMealPlanSlot(todayWeekday(), slot as PlanSlot, recipe?.id ?? null);
+    refreshMeals();
+  };
+  const onToggleEaten = (slot: MealType) => { setEatenSlots(toggleEatenToday(slot as PlanSlot)); setMealsVersion((v) => v + 1); };
+
+  // Recipe modal "add to plan" → writes the plan for that date's weekday.
   const addToPlan = (date: string, recipe: Recipe) => {
-    setAllMeals((all) => {
-      const cur = all[date] ?? EMPTY_DAY;
-      return { ...all, [date]: { ...cur, [recipe.mealType]: { name: recipe.name, recipeId: recipe.id, macros: recipe.macros, micros: recipe.micros } } };
-    });
+    const wd = new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" });
+    setMealPlanSlot(wd, recipe.mealType as PlanSlot, recipe.id);
+    if (wd === todayWeekday()) refreshMeals();
   };
 
   const cycleReady = hasCycleSettings();
 
-  // Fill today's LOG. SINGLE SOURCE OF TRUTH: if the one weekly Meals plan
-  // already proposes meals for today, copy THOSE (so Diet mirrors the Planner &
-  // Today). Only fall back to picking when a slot has nothing planned yet.
+  // Fill today's empty slots into the ONE plan (phase-synced picks), keeping any
+  // meal the Meals Planner already set — so Diet & Planner stay identical.
   const fillToday = (pred: (r: Recipe) => boolean) => {
     const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+    const day = todayWeekday();
     const planned = readTodayPlannedDay();
-    setAllMeals((all) => {
-      const day: DayMeals = { ...EMPTY_DAY };
-      slots.forEach((slot, i) => {
-        const plannedId = planned[slot as "breakfast" | "lunch" | "dinner" | "snack"];
-        let r = plannedId ? RECIPES.find((x) => x.id === plannedId) : undefined;
-        if (!r) {
-          const primary = RECIPES.filter((x) => x.mealType === slot && pred(x));
-          const pool = primary.length ? primary : RECIPES.filter((x) => x.mealType === slot && passesMyRules(x, profile));
-          r = pool.length ? pool[(i * 3) % pool.length] : undefined;
-        }
-        if (r) day[slot] = { name: r.name, recipeId: r.id, macros: r.macros, micros: r.micros };
-      });
-      return { ...all, [today]: day };
+    slots.forEach((slot, i) => {
+      if (planned[slot as PlanSlot]) return; // keep what the plan already has
+      const primary = RECIPES.filter((x) => x.mealType === slot && pred(x));
+      const pool = primary.length ? primary : RECIPES.filter((x) => x.mealType === slot && passesMyRules(x, profile));
+      const r = pool.length ? pool[(i * 3) % pool.length] : undefined;
+      if (r) setMealPlanSlot(day, slot as PlanSlot, r.id);
     });
+    refreshMeals();
     setTab("today");
   };
   const onSyncedPlan = () => fillToday((r) => r.phases.includes(cyclePhase) && passesMyRules(r, profile));
@@ -1653,7 +1681,7 @@ export default function DietPage() {
       <div className="space-y-4">
         {tab === "profile" && (
           <ProfileTab
-            phase={cyclePhase} cycleDay={cycleDay} profile={profile} allMeals={allMeals}
+            phase={cyclePhase} cycleDay={cycleDay} profile={profile} mealsVersion={mealsVersion}
             setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
             onReplayTour={() => setReplayTour(true)} cycleReady={cycleReady}
             onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
@@ -1664,11 +1692,11 @@ export default function DietPage() {
             phase={cyclePhase} cycleDay={cycleDay} profile={profile}
             onEdit={() => setEditingSetup(true)} cycleReady={cycleReady}
             onSyncedPlan={onSyncedPlan}
-            mealsToday={Object.values(allMeals[today] ?? {}).some(Boolean)}
+            mealsToday={mealsToday}
           />
         )}
         {tab === "today" && (
-          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} setDayMeals={setDayMeals} />
+          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} eatenSlots={eatenSlots} onSetSlot={onSetSlot} onToggleEaten={onToggleEaten} />
         )}
         {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
       </div>
