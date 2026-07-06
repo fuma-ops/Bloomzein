@@ -1914,9 +1914,10 @@ function SessionPlayer({
   const dim = mode === "audio" && !peek;
 
   return (
-    <div className={["yoga-fade", dim ? "" : ""].join(" ")}>
+    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col p-3 sm:p-4"
+      style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
       {/* TOP BAR */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
         <button onClick={() => { stop(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
           <X className="h-3.5 w-3.5" /> End
         </button>
@@ -1931,20 +1932,20 @@ function SessionPlayer({
         </div>
       </div>
 
-      <div className={["rounded-3xl border border-petal/60 overflow-hidden shadow-xl shadow-rose/10 transition",
+      <div className={["flex-1 min-h-0 flex flex-col rounded-3xl border border-petal/60 overflow-hidden shadow-xl shadow-rose/10 transition",
         dim ? "bg-rose/95 text-white" : "bg-white/90 backdrop-blur"].join(" ")}>
-        {/* IMAGE / PACER */}
-        <div className={["relative", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
+        {/* IMAGE / PACER — flexes to fill the free space */}
+        <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
             <>
-              <img src={pose.image} alt={pose.name} className="w-full aspect-square object-contain sm:aspect-[4/3] sm:max-h-[50vh] bg-[oklch(0.96_0.04_350)]" />
+              <img src={pose.image} alt={pose.name} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)]" />
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
                 <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
             </>
           ) : (
             // Eyes-closed: pose faintly visible behind, pacer front and center
-            <div className="relative w-full aspect-square sm:aspect-[4/3] sm:max-h-[50vh] grid place-items-center">
+            <div className="relative w-full h-full grid place-items-center">
               <img
                 src={pose.image}
                 alt=""
@@ -1961,7 +1962,7 @@ function SessionPlayer({
         </div>
 
         {/* TEXT */}
-        <div className={["p-4 sm:p-6", dim ? "text-white" : ""].join(" ")}>
+        <div className={["shrink-0 p-3 sm:p-5", dim ? "text-white" : ""].join(" ")}>
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div>
               <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : "text-rose/60"].join(" ")}>
@@ -1978,11 +1979,11 @@ function SessionPlayer({
             </div>
           </div>
 
-          <p dir={lang === "ar" ? "rtl" : "ltr"} className={["mt-3 text-sm sm:text-base leading-relaxed", dim ? "text-white/90" : "text-rose/90"].join(" ")}>
+          <p dir={lang === "ar" ? "rtl" : "ltr"} className={["mt-2 text-xs sm:text-base leading-snug line-clamp-2", dim ? "text-white/90" : "text-rose/90"].join(" ")}>
             {pose.cues[lang]}
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button onClick={() => setRunning((r) => !r)}
               className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white">
               {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === hold ? "Start" : "Resume"}</>}

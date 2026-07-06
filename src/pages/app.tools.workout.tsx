@@ -2326,7 +2326,7 @@ function SessionActive({ session, onExit, onDone }: {
         </button>
       </div>
 
-      <div className="relative flex-1 overflow-y-auto">
+      <div className="relative flex-1 min-h-0 overflow-hidden">
         {phase === "exercise" && next && remaining > 0 && remaining <= 5 && (
           <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-2.5 sm:p-4 pr-3 sm:pr-6 animate-fade-in">
             <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-28 sm:w-28 object-cover rounded-xl border border-petal/60" />
@@ -2336,25 +2336,27 @@ function SessionActive({ session, onExit, onDone }: {
             </div>
           </div>
         )}
-        {/* min-h-full centers when there's room, but lets content scroll (and stay
-            reachable from the top) on shorter screens instead of clipping. */}
-        <div className="min-h-full flex flex-col items-center justify-center gap-2.5 sm:gap-4 p-4">
+        {/* Fits the viewport with no scroll: the photo flexes to whatever height
+            is left, everything else stays a fixed, always-visible size. */}
+        <div className="h-full flex flex-col items-center justify-center gap-1.5 sm:gap-3 px-3 py-2">
           {phase === "exercise" ? (
             <>
-              <ExercisePhoto exercise={exercise} zone={session.zone} className="w-auto max-w-full sm:max-w-md mx-auto max-h-[38vh] sm:max-h-[42vh] aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
-              <h2 className="font-script text-3xl sm:text-6xl text-hotpink leading-none text-center">{exercise.name}</h2>
-              <p className="text-sm sm:text-xl text-rose/70 text-center">{exercise.muscles}</p>
+              <div className="flex-1 min-h-0 w-full flex items-center justify-center">
+                <ExercisePhoto exercise={exercise} zone={session.zone} className="max-h-full max-w-full aspect-square object-cover rounded-3xl border border-petal/60 shadow-md" />
+              </div>
+              <h2 className="shrink-0 font-script text-2xl sm:text-5xl text-hotpink leading-none text-center">{exercise.name}</h2>
+              <p className="shrink-0 text-xs sm:text-lg text-rose/70 text-center line-clamp-1">{exercise.muscles}</p>
               {getCoaching(exercise.slug)?.cues[0] && (
-                <p className="max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2">
+                <p className="shrink-0 max-w-md text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2 line-clamp-1">
                   <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
                 </p>
               )}
               {step.repTarget && (
-                <span className="rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
+                <span className="shrink-0 rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
                   {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
                 </span>
               )}
-              <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
+              <div className="shrink-0"><CircularTimer totalSec={totalSec} remainingSec={remaining} size={120} /></div>
             </>
           ) : (
             <div className="w-full max-w-md rounded-3xl bg-gradient-to-b from-white/95 to-blush/40 border border-petal/60 p-5 sm:p-7 text-center shadow-md">
