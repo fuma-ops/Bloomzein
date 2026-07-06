@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 Disallow: /app/
 
-Sitemap: https://bloomzein.app/sitemap.xml
+Sitemap: https://www.bloomzein.com/sitemap.xml

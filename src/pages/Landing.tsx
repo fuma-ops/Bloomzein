@@ -92,7 +92,7 @@ export default function Landing() {
                 disabled={installing}
                 className="bloom-luxury-btn animate-cta-glow hover-scale inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition disabled:opacity-70"
               >
-                {installing ? "Préparation…" : "Download App"} <Download className="h-3.5 w-3.5" />
+                {installing ? "Preparing…" : "Download App"} <Download className="h-3.5 w-3.5" />
               </button>
               {/* QR popover on hover */}
               <div className="pointer-events-none absolute right-0 top-full mt-2 w-44 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0 translate-y-1">
@@ -237,7 +237,7 @@ export default function Landing() {
                   ) : (
                     <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
-                  {installing ? "Préparation…" : "Download App"}
+                  {installing ? "Preparing…" : "Download App"}
                 </button>
               </div>
             </div>
@@ -561,7 +561,7 @@ export default function Landing() {
               <p className="mb-3 text-sm font-bold text-hotpink">Support</p>
               <ul className="mb-4 space-y-2 text-sm text-[#9d174d]/70">
                 <li><a href="#" className="hover:text-hotpink transition">Contact Us</a></li>
-                <li><a href="mailto:support@bloomzein.com" className="hover:text-hotpink transition">support@bloomzein.com</a></li>
+                <li><a href="mailto:bloomzeinapp@gmail.com" className="hover:text-hotpink transition">bloomzeinapp@gmail.com</a></li>
               </ul>
               <div className="rounded-2xl border border-pink-300/50 bg-white/55 p-3 backdrop-blur">
                 <p className="font-bold text-hotpink text-sm">Stay in Bloom 🌸</p>

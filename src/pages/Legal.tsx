@@ -13,7 +13,7 @@ import { AppIcon } from "@/components/bloom/AppIcon";
  * ------------------------------------------------------------------ */
 
 const LAST_UPDATED = "July 6, 2026";
-const CONTACT_EMAIL = "hello@bloomzein.app"; // [contact email]
+const CONTACT_EMAIL = "bloomzeinapp@gmail.com"; // [contact email]
 const ENTITY = "Bloom & Zein"; // [Company / legal entity]
 
 function LegalShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
