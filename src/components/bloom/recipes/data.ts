@@ -52,6 +52,8 @@ export interface DietProfile {
   cookingFrequency: CookingFrequency;
   /** Weight log over time (kg), oldest → newest. */
   weightHistory: WeightEntry[];
+  /** Optional goal weight (kg) to progress toward. */
+  targetWeight?: number;
 }
 
 export const DIET_PROFILE_KEY = "bloom:diet-profile";
