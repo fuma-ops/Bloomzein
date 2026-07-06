@@ -10,9 +10,14 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [agreed, setAgreed] = useState(false)
+
+  // Explicit consent is required to create an account (we process health data).
+  const consentNeeded = mode === "signup" && !agreed
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (consentNeeded) { setError("Please agree to the Privacy Policy and Terms to continue."); return }
     setError(null)
     setLoading(true)
     const { error } = mode === "signin"
@@ -20,6 +25,11 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
       : await signUpWithEmail(email, password)
     setLoading(false)
     if (error) setError(error)
+  }
+
+  const handleGoogle = () => {
+    if (consentNeeded) { setError("Please agree to the Privacy Policy and Terms to continue."); return }
+    signInWithGoogle()
   }
 
   return (
@@ -36,14 +46,18 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
 
         <div className="flex flex-col items-center text-center">
           <AppIcon size={56} />
-          <h2 className="mt-3 font-script text-3xl text-[#831843]">Rejoins Bloom & Zein ✿</h2>
+          <h2 className="mt-3 font-script text-3xl text-[#831843]">
+            {mode === "signin" ? "Welcome back ✿" : "Join Bloom & Zein ✿"}
+          </h2>
           <p className="mt-1 text-sm text-[#9D5C7E] leading-snug">
-            Crée ton compte gratuit pour profiter de toutes les fonctionnalités.
+            {mode === "signin"
+              ? "Sign in to pick up right where you left off."
+              : "Create your free account to unlock every feature."}
           </p>
         </div>
 
         <button
-          onClick={signInWithGoogle}
+          onClick={handleGoogle}
           className="mt-5 w-full inline-flex items-center justify-center gap-2.5 rounded-full bg-white border border-[#EC4899]/25 px-4 py-3 text-sm font-bold text-[#831843] shadow-sm hover:bg-[#FFF0F6] transition"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -52,12 +66,12 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
-          Continuer avec Google
+          Continue with Google
         </button>
 
         <div className="my-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#EC4899]/15" />
-          <span className="text-xs font-semibold text-[#9D5C7E]">ou avec ton email</span>
+          <span className="text-xs font-semibold text-[#9D5C7E]">or with your email</span>
           <div className="h-px flex-1 bg-[#EC4899]/15" />
         </div>
 
@@ -74,30 +88,54 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
             type="password"
             required
             minLength={6}
-            placeholder="Mot de passe"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-2xl border border-[#EC4899]/20 bg-[#FFF0F6]/60 px-4 py-2.5 text-sm text-[#831843] placeholder:text-[#9D5C7E]/70 outline-none focus:border-[#EC4899] transition"
           />
+
+          {mode === "signup" && (
+            <label className="mt-0.5 flex items-start gap-2 text-left text-[11.5px] leading-snug text-[#9D5C7E]">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => { setAgreed(e.target.checked); if (e.target.checked) setError(null) }}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#EC4899]"
+              />
+              <span>
+                I’m 16 or older and agree to the{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-[#EC4899] hover:text-[#DB2777] underline">Privacy Policy</a>{" "}and{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-[#EC4899] hover:text-[#DB2777] underline">Terms</a>, including processing of my health data.
+              </span>
+            </label>
+          )}
+
           {error && <p className="text-xs font-semibold text-[#DB2777]">{error}</p>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || consentNeeded}
             className="mt-1 rounded-full bg-[#EC4899] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-[#EC4899]/30 hover:bg-[#DB2777] transition disabled:opacity-60"
           >
-            {loading ? "Un instant…" : mode === "signin" ? "Se connecter" : "Créer mon compte"}
+            {loading ? "One moment…" : mode === "signin" ? "Sign in" : "Create my account"}
           </button>
         </form>
 
         <p className="mt-4 text-center text-xs text-[#9D5C7E]">
-          {mode === "signin" ? "Pas encore de compte ?" : "Déjà un compte ?"}{" "}
+          {mode === "signin" ? "Don’t have an account yet?" : "Already have an account?"}{" "}
           <button
             onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null) }}
             className="font-bold text-[#EC4899] hover:text-[#DB2777] transition"
           >
-            {mode === "signin" ? "Inscris-toi" : "Connecte-toi"}
+            {mode === "signin" ? "Sign up" : "Sign in"}
           </button>
         </p>
+        {mode === "signin" && (
+          <p className="mt-3 text-center text-[11px] text-[#9D5C7E]/80">
+            By continuing you agree to our{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#EC4899] hover:text-[#DB2777] underline">Privacy Policy</a>{" "}&amp;{" "}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#EC4899] hover:text-[#DB2777] underline">Terms</a>.
+          </p>
+        )}
       </div>
     </div>
   )

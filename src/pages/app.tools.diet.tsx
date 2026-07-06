@@ -1399,7 +1399,7 @@ export default function DietPage() {
 
       {/* HERO — compact fixed height (stays small on desktop, like the Budget hero) */}
       <div className="relative w-full min-h-[150px] sm:min-h-[166px] lg:min-h-[178px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-hero-border-signal">
-        <img src="/images/meal-oats.jpg" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <img src="/images/meal-oats.webp" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">

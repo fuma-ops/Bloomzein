@@ -29,13 +29,13 @@ const TOPIC_LABELS: Record<Topic, string> = {
 };
 
 const IMG = {
-  featured: "/images/read-featured.png",
-  "Cycle & Body": "/images/read-cycle.png",
-  "Self-care": "/images/read-selfcare.png",
-  "Money": "/images/read-money.png",
-  "Movement": "/images/read-movement.png",
-  "Mindset": "/images/read-mindset.png",
-  "Recipes": "/images/read-recipes.png",
+  featured: "/images/read-featured.webp",
+  "Cycle & Body": "/images/read-cycle.webp",
+  "Self-care": "/images/read-selfcare.webp",
+  "Money": "/images/read-money.webp",
+  "Movement": "/images/read-movement.webp",
+  "Mindset": "/images/read-mindset.webp",
+  "Recipes": "/images/read-recipes.webp",
 } as const;
 
 const ARTICLES: Article[] = [

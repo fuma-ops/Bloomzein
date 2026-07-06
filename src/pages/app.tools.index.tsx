@@ -66,7 +66,7 @@ export default function ToolsIndex() {
         <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ minHeight: '11rem' }}>
           {/* New bloom fitness image */}
           <img
-            src="/images/tools-hero-bloom.png" alt=""
+            src="/images/tools-hero-bloom.webp" alt=""
             className="animate-hero-breathe absolute inset-0 h-full w-full object-cover"
             style={{ objectPosition: 'center' }}
           />
@@ -146,7 +146,7 @@ export default function ToolsIndex() {
       {/* HERO — Daily Bloom Affirmation */}
       <section className="mt-4 sm:mt-6">
         <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-          <img src="/images/tools-hero-affirmation.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
+          <img src="/images/tools-hero-affirmation.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
           <div
             className="absolute inset-0 z-[2]"
             style={{ background: "radial-gradient(65% 90% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.6) 45%, transparent 80%)" }}

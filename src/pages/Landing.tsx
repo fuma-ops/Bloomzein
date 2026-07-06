@@ -190,7 +190,7 @@ export default function Landing() {
         <section className="section-pink-shadow relative -mx-4 -mt-4 min-h-0 overflow-hidden rounded-b-[2rem] sm:-mx-6 sm:-mt-6 sm:rounded-b-[3rem]">
           {/* hero photo — fills the entire banner, text sits on top of it */}
           <img
-            src="/images/landing-hero.png"
+            src="/images/landing-hero.webp"
             alt="A radiant girl glowing in a dreamy pink bloom of light and petals"
             fetchPriority="high"
             decoding="async"
@@ -545,8 +545,13 @@ export default function Landing() {
             <div>
               <p className="mb-3 text-sm font-bold text-hotpink">Company</p>
               <ul className="space-y-2 text-sm text-[#9d174d]/70">
-                {["About Us","Our Mission","Privacy Policy","Terms of Service"].map(c => (
-                  <li key={c}><a href="#" className="hover:text-hotpink transition">{c}</a></li>
+                {[
+                  { label: "About Us", href: "#" },
+                  { label: "Our Mission", href: "#" },
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Terms of Service", href: "/terms" },
+                ].map(({ label, href }) => (
+                  <li key={label}><a href={href} className="hover:text-hotpink transition">{label}</a></li>
                 ))}
               </ul>
             </div>

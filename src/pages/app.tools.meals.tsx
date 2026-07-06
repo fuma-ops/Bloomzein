@@ -58,11 +58,11 @@ import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/comp
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
 const MEAL_PHOTO_FALLBACK: Record<string, string> = {
-  breakfast: '/images/meal-oats.jpg',
-  lunch:     '/images/meal-buddha.jpg',
-  dinner:    '/images/meal-stew.jpg',
-  snack:     '/images/meal-lunchbox.jpg',
-  lunchbox:  '/images/meal-lunchbox.jpg',
+  breakfast: '/images/meal-oats.webp',
+  lunch:     '/images/meal-buddha.webp',
+  dinner:    '/images/meal-stew.webp',
+  snack:     '/images/meal-lunchbox.webp',
+  lunchbox:  '/images/meal-lunchbox.webp',
 };
 
 /* ---------- localStorage keys ---------- */
@@ -466,7 +466,7 @@ export default function MealsPage() {
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
       {/* HERO — compact, matches Budget Planner height */}
       <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
-        <img src="/images/meals-hero-new.png" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
+        <img src="/images/meals-hero-new.webp" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
@@ -843,7 +843,7 @@ function WeekTab({
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
                   const proteinBoosted = d === proteinBoostDay && slot === "dinner";
-                  const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.jpg';
+                  const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.webp';
                   const photoSrc = r?.photo ? `/images/recipes/${r.photo}` : fallback;
                   return (
                     <div
@@ -969,7 +969,7 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
         {KID_DAYS.map((d, di) => {
           const id = kidPlan[d];
           const r = id ? RECIPES.find((x) => x.id === id) : null;
-          const photo = MEAL_PHOTO_FALLBACK['lunchbox'] ?? '/images/meal-lunchbox.jpg';
+          const photo = MEAL_PHOTO_FALLBACK['lunchbox'] ?? '/images/meal-lunchbox.webp';
           return (
             <div
               key={d}
@@ -1345,7 +1345,7 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {list.map((r) => {
-        const fallback = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
+        const fallback = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.webp';
         const photoSrc = recipeImg(r) ?? fallback;
         return (
           <div key={r.id} className="flex flex-col gap-1">
@@ -1426,7 +1426,7 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
   const r = RECIPES.find((x) => x.id === id);
   if (!r) return null;
   const fav = favorites.includes(r.id);
-  const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.jpg';
+  const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.webp';
   const photoSrc  = fallback;
 
   // Guard: ignore backdrop clicks for the first 80ms after mount so the

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Landing from "./pages/Landing";
+import { PrivacyPage, TermsPage } from "./pages/Legal";
 import ToolsIndex from "./pages/app.tools.index";
 import BudgetPage from "./pages/budget";
 import YogaPage from "./pages/app.tools.yoga";
@@ -79,6 +80,14 @@ function AppContent() {
   // Landing page remains standalone (no AppShell layout)
   if (path === "/" || path === "/index.html") {
     return <Landing />;
+  }
+
+  // Legal pages — public, standalone, no auth (needed before collecting data)
+  if (path === "/privacy") {
+    return <PrivacyPage />;
+  }
+  if (path === "/terms") {
+    return <TermsPage />;
   }
 
   // Inside-App routes wrapped with the interactive Navigation Menu & Sidebar (AppShell)

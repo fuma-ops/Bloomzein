@@ -44,9 +44,9 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
 /* ---------- Favorites — real saved recipes, else curated reads ---------- */
 type FavItem = { title: string; tag: string; img: string; href: string };
 const CURATED_READS: FavItem[] = [
-  { title: "Cycle syncing 101", tag: "Wellness", img: "/images/read-cycle.png", href: "/app/read" },
-  { title: "Soft girl morning ritual", tag: "Lifestyle", img: "/images/read-selfcare.png", href: "/app/read" },
-  { title: "Pink budgeting that works", tag: "Money", img: "/images/read-money.png", href: "/budget" },
+  { title: "Cycle syncing 101", tag: "Wellness", img: "/images/read-cycle.webp", href: "/app/read" },
+  { title: "Soft girl morning ritual", tag: "Lifestyle", img: "/images/read-selfcare.webp", href: "/app/read" },
+  { title: "Pink budgeting that works", tag: "Money", img: "/images/read-money.webp", href: "/budget" },
 ];
 function readFavorites(): { items: FavItem[]; isReal: boolean } {
   const favIds = readJSON<string[]>("bloom:meals-favorites", []);
@@ -60,7 +60,7 @@ function readFavorites(): { items: FavItem[]; isReal: boolean } {
     items: recs.slice(0, 8).map((r) => ({
       title: r.name,
       tag: r.mealType,
-      img: r.photo ? `/images/recipes/${r.photo}` : "/images/meal-buddha.jpg",
+      img: r.photo ? `/images/recipes/${r.photo}` : "/images/meal-buddha.webp",
       href: "/app/tools/meals",
     })),
   };
@@ -125,7 +125,7 @@ export default function MePage() {
             <div className="relative shrink-0">
               <div className="absolute -inset-1 rounded-full bg-white/70 blur-md" />
               <img
-                src="/images/me-avatar.png"
+                src="/images/me-avatar.webp"
                 alt="Your avatar"
                 className="relative h-16 w-16 sm:h-28 sm:w-28 rounded-full border-2 sm:border-4 border-white object-cover shadow-xl shadow-hotpink/30"
                 referrerPolicy="no-referrer"

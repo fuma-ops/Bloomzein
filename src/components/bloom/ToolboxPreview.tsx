@@ -77,10 +77,10 @@ const TEASERS: Record<string, { title: string; text: string }> = {
 };
 
 const MEAL_PREVIEWS: { src: string; label: string }[] = [
-  { src: "/images/meal-buddha.jpg", label: "Buddha Bowl" },
-  { src: "/images/meal-lunchbox.jpg", label: "Cute Lunchbox" },
-  { src: "/images/meal-oats.jpg", label: "Cozy Oats" },
-  { src: "/images/meal-stew.jpg", label: "Warm Stew" },
+  { src: "/images/meal-buddha.webp", label: "Buddha Bowl" },
+  { src: "/images/meal-lunchbox.webp", label: "Cute Lunchbox" },
+  { src: "/images/meal-oats.webp", label: "Cozy Oats" },
+  { src: "/images/meal-stew.webp", label: "Warm Stew" },
 ];
 
 const BUDGET_SEGMENTS = [
@@ -447,7 +447,7 @@ function WorkoutPreview({ phase }: { phase: Phase }) {
   return (
     <PreviewShell>
       <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
-      <img src={`/images/${data.zone}.png`} alt="" loading="lazy" className="h-28 w-44 rounded-2xl object-cover shadow-md sm:h-32 sm:w-52 lg:h-44 lg:w-72" />
+      <img src={`/images/${data.zone}.webp`} alt="" loading="lazy" className="h-28 w-44 rounded-2xl object-cover shadow-md sm:h-32 sm:w-52 lg:h-44 lg:w-72" />
       <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
       <DiscoverButton href="/app/tools/workout" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </PreviewShell>
