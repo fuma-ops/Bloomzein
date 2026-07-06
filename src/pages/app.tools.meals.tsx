@@ -318,11 +318,10 @@ export default function MealsPage() {
     const refresh = () => setTodaySymptoms(readTodaySymptoms());
     window.addEventListener("storage", refresh);
 
-    // FIRST-USE ONLY: if the user has never chosen a phase, pre-select their
-    // real cycle phase so meals start phase-appropriate. Once they've made a
-    // choice (including "any"), it's theirs — we never override it again.
+    // Default the phase from the Cycle Tracker: whenever meals opens on "any",
+    // pre-select the user's real current phase so meals start phase-appropriate.
     try {
-      if (localStorage.getItem(LS.phase) == null) {
+      if (phase === "any") {
         const real = readCyclePhase();
         if (real && real !== "any") setPhase(real as CyclePhase);
       }
