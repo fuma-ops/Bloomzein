@@ -443,7 +443,28 @@ const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
 export const REMINDER_KEY = "bloom:yoga-reminder";
 export const YOGA_DURATIONS_KEY = "bloom:yoga-durations";
+export const YOGA_PROFILE_KEY = "bloom:yoga-profile";
 interface Streak { count: number; lastISO: string | null; }
+
+// What the user wants from yoga — used when building a custom week + stored as
+// a preference (level also becomes the default for every session she starts).
+type YogaGoal = "calm" | "strength" | "flexibility" | "energy";
+const YOGA_GOALS: { key: YogaGoal; label: string; focuses: string[] }[] = [
+  { key: "calm",        label: "Calm & restore",  focuses: ["Stress relief", "Sleep prep"] },
+  { key: "strength",    label: "Strength & tone", focuses: ["Strength", "Morning energy"] },
+  { key: "flexibility", label: "Flexibility",     focuses: ["Stress relief", "Cycle sync"] },
+  { key: "energy",      label: "Energy & focus",  focuses: ["Morning energy", "Strength"] },
+];
+const YOGA_DAY_PATTERNS: Record<number, string[]> = {
+  2: ["Mon", "Thu"],
+  3: ["Mon", "Wed", "Fri"],
+  4: ["Mon", "Tue", "Thu", "Fri"],
+  5: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+};
+function readYogaProfileLevel(): Level {
+  try { const p = JSON.parse(localStorage.getItem(YOGA_PROFILE_KEY) || "null"); return p?.level ?? "Beginner"; }
+  catch { return "Beginner"; }
+}
 
 /** Maps the app-wide 5-phase cycle to Yoga's 4-phase model. */
 function mapToYogaPhase(p: CyclePhase | null): Phase {
@@ -1217,6 +1238,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const [durations, setDurations] = useState<Record<string, number>>({});
   const [reminder, setReminder] = useState("07:30");
   const [editing, setEditing] = useState(false);
+  const [buildStep, setBuildStep] = useState(false); // "Build my own" → level/goal setup first
 
   // Cross-tool fuel: her body goal + real cycle phase decide the meals we
   // suggest after each planned flow (falls back to the yoga phase suggestion).
@@ -1249,6 +1271,21 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     setSchedule(next);
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
     askForNotifications();
+  };
+
+  // "Build my own" → save level/goal, lay out a week from those, open the editor.
+  const createOwnWeek = (level: Level, gGoal: YogaGoal, daysPerWeek: number) => {
+    try { localStorage.setItem(YOGA_PROFILE_KEY, JSON.stringify({ level, goal: gGoal })); } catch {}
+    const activeDays = YOGA_DAY_PATTERNS[daysPerWeek] ?? YOGA_DAY_PATTERNS[3];
+    const focuses = YOGA_GOALS.find((g) => g.key === gGoal)?.focuses ?? ["Stress relief"];
+    const next: Record<string, string | null> = {};
+    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d) => { next[d] = null; });
+    activeDays.forEach((d, i) => { next[d] = focuses[i % focuses.length]; });
+    setSchedule(next);
+    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    askForNotifications();
+    setBuildStep(false);
+    setEditing(true); // land in the editor to fine-tune the suggested week
   };
 
   // A schedule is only useful if we can actually nudge her — ask right when
@@ -1386,8 +1423,11 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           </button>
         )}
 
-        {/* Empty week (first-time / after reset) → choose how to start */}
-        {!editing && weekEmpty ? (
+        {/* Build my own → level/goal setup first, then the editor */}
+        {!editing && buildStep ? (
+          <YogaPlanSetup onBack={() => setBuildStep(false)} onCreate={createOwnWeek} />
+        ) : /* Empty week (first-time / after reset) → choose how to start */
+        !editing && weekEmpty ? (
           <div className="space-y-2.5">
             <div>
               <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Set up your soft week ✿</h3>
@@ -1401,11 +1441,11 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               </div>
               <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
             </button>
-            <button onClick={() => setEditing(true)} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <button onClick={() => setBuildStep(true)} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-rose">Build my own week</p>
-                <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day's focus &amp; length — e.g. Strength Mon, Sleep prep Fri.</p>
+                <p className="text-[11px] text-rose/70 leading-snug">Pick your level &amp; goal, then fine-tune each day's focus &amp; length.</p>
               </div>
               <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
             </button>
@@ -1593,6 +1633,38 @@ const DURATIONS = [10, 20, 30, 45, 60];
 const LEVELS: Level[] = ["Beginner", "Intermediate", "Advanced"];
 const SOUNDS = ["Silence", "Rain", "Singing bowls", "Forest"] as const;
 
+function YogaPlanSetup({ onBack, onCreate }: {
+  onBack: () => void;
+  onCreate: (level: Level, goal: YogaGoal, days: number) => void;
+}) {
+  const [level, setLevel] = useState<Level>(() => readYogaProfileLevel());
+  const [goal, setGoal] = useState<YogaGoal>("calm");
+  const [days, setDays] = useState(3);
+  return (
+    <div className="space-y-3.5 animate-fade-in">
+      <div>
+        <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Build your own week ✿</h3>
+        <p className="text-[12px] text-rose/70">Set your level &amp; focus — we&apos;ll lay out a week you can fine-tune.</p>
+      </div>
+      <PickGroup label="Your level" icon={GraduationCap}>
+        {LEVELS.map((lv) => <Chip key={lv} active={level === lv} onClick={() => setLevel(lv)}>{lv}</Chip>)}
+      </PickGroup>
+      <PickGroup label="What do you want?" icon={Heart}>
+        {YOGA_GOALS.map((g) => <Chip key={g.key} active={goal === g.key} onClick={() => setGoal(g.key)}>{g.label}</Chip>)}
+      </PickGroup>
+      <PickGroup label="Days per week" icon={Calendar}>
+        {[2, 3, 4, 5].map((d) => <Chip key={d} active={days === d} onClick={() => setDays(d)}>{d} days</Chip>)}
+      </PickGroup>
+      <div className="flex items-center gap-2 pt-1">
+        <button onClick={onBack} className="rounded-full bg-white/85 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Back</button>
+        <button onClick={() => onCreate(level, goal, days)} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white inline-flex items-center justify-center gap-2">
+          Create my week <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Setup({
   onBack, onStart, preset,
 }: {
@@ -1602,7 +1674,7 @@ function Setup({
 }) {
   const [durationMin, setDuration] = useState(preset?.durationMin ?? 20);
   const [intention, setIntention] = useState<Intention>(preset?.intention ?? "morning");
-  const [level, setLevel] = useState<Level>("Beginner");
+  const [level, setLevel] = useState<Level>(() => readYogaProfileLevel());
   const [lang, setLang] = useState<Lang>("en");
   const [sound, setSound] = useState<typeof SOUNDS[number]>("Silence");
   const [mode, setMode] = useState<Mode>("visual");
