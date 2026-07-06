@@ -12,6 +12,7 @@ import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { energyBalance } from "@/lib/nutritionTargets";
+import { todayISO } from "@/lib/localDate";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay } from "@/lib/crossToolData";
@@ -46,7 +47,6 @@ export const TODAY_WATER_KEY = KEYS.water;
 function readJSON<T>(key: string, fallback: T): T {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }
-function todayISO() { return new Date().toISOString().slice(0, 10); }
 function localDateStr(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

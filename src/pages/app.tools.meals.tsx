@@ -51,6 +51,7 @@ import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
+import { todayISO } from "@/lib/localDate";
 import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
@@ -192,8 +193,8 @@ const WORKOUT_LOG_KEY = "bloom:workout-history";
 function didStrengthWorkoutToday(): boolean {
   try {
     const history: { date: string; intention: string }[] = JSON.parse(localStorage.getItem(WORKOUT_LOG_KEY) || "[]");
-    const todayISO = new Date().toISOString().slice(0, 10);
-    return history.some((h) => h.date === todayISO && (h.intention === "strengthen" || h.intention === "tonify"));
+    const today = todayISO();
+    return history.some((h) => h.date === today && (h.intention === "strengthen" || h.intention === "tonify"));
   } catch { return false; }
 }
 

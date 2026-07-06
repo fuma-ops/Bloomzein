@@ -13,6 +13,7 @@ import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { flushCloudSync } from "@/lib/cloudSync";
+import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -75,11 +76,6 @@ function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] 
   return [value, setValue];
 }
 
-function todayISO() { return new Date().toISOString().slice(0, 10); }
-function isYesterday(iso: string) {
-  const d = new Date(iso); const y = new Date(); y.setDate(y.getDate() - 1);
-  return d.toISOString().slice(0, 10) === y.toISOString().slice(0, 10);
-}
 
 // ===================== SOUND LAYER =====================
 // Soft bip at 3s, clear bip at 0, gentle chime at rest end. No external audio files needed.

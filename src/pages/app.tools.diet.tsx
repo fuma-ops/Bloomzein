@@ -12,6 +12,7 @@ import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type 
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
+import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard, CoachCard } from "@/components/bloom/diet/DietDashboard";
@@ -75,8 +76,6 @@ const DEFAULT_PROFILE: DietProfile & { weight: number } = {
 };
 
 /* ---------- shared helpers ---------- */
-
-function todayISO() { return new Date().toISOString().slice(0, 10); }
 
 /** Maps the app-wide cycle phase to the Diet Tool's 4-phase model.
  *  Delegates to the canonical mapping (single source); "any" → follicular. */

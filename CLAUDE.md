@@ -83,3 +83,8 @@ one `bloom:meals-plan`.
 **Rule:** before adding anything that shows a meal, a calorie, a phase, or a
 weight, find the canonical helper above and use it. If one doesn't exist, add it
 to the shared module — do not read the raw localStorage key in a tool.
+
+**Dates are LOCAL, not UTC.** "Today" is the user's local calendar day. Stamp
+and compare days with `todayISO` / `localDateISO` / `isYesterday` from
+`src/lib/localDate.ts` — never `new Date().toISOString().slice(0,10)`, which is
+UTC and made late-night sessions land on the wrong day.

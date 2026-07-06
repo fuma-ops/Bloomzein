@@ -2,6 +2,7 @@
  * Cross-tool data layer — mirrors the cyclePhase.ts pattern.
  * All tools read/write through these helpers so the shared keys stay consistent.
  */
+import { todayISO } from "@/lib/localDate";
 
 function readJSON<T>(key: string, fallback: T): T {
   try {
@@ -10,10 +11,6 @@ function readJSON<T>(key: string, fallback: T): T {
   } catch {
     return fallback;
   }
-}
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 // ── Keys (single source of truth) ───────────────────────────────────────────
