@@ -484,9 +484,10 @@ function WeightSparkline({ history }: { history: { date: string; kg: number }[] 
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, setProfile, onEdit, goTo }: {
+function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, goTo }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
+  allMeals: Record<string, DayMeals>;
   setProfile: (v: (DietProfile & { weight: number }) | ((p: DietProfile & { weight: number }) => DietProfile & { weight: number })) => void;
   onEdit: () => void;
   goTo: (t: TabKey) => void;
@@ -511,6 +512,31 @@ function ProfileTab({ phase, cycleDay, profile, setProfile, onEdit, goTo }: {
   const first = history[0]?.kg ?? profile.weight;
   const latest = history.length ? history[history.length - 1].kg : profile.weight;
   const delta = +(latest - first).toFixed(1);
+
+  // Target weight progress
+  const target = profile.targetWeight;
+  const setTarget = (v: number | undefined) => setProfile((p) => ({ ...p, targetWeight: v }));
+  const toGo = target ? +(latest - target).toFixed(1) : null;
+  const targetPct = target && first !== target
+    ? Math.max(0, Math.min(100, Math.round(((first - latest) / (first - target)) * 100)))
+    : 0;
+
+  // Diet adherence — logged meals this week whose recipe fits the plan
+  const adherence = useMemo(() => {
+    const cutoff = Date.now() - 7 * 864e5;
+    let logged = 0, onPlan = 0;
+    for (const [date, day] of Object.entries(allMeals)) {
+      const t = new Date(date + "T00:00:00").getTime();
+      if (isNaN(t) || t < cutoff) continue;
+      for (const meal of Object.values(day)) {
+        if (!meal) continue;
+        logged++;
+        const rec = meal.recipeId ? RECIPES.find((r) => r.id === meal.recipeId) : undefined;
+        if (rec && passesMyRules(rec, profile)) onPlan++;
+      }
+    }
+    return { logged, onPlan, pct: logged ? Math.round((onPlan / logged) * 100) : 0 };
+  }, [allMeals, profile]);
 
   const sessions = useMemo(() => {
     const cutoff = Date.now() - 7 * 864e5;
@@ -555,6 +581,17 @@ function ProfileTab({ phase, cycleDay, profile, setProfile, onEdit, goTo }: {
           <span className="rounded-full bg-blush text-hotpink text-[11px] font-bold px-2.5 py-1 border border-petal/60 shrink-0">{matchCount} recipes</span>
         </div>
         <p className="text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
+        {adherence.logged > 0 && (
+          <div className="mt-2.5">
+            <div className="flex items-center justify-between text-[11px] font-bold text-rose/70 mb-1">
+              <span>On-plan meals · this week</span>
+              <span className="text-hotpink">{adherence.onPlan}/{adherence.logged} · {adherence.pct}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-blush overflow-hidden">
+              <div className="h-full rounded-full bg-hotpink transition-all" style={{ width: `${adherence.pct}%` }} />
+            </div>
+          </div>
+        )}
         <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
           {DIET_REGIMES.map((r) => (
             <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
@@ -581,6 +618,25 @@ function ProfileTab({ phase, cycleDay, profile, setProfile, onEdit, goTo }: {
           )}
         </div>
         <WeightSparkline history={history} />
+        {/* Goal weight + progress */}
+        <div className="mt-2.5 rounded-2xl bg-blush/50 border border-petal/50 p-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-rose/70">Goal weight</span>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setTarget(+(Math.max(0, (target ?? latest) - 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">−</button>
+              <span className="min-w-[3.6rem] text-center text-sm font-bold text-hotpink">{target != null ? `${target} kg` : "set ✿"}</span>
+              <button onClick={() => setTarget(+(((target ?? latest) + 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">+</button>
+            </div>
+          </div>
+          {target != null && (
+            <>
+              <div className="mt-2 h-2 rounded-full bg-white overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${targetPct}%` }} />
+              </div>
+              <p className="mt-1 text-[10.5px] text-rose/60">{toGo === 0 ? "You hit your goal ✿" : `${Math.abs(toGo ?? 0)} kg to ${((toGo ?? 0) > 0) ? "lose" : "gain"} · ${targetPct}% there`}</p>
+            </>
+          )}
+        </div>
         <div className="mt-3 flex items-center gap-2">
           <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
             <button onClick={() => setWeightInput((w) => (Math.max(0, (parseFloat(w) || 0) - 0.1)).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">−</button>
@@ -1175,7 +1231,7 @@ export default function DietPage() {
       <div className="space-y-4">
         {tab === "profile" && (
           <ProfileTab
-            phase={cyclePhase} cycleDay={cycleDay} profile={profile}
+            phase={cyclePhase} cycleDay={cycleDay} profile={profile} allMeals={allMeals}
             setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
           />
         )}
