@@ -703,52 +703,17 @@ function WeekTab({
         });
         if (!comment) return null;
         return (
-          <div className="mb-3 flex items-start gap-2.5 rounded-2xl border border-petal/70 bg-gradient-to-r from-blush/50 to-petal/25 px-3.5 py-3 animate-fade-in">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white">
-              <Sparkles className="h-4 w-4" strokeWidth={1.8} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Synced with your training</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-rose/80">{comment}</p>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ── PHASE NUDGE — eye-catching banner with a one-tap CTA ─────────────── */}
-      {realPhase && realPhase !== "any" && CYCLE_TO_DIET[realPhase] && (() => {
-        const info = PHASE_INFO[CYCLE_TO_DIET[realPhase]];
-        return (
-          <div className="relative overflow-hidden rounded-[1.5rem] mb-3 animate-scale-in shadow-lg shadow-hotpink/20"
-            style={{ background: 'linear-gradient(120deg,#EC4899 0%,#DB2777 55%,#BE185D 100%)' }}>
-            <span aria-hidden className="absolute inset-0 pointer-events-none"
-              style={{ background: 'linear-gradient(100deg,transparent 20%,rgba(255,255,255,.18) 50%,transparent 80%)', backgroundSize: '200% 100%', animation: 'bloom-shimmer 3s linear infinite' }} />
-            <div className="relative flex items-center gap-3 p-3.5 sm:p-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/20 border border-white/40 text-white animate-icon-breathe">
-                <Heart className="h-5 w-5" strokeWidth={1.8} fill="currentColor" />
-              </span>
-              <div className="flex-1 min-w-0 text-white">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">You're in your {info.label.toLowerCase()} phase</p>
-                <p className="text-sm font-semibold leading-snug">{phaseSynced ? "Your plan is synced to your cycle ✿" : "Want meals tailored to it?"}</p>
-              </div>
-              {phaseSynced ? (
-                <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/90 text-hotpink text-[11px] font-bold px-3 py-1.5">
-                  <Check className="h-3.5 w-3.5" strokeWidth={3} /> Synced
-                </span>
-              ) : (
-                <button onClick={handleGeneratePhase} disabled={generating}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white text-hotpink text-xs font-bold px-3.5 py-2 shadow-md active:scale-95 transition animate-cta-bounce">
-                  <Sparkles className="h-3.5 w-3.5" /> Generate
-                </button>
-              )}
-            </div>
+          <div className="mb-3 flex items-start gap-2 text-[11.5px] leading-snug text-rose/80 animate-fade-in">
+            <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" strokeWidth={2} />
+            <p className="flex-1"><span className="font-bold text-rose-500 uppercase text-[10px] tracking-wide">Synced with training · </span>{comment}</p>
           </div>
         );
       })()}
 
       {/* This week's vibe — compact app-styled pickers + guided actions */}
       <Glass className="p-4 sm:p-5">
-        <p className="font-script text-2xl text-hotpink mb-3">This week's vibe</p>
+        <p className="font-script text-2xl text-hotpink mb-1">This week's vibe</p>
+        <p className="text-[11px] text-rose/60 leading-snug mb-3">Why here? Your <b className="text-hotpink">Diet</b> is your overall style — this is just the mood for <b>this week's</b> meal plan.</p>
         <div data-tour="meals-vibe" className="flex flex-wrap gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Cycle phase</p>
@@ -773,10 +738,10 @@ function WeekTab({
           {phaseSynced && <span className="text-hotpink font-semibold"> · synced to your phase ✿</span>}
         </p>
 
-        {/* Next-step banner — green + pink, recommends what to do next */}
-        <div className="mt-3 flex items-center gap-2.5 rounded-2xl p-2.5 text-white shadow-md" style={{ background: "linear-gradient(90deg,#10B981 0%,#EC4899 100%)" }}>
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/25">{planEmpty ? <Sparkles className="h-4 w-4" /> : <Check className="h-4 w-4" strokeWidth={3} />}</span>
-          <p className="flex-1 text-[12px] font-semibold leading-snug">{planEmpty ? (owned.size ? "You're set — tap Plan my week to build it ✿" : "Next: build your pantry, then plan your week ✿") : "Your week is planned ✿ — scroll down to see it."}</p>
+        {/* Next-step hint — light, just an icon + instruction */}
+        <div className="mt-3 flex items-start gap-2 text-[12px] leading-snug text-rose/80">
+          {planEmpty ? <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" strokeWidth={2} /> : <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" strokeWidth={3} />}
+          <p className="flex-1"><span className="font-bold text-rose-500 uppercase text-[10px] tracking-wide">Next · </span>{planEmpty ? (owned.size ? "tap Plan my week to build it ✿" : "build your pantry, then plan your week ✿") : "your week is planned — scroll down to see it ✿"}</p>
         </div>
 
         {/* 3 vignettes — clear choices with descriptions */}
@@ -831,12 +796,12 @@ function WeekTab({
         );
       })()}
 
-      {/* Diet-synced banner — green + pink, right before the week's meals */}
+      {/* Diet-synced note — light, just an icon + text, right before the week's meals */}
       {fromDiet && (
-        <div className="flex items-center gap-3 rounded-2xl p-3 text-white shadow-lg shadow-emerald-300/30 animate-fade-in" style={{ background: "linear-gradient(90deg,#10B981 0%,#DB2777 100%)" }}>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><Sparkles className="h-5 w-5" /></span>
-          <p className="flex-1 text-[12.5px] font-semibold leading-snug">We set up your week to match your <b className="underline">{fromDiet}</b> diet ✿</p>
-          <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-white/80 hover:text-white"><X className="h-4 w-4" /></button>
+        <div className="flex items-center gap-2 text-[12.5px] leading-snug text-rose/80 animate-fade-in">
+          <Sparkles className="h-4 w-4 shrink-0 text-rose-500" strokeWidth={2} />
+          <p className="flex-1">We set up your week to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</p>
+          <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-rose/40 hover:text-hotpink"><X className="h-4 w-4" /></button>
         </div>
       )}
 
