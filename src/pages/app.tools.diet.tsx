@@ -4,13 +4,14 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
   Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
-  Scale, TrendingUp, TrendingDown, Minus,
+  Scale, TrendingUp, TrendingDown, Minus, RotateCcw,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState } from "@/lib/crossToolData";
+import { flushCloudSync } from "@/lib/cloudSync";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard, CoachCard } from "@/components/bloom/diet/DietDashboard";
@@ -361,16 +362,72 @@ const COOKING_OPTIONS: { key: CookingFrequency; label: string }[] = [
   { key: "love", label: "Love cooking" },
 ];
 
+/** Small numeric field for the setup wizard. */
+function SetupNumber({ label, unit, value, onChange, placeholder, autoFocus }: {
+  label: string; unit: string; value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean;
+}) {
+  return (
+    <label className="flex-1 flex items-center rounded-2xl bg-white border border-petal/60 overflow-hidden focus-within:border-hotpink transition">
+      <span className="pl-3.5 pr-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">{label}</span>
+      <input
+        value={value}
+        autoFocus={autoFocus}
+        onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ""))}
+        inputMode="decimal"
+        placeholder={placeholder}
+        className="flex-1 min-w-0 text-center text-lg font-bold text-rose outline-none py-2.5"
+      />
+      <span className="pr-3.5 text-[12px] font-bold text-rose/50">{unit}</span>
+    </label>
+  );
+}
+
+/**
+ * First-run wizard — reveals ONE step at a time so a brand-new user is never
+ * shown every feature at once. Order: body basics → goal → eating plan →
+ * preferences. Each step has a single clear ask + a guiding line.
+ */
 function SetupScreen({
   initial, onDone,
 }: { initial: DietProfile & { weight: number }; onDone: (p: DietProfile & { weight: number }) => void }) {
+  const [step, setStep] = useState(0);
+
+  // Step 1 — body
+  const [weight, setWeight] = useState(initial.weight ? String(initial.weight) : "");
+  const [height, setHeight] = useState(initial.heightCm != null ? String(initial.heightCm) : "");
+  const [age, setAge] = useState(initial.age != null ? String(initial.age) : "");
+  // Step 2 — goal
   const [goal, setGoal] = useState<DietGoal>(initial.goal);
+  const [targetWeight, setTargetWeight] = useState(initial.targetWeight != null ? String(initial.targetWeight) : "");
+  // Step 3 — plan
   const [regime, setRegime] = useState<DietRegime>(initial.regime ?? "balanced");
+  // Step 4 — preferences
   const [allergies, setAllergies] = useState<Allergy[]>(initial.allergies);
   const [cooking, setCooking] = useState<CookingFrequency>(initial.cookingFrequency);
+  const toggleAllergy = (a: Allergy) => setAllergies((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
 
-  const toggleAllergy = (a: Allergy) => {
-    setAllergies((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+  const STEPS = [
+    { key: "body", title: "About your body", hint: "This powers your exact calorie target — nothing is shared." },
+    { key: "goal", title: "Your goal", hint: "We'll tailor your calories, protein & timeline to this." },
+    { key: "plan", title: "Your eating plan", hint: "Sets which recipes you'll be offered all month." },
+    { key: "prefs", title: "A few preferences", hint: "So every suggestion is safe and doable for you." },
+  ] as const;
+  const isLast = step === STEPS.length - 1;
+  const wKg = parseFloat(weight);
+  const canNext = step === 0 ? wKg > 0 : true; // body weight is the one hard requirement
+
+  const finish = () => {
+    const kg = wKg > 0 ? wKg : 65;
+    const hist = (initial.weightHistory ?? []).filter((e) => e.date !== todayISO());
+    hist.push({ date: todayISO(), kg });
+    hist.sort((a, b) => (a.date < b.date ? -1 : 1));
+    onDone({
+      goal, regime, dietType: regimeToDietType(regime), allergies, cookingFrequency: cooking,
+      weight: kg, weightHistory: hist,
+      heightCm: parseFloat(height) > 0 ? parseFloat(height) : undefined,
+      age: parseInt(age, 10) > 0 ? parseInt(age, 10) : undefined,
+      targetWeight: parseFloat(targetWeight) > 0 ? parseFloat(targetWeight) : undefined,
+    });
   };
 
   return (
@@ -379,56 +436,99 @@ function SetupScreen({
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
-      <header className="mb-4">
-        <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none">Diet Tool</h1>
-        <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-rose/80">a quick setup, just for you ✿</p>
+      <header className="mb-3">
+        <h1 className="font-script text-3xl sm:text-5xl text-hotpink leading-none">Let's set up your Diet</h1>
+        <p className="mt-1 text-xs sm:text-sm text-rose/80">One little step at a time — takes under a minute ✿</p>
       </header>
 
-      <Glass className="p-4 sm:p-6 space-y-6">
-        <div>
-          <h2 className="font-script text-xl text-hotpink mb-2">Your goal</h2>
-          <div className="flex flex-wrap gap-2">
-            {GOAL_OPTIONS.map((o) => (
-              <SelectPill key={o.key} active={goal === o.key} onClick={() => setGoal(o.key)}>{o.label}</SelectPill>
-            ))}
-          </div>
-        </div>
+      {/* progress dots */}
+      <div className="flex items-center gap-1.5 mb-3">
+        {STEPS.map((s, i) => (
+          <div key={s.key} className={["h-1.5 flex-1 rounded-full transition-all", i < step ? "bg-hotpink" : i === step ? "bg-hotpink/60" : "bg-petal/50"].join(" ")} />
+        ))}
+      </div>
 
-        <div>
-          <h2 className="font-script text-xl text-hotpink mb-2">Your eating plan</h2>
-          <div className="flex flex-wrap gap-2">
-            {DIET_REGIMES.map((o) => (
-              <SelectPill key={o.key} active={regime === o.key} onClick={() => setRegime(o.key)}>{o.label}</SelectPill>
-            ))}
-          </div>
-          <p className="mt-2 text-[12px] text-rose/70 leading-snug">{dietRegimeInfo(regime).blurb}</p>
-        </div>
+      <Glass className="p-4 sm:p-6">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mb-1">Step {step + 1} of {STEPS.length}</p>
+        <h2 className="font-script text-2xl text-hotpink mb-1">{STEPS[step].title}</h2>
+        <p className="text-[12px] text-rose/70 leading-snug mb-4 flex items-start gap-1.5"><Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />{STEPS[step].hint}</p>
 
-        <div>
-          <h2 className="font-script text-xl text-hotpink mb-2">Allergies</h2>
-          <div className="flex flex-wrap gap-2">
-            {ALLERGY_OPTIONS.map((o) => (
-              <SelectPill key={o.key} active={allergies.includes(o.key)} onClick={() => toggleAllergy(o.key)}>{o.label}</SelectPill>
-            ))}
-            <SelectPill active={allergies.length === 0} onClick={() => setAllergies([])}>None</SelectPill>
+        {step === 0 && (
+          <div className="space-y-2.5">
+            <SetupNumber label="Weight" unit="kg" value={weight} onChange={setWeight} placeholder="65" autoFocus />
+            <div className="flex gap-2.5">
+              <SetupNumber label="Height" unit="cm" value={height} onChange={setHeight} placeholder="165" />
+              <SetupNumber label="Age" unit="yr" value={age} onChange={setAge} placeholder="30" />
+            </div>
+            <p className="text-[11px] text-rose/50 leading-snug">Weight is required. Height &amp; age make your calorie target exact (we'll use gentle defaults otherwise).</p>
           </div>
-        </div>
+        )}
 
-        <div>
-          <h2 className="font-script text-xl text-hotpink mb-2">Cooking frequency</h2>
-          <div className="flex flex-wrap gap-2">
-            {COOKING_OPTIONS.map((o) => (
-              <SelectPill key={o.key} active={cooking === o.key} onClick={() => setCooking(o.key)}>{o.label}</SelectPill>
-            ))}
+        {step === 1 && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {GOAL_OPTIONS.map((o) => (
+                <SelectPill key={o.key} active={goal === o.key} onClick={() => setGoal(o.key)}>{o.label}</SelectPill>
+              ))}
+            </div>
+            {goal !== "maintain" && (
+              <div className="pt-1">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Goal weight (optional)</p>
+                <SetupNumber label="Target" unit="kg" value={targetWeight} onChange={setTargetWeight} placeholder={goal === "lose" ? "60" : "70"} />
+                <p className="mt-1.5 text-[11px] text-rose/50">Set this to unlock your realistic timeline on the goal-path card.</p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        <PinkBtn
-          className="w-full justify-center"
-          onClick={() => onDone({ goal, regime, dietType: regimeToDietType(regime), allergies, cookingFrequency: cooking, weight: initial.weight, weightHistory: initial.weightHistory ?? [] })}
-        >
-          Save & start blooming <Sparkles className="h-4 w-4" />
-        </PinkBtn>
+        {step === 2 && (
+          <div>
+            <div className="flex flex-wrap gap-2">
+              {DIET_REGIMES.map((o) => (
+                <SelectPill key={o.key} active={regime === o.key} onClick={() => setRegime(o.key)}>{o.label}</SelectPill>
+              ))}
+            </div>
+            <p className="mt-2.5 text-[12px] text-rose/70 leading-snug">{dietRegimeInfo(regime).blurb}</p>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Allergies</p>
+              <div className="flex flex-wrap gap-2">
+                {ALLERGY_OPTIONS.map((o) => (
+                  <SelectPill key={o.key} active={allergies.includes(o.key)} onClick={() => toggleAllergy(o.key)}>{o.label}</SelectPill>
+                ))}
+                <SelectPill active={allergies.length === 0} onClick={() => setAllergies([])}>None</SelectPill>
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Cooking time</p>
+              <div className="flex flex-wrap gap-2">
+                {COOKING_OPTIONS.map((o) => (
+                  <SelectPill key={o.key} active={cooking === o.key} onClick={() => setCooking(o.key)}>{o.label}</SelectPill>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* nav */}
+        <div className="mt-5 flex items-center gap-2">
+          {step > 0 && (
+            <button onClick={() => setStep((s) => s - 1)} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-4 py-2.5 text-sm font-semibold text-rose active:scale-95 transition">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+          )}
+          <PinkBtn
+            className="flex-1 justify-center disabled:opacity-40"
+            onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
+            disabled={!canNext}
+          >
+            {isLast ? <>Save &amp; start blooming <Sparkles className="h-4 w-4" /></> : <>Continue <ChevronRight className="h-4 w-4" /></>}
+          </PinkBtn>
+        </div>
       </Glass>
     </div>
   );
@@ -1435,6 +1535,13 @@ export default function DietPage() {
     window.location.href = "/app/tools/meals";
   };
 
+  // Reset → wipe every diet key and reload into the first-run wizard (preview).
+  const onReset = async () => {
+    resetToolState("diet");
+    try { await flushCloudSync(); } catch {}
+    window.location.reload();
+  };
+
   if (!setupComplete || editingSetup) {
     return <SetupScreen initial={profile} onDone={handleSetupDone} />;
   }
@@ -1461,6 +1568,14 @@ export default function DietPage() {
         <img src="/images/meal-oats.jpg" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        {/* Reset — preview the brand-new-user experience */}
+        <button
+          onClick={onReset}
+          title="Reset (preview first-time setup)"
+          className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-hotpink border border-white/60 shadow-sm active:scale-95 transition"
+        >
+          <RotateCcw className="h-3 w-3" /> Reset
+        </button>
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">
           {/* Title block */}
           <div className="flex-1 flex flex-col justify-center max-w-[55%] sm:max-w-[45%] lg:max-w-[38%]">

@@ -321,7 +321,7 @@ export function writeSeenLevel(n: number): void {
 
 /** Clears every localStorage key a tool owns (bloom:<tool>-*) plus the shared
  *  movement-level marker, so the next load looks like a brand-new user. */
-export function resetToolState(tool: "workout" | "yoga" | "meals"): void {
+export function resetToolState(tool: "workout" | "yoga" | "meals" | "diet"): void {
   try {
     const kill: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
