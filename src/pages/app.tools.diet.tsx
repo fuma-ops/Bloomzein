@@ -671,7 +671,9 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
             <span className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-6 w-6" /></span>
             <p className="font-script text-xl text-hotpink">Sync your cycle first</p>
             <p className="mt-1 text-[12px] text-rose/70 max-w-xs mx-auto">Set up the Cycle Tracker so your food plan matches your phase automatically.</p>
-            <a href="/app/tools/cycle" className="mt-3 inline-block"><PinkBtn>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn></a>
+            <div className="mt-3">
+              <PinkBtn onClick={() => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; }}>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn>
+            </div>
           </Glass>
         ) : (
           <PhaseCarousel phase={phase} cycleDay={cycleDay} onSyncedPlan={onSyncedPlan} />

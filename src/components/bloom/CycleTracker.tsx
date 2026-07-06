@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Droplet,
@@ -277,6 +278,9 @@ export function CycleTracker() {
   const [isSetup,        setIsSetup]        = useState(() => hasCycleSettings());
   const [showResetMenu,  setShowResetMenu]  = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // Came here from the Diet tool's "sync your cycle first" gate → guide her back.
+  const [awaitDiet] = useState(() => { try { return localStorage.getItem("bloom:diet-await-cycle") === "1"; } catch { return false; } });
+  const returnToDiet = () => { try { localStorage.removeItem("bloom:diet-await-cycle"); } catch {} window.location.href = "/app/tools/diet"; };
 
   // First visit to the Cycle Tracker → play the "Meet your cycle" tour once.
   useEffect(() => {
@@ -687,6 +691,21 @@ export function CycleTracker() {
   return (
     <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
       {showOnboarding && <CycleOnboarding onDone={finishOnboarding} />}
+      {awaitDiet && (
+        <button
+          onClick={isSetup ? returnToDiet : () => setSetupOpen(true)}
+          className={["relative z-10 w-full mb-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-white shadow-lg shadow-hotpink/30 active:scale-[0.99] transition", isSetup ? "bg-gradient-to-r from-emerald-500 to-hotpink animate-selected-glow" : "bg-gradient-to-r from-hotpink to-[#DB2777]"].join(" ")}
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25">
+            {isSetup ? <Check className="h-5 w-5" strokeWidth={3} /> : <Sparkles className="h-5 w-5" />}
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-widest text-white/75">Setting up your Diet plan</span>
+            <span className="block text-sm font-bold leading-tight">{isSetup ? "Cycle synced ✿ — back to My Diet" : "Sync your cycle, then we'll bring you back"}</span>
+          </span>
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{isSetup ? "Continue" : "Set up"} <ChevronRight className="h-3.5 w-3.5" /></span>
+        </button>
+      )}
       {/* Decorative background blobs — give glass cards something to blur through */}
       <div aria-hidden style={{ position: 'absolute', top: -80, right: -60, width: 340, height: 340, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
       <div aria-hidden style={{ position: 'absolute', top: '38%', left: -90, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(244,114,182,.14) 0%,transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
@@ -1289,7 +1308,7 @@ export function CycleTracker() {
         open={setupOpen}
         onClose={() => setSetupOpen(false)}
         initial={settings}
-        onSave={(s) => { setSettings(s); writeCycleSettings(s); setIsSetup(true); }}
+        onSave={(s) => { setSettings(s); writeCycleSettings(s); setIsSetup(true); if (awaitDiet) setTimeout(returnToDiet, 700); }}
       />
     </div>
   );
