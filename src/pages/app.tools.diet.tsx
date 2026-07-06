@@ -10,7 +10,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
@@ -1179,6 +1179,8 @@ function TodayTab({
     const history = loadWorkoutHistory();
     return history.find((h) => h.date === todayISO()) ?? null;
   }, []);
+  // Yoga planned today (and no strength) → a gentle recovery-food nudge.
+  const yogaToday = useMemo(() => readYogaPlanDays().includes(todayWeekday()), []);
 
   // One calorie brain: the same BMR engine as the dashboard & Meals target.
   const targets = useMemo(() => computeTargets(false), [profile.goal, profile.weight, profile.heightCm, profile.age, phase, workoutToday]);
@@ -1304,6 +1306,18 @@ function TodayTab({
             <PinkBtn variant="outline" className="text-xs px-3 py-1.5" onClick={() => setPwIndex((i) => (i + 1) % Math.max(1, pwPool.length))}>See alternatives</PinkBtn>
             <PinkBtn variant="ghost" className="text-xs px-3 py-1.5" onClick={() => setDismissedPW((d) => ({ ...d, [todayISO()]: true }))}>Dismiss</PinkBtn>
           </div>
+        </Glass>
+      )}
+
+      {/* Yoga-day recovery nudge — gentle, hydrating, anti-inflammatory (not protein) */}
+      {yogaToday && !workoutToday && (
+        <Glass className="p-4 border-violet-200/70">
+          <p className="text-sm font-bold text-violet-700 flex items-center gap-1.5">🧘 Yoga day — recovery fuel</p>
+          <p className="mt-1 text-xs text-rose/80 leading-snug">
+            Keep it light &amp; hydrating today. Lean into anti-inflammatory foods —
+            berries, leafy greens, omega-3s, ginger &amp; turmeric — and an extra glass
+            of water. No need to load protein for a gentle flow.
+          </p>
         </Glass>
       )}
 

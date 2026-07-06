@@ -69,6 +69,11 @@ data. When tools interact, they read/write through a single shared helper.
   a second calorie formula.
 - **Training burn / sessions** → `crossToolData.ts`
   (`readTrainingCaloriesToday`, `readSessionsThisWeek`, workout + yoga logs).
+- **Training PLAN → food** — the planned workout + yoga days
+  (`readWorkoutPlanDays` / `readYogaPlanDays`) raise the calorie *target* via the
+  activity factor in `computeTargets`; surface the effect with
+  `movementFoodLine`. Workout days add a protein-forward dinner; yoga-only days
+  get a light, hydrating, anti-inflammatory recovery cue (never protein).
 
 **Recovery-fuel meals** (Workout/Yoga post-session `FuelCard`) are a *distinct
 purpose* — a suggested recovery add-on for after a session — and must be framed
