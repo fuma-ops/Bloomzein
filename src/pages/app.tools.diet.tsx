@@ -12,7 +12,7 @@ import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type 
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan } from "@/lib/crossToolData";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
-import { computeTargets, energyBalance } from "@/lib/nutritionTargets";
+import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard, CoachCard } from "@/components/bloom/diet/DietDashboard";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules,
@@ -494,9 +494,15 @@ function StepHeader({ step, title, sub }: { step: number; title: string; sub: st
   );
 }
 
-/** Weight over time: real logged points + a dashed 2-week estimate toward the goal,
- *  drawn on a proper time axis (dated X, kg-labelled Y) so the trend is easy to read. */
-function WeightChart({ history, target }: { history: { date: string; kg: number }[]; target?: number }) {
+/** Weight over time: real logged points + a dashed projection that follows the
+ *  user's ACTUAL planned pace (from her calorie deficit/surplus), drawn on a
+ *  proper time axis so the trend — and a realistic timeline — is easy to read. */
+function WeightChart({ history, target, projection }: {
+  history: { date: string; kg: number }[];
+  target?: number;
+  /** Real projected pace from the nutrition plan (kg/week) + ETA in weeks. */
+  projection?: { weeklyRateKg: number; etaWeeks: number | null } | null;
+}) {
   if (history.length < 1) return <p className="text-[11px] text-rose/50 italic">Log your weight to see your graph & estimate ✿</p>;
   const w = 320, h = 152;
   const padL = 30, padR = 12, padT = 12, padB = 26; // room for kg (left) + dates (bottom)
@@ -506,9 +512,26 @@ function WeightChart({ history, target }: { history: { date: string; kg: number 
   const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const lastReal = history[history.length - 1];
   const lastDay = dayOf(lastReal.date);
-  const projDays = 14;
-  const maxDay = Math.max(lastDay + (target != null ? projDays : 3), 4);
-  const kgs = [...history.map((r) => r.kg), ...(target != null ? [target] : [])];
+
+  // ── Real projection: extend from the last logged weight along the pace the
+  //    plan actually produces (kg/week ÷ 7 per day), capped for readability.
+  //    It reaches the goal at the honest ETA — never a fake 2-week straight line.
+  const ratePerDay = projection ? projection.weeklyRateKg / 7 : 0;
+  const movesToGoal = target != null && Math.abs(ratePerDay) > 0.0005 &&
+    ((target < lastReal.kg && ratePerDay < 0) || (target > lastReal.kg && ratePerDay > 0));
+  const CAP_DAYS = 84; // don't draw more than ~12 weeks ahead
+  let projDays = 0, projEndKg = lastReal.kg, reachesGoal = false;
+  if (movesToGoal) {
+    const etaDays = projection!.etaWeeks ? projection!.etaWeeks * 7 : CAP_DAYS;
+    projDays = Math.min(Math.max(7, etaDays), CAP_DAYS);
+    projEndKg = lastReal.kg + ratePerDay * projDays;
+    if ((ratePerDay < 0 && projEndKg <= target!) || (ratePerDay > 0 && projEndKg >= target!)) {
+      projEndKg = target!; reachesGoal = true; projDays = Math.min(etaDays, CAP_DAYS);
+    }
+  }
+  const hasProj = movesToGoal && projDays > 0;
+  const maxDay = Math.max(lastDay + (hasProj ? projDays : 3), 4);
+  const kgs = [...history.map((r) => r.kg), ...(target != null ? [target] : []), ...(hasProj ? [projEndKg] : [])];
   const minK = Math.min(...kgs) - 0.6, maxK = Math.max(...kgs) + 0.6;
   const X = (day: number) => padL + (day / (maxDay || 1)) * (w - padL - padR);
   const Y = (kg: number) => padT + (1 - (kg - minK) / ((maxK - minK) || 1)) * (h - padT - padB);
@@ -543,10 +566,12 @@ function WeightChart({ history, target }: { history: { date: string; kg: number 
         <text x={padL - 5} y={padT - 3} fontSize="8" fill="#C4849F" textAnchor="end" fontWeight="700">kg</text>
 
         {target != null && (
+          <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#F9A8D4" strokeWidth="1.2" strokeDasharray="3 3" />
+        )}
+        {hasProj && (
           <>
-            <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#F9A8D4" strokeWidth="1.2" strokeDasharray="3 3" />
-            <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(maxDay)} ${Y(target)}`} fill="none" stroke="#DB2777" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
-            <circle cx={X(maxDay)} cy={Y(target)} r="3.5" fill="none" stroke="#DB2777" strokeWidth="2" />
+            <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(lastDay + projDays)} ${Y(projEndKg)}`} fill="none" stroke="#DB2777" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
+            <circle cx={X(lastDay + projDays)} cy={Y(projEndKg)} r="3.5" fill="none" stroke="#DB2777" strokeWidth="2" />
           </>
         )}
         <path d={realD} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -554,7 +579,7 @@ function WeightChart({ history, target }: { history: { date: string; kg: number 
       </svg>
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-bold text-rose/60">
         <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#EC4899]" /> Real weight</span>
-        {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> 2-week estimate</span>}
+        {hasProj && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> Projected pace (~{Math.abs(projection!.weeklyRateKg)}kg/wk)</span>}
         {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg,#F9A8D4 0 2px,transparent 2px 4px)" }} /> Goal {target}kg</span>}
       </div>
     </div>
@@ -613,6 +638,8 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
 
   // Live daily energy balance — recomputes when meals logged or profile changes.
   const energy = useMemo(() => energyBalance(), [allMeals, profile]);
+  // Real weight projection (pace from the calorie plan) for the chart.
+  const weightProjection = useMemo(() => goalProjection(), [profile]);
 
   const history = profile.weightHistory ?? [];
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
@@ -736,7 +763,7 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
 
       {/* STEP 2 — weight */}
       <div id="diet-weight">
-        <StepHeader step={2} title="Track your weight" sub="follow your progress & 2-week estimate" />
+        <StepHeader step={2} title="Track your weight" sub="follow your progress & real-pace projection" />
         <Glass className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
@@ -753,8 +780,8 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
               </span>
             )}
           </div>
-          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the graph draws your real weight and a soft 2-week estimate toward your goal.</p>
-          <WeightChart history={history} target={target} />
+          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the graph draws your real weight and a dashed projection at the pace your current calorie plan actually produces (not a guess).</p>
+          <WeightChart history={history} target={target} projection={weightProjection} />
           <div className="mt-2.5 rounded-2xl bg-blush/50 border border-petal/50 p-2.5">
             <div className="flex items-center justify-between gap-2">
               <span className="text-[11px] font-bold text-rose/70">Goal weight</span>
