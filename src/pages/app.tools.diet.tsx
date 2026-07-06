@@ -8,8 +8,9 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
-import { readCyclePhase, readCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, readCycleSettings, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
+import { addRecipeToMealPlan } from "@/lib/crossToolData";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, calculateDailyTargets, passesMyRules,
@@ -41,7 +42,7 @@ const DIET_TOUR_CONTENT: SparkleContent = {
 };
 const DIET_TOUR_STEPS: SparkleStep[] = [
   { key: "plan",   selector: "#diet-plan",   title: "Your eating plan",   desc: "Pick a real diet — every recipe is filtered to match it." },
-  { key: "cycle",  selector: "#diet-cycle",  title: "Synced to your cycle", desc: "Your phase shapes what to eat today — it's always here." },
+  { key: "cycle",  selector: "#diet-cycle",  title: "Your cycle-synced plan", desc: "Today's phase shapes what to eat — tap Synced plan." },
   { key: "weight", selector: "#diet-weight", title: "Track your weight",  desc: "Log your weight, set a goal, and watch the trend." },
   { key: "tabs",   selector: "#diet-tabs",   title: "Log & browse",       desc: "Today logs your meals · Recipes browses your filtered library." },
 ];
@@ -485,24 +486,91 @@ function PhaseCard({ phase, active }: { phase: DietPhase; active: boolean }) {
 
 /* ---------- Profile / home dashboard ---------- */
 
-function WeightSparkline({ history }: { history: { date: string; kg: number }[] }) {
-  if (history.length < 2) return <p className="text-[11px] text-rose/50 italic">Log your weight a few days to see your trend ✿</p>;
-  const pts = history.slice(-14);
-  const w = 300, h = 44, pad = 4;
-  const min = Math.min(...pts.map((p) => p.kg)), max = Math.max(...pts.map((p) => p.kg));
-  const span = max - min || 1;
-  const x = (i: number) => pad + (i / (pts.length - 1)) * (w - pad * 2);
-  const y = (v: number) => pad + (1 - (v - min) / span) * (h - pad * 2);
-  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.kg).toFixed(1)}`).join(" ");
+/** Numbered section header for the guided My Diet flow. */
+function StepHeader({ step, title, sub }: { step: number; title: string; sub: string }) {
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-11">
-      <path d={d} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {pts.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.kg)} r="2.5" fill="#EC4899" />)}
-    </svg>
+    <div className="flex items-center gap-2 mb-2 mt-1">
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink text-white text-[11px] font-black">{step}</span>
+      <div className="min-w-0">
+        <p className="font-script text-lg text-hotpink leading-none truncate">{title}</p>
+        <p className="text-[10.5px] text-rose/55 leading-tight">{sub}</p>
+      </div>
+    </div>
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, goTo, onReplayTour }: {
+/** Weight over time: real logged points + a dashed 2-week estimate toward the goal. */
+function WeightChart({ history, target }: { history: { date: string; kg: number }[]; target?: number }) {
+  if (history.length < 1) return <p className="text-[11px] text-rose/50 italic">Log your weight to see your graph & estimate ✿</p>;
+  const w = 320, h = 116, pad = 16;
+  const startMs = new Date(history[0].date + "T00:00:00").getTime();
+  const dayOf = (d: string) => (new Date(d + "T00:00:00").getTime() - startMs) / 864e5;
+  const lastReal = history[history.length - 1];
+  const lastDay = dayOf(lastReal.date);
+  const projDays = 14;
+  const maxDay = Math.max(lastDay + (target != null ? projDays : 3), 4);
+  const kgs = [...history.map((r) => r.kg), ...(target != null ? [target] : [])];
+  const minK = Math.min(...kgs) - 0.6, maxK = Math.max(...kgs) + 0.6;
+  const X = (day: number) => pad + (day / (maxDay || 1)) * (w - pad * 2);
+  const Y = (kg: number) => pad + (1 - (kg - minK) / ((maxK - minK) || 1)) * (h - pad * 2);
+  const realD = history.map((r, i) => `${i ? "L" : "M"} ${X(dayOf(r.date)).toFixed(1)} ${Y(r.kg).toFixed(1)}`).join(" ");
+  return (
+    <div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 116 }}>
+        {target != null && (
+          <>
+            <line x1={pad} y1={Y(target)} x2={w - pad} y2={Y(target)} stroke="#F9A8D4" strokeWidth="1" strokeDasharray="3 3" />
+            <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(maxDay)} ${Y(target)}`} fill="none" stroke="#DB2777" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
+            <circle cx={X(maxDay)} cy={Y(target)} r="3.5" fill="none" stroke="#DB2777" strokeWidth="2" />
+          </>
+        )}
+        <path d={realD} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {history.map((r, i) => <circle key={i} cx={X(dayOf(r.date))} cy={Y(r.kg)} r="2.6" fill="#EC4899" />)}
+      </svg>
+      <div className="mt-1 flex items-center gap-3 text-[9px] font-bold text-rose/60">
+        <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#EC4899]" /> Real</span>
+        {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> 2-week estimate</span>}
+        {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg,#F9A8D4 0 2px,transparent 2px 4px)" }} /> Goal {target}kg</span>}
+      </div>
+    </div>
+  );
+}
+
+/** Step 1 — the phase-nutrition cards as a carousel, today's phase highlighted. */
+function PhaseCarousel({ phase, cycleDay, onSyncedPlan }: { phase: DietPhase; cycleDay: number; onSyncedPlan: () => void }) {
+  const order: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
+  const cards = [phase, ...order.filter((p) => p !== phase)]; // current first
+  return (
+    <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1">
+      {cards.map((ph) => {
+        const info = PHASE_INFO[ph];
+        const active = ph === phase;
+        return (
+          <div key={ph} className={["snap-center shrink-0 w-[86%] sm:w-[47%] rounded-[1.5rem] p-4 border transition", active ? "bg-white ring-2 ring-hotpink shadow-lg shadow-hotpink/20 animate-selected-glow" : "bg-white/70 border-petal/50 opacity-80"].join(" ")}>
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-script text-xl text-hotpink leading-none">{info.label}{active ? " · today" : ""}</p>
+              {active && <span className="rounded-full bg-hotpink text-white text-[9px] font-bold px-2 py-0.5">Day {cycleDay}</span>}
+            </div>
+            <p className="mt-1 text-[11.5px] italic text-rose/70 leading-snug">{info.tone}.</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {info.eat.slice(0, 5).map((f) => (
+                <span key={f} className="rounded-full bg-blush text-hotpink text-[10px] font-bold px-2 py-0.5 border border-petal/60">{f}</span>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-rose/45">Key · {info.keyNutrients.slice(0, 3).join(" · ")}</p>
+            {active ? (
+              <PinkBtn onClick={onSyncedPlan} className="w-full justify-center mt-3">✿ Synced plan → Today <ChevronRight className="h-4 w-4" /></PinkBtn>
+            ) : (
+              <p className="mt-3 text-[10.5px] text-rose/45 text-center">comes around on your {info.label.toLowerCase()} days</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   allMeals: Record<string, DayMeals>;
@@ -510,8 +578,11 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   onEdit: () => void;
   goTo: (t: TabKey) => void;
   onReplayTour: () => void;
+  cycleReady: boolean;
+  onSyncedPlan: () => void;
+  onDietToday: () => void;
+  onDietWeek: () => void;
 }) {
-  const info = PHASE_INFO[phase];
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
 
@@ -532,7 +603,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   const latest = history.length ? history[history.length - 1].kg : profile.weight;
   const delta = +(latest - first).toFixed(1);
 
-  // Target weight progress
   const target = profile.targetWeight;
   const setTarget = (v: number | undefined) => setProfile((p) => ({ ...p, targetWeight: v }));
   const toGo = target ? +(latest - target).toFixed(1) : null;
@@ -540,7 +610,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
     ? Math.max(0, Math.min(100, Math.round(((first - latest) / (first - target)) * 100)))
     : 0;
 
-  // Diet adherence — logged meals this week whose recipe fits the plan
   const adherence = useMemo(() => {
     const cutoff = Date.now() - 7 * 864e5;
     let logged = 0, onPlan = 0;
@@ -568,11 +637,19 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   const nToday = todayISO();
   const mealsToday = Object.values(allMeals[nToday] ?? {}).some(Boolean);
   const weighedThisWeek = history.some((e) => Date.now() - new Date(e.date + "T00:00:00").getTime() < 7 * 864e5);
-  const next = !mealsToday
-    ? { Icon: UtensilsCrossed, text: "Add your first meal today", cta: "Pick a recipe" as string | null, act: () => goTo("recipes") }
+  const next = !cycleReady
+    ? { Icon: Moon, text: "Sync your cycle to unlock your plan", cta: "Set up" as string | null, act: () => { window.location.href = "/app/tools/cycle"; } }
+    : !mealsToday
+    ? { Icon: UtensilsCrossed, text: "Plan your meals for today", cta: "Sync plan" as string | null, act: onSyncedPlan }
     : !weighedThisWeek
     ? { Icon: Scale, text: "Time for your weekly weigh-in", cta: "Log weight" as string | null, act: () => document.getElementById("diet-weight")?.scrollIntoView({ behavior: "smooth", block: "center" }) }
     : { Icon: Sparkles, text: "You're on a roll — all on track", cta: null as string | null, act: () => {} };
+
+  // Setup completeness
+  const s1 = cycleReady, s2 = Object.keys(allMeals).length > 0, s3 = history.length > 0;
+  const Dot = ({ ok }: { ok: boolean }) => ok
+    ? <Check className="h-3.5 w-3.5 text-hotpink" strokeWidth={3} />
+    : <span className="inline-block h-3 w-3 rounded-full border-2 border-rose/30" />;
 
   return (
     <div className="space-y-4">
@@ -585,104 +662,113 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         </span>
         {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
       </button>
-      {/* Cycle focus — always on, we know her cycle */}
-      <Glass id="diet-cycle" className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-5 w-5" /></span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Cycle · Day {cycleDay}</p>
-              <p className="font-script text-xl text-hotpink leading-none truncate">{info.label} phase</p>
-            </div>
-          </div>
-          <PinkBtn variant="outline" onClick={() => goTo("cycle")} className="!px-3 !py-1 shrink-0 text-xs">Nutrition <ChevronRight className="h-3.5 w-3.5" /></PinkBtn>
-        </div>
-        <p className="mt-2 text-[12px] text-rose/70 leading-snug italic">{info.tone}.</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {info.eat.slice(0, 5).map((f) => (
-            <span key={f} className="rounded-full bg-blush text-hotpink text-[10px] font-bold px-2 py-0.5 border border-petal/60">{f}</span>
-          ))}
-        </div>
-      </Glass>
 
-      {/* Your eating plan — prominent, changeable, drives the recipes */}
-      <Glass id="diet-plan" className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-5 w-5" /></span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Your eating plan</p>
-              <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label}</p>
-            </div>
-          </div>
-          <span className="rounded-full bg-blush text-hotpink text-[11px] font-bold px-2.5 py-1 border border-petal/60 shrink-0">{matchCount} recipes</span>
-        </div>
-        <p className="text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
-        {adherence.logged > 0 && (
-          <div className="mt-2.5">
-            <div className="flex items-center justify-between text-[11px] font-bold text-rose/70 mb-1">
-              <span>On-plan meals · this week</span>
-              <span className="text-hotpink">{adherence.onPlan}/{adherence.logged} · {adherence.pct}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-blush overflow-hidden">
-              <div className="h-full rounded-full bg-hotpink transition-all" style={{ width: `${adherence.pct}%` }} />
-            </div>
-          </div>
+      {/* STEP 1 — cycle-synced plan */}
+      <div id="diet-cycle">
+        <StepHeader step={1} title="Your cycle-synced plan" sub="eat in tune with today's phase" />
+        {!cycleReady ? (
+          <Glass className="p-5 text-center">
+            <span className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-6 w-6" /></span>
+            <p className="font-script text-xl text-hotpink">Sync your cycle first</p>
+            <p className="mt-1 text-[12px] text-rose/70 max-w-xs mx-auto">Set up the Cycle Tracker so your food plan matches your phase automatically.</p>
+            <a href="/app/tools/cycle" className="mt-3 inline-block"><PinkBtn>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn></a>
+          </Glass>
+        ) : (
+          <PhaseCarousel phase={phase} cycleDay={cycleDay} onSyncedPlan={onSyncedPlan} />
         )}
-        <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
-          {DIET_REGIMES.map((r) => (
-            <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
-          ))}
-        </div>
-        <PinkBtn onClick={() => goTo("recipes")} className="w-full justify-center mt-3">Browse {regime.label} recipes <ChevronRight className="h-4 w-4" /></PinkBtn>
-      </Glass>
+      </div>
 
-      {/* Weight tracker */}
-      <Glass id="diet-weight" className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 capitalize">Weight · goal {profile.goal}</p>
-              <p className="font-script text-2xl text-hotpink leading-none">{latest} kg</p>
-            </div>
-          </div>
-          {history.length > 1 && (
-            <span className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
-              {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-              {delta > 0 ? "+" : ""}{delta} kg
-            </span>
-          )}
-        </div>
-        <WeightSparkline history={history} />
-        {/* Goal weight + progress */}
-        <div className="mt-2.5 rounded-2xl bg-blush/50 border border-petal/50 p-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold text-rose/70">Goal weight</span>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setTarget(+(Math.max(0, (target ?? latest) - 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">−</button>
-              <span className="min-w-[3.6rem] text-center text-sm font-bold text-hotpink">{target != null ? `${target} kg` : "set ✿"}</span>
-              <button onClick={() => setTarget(+(((target ?? latest) + 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">+</button>
-            </div>
-          </div>
-          {target != null && (
-            <>
-              <div className="mt-2 h-2 rounded-full bg-white overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${targetPct}%` }} />
+      {/* STEP 2 — your eating plan */}
+      <div id="diet-plan">
+        <StepHeader step={2} title="Your eating plan" sub="or choose your own diet" />
+        <Glass className="p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-5 w-5" /></span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Diet plan</p>
+                <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label}</p>
               </div>
-              <p className="mt-1 text-[10.5px] text-rose/60">{toGo === 0 ? "You hit your goal ✿" : `${Math.abs(toGo ?? 0)} kg to ${((toGo ?? 0) > 0) ? "lose" : "gain"} · ${targetPct}% there`}</p>
-            </>
-          )}
-        </div>
-        <div className="mt-3 flex items-center gap-2">
-          <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
-            <button onClick={() => setWeightInput((w) => (Math.max(0, (parseFloat(w) || 0) - 0.1)).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">−</button>
-            <input value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none" />
-            <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
-            <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
+            </div>
+            <span className="rounded-full bg-blush text-hotpink text-[11px] font-bold px-2.5 py-1 border border-petal/60 shrink-0">{matchCount} recipes</span>
           </div>
-          <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log</PinkBtn>
-        </div>
+          <p className="text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
+          {adherence.logged > 0 && (
+            <div className="mt-2.5">
+              <div className="flex items-center justify-between text-[11px] font-bold text-rose/70 mb-1">
+                <span>On-plan meals · this week</span>
+                <span className="text-hotpink">{adherence.onPlan}/{adherence.logged} · {adherence.pct}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-blush overflow-hidden"><div className="h-full rounded-full bg-hotpink transition-all" style={{ width: `${adherence.pct}%` }} /></div>
+            </div>
+          )}
+          <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
+            {DIET_REGIMES.map((r) => (
+              <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] text-rose/55 leading-snug flex items-start gap-1"><Sparkles className="h-3 w-3 mt-0.5 shrink-0 text-hotpink" /> Your diet is applied to your whole week in the Meals Planner.</p>
+          <PinkBtn onClick={onDietToday} className="w-full justify-center mt-2.5">My plan for today <ChevronRight className="h-4 w-4" /></PinkBtn>
+          <button onClick={onDietWeek} className="w-full mt-2 inline-flex items-center justify-center gap-1 rounded-full border border-hotpink/50 text-hotpink text-sm font-semibold py-2 hover:bg-hotpink/10 active:scale-95 transition">See my week in Meals Planner <ChevronRight className="h-4 w-4" /></button>
+        </Glass>
+      </div>
+
+      {/* STEP 3 — weight */}
+      <div id="diet-weight">
+        <StepHeader step={3} title="Track your weight" sub="follow your progress & 2-week estimate" />
+        <Glass className="p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 capitalize">Weight · goal {profile.goal}</p>
+                <p className="font-script text-2xl text-hotpink leading-none">{latest} kg</p>
+              </div>
+            </div>
+            {history.length > 1 && (
+              <span className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
+                {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                {delta > 0 ? "+" : ""}{delta} kg
+              </span>
+            )}
+          </div>
+          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the graph draws your real weight and a soft 2-week estimate toward your goal.</p>
+          <WeightChart history={history} target={target} />
+          <div className="mt-2.5 rounded-2xl bg-blush/50 border border-petal/50 p-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold text-rose/70">Goal weight</span>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setTarget(+(Math.max(0, (target ?? latest) - 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">−</button>
+                <span className="min-w-[3.6rem] text-center text-sm font-bold text-hotpink">{target != null ? `${target} kg` : "set ✿"}</span>
+                <button onClick={() => setTarget(+(((target ?? latest) + 0.5)).toFixed(1))} className="grid h-6 w-6 place-items-center rounded-full bg-white border border-petal/60 text-hotpink font-bold">+</button>
+              </div>
+            </div>
+            {target != null && (
+              <>
+                <div className="mt-2 h-2 rounded-full bg-white overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${targetPct}%` }} /></div>
+                <p className="mt-1 text-[10.5px] text-rose/60">{toGo === 0 ? "You hit your goal ✿" : `${Math.abs(toGo ?? 0)} kg to ${((toGo ?? 0) > 0) ? "lose" : "gain"} · ${targetPct}% there`}</p>
+              </>
+            )}
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
+              <button onClick={() => setWeightInput((w) => (Math.max(0, (parseFloat(w) || 0) - 0.1)).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">−</button>
+              <input value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none" />
+              <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
+              <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
+            </div>
+            <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log</PinkBtn>
+          </div>
+        </Glass>
+      </div>
+
+      {/* Setup checklist */}
+      <Glass className="p-3 flex items-center justify-center gap-3 flex-wrap text-[11px] font-bold text-rose/70">
+        <span className="inline-flex items-center gap-1"><Dot ok={s1} /> Cycle synced</span>
+        <span className="text-rose/25">·</span>
+        <span className="inline-flex items-center gap-1"><Dot ok={s2} /> Meals planned</span>
+        <span className="text-rose/25">·</span>
+        <span className="inline-flex items-center gap-1"><Dot ok={s3} /> Weight tracked</span>
       </Glass>
 
       {/* Movement this week */}
@@ -1160,16 +1246,14 @@ function RecipesTab({
 
 /* ---------- Page ---------- */
 
-type TabKey = "profile" | "cycle" | "today" | "recipes";
+type TabKey = "profile" | "today" | "recipes";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "profile", label: "My Diet",        icon: Activity },
-  { key: "cycle", label: "Cycle Nutrition", icon: Moon },
   { key: "today", label: "Today",           icon: UtensilsCrossed },
   { key: "recipes", label: "Recipes",       icon: BookOpen },
 ];
 const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
   profile: { title: "My Diet",          subtitle: "your plan, your weight, your cycle — all in one ✿" },
-  cycle:   { title: "Cycle Nutrition",  subtitle: "eat in sync with your cycle ✿" },
   today:   { title: "Today's Meals",    subtitle: "nourish your bloom, one bite at a time 🌸" },
   recipes: { title: "Recipes",          subtitle: "cook for your phase, glow all season 💫" },
 };
@@ -1222,6 +1306,36 @@ export default function DietPage() {
       const cur = all[date] ?? EMPTY_DAY;
       return { ...all, [date]: { ...cur, [recipe.mealType]: { name: recipe.name, recipeId: recipe.id, macros: recipe.macros, micros: recipe.micros } } };
     });
+  };
+
+  const cycleReady = hasCycleSettings();
+
+  // Auto-fill today's meals from a recipe predicate (best match per slot), then open Today.
+  const fillToday = (pred: (r: Recipe) => boolean) => {
+    const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+    setAllMeals((all) => {
+      const day: DayMeals = { ...EMPTY_DAY };
+      slots.forEach((slot, i) => {
+        const primary = RECIPES.filter((r) => r.mealType === slot && pred(r));
+        const pool = primary.length ? primary : RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
+        const r = pool.length ? pool[(i * 3) % pool.length] : undefined;
+        if (r) day[slot] = { name: r.name, recipeId: r.id, macros: r.macros, micros: r.micros };
+      });
+      return { ...all, [today]: day };
+    });
+    setTab("today");
+  };
+  const onSyncedPlan = () => fillToday((r) => r.phases.includes(cyclePhase) && passesMyRules(r, profile));
+  const onDietToday = () => fillToday((r) => passesMyRules(r, profile));
+  const onDietWeek = () => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const slots = ["breakfast", "lunch", "dinner"] as const;
+    days.forEach((d, di) => slots.forEach((slot, si) => {
+      const cands = RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
+      if (cands.length) addRecipeToMealPlan(cands[(di * 3 + si) % cands.length].id, d, slot);
+    }));
+    try { localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label); } catch {}
+    window.location.href = "/app/tools/meals";
   };
 
   if (!setupComplete || editingSetup) {
@@ -1294,10 +1408,10 @@ export default function DietPage() {
           <ProfileTab
             phase={cyclePhase} cycleDay={cycleDay} profile={profile} allMeals={allMeals}
             setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
-            onReplayTour={() => setReplayTour(true)}
+            onReplayTour={() => setReplayTour(true)} cycleReady={cycleReady}
+            onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
           />
         )}
-        {tab === "cycle" && <CycleNutritionTab phase={cyclePhase} profile={profile} onEdit={() => setEditingSetup(true)} />}
         {tab === "today" && (
           <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} setDayMeals={setDayMeals} />
         )}
