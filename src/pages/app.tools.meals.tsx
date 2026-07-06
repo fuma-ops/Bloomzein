@@ -54,6 +54,7 @@ import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
+import { computeTargets, targetRationale, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
@@ -172,14 +173,14 @@ function buildWeek(
   phase: CyclePhase,
   owned: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
-  proteinBoostDay?: string,
+  proteinBoostDays?: Set<string>,
 ) {
   const used = new Set<string>();
   const plan: Record<string, Record<MealType, string | null>> = {};
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     (["breakfast", "lunch", "dinner", "snack"] as MealType[]).forEach((type) => {
-      const slotIntention: Intention = d === proteinBoostDay && type === "dinner" ? "protein" : intention;
+      const slotIntention: Intention = proteinBoostDays?.has(d) && type === "dinner" ? "protein" : intention;
       const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings);
       if (r) { plan[d][type] = r.id; used.add(r.id); }
     });
@@ -368,13 +369,17 @@ export default function MealsPage() {
     return RECIPES.filter((r) => passesMyRules(r, profile));
   }, []);
 
-  const proteinBoostDay = useMemo(
-    () => (didStrengthWorkoutToday() ? todayDayName() : null),
-    [],
-  );
+  // Premium training↔meals loop: every planned WORKOUT day (plus today if she
+  // already trained strength) gets a protein-forward dinner for recovery —
+  // not just "today". These are the days her body is rebuilding.
+  const proteinBoostDays = useMemo(() => {
+    const days = new Set<string>(readWorkoutPlanDays());
+    if (didStrengthWorkoutToday()) days.add(todayDayName());
+    return days;
+  }, []);
 
   const generateWeek = () => {
-    const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDay ?? undefined);
+    const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays);
     setPlan(p);
     setStep(3);
     setTab("week");
@@ -386,7 +391,7 @@ export default function MealsPage() {
     const ph = (real && real !== "any" ? real : phase) as CyclePhase;
     setIntention("cycle");
     setPhase(ph);
-    setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDay ?? undefined));
+    setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays));
     setStep(3);
     setTab("week");
   };
@@ -414,7 +419,7 @@ export default function MealsPage() {
       const savedPhase = readLS<CyclePhase>(LS.phase, "any");
       const savedOwned = pantrySet(readLS<Record<string, string[]>>(LS.pantry, {}));
       const savedRatings = readLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
-      setPlan(buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDay ?? undefined));
+      setPlan(buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDays));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -434,7 +439,7 @@ export default function MealsPage() {
     const cur = plan[day]?.[type];
     if (cur) used.delete(cur);
     used.add(cur || "");
-    const slotIntention: Intention = day === proteinBoostDay && type === "dinner" ? "protein" : intention;
+    const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
     const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
     if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
   };
@@ -450,7 +455,7 @@ export default function MealsPage() {
     const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
     const dayPlan: Record<MealType, string | null> = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     slots.forEach((type) => {
-      const slotIntention: Intention = day === proteinBoostDay && type === "dinner" ? "protein" : intention;
+      const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
       const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
       if (r) { dayPlan[type] = r.id; used.add(r.id); }
     });
@@ -568,7 +573,7 @@ export default function MealsPage() {
             onSwap={swapMeal}
             onRegen={regenDay}
             owned={owned}
-            proteinBoostDay={proteinBoostDay}
+            proteinBoostDays={proteinBoostDays}
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
@@ -670,9 +675,73 @@ function MealsGuide({ onDone, setTab }: { onDone: () => void; setTab: (t: TabKey
 
 /* ---------- This Week ---------- */
 
+/** Premium daily nutrition target — the number that makes the app feel real. */
+function DailyTargetCard({ t }: { t: TargetBreakdown }) {
+  const goalLabel = t.goal === "lose" ? "Lean" : t.goal === "gain" ? "Build" : "Maintain";
+  const macros = [
+    { k: "Protein", v: t.protein, cls: "text-amber-600", bg: "bg-amber-50", br: "border-amber-200/70" },
+    { k: "Carbs", v: t.carbs, cls: "text-rose-500", bg: "bg-rose-50", br: "border-rose-200/70" },
+    { k: "Fat", v: t.fat, cls: "text-violet-500", bg: "bg-violet-50", br: "border-violet-200/70" },
+  ];
+  return (
+    <Glass className="p-4 sm:p-5 animate-fade-in" data-tour="meals-target">
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="font-script text-2xl text-hotpink">Your daily target</p>
+        <span className="rounded-full bg-hotpink/10 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20">{goalLabel} goal</span>
+      </div>
+      <div className="flex items-end gap-4">
+        <div className="shrink-0">
+          <p className="text-4xl sm:text-5xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mt-1">kcal / day</p>
+        </div>
+        <div className="flex-1 grid grid-cols-3 gap-1.5">
+          {macros.map((m) => (
+            <div key={m.k} className={`rounded-xl ${m.bg} border ${m.br} py-2 text-center`}>
+              <p className={`text-lg font-black leading-none ${m.cls} tabular-nums`}>{m.v}<span className="text-[10px] font-bold">g</span></p>
+              <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{m.k}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="mt-2.5 flex items-start gap-1.5 text-[11px] leading-snug text-rose/70">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+        <span>Tuned from your body &amp; {targetRationale(t)}.</span>
+      </p>
+    </Glass>
+  );
+}
+
+/** A day's actual calories/protein vs the daily target — the closed loop. */
+function DayTotals({ plan, day, target }: { plan: any; day: string; target: TargetBreakdown }) {
+  const dayPlan = plan?.[day];
+  const recipes = dayPlan
+    ? (["breakfast", "lunch", "dinner", "snack"] as MealType[])
+        .map((s) => (dayPlan[s] ? RECIPES.find((r) => r.id === dayPlan[s]) : null))
+        .filter(Boolean) as { macros: { calories: number; protein: number; carbs: number; fat: number } }[]
+    : [];
+  if (!recipes.length) return null;
+  const totals = sumMacros(recipes);
+  const verdict = calorieVerdict(totals.calories, target.calories);
+  const pct = Math.min(100, Math.round((totals.calories / Math.max(1, target.calories)) * 100));
+  const barCls = verdict === "on" ? "bg-emerald-400" : verdict === "under" ? "bg-amber-400" : "bg-rose-400";
+  const label = verdict === "on" ? "on target" : verdict === "under" ? "under" : "over";
+  const labelCls = verdict === "on" ? "text-emerald-600" : verdict === "under" ? "text-amber-600" : "text-rose-500";
+  return (
+    <div className="mt-2.5 pt-2.5 border-t border-petal/50">
+      <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+        <span className="text-rose/60 tabular-nums">≈{totals.calories.toLocaleString()} <span className="text-rose/35">/ {target.calories.toLocaleString()} kcal</span></span>
+        <span className={`uppercase tracking-wide ${labelCls}`}>{label} · {totals.protein}g P</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-petal/40 overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDay, fromDiet, onDismissFromDiet,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, fromDiet, onDismissFromDiet,
 }: any) {
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
@@ -686,6 +755,11 @@ function WeekTab({
       return () => clearTimeout(t);
     }
   }, [fromDiet]);
+
+  // Premium: a real, personalised daily nutrition target (body + goal +
+  // training load + cycle phase). Recompute when the plan changes so the
+  // eat-back and training-day count stay live.
+  const targets: TargetBreakdown = useMemo(() => computeTargets(true), [plan]);
 
   // The user's real cycle phase (for the attention-grabbing banner).
   const realPhase = useMemo(() => readCyclePhase(), []);
@@ -819,6 +893,9 @@ function WeekTab({
         </div>
       )}
 
+      {/* Premium: personalised daily nutrition target */}
+      <DailyTargetCard t={targets} />
+
       {planEmpty ? (
         <EmptyState
           icon={Calendar}
@@ -842,7 +919,7 @@ function WeekTab({
                 {(["breakfast","lunch","dinner","snack"] as MealType[]).map((slot) => {
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
-                  const proteinBoosted = d === proteinBoostDay && slot === "dinner";
+                  const proteinBoosted = !!proteinBoostDays?.has(d) && slot === "dinner";
                   const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.jpg';
                   const photoSrc = r?.photo ? `/images/recipes/${r.photo}` : fallback;
                   return (
@@ -901,6 +978,7 @@ function WeekTab({
                   );
                 })}
               </div>
+              <DayTotals plan={plan} day={d} target={targets} />
             </Glass>
             );
           })}
