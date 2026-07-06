@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
-import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, toYogaPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
@@ -466,16 +466,11 @@ function readYogaProfileLevel(): Level {
   catch { return "Beginner"; }
 }
 
-/** Maps the app-wide 5-phase cycle to Yoga's 4-phase model. */
+/** Maps the app-wide 5-phase cycle to Yoga's 4-phase model.
+ *  Delegates to the canonical mapping (single source) — the fertile window
+ *  now resolves to ovulation, consistent with Meals & training. */
 function mapToYogaPhase(p: CyclePhase | null): Phase {
-  switch (p) {
-    case "period": return "menstrual";
-    case "fertile": return "follicular";
-    case "ovulation": return "ovulation";
-    case "luteal": return "luteal";
-    case "follicular": return "follicular";
-    default: return "follicular";
-  }
+  return toYogaPhase(p);
 }
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }

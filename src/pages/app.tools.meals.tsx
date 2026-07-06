@@ -38,21 +38,16 @@ import {
   type Recipe,
   type Intention,
   type CyclePhase,
-  type DietPhase,
   type PantryCategoryKey,
   type MealType,
 } from "@/components/bloom/meals/data";
 
-// Maps the app-wide cycle phase to the Diet model's 4 nutrition phases.
-const CYCLE_TO_DIET: Record<string, DietPhase> = {
-  period: "menstrual", follicular: "follicular", fertile: "ovulatory", ovulation: "ovulatory", luteal: "luteal",
-};
 
 
 import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
-import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { computeTargets, targetRationale, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
@@ -707,6 +702,11 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
         <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
         <span>Tuned from your body &amp; {targetRationale(t)}.</span>
       </p>
+      {/* Guided instruction — helps her understand the number from day one */}
+      <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
+        <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How to use</span>
+        <span>This is your goal for the day. Each day below shows a little bar of how close its meals land — aim for <b className="text-emerald-600">on target</b>. Add your height &amp; age in <b className="text-hotpink">Diet</b> to make it exact.</span>
+      </div>
     </Glass>
   );
 }
@@ -792,7 +792,7 @@ function WeekTab({
           phase: normalizePhase(realPhase),
           goal: readDietProfile().goal,
         });
-        const dp = phase !== "any" ? CYCLE_TO_DIET[phase] : null;
+        const dp = toDietPhase(phase);
         const info = dp ? PHASE_INFO[dp] : null;
         if (!phaseSynced) return null;
         return (

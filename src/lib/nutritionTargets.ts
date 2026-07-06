@@ -89,8 +89,8 @@ const PROTEIN_PER_KG: Record<DietGoal, number> = {
 export function computeTargets(forToday = false): TargetBreakdown {
   const p = readDietProfile();
   const weight = p.weight > 0 ? p.weight : 65;
-  const height = (p as { heightCm?: number }).heightCm ?? DEFAULT_HEIGHT_CM;
-  const age = (p as { age?: number }).age ?? DEFAULT_AGE;
+  const height = p.heightCm && p.heightCm > 0 ? p.heightCm : DEFAULT_HEIGHT_CM;
+  const age = p.age && p.age > 0 ? p.age : DEFAULT_AGE;
   const goal = p.goal;
 
   // Mifflin-St Jeor (female): 10·kg + 6.25·cm − 5·age − 161

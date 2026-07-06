@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
-import { readCyclePhase, readCycleSettings, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan } from "@/lib/crossToolData";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
@@ -75,16 +75,10 @@ const DEFAULT_PROFILE: DietProfile & { weight: number } = {
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
-/** Maps the app-wide cycle phase to the Diet Tool's 4-phase model. */
+/** Maps the app-wide cycle phase to the Diet Tool's 4-phase model.
+ *  Delegates to the canonical mapping (single source); "any" → follicular. */
 function mapCyclePhase(p: CyclePhase | null): DietPhase {
-  switch (p) {
-    case "period": return "menstrual";
-    case "follicular": return "follicular";
-    case "fertile": return "ovulatory";
-    case "ovulation": return "ovulatory";
-    case "luteal": return "luteal";
-    default: return "follicular";
-  }
+  return (toDietPhase(p) ?? "follicular") as DietPhase;
 }
 
 /** Cycle day computed from the user's saved Cycle Tracker settings. */
@@ -617,6 +611,11 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
 
   const history = profile.weightHistory ?? [];
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
+  // Body basics for an accurate calorie target (BMR). Persist as the user types.
+  const [heightInput, setHeightInput] = useState(profile.heightCm != null ? String(profile.heightCm) : "");
+  const [ageInput, setAgeInput] = useState(profile.age != null ? String(profile.age) : "");
+  const saveHeight = (v: string) => { setHeightInput(v); const n = parseFloat(v); setProfile((p) => ({ ...p, heightCm: n > 0 ? n : undefined })); };
+  const saveAge = (v: string) => { setAgeInput(v); const n = parseInt(v, 10); setProfile((p) => ({ ...p, age: n > 0 ? n : undefined })); };
   const logWeight = () => {
     const kg = parseFloat(weightInput);
     if (!kg || kg <= 0) return;
@@ -766,6 +765,26 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
               <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
             </div>
             <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log</PinkBtn>
+          </div>
+
+          {/* Body basics → accurate calorie target */}
+          <div className="mt-3 rounded-2xl bg-blush/50 border border-petal/50 p-3">
+            <p className="flex items-start gap-1.5 text-[11px] leading-snug text-rose/70 mb-2">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+              <span>Add your height &amp; age once — it lets us calculate your <b className="text-hotpink">exact daily calorie target</b> in Meals (instead of an estimate).</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
+                <span className="pl-3 pr-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/50">Height</span>
+                <input value={heightInput} onChange={(e) => saveHeight(e.target.value.replace(/[^\d.]/g, ""))} inputMode="numeric" placeholder="165" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none py-2" />
+                <span className="pr-3 text-[11px] font-bold text-rose/50">cm</span>
+              </label>
+              <label className="flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
+                <span className="pl-3 pr-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/50">Age</span>
+                <input value={ageInput} onChange={(e) => saveAge(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" placeholder="30" className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none py-2" />
+                <span className="pr-3 text-[11px] font-bold text-rose/50">yr</span>
+              </label>
+            </div>
           </div>
         </Glass>
       </div>
