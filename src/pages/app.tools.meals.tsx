@@ -670,6 +670,15 @@ function WeekTab({
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
+  const dietNoteRef = useRef<HTMLDivElement>(null);
+
+  // Arriving from the Diet tool: scroll straight to the synced week + its note.
+  useEffect(() => {
+    if (fromDiet) {
+      const t = setTimeout(() => dietNoteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 250);
+      return () => clearTimeout(t);
+    }
+  }, [fromDiet]);
 
   // The user's real cycle phase (for the attention-grabbing banner).
   const realPhase = useMemo(() => readCyclePhase(), []);
@@ -704,7 +713,7 @@ function WeekTab({
         });
         const dp = phase !== "any" ? CYCLE_TO_DIET[phase] : null;
         const info = dp ? PHASE_INFO[dp] : null;
-        if (!comment && !info) return null;
+        if (!phaseSynced) return null;
         return (
           <div className="mb-3 rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
@@ -781,12 +790,17 @@ function WeekTab({
       </Glass>
 
 
-      {/* Diet-synced note — light, just an icon + text, right before the week's meals */}
+      {/* Diet-synced note — same green-bordered "synced plan" style, right before the week's meals */}
       {fromDiet && (
-        <div className="flex items-center gap-2 text-[12.5px] leading-snug text-rose/80 animate-fade-in">
-          <Sparkles className="h-4 w-4 shrink-0 text-rose-500" strokeWidth={2} />
-          <p className="flex-1">We set up your week to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</p>
-          <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-rose/40 hover:text-hotpink"><X className="h-4 w-4" /></button>
+        <div ref={dietNoteRef} className="rounded-2xl border-2 border-emerald-300/70 p-3.5 animate-fade-in">
+          <div className="flex items-start gap-2">
+            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600" strokeWidth={2.2} />
+            <div className="flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Your synced plan · {fromDiet} diet</p>
+              <p className="mt-0.5 text-[11.5px] text-rose/80 leading-snug">We set up this week's meals to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</p>
+            </div>
+            <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-rose/40 hover:text-hotpink"><X className="h-4 w-4" /></button>
+          </div>
         </div>
       )}
 

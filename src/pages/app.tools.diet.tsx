@@ -42,9 +42,8 @@ const DIET_TOUR_CONTENT: SparkleContent = {
 };
 const DIET_TOUR_STEPS: SparkleStep[] = [
   { key: "plan",   selector: "#diet-plan",   title: "Your eating plan",   desc: "Pick a real diet — every recipe is filtered to match it." },
-  { key: "cycle",  selector: "#diet-cycle",  title: "Your cycle-synced plan", desc: "Today's phase shapes what to eat — tap Synced plan." },
   { key: "weight", selector: "#diet-weight", title: "Track your weight",  desc: "Log your weight, set a goal, and watch the trend." },
-  { key: "tabs",   selector: "#diet-tabs",   title: "Log & browse",       desc: "Today logs your meals · Recipes browses your filtered library." },
+  { key: "tabs",   selector: "#diet-tabs",   title: "Cycle, log & browse", desc: "Cycle Nutrition syncs food to your phase · Today logs meals · Recipes browses your library." },
 ];
 
 function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
@@ -499,27 +498,57 @@ function StepHeader({ step, title, sub }: { step: number; title: string; sub: st
   );
 }
 
-/** Weight over time: real logged points + a dashed 2-week estimate toward the goal. */
+/** Weight over time: real logged points + a dashed 2-week estimate toward the goal,
+ *  drawn on a proper time axis (dated X, kg-labelled Y) so the trend is easy to read. */
 function WeightChart({ history, target }: { history: { date: string; kg: number }[]; target?: number }) {
   if (history.length < 1) return <p className="text-[11px] text-rose/50 italic">Log your weight to see your graph & estimate ✿</p>;
-  const w = 320, h = 116, pad = 16;
+  const w = 320, h = 152;
+  const padL = 30, padR = 12, padT = 12, padB = 26; // room for kg (left) + dates (bottom)
   const startMs = new Date(history[0].date + "T00:00:00").getTime();
   const dayOf = (d: string) => (new Date(d + "T00:00:00").getTime() - startMs) / 864e5;
+  const dateAtDay = (day: number) => new Date(startMs + day * 864e5);
+  const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const lastReal = history[history.length - 1];
   const lastDay = dayOf(lastReal.date);
   const projDays = 14;
   const maxDay = Math.max(lastDay + (target != null ? projDays : 3), 4);
   const kgs = [...history.map((r) => r.kg), ...(target != null ? [target] : [])];
   const minK = Math.min(...kgs) - 0.6, maxK = Math.max(...kgs) + 0.6;
-  const X = (day: number) => pad + (day / (maxDay || 1)) * (w - pad * 2);
-  const Y = (kg: number) => pad + (1 - (kg - minK) / ((maxK - minK) || 1)) * (h - pad * 2);
+  const X = (day: number) => padL + (day / (maxDay || 1)) * (w - padL - padR);
+  const Y = (kg: number) => padT + (1 - (kg - minK) / ((maxK - minK) || 1)) * (h - padT - padB);
   const realD = history.map((r, i) => `${i ? "L" : "M"} ${X(dayOf(r.date)).toFixed(1)} ${Y(r.kg).toFixed(1)}`).join(" ");
+
+  // Y gridlines / labels (3 rows: max, mid, min)
+  const yTicks = [maxK, (maxK + minK) / 2, minK];
+  // X ticks: start, midpoint, end (dated). Show 3 so it stays readable.
+  const xTicks = [0, maxDay / 2, maxDay];
+
   return (
     <div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 116 }}>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 152 }}>
+        {/* Y grid + kg labels */}
+        {yTicks.map((kg, i) => (
+          <g key={`y${i}`}>
+            <line x1={padL} y1={Y(kg)} x2={w - padR} y2={Y(kg)} stroke="#FBE4EF" strokeWidth="1" />
+            <text x={padL - 5} y={Y(kg) + 3} fontSize="8.5" fill="#C4849F" textAnchor="end">{kg.toFixed(1)}</text>
+          </g>
+        ))}
+        {/* Axis lines */}
+        <line x1={padL} y1={padT} x2={padL} y2={h - padB} stroke="#F4C6DD" strokeWidth="1" />
+        <line x1={padL} y1={h - padB} x2={w - padR} y2={h - padB} stroke="#F4C6DD" strokeWidth="1" />
+        {/* X date labels + ticks */}
+        {xTicks.map((day, i) => (
+          <g key={`x${i}`}>
+            <line x1={X(day)} y1={h - padB} x2={X(day)} y2={h - padB + 3} stroke="#F4C6DD" strokeWidth="1" />
+            <text x={X(day)} y={h - padB + 14} fontSize="8.5" fill="#C4849F" textAnchor={i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"}>{fmtDate(dateAtDay(day))}</text>
+          </g>
+        ))}
+        {/* kg unit tag */}
+        <text x={padL - 5} y={padT - 3} fontSize="8" fill="#C4849F" textAnchor="end" fontWeight="700">kg</text>
+
         {target != null && (
           <>
-            <line x1={pad} y1={Y(target)} x2={w - pad} y2={Y(target)} stroke="#F9A8D4" strokeWidth="1" strokeDasharray="3 3" />
+            <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#F9A8D4" strokeWidth="1.2" strokeDasharray="3 3" />
             <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(maxDay)} ${Y(target)}`} fill="none" stroke="#DB2777" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
             <circle cx={X(maxDay)} cy={Y(target)} r="3.5" fill="none" stroke="#DB2777" strokeWidth="2" />
           </>
@@ -527,8 +556,8 @@ function WeightChart({ history, target }: { history: { date: string; kg: number 
         <path d={realD} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {history.map((r, i) => <circle key={i} cx={X(dayOf(r.date))} cy={Y(r.kg)} r="2.6" fill="#EC4899" />)}
       </svg>
-      <div className="mt-1 flex items-center gap-3 text-[9px] font-bold text-rose/60">
-        <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#EC4899]" /> Real</span>
+      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-bold text-rose/60">
+        <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#EC4899]" /> Real weight</span>
         {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> 2-week estimate</span>}
         {target != null && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg,#F9A8D4 0 2px,transparent 2px 4px)" }} /> Goal {target}kg</span>}
       </div>
@@ -638,18 +667,12 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   const mealsToday = Object.values(allMeals[nToday] ?? {}).some(Boolean);
   const weighedThisWeek = history.some((e) => Date.now() - new Date(e.date + "T00:00:00").getTime() < 7 * 864e5);
   const next = !cycleReady
-    ? { Icon: Moon, text: "Sync your cycle to unlock your plan", cta: "Set up" as string | null, act: () => { window.location.href = "/app/tools/cycle"; } }
+    ? { Icon: Moon, text: "Sync your cycle to unlock your plan", cta: "Set up" as string | null, act: () => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; } }
     : !mealsToday
-    ? { Icon: UtensilsCrossed, text: "Plan your meals for today", cta: "Sync plan" as string | null, act: onSyncedPlan }
+    ? { Icon: UtensilsCrossed, text: "See your cycle-synced plan", cta: "Cycle Nutrition" as string | null, act: () => goTo("cycle") }
     : !weighedThisWeek
     ? { Icon: Scale, text: "Time for your weekly weigh-in", cta: "Log weight" as string | null, act: () => document.getElementById("diet-weight")?.scrollIntoView({ behavior: "smooth", block: "center" }) }
     : { Icon: Sparkles, text: "You're on a roll — all on track", cta: null as string | null, act: () => {} };
-
-  // Setup completeness
-  const s1 = cycleReady, s2 = Object.keys(allMeals).length > 0, s3 = history.length > 0;
-  const Dot = ({ ok }: { ok: boolean }) => ok
-    ? <Check className="h-3.5 w-3.5 text-hotpink" strokeWidth={3} />
-    : <span className="inline-block h-3 w-3 rounded-full border-2 border-rose/30" />;
 
   return (
     <div className="space-y-4">
@@ -663,26 +686,9 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
       </button>
 
-      {/* STEP 1 — cycle-synced plan */}
-      <div id="diet-cycle">
-        <StepHeader step={1} title="Your cycle-synced plan" sub="eat in tune with today's phase" />
-        {!cycleReady ? (
-          <Glass className="p-5 text-center">
-            <span className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-6 w-6" /></span>
-            <p className="font-script text-xl text-hotpink">Sync your cycle first</p>
-            <p className="mt-1 text-[12px] text-rose/70 max-w-xs mx-auto">Set up the Cycle Tracker so your food plan matches your phase automatically.</p>
-            <div className="mt-3">
-              <PinkBtn onClick={() => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; }}>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn>
-            </div>
-          </Glass>
-        ) : (
-          <PhaseCarousel phase={phase} cycleDay={cycleDay} onSyncedPlan={onSyncedPlan} />
-        )}
-      </div>
-
-      {/* STEP 2 — your eating plan */}
+      {/* STEP 1 — your eating plan */}
       <div id="diet-plan">
-        <StepHeader step={2} title="Your eating plan" sub="or choose your own diet" />
+        <StepHeader step={1} title="Your eating plan" sub="or choose your own diet" />
         <Glass className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -715,9 +721,9 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         </Glass>
       </div>
 
-      {/* STEP 3 — weight */}
+      {/* STEP 2 — weight */}
       <div id="diet-weight">
-        <StepHeader step={3} title="Track your weight" sub="follow your progress & 2-week estimate" />
+        <StepHeader step={2} title="Track your weight" sub="follow your progress & 2-week estimate" />
         <Glass className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
@@ -764,15 +770,6 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         </Glass>
       </div>
 
-      {/* Setup checklist */}
-      <Glass className="p-3 flex items-center justify-center gap-3 flex-wrap text-[11px] font-bold text-rose/70">
-        <span className="inline-flex items-center gap-1"><Dot ok={s1} /> Cycle synced</span>
-        <span className="text-rose/25">·</span>
-        <span className="inline-flex items-center gap-1"><Dot ok={s2} /> Meals planned</span>
-        <span className="text-rose/25">·</span>
-        <span className="inline-flex items-center gap-1"><Dot ok={s3} /> Weight tracked</span>
-      </Glass>
-
       {/* Movement this week */}
       <Glass className="p-4 sm:p-5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -795,15 +792,52 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
 }
 
 function CycleNutritionTab({
-  phase, profile, onEdit,
-}: { phase: DietPhase; profile: DietProfile; onEdit: () => void }) {
+  phase, cycleDay, profile, onEdit, cycleReady, onSyncedPlan, mealsToday,
+}: {
+  phase: DietPhase; cycleDay: number; profile: DietProfile; onEdit: () => void;
+  cycleReady: boolean; onSyncedPlan: () => void; mealsToday: boolean;
+}) {
   const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
+  const info = PHASE_INFO[phase];
+
+  // Guiding next-step banner — never leave the user unsure what to do here.
+  const next = !cycleReady
+    ? { Icon: Moon, text: "Sync your cycle to unlock this plan", cta: "Set up" as string | null, act: () => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; } }
+    : !mealsToday
+    ? { Icon: UtensilsCrossed, text: `Fill today with your ${info.label.toLowerCase()}-phase plan`, cta: "Synced plan" as string | null, act: onSyncedPlan }
+    : { Icon: Sparkles, text: "Today's meals are synced to your phase ✿", cta: null as string | null, act: () => {} };
+
   return (
     <div className="space-y-5">
+      {/* Guiding thread — same idea as the Budget planner's smart banner */}
+      <button onClick={next.act} className="w-full flex items-center gap-3 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white p-3.5 shadow-lg shadow-hotpink/30 active:scale-[0.99] transition text-left">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><next.Icon className="h-5 w-5" /></span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-[10px] font-bold uppercase tracking-widest text-white/70">Next step</span>
+          <span className="block text-sm font-bold leading-tight">{next.text}</span>
+        </span>
+        {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
+      </button>
+
+      {/* Cycle-synced plan (moved here from My Diet) */}
+      <div id="diet-cycle">
+        <StepHeader step={1} title="Your cycle-synced plan" sub="eat in tune with today's phase" />
+        {!cycleReady ? (
+          <Glass className="p-5 text-center">
+            <span className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-6 w-6" /></span>
+            <p className="font-script text-xl text-hotpink">Sync your cycle first</p>
+            <p className="mt-1 text-[12px] text-rose/70 max-w-xs mx-auto">Set up the Cycle Tracker so your food plan matches your phase automatically.</p>
+            <div className="mt-3">
+              <PinkBtn onClick={() => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; }}>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn>
+            </div>
+          </Glass>
+        ) : (
+          <PhaseCarousel phase={phase} cycleDay={cycleDay} onSyncedPlan={onSyncedPlan} />
+        )}
+      </div>
+
       <div>
-        <h3 className="font-script text-2xl text-hotpink mb-3 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-hotpink" strokeWidth={1.6} /> Your Cycle Phases
-        </h3>
+        <StepHeader step={2} title="Your cycle phases" sub="what nourishes you all month" />
         <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
           {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
         </div>
@@ -1248,14 +1282,16 @@ function RecipesTab({
 
 /* ---------- Page ---------- */
 
-type TabKey = "profile" | "today" | "recipes";
+type TabKey = "profile" | "cycle" | "today" | "recipes";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "profile", label: "My Diet",        icon: Activity },
+  { key: "cycle",   label: "Cycle Nutrition", icon: Moon },
   { key: "today", label: "Today",           icon: UtensilsCrossed },
   { key: "recipes", label: "Recipes",       icon: BookOpen },
 ];
 const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
-  profile: { title: "My Diet",          subtitle: "your plan, your weight, your cycle — all in one ✿" },
+  profile: { title: "My Diet",          subtitle: "your plan, your weight & your movement — all in one ✿" },
+  cycle:   { title: "Cycle Nutrition",  subtitle: "eat in tune with today's phase 🌙" },
   today:   { title: "Today's Meals",    subtitle: "nourish your bloom, one bite at a time 🌸" },
   recipes: { title: "Recipes",          subtitle: "cook for your phase, glow all season 💫" },
 };
@@ -1412,6 +1448,14 @@ export default function DietPage() {
             setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
             onReplayTour={() => setReplayTour(true)} cycleReady={cycleReady}
             onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
+          />
+        )}
+        {tab === "cycle" && (
+          <CycleNutritionTab
+            phase={cyclePhase} cycleDay={cycleDay} profile={profile}
+            onEdit={() => setEditingSetup(true)} cycleReady={cycleReady}
+            onSyncedPlan={onSyncedPlan}
+            mealsToday={Object.values(allMeals[today] ?? {}).some(Boolean)}
           />
         )}
         {tab === "today" && (
