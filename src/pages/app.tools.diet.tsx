@@ -12,8 +12,10 @@ import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type 
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan } from "@/lib/crossToolData";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
+import { computeTargets, energyBalance } from "@/lib/nutritionTargets";
+import { EnergyTodayCard, GoalPathCard, WeekBalanceCard, CoachCard } from "@/components/bloom/diet/DietDashboard";
 import {
-  RECIPES, PHASE_INFO, PHASE_MICROS, calculateDailyTargets, passesMyRules,
+  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
   type Recipe, type DietProfile, type DietPhase, type DietGoal, type MealType,
   type DietType, type Allergy, type CookingFrequency, type DietRegime,
@@ -609,6 +611,9 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
 
+  // Live daily energy balance — recomputes when meals logged or profile changes.
+  const energy = useMemo(() => energyBalance(), [allMeals, profile]);
+
   const history = profile.weightHistory ?? [];
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
   // Body basics for an accurate calorie target (BMR). Persist as the user types.
@@ -684,6 +689,15 @@ function ProfileTab({ phase, cycleDay, profile, allMeals, setProfile, onEdit, go
         </span>
         {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
       </button>
+
+      {/* ── Daily command center — gathers every tool (phase · workout · yoga ·
+             body · goal) into the numbers she checks each day ── */}
+      <EnergyTodayCard e={energy} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <GoalPathCard />
+        <WeekBalanceCard />
+      </div>
+      <CoachCard />
 
       {/* STEP 1 — your eating plan */}
       <div id="diet-plan">
@@ -1005,9 +1019,8 @@ function TodayTab({
     return history.find((h) => h.date === todayISO()) ?? null;
   }, []);
 
-  const targets = useMemo(() => calculateDailyTargets({
-    goal: profile.goal, phase, weight: profile.weight, caloriesBurned: workoutToday?.calories ?? 0,
-  }), [profile.goal, profile.weight, phase, workoutToday]);
+  // One calorie brain: the same BMR engine as the dashboard & Meals target.
+  const targets = useMemo(() => computeTargets(false), [profile.goal, profile.weight, profile.heightCm, profile.age, phase, workoutToday]);
 
   const proteinBoostTarget = workoutToday ? Math.round(profile.weight * 1.8) : targets.protein;
 

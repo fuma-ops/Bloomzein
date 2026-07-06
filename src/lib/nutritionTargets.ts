@@ -23,8 +23,13 @@ import {
   readWorkoutPlanDays,
   readYogaPlanDays,
   readWorkoutCaloriesToday,
+  readTrainingCaloriesToday,
+  readSessionsThisWeek,
 } from "@/lib/crossToolData";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
+
+const MEALS_LOG_KEY = "bloom:diet-today-meals";
+function todayISO() { return new Date().toISOString().slice(0, 10); }
 
 export interface MacroTargets {
   calories: number;
@@ -159,4 +164,170 @@ export function calorieVerdict(total: number, target: number): "under" | "on" | 
   if (ratio < 0.88) return "under";
   if (ratio > 1.12) return "over";
   return "on";
+}
+
+/* ============================================================================
+   Energy balance — the daily "command center" numbers, gathering every tool:
+   goal target (body+phase+training) − eaten (logged meals) + burned (workout
+   & yoga). One source of truth so Diet, Today and Meals never disagree.
+============================================================================ */
+
+interface LoggedMacros { calories: number; protein: number; carbs: number; fat: number }
+
+/** Sum of macros the user has actually logged for today (from the Diet tool). */
+export function eatenToday(): MacroTargets {
+  const empty = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  try {
+    const raw = localStorage.getItem(MEALS_LOG_KEY);
+    if (!raw) return empty;
+    const all = JSON.parse(raw) as Record<string, Record<string, { macros?: LoggedMacros } | null>>;
+    const day = all[todayISO()];
+    if (!day) return empty;
+    return Object.values(day).reduce<MacroTargets>((acc, meal) => {
+      const m = meal?.macros;
+      if (!m) return acc;
+      return {
+        calories: acc.calories + (m.calories || 0),
+        protein: acc.protein + (m.protein || 0),
+        carbs: acc.carbs + (m.carbs || 0),
+        fat: acc.fat + (m.fat || 0),
+      };
+    }, empty);
+  } catch {
+    return empty;
+  }
+}
+
+export interface EnergyBalance {
+  goal: number;        // base daily goal (no eat-back)
+  burned: number;      // workout + yoga calories today
+  allowance: number;   // goal + burned — what she can eat today
+  eaten: number;       // logged so far today
+  remaining: number;   // allowance − eaten
+  protein: { eaten: number; target: number };
+  carbs: { eaten: number; target: number };
+  fat: { eaten: number; target: number };
+  logged: boolean;     // has she logged any meal today?
+  verdict: "start" | "ontrack" | "close" | "over";
+}
+
+/** Today's full energy picture — target vs eaten vs burned. */
+export function energyBalance(): EnergyBalance {
+  const t = computeTargets(false);            // base goal, no eat-back
+  const burned = Math.round(readTrainingCaloriesToday());
+  const allowance = t.calories + burned;
+  const e = eatenToday();
+  const eaten = Math.round(e.calories);
+  const remaining = allowance - eaten;
+  const ratio = allowance > 0 ? eaten / allowance : 0;
+  const verdict: EnergyBalance["verdict"] =
+    eaten === 0 ? "start" : ratio > 1.08 ? "over" : ratio >= 0.9 ? "close" : "ontrack";
+  return {
+    goal: t.calories, burned, allowance, eaten, remaining,
+    protein: { eaten: Math.round(e.protein), target: t.protein },
+    carbs: { eaten: Math.round(e.carbs), target: t.carbs },
+    fat: { eaten: Math.round(e.fat), target: t.fat },
+    logged: eaten > 0,
+    verdict,
+  };
+}
+
+/* ---------- Goal projection (weight → ETA, from the plan she set up) ---------- */
+
+export interface GoalProjection {
+  current: number;
+  target: number;
+  toGo: number;          // kg still to change (signed toward target)
+  direction: "lose" | "gain";
+  pct: number;           // 0-100 progress from start weight
+  weeklyRateKg: number;  // projected kg/week from her calorie plan
+  etaWeeks: number | null;
+}
+
+/** Projects when she'll reach her goal weight, based on her planned calorie
+ *  delta vs maintenance (7,700 kcal ≈ 1 kg). Null if no goal or wrong direction. */
+export function goalProjection(): GoalProjection | null {
+  const p = readDietProfile();
+  const target = p.targetWeight;
+  if (target == null) return null;
+  const hist = p.weightHistory ?? [];
+  const current = hist.length ? hist[hist.length - 1].kg : p.weight;
+  const start = hist.length ? hist[0].kg : p.weight;
+  const toGo = +(current - target).toFixed(1);
+  if (Math.abs(toGo) < 0.1) return { current, target, toGo: 0, direction: toGo >= 0 ? "lose" : "gain", pct: 100, weeklyRateKg: 0, etaWeeks: 0 };
+
+  const t = computeTargets(false);
+  const dailyDelta = t.calories - t.tdee;          // negative = deficit
+  const weeklyRateKg = +((dailyDelta * 7) / 7700).toFixed(2); // negative = losing
+  const pct = start !== target ? Math.max(0, Math.min(100, Math.round(((start - current) / (start - target)) * 100))) : 0;
+
+  // ETA only when the plan pushes toward the goal.
+  let etaWeeks: number | null = null;
+  const needToLose = toGo > 0;
+  if (needToLose && weeklyRateKg < -0.01) etaWeeks = Math.ceil(toGo / Math.abs(weeklyRateKg));
+  else if (!needToLose && weeklyRateKg > 0.01) etaWeeks = Math.ceil(Math.abs(toGo) / weeklyRateKg);
+
+  return { current, target, toGo, direction: needToLose ? "lose" : "gain", pct, weeklyRateKg, etaWeeks };
+}
+
+/* ---------- This week (training + burn snapshot) ---------- */
+
+export interface WeekSnapshot {
+  workoutsDone: number;
+  yogaDone: number;
+  plannedTraining: number;
+  sessionsDone: number;
+}
+export function weekSnapshot(): WeekSnapshot {
+  const s = readSessionsThisWeek();
+  return {
+    workoutsDone: s.workouts,
+    yogaDone: s.yoga,
+    plannedTraining: plannedTrainingDays(),
+    sessionsDone: s.workouts + s.yoga,
+  };
+}
+
+/* ---------- Coach — the best plan to reach her goal ---------- */
+
+export interface CoachPlan {
+  headline: string;
+  steps: string[];
+  targetCalories: number;
+  workoutsPerWeek: number;
+  yogaPerWeek: number;
+}
+
+/** A concrete, personalised recommendation for hitting her goal. */
+export function coachRecommendation(): CoachPlan {
+  const t = computeTargets(false);
+  const proj = goalProjection();
+  const goal = t.goal;
+
+  const workoutsPerWeek = goal === "gain" ? 4 : goal === "lose" ? 3 : 3;
+  const yogaPerWeek = 2;
+
+  const steps: string[] = [];
+  if (goal === "lose") {
+    steps.push(`Eat around ${t.calories.toLocaleString()} kcal/day, keeping protein near ${t.protein}g to hold onto muscle.`);
+    steps.push(`Train ${workoutsPerWeek}× strength + ${yogaPerWeek}× yoga — strength protects your shape in a deficit.`);
+    steps.push("Protein-forward dinners on training days (your meal plan already does this).");
+  } else if (goal === "gain") {
+    steps.push(`Eat around ${t.calories.toLocaleString()} kcal/day with ${t.protein}g protein to build.`);
+    steps.push(`Train ${workoutsPerWeek}× strength + ${yogaPerWeek}× yoga — progressive overload drives growth.`);
+    steps.push("Add a recovery meal after each session to fuel repair.");
+  } else {
+    steps.push(`Hold around ${t.calories.toLocaleString()} kcal/day, ${t.protein}g protein.`);
+    steps.push(`Keep moving ${workoutsPerWeek}× strength + ${yogaPerWeek}× yoga to stay strong & even.`);
+    steps.push("Let your cycle guide intensity — restorative on period & luteal days.");
+  }
+
+  const headline =
+    proj?.etaWeeks != null
+      ? `Reach ${proj.target}kg in ~${proj.etaWeeks} week${proj.etaWeeks > 1 ? "s" : ""} with this plan`
+      : goal === "maintain"
+      ? "Your plan to stay strong, lean & steady"
+      : "Set a goal weight to see your timeline";
+
+  return { headline, steps, targetCalories: t.calories, workoutsPerWeek, yogaPerWeek };
 }
