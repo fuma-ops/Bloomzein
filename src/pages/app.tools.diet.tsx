@@ -1029,6 +1029,7 @@ function RecipesTab({
   const toggle = <T,>(arr: T[], v: T, set: (a: T[]) => void) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
   const myRulesRecipes = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)), [profile]);
+  const regime = dietRegimeInfo(profile.regime ?? "balanced");
 
   const filtersActive = !!query.trim() || phaseFilters.length || mealFilters.length || timeFilter || goalFilters.length;
 
@@ -1076,6 +1077,14 @@ function RecipesTab({
 
   return (
     <div className="space-y-4">
+      {/* Active plan header — makes the filtering explicit */}
+      <div className="flex items-center gap-2.5 rounded-2xl bg-hotpink/10 border border-petal/60 px-3.5 py-2.5">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-4 w-4" /></span>
+        <p className="text-[12px] text-rose/80 leading-snug">
+          <b className="text-hotpink">{regime.label}</b> plan · <b className="text-hotpink">{myRulesRecipes.length}</b> recipes matched to you{profile.allergies.length ? " (allergy-safe)" : ""}.
+        </p>
+      </div>
+
       {/* Search + filters */}
       <Glass className="p-4 space-y-3">
         <div className="relative">
@@ -1112,7 +1121,7 @@ function RecipesTab({
 
       {!!pwRecipes.length && !filtersActive && (
         <Glass className="p-4">
-          <p className="font-script text-lg text-hotpink mb-2">🏋️ Post-workout recipes — high protein · phase matched</p>
+          <p className="font-script text-lg text-hotpink mb-2 inline-flex items-center gap-1.5"><Dumbbell className="h-4 w-4" strokeWidth={1.8} /> Post-workout recipes — high protein · phase matched</p>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             {pwRecipes.map((r) => (
               <div key={r.id} className="w-40 shrink-0"><RecipeCard recipe={r} onOpen={() => onOpenRecipe(r)} /></div>
