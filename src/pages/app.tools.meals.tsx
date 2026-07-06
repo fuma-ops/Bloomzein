@@ -52,7 +52,7 @@ const CYCLE_TO_DIET: Record<string, DietPhase> = {
 import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
-import { readCyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
@@ -322,7 +322,8 @@ export default function MealsPage() {
     // pre-select the user's real current phase so meals start phase-appropriate.
     try {
       if (phase === "any") {
-        const real = readCyclePhase();
+        let real = readCyclePhase();
+        if ((!real || real === "any") && hasCycleSettings()) real = phaseForDay(new Date(), readCycleSettings());
         if (real && real !== "any") setPhase(real as CyclePhase);
       }
     } catch {}
@@ -719,7 +720,7 @@ function WeekTab({
             <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Cycle phase</p>
             <PickerField
               value={phase} title="Cycle phase"
-              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
               onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[8.5rem] !text-sm !py-2 !rounded-full"
             />
           </div>
