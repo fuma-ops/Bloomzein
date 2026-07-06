@@ -11,7 +11,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, toYogaPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -1900,6 +1900,9 @@ function SessionPlayer({
       window.dispatchEvent(new Event("bloom:yoga-updated"));
     } catch {}
     incrementYogaSession(); // feeds the movement level (logical, real count)
+    // Log the flow's calories so yoga counts toward the daily energy balance.
+    const practiceMin = Math.max(5, Math.round((flow.length * hold) / 60));
+    logYogaSession(practiceMin, readDietProfile().weight);
     onDone();
   }
 

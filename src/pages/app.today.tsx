@@ -11,6 +11,8 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { energyBalance } from "@/lib/nutritionTargets";
+import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
@@ -708,6 +710,11 @@ export default function TodayPage() {
         <a href="/app/calendar" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
           Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
         </a>
+      </section>
+
+      {/* ── 2a. TODAY'S ENERGY (slim) — the daily balance, links into Diet ── */}
+      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
+        <TodayEnergyStrip e={energyBalance()} />
       </section>
 
       {/* ── 2b. TODAY'S MEALS ────────────────────────────────────────────────── */}

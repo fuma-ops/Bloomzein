@@ -211,6 +211,51 @@ export function incrementYogaSession(): void {
   try { localStorage.setItem(YOGA_SESSIONS_KEY, String(readYogaSessionCount() + 1)); } catch {}
 }
 
+// ── Yoga energy log (so yoga counts toward the daily energy balance) ─────────
+
+export const YOGA_LOG_KEY = "bloom:yoga-history";
+
+/** Log a finished yoga flow's calories. MET ~2.8 (gentle hatha/vinyasa),
+ *  kcal = MET × 3.5 × weight(kg) / 200 × minutes — scaled by real bodyweight. */
+export function logYogaSession(durationMin: number, weightKg = 65): void {
+  try {
+    const kcal = Math.round(((2.8 * 3.5 * (weightKg > 0 ? weightKg : 65)) / 200) * durationMin);
+    const log = readJSON<{ date: string; calories: number; durationMin: number }[]>(YOGA_LOG_KEY, []);
+    log.push({ date: todayISO(), calories: kcal, durationMin });
+    localStorage.setItem(YOGA_LOG_KEY, JSON.stringify(log));
+    window.dispatchEvent(new Event("bloom:workout-updated"));
+  } catch {}
+}
+
+/** Calories burned in yoga flows today (0 if none). */
+export function readYogaCaloriesToday(): number {
+  try {
+    const log = readJSON<{ date: string; calories: number }[]>(YOGA_LOG_KEY, []);
+    const t = todayISO();
+    return log.filter((h) => h.date === t).reduce((s, h) => s + (h.calories || 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+/** All training calories burned today (workout + yoga) — the energy-out figure. */
+export function readTrainingCaloriesToday(): number {
+  return readWorkoutCaloriesToday() + readYogaCaloriesToday();
+}
+
+/** Count of workout + yoga sessions completed in the last 7 days. */
+export function readSessionsThisWeek(): { workouts: number; yoga: number } {
+  const cutoff = Date.now() - 7 * 864e5;
+  const inWeek = (d?: string) => {
+    if (!d) return false;
+    const t = new Date(d + "T00:00:00").getTime();
+    return !isNaN(t) && t >= cutoff;
+  };
+  const wk = readJSON<{ date?: string }[]>(WORKOUT_LOG_KEY, []).filter((h) => inWeek(h.date)).length;
+  const yg = readJSON<{ date?: string }[]>(YOGA_LOG_KEY, []).filter((h) => inWeek(h.date)).length;
+  return { workouts: wk, yoga: yg };
+}
+
 // A gentle, bloom-themed ladder. Thresholds ramp up so each level feels earned.
 const MOVEMENT_LEVELS: { min: number; name: string; icon: string }[] = [
   { min: 0,   name: "Seedling", icon: "🌱" },
