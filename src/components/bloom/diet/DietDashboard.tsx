@@ -67,6 +67,22 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
   useEffect(() => { if (!flash) return; const t = setTimeout(() => setFlash(null), 2600); return () => clearTimeout(t); }, [flash]);
   const planMeals = () => { onPlanMeals(); setFlash("meals"); };
   const planMovement = () => { onPlanMovement(); setFlash("movement"); };
+
+  // "Recalculated ✓" flash — the calorie target changed since she last saw it
+  // (she edited a workout/yoga plan, so the activity factor shifted).
+  const [recalcFlash, setRecalcFlash] = useState(false);
+  useEffect(() => {
+    try {
+      const cur = String(e.goal);
+      const prev = localStorage.getItem("bloom:diet-last-goal");
+      localStorage.setItem("bloom:diet-last-goal", cur);
+      if (prev != null && prev !== cur) {
+        setRecalcFlash(true);
+        const t = setTimeout(() => setRecalcFlash(false), 4000);
+        return () => clearTimeout(t);
+      }
+    } catch {}
+  }, [e.goal]);
   const verdictText =
     e.verdict === "over" ? "Your plan runs a little over target — swap a lighter dinner"
     : e.verdict === "close" ? "Your plan hits your target beautifully ✿"
@@ -75,11 +91,18 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
 
   return (
     <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
-      <div className="mb-3">
-        <p className="font-script text-2xl text-hotpink leading-none">Today's energy</p>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mt-1">
-          personalised to your {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
-        </p>
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="font-script text-2xl text-hotpink leading-none">Today's energy</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mt-1">
+            personalised to your {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
+          </p>
+        </div>
+        {recalcFlash && (
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[10px] font-black animate-fade-in">
+            <Check className="h-3 w-3" strokeWidth={3} /> Recalculated
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <Ring pct={eatenPct}>
