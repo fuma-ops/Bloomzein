@@ -515,6 +515,8 @@ const RAW_RECIPES: RawRecipe[] = [
   {
     id: "b01", name: "Greek Yogurt Power Bowl", cuisine: "Mediterranean", mealType: "breakfast",
     prepTime: 5, cookTime: 0, difficulty: "quick",
+    servings: 1,
+    equipment: [],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
     photo: "breakfast-mediterranean-greek-yogurt-power-bowl.jpg",
@@ -524,13 +526,22 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Greek yoghurt", quantity: "200g" },
       { name: "Mixed berries", quantity: "1/2 cup" },
       { name: "Granola", quantity: "1/4 cup" },
-      { name: "Honey", quantity: "1 tsp" },
+      { name: "Pumpkin seeds", quantity: "1 tbsp" },
+      { name: "Honey", quantity: "1 tsp" }
     ],
-    steps: ["Spoon yoghurt into a bowl.", "Top with berries and granola.", "Drizzle with honey and serve."],
+    steps: [
+      "Spoon **Greek yoghurt** into a bowl and smooth into a swirl.",
+      "Scatter over **mixed berries** and a handful of **granola** for crunch.",
+      "Finish with a few **pumpkin seeds** and a thread of **honey**; eat straight away so the granola stays crisp."
+    ],
+    batchTip: "Layer yoghurt and berries in a jar the night before; add granola only when you eat so it stays crunchy.",
+    substitutionTip: "Dairy-free? Use thick coconut yoghurt and maple syrup instead of honey."
   },
   {
     id: "b02", name: "Avocado Egg Toast", cuisine: "Mediterranean", mealType: "breakfast",
     prepTime: 10, cookTime: 5, difficulty: "quick",
+    servings: 1,
+    equipment: ["Small pot", "Non-stick pan"],
     phases: ["follicular", "ovulatory", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["eggs"],
     photo: "breakfast-mediterranean-avocado-egg-toast.jpg",
@@ -539,46 +550,82 @@ const RAW_RECIPES: RawRecipe[] = [
     ingredients: [
       { name: "Sourdough bread", quantity: "2 slices" },
       { name: "Avocado", quantity: "1" },
-      { name: "Egg", quantity: "2" },
+      { name: "Eggs", quantity: "2" },
+      { name: "Lemon", quantity: "1/2" },
       { name: "Chili flakes", quantity: "pinch" },
+      { name: "Salt & pepper", quantity: "to taste" }
     ],
-    steps: ["Toast the bread.", "Mash avocado and spread on toast.", "Fry or poach eggs and place on top, season."],
+    steps: [
+      "Bring a small pot of water to a gentle simmer to poach, or heat a **non-stick pan** to fry.",
+      "Toast the **sourdough** until deep golden.",
+      "Mash the **avocado** with a squeeze of **lemon**, salt and pepper, then spread thickly onto the toast.",
+      "Poach or fry the **eggs** to your liking, slide onto the avocado and finish with **chili flakes** and flaky salt."
+    ],
+    batchTip: "Minimal prep - but you can mash the avocado with lemon up to an hour ahead; the acid keeps it green.",
+    substitutionTip: "No sourdough? Any hearty wholegrain bread works, or grilled sweet potato slices for gluten-free."
   },
   {
     id: "b03", name: "Salmon & Quinoa Breakfast Bowl", cuisine: "Nordic", mealType: "breakfast",
     prepTime: 10, cookTime: 15, difficulty: "easy",
+    servings: 1,
+    equipment: ["Small pot"],
     phases: ["luteal", "menstrual"], goal: ["gain", "maintain"],
     dietTags: ["pescatarian", "gluten-free"], allergens: [],
     photo: "breakfast-nordic-salmon-quinoa-breakfast-bowl.jpg",
     macros: { calories: 410, protein: 30, carbs: 34, fat: 16 },
     micros: { omega3: 1.8, iron: 2, magnesium: 60 },
     ingredients: [
-      { name: "Cooked quinoa", quantity: "1 cup" },
+      { name: "Quinoa", quantity: "1/3 cup, dry" },
       { name: "Smoked salmon", quantity: "100g" },
-      { name: "Soft-boiled egg", quantity: "1" },
-      { name: "Spinach", quantity: "1 handful" },
+      { name: "Egg", quantity: "1" },
+      { name: "Baby spinach", quantity: "1 handful" },
+      { name: "Lemon", quantity: "1/2" },
+      { name: "Fresh dill", quantity: "few sprigs" },
+      { name: "Olive oil", quantity: "1 tsp" }
     ],
-    steps: ["Warm the quinoa and place in a bowl.", "Layer salmon, egg and spinach on top.", "Season with lemon and dill."],
+    steps: [
+      "Rinse **quinoa** and simmer in 2/3 cup water for 12-15 min until the grains uncurl; fluff and let the steam escape.",
+      "Meanwhile, lower the **egg** into boiling water for 6.5 min, then cool under cold water and peel.",
+      "Wilt **baby spinach** through the warm quinoa and pile into a bowl.",
+      "Drape over the **smoked salmon**, halve the soft egg on top, and finish with **dill**, a squeeze of **lemon** and a drizzle of **olive oil**."
+    ],
+    batchTip: "Cook a big batch of quinoa - it keeps 4 days chilled and the bowl assembles in minutes.",
+    substitutionTip: "Swap smoked salmon for hot-smoked trout or flaked cooked salmon."
   },
   {
     id: "b04", name: "Spiced Chickpea Shakshuka", cuisine: "Middle Eastern", mealType: "breakfast",
     prepTime: 10, cookTime: 20, difficulty: "easy",
+    servings: 2,
+    equipment: ["Frying pan with lid"],
     phases: ["menstrual", "follicular"], goal: ["maintain", "gain", "lose"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs"],
     photo: "breakfast-middle-eastern-spiced-chickpea-shakshuka.jpg",
     macros: { calories: 380, protein: 26, carbs: 36, fat: 14 },
     micros: { iron: 4, fibre: 9, vitaminC: 22 },
     ingredients: [
-      { name: "Chickpeas", quantity: "1 cup" },
+      { name: "Chickpeas", quantity: "1 cup, drained" },
       { name: "Crushed tomatoes", quantity: "1 cup" },
       { name: "Eggs", quantity: "2" },
+      { name: "Onion", quantity: "1/2" },
+      { name: "Garlic", quantity: "2 cloves" },
       { name: "Cumin & paprika", quantity: "1 tsp each" },
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Fresh coriander", quantity: "to finish" }
     ],
-    steps: ["Simmer tomatoes with chickpeas and spices.", "Make wells and crack eggs into the sauce.", "Cover and cook until eggs are just set."],
+    steps: [
+      "Soften diced **onion** and **garlic** in **olive oil** in a frying pan for 3-4 min.",
+      "Stir in **cumin**, **paprika** and a pinch of salt until fragrant, then add **crushed tomatoes** and **chickpeas**; simmer 8-10 min until thick.",
+      "Make two wells and crack in the **eggs**; cover and cook 5-6 min until the whites set but the yolks stay soft.",
+      "Scatter with **coriander** and serve straight from the pan with bread."
+    ],
+    batchTip: "Make the tomato-chickpea base ahead and chill 3 days; reheat and add fresh eggs to serve.",
+    substitutionTip: "No eggs? Fold in cubed feta or firm tofu and warm through instead."
   },
   {
     id: "b05", name: "Tropical Green Smoothie", cuisine: "Latin", mealType: "breakfast",
     prepTime: 8, cookTime: 0, difficulty: "quick",
+    servings: 1,
+    equipment: ["Blender"],
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
     photo: "breakfast-latin-tropical-green-smoothie.jpg",
@@ -589,12 +636,22 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Spinach", quantity: "1 cup" },
       { name: "Banana", quantity: "1/2" },
       { name: "Coconut water", quantity: "1 cup" },
+      { name: "Lime", quantity: "1/2" },
+      { name: "Chia seeds", quantity: "1 tsp (optional)" }
     ],
-    steps: ["Add all ingredients to a blender.", "Blend until smooth.", "Pour and enjoy immediately."],
+    steps: [
+      "Add **coconut water** to the blender first, then the **spinach**, so the leaves blend perfectly smooth.",
+      "Add **mango**, **banana**, a squeeze of **lime** and the **chia seeds**.",
+      "Blend on high for 45-60 sec until silky; loosen with a splash more coconut water if needed and drink straight away."
+    ],
+    batchTip: "Freeze mango and banana chunks in bags - blitz from frozen for an instant thick smoothie.",
+    substitutionTip: "Swap coconut water for any plant milk to make it creamier and more filling."
   },
   {
     id: "b06", name: "Banana Oat Pancakes with Walnuts", cuisine: "Nordic", mealType: "breakfast",
     prepTime: 10, cookTime: 10, difficulty: "easy",
+    servings: 2,
+    equipment: ["Blender", "Non-stick pan"],
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
     photo: "breakfast-nordic-banana-oat-pancakes-walnuts.jpg",
@@ -604,13 +661,26 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Oats", quantity: "1 cup" },
       { name: "Banana", quantity: "1" },
       { name: "Eggs", quantity: "2" },
+      { name: "Baking powder", quantity: "1/2 tsp" },
+      { name: "Cinnamon", quantity: "1/4 tsp" },
       { name: "Walnuts", quantity: "2 tbsp" },
+      { name: "Oil", quantity: "for the pan" },
+      { name: "Maple syrup", quantity: "to serve" }
     ],
-    steps: ["Blend oats, banana and eggs into a batter.", "Cook small pancakes on a non-stick pan.", "Top with crushed walnuts."],
+    steps: [
+      "Blend **oats**, **banana**, **eggs**, **baking powder** and **cinnamon** to a smooth batter; rest 5 min to thicken.",
+      "Heat a little **oil** in a **non-stick pan** over medium; pour small rounds and cook 2 min until bubbles form on top.",
+      "Flip and cook 1 min more until springy.",
+      "Stack, scatter with toasted **walnuts** and drizzle with **maple syrup**."
+    ],
+    batchTip: "Cook the full batch and freeze between sheets of baking paper; reheat straight from the toaster.",
+    substitutionTip: "No walnuts? Use pecans or seeds; for egg-free, blend 2 tbsp ground flax with 6 tbsp water first."
   },
   {
     id: "b07", name: "Moroccan Spiced Egg Wrap", cuisine: "African", mealType: "breakfast",
     prepTime: 10, cookTime: 8, difficulty: "quick",
+    servings: 1,
+    equipment: ["Non-stick pan"],
     phases: ["menstrual", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["halal"], allergens: ["eggs"],
     photo: "breakfast-african-moroccan-spiced-egg-wrap.jpg",
@@ -620,13 +690,26 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Whole-wheat wrap", quantity: "1" },
       { name: "Eggs", quantity: "2" },
       { name: "Ras el hanout", quantity: "1 tsp" },
-      { name: "Tomato & onion", quantity: "1/2 cup" },
+      { name: "Tomato", quantity: "1/2" },
+      { name: "Onion", quantity: "1/4" },
+      { name: "Olive oil", quantity: "1 tsp" },
+      { name: "Lemon", quantity: "1/2" },
+      { name: "Fresh coriander", quantity: "handful" }
     ],
-    steps: ["Scramble eggs with spices, tomato and onion.", "Warm the wrap.", "Fill, roll and serve."],
+    steps: [
+      "Soften diced **onion** and **tomato** in **olive oil** for 3 min until juicy.",
+      "Whisk the **eggs** with **ras el hanout** and salt, pour in and softly scramble for 2 min until just set.",
+      "Warm the **wrap** in a dry pan for 20 sec a side until pliable.",
+      "Pile in the eggs and **coriander**, add a squeeze of **lemon**, then roll tightly and halve."
+    ],
+    batchTip: "Scramble double and keep chilled 2 days; warm and wrap fresh for a fast breakfast.",
+    substitutionTip: "No ras el hanout? Mix cumin, cinnamon, paprika and a little ground ginger."
   },
   {
     id: "b08", name: "Asian Tofu Scramble", cuisine: "Asian", mealType: "breakfast",
     prepTime: 8, cookTime: 8, difficulty: "quick",
+    servings: 1,
+    equipment: ["Non-stick pan"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "gain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["soy"],
     photo: "breakfast-asian-tofu-scramble.jpg",
@@ -635,14 +718,26 @@ const RAW_RECIPES: RawRecipe[] = [
     ingredients: [
       { name: "Firm tofu", quantity: "200g" },
       { name: "Turmeric", quantity: "1/2 tsp" },
+      { name: "Garlic", quantity: "1 clove" },
       { name: "Spring onion", quantity: "2" },
       { name: "Soy sauce", quantity: "1 tbsp" },
+      { name: "Sesame oil", quantity: "1 tsp" },
+      { name: "Chili flakes", quantity: "pinch" }
     ],
-    steps: ["Crumble tofu into a hot pan.", "Add turmeric and soy sauce, stir-fry.", "Finish with spring onion."],
+    steps: [
+      "Press **firm tofu** in a clean towel for a few minutes, then crumble into rough curds.",
+      "Heat **sesame oil**, fry **garlic** for 30 sec, then add the tofu and **turmeric**; stir-fry 4-5 min until golden and dry.",
+      "Splash in **soy sauce** and toss for a minute to glaze.",
+      "Off the heat, fold through **spring onion** and a pinch of **chili flakes**."
+    ],
+    batchTip: "Keeps 3 days chilled and is great cold in a lunch wrap too.",
+    substitutionTip: "Soy-free? Use a chickpea-flour scramble or season with coconut aminos."
   },
   {
     id: "b09", name: "Berry Chia Pudding", cuisine: "Mediterranean", mealType: "breakfast",
     prepTime: 5, cookTime: 0, difficulty: "quick",
+    servings: 1,
+    equipment: ["Jar or bowl"],
     phases: ["luteal", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
     photo: "breakfast-mediterranean-berry-chia-pudding.jpg",
@@ -651,14 +746,24 @@ const RAW_RECIPES: RawRecipe[] = [
     ingredients: [
       { name: "Chia seeds", quantity: "3 tbsp" },
       { name: "Almond milk", quantity: "1 cup" },
-      { name: "Mixed berries", quantity: "1/2 cup" },
       { name: "Maple syrup", quantity: "1 tsp" },
+      { name: "Vanilla", quantity: "1/4 tsp" },
+      { name: "Mixed berries", quantity: "1/2 cup" }
     ],
-    steps: ["Mix chia seeds with almond milk and maple syrup.", "Refrigerate overnight.", "Top with berries before serving."],
+    steps: [
+      "Whisk **chia seeds**, **almond milk**, **maple syrup** and **vanilla** in a jar.",
+      "Wait 5 min, then whisk again to break up any clumps so it sets evenly.",
+      "Chill overnight until thick and spoonable.",
+      "Top with **mixed berries** just before serving."
+    ],
+    batchTip: "Make 3-4 jars at once; the plain base keeps 4 days chilled.",
+    substitutionTip: "Any milk works; use honey instead of maple if you are not strictly vegan."
   },
   {
     id: "b10", name: "Smoked Salmon Bagel", cuisine: "Nordic", mealType: "breakfast",
     prepTime: 8, cookTime: 0, difficulty: "quick",
+    servings: 1,
+    equipment: ["Toaster"],
     phases: ["menstrual", "luteal"], goal: ["gain", "maintain"],
     dietTags: ["pescatarian"], allergens: ["dairy"],
     photo: "breakfast-nordic-smoked-salmon-bagel.jpg",
@@ -668,9 +773,19 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Bagel", quantity: "1" },
       { name: "Cream cheese", quantity: "30g" },
       { name: "Smoked salmon", quantity: "80g" },
-      { name: "Capers & dill", quantity: "to taste" },
+      { name: "Capers", quantity: "1 tsp" },
+      { name: "Red onion", quantity: "few rings" },
+      { name: "Fresh dill", quantity: "few sprigs" },
+      { name: "Lemon", quantity: "1 wedge" }
     ],
-    steps: ["Slice and toast the bagel.", "Spread cream cheese on both halves.", "Layer salmon, capers and dill."],
+    steps: [
+      "Slice and toast the **bagel** until golden.",
+      "Spread **cream cheese** thickly over both cut halves.",
+      "Drape over the **smoked salmon**, then scatter with **capers**, **red onion** and **dill**.",
+      "Finish with a squeeze of **lemon** and cracked black pepper; sandwich or serve open."
+    ],
+    batchTip: "Assembly only - keep the toppings ready and build fresh so the bagel stays crisp.",
+    substitutionTip: "Swap cream cheese for whipped ricotta, or use hot-smoked trout for the salmon."
   },
 
   // ───────── Lunch (12) ─────────
@@ -1174,6 +1289,8 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "rose-oats", name: "Rose-Berry Overnight Oats", cuisine: "Global", mealType: "breakfast",
     image: "/images/meal-oats.webp",
     prepTime: 5, cookTime: 0, difficulty: "easy",
+    servings: 1,
+    equipment: ["Jar"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],
     macros: { calories: 320, protein: 14, carbs: 50, fat: 8 },
@@ -1184,20 +1301,22 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Milk", quantity: "1/2 cup" },
       { name: "Strawberries", quantity: "1/2 cup" },
       { name: "Honey", quantity: "1 tsp" },
+      { name: "Rose water", quantity: "1/4 tsp" }
     ],
     steps: [
-      "Mix oats, yogurt and milk in a jar.",
-      "Stir in honey and half the strawberries.",
-      "Chill overnight. Top with remaining berries in the morning.",
+      "Stir **oats**, **Greek yogurt** and **milk** together in a jar until the oats are fully submerged.",
+      "Mix in **honey**, a drop of **rose water** and half the chopped **strawberries**.",
+      "Seal and chill overnight to soften and thicken.",
+      "Top with the remaining strawberries in the morning."
     ],
     cyclePhase: ["follicular", "ovulation", "any"],
     intention: ["light", "energy", "quick"],
     cost: "$",
     vibe: "Energizing",
     conservation: { fridgeDays: 3, freezerWeeks: 0, container: "Glass jar with lid" },
-    batchTip: "Make 3 jars at once for the week.",
-    substitutionTip: "Swap strawberries for any berry or chopped apple.",
-    packable: true, noReheat: true,
+    batchTip: "Make 3 jars at once for the week; they keep 3 days chilled.",
+    substitutionTip: "Swap strawberries for any berry or chopped apple; skip the rose water if you prefer.",
+    packable: true, noReheat: true
   },
   {
     id: "rainbow-buddha", name: "Rainbow Salmon Buddha Bowl", cuisine: "Asian", mealType: "lunch",
@@ -1293,6 +1412,8 @@ const RAW_RECIPES: RawRecipe[] = [
   {
     id: "b11", name: "Spinach Feta Breakfast Muffins", cuisine: "Mediterranean", mealType: "breakfast",
     prepTime: 15, cookTime: 20, difficulty: "easy",
+    servings: 6,
+    equipment: ["Muffin tin", "Mixing bowl"],
     phases: ["follicular", "ovulatory"], goal: ["maintain", "lose"],
     dietTags: ["vegetarian"], allergens: ["dairy", "eggs"],
     macros: { calories: 290, protein: 18, carbs: 20, fat: 16 },
@@ -1303,29 +1424,53 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Feta", quantity: "50g" },
       { name: "Flour", quantity: "1/2 cup" },
       { name: "Milk", quantity: "1/4 cup" },
+      { name: "Baking powder", quantity: "1 tsp" },
+      { name: "Spring onion", quantity: "2" },
+      { name: "Olive oil", quantity: "1 tbsp" }
     ],
-    steps: ["Whisk eggs with milk and flour.", "Fold in spinach and feta.", "Bake in a muffin tin 20 min at 180°C."],
+    steps: [
+      "Heat oven to 180°C and oil or line a 6-cup **muffin tin**.",
+      "Whisk **eggs** with **milk**, **flour**, **baking powder** and **olive oil** to a smooth batter.",
+      "Wilt and chop **spinach**, squeeze out the water, then fold in with crumbled **feta** and sliced **spring onion**; season.",
+      "Divide between the cups and bake 20 min until risen and set."
+    ],
+    batchTip: "Bake a batch and freeze; reheat from frozen in a 160°C oven for 10 min.",
+    substitutionTip: "Gluten-free? Use a 1:1 GF flour blend; dairy-free feta also works."
   },
   {
     id: "b12", name: "Vegan Tofu Breakfast Burrito", cuisine: "Latin", mealType: "breakfast",
     prepTime: 10, cookTime: 10, difficulty: "easy",
+    servings: 1,
+    equipment: ["Non-stick pan"],
     phases: ["menstrual", "luteal"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["soy"],
     macros: { calories: 340, protein: 18, carbs: 36, fat: 14 },
     micros: { iron: 4, fibre: 7, vitaminC: 12 },
     ingredients: [
       { name: "Firm tofu", quantity: "150g" },
-      { name: "Corn tortilla", quantity: "1" },
+      { name: "Corn tortilla", quantity: "1 large" },
       { name: "Black beans", quantity: "1/2 cup" },
-      { name: "Salsa", quantity: "2 tbsp" },
       { name: "Avocado", quantity: "1/4" },
       { name: "Turmeric", quantity: "1/2 tsp" },
+      { name: "Cumin", quantity: "1/2 tsp" },
+      { name: "Lime", quantity: "1/2" },
+      { name: "Fresh coriander", quantity: "handful" },
+      { name: "Salsa", quantity: "2 tbsp - tap in steps to make it" }
     ],
-    steps: ["Crumble and scramble tofu with turmeric.", "Warm the black beans.", "Assemble burrito with avocado and salsa."],
+    steps: [
+      "Press and crumble **firm tofu**, then fry with **turmeric**, **cumin** and salt for 4-5 min until golden.",
+      "Warm the **black beans** and lightly crush them; heat the **corn tortilla** until soft and pliable.",
+      "Slice the **avocado** and squeeze over **lime**.",
+      "Layer beans, tofu, avocado and a spoon of [[salsa]] down the tortilla, scatter with **coriander** and roll tight."
+    ],
+    batchTip: "Scramble the tofu and beans ahead; keep 3 days chilled and wrap fresh to serve.",
+    substitutionTip: "Use a large gluten-free wrap if corn tortillas tear, or serve in lettuce cups."
   },
   {
     id: "b13", name: "Overnight PB Banana Oats", cuisine: "Global", mealType: "breakfast",
     prepTime: 5, cookTime: 0, difficulty: "quick",
+    servings: 1,
+    equipment: ["Jar"],
     phases: ["luteal", "menstrual"], goal: ["gain", "maintain"],
     dietTags: ["vegan"], allergens: ["nuts"],
     macros: { calories: 380, protein: 13, carbs: 52, fat: 14 },
@@ -1334,14 +1479,25 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Oats", quantity: "1/2 cup" },
       { name: "Plant milk", quantity: "3/4 cup" },
       { name: "Peanut butter", quantity: "1 tbsp" },
-      { name: "Banana", quantity: "1/2" },
       { name: "Chia seeds", quantity: "1 tsp" },
+      { name: "Cinnamon", quantity: "pinch" },
+      { name: "Maple syrup", quantity: "1 tsp" },
+      { name: "Banana", quantity: "1/2" }
     ],
-    steps: ["Combine oats, milk, peanut butter and chia seeds in a jar.", "Chill overnight.", "Top with sliced banana before eating."],
+    steps: [
+      "Stir **oats**, **plant milk**, **peanut butter**, **chia seeds** and a pinch of **cinnamon** in a jar until the peanut butter loosens through.",
+      "Sweeten with a little **maple syrup** if you like.",
+      "Chill overnight to thicken.",
+      "Top with sliced **banana** just before eating."
+    ],
+    batchTip: "Make several jars at once; they keep 4 days chilled.",
+    substitutionTip: "Nut-free? Use sunflower seed butter or tahini in place of peanut butter."
   },
   {
     id: "b14", name: "Shakshuka Verde", cuisine: "Middle Eastern", mealType: "breakfast",
     prepTime: 10, cookTime: 18, difficulty: "easy",
+    servings: 2,
+    equipment: ["Frying pan with lid"],
     phases: ["follicular", "ovulatory"], goal: ["maintain", "lose"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs", "dairy"],
     macros: { calories: 310, protein: 19, carbs: 18, fat: 18 },
@@ -1349,11 +1505,22 @@ const RAW_RECIPES: RawRecipe[] = [
     ingredients: [
       { name: "Spinach", quantity: "2 cups" },
       { name: "Green chili", quantity: "1" },
+      { name: "Onion", quantity: "1/2" },
+      { name: "Garlic", quantity: "2 cloves" },
+      { name: "Cumin", quantity: "1/2 tsp" },
       { name: "Eggs", quantity: "2" },
       { name: "Feta", quantity: "30g" },
-      { name: "Garlic", quantity: "2 cloves" },
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Lemon", quantity: "1/2" }
     ],
-    steps: ["Wilt spinach with garlic and chili.", "Crack eggs into wells and cover until set.", "Crumble feta on top before serving."],
+    steps: [
+      "Soften **onion**, **garlic** and sliced **green chili** in **olive oil** for 3-4 min.",
+      "Add **cumin**, then the **spinach** in handfuls, wilting until you have a soft green base; season.",
+      "Make two wells, crack in the **eggs**, cover and cook 5-6 min until the whites set.",
+      "Crumble over **feta**, add a squeeze of **lemon** and serve."
+    ],
+    batchTip: "Make the green base ahead and chill 3 days; add fresh eggs when you reheat.",
+    substitutionTip: "Dairy-free? Swap feta for a spoon of dairy-free yoghurt, or leave it out."
   },
   {
     id: "b15", name: "Coconut Quinoa Porridge", cuisine: "Asian", mealType: "breakfast",
