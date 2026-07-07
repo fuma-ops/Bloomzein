@@ -10,6 +10,8 @@ export {
   hasDietSetup,
   updateDietProfile,
   scaleQuantity,
+  recipeImageSrc,
+  recipeSlug,
   COOKING_OPTIONS,
   ALLERGY_OPTIONS,
   DIET_PROFILE_KEY,

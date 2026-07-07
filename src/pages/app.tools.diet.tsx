@@ -18,7 +18,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import {
-  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity,
+  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity, recipeImageSrc,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
   type Recipe, type DietProfile, type DietPhase, type DietGoal, type MealType,
   type DietType, type Allergy, type CookingFrequency, type DietRegime,
@@ -279,16 +279,16 @@ function RecipeModal({
           <button onClick={onClose} className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink">
             <X className="h-4 w-4" />
           </button>
-          {recipe.photo || recipe.image ? (
-            <img
-              src={recipe.image ?? `/images/recipes/${recipe.photo}`}
-              alt={recipe.name}
-              className="w-full aspect-[16/10] object-cover rounded-2xl"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-            />
-          ) : (
-            <RecipePlaceholder name={recipe.name} className="aspect-[16/10]" />
-          )}
+          <img
+            src={recipeImageSrc(recipe)}
+            alt={recipe.name}
+            className="w-full aspect-[16/10] object-cover rounded-2xl bg-blush"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              const fb = MEAL_SLOT_FALLBACK[recipe.mealType] ?? "/images/meal-buddha.webp";
+              if (el.src.endsWith(fb)) { el.style.display = "none"; } else { el.src = fb; }
+            }}
+          />
           <h2 className="mt-3 font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
           <p className="text-sm text-rose/70">{recipe.cuisine} cuisine</p>
 
@@ -1176,8 +1176,7 @@ const MEAL_SLOT_FALLBACK: Record<string, string> = {
   dinner: "/images/meal-stew.webp", snack: "/images/meal-buddha.webp", lunchbox: "/images/meal-lunchbox.webp",
 };
 function mealSlotPhoto(type: string, r?: Recipe): string {
-  if (r?.image) return r.image;
-  if (r?.photo) return `/images/recipes/${r.photo}`;
+  if (r) return recipeImageSrc(r);
   return MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.webp";
 }
 
