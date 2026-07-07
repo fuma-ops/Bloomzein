@@ -10,12 +10,12 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { StepText } from "@/components/bloom/recipes/StepText";
-import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
+import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules,
@@ -1700,9 +1700,17 @@ export default function DietPage() {
   const planMealsImplicit = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const slots = ["breakfast", "lunch", "dinner", "snack"] as const;
+    const target = computeTargets(true).calories;
     days.forEach((d, di) => slots.forEach((slot, si) => {
       const cands = RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
-      if (cands.length) addRecipeToMealPlan(cands[(di * 3 + si) % cands.length].id, d, slot);
+      if (!cands.length) return;
+      // Calorie-aware: among candidates, prefer the one closest to this slot's
+      // budget (so a build goal lands on denser dishes), varied by day index.
+      const budget = slotBudget(target, slot);
+      const byFit = [...cands].sort((a, b) => Math.abs(a.macros.calories - budget) - Math.abs(b.macros.calories - budget));
+      const pick = byFit[(di + si) % Math.min(byFit.length, 4)] ?? byFit[0];
+      addRecipeToMealPlan(pick.id, d, slot);
+      setMealPortion(d, slot as PlanSlot, portionForRecipe(pick.macros.calories || 0, slot, target));
     }));
     try {
       localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label);

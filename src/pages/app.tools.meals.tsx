@@ -56,13 +56,13 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState, writeMealPortions, setMealPortion, portionFor } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { todayISO } from "@/lib/localDate";
-import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
+import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, slotBudget, portionForRecipe, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
@@ -132,6 +132,7 @@ function pickForSlot(
   owned: Set<string>,
   used: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
+  budget?: number,
 ): Recipe | null {
   const base = pool.filter((r) => r.mealType === type && ratings[r.id] !== "never");
   let candidates = base;
@@ -158,6 +159,14 @@ function pickForSlot(
   //  · "budget" has no recipe tag — it scores the real cost field instead.
   const softIntention = intention !== "cycle" && intention !== "quick";
   const phaseAware = phase !== "any";
+  // Calorie-aware: prefer recipes sized near this slot's calorie budget so the
+  // day actually reaches the goal (a build day needs denser dishes than a lean
+  // day). Recipes within a scalable window of the budget score highest.
+  const calFit = (cals: number) => {
+    if (!budget || budget <= 0 || !cals) return 0;
+    const off = Math.abs(cals - budget) / budget;      // 0 = bang on budget
+    return (1 - Math.min(1, off)) * 0.7;               // up to +0.7 — matters, but vibe still counts
+  };
   const scored = candidates.map((r) => ({
     r,
     s: scoreRecipe(r, owned)
@@ -165,6 +174,7 @@ function pickForSlot(
       + (softIntention && intention !== "budget" && r.intention.includes(intention) ? 0.6 : 0)
       + (intention === "budget" && r.cost === "$" ? 0.6 : 0)
       + (phaseAware && (r.cyclePhase.includes(phase) || r.cyclePhase.includes("any")) ? 0.35 : 0)
+      + calFit(r.macros.calories || 0)
       + Math.random() * 0.3,
   }));
   scored.sort((a, b) => b.s - a.s);
@@ -182,18 +192,29 @@ function buildWeek(
   owned: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
   proteinBoostDays?: Set<string>,
-) {
+  dailyTarget?: number,
+): { plan: Record<string, Record<MealType, string | null>>; portions: Record<string, Partial<Record<MealType, number>>> } {
   const used = new Set<string>();
   const plan: Record<string, Record<MealType, string | null>> = {};
+  const portions: Record<string, Partial<Record<MealType, number>>> = {};
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     (["breakfast", "lunch", "dinner", "snack"] as MealType[]).forEach((type) => {
       const slotIntention: Intention = proteinBoostDays?.has(d) && type === "dinner" ? "protein" : intention;
-      const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings);
-      if (r) { plan[d][type] = r.id; used.add(r.id); }
+      const budget = dailyTarget ? slotBudget(dailyTarget, type) : undefined;
+      const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings, budget);
+      if (r) {
+        plan[d][type] = r.id;
+        used.add(r.id);
+        // Portion the serving so the day actually reaches the calorie target.
+        if (dailyTarget) {
+          const f = portionForRecipe(r.macros.calories || 0, type, dailyTarget);
+          if (f !== 1) (portions[d] ??= {})[type] = f;
+        }
+      }
     });
   });
-  return plan;
+  return { plan, portions };
 }
 
 // Workout → Meals: after a strength/tonify session today, bias tonight's
@@ -421,8 +442,10 @@ export default function MealsPage() {
   }, []);
 
   const generateWeek = () => {
-    const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays);
+    const target = computeTargets(true).calories;
+    const { plan: p, portions } = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays, target);
     setPlan(p);
+    writeMealPortions(portions);
     markMealsTuned();
     ownThisPlan(); // built here → the user's own week (Diet won't overwrite it)
     setStep(3);
@@ -435,7 +458,10 @@ export default function MealsPage() {
     const ph = (real && real !== "any" ? real : phase) as CyclePhase;
     setIntention("cycle");
     setPhase(ph);
-    setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays));
+    const target = computeTargets(true).calories;
+    const { plan: p, portions } = buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays, target);
+    setPlan(p);
+    writeMealPortions(portions);
     markMealsTuned();
     ownThisPlan();
     setStep(3);
@@ -465,7 +491,10 @@ export default function MealsPage() {
       const savedPhase = readLS<CyclePhase>(LS.phase, "any");
       const savedOwned = pantrySet(readLS<Record<string, string[]>>(LS.pantry, {}));
       const savedRatings = readLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
-      setPlan(buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDays));
+      const target = computeTargets(true).calories;
+      const { plan: healed, portions } = buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDays, target);
+      setPlan(healed);
+      writeMealPortions(portions);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -485,9 +514,13 @@ export default function MealsPage() {
     const cur = plan[day]?.[type];
     if (cur) used.delete(cur);
     used.add(cur || "");
+    const target = computeTargets(true).calories;
     const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
-    const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
-    if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
+    const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings, slotBudget(target, type));
+    if (r) {
+      setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
+      setMealPortion(day, type as any, portionForRecipe(r.macros.calories || 0, type, target));
+    }
     clearMealsTuned(); // a manual swap makes it her own plan
     ownThisPlan();
   };
@@ -500,14 +533,23 @@ export default function MealsPage() {
       if (d === day || !meals) return;
       Object.values(meals).forEach((id) => { if (id) used.add(id as string); });
     });
+    const target = computeTargets(true).calories;
     const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
     const dayPlan: Record<MealType, string | null> = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
+    const dayPortions: Partial<Record<MealType, number>> = {};
     slots.forEach((type) => {
       const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
-      const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
-      if (r) { dayPlan[type] = r.id; used.add(r.id); }
+      const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings, slotBudget(target, type));
+      if (r) {
+        dayPlan[type] = r.id;
+        used.add(r.id);
+        const f = portionForRecipe(r.macros.calories || 0, type, target);
+        if (f !== 1) dayPortions[type] = f;
+      }
     });
     setPlan({ ...plan, [day]: dayPlan });
+    // Replace this day's portions (set the whole day at once).
+    slots.forEach((type) => setMealPortion(day, type as any, dayPortions[type] ?? 1));
     clearMealsTuned();
     ownThisPlan();
   };
@@ -780,16 +822,24 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
   );
 }
 
-/** A day's actual calories/protein vs the daily target — the closed loop. */
+/** A day's actual calories/protein vs the daily target — the closed loop.
+ *  Scales each meal by its planned portion so the day lands on the goal. */
 function DayTotals({ plan, day, target }: { plan: any; day: string; target: TargetBreakdown }) {
   const dayPlan = plan?.[day];
   const recipes = dayPlan
     ? (["breakfast", "lunch", "dinner", "snack"] as MealType[])
-        .map((s) => (dayPlan[s] ? RECIPES.find((r) => r.id === dayPlan[s]) : null))
+        .map((s) => {
+          const r = dayPlan[s] ? RECIPES.find((x) => x.id === dayPlan[s]) : null;
+          if (!r) return null;
+          const f = portionFor(day, s as any);
+          return { macros: { calories: r.macros.calories * f, protein: r.macros.protein * f, carbs: r.macros.carbs * f, fat: r.macros.fat * f } };
+        })
         .filter(Boolean) as { macros: { calories: number; protein: number; carbs: number; fat: number } }[]
     : [];
   if (!recipes.length) return null;
   const totals = sumMacros(recipes);
+  totals.calories = Math.round(totals.calories);
+  totals.protein = Math.round(totals.protein);
   const verdict = calorieVerdict(totals.calories, target.calories);
   const pct = Math.min(100, Math.round((totals.calories / Math.max(1, target.calories)) * 100));
   const barCls = verdict === "on" ? "bg-emerald-400" : verdict === "under" ? "bg-amber-400" : "bg-rose-400";
@@ -1116,6 +1166,7 @@ function WeekTab({
                 {(["breakfast","lunch","dinner","snack"] as MealType[]).map((slot) => {
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
+                  const portion = portionFor(d, slot as any);
                   const proteinBoosted = !!proteinBoostDays?.has(d) && slot === "dinner";
                   const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.webp';
                   const photoSrc = r?.photo ? `/images/recipes/${r.photo}` : fallback;
@@ -1136,11 +1187,14 @@ function WeekTab({
                       {/* Subtle top-only gradient so badges stay readable */}
                       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
 
-                      {/* Meal type badge */}
-                      <div className="absolute top-1.5 left-1.5">
+                      {/* Meal type badge + portion (servings needed to hit target) */}
+                      <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-0.5">
                         <span className="text-[8px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">
                           {slot === 'breakfast' ? 'morn' : slot === 'dinner' ? 'eve' : slot}
                         </span>
+                        {r && portion !== 1 && (
+                          <span className="text-[7px] font-black text-white bg-emerald-500/90 rounded-full px-1 py-0.5" title={`${portion} servings to match your calorie target`}>×{portion}</span>
+                        )}
                       </div>
 
                       {/* Protein badge */}
