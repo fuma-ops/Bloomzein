@@ -918,7 +918,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 0, difficulty: "easy",
     phases: ["luteal", "ovulatory"], goal: ["lose", "gain"],
     dietTags: ["pescatarian", "gluten-free"], allergens: ["soy"],
-    photo: "lunch-asian-spicy-tuna-poke-bowl.jpg",
+    photo: "lunch-asian-spicy-tuna-poke-bowl.png",
     macros: { calories: 470, protein: 34, carbs: 46, fat: 16 },
     micros: { omega3: 1.4, iron: 2, vitaminC: 18 },
     ingredients: [
