@@ -189,16 +189,16 @@ export function trainingAwarenessComment(opts: {
 /* ---------- Photo helper (mirrors the Meals week grid) ---------- */
 
 const MEAL_FALLBACK: Record<string, string> = {
-  breakfast: "/images/meal-oats.jpg",
-  lunch: "/images/meal-buddha.jpg",
-  dinner: "/images/meal-stew.jpg",
-  snack: "/images/meal-buddha.jpg",
-  lunchbox: "/images/meal-lunchbox.jpg",
+  breakfast: "/images/meal-oats.webp",
+  lunch: "/images/meal-buddha.webp",
+  dinner: "/images/meal-stew.webp",
+  snack: "/images/meal-buddha.webp",
+  lunchbox: "/images/meal-lunchbox.webp",
 };
 function recipePhoto(r: Recipe): string {
   if (r.image) return r.image;
   if (r.photo) return `/images/recipes/${r.photo}`;
-  return MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.jpg";
+  return MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.webp";
 }
 
 /* ---------- Mini meal card — image + macro chips + actions (Diet-style) ---------- */
@@ -209,7 +209,7 @@ function planSlotFor(r: Recipe): (typeof PLAN_SLOTS)[number] {
 }
 
 function MiniMealCard({ r, day, onOpen }: { r: Recipe; day?: string; onOpen?: (id: string) => void }) {
-  const fallback = MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.jpg";
+  const fallback = MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.webp";
   const [planned, setPlanned] = useState(false);
   const [listed, setListed] = useState(false);
   const macros = [

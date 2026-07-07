@@ -10,12 +10,12 @@ import { scrollToTopOf } from "@/lib/scrollToTopOf";
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "bestsellers";
 
 const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] = [
-  { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.jpg" },
-  { key: "beauty",      label: "Beauty",      img: "/images/shop-cat-beauty.jpg" },
-  { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.jpg" },
-  { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.jpg" },
-  { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.jpg" },
-  { key: "bestsellers", label: "Best sellers", img: "/images/shop-cat-premium.jpg" },
+  { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.webp" },
+  { key: "beauty",      label: "Beauty",      img: "/images/shop-cat-beauty.webp" },
+  { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.webp" },
+  { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.webp" },
+  { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.webp" },
+  { key: "bestsellers", label: "Best sellers", img: "/images/shop-cat-premium.webp" },
 ];
 
 interface Product {
@@ -29,23 +29,23 @@ interface Product {
 }
 
 const PRODUCTS: Product[] = [
-  { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "/images/shop-cat-selfcare.jpg",    bestseller: true },
-  { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "/images/shop-hero.png" },
-  { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "/images/shop-cat-beauty.jpg",      bestseller: true },
-  { id: "serum",    name: "Rose Petal Serum",    price: 42,  rating: 4.9, cat: "beauty",      img: "/images/shop-hero.png" },
-  { id: "heat",     name: "Cozy Heat Wrap",      price: 36,  rating: 4.8, cat: "cycle",       img: "/images/shop-cat-cycle.jpg",       bestseller: true },
-  { id: "bottle",   name: "Bloom Water Bottle",  price: 24,  rating: 4.6, cat: "active",      img: "/images/shop-cat-active.jpg" },
-  { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "/images/shop-hero.png",            bestseller: true },
-  { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "/images/shop-cat-accessories.jpg" },
-  { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "accessories", img: "/images/shop-cat-premium.jpg",     bestseller: true },
+  { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "/images/shop-cat-selfcare.webp",    bestseller: true },
+  { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "/images/shop-hero.webp" },
+  { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "/images/shop-cat-beauty.webp",      bestseller: true },
+  { id: "serum",    name: "Rose Petal Serum",    price: 42,  rating: 4.9, cat: "beauty",      img: "/images/shop-hero.webp" },
+  { id: "heat",     name: "Cozy Heat Wrap",      price: 36,  rating: 4.8, cat: "cycle",       img: "/images/shop-cat-cycle.webp",       bestseller: true },
+  { id: "bottle",   name: "Bloom Water Bottle",  price: 24,  rating: 4.6, cat: "active",      img: "/images/shop-cat-active.webp" },
+  { id: "leggings", name: "Soft Glow Leggings",  price: 58,  rating: 4.9, cat: "active",      img: "/images/shop-hero.webp",            bestseller: true },
+  { id: "clip",     name: "Pearl Hair Clip",     price: 14,  rating: 4.5, cat: "accessories", img: "/images/shop-cat-accessories.webp" },
+  { id: "planner",  name: "Bloom Daily Planner", price: 32,  rating: 5.0, cat: "accessories", img: "/images/shop-cat-premium.webp",     bestseller: true },
 ];
 
 const MOODS: { label: string; img: string }[] = [
-  { label: "Romanticize My Day", img: "/images/shop-cat-selfcare.jpg" },
-  { label: "Cozy Evening",       img: "/images/shop-cat-premium.jpg" },
-  { label: "Glow Up",            img: "/images/shop-cat-beauty.jpg" },
-  { label: "PMS Comfort",        img: "/images/shop-cat-cycle.jpg" },
-  { label: "Self-care Sunday",   img: "/images/shop-cat-accessories.jpg" },
+  { label: "Romanticize My Day", img: "/images/shop-cat-selfcare.webp" },
+  { label: "Cozy Evening",       img: "/images/shop-cat-premium.webp" },
+  { label: "Glow Up",            img: "/images/shop-cat-beauty.webp" },
+  { label: "PMS Comfort",        img: "/images/shop-cat-cycle.webp" },
+  { label: "Self-care Sunday",   img: "/images/shop-cat-accessories.webp" },
 ];
 
 const PERKS: { label: string; icon: typeof Gift }[] = [
@@ -118,7 +118,7 @@ export default function ShopPage() {
         {/* HERO */}
         <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
           <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-            <img src="/images/shop-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+            <img src="/images/shop-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
             <div className="absolute inset-0 z-[1] bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
             <div className="relative z-[2] px-4 py-6 sm:px-10 sm:py-14 max-w-md">
               <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2">

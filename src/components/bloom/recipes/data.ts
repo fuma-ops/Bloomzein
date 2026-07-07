@@ -1132,7 +1132,7 @@ const RAW_RECIPES: RawRecipe[] = [
   // ───────── Migrated from Meals Planner seed (4) ─────────
   {
     id: "rose-oats", name: "Rose-Berry Overnight Oats", cuisine: "Global", mealType: "breakfast",
-    image: "/images/meal-oats.jpg",
+    image: "/images/meal-oats.webp",
     prepTime: 5, cookTime: 0, difficulty: "easy",
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],
@@ -1161,7 +1161,7 @@ const RAW_RECIPES: RawRecipe[] = [
   },
   {
     id: "rainbow-buddha", name: "Rainbow Salmon Buddha Bowl", cuisine: "Asian", mealType: "lunch",
-    image: "/images/meal-buddha.jpg",
+    image: "/images/meal-buddha.webp",
     prepTime: 10, cookTime: 15, difficulty: "easy",
     phases: ["ovulatory", "follicular"], goal: ["maintain", "gain"],
     dietTags: ["gluten-free"], allergens: [],
@@ -1191,7 +1191,7 @@ const RAW_RECIPES: RawRecipe[] = [
   },
   {
     id: "cozy-lentil", name: "Cozy Lentil Sweet Potato Stew", cuisine: "Global", mealType: "dinner",
-    image: "/images/meal-stew.jpg",
+    image: "/images/meal-stew.webp",
     prepTime: 10, cookTime: 30, difficulty: "easy",
     phases: ["menstrual", "luteal"], goal: ["maintain", "lose"],
     dietTags: ["vegan", "vegetarian", "gluten-free"], allergens: [],
@@ -1222,7 +1222,7 @@ const RAW_RECIPES: RawRecipe[] = [
   },
   {
     id: "kid-bento", name: "Strawberry Bento Lunchbox", cuisine: "Global", mealType: "lunchbox",
-    image: "/images/meal-lunchbox.jpg",
+    image: "/images/meal-lunchbox.webp",
     prepTime: 10, cookTime: 0, difficulty: "easy",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],

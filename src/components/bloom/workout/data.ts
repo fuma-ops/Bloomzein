@@ -30,26 +30,26 @@ export interface Exercise {
 }
 
 /* ==================== ZONES ====================
-   Zone image naming convention: /images/zone-{key}.jpg (square, 800x800) */
+   Zone image naming convention: /images/zone-{key}.webp (square, 800x800) */
 
 export const ZONES: { key: Zone; label: string; icon: LucideIcon; image: string }[] = [
-  { key: "glutes", label: "Glutes", icon: Flame, image: "/images/zone-glutes.png" },
-  { key: "core", label: "Abs & Core", icon: Activity, image: "/images/zone-core.png" },
-  { key: "arms", label: "Arms & Shoulders", icon: Zap, image: "/images/zone-arms.png" },
-  { key: "back", label: "Back", icon: Wind, image: "/images/zone-back.png" },
-  { key: "legs", label: "Legs & Thighs", icon: Footprints, image: "/images/zone-legs.png" },
-  { key: "full-body", label: "Full Body", icon: Sparkles, image: "/images/zone-full-body.png" },
+  { key: "glutes", label: "Glutes", icon: Flame, image: "/images/zone-glutes.webp" },
+  { key: "core", label: "Abs & Core", icon: Activity, image: "/images/zone-core.webp" },
+  { key: "arms", label: "Arms & Shoulders", icon: Zap, image: "/images/zone-arms.webp" },
+  { key: "back", label: "Back", icon: Wind, image: "/images/zone-back.webp" },
+  { key: "legs", label: "Legs & Thighs", icon: Footprints, image: "/images/zone-legs.webp" },
+  { key: "full-body", label: "Full Body", icon: Sparkles, image: "/images/zone-full-body.webp" },
 ];
 
 /* ==================== HERO IMAGES ====================
    Wide banner images (1600x900, 16:9). Displayed responsively with object-cover. */
 
 export const HERO_IMAGES = {
-  discover: "/images/workout-hero-discover.png",
-  program: "/images/workout-hero-program.png",
-  library: "/images/workout-hero-library.png",
+  discover: "/images/workout-hero-discover.webp",
+  program: "/images/workout-hero-program.webp",
+  library: "/images/workout-hero-library.webp",
   bestShape: "/images/workout-hero-bestshape.webp",
-  session: "/images/workout-hero-session.png",
+  session: "/images/workout-hero-session.webp",
 };
 
 /* ==================== INTENTIONS ==================== */
@@ -62,7 +62,7 @@ export const WORKOUT_INTENTIONS: { key: WorkoutIntention; label: string; desc: s
 ];
 
 /* ==================== EXERCISES ====================
-   Image naming convention: /images/workout-{slug}.jpg
+   Image naming convention: /images/workout-{slug}.webp
    Real photography, clean & bright, works cropped to 16:9 and square. */
 
 const E = (slug: string, name: string, muscles: string): Exercise => ({
@@ -469,27 +469,27 @@ export type BodyType = "pear" | "hourglass" | "rectangle" | "apple" | "inverted-
 
 export const BODY_TYPES: Record<BodyType, { label: string; image: string; photo: string; strengths: string; recommended: WorkoutIntention[] }> = {
   pear: {
-    label: "Pear", image: "/images/bodytype-pear.svg", photo: "/images/body-pear.png",
+    label: "Pear", image: "/images/bodytype-pear.svg", photo: "/images/body-pear.webp",
     strengths: "Strong legs and glutes — natural power in your lower body.",
     recommended: ["strengthen", "tonify"],
   },
   hourglass: {
-    label: "Hourglass", image: "/images/bodytype-hourglass.svg", photo: "/images/body-hourglass.png",
+    label: "Hourglass", image: "/images/bodytype-hourglass.svg", photo: "/images/body-hourglass.webp",
     strengths: "Balanced strength throughout — great at full-body flows.",
     recommended: ["tonify", "stretch"],
   },
   rectangle: {
-    label: "Rectangle", image: "/images/bodytype-rectangle.svg", photo: "/images/body-rectangle.png",
+    label: "Rectangle", image: "/images/bodytype-rectangle.svg", photo: "/images/body-rectangle.webp",
     strengths: "Efficient, athletic build — responds fast to strength work.",
     recommended: ["strengthen", "tonify"],
   },
   apple: {
-    label: "Apple", image: "/images/bodytype-apple.svg", photo: "/images/body-apple.png",
+    label: "Apple", image: "/images/bodytype-apple.svg", photo: "/images/body-apple.webp",
     strengths: "Strong core and upper body — a natural base for stability work.",
     recommended: ["tonify", "stretch"],
   },
   "inverted-triangle": {
-    label: "Inverted Triangle", image: "/images/bodytype-inverted-triangle.svg", photo: "/images/body-inverted-triangle.png",
+    label: "Inverted Triangle", image: "/images/bodytype-inverted-triangle.svg", photo: "/images/body-inverted-triangle.webp",
     strengths: "Strong shoulders and back — built for pulling movements.",
     recommended: ["stretch", "recover"],
   },

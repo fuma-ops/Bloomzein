@@ -103,9 +103,11 @@ async function flush() {
       .upsert(rows, { onConflict: "user_id,key" });
     if (error) {
       // Re-queue on failure so we retry on the next change.
+      console.warn("[cloudSync] push failed — data kept locally, will retry:", error.message);
       keys.forEach((k) => dirty.add(k));
     }
-  } catch {
+  } catch (e) {
+    console.warn("[cloudSync] push threw — data kept locally, will retry:", e);
     keys.forEach((k) => dirty.add(k));
   }
 }
@@ -122,9 +124,11 @@ async function pullAndMerge() {
       .from("user_data")
       .select("key, value, updated_at")
       .eq("user_id", currentUserId);
-    if (error || !data) return;
+    if (error) { console.warn("[cloudSync] pull failed — using local data:", error.message); return; }
+    if (!data) return;
     rows = data;
-  } catch {
+  } catch (e) {
+    console.warn("[cloudSync] pull threw — using local data:", e);
     return;
   }
 

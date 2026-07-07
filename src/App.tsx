@@ -1,18 +1,28 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Landing from "./pages/Landing";
-import ToolsIndex from "./pages/app.tools.index";
-import BudgetPage from "./pages/budget";
-import YogaPage from "./pages/app.tools.yoga";
-import MealsPage from "./pages/app.tools.meals";
-import DietPage from "./pages/app.tools.diet";
-import WorkoutPage from "./pages/app.tools.workout";
-import TodayPage from "./pages/app.today";
-import ReadPage from "./pages/app.read";
-import ShopPage from "./pages/app.shop";
-import MePage from "./pages/app.me";
-import NotesPage from "./pages/app.tools.notes";
-import CalendarPage from "./pages/app.calendar";
-import DiaryPage from "./pages/app.tools.diary";
+import { AppIcon } from "./components/bloom/AppIcon";
+// Route pages are lazy-loaded so the first paint (Landing) ships a small
+// bundle; each tool's code + heavy libs (charts, recipe data) load on demand.
+const PrivacyPage = lazy(() => import("./pages/Legal").then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
+const HelpPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
+const FaqPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
+const GuidesIndexPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
+const GuidePage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
+const ToolsIndex = lazy(() => import("./pages/app.tools.index"));
+const BudgetPage = lazy(() => import("./pages/budget"));
+const YogaPage = lazy(() => import("./pages/app.tools.yoga"));
+const MealsPage = lazy(() => import("./pages/app.tools.meals"));
+const DietPage = lazy(() => import("./pages/app.tools.diet"));
+const WorkoutPage = lazy(() => import("./pages/app.tools.workout"));
+const TodayPage = lazy(() => import("./pages/app.today"));
+const ReadPage = lazy(() => import("./pages/app.read"));
+const ShopPage = lazy(() => import("./pages/app.shop"));
+const MePage = lazy(() => import("./pages/app.me"));
+const NotesPage = lazy(() => import("./pages/app.tools.notes"));
+const CalendarPage = lazy(() => import("./pages/app.calendar"));
+const DiaryPage = lazy(() => import("./pages/app.tools.diary"));
+const CycleTracker = lazy(() => import("./components/bloom/CycleTracker").then((m) => ({ default: m.CycleTracker })));
 import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -21,8 +31,16 @@ import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
 import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
-import { CycleTracker } from "./components/bloom/CycleTracker";
 import { markToolVisited } from "./components/bloom/visitedTools";
+
+/** Soft loading placeholder shown while a lazy page chunk loads. */
+function PageLoader() {
+  return (
+    <div className="grid min-h-[50vh] place-items-center">
+      <div className="animate-pulse"><AppIcon size={44} /></div>
+    </div>
+  );
+}
 
 function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
@@ -79,6 +97,28 @@ function AppContent() {
   // Landing page remains standalone (no AppShell layout)
   if (path === "/" || path === "/index.html") {
     return <Landing />;
+  }
+
+  // Legal pages — public, standalone, no auth (needed before collecting data)
+  if (path === "/privacy") {
+    return <Suspense fallback={<PageLoader />}><PrivacyPage /></Suspense>;
+  }
+  if (path === "/terms") {
+    return <Suspense fallback={<PageLoader />}><TermsPage /></Suspense>;
+  }
+
+  // Public SEO content pages — indexable, no auth
+  if (path === "/help") {
+    return <Suspense fallback={<PageLoader />}><HelpPage /></Suspense>;
+  }
+  if (path === "/faq") {
+    return <Suspense fallback={<PageLoader />}><FaqPage /></Suspense>;
+  }
+  if (path === "/guides") {
+    return <Suspense fallback={<PageLoader />}><GuidesIndexPage /></Suspense>;
+  }
+  if (path.startsWith("/guides/")) {
+    return <Suspense fallback={<PageLoader />}><GuidePage slug={path.split("/").pop() || ""} /></Suspense>;
   }
 
   // Inside-App routes wrapped with the interactive Navigation Menu & Sidebar (AppShell)
@@ -145,7 +185,9 @@ function AppContent() {
         <AppShell currentPath={path}>
           {/* key={path} resets the boundary on navigation so one bad page never traps the user */}
           <ErrorBoundary key={path}>
-            {isProtected ? <AuthGate>{content}</AuthGate> : content}
+            <Suspense fallback={<PageLoader />}>
+              {isProtected ? <AuthGate>{content}</AuthGate> : content}
+            </Suspense>
           </ErrorBoundary>
         </AppShell>
         <InstallPrompt />
@@ -167,8 +209,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

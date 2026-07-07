@@ -302,46 +302,46 @@ export const YOGA_IMAGES: Record<OnboardingPhase, { hero: string; week: string[]
 };
 
 export const DIET_IMAGES: Record<OnboardingPhase, { breakfast: string; lunch: string; dinner: string }> = {
-  menstrual: { breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-stew.jpg", dinner: "/images/meal-buddha.jpg" },
-  follicular: { breakfast: "/images/meal-lunchbox.jpg", lunch: "/images/meal-buddha.jpg", dinner: "/images/meal-stew.jpg" },
-  ovulatory: { breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-buddha.jpg", dinner: "/images/meal-stew.jpg" },
-  luteal: { breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-lunchbox.jpg", dinner: "/images/meal-stew.jpg" },
+  menstrual: { breakfast: "/images/meal-oats.webp", lunch: "/images/meal-stew.webp", dinner: "/images/meal-buddha.webp" },
+  follicular: { breakfast: "/images/meal-lunchbox.webp", lunch: "/images/meal-buddha.webp", dinner: "/images/meal-stew.webp" },
+  ovulatory: { breakfast: "/images/meal-oats.webp", lunch: "/images/meal-buddha.webp", dinner: "/images/meal-stew.webp" },
+  luteal: { breakfast: "/images/meal-oats.webp", lunch: "/images/meal-lunchbox.webp", dinner: "/images/meal-stew.webp" },
 };
 
 export const MOVEMENT_IMAGES: Record<OnboardingPhase, { workout: string; yoga: string; meal: string }> = {
-  menstrual: { workout: "/images/zone-back.png", yoga: "/images/pose-pigeon.webp", meal: "/images/meal-stew.jpg" },
-  follicular: { workout: "/images/zone-glutes.png", yoga: "/images/pose-warrior-1.webp", meal: "/images/meal-lunchbox.jpg" },
-  ovulatory: { workout: "/images/zone-legs.png", yoga: "/images/pose-warrior-2.webp", meal: "/images/meal-buddha.jpg" },
-  luteal: { workout: "/images/zone-core.png", yoga: "/images/pose-seated-twist.webp", meal: "/images/meal-stew.jpg" },
+  menstrual: { workout: "/images/zone-back.webp", yoga: "/images/pose-pigeon.webp", meal: "/images/meal-stew.webp" },
+  follicular: { workout: "/images/zone-glutes.webp", yoga: "/images/pose-warrior-1.webp", meal: "/images/meal-lunchbox.webp" },
+  ovulatory: { workout: "/images/zone-legs.webp", yoga: "/images/pose-warrior-2.webp", meal: "/images/meal-buddha.webp" },
+  luteal: { workout: "/images/zone-core.webp", yoga: "/images/pose-seated-twist.webp", meal: "/images/meal-stew.webp" },
 };
 
 export const SYNC_IMAGES: Record<OnboardingPhase, { anchor: string; yoga: string; workout: string; meal: string; weekly: string }> = {
   menstrual: {
     anchor: "/images/cycle-insight-hero.webp",
     yoga: "/images/pose-childs-pose.webp",
-    workout: "/images/zone-back.png",
-    meal: "/images/meal-stew.jpg",
+    workout: "/images/zone-back.webp",
+    meal: "/images/meal-stew.webp",
     weekly: "/images/cycle-journal-hero.webp",
   },
   follicular: {
     anchor: "/images/cycle-insight-hero.webp",
     yoga: "/images/pose-warrior-1.webp",
-    workout: "/images/zone-glutes.png",
-    meal: "/images/meal-lunchbox.jpg",
+    workout: "/images/zone-glutes.webp",
+    meal: "/images/meal-lunchbox.webp",
     weekly: "/images/cycle-journal-hero.webp",
   },
   ovulatory: {
     anchor: "/images/cycle-insight-hero.webp",
     yoga: "/images/pose-warrior-2.webp",
-    workout: "/images/zone-legs.png",
-    meal: "/images/meal-buddha.jpg",
+    workout: "/images/zone-legs.webp",
+    meal: "/images/meal-buddha.webp",
     weekly: "/images/cycle-journal-hero.webp",
   },
   luteal: {
     anchor: "/images/cycle-insight-hero.webp",
     yoga: "/images/pose-seated-twist.webp",
-    workout: "/images/zone-core.png",
-    meal: "/images/meal-stew.jpg",
+    workout: "/images/zone-core.webp",
+    meal: "/images/meal-stew.webp",
     weekly: "/images/cycle-journal-hero.webp",
   },
 };

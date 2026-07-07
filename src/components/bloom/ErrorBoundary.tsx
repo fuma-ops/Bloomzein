@@ -1,5 +1,6 @@
-import { Component, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Flower2, RotateCcw } from "lucide-react";
+import { logError } from "@/lib/errorLog";
 
 interface Props { children: ReactNode }
 interface State { error: Error | null }
@@ -16,9 +17,10 @@ export class ErrorBoundary extends Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch(error: Error) {
-    // Leave a breadcrumb so a crash on a real device is diagnosable later.
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // Leave a local breadcrumb, and report the crash to our Supabase error log.
     try { localStorage.setItem("bloom:last-error", `${error?.message ?? error}`); } catch {}
+    void logError(error, "react", { componentStack: info.componentStack ?? undefined });
   }
 
   render() {

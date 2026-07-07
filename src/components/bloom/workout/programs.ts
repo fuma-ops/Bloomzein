@@ -309,7 +309,7 @@ export const PROGRAMS: Program[] = [
     title: "6-Week Strong Core",
     tagline: "A genuinely strong, stable midsection — built from the inside out.",
     goal: "tonify", level: "Beginner", equipment: "mat",
-    weeks: 6, daysPerWeek: 3, image: "/images/workout-hero-session.png",
+    weeks: 6, daysPerWeek: 3, image: "/images/workout-hero-session.webp",
     tier: "premium",
     promise: [
       "Deep-core strength that protects your back",
@@ -397,7 +397,7 @@ export const PROGRAMS: Program[] = [
     title: "4-Week Cycle-Synced Reset",
     tagline: "Train with your hormones, not against them. No equipment.",
     goal: "energy", level: "Beginner", equipment: "none",
-    weeks: 4, daysPerWeek: 3, image: "/images/workout-hero-discover.png",
+    weeks: 4, daysPerWeek: 3, image: "/images/workout-hero-discover.webp",
     tier: "free",
     promise: [
       "A full-body habit you can actually keep",
@@ -486,7 +486,7 @@ export const PROGRAMS: Program[] = [
     title: "8-Week Upper Body Sculpt",
     tagline: "Toned arms, strong back, beautiful posture.",
     goal: "tonify", level: "Intermediate", equipment: "dumbbells",
-    weeks: 8, daysPerWeek: 3, image: "/images/workout-hero-library.png",
+    weeks: 8, daysPerWeek: 3, image: "/images/workout-hero-library.webp",
     tier: "premium",
     promise: [
       "Defined shoulders & arms without bulk",
@@ -581,7 +581,7 @@ export const PROGRAMS: Program[] = [
     title: "6-Week Total Body Tone",
     tagline: "Lean, strong and sculpted — full body, three days a week.",
     goal: "tonify", level: "Intermediate", equipment: "bands",
-    weeks: 6, daysPerWeek: 3, image: "/images/workout-hero-program.png",
+    weeks: 6, daysPerWeek: 3, image: "/images/workout-hero-program.webp",
     tier: "premium",
     promise: [
       "Full-body definition in six focused weeks",
@@ -667,7 +667,7 @@ export const PROGRAMS: Program[] = [
     title: "4-Week Beginner Foundations",
     tagline: "Brand new to training? Start here. Gentle, safe, no equipment.",
     goal: "energy", level: "Beginner", equipment: "none",
-    weeks: 4, daysPerWeek: 2, image: "/images/workout-hero-bestshape.png",
+    weeks: 4, daysPerWeek: 2, image: "/images/workout-hero-bestshape.webp",
     tier: "free",
     promise: [
       "Master the 6 fundamental movements safely",

@@ -1281,7 +1281,7 @@ export function BudgetPlanner() {
         const isDash = tab === "Dashboard";
         return (
           <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl">
-            <img src="/images/budget-hero.png" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <img src="/images/budget-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
             <div className={["relative z-10 flex items-center justify-between gap-3 p-4 sm:p-5 lg:p-5", isDash ? "min-h-[120px] sm:min-h-[140px]" : "min-h-[88px] sm:min-h-[100px]"].join(" ")}>
               <div className="max-w-[65%]">

@@ -704,7 +704,7 @@ export default function NotesPage() {
     const fireAlert = (rem: Reminder, body: string, medKey?: string) => {
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         try {
-          new Notification("BloomyGirl Nudge ✿", { body: `${body} 💕`, icon: "/images/me-avatar.png" });
+          new Notification("BloomyGirl Nudge ✿", { body: `${body} 💕`, icon: "/images/me-avatar.webp" });
         } catch (e) {
           console.error("Browser notification failed to fire:", e);
         }
@@ -978,7 +978,7 @@ export default function NotesPage() {
 
       {/* HERO */}
       <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
-        <img src="/images/notes-hero.png" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <img src="/images/notes-hero.webp" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">

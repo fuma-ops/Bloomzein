@@ -77,7 +77,7 @@ function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, u
       const data = userId
         ? { url: "/app/today", kind: "water" as const, reminderId: "water", doseKey, dedupePrefix: doseKey, confirmToken: doseConfirmToken(userId, "water", doseKey) }
         : undefined;
-      out.push({ dedupeKey: doseKey, fireAt, body: `Encore ${left} verre${left > 1 ? "s" : ""} pour atteindre tes ${waterGoal} verres aujourd'hui 💧`, data });
+      out.push({ dedupeKey: doseKey, fireAt, body: `${left} more glass${left > 1 ? "es" : ""} to reach your ${waterGoal} glasses today 💧`, data });
     }
   }
   return out;
@@ -249,11 +249,11 @@ function planItemTiming(time: string): "now" | "upcoming" | "past" | null {
 
 // ── Meal display helpers ─────────────────────────────────────────────────────
 const MEAL_PHOTO: Record<string, string> = {
-  breakfast: "/images/meal-oats.jpg",
-  lunch:     "/images/meal-buddha.jpg",
-  dinner:    "/images/meal-stew.jpg",
-  lunchbox:  "/images/meal-lunchbox.jpg",
-  snack:     "/images/meal-lunchbox.jpg",
+  breakfast: "/images/meal-oats.webp",
+  lunch:     "/images/meal-buddha.webp",
+  dinner:    "/images/meal-stew.webp",
+  lunchbox:  "/images/meal-lunchbox.webp",
+  snack:     "/images/meal-lunchbox.webp",
 };
 const MEAL_SLOT_LABEL: Record<string, string> = {
   breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", lunchbox: "Lunchbox", snack: "Snack",
@@ -545,7 +545,7 @@ export default function TodayPage() {
         className="pearl-frame relative overflow-hidden -mx-3 sm:-mx-6 md:mx-0 -mt-3 sm:-mt-5 md:mt-0 rounded-b-[1.75rem] sm:rounded-b-[2.5rem] md:rounded-[2.5rem] rounded-t-none md:rounded-t-[2.5rem] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
-        <img src="/images/today-hero.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
 
@@ -1037,7 +1037,7 @@ export default function TodayPage() {
       {/* ── 7. BLOOM AFFIRMATION ────────────────────────────────────────────── */}
       <section className="mt-4 sm:mt-6 mb-4 animate-card-pop-in" style={{ animationDelay: "280ms" }}>
         <div className="pearl-frame relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
-          <img src="/images/tools-hero-affirmation.png" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
+          <img src="/images/tools-hero-affirmation.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
           <div className="absolute inset-0 z-[2]" style={{ background: "radial-gradient(65% 90% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.6) 45%, transparent 80%)" }} />
           <div className="relative z-[2] flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5">
             <div className="text-center sm:text-left">
