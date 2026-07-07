@@ -279,7 +279,16 @@ function RecipeModal({
           <button onClick={onClose} className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink">
             <X className="h-4 w-4" />
           </button>
-          <RecipePlaceholder name={recipe.name} className="aspect-[16/10]" />
+          {recipe.photo || recipe.image ? (
+            <img
+              src={recipe.image ?? `/images/recipes/${recipe.photo}`}
+              alt={recipe.name}
+              className="w-full aspect-[16/10] object-cover rounded-2xl"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <RecipePlaceholder name={recipe.name} className="aspect-[16/10]" />
+          )}
           <h2 className="mt-3 font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
           <p className="text-sm text-rose/70">{recipe.cuisine} cuisine</p>
 
