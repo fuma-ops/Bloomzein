@@ -1690,7 +1690,7 @@ const CUISINE_GRADIENT: Record<string, string> = {
 };
 function recipeImg(r: Recipe): string | null {
   if (r.image) return r.image;
-  if (r.photo) return `/images/${r.photo}`;
+  if (r.photo) return `/images/recipes/${r.photo}`;
   return null;
 }
 
@@ -1795,7 +1795,7 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
     fat: Math.round(r.macros.fat * f),
   };
   const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.webp';
-  const photoSrc  = fallback;
+  const photoSrc  = recipeImg(r) ?? fallback;
 
   // Guard: ignore backdrop clicks for the first 80ms after mount so the
   // opening tap doesn't immediately close the modal via event propagation.

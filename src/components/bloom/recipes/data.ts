@@ -676,7 +676,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 10, cookTime: 10, difficulty: "easy",
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
-    photo: "breakfast-nordic-banana-oat-pancakes-walnuts.jpg",
+    photo: "breakfast-nordic-banana-oat-pancakes-walnuts.png",
     macros: { calories: 420, protein: 14, carbs: 58, fat: 15 },
     micros: { magnesium: 70, fibre: 6 },
     ingredients: [
