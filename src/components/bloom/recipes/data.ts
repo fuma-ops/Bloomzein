@@ -98,18 +98,20 @@ export function hasDietSetup(): boolean {
 /* ---------- Portion scaling — bake the planned serving size straight into the
    ingredient amounts (no "×1.4" label; the recipe just reads naturally). Scales
    a quantity string ("200g", "1/2 cup", "1 tsp") by a factor, formatting mass
-   units glued ("280g") and counts with nice fractions ("¾ cup", "1½ tsp").
-   Non-numeric quantities ("a pinch", "to taste") are left untouched. */
+   units glued ("280g") and counts as clear ASCII mixed numbers ("3/4 cup",
+   "1 1/2 tsp"). Non-numeric quantities ("a pinch", "to taste") are untouched. */
+// A whole and a fraction are separated by a space so "1 1/4 cup" can never be
+// misread as "1/4 cup".
 const NICE_FRACTIONS: [number, string][] = [
-  [0, ""], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"],
+  [0, ""], [0.25, "1/4"], [1 / 3, "1/3"], [0.5, "1/2"], [2 / 3, "2/3"], [0.75, "3/4"],
 ];
 function niceFraction(n: number): string {
   const whole = Math.floor(n + 1e-9);
   const frac = n - whole;
   let best = "", bestD = 1;
   for (const [v, s] of NICE_FRACTIONS) { const d = Math.abs(frac - v); if (d < bestD) { bestD = d; best = s; } }
-  if (!best) return String(whole);
-  return whole > 0 ? `${whole}${best}` : best;
+  if (!best) return String(whole);              // whole number, no fraction
+  return whole > 0 ? `${whole} ${best}` : best; // "1 1/4"  or  "3/4"
 }
 export function scaleQuantity(qty: string, factor: number): string {
   if (!qty || !factor || factor === 1) return qty;
