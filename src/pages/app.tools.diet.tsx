@@ -273,6 +273,14 @@ function RecipeModal({
           <h2 className="mt-3 font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
           <p className="text-sm text-rose/70">{recipe.cuisine} cuisine</p>
 
+          {/* Prep / cook / yield meta */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-rose/70">
+            <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-hotpink" /> Prep {recipe.prepTime} min</span>
+            <span className="inline-flex items-center gap-1"><Flame className="h-3.5 w-3.5 text-hotpink" /> Cook {recipe.cookTime} min</span>
+            <span className="inline-flex items-center gap-1"><UtensilsCrossed className="h-3.5 w-3.5 text-hotpink" /> Serves {recipe.servings}</span>
+            <span className="capitalize inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-hotpink" /> {recipe.difficulty}</span>
+          </div>
+
           <div className="mt-2 flex flex-wrap gap-1.5">
             {recipe.phases.map((p) => <PhasePillTag key={p} phase={p} />)}
             {recipe.dietTags.map((t) => (
@@ -300,22 +308,57 @@ function RecipeModal({
             </div>
           )}
 
+          {/* Equipment */}
+          {recipe.equipment && recipe.equipment.length > 0 && (
+            <>
+              <h3 className="mt-4 font-script text-lg text-hotpink">You'll need</h3>
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {recipe.equipment.map((e) => (
+                  <span key={e} className="rounded-full bg-blush/70 border border-petal/50 px-2.5 py-0.5 text-[11px] font-semibold text-magenta">{e}</span>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Ingredients */}
-          <h3 className="mt-4 font-script text-lg text-hotpink">Ingredients</h3>
+          <h3 className="mt-4 font-script text-lg text-hotpink">Ingredients <span className="text-xs font-sans font-semibold text-rose/50">· makes {recipe.servings} serving{recipe.servings === 1 ? "" : "s"}</span></h3>
           <ul className="mt-1 space-y-1 text-sm text-rose/90">
             {recipe.ingredients.map((ing) => (
-              <li key={ing.name} className="flex items-center justify-between gap-2 border-b border-petal/40 py-1">
-                <span>{ing.name}</span>
-                <span className="text-rose/60">{ing.quantity}</span>
+              <li key={ing.name} className="flex items-start justify-between gap-3 border-b border-petal/40 py-1">
+                <span className="font-medium">{ing.name}</span>
+                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{ing.quantity}</span>
               </li>
             ))}
           </ul>
 
           {/* Steps */}
-          <h3 className="mt-4 font-script text-lg text-hotpink">Steps</h3>
-          <ol className="mt-1 space-y-1.5 text-sm text-rose/90 list-decimal list-inside">
-            {recipe.steps.map((s, i) => <li key={i}>{s}</li>)}
+          <h3 className="mt-4 font-script text-lg text-hotpink">Method</h3>
+          <ol className="mt-2 space-y-3">
+            {recipe.steps.map((s, i) => (
+              <li key={i} className="flex gap-3 text-sm text-rose/90 leading-relaxed">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink text-white text-xs font-bold">{i + 1}</span>
+                <span className="flex-1 pt-0.5">{s}</span>
+              </li>
+            ))}
           </ol>
+
+          {/* Tips */}
+          {(recipe.substitutionTip || recipe.batchTip) && (
+            <div className="mt-4 space-y-2">
+              {recipe.substitutionTip && (
+                <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3 flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
+                  <p className="text-[12.5px] text-rose/80 leading-snug"><b className="text-hotpink">Swap:</b> {recipe.substitutionTip}</p>
+                </div>
+              )}
+              {recipe.batchTip && (
+                <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3 flex items-start gap-2">
+                  <Leaf className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
+                  <p className="text-[12.5px] text-rose/80 leading-snug"><b className="text-hotpink">Make ahead:</b> {recipe.batchTip}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Add to plan */}
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center">
