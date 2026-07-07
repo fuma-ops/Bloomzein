@@ -1229,6 +1229,11 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const [reminder, setReminder] = useState("07:30");
   const [editing, setEditing] = useState(false);
   const [buildStep, setBuildStep] = useState(false); // "Build my own" → level/goal setup first
+  // "Goal-tuned" marker — set by Diet when it lays down this week; cleared once
+  // she edits / re-syncs / builds her own, so the badge persists until she changes it.
+  const [tunedGoal, setTunedGoal] = useState<string | null>(() => { try { return localStorage.getItem("bloom:yoga-plan-goal"); } catch { return null; } });
+  const clearYogaTuned = () => { try { localStorage.removeItem("bloom:yoga-plan-goal"); } catch {} setTunedGoal(null); };
+  const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
 
   // Cross-tool fuel: her body goal + real cycle phase decide the meals we
   // suggest after each planned flow (falls back to the yoga phase suggestion).
@@ -1261,6 +1266,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     setSchedule(next);
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
     askForNotifications();
+    clearYogaTuned(); // cycle-sync is her choice, not the Diet goal plan
   };
 
   // "Build my own" → save level/goal, lay out a week from those, open the editor.
@@ -1276,6 +1282,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     askForNotifications();
     setBuildStep(false);
     setEditing(true); // land in the editor to fine-tune the suggested week
+    clearYogaTuned(); // her own build → no longer the Diet goal plan
   };
 
   // A schedule is only useful if we can actually nudge her — ask right when
@@ -1292,6 +1299,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     const next = { ...schedule, [day]: val };
     setSchedule(next);
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    clearYogaTuned(); // a hand edit means it's her own week now
     if (val) askForNotifications();
   };
   const setDuration = (day: string, n: number) => {
@@ -1375,6 +1383,13 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             </button>
           </div>
         </div>
+
+        {/* Soft badge — this week is tuned to her diet goal (from Diet), until she edits it */}
+        {tunedGoal && !editing && (
+          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[10.5px] font-bold text-rose-500">
+            <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(tunedGoal)} goal
+          </div>
+        )}
 
         {/* Edit-mode instruction — helps first-timers build their own week */}
         {editing && (

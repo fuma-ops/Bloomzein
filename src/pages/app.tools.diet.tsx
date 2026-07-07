@@ -1680,6 +1680,13 @@ export default function DietPage() {
     };
     try {
       localStorage.setItem("bloom:yoga-schedule", JSON.stringify(yogaSchedule));
+      // Mark BOTH plans as goal-tuned (from Diet) so each tool shows the badge
+      // and never calls it a plain 'freestyle' week. Only mark the workout when
+      // there's no existing plan (autoplan will freshly generate it).
+      localStorage.setItem("bloom:yoga-plan-goal", profile.goal);
+      if (!localStorage.getItem("bloom:workout-program") && !localStorage.getItem("bloom:workout-active-program")) {
+        localStorage.setItem("bloom:workout-plan-goal", profile.goal);
+      }
       // Workout: let HER choose her first setup (level / equipment / days). The
       // Workout tool then auto-generates a goal-fit week from that profile.
       localStorage.setItem("bloom:workout-autoplan", "1");
