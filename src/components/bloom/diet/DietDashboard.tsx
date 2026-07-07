@@ -96,16 +96,18 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
         <MacroBar label="Carbs" eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
         <MacroBar label="Fat" eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
       </div>
-      {/* Simple, friendly line so the filled rings make sense */}
-      <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-snug text-rose/70">
-        <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
-        <span><b className="text-hotpink">{Math.max(0, e.remaining).toLocaleString()} kcal</b> left from today's planned meals.</span>
-      </p>
-      {/* Coach in one line — target guidance. The 'set a goal weight' prompt
-          lives only on the Goal-path card, so we don't repeat it here. */}
+      {/* Only once meals are planned: the friendly 'kcal left' line */}
+      {mealsPlanned && (
+        <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-snug text-rose/70">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
+          <span><b className="text-hotpink">{Math.max(0, e.remaining).toLocaleString()} kcal</b> left from today's planned meals.</span>
+        </p>
+      )}
+      {/* Coach in one line — the calorie target. Movement guidance lives in the
+          'Plan my movement' CTA, so we don't state a workout/yoga count here. */}
       <p className="mt-2.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-rose/80">
         <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-        <span>{hasEta && <b className="text-hotpink">{coach.headline}. </b>}Aim ~{coach.targetCalories.toLocaleString()} kcal, {coach.workoutsPerWeek} workouts + {coach.yogaPerWeek} yoga.</span>
+        <span>{hasEta && <b className="text-hotpink">{coach.headline}. </b>}Aim for ~{coach.targetCalories.toLocaleString()} kcal a day.</span>
       </p>
       {/* Movement → food: shows the yoga/workout plan's effect on the target */}
       {moveLine && (
