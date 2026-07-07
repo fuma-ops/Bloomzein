@@ -10,7 +10,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
@@ -818,7 +818,7 @@ function PhaseCarousel({ phase, cycleDay, onSyncedPlan }: { phase: DietPhase; cy
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement }: {
+function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   mealsVersion: number;
@@ -832,6 +832,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   onDietWeek: () => void;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
+  onUnplanMeals: () => void;
+  onUnplanMovement: () => void;
 }) {
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
@@ -916,6 +918,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
         movementPlanned={movementPlanned}
         onPlanMeals={onPlanMeals}
         onPlanMovement={onPlanMovement}
+        onUnplanMeals={onUnplanMeals}
+        onUnplanMovement={onUnplanMovement}
         onViewTodayPlan={() => goTo("today")}
       />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -1726,6 +1730,11 @@ export default function DietPage() {
     // tapping the Workout or Yoga CTA, never an automatic redirect.
   };
 
+  // Toggle the setup CTAs back OFF — un-plan meals / movement so the user can
+  // start fresh without opening a tool.
+  const unplanMealsImplicit = () => { clearMealPlan(); refreshMeals(); };
+  const unplanMovementImplicit = () => { clearMovementPlan(); };
+
   // Reset → preview a brand-new user: wipe the diet keys AND the shared plans
   // (meals / workout / yoga) so the setup CTAs show unchecked, then reload.
   const onReset = async () => {
@@ -1819,6 +1828,7 @@ export default function DietPage() {
             onReplayTour={() => setReplayTour(true)} cycleReady={cycleReady}
             onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
             onPlanMeals={planMealsImplicit} onPlanMovement={planMovementImplicit}
+            onUnplanMeals={unplanMealsImplicit} onUnplanMovement={unplanMovementImplicit}
           />
         )}
         {tab === "cycle" && (
