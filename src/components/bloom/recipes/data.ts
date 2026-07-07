@@ -82,6 +82,19 @@ export function readDietProfile(): DietProfile & { weight: number } {
   }
 }
 
+// Has the user actually completed the Diet setup? Until they have, nothing that
+// depends on a personalised goal/target (calorie targets, "tuned to your goal")
+// should appear — meals then follow only the selected week vibe.
+export const DIET_SETUP_KEY = "bloom:diet-setup-complete";
+export function hasDietSetup(): boolean {
+  try {
+    const raw = localStorage.getItem(DIET_SETUP_KEY);
+    return raw ? JSON.parse(raw) === true : false;
+  } catch {
+    return false;
+  }
+}
+
 /* ---------- Pantry (for shopping list / ingredient categorisation) ---------- */
 
 export type PantryCategoryKey =

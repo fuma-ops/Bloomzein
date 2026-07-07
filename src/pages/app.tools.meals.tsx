@@ -37,6 +37,7 @@ import {
   SEASONAL,
   passesMyRules,
   readDietProfile,
+  hasDietSetup,
   type Recipe,
   type Intention,
   type CyclePhase,
@@ -307,8 +308,25 @@ export default function MealsPage() {
   // "Goal-tuned" marker — set when the week is auto-generated to her diet goal,
   // cleared the moment she swaps/redoes a meal (then it's her own plan).
   const [mealsTuned, setMealsTuned] = useState<string | null>(() => { try { return localStorage.getItem("bloom:meals-plan-goal"); } catch { return null; } });
-  const markMealsTuned = () => { const g = readDietProfile().goal; try { localStorage.setItem("bloom:meals-plan-goal", g); } catch {} setMealsTuned(g); };
+  // A plan is only "tuned to a goal" if the user actually set a goal in Diet.
+  // Otherwise it just follows the selected week vibe — no goal, no target.
+  const markMealsTuned = () => {
+    if (!hasDietSetup()) { clearMealsTuned(); return; }
+    const g = readDietProfile().goal;
+    try { localStorage.setItem("bloom:meals-plan-goal", g); } catch {}
+    setMealsTuned(g);
+  };
   const clearMealsTuned = () => { try { localStorage.removeItem("bloom:meals-plan-goal"); } catch {} setMealsTuned(null); };
+  // Whether the Diet tool has been set up — gates the daily calorie target and
+  // the "tuned to your goal" badge. Re-read on focus/storage so a reset (or a
+  // fresh setup) reflects immediately.
+  const [dietSetup, setDietSetup] = useState(hasDietSetup);
+  useEffect(() => {
+    const refresh = () => setDietSetup(hasDietSetup());
+    window.addEventListener("storage", refresh);
+    window.addEventListener("focus", refresh);
+    return () => { window.removeEventListener("storage", refresh); window.removeEventListener("focus", refresh); };
+  }, []);
   const [kidPlan, setKidPlan] = useLS<Record<string, string | null>>(LS.kidPlan, {});
   const [favorites, setFavorites] = useLS<string[]>(LS.favorites, []);
   const [ratings, setRatings] = useLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
@@ -582,7 +600,7 @@ export default function MealsPage() {
             onRegen={regenDay}
             owned={owned}
             proteinBoostDays={proteinBoostDays}
-            mealsTuned={mealsTuned}
+            mealsTuned={mealsTuned} dietSetup={dietSetup}
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
@@ -767,7 +785,7 @@ function DayTotals({ plan, day, target }: { plan: any; day: string; target: Targ
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, fromDiet, onDismissFromDiet,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup, fromDiet, onDismissFromDiet,
 }: any) {
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
   const hasPantry = owned.size > 0;
@@ -827,8 +845,24 @@ function WeekTab({
 
   return (
     <>
-      {/* ①  YOUR DAILY TARGET — first thing after the hero, exactly as asked */}
-      <DailyTargetCard t={targets} />
+      {/* ①  YOUR DAILY TARGET — only once Diet is set up (a real goal + body).
+             Without it there is no personalised target to show, so instead we
+             gently offer to set a goal and get adequate meals. */}
+      {dietSetup ? (
+        <DailyTargetCard t={targets} />
+      ) : (
+        <button
+          onClick={() => { window.location.href = "/app/tools/diet"; }}
+          className="w-full flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-white/70 p-3.5 text-left transition hover:bg-blush hover-scale active:scale-[0.99] animate-fade-in"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-5 w-5" /></span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-hotpink leading-tight">Want a daily calorie target?</span>
+            <span className="block text-[11.5px] text-rose/65 leading-snug">Set a goal in Diet and I'll tune every week to it — for now, meals just follow your chosen vibe ✿</span>
+          </span>
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink">Set goal <ChevronRight className="h-3.5 w-3.5" /></span>
+        </button>
+      )}
 
       {/* ②  Compact vibe toolbar — pickers + one primary action, no big card
              pushing the plan down. Everything that used to be a stacked
@@ -836,9 +870,13 @@ function WeekTab({
       <Glass className="p-3 sm:p-3.5">
         <div className="flex items-center justify-between gap-2 mb-2">
           <p className="font-script text-xl text-hotpink leading-none">This week's vibe</p>
-          {!planEmpty && mealsTuned ? (
+          {dietSetup && !planEmpty && mealsTuned ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200/80 px-2 py-0.5 text-[10px] font-bold text-rose-500">
               <Sparkles className="h-2.5 w-2.5" strokeWidth={2.4} /> Tuned · {goalWord(mealsTuned)} goal
+            </span>
+          ) : !dietSetup && !planEmpty ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold text-magenta">
+              <Apple className="h-2.5 w-2.5" strokeWidth={2.4} /> {intentionLabel}-vibe week
             </span>
           ) : null}
         </div>
