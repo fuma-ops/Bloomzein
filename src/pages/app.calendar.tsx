@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb, CalendarDays,
   Droplet, Sprout, Star, Moon, Circle,
@@ -736,7 +737,9 @@ function DayDrawer({
   const phase = phaseForDay(date, readCycleSettings());
   const meta = phase ? PHASE_META[phase] : null;
 
-  return (
+  // Portal to <body> so `fixed` centers on the real screen, not inside the
+  // calendar column (a transformed/blurred parent would otherwise offset it).
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-rose/30 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
         className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
@@ -808,6 +811,7 @@ function DayDrawer({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
