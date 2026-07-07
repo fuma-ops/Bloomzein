@@ -43,6 +43,7 @@ import {
   hasDietSetup,
   updateDietProfile,
   scaleQuantity,
+  recipeImageSrc,
   COOKING_OPTIONS,
   ALLERGY_OPTIONS,
   type Allergy,
@@ -1173,7 +1174,7 @@ function WeekTab({
                   const portion = portionFor(d, slot as any);
                   const proteinBoosted = !!proteinBoostDays?.has(d) && slot === "dinner";
                   const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.webp';
-                  const photoSrc = r?.photo ? `/images/recipes/${r.photo}` : fallback;
+                  const photoSrc = r ? recipeImageSrc(r) : fallback;
                   return (
                     <div
                       key={slot}
@@ -1684,9 +1685,7 @@ const CUISINE_GRADIENT: Record<string, string> = {
   Latin: "from-rose-50 to-pink-100",
 };
 function recipeImg(r: Recipe): string | null {
-  if (r.image) return r.image;
-  if (r.photo) return `/images/recipes/${r.photo}`;
-  return null;
+  return recipeImageSrc(r);
 }
 
 function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
