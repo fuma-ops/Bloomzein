@@ -822,106 +822,84 @@ function WeekTab({
     }, 400);
   };
 
+  const intentionLabel = INTENTIONS.find((i) => i.key === intention)?.label ?? "";
+
   return (
     <>
-      {/* ── YOUR SYNCED PLAN — training + phase nutrition in ONE green-bordered note ── */}
-      {(() => {
-        const comment = trainingAwarenessComment({
-          workoutDays: readWorkoutPlanDays().length,
-          yogaDays: readYogaPlanDays().length,
-          phase: normalizePhase(realPhase),
-          goal: readDietProfile().goal,
-        });
-        const dp = toDietPhase(phase);
-        const info = dp ? PHASE_INFO[dp] : null;
-        if (!phaseSynced) return null;
-        return (
-          <div className="mb-3 rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Your synced plan{info ? ` · ${info.label} phase` : ""}
-            </p>
-            {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
-            {info && (
-              <>
-                <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
-                </div>
-              </>
-            )}
-          </div>
-        );
-      })()}
+      {/* ①  YOUR DAILY TARGET — first thing after the hero, exactly as asked */}
+      <DailyTargetCard t={targets} />
 
-      {/* This week's vibe — compact app-styled pickers + guided actions */}
-      <Glass className="p-4 sm:p-5">
-        <p className="font-script text-2xl text-hotpink mb-1">This week's vibe</p>
-        <p className="text-[11px] text-rose/60 leading-snug mb-3">Why here? Your <b className="text-hotpink">Diet</b> is your overall style — this is just the mood for <b>this week's</b> meal plan.</p>
-        <div data-tour="meals-vibe" className="flex flex-wrap gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Cycle phase</p>
-            <PickerField
-              value={phase} title="Cycle phase"
-              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
-              onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[8.5rem] !text-sm !py-2 !rounded-full"
-            />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Vibe</p>
-            <PickerField
-              value={intention} title="This week's vibe"
-              options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
-              onChange={(v) => setIntention(v as Intention)} className="min-w-[9.5rem] !text-sm !py-2 !rounded-full"
-            />
-          </div>
+      {/* ②  Compact vibe toolbar — pickers + one primary action, no big card
+             pushing the plan down. Everything that used to be a stacked
+             vignette now lives on a single slim row. */}
+      <Glass className="p-3 sm:p-3.5">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <p className="font-script text-xl text-hotpink leading-none">This week's vibe</p>
+          {!planEmpty && mealsTuned ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200/80 px-2 py-0.5 text-[10px] font-bold text-rose-500">
+              <Sparkles className="h-2.5 w-2.5" strokeWidth={2.4} /> Tuned · {goalWord(mealsTuned)} goal
+            </span>
+          ) : null}
         </div>
-        <p className="mt-2.5 text-[12px] text-rose/70 leading-snug">
-          <span className="italic">{INTENTIONS.find((i) => i.key === intention)?.blurb}</span>
-          {phase !== "any" && intention !== "cycle" && <> · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">focus fully on my {phase} phase</button></>}
-        </p>
-        {/* Confirms BOTH picks are live — the plan leans to the vibe AND the phase. */}
-        {phase !== "any" && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600">
+
+        {/* Pickers — small pill selects, side by side */}
+        <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
+          <PickerField
+            value={phase} title="Cycle phase"
+            options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+            onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
+          />
+          <PickerField
+            value={intention} title="This week's vibe"
+            options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+            onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
+          />
+        </div>
+
+        {/* One tiny status line — synced confirmation OR the next step */}
+        {phase !== "any" ? (
+          <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600">
             <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.6} />
             {intention === "cycle"
               ? <span>Fully synced to your <b className="capitalize">{phase}</b> phase ✿</span>
-              : <span><span className="capitalize">{INTENTIONS.find((i) => i.key === intention)?.label}</span>-leaning, tuned to your <b className="capitalize">{phase}</b> phase</span>}
+              : <span><span className="capitalize">{intentionLabel}</span>-leaning, tuned to your <b className="capitalize">{phase}</b> phase · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">focus fully</button></span>}
+          </p>
+        ) : planEmpty ? (
+          <p className="mt-2 text-[11.5px] text-rose/70 leading-snug italic">{INTENTIONS.find((i) => i.key === intention)?.blurb}</p>
+        ) : null}
+
+        {/* Actions — pantry (ghost) + one primary. No redundant third button. */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            onClick={goPantry}
+            className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/80 px-3 py-2 text-[12px] font-bold text-hotpink hover:bg-blush transition active:scale-95"
+          >
+            <Apple className="h-3.5 w-3.5" /> Pantry
+            {owned.size > 0 && <Check className="h-3 w-3 text-emerald-500" strokeWidth={3} />}
+          </button>
+          <div className="flex-1" />
+          <button
+            onClick={handleGenerate} disabled={generating}
+            data-tour="meals-plan"
+            className="inline-flex items-center gap-1.5 rounded-full border-transparent bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2 text-[13px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
+          >
+            {planEmpty ? <Sparkles className="h-4 w-4" /> : <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />}
+            {generating ? "Building…" : planEmpty ? "Plan my week" : "Regenerate"}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Next-step nudge only while empty — one soft line, no banner */}
+        {planEmpty && (
+          <p className="mt-2 text-[11px] text-rose/55 leading-snug">
+            {owned.size ? "Tap Plan my week to build it from your shelves ✿" : "Tip: build your pantry first, then plan — I'll cook from what you own ✿"}
           </p>
         )}
-
-        {/* Next-step hint — light, just an icon + instruction */}
-        <div className="mt-3 flex items-start gap-2 text-[12px] leading-snug text-rose/80">
-          {planEmpty ? <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" strokeWidth={2} /> : <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" strokeWidth={3} />}
-          <p className="flex-1"><span className="font-bold text-rose-500 uppercase text-[10px] tracking-wide">Next · </span>{planEmpty ? (owned.size ? "tap Plan my week to build it ✿" : "build your pantry, then plan your week ✿") : "your week is planned — scroll down to see it ✿"}</p>
-        </div>
-
-        {/* 3 vignettes — clear choices with descriptions */}
-        <div className="mt-3 space-y-2">
-          {[
-            { key: "pantry", Icon: Apple, title: "Build my pantry", desc: "Tell me what you already own — I plan from your shelves.", cta: "Set up", onClick: goPantry, primary: false, disabled: false, done: owned.size > 0 },
-            { key: "plan", Icon: Sparkles, title: "Plan my week", desc: "Generate a full week from your vibe & phase.", cta: generating ? "Building…" : "Plan", onClick: handleGenerate, primary: true, disabled: generating, done: !planEmpty },
-            { key: "regen", Icon: RefreshCw, title: "Regenerate", desc: "Not feeling it? Shuffle a fresh week.", cta: "Shuffle", onClick: handleGenerate, primary: false, disabled: planEmpty || generating, done: false },
-          ].map((v) => (
-            <button
-              key={v.key} onClick={v.onClick} disabled={v.disabled}
-              data-tour={v.key === "plan" ? "meals-plan" : undefined}
-              className={["w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.99] disabled:opacity-40", v.primary ? "border-transparent bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow-lg shadow-hotpink/30 animate-cta-bounce" : "border-petal/60 bg-white/80 hover:bg-blush"].join(" ")}
-            >
-              <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", v.primary ? "bg-white/25 text-white" : "bg-hotpink/10 text-hotpink"].join(" ")}><v.Icon className="h-5 w-5" /></span>
-              <span className="flex-1 min-w-0">
-                <span className={["flex items-center gap-1 text-sm font-bold leading-tight", v.primary ? "text-white" : "text-hotpink"].join(" ")}>{v.title}{v.done && <Check className={["h-3.5 w-3.5", v.primary ? "text-white" : "text-emerald-500"].join(" ")} strokeWidth={3} />}</span>
-                <span className={["block text-[11px] leading-snug", v.primary ? "text-white/85" : "text-rose/60"].join(" ")}>{v.desc}</span>
-              </span>
-              <span className={["shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold", v.primary ? "bg-white/25 text-white" : "bg-hotpink/10 text-hotpink"].join(" ")}>{v.cta} <ChevronRight className="h-3.5 w-3.5" /></span>
-            </button>
-          ))}
-        </div>
       </Glass>
 
-
-      {/* Diet-synced note — same green-bordered "synced plan" style, right before the week's meals */}
+      {/* Diet-synced note — small, only when arriving from the Diet tool */}
       {fromDiet && (
-        <div ref={dietNoteRef} className="rounded-2xl border-2 border-emerald-300/70 p-3.5 animate-fade-in">
+        <div ref={dietNoteRef} className="rounded-2xl border-2 border-emerald-300/70 p-3 animate-fade-in">
           <div className="flex items-start gap-2">
             <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600" strokeWidth={2.2} />
             <div className="flex-1">
@@ -933,16 +911,7 @@ function WeekTab({
         </div>
       )}
 
-      {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
-      {!planEmpty && mealsTuned && (
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[11px] font-bold text-rose-500">
-          <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(mealsTuned)} goal
-        </div>
-      )}
-
-      {/* Premium: personalised daily nutrition target */}
-      <DailyTargetCard t={targets} />
-
+      {/* ③  THE PLAN — right here, no longer pushed down */}
       {planEmpty ? (
         <EmptyState
           icon={Calendar}
@@ -1037,6 +1006,35 @@ function WeekTab({
           })}
         </div>
       )}
+
+      {/* Phase-nutrition context — moved BELOW the plan so it never pushes it
+          down. Supplementary "here's what this phase wants" note. */}
+      {phaseSynced && (() => {
+        const comment = trainingAwarenessComment({
+          workoutDays: readWorkoutPlanDays().length,
+          yogaDays: readYogaPlanDays().length,
+          phase: normalizePhase(realPhase),
+          goal: readDietProfile().goal,
+        });
+        const dp = toDietPhase(phase);
+        const info = dp ? PHASE_INFO[dp] : null;
+        return (
+          <div className="rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Why this week{info ? ` · ${info.label} phase` : ""}
+            </p>
+            {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
+            {info && (
+              <>
+                <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Sunday Prep CTA — only when a plan exists */}
       {!planEmpty && (
