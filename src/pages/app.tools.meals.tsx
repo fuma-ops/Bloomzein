@@ -24,6 +24,8 @@ import {
   Dumbbell,
   Flame,
   SlidersHorizontal,
+  Moon,
+  Pencil,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -39,6 +41,11 @@ import {
   passesMyRules,
   readDietProfile,
   hasDietSetup,
+  updateDietProfile,
+  COOKING_OPTIONS,
+  ALLERGY_OPTIONS,
+  type Allergy,
+  type CookingFrequency,
   type Recipe,
   type Intention,
   type CyclePhase,
@@ -322,8 +329,11 @@ export default function MealsPage() {
   // the "tuned to your goal" badge. Re-read on focus/storage so a reset (or a
   // fresh setup) reflects immediately.
   const [dietSetup, setDietSetup] = useState(hasDietSetup);
+  // Bumped when the shared Diet profile changes (e.g. allergies/cooking set in
+  // the setup guide) so the recipe pool re-filters without a reload.
+  const [profileTick, setProfileTick] = useState(0);
   useEffect(() => {
-    const refresh = () => setDietSetup(hasDietSetup());
+    const refresh = () => { setDietSetup(hasDietSetup()); setProfileTick((t) => t + 1); };
     window.addEventListener("storage", refresh);
     window.addEventListener("focus", refresh);
     return () => { window.removeEventListener("storage", refresh); window.removeEventListener("focus", refresh); };
@@ -334,6 +344,8 @@ export default function MealsPage() {
   const [shopChecked, setShopChecked] = useLS<string[]>(LS.shopChecked, []);
   const [freezer, setFreezer] = useLS<{ name: string; date: string }[]>(LS.freezer, []);
   const [step, setStep] = useLS<number>(LS.step, 0); // 0=welcome,1=pantry,2=vibe,3=ready
+  // "Continue without pantry" — user opted to plan from the whole library.
+  const [pantrySkip, setPantrySkip] = useLS<boolean>("bloom:meals-pantry-skip", false);
   const [phase, setPhase] = useLS<CyclePhase>(LS.phase as any, "any");
   const [openRecipe, setOpenRecipe] = useState<string | null>(null);
   const [todaySymptoms, setTodaySymptoms] = useState<string[]>([]);
@@ -392,7 +404,8 @@ export default function MealsPage() {
   const myRulesPool = useMemo(() => {
     const profile = readDietProfile();
     return RECIPES.filter((r) => passesMyRules(r, profile));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileTick]);
 
   // Premium training↔meals loop: every planned WORKOUT day (plus today if she
   // already trained strength) gets a protein-forward dinner for recovery —
@@ -604,6 +617,7 @@ export default function MealsPage() {
             owned={owned}
             proteinBoostDays={proteinBoostDays}
             mealsTuned={mealsTuned} dietSetup={dietSetup}
+            pantrySkip={pantrySkip} onSkipPantry={() => setPantrySkip(true)}
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
@@ -802,72 +816,134 @@ function StepRow({ n, done, title, desc, children }: { n: number; done: boolean;
   );
 }
 
-/* Fresh-start / post-reset experience: an inline, step-by-step setup guide
-   (pantry → vibe → plan) — NOT the spotlight tour. Walks the user through the
-   real controls so she's never dropped on an empty screen. */
-function SetupSteps({ phase, setPhase, intention, setIntention, owned, goPantry, onPlan, generating, dietSetup }: any) {
-  const pantryDone = owned.size > 0;
-  const vibeDone = phase !== "any";
+/* A small selectable pill (cooking time / allergies). */
+function ChoicePill({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={["rounded-full px-3 py-1.5 text-[12px] font-semibold transition active:scale-95", active ? "bg-hotpink text-white shadow shadow-hotpink/30" : "border border-petal/60 bg-white/80 text-rose/70 hover:bg-blush"].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* Fresh-start / post-reset experience: an inline, step-by-step setup guide —
+   NOT the spotlight tour. The cycle phase is auto-synced from the Cycle Tracker
+   (never a manual step); the user just sets vibe, cooking time & allergies, and
+   pantry is optional (skippable). Cooking time & allergies write to the shared
+   Diet profile so there is one source of truth. */
+function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, generating, dietSetup, pantrySkip, onSkipPantry }: any) {
+  const initial = readDietProfile();
+  const [cooking, setCooking] = useState<CookingFrequency>(initial.cookingFrequency);
+  const [allergies, setAllergies] = useState<Allergy[]>(initial.allergies);
+  const [touched, setTouched] = useState({ vibe: false, cooking: false, allergy: false });
+
+  const phaseKnown = phase !== "any";
+  const pantryDone = owned.size > 0 || pantrySkip;
+
+  const chooseCooking = (k: CookingFrequency) => { setCooking(k); updateDietProfile({ cookingFrequency: k }); setTouched((t) => ({ ...t, cooking: true })); };
+  const toggleAllergy = (a: Allergy) => {
+    setAllergies((prev) => { const next = prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]; updateDietProfile({ allergies: next }); return next; });
+    setTouched((t) => ({ ...t, allergy: true }));
+  };
+  const chooseNoAllergy = () => { setAllergies([]); updateDietProfile({ allergies: [] }); setTouched((t) => ({ ...t, allergy: true })); };
+
   return (
     <Glass className="p-4 sm:p-5 animate-scale-in">
       <p className="font-script text-2xl text-hotpink leading-none">Let's set up your week ✿</p>
-      <p className="mt-1 mb-4 text-[12px] text-rose/60 leading-snug">Three little steps — then I cook your whole week from what you already own.</p>
+      <p className="mt-1 text-[12px] text-rose/60 leading-snug">A few quick picks — then I cook your whole week for you.</p>
+
+      {/* Cycle phase — automatic, from the Cycle Tracker (not a step) */}
+      <div className="mt-3 mb-4 flex items-start gap-2 rounded-2xl bg-blush/60 px-3 py-2.5">
+        {phaseKnown ? (
+          <>
+            <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" strokeWidth={2.8} />
+            <p className="text-[12px] text-rose/80 leading-snug">Synced to your <b className="text-hotpink capitalize">{phase}</b> phase — automatically, from your Cycle Tracker ✿</p>
+          </>
+        ) : (
+          <>
+            <Moon className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
+            <p className="text-[12px] text-rose/80 leading-snug">Meals adapt to your cycle. <a href="/app/tools/cycle" className="font-bold text-hotpink underline">Set up your Cycle Tracker</a> to sync your phase automatically.</p>
+          </>
+        )}
+      </div>
 
       <div className="space-y-4">
-        {/* 1 — Pantry */}
-        <StepRow n={1} done={pantryDone} title="Build your pantry first" desc="Tap what you already have — I plan from your shelves before anything else.">
-          <button
-            onClick={goPantry}
-            className={["inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition active:scale-95", pantryDone ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
-          >
-            <Apple className="h-4 w-4" /> {pantryDone ? "Edit pantry" : "Set up pantry"} <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </StepRow>
-
-        {/* 2 — This week's vibe (real pickers, inline) */}
-        <StepRow n={2} done={vibeDone} title="Then choose this week's vibe" desc="Your cycle phase + the mood for this week — light, protein, comfort or fully cycle-synced.">
-          <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
-            <PickerField
-              value={phase} title="Cycle phase"
-              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
-              onChange={(v: any) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
-            />
+        {/* 1 — Vibe */}
+        <StepRow n={1} done={touched.vibe} title="Choose this week's vibe" desc="The mood for this week — light, protein-rich, comfort or fully cycle-synced.">
+          <div data-tour="meals-vibe">
             <PickerField
               value={intention} title="This week's vibe"
               options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
-              onChange={(v: any) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
+              onChange={(v: any) => { setIntention(v as Intention); setTouched((t) => ({ ...t, vibe: true })); }}
+              className="min-w-[9rem] !text-[13px] !py-1.5 !rounded-full"
             />
           </div>
-          {/* Cooking time & diet style live in the Diet tool — offer it softly, don't fork it here */}
-          {!dietSetup && (
-            <a href="/app/tools/diet" className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline">
-              <SlidersHorizontal className="h-3 w-3" /> Optional · set your diet style &amp; cooking time in Diet
-            </a>
-          )}
         </StepRow>
 
-        {/* 3 — Plan */}
-        <StepRow n={3} done={false} title="Plan my week" desc="One tap builds all 7 days — breakfast, lunch, dinner & snack.">
-          <button
-            onClick={onPlan} disabled={generating}
-            data-tour="meals-plan"
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2 text-[13px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
-          >
-            <Sparkles className="h-4 w-4" /> {generating ? "Building…" : "Plan my week"} <ChevronRight className="h-3.5 w-3.5" />
-          </button>
+        {/* 2 — Cooking time (shared Diet profile) */}
+        <StepRow n={2} done={touched.cooking} title="Cooking time" desc="How long do you want to spend in the kitchen?">
+          <div className="flex flex-wrap gap-1.5">
+            {COOKING_OPTIONS.map((o) => (
+              <ChoicePill key={o.key} active={touched.cooking && cooking === o.key} onClick={() => chooseCooking(o.key)}>{o.label}</ChoicePill>
+            ))}
+          </div>
+        </StepRow>
+
+        {/* 3 — Allergies (shared Diet profile) */}
+        <StepRow n={3} done={touched.allergy} title="Allergies" desc="Anything I should keep out of your plan?">
+          <div className="flex flex-wrap gap-1.5">
+            <ChoicePill active={touched.allergy && allergies.length === 0} onClick={chooseNoAllergy}>None</ChoicePill>
+            {ALLERGY_OPTIONS.map((o) => (
+              <ChoicePill key={o.key} active={allergies.includes(o.key)} onClick={() => toggleAllergy(o.key)}>{o.label}</ChoicePill>
+            ))}
+          </div>
+        </StepRow>
+
+        {/* 4 — Pantry (optional, skippable) */}
+        <StepRow n={4} done={pantryDone} title="Pantry — optional" desc={pantrySkip ? "Skipped — I'll plan from my whole recipe library." : "Plan from what you own, or skip and I'll use everything."}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={goPantry}
+              className={["inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition active:scale-95", owned.size > 0 ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
+            >
+              <Apple className="h-4 w-4" /> {owned.size > 0 ? "Edit pantry" : "Set up pantry"} <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            {!pantryDone && (
+              <button onClick={onSkipPantry} className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/70 px-3.5 py-2 text-[12.5px] font-semibold text-rose/70 hover:bg-blush transition active:scale-95">
+                Continue without pantry
+              </button>
+            )}
+          </div>
         </StepRow>
       </div>
+
+      {/* Plan — primary, always available (sensible defaults if a step is skipped) */}
+      <button
+        onClick={onPlan} disabled={generating}
+        data-tour="meals-plan"
+        className="mt-4 w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-3 text-[14px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
+      >
+        <Sparkles className="h-4 w-4" /> {generating ? "Building your week…" : "Plan my week"} <ChevronRight className="h-4 w-4" />
+      </button>
+      {/* Persistent reminder of what the plan follows */}
+      <p className="mt-2 text-center text-[11px] text-rose/55 leading-snug">
+        {dietSetup ? "Your week follows your Diet goal & this week's vibe ✿" : "Your week follows this week's vibe ✿"}
+      </p>
     </Glass>
   );
 }
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup, fromDiet, onDismissFromDiet,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup,
+  pantrySkip, onSkipPantry, fromDiet, onDismissFromDiet,
 }: any) {
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
+  const [editingVibe, setEditingVibe] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
   const dietNoteRef = useRef<HTMLDivElement>(null);
 
@@ -942,70 +1018,50 @@ function WeekTab({
         </button>
       )}
 
-      {/* ②  Compact vibe toolbar — shown once the week exists. While empty, the
-             numbered setup guide below takes its place. */}
+      {/* ②  Slim plan bar — once a week exists, "This week's vibe" collapses to
+             a one-line notification of what the plan follows, with a small Edit
+             to reopen the vibe controls + a Regenerate. */}
       {!planEmpty && (
-      <Glass className="p-3 sm:p-3.5">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <p className="font-script text-xl text-hotpink leading-none">This week's vibe</p>
-          {dietSetup && !planEmpty && mealsTuned ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200/80 px-2 py-0.5 text-[10px] font-bold text-rose-500">
-              <Sparkles className="h-2.5 w-2.5" strokeWidth={2.4} /> Tuned · {goalWord(mealsTuned)} goal
-            </span>
-          ) : !dietSetup && !planEmpty ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold text-magenta">
-              <Apple className="h-2.5 w-2.5" strokeWidth={2.4} /> {intentionLabel}-vibe week
-            </span>
-          ) : null}
-        </div>
-
-        {/* Pickers — small pill selects, side by side */}
-        <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
-          <PickerField
-            value={phase} title="Cycle phase"
-            options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
-            onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
-          />
-          <PickerField
-            value={intention} title="This week's vibe"
-            options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
-            onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
-          />
-        </div>
-
-        {/* One tiny status line — synced confirmation OR the next step */}
-        {phase !== "any" ? (
-          <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600">
-            <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.6} />
-            {intention === "cycle"
-              ? <span>Fully synced to your <b className="capitalize">{phase}</b> phase ✿</span>
-              : <span><span className="capitalize">{intentionLabel}</span>-leaning, tuned to your <b className="capitalize">{phase}</b> phase · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">focus fully</button></span>}
+      <Glass className="p-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 shrink-0 text-hotpink" />
+          <p className="flex-1 min-w-0 text-[12px] text-rose/80 leading-snug">
+            {dietSetup && mealsTuned
+              ? <>Plan tuned to your <b className="text-hotpink">{goalWord(mealsTuned)}</b> goal</>
+              : <>Plan tuned to your <b className="text-hotpink capitalize">{intentionLabel}</b> vibe</>}
+            {phase !== "any" && <span className="text-rose/50"> · <span className="capitalize">{phase}</span> phase</span>}
           </p>
-        ) : planEmpty ? (
-          <p className="mt-2 text-[11.5px] text-rose/70 leading-snug italic">{INTENTIONS.find((i) => i.key === intention)?.blurb}</p>
-        ) : null}
-
-        {/* Actions — pantry (ghost) + one primary. No redundant third button. */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button
-            onClick={goPantry}
-            className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/80 px-3 py-2 text-[12px] font-bold text-hotpink hover:bg-blush transition active:scale-95"
-          >
-            <Apple className="h-3.5 w-3.5" /> Pantry
-            {owned.size > 0 && <Check className="h-3 w-3 text-emerald-500" strokeWidth={3} />}
+          <button onClick={() => setEditingVibe((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full border border-petal/60 bg-white/80 px-2.5 py-1.5 text-[11px] font-bold text-hotpink hover:bg-blush transition active:scale-95">
+            <Pencil className="h-3 w-3" /> Edit
           </button>
-          <div className="flex-1" />
-          <button
-            onClick={handleGenerate} disabled={generating}
-            data-tour="meals-plan"
-            className="inline-flex items-center gap-1.5 rounded-full border-transparent bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2 text-[13px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
-          >
-            {planEmpty ? <Sparkles className="h-4 w-4" /> : <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />}
-            {generating ? "Building…" : planEmpty ? "Plan my week" : "Regenerate"}
-            <ChevronRight className="h-3.5 w-3.5" />
+          <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
+            <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
           </button>
         </div>
 
+        {/* Expanded editor — vibe + phase override; cooking time & allergies live in Diet */}
+        {editingVibe && (
+          <div className="mt-3 pt-3 border-t border-petal/50 space-y-2.5 animate-fade-in">
+            <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
+              <PickerField
+                value={intention} title="This week's vibe"
+                options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+                onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
+              />
+              <PickerField
+                value={phase} title="Cycle phase"
+                options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+                onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
+              />
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <button onClick={goPantry} className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><Apple className="h-3 w-3" /> Pantry</button>
+              <a href="/app/tools/diet" className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><SlidersHorizontal className="h-3 w-3" /> Cooking time &amp; allergies</a>
+              <div className="flex-1" />
+              <button onClick={() => { handleGenerate(); setEditingVibe(false); }} className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3 py-1.5 text-[11px] font-bold active:scale-95"><RefreshCw className="h-3 w-3" /> Apply</button>
+            </div>
+          </div>
+        )}
       </Glass>
       )}
 
@@ -1026,9 +1082,9 @@ function WeekTab({
       {/* ③  THE PLAN — right here, no longer pushed down */}
       {planEmpty ? (
         <SetupSteps
-          phase={phase} setPhase={setPhase} intention={intention} setIntention={setIntention}
+          phase={phase} intention={intention} setIntention={setIntention}
           owned={owned} goPantry={goPantry} onPlan={handleGenerate} generating={generating}
-          dietSetup={dietSetup}
+          dietSetup={dietSetup} pantrySkip={pantrySkip} onSkipPantry={onSkipPantry}
         />
       ) : (
         <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
