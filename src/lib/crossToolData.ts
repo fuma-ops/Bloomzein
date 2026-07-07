@@ -168,6 +168,27 @@ export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlo
   setMealPlanSlot(day, slot, recipeId);
 }
 
+/** Un-plan the whole weekly meal plan — powers the Diet "Meals planned" toggle. */
+export function clearMealPlan(): void {
+  try {
+    ["bloom:meals-from-diet", "bloom:meals-plan-goal", MEALS_PLAN_KEY].forEach((k) => localStorage.removeItem(k));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
+/** Un-plan movement (yoga schedule + workout program + goal/autoplan flags) —
+ *  powers the Diet "Movement planned" toggle. */
+export function clearMovementPlan(): void {
+  try {
+    [
+      YOGA_SCHEDULE_KEY, "bloom:yoga-plan-goal",
+      WORKOUT_PROGRAM_KEY, WORKOUT_ACTIVE_PROGRAM_KEY,
+      "bloom:workout-plan-goal", "bloom:workout-autoplan",
+    ].forEach((k) => localStorage.removeItem(k));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
 /** Set (or clear, with null) one slot of the weekly plan — the single writer. */
 export function setMealPlanSlot(day: string, slot: PlanSlot, recipeId: string | null): void {
   try {

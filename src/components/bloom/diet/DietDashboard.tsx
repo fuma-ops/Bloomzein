@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
-  Sparkles, ChevronRight, Activity, Trophy, Pencil, Check,
+  Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
@@ -48,12 +48,14 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals, onPlanMovement, onViewTodayPlan }: {
+export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onViewTodayPlan }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
   movementPlanned: boolean;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
+  onUnplanMeals?: () => void;
+  onUnplanMovement?: () => void;
   onViewTodayPlan: () => void;
 }) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
@@ -145,9 +147,9 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
       )}
       {/* Two guided setup steps — soft app rows; check off once each plan exists */}
       <div className="mt-3 grid gap-2">
-        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals}
+        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals} onUndo={onUnplanMeals}
           views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
-        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement}
+        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement} onUndo={onUnplanMovement}
           views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
       </div>
       {/* Once she's eating, the daily verdict */}
@@ -162,14 +164,22 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
 
 /** A guided setup step, app-style. Not done → soft to-do row you can tap to
  *  build the plan. Done → soft green check + a small 'View' CTA to the plan. */
-function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, views }: {
+function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, views }: {
   done: boolean; flashed?: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void;
+  onUndo?: () => void;
   views: { label: string; onClick: () => void }[];
 }) {
   if (done) {
     return (
       <div className="w-full flex items-center gap-2 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
+        {/* Tap the tick to un-plan — it toggles off, back to the to-do state */}
+        <button
+          onClick={onUndo} disabled={!onUndo} title="Un-plan" aria-label="Un-plan"
+          className="group relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600 enabled:hover:bg-rose-100 enabled:hover:text-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
+        >
+          <Check className="h-3.5 w-3.5 group-enabled:group-hover:hidden" strokeWidth={3} />
+          <X className="h-3.5 w-3.5 hidden group-enabled:group-hover:block" strokeWidth={3} />
+        </button>
         <span className="flex-1 min-w-0 text-[12.5px] font-bold text-rose/70 truncate">{doneLabel}</span>
         {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
         <div className="shrink-0 flex items-center gap-1">
