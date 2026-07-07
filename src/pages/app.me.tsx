@@ -3,8 +3,11 @@ import {
   Pencil, Sparkles, Wallet,
   Flower2, ChevronRight,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
-  Check,
+  Check, Inbox,
 } from "lucide-react";
+
+/** Only this account sees the private admin inbox link. */
+const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
@@ -86,6 +89,15 @@ const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
 export default function MePage() {
   const { profile, user, signOut, updateProfile } = useAuth();
   const displayName = profile?.name || user?.email?.split("@")[0] || "Bloom girl";
+
+  // Add the private "Messages" inbox link only for the admin account.
+  const isAdmin = user?.email === ADMIN_EMAIL;
+  const groups: { items: SettingItem[]; danger?: boolean }[] = isAdmin
+    ? [
+        { items: [{ Icon: Inbox, label: "Messages", href: "/admin" }, ...settingsGroups[0].items] },
+        ...settingsGroups.slice(1),
+      ]
+    : settingsGroups;
 
   // Lets you re-trigger the new-user onboarding popup at any time, for testing.
   async function replayOnboarding() {
@@ -198,7 +210,7 @@ export default function MePage() {
       <section className="mt-5 sm:mt-8 mb-4 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
         <SectionTitle>Settings</SectionTitle>
         <div className="space-y-3">
-          {settingsGroups.map((group, gi) => (
+          {groups.map((group, gi) => (
             <div
               key={gi}
               className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl overflow-hidden"
