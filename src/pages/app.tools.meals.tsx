@@ -1605,7 +1605,7 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <h3 className="font-script text-3xl text-white leading-tight drop-shadow">{r.name}</h3>
             <p className="mt-0.5 text-xs text-white/80">
-              {r.vibe} · {r.prepMin + r.cookMin} min · {r.difficulty} · {r.cost}
+              {r.vibe} · {r.prepMin + r.cookMin} min · serves {r.servings} · {r.difficulty} · {r.cost}
             </p>
           </div>
         </div>
@@ -1628,9 +1628,21 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
             ))}
           </div>
 
+          {/* Equipment */}
+          {r.equipment && r.equipment.length > 0 && (
+            <div>
+              <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">You'll need</p>
+              <div className="flex flex-wrap gap-1.5">
+                {r.equipment.map((e: string) => (
+                  <span key={e} className="rounded-full bg-blush/70 border border-petal/50 px-2.5 py-0.5 text-[11px] font-semibold text-magenta">{e}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Ingredients */}
           <div>
-            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Ingredients</p>
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Ingredients · makes {r.servings} serving{r.servings === 1 ? "" : "s"}</p>
             <ul className="space-y-1">
               {r.ingredients.map((i) => (
                 <li key={i.item} className="flex gap-2 text-sm text-rose">

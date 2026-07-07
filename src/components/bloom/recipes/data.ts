@@ -368,9 +368,13 @@ export interface Recipe {
   allergens: Allergy[];
   cost: "$" | "$$" | "$$$";
   vibe: Vibe;
+  /** How many servings the ingredient list makes. Macros are PER serving. */
+  servings: number;
   macros: { calories: number; protein: number; carbs: number; fat: number };
   micros: Partial<Record<"iron" | "magnesium" | "omega3" | "vitaminC" | "fibre" | "vitaminB6" | "calcium" | "vitaminD", number>>;
   ingredients: RecipeIngredient[];
+  /** Kitchen tools needed — shown so the cook can set up before starting. */
+  equipment: string[];
   steps: string[];
   conservation: { fridgeDays: number; freezerWeeks: number; sameDay?: boolean; container?: string };
   batchTip?: string;
@@ -400,6 +404,8 @@ interface RawRecipe {
   micros: Recipe["micros"];
   ingredients: { name: string; quantity: string }[];
   steps: string[];
+  servings?: number;
+  equipment?: string[];
   cyclePhase?: CyclePhase[];
   intention?: Intention[];
   cost?: "$" | "$$" | "$$$";
@@ -473,6 +479,8 @@ function finalizeRecipe(r: RawRecipe): Recipe {
     intention: r.intention ?? inferIntentions(r),
     cost: r.cost ?? inferCost(r),
     vibe: r.vibe ?? inferVibe(r),
+    servings: r.servings ?? 1,
+    equipment: r.equipment ?? [],
     conservation: r.conservation ?? { fridgeDays: 3, freezerWeeks: 0 },
     ingredients: r.ingredients.map((i) => ({
       name: i.name,
@@ -716,19 +724,45 @@ const RAW_RECIPES: RawRecipe[] = [
   },
   {
     id: "l05", name: "Falafel Wrap with Tahini", cuisine: "Middle Eastern", mealType: "lunch",
-    prepTime: 15, cookTime: 15, difficulty: "easy",
+    prepTime: 25, cookTime: 15, difficulty: "medium",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegan"], allergens: [],
     photo: "lunch-middle-eastern-falafel-wrap-tahini.jpg",
+    servings: 2,
     macros: { calories: 430, protein: 16, carbs: 50, fat: 18 },
     micros: { fibre: 10, iron: 3, vitaminB6: 0.3 },
+    equipment: ["Food processor", "Large mixing bowl", "Frying pan or baking tray", "Slotted spoon"],
     ingredients: [
-      { name: "Falafel", quantity: "5 pieces" },
-      { name: "Pita bread", quantity: "1" },
-      { name: "Tahini sauce", quantity: "2 tbsp" },
-      { name: "Pickled vegetables", quantity: "1/2 cup" },
+      { name: "Dried chickpeas", quantity: "150 g (soaked overnight — do not use canned)" },
+      { name: "Small onion", quantity: "1/2, roughly chopped" },
+      { name: "Garlic", quantity: "2 cloves" },
+      { name: "Fresh parsley", quantity: "1/2 cup, packed" },
+      { name: "Fresh coriander (cilantro)", quantity: "1/4 cup, packed" },
+      { name: "Ground cumin", quantity: "1 tsp" },
+      { name: "Ground coriander", quantity: "1 tsp" },
+      { name: "Baking soda", quantity: "1/4 tsp" },
+      { name: "Salt", quantity: "3/4 tsp" },
+      { name: "Chickpea or plain flour", quantity: "1–2 tbsp" },
+      { name: "Oil for frying", quantity: "for shallow-frying (or 1 tbsp to bake)" },
+      { name: "Tahini", quantity: "3 tbsp" },
+      { name: "Lemon", quantity: "1/2, juiced" },
+      { name: "Cucumber", quantity: "1/2, thinly sliced" },
+      { name: "Red onion", quantity: "1/4, thinly sliced" },
+      { name: "White wine or cider vinegar", quantity: "2 tbsp" },
+      { name: "Large pita or flatbread", quantity: "2" },
+      { name: "Lettuce & tomato", quantity: "a handful, to fill" },
     ],
-    steps: ["Warm the falafel.", "Fill pita with falafel and pickled vegetables.", "Drizzle with tahini sauce."],
+    steps: [
+      "The night before: cover the dried chickpeas with plenty of cold water and soak 12–24 h. They'll roughly triple in size. Drain and pat completely dry — do NOT cook them; raw soaked chickpeas are what make falafel hold together.",
+      "Quick-pickle: toss the cucumber and red onion with the vinegar, a pinch of salt and 1 tsp sugar (optional). Set aside for at least 15 minutes, stirring once.",
+      "Tahini sauce: whisk the tahini with the lemon juice, a small grated garlic clove (from the 2) and a pinch of salt. It will seize — whisk in cold water 1 tbsp at a time until smooth and pourable. Set aside.",
+      "Falafel mix: add the drained chickpeas, onion, remaining garlic, parsley, coriander, cumin, ground coriander and 3/4 tsp salt to a food processor. Pulse to a coarse, couscous-like texture — stop before it becomes a paste, scraping down the sides. Pulse in the baking soda and 1 tbsp flour. If it feels too wet to shape, add the second tbsp flour. Chill 20–30 min if you have time (helps them hold).",
+      "Shape into about 10–12 walnut-sized balls, pressing firmly so they compact.",
+      "To fry: heat 2 cm of oil to 170°C (a crumb should sizzle steadily). Fry in batches 3–4 min, turning, until deep golden and crisp. Lift out with a slotted spoon onto paper towel. Oven option: brush with 1 tbsp oil and bake at 220°C / 425°F for ~20 min, flipping halfway.",
+      "Warm the pita. Spread with tahini, add lettuce and tomato, tuck in 5 falafel per wrap, top with the pickled veg and an extra drizzle of tahini. Roll tightly and serve warm.",
+    ],
+    batchTip: "Cooked falafel freeze beautifully — freeze in a single layer, then reheat in a hot oven for 10 min straight from frozen.",
+    substitutionTip: "No time to soak? Canned chickpeas work in a pinch — drain and pat very dry, add an extra tbsp flour, and expect a softer, more fragile falafel (baking is more forgiving than frying).",
   },
   {
     id: "l06", name: "Sweet Potato Black Bean Bowl", cuisine: "Latin", mealType: "lunch",
