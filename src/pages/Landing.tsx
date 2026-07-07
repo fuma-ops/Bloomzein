@@ -73,11 +73,8 @@ export default function Landing() {
       {/* Navbar */}
       <header className="sticky top-0 z-40 border-b border-petal/60 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 2xl:max-w-[96rem]">
-          {/* Logo — Bloomzein only */}
-          <a href="/" className="flex items-center gap-2 shrink-0">
-            <BloomLogo />
-            <span className="font-script text-xl text-hotpink hidden sm:block">Bloomzein</span>
-          </a>
+          {/* Logo — Bloomzein (icon + wordmark live inside BloomLogo) */}
+          <BloomLogo className="shrink-0" />
           <nav className="hidden items-center gap-5 text-sm font-semibold text-rose md:flex">
             <a href="/" className="hover:text-hotpink transition">Home</a>
             <a href="#universes" className="hover:text-hotpink transition">Features</a>
@@ -500,9 +497,8 @@ export default function Landing() {
 
             {/* Brand */}
             <div className="col-span-2 sm:col-span-3 lg:col-span-1">
-              <div className="flex items-center gap-2 mb-3">
-                <BloomLogo className="h-8 w-8" />
-                <span className="font-script text-2xl text-hotpink">Bloomzein</span>
+              <div className="mb-3">
+                <BloomLogo />
               </div>
               <p className="text-sm leading-relaxed text-[#9d174d]/75 max-w-[15rem]">
                 Your all-in-one app for cycle tracking, nutrition, fitness, and self-care. Designed for your body, mind &amp; life.
