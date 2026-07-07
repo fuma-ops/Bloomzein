@@ -10,7 +10,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, portionFor, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
@@ -18,7 +18,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import {
-  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules,
+  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
   type Recipe, type DietProfile, type DietPhase, type DietGoal, type MealType,
   type DietType, type Allergy, type CookingFrequency, type DietRegime,
@@ -258,10 +258,19 @@ function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) 
 }
 
 function RecipeModal({
-  recipe, onClose, onAddToPlan,
-}: { recipe: Recipe; onClose: () => void; onAddToPlan: (date: string, recipe: Recipe) => void }) {
+  recipe, portion = 1, onClose, onAddToPlan,
+}: { recipe: Recipe; portion?: number; onClose: () => void; onAddToPlan: (date: string, recipe: Recipe) => void }) {
   const [date, setDate] = useState(todayISO());
   const [added, setAdded] = useState(false);
+  // Portion baked in — show macros & ingredient amounts as the plan serves them.
+  const f = portion && portion > 0 ? portion : 1;
+  const scaled = f !== 1;
+  const mac = {
+    calories: Math.round(recipe.macros.calories * f),
+    protein: Math.round(recipe.macros.protein * f),
+    carbs: Math.round(recipe.macros.carbs * f),
+    fat: Math.round(recipe.macros.fat * f),
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
@@ -292,12 +301,12 @@ function RecipeModal({
             )}
           </div>
 
-          {/* Nutrition rings */}
+          {/* Nutrition rings — scaled to the planned portion */}
           <div className="mt-4 grid grid-cols-4 gap-2">
-            <RingProgress value={recipe.macros.calories} target={recipe.macros.calories} label="kcal" sub="" colorClass="text-hotpink" size={64} />
-            <RingProgress value={recipe.macros.protein} target={recipe.macros.protein} label="protein" sub="g" colorClass="text-amber-500" size={64} />
-            <RingProgress value={recipe.macros.carbs} target={recipe.macros.carbs} label="carbs" sub="g" colorClass="text-rose-500" size={64} />
-            <RingProgress value={recipe.macros.fat} target={recipe.macros.fat} label="fat" sub="g" colorClass="text-violet-500" size={64} />
+            <RingProgress value={mac.calories} target={mac.calories} label="kcal" sub="" colorClass="text-hotpink" size={64} />
+            <RingProgress value={mac.protein} target={mac.protein} label="protein" sub="g" colorClass="text-amber-500" size={64} />
+            <RingProgress value={mac.carbs} target={mac.carbs} label="carbs" sub="g" colorClass="text-rose-500" size={64} />
+            <RingProgress value={mac.fat} target={mac.fat} label="fat" sub="g" colorClass="text-violet-500" size={64} />
           </div>
 
           {/* Micro bars */}
@@ -321,13 +330,13 @@ function RecipeModal({
             </>
           )}
 
-          {/* Ingredients */}
-          <h3 className="mt-4 font-script text-lg text-hotpink">Ingredients <span className="text-xs font-sans font-semibold text-rose/50">· makes {recipe.servings} serving{recipe.servings === 1 ? "" : "s"}</span></h3>
+          {/* Ingredients — amounts scaled to the planned portion */}
+          <h3 className="mt-4 font-script text-lg text-hotpink">Ingredients <span className="text-xs font-sans font-semibold text-rose/50">· {scaled ? "portioned for your goal ✿" : `makes ${recipe.servings} serving${recipe.servings === 1 ? "" : "s"}`}</span></h3>
           <ul className="mt-1 space-y-1 text-sm text-rose/90">
             {recipe.ingredients.map((ing) => (
               <li key={ing.name} className="flex items-start justify-between gap-3 border-b border-petal/40 py-1">
                 <span className="font-medium">{ing.name}</span>
-                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{ing.quantity}</span>
+                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{scaleQuantity(ing.quantity, f)}</span>
               </li>
             ))}
           </ul>
@@ -1168,7 +1177,7 @@ function MealSlot({
 }: {
   type: MealType; meal: LoggedMeal | null;
   onAddRecipe: (r: Recipe) => void; onRemove: () => void;
-  onOpen: (r: Recipe) => void;
+  onOpen: (r: Recipe, portion?: number) => void;
   candidates: Recipe[];
 }) {
   const [searching, setSearching] = useState(false);
@@ -1194,8 +1203,8 @@ function MealSlot({
         const r = meal.recipeId ? RECIPES.find((x) => x.id === meal.recipeId) : undefined;
         return (
           <div className="mt-1.5 flex items-center gap-3">
-            {/* Tap the meal → open the full recipe (like the Recipes tab) */}
-            <button onClick={() => r && onOpen(r)} className="flex flex-1 items-center gap-3 text-left active:scale-[0.99] transition">
+            {/* Tap the meal → open the full recipe, at its planned portion */}
+            <button onClick={() => r && onOpen(r, portionFor(todayWeekday(), type as PlanSlot))} className="flex flex-1 items-center gap-3 text-left active:scale-[0.99] transition">
               <img
                 src={mealSlotPhoto(type, r)}
                 alt={meal.name}
@@ -1257,7 +1266,7 @@ function TodayTab({
   phase: DietPhase; cycleDay: number; profile: DietProfile & { weight: number };
   dayMeals: DayMeals;
   onSetSlot: (slot: MealType, recipe: Recipe | null) => void;
-  onOpenRecipe: (r: Recipe) => void;
+  onOpenRecipe: (r: Recipe, portion?: number) => void;
 }) {
   const [dismissedPW, setDismissedPW] = useLS<Record<string, boolean>>(LS.dismissedPW, {});
   const [pwIndex, setPwIndex] = useState(0);
@@ -1444,7 +1453,7 @@ const GOAL_FILTERS = [
 
 function RecipesTab({
   phase, profile, onOpenRecipe,
-}: { phase: DietPhase; profile: DietProfile; onOpenRecipe: (r: Recipe) => void }) {
+}: { phase: DietPhase; profile: DietProfile; onOpenRecipe: (r: Recipe, portion?: number) => void }) {
   const [query, setQuery] = useState("");
   const [phaseFilters, setPhaseFilters] = useState<DietPhase[]>([]);
   const [mealFilters, setMealFilters] = useState<MealType[]>([]);
@@ -1604,7 +1613,10 @@ export default function DietPage() {
   const [profile, setProfile] = useLS<DietProfile & { weight: number }>(LS.profile, DEFAULT_PROFILE);
   const [tab, setTab] = useLS<TabKey>(LS.tab, "profile");
   const [editingSetup, setEditingSetup] = useState(false);
-  const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
+  const [openRecipe, setOpenRecipe] = useState<{ recipe: Recipe; portion: number } | null>(null);
+  // Open a recipe, optionally at its planned portion so macros & ingredient
+  // amounts show what the plan actually serves.
+  const openRecipeAt = (r: Recipe, portion = 1) => setOpenRecipe({ recipe: r, portion });
   // Today's meals ARE the one shared weekly plan (bloom:meals-plan). We mirror
   // it in state and re-read after every write so edits here == the Planner.
   const [todayPlan, setTodayPlan] = useState(() => readTodayPlannedDay());
@@ -1856,12 +1868,12 @@ export default function DietPage() {
           <CycleNutritionTab phase={cyclePhase} />
         )}
         {tab === "today" && (
-          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={setOpenRecipe} />
+          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />
         )}
-        {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
+        {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={openRecipeAt} />}
       </div>
 
-      {openRecipe && <RecipeModal recipe={openRecipe} onClose={() => setOpenRecipe(null)} onAddToPlan={addToPlan} />}
+      {openRecipe && <RecipeModal recipe={openRecipe.recipe} portion={openRecipe.portion} onClose={() => setOpenRecipe(null)} onAddToPlan={addToPlan} />}
     </div>
   );
 }

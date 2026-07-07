@@ -42,6 +42,7 @@ import {
   readDietProfile,
   hasDietSetup,
   updateDietProfile,
+  scaleQuantity,
   COOKING_OPTIONS,
   ALLERGY_OPTIONS,
   type Allergy,
@@ -372,7 +373,10 @@ export default function MealsPage() {
   // "Continue without pantry" — user opted to plan from the whole library.
   const [pantrySkip, setPantrySkip] = useLS<boolean>("bloom:meals-pantry-skip", false);
   const [phase, setPhase] = useLS<CyclePhase>(LS.phase as any, "any");
-  const [openRecipe, setOpenRecipe] = useState<string | null>(null);
+  const [openRecipe, setOpenRecipe] = useState<{ id: string; portion: number } | null>(null);
+  // Open a recipe, optionally at a planned portion so ingredients & macros show
+  // scaled to what the plan actually serves.
+  const openRecipeAt = (id: string, portion = 1) => setOpenRecipe({ id, portion });
   const [todaySymptoms, setTodaySymptoms] = useState<string[]>([]);
   const [onboarded, setOnboarded] = useLS<boolean>("bloom:meals-onboarded", false);
   const [showGuide, setShowGuide] = useState(false);
@@ -397,7 +401,7 @@ export default function MealsPage() {
     } catch {}
     // Deep-link from Today / Cycle: open the tapped recipe straight away.
     const recipeId = readLaunch<string>(LAUNCH_MEAL_KEY);
-    if (recipeId) setOpenRecipe(recipeId);
+    if (recipeId) setOpenRecipe({ id: recipeId, portion: 1 });
 
     return () => window.removeEventListener("storage", refresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -661,7 +665,7 @@ export default function MealsPage() {
             plan={plan} planEmpty={planEmpty}
             onGenerate={generateWeek}
             onGeneratePhase={generatePhasePlan}
-            onOpen={setOpenRecipe}
+            onOpen={openRecipeAt}
             onSwap={swapMeal}
             onRegen={regenDay}
             owned={owned}
@@ -676,7 +680,7 @@ export default function MealsPage() {
 
         {tab === "kids" && (
           <KidsTab
-            kidPlan={kidPlan} onGenerate={generateKids} onOpen={setOpenRecipe}
+            kidPlan={kidPlan} onGenerate={generateKids} onOpen={openRecipeAt}
           />
         )}
 
@@ -707,12 +711,12 @@ export default function MealsPage() {
         {tab === "favs" && (
           <FavsTab
             favorites={favorites} ratings={ratings} setRatings={setRatings}
-            onOpen={setOpenRecipe} toggleFav={toggleFav}
+            onOpen={openRecipeAt} toggleFav={toggleFav}
           />
         )}
 
         {/* Clever shortcuts */}
-        <CleverRow onOpen={setOpenRecipe} owned={owned} />
+        <CleverRow onOpen={openRecipeAt} owned={owned} />
       </div>
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
@@ -722,7 +726,7 @@ export default function MealsPage() {
         CSS transform on an ancestor breaks fixed positioning — moving it here fixes it. */}
     {openRecipe && (
       <RecipeSheet
-        id={openRecipe} onClose={() => setOpenRecipe(null)}
+        id={openRecipe.id} portion={openRecipe.portion} onClose={() => setOpenRecipe(null)}
         favorites={favorites} toggleFav={toggleFav}
         ratings={ratings} setRatings={setRatings}
       />
@@ -1175,7 +1179,7 @@ function WeekTab({
                       key={slot}
                       className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
                       style={{ aspectRatio: '3/4' }}
-                      onClick={() => r && requestAnimationFrame(() => onOpen(r.id))}
+                      onClick={() => r && requestAnimationFrame(() => onOpen(r.id, portion))}
                     >
                       {/* Photo */}
                       <img
@@ -1187,14 +1191,11 @@ function WeekTab({
                       {/* Subtle top-only gradient so badges stay readable */}
                       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
 
-                      {/* Meal type badge + portion (servings needed to hit target) */}
-                      <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-0.5">
+                      {/* Meal type badge */}
+                      <div className="absolute top-1.5 left-1.5">
                         <span className="text-[8px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">
                           {slot === 'breakfast' ? 'morn' : slot === 'dinner' ? 'eve' : slot}
                         </span>
-                        {r && portion !== 1 && (
-                          <span className="text-[7px] font-black text-white bg-emerald-500/90 rounded-full px-1 py-0.5" title={`${portion} servings to match your calorie target`}>×{portion}</span>
-                        )}
                       </div>
 
                       {/* Protein badge */}
@@ -1780,10 +1781,19 @@ function CleverRow({ onOpen, owned }: { onOpen: (id: string) => void; owned: Set
 
 /* ---------- Recipe Sheet ---------- */
 
-function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }: any) {
+function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, setRatings }: any) {
   const r = RECIPES.find((x) => x.id === id);
   if (!r) return null;
   const fav = favorites.includes(r.id);
+  // Portion baked in: show macros & ingredient amounts for what the plan serves.
+  const f = portion && portion > 0 ? portion : 1;
+  const scaled = f !== 1;
+  const mac = {
+    calories: Math.round(r.macros.calories * f),
+    protein: Math.round(r.macros.protein * f),
+    carbs: Math.round(r.macros.carbs * f),
+    fat: Math.round(r.macros.fat * f),
+  };
   const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.webp';
   const photoSrc  = fallback;
 
@@ -1840,13 +1850,13 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
         {/* Content */}
         <div className="p-5 space-y-4">
 
-          {/* Macros row */}
+          {/* Macros row — scaled to the planned portion */}
           <div className="grid grid-cols-4 gap-2 text-center">
             {[
-              { label: 'Cal', value: r.macros.calories },
-              { label: 'Protein', value: `${r.macros.protein}g` },
-              { label: 'Carbs', value: `${r.macros.carbs}g` },
-              { label: 'Fat', value: `${r.macros.fat}g` },
+              { label: 'Cal', value: mac.calories },
+              { label: 'Protein', value: `${mac.protein}g` },
+              { label: 'Carbs', value: `${mac.carbs}g` },
+              { label: 'Fat', value: `${mac.fat}g` },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-xl bg-blush/60 py-2 px-1">
                 <p className="text-[10px] text-rose/60 uppercase font-semibold">{label}</p>
@@ -1867,14 +1877,16 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
             </div>
           )}
 
-          {/* Ingredients */}
+          {/* Ingredients — amounts scaled to the planned portion */}
           <div>
-            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Ingredients · makes {r.servings} serving{r.servings === 1 ? "" : "s"}</p>
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">
+              Ingredients{scaled ? " · portioned for your goal ✿" : ` · makes ${r.servings} serving${r.servings === 1 ? "" : "s"}`}
+            </p>
             <ul className="space-y-1">
               {r.ingredients.map((i) => (
                 <li key={i.item} className="flex gap-2 text-sm text-rose">
                   <span className="text-hotpink mt-0.5">•</span>
-                  <span><b className="font-medium">{i.qty}</b> {i.item}</span>
+                  <span><b className="font-medium">{scaleQuantity(i.qty, f)}</b> {i.item}</span>
                 </li>
               ))}
             </ul>

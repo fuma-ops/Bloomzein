@@ -95,6 +95,40 @@ export function hasDietSetup(): boolean {
   }
 }
 
+/* ---------- Portion scaling — bake the planned serving size straight into the
+   ingredient amounts (no "×1.4" label; the recipe just reads naturally). Scales
+   a quantity string ("200g", "1/2 cup", "1 tsp") by a factor, formatting mass
+   units glued ("280g") and counts with nice fractions ("¾ cup", "1½ tsp").
+   Non-numeric quantities ("a pinch", "to taste") are left untouched. */
+const NICE_FRACTIONS: [number, string][] = [
+  [0, ""], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"],
+];
+function niceFraction(n: number): string {
+  const whole = Math.floor(n + 1e-9);
+  const frac = n - whole;
+  let best = "", bestD = 1;
+  for (const [v, s] of NICE_FRACTIONS) { const d = Math.abs(frac - v); if (d < bestD) { bestD = d; best = s; } }
+  if (!best) return String(whole);
+  return whole > 0 ? `${whole}${best}` : best;
+}
+export function scaleQuantity(qty: string, factor: number): string {
+  if (!qty || !factor || factor === 1) return qty;
+  const m = String(qty).match(/^\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.?\d+)\s*(.*)$/);
+  if (!m) return qty;
+  const numStr = m[1];
+  const rest = (m[2] || "").trim();
+  let val: number;
+  if (/\s/.test(numStr)) { const [w, fr] = numStr.split(/\s+/); const [a, b] = fr.split("/").map(Number); val = Number(w) + a / b; }
+  else if (numStr.includes("/")) { const [a, b] = numStr.split("/").map(Number); val = a / b; }
+  else val = parseFloat(numStr);
+  if (!isFinite(val)) return qty;
+  const scaled = val * factor;
+  const unit = rest.toLowerCase();
+  if (/^(g|ml)\b/.test(unit)) return `${scaled >= 20 ? Math.round(scaled / 5) * 5 : Math.round(scaled)}${rest}`;
+  if (/^(kg|l)\b/.test(unit)) return `${Math.round(scaled * 100) / 100}${rest}`;
+  return `${niceFraction(Math.round(scaled * 4) / 4)}${rest ? " " + rest : ""}`;
+}
+
 // Merge-write the shared Diet profile. Preferences edited elsewhere (e.g. the
 // Meal Planner's setup guide: cooking time & allergies) flow through here so
 // there is exactly ONE profile — no forked copy. Fires a storage event so any
