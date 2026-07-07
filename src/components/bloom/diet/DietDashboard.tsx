@@ -57,6 +57,8 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
   const coach = coachRecommendation();
+  const proj = goalProjection();
+  const hasEta = !!proj && proj.etaWeeks != null; // only tease the timeline if a goal weight is set
   const verdictText =
     e.verdict === "over" ? "A little over — an easy dinner evens it out"
     : e.verdict === "close" ? "Almost there — you're right on target ✿"
@@ -65,10 +67,7 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
 
   return (
     <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
-      <div className="flex items-center justify-between mb-3">
-        <p className="font-script text-2xl text-hotpink">Today's energy</p>
-        <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20"><Flame className="h-3 w-3" /> {e.burned} burned</span>
-      </div>
+      <p className="font-script text-2xl text-hotpink mb-3">Today's energy</p>
       <div className="flex items-center gap-4">
         <Ring pct={eatenPct}>
           <div>
@@ -89,10 +88,11 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
         <MacroBar label="Carbs" eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
         <MacroBar label="Fat" eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
       </div>
-      {/* Coach in one line — the goal guidance, folded in (no separate card) */}
+      {/* Coach in one line — target guidance. The 'set a goal weight' prompt
+          lives only on the Goal-path card, so we don't repeat it here. */}
       <p className="mt-2.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-rose/80">
         <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-        <span><b className="text-hotpink">{coach.headline}.</b> Aim ~{coach.targetCalories.toLocaleString()} kcal, {coach.workoutsPerWeek} workouts + {coach.yogaPerWeek} yoga.</span>
+        <span>{hasEta && <b className="text-hotpink">{coach.headline}. </b>}Aim ~{coach.targetCalories.toLocaleString()} kcal, {coach.workoutsPerWeek} workouts + {coach.yogaPerWeek} yoga.</span>
       </p>
       {/* Movement → food: shows the yoga/workout plan's effect on the target */}
       {moveLine && (
@@ -100,10 +100,10 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
           <Dumbbell className="h-3 w-3 shrink-0" /> {moveLine}
         </p>
       )}
-      {/* Two guided setup CTAs — check off once you've built each plan */}
+      {/* Two guided setup steps — soft app rows; check off once each plan exists */}
       <div className="mt-3 grid gap-2">
-        <SetupCta done={mealsPlanned} Icon={Utensils} todo="Plan my meals for my goal" done_label="Meals planned — view →" onClick={onPlanMeals} href="/app/tools/meals" />
-        <SetupCta done={movementPlanned} Icon={Dumbbell} todo="Plan my movement for my goal" done_label="Movement planned — view →" onClick={onPlanMovement} href="/app/tools/workout" />
+        <SetupCta done={mealsPlanned} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={onPlanMeals} href="/app/tools/meals" />
+        <SetupCta done={movementPlanned} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={onPlanMovement} href="/app/tools/workout" />
       </div>
       {/* Once she's eating, the daily verdict */}
       {e.logged && (
@@ -115,25 +115,26 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
   );
 }
 
-/** A guided setup step: soft dashed CTA when not done → green checked link when done. */
-function SetupCta({ done, Icon, todo, done_label, onClick, href }: {
-  done: boolean; Icon: typeof Utensils; todo: string; done_label: string; onClick: () => void; href: string;
+/** A guided setup step, app-style. Not done → soft to-do row you can tap to
+ *  build the plan. Done → soft green check + a small 'View' CTA to the plan. */
+function SetupCta({ done, Icon, todo, doneLabel, onClick, href }: {
+  done: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void; href: string;
 }) {
   if (done) {
     return (
-      <button onClick={go(href)} className="w-full inline-flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-[12px] font-bold text-emerald-700 active:scale-[0.99] transition">
-        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-3 w-3" strokeWidth={3} /></span>
-        <span className="flex-1 text-left">{done_label}</span>
-        <ChevronRight className="h-4 w-4 shrink-0" />
-      </button>
+      <div className="w-full flex items-center gap-2.5 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
+        <span className="flex-1 text-[12.5px] font-bold text-rose/70">{doneLabel}</span>
+        <button onClick={go(href)} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink px-3 py-1 text-[11px] font-bold active:scale-95 transition">View <ChevronRight className="h-3 w-3" /></button>
+      </div>
     );
   }
   return (
-    <button onClick={onClick} className="w-full inline-flex items-center gap-2 rounded-2xl border-2 border-dashed border-hotpink/40 bg-hotpink/5 px-3 py-2 text-[12px] font-bold text-hotpink active:scale-[0.99] transition hover:bg-hotpink/10">
-      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-hotpink/40" />
-      <Icon className="h-4 w-4 shrink-0" />
-      <span className="flex-1 text-left">{todo}</span>
-      <ChevronRight className="h-4 w-4 shrink-0" />
+    <button onClick={onClick} className="w-full inline-flex items-center gap-2.5 rounded-2xl bg-blush/50 border border-petal/60 px-3 py-2.5 active:scale-[0.99] transition hover:bg-blush">
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-hotpink/30" />
+      <Icon className="h-4 w-4 shrink-0 text-hotpink" />
+      <span className="flex-1 text-left text-[12.5px] font-bold text-hotpink">{todo}</span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-hotpink/60" />
     </button>
   );
 }
