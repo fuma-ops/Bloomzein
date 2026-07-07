@@ -1205,15 +1205,13 @@ function WeekTab({
                         </div>
                       )}
 
-                      {/* Pink glass bottom strip — full width */}
-                      <div
-                        className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
-                        style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-                      >
+                      {/* Name over a slim bottom fade — the whole dish stays
+                          visible; no big pink block hiding the food. */}
+                      <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
                         {r ? (
-                          <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r.name}</p>
+                          <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r.name}</p>
                         ) : (
-                          <p className="text-[9px] text-white/50 italic">—</p>
+                          <p className="text-[9px] text-white/70 italic">—</p>
                         )}
                       </div>
 
@@ -1352,12 +1350,9 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
               >
                 <Shuffle className="h-2.5 w-2.5" />
               </button>
-              {/* Pink glass bottom strip — full width */}
-              <div
-                className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
-                style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-              >
-                <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r?.name ?? '—'}</p>
+              {/* Name over a slim bottom fade — food stays visible */}
+              <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
+                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r?.name ?? '—'}</p>
               </div>
             </div>
           );
@@ -1727,12 +1722,9 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
               >
                 <Heart className="h-2.5 w-2.5 text-white fill-white" />
               </button>
-              {/* Pink glass name strip */}
-              <div
-                className="absolute bottom-0 left-0 right-0 px-2 py-2 text-center"
-                style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-              >
-                <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r.name}</p>
+              {/* Name over a slim bottom fade — food stays visible */}
+              <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
+                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r.name}</p>
               </div>
             </div>
             {/* Rating pills */}
