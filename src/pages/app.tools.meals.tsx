@@ -303,6 +303,11 @@ export default function MealsPage() {
   const [extra, setExtra] = useLS<Record<string, string>>(LS.extra, {});
   const [intention, setIntention] = useLS<Intention>(LS.intention, "light");
   const [plan, setPlan] = useLS<Record<string, Record<MealType, string | null>>>(LS.plan, {});
+  // "Goal-tuned" marker — set when the week is auto-generated to her diet goal,
+  // cleared the moment she swaps/redoes a meal (then it's her own plan).
+  const [mealsTuned, setMealsTuned] = useState<string | null>(() => { try { return localStorage.getItem("bloom:meals-plan-goal"); } catch { return null; } });
+  const markMealsTuned = () => { const g = readDietProfile().goal; try { localStorage.setItem("bloom:meals-plan-goal", g); } catch {} setMealsTuned(g); };
+  const clearMealsTuned = () => { try { localStorage.removeItem("bloom:meals-plan-goal"); } catch {} setMealsTuned(null); };
   const [kidPlan, setKidPlan] = useLS<Record<string, string | null>>(LS.kidPlan, {});
   const [favorites, setFavorites] = useLS<string[]>(LS.favorites, []);
   const [ratings, setRatings] = useLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
@@ -379,6 +384,7 @@ export default function MealsPage() {
   const generateWeek = () => {
     const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays);
     setPlan(p);
+    markMealsTuned();
     setStep(3);
     setTab("week");
   };
@@ -390,6 +396,7 @@ export default function MealsPage() {
     setIntention("cycle");
     setPhase(ph);
     setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays));
+    markMealsTuned();
     setStep(3);
     setTab("week");
   };
@@ -440,6 +447,7 @@ export default function MealsPage() {
     const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
     const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
     if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
+    clearMealsTuned(); // a manual swap makes it her own plan
   };
 
   const regenDay = (day: string) => {
@@ -458,6 +466,7 @@ export default function MealsPage() {
       if (r) { dayPlan[type] = r.id; used.add(r.id); }
     });
     setPlan({ ...plan, [day]: dayPlan });
+    clearMealsTuned();
   };
 
   const toggleFav = (id: string) => {
@@ -572,6 +581,7 @@ export default function MealsPage() {
             onRegen={regenDay}
             owned={owned}
             proteinBoostDays={proteinBoostDays}
+            mealsTuned={mealsTuned}
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
@@ -756,8 +766,9 @@ function DayTotals({ plan, day, target }: { plan: any; day: string; target: Targ
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, fromDiet, onDismissFromDiet,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, fromDiet, onDismissFromDiet,
 }: any) {
+  const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
@@ -919,6 +930,13 @@ function WeekTab({
             </div>
             <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-rose/40 hover:text-hotpink"><X className="h-4 w-4" /></button>
           </div>
+        </div>
+      )}
+
+      {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
+      {!planEmpty && mealsTuned && (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[11px] font-bold text-rose-500">
+          <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(mealsTuned)} goal
         </div>
       )}
 

@@ -1661,7 +1661,10 @@ export default function DietPage() {
       const cands = RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
       if (cands.length) addRecipeToMealPlan(cands[(di * 3 + si) % cands.length].id, d, slot);
     }));
-    try { localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label); } catch {}
+    try {
+      localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label);
+      localStorage.setItem("bloom:meals-plan-goal", profile.goal); // goal-tuned marker
+    } catch {}
     refreshMeals();
   };
   const planMovementImplicit = () => {
