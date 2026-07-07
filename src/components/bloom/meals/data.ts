@@ -9,6 +9,7 @@ export {
   readDietProfile,
   hasDietSetup,
   updateDietProfile,
+  scaleQuantity,
   COOKING_OPTIONS,
   ALLERGY_OPTIONS,
   DIET_PROFILE_KEY,
