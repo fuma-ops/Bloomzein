@@ -335,6 +335,22 @@ export function regimeToDietType(regime: DietRegime): DietType {
   return "omnivore";
 }
 
+/* ---------- Tappable sub-recipes ----------
+ * Components (sauces, dips, quick sides) that appear inside step text as
+ * [[name]]. The user taps the word to reveal a one-line "how to make it",
+ * so steps stay short but nothing is a mystery pre-made ingredient. */
+export const SUBRECIPES: Record<string, string> = {
+  "tahini sauce": "Whisk 3 tbsp tahini with the juice of ½ lemon, 1 grated garlic clove and a pinch of salt; loosen with cold water, 1 tbsp at a time, until smooth and pourable.",
+  "quick pickles": "Toss thinly sliced cucumber and red onion with 2 tbsp vinegar, a pinch of salt and 1 tsp sugar; leave 15 min.",
+  "tzatziki": "Stir grated, squeezed cucumber into thick Greek yoghurt with 1 grated garlic clove, a squeeze of lemon, olive oil, salt and chopped dill.",
+  "pesto": "Blitz a big handful of basil with toasted pine nuts, grated parmesan, 1 garlic clove and olive oil to a loose paste; season.",
+  "hummus": "Blend a can of chickpeas with 2 tbsp tahini, lemon juice, 1 garlic clove, olive oil and a splash of water until smooth; season.",
+  "guacamole": "Mash ripe avocado with lime juice, finely chopped onion, a little chilli, coriander and salt.",
+  "salsa": "Finely chop tomato, red onion, coriander and chilli; dress with lime juice and salt.",
+  "yoghurt marinade": "Mix thick yoghurt with grated garlic, lemon, olive oil and spices (paprika, cumin, oregano); coat the protein and rest 20 min+.",
+  "vinaigrette": "Shake 3 tbsp olive oil with 1 tbsp vinegar or lemon, ½ tsp mustard, salt and pepper until emulsified.",
+};
+
 /* ---------- Recipe shape ---------- */
 
 export interface RecipeIngredient {
@@ -724,45 +740,35 @@ const RAW_RECIPES: RawRecipe[] = [
   },
   {
     id: "l05", name: "Falafel Wrap with Tahini", cuisine: "Middle Eastern", mealType: "lunch",
-    prepTime: 25, cookTime: 15, difficulty: "medium",
+    prepTime: 15, cookTime: 10, difficulty: "easy",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegan"], allergens: [],
     photo: "lunch-middle-eastern-falafel-wrap-tahini.jpg",
     servings: 2,
     macros: { calories: 430, protein: 16, carbs: 50, fat: 18 },
     micros: { fibre: 10, iron: 3, vitaminB6: 0.3 },
-    equipment: ["Food processor", "Large mixing bowl", "Frying pan or baking tray", "Slotted spoon"],
+    equipment: ["Food processor", "Frying pan"],
     ingredients: [
-      { name: "Dried chickpeas", quantity: "150 g (soaked overnight — do not use canned)" },
-      { name: "Small onion", quantity: "1/2, roughly chopped" },
+      { name: "Dried chickpeas", quantity: "150 g, soaked overnight" },
+      { name: "Onion", quantity: "1/2" },
       { name: "Garlic", quantity: "2 cloves" },
-      { name: "Fresh parsley", quantity: "1/2 cup, packed" },
-      { name: "Fresh coriander (cilantro)", quantity: "1/4 cup, packed" },
-      { name: "Ground cumin", quantity: "1 tsp" },
-      { name: "Ground coriander", quantity: "1 tsp" },
+      { name: "Parsley & coriander", quantity: "3/4 cup, packed" },
+      { name: "Cumin & ground coriander", quantity: "1 tsp each" },
       { name: "Baking soda", quantity: "1/4 tsp" },
-      { name: "Salt", quantity: "3/4 tsp" },
-      { name: "Chickpea or plain flour", quantity: "1–2 tbsp" },
-      { name: "Oil for frying", quantity: "for shallow-frying (or 1 tbsp to bake)" },
-      { name: "Tahini", quantity: "3 tbsp" },
-      { name: "Lemon", quantity: "1/2, juiced" },
-      { name: "Cucumber", quantity: "1/2, thinly sliced" },
-      { name: "Red onion", quantity: "1/4, thinly sliced" },
-      { name: "White wine or cider vinegar", quantity: "2 tbsp" },
-      { name: "Large pita or flatbread", quantity: "2" },
-      { name: "Lettuce & tomato", quantity: "a handful, to fill" },
+      { name: "Flour", quantity: "1–2 tbsp" },
+      { name: "Oil", quantity: "for frying" },
+      { name: "Pita or flatbread", quantity: "2" },
+      { name: "Tahini sauce", quantity: "3 tbsp — tap in steps to make it" },
+      { name: "Cucumber, tomato & lettuce", quantity: "to fill" },
     ],
     steps: [
-      "The night before: cover the dried chickpeas with plenty of cold water and soak 12–24 h. They'll roughly triple in size. Drain and pat completely dry — do NOT cook them; raw soaked chickpeas are what make falafel hold together.",
-      "Quick-pickle: toss the cucumber and red onion with the vinegar, a pinch of salt and 1 tsp sugar (optional). Set aside for at least 15 minutes, stirring once.",
-      "Tahini sauce: whisk the tahini with the lemon juice, a small grated garlic clove (from the 2) and a pinch of salt. It will seize — whisk in cold water 1 tbsp at a time until smooth and pourable. Set aside.",
-      "Falafel mix: add the drained chickpeas, onion, remaining garlic, parsley, coriander, cumin, ground coriander and 3/4 tsp salt to a food processor. Pulse to a coarse, couscous-like texture — stop before it becomes a paste, scraping down the sides. Pulse in the baking soda and 1 tbsp flour. If it feels too wet to shape, add the second tbsp flour. Chill 20–30 min if you have time (helps them hold).",
-      "Shape into about 10–12 walnut-sized balls, pressing firmly so they compact.",
-      "To fry: heat 2 cm of oil to 170°C (a crumb should sizzle steadily). Fry in batches 3–4 min, turning, until deep golden and crisp. Lift out with a slotted spoon onto paper towel. Oven option: brush with 1 tbsp oil and bake at 220°C / 425°F for ~20 min, flipping halfway.",
-      "Warm the pita. Spread with tahini, add lettuce and tomato, tuck in 5 falafel per wrap, top with the pickled veg and an extra drizzle of tahini. Roll tightly and serve warm.",
+      "Soak **dried chickpeas** overnight, then drain — don't cook them (raw soaked chickpeas are what hold falafel together).",
+      "Pulse the chickpeas with **onion**, **garlic**, **parsley & coriander**, **cumin** and **salt** to a coarse crumb — not a paste. Mix in **baking soda** and **flour**, then shape into ~10 balls.",
+      "Fry in **oil** at 170°C for 3–4 min until deep golden (or bake at 220°C for ~20 min, turning once).",
+      "Warm the **pita**, spread with [[tahini sauce]], add **lettuce** & **tomato**, tuck in the falafel and [[quick pickles]], then roll.",
     ],
-    batchTip: "Cooked falafel freeze beautifully — freeze in a single layer, then reheat in a hot oven for 10 min straight from frozen.",
-    substitutionTip: "No time to soak? Canned chickpeas work in a pinch — drain and pat very dry, add an extra tbsp flour, and expect a softer, more fragile falafel (baking is more forgiving than frying).",
+    batchTip: "Cooked falafel freeze well — reheat from frozen in a hot oven for 10 min.",
+    substitutionTip: "No time to soak? Use canned chickpeas, patted very dry (softer result — baking is more forgiving).",
   },
   {
     id: "l06", name: "Sweet Potato Black Bean Bowl", cuisine: "Latin", mealType: "lunch",
