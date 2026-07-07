@@ -1,4 +1,4 @@
-# Bloom & Zein
+# Bloomzein
 User-agent: *
 Allow: /
 Disallow: /app/

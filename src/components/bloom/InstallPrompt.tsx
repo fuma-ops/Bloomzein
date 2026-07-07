@@ -49,7 +49,7 @@ export function InstallPrompt() {
           ) : (
             <>
               <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">
-                Get Bloom & Zein right from your home screen.
+                Get Bloomzein right from your home screen.
               </p>
               {hasPrompt && (
                 <button

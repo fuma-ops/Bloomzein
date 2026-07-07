@@ -69,7 +69,7 @@ function ContentShell({ eyebrow, title, subtitle, children }: {
     <div className="min-h-screen bg-[#FFF5F9] text-[#4a2338]">
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
         <a href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition">
-          <ArrowLeft className="h-4 w-4" /> Back to Bloom &amp; Zein
+          <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
         </a>
         <header className="mt-6 flex items-center gap-3">
           <AppIcon size={44} />
@@ -109,7 +109,7 @@ function ContentFooter() {
         <a href="/privacy" className="hover:text-[#EC4899]">Privacy</a>
         <a href="/terms" className="hover:text-[#EC4899]">Terms</a>
       </div>
-      <p className="mt-3">© {new Date().getFullYear()} Bloom &amp; Zein ✿</p>
+      <p className="mt-3">© {new Date().getFullYear()} Bloomzein ✿</p>
     </footer>
   );
 }
@@ -133,8 +133,8 @@ function A({ href, children }: { href: string; children: React.ReactNode }) {
 
 export function HelpPage() {
   useSeo(
-    "Help Center — Bloom & Zein cycle & wellness app",
-    "Get help with Bloom & Zein: setting up cycle tracking, syncing meals and workouts to your phase, managing reminders, privacy, and your account.",
+    "Help Center — Bloomzein cycle & wellness app",
+    "Get help with Bloomzein: setting up cycle tracking, syncing meals and workouts to your phase, managing reminders, privacy, and your account.",
     "/help",
   );
   const topics = [
@@ -143,7 +143,7 @@ export function HelpPage() {
     { icon: LifeBuoy, title: "Meals, diet & workouts", body: "Pick a diet style and a weekly vibe; the Meal Planner builds a week that matches your diet and your cycle phase. Workouts and yoga adapt to your energy across the month." },
   ];
   return (
-    <ContentShell eyebrow="Help Center" title="How can we help?" subtitle="Everything you need to get the most from Bloom & Zein — your all-in-one cycle tracking, nutrition and self-care app.">
+    <ContentShell eyebrow="Help Center" title="How can we help?" subtitle="Everything you need to get the most from Bloomzein — your all-in-one cycle tracking, nutrition and self-care app.">
       <div className="grid gap-3 sm:grid-cols-3">
         {topics.map((t) => (
           <div key={t.title} className="rounded-2xl border border-[#F4C6DD] bg-white p-4">
@@ -194,22 +194,22 @@ export function HelpPage() {
  * ================================================================= */
 
 const FAQS: { q: string; a: string }[] = [
-  { q: "Is Bloom & Zein free?", a: "Yes — you can create an account and use cycle tracking, meal planning, workouts, yoga, budgeting and journaling for free." },
+  { q: "Is Bloomzein free?", a: "Yes — you can create an account and use cycle tracking, meal planning, workouts, yoga, budgeting and journaling for free." },
   { q: "Is my health data private?", a: "Yes. Your cycle, weight, mood and other data are stored securely, protected so only your account can access them, and never sold. We don't run third-party advertising or analytics trackers." },
-  { q: "Can I use Bloom & Zein for birth control?", a: "No. Cycle predictions are estimates to help you understand your body and are not a contraceptive method. Do not rely on the app to prevent or plan pregnancy — talk to a healthcare professional." },
+  { q: "Can I use Bloomzein for birth control?", a: "No. Cycle predictions are estimates to help you understand your body and are not a contraceptive method. Do not rely on the app to prevent or plan pregnancy — talk to a healthcare professional." },
   { q: "How does cycle syncing work?", a: "You enter your last period date and cycle length. Bloomzein estimates your four phases — menstrual, follicular, ovulatory and luteal — and tunes your meals, workouts and daily insights to what your body tends to need in each phase." },
   { q: "Does the meal planner really match my diet and my cycle?", a: "Yes. Your chosen diet (Balanced, Mediterranean, High-Protein, Vegan and more) filters which recipes can appear, and your selected cycle phase nudges the plan toward phase-supportive meals on top of that." },
-  { q: "Does Bloom & Zein work offline?", a: "Yes. It's a Progressive Web App, so your data is cached on your device and the core experience works offline. Changes sync to the cloud the next time you're online and signed in." },
+  { q: "Does Bloomzein work offline?", a: "Yes. It's a Progressive Web App, so your data is cached on your device and the core experience works offline. Changes sync to the cloud the next time you're online and signed in." },
   { q: "Can I install it like an app?", a: "Yes. On your phone, open the site and choose “Add to Home Screen” (iPhone: the Share button; Android: the install prompt). It then opens full-screen like a native app." },
   { q: "Which devices are supported?", a: "Any modern browser on iOS, Android, or desktop. Sign in and your data follows you across all your devices." },
   { q: "How do I delete my account or data?", a: "Email us and we'll remove your data from our systems. You can also clear your logs from within the app." },
-  { q: "Is Bloom & Zein medical advice?", a: "No. It's a wellness and self-tracking tool for general information. Always consult a qualified healthcare professional for medical decisions." },
+  { q: "Is Bloomzein medical advice?", a: "No. It's a wellness and self-tracking tool for general information. Always consult a qualified healthcare professional for medical decisions." },
 ];
 
 export function FaqPage() {
   useSeo(
-    "FAQ — Bloom & Zein cycle tracking & wellness app",
-    "Answers to common questions about Bloom & Zein: is it free, is my health data private, how cycle syncing works, offline use, installing the app, and more.",
+    "FAQ — Bloomzein cycle tracking & wellness app",
+    "Answers to common questions about Bloomzein: is it free, is my health data private, how cycle syncing works, offline use, installing the app, and more.",
     "/faq",
   );
   const faqSchema = {
@@ -222,7 +222,7 @@ export function FaqPage() {
     })),
   };
   return (
-    <ContentShell eyebrow="FAQ" title="Frequently asked questions" subtitle="Quick answers about cycle tracking, your privacy, meal planning, offline use and getting started with Bloom & Zein.">
+    <ContentShell eyebrow="FAQ" title="Frequently asked questions" subtitle="Quick answers about cycle tracking, your privacy, meal planning, offline use and getting started with Bloomzein.">
       <JsonLd data={faqSchema} />
       <div className="space-y-3">
         {FAQS.map((f) => (
@@ -249,7 +249,7 @@ export const GUIDES: Guide[] = [
   {
     slug: "cycle-syncing",
     title: "Cycle Syncing 101: living in sync with your menstrual cycle",
-    metaTitle: "Cycle Syncing 101: How to Live in Sync With Your Cycle | Bloom & Zein",
+    metaTitle: "Cycle Syncing 101: How to Live in Sync With Your Cycle | Bloomzein",
     description: "A beginner's guide to cycle syncing — what the four menstrual phases mean and how to align your food, movement and energy with each one.",
     readMins: 6,
     intro: "Cycle syncing means adapting your food, movement, work and rest to the natural hormonal shifts of your menstrual cycle. Instead of expecting the same energy every day, you work with your body across four phases — and often feel steadier, stronger and less at war with yourself.",
@@ -271,7 +271,7 @@ export const GUIDES: Guide[] = [
       { h: "Luteal phase — soften & steady", p: [
         "In the second half, progesterone rises and cravings are real. Complex carbs, magnesium and steady, comforting meals help smooth mood dips. Ease off high-intensity training toward the end and prioritise sleep.",
       ] },
-      { h: "How Bloom & Zein does this for you", p: [
+      { h: "How Bloomzein does this for you", p: [
         "Set your cycle once and Bloomzein estimates your phase every day, then tunes your meal plan, workouts and daily insight to match — so you don't have to track it all in your head.",
       ] },
     ],
@@ -279,7 +279,7 @@ export const GUIDES: Guide[] = [
   {
     slug: "eating-for-your-cycle",
     title: "Eating for your cycle: a phase-by-phase nutrition guide",
-    metaTitle: "Eating for Your Cycle: Phase-by-Phase Nutrition Guide | Bloom & Zein",
+    metaTitle: "Eating for Your Cycle: Phase-by-Phase Nutrition Guide | Bloomzein",
     description: "What to eat in each phase of your menstrual cycle — iron for your period, protein as you rise, fibre at ovulation and complex carbs in your luteal phase.",
     readMins: 7,
     intro: "Your nutritional needs shift across your cycle. Eating with those shifts — rather than against them — can support your energy, mood and cravings. Here's a simple phase-by-phase approach.",
@@ -305,7 +305,7 @@ export const GUIDES: Guide[] = [
   {
     slug: "cycle-synced-workouts",
     title: "Cycle-synced workouts: training with your hormones",
-    metaTitle: "Cycle-Synced Workouts: Train With Your Hormones | Bloom & Zein",
+    metaTitle: "Cycle-Synced Workouts: Train With Your Hormones | Bloomzein",
     description: "How to match your workouts to your menstrual cycle — gentle movement on your period, strength as you rise, peak effort at ovulation, and easing off in your luteal phase.",
     readMins: 6,
     intro: "Training the same way all month ignores the fact that your strength, recovery and energy genuinely change across your cycle. Syncing your workouts can mean better results and fewer burnout weeks.",
@@ -331,7 +331,7 @@ export const GUIDES: Guide[] = [
 
 export function GuidesIndexPage() {
   useSeo(
-    "Guides — cycle syncing, nutrition & wellness | Bloom & Zein",
+    "Guides — cycle syncing, nutrition & wellness | Bloomzein",
     "In-depth guides on cycle syncing, eating for your menstrual cycle, and cycle-synced workouts — practical, phase-by-phase advice for women's wellness.",
     "/guides",
   );
@@ -355,8 +355,8 @@ export function GuidePage({ slug }: { slug: string }) {
   const guide = GUIDES.find((g) => g.slug === slug);
   // Hooks must run unconditionally — fall back to sensible SEO if not found.
   useSeo(
-    guide?.metaTitle ?? "Guide not found — Bloom & Zein",
-    guide?.description ?? "Explore Bloom & Zein guides on cycle syncing, nutrition and movement.",
+    guide?.metaTitle ?? "Guide not found — Bloomzein",
+    guide?.description ?? "Explore Bloomzein guides on cycle syncing, nutrition and movement.",
     `/guides/${slug}`,
   );
   if (!guide) {
@@ -371,8 +371,8 @@ export function GuidePage({ slug }: { slug: string }) {
     "@type": "Article",
     headline: guide.title,
     description: guide.description,
-    author: { "@type": "Organization", name: "Bloom & Zein" },
-    publisher: { "@type": "Organization", name: "Bloom & Zein" },
+    author: { "@type": "Organization", name: "Bloomzein" },
+    publisher: { "@type": "Organization", name: "Bloomzein" },
     mainEntityOfPage: `${SITE}/guides/${guide.slug}`,
   };
   return (

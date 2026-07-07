@@ -7,7 +7,7 @@ export function BloomLogo({ to = "/", className = "" }: { to?: string; className
         <AppIcon size={38} />
       </div>
       <span className="font-script text-xl leading-none bg-gradient-to-r from-hotpink to-rose bg-clip-text text-transparent pr-1">
-        Bloom &amp; Zein
+        Bloomzein
       </span>
     </a>
   )

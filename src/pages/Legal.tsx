@@ -4,7 +4,7 @@ import { AppIcon } from "@/components/bloom/AppIcon";
 /* ------------------------------------------------------------------ *
  * Legal pages — Privacy Policy & Terms of Service.
  *
- * Operator is intentionally kept as the "Bloom & Zein" brand (solo
+ * Operator is intentionally kept as the "Bloomzein" brand (solo
  * developer) and governing law is phrased neutrally, so no personal
  * name or country is exposed. This is a solid, GDPR-aware starting
  * point — have it reviewed by a lawyer before scaling, and if you later
@@ -13,14 +13,14 @@ import { AppIcon } from "@/components/bloom/AppIcon";
 
 const LAST_UPDATED = "July 6, 2026";
 const CONTACT_EMAIL = "bloomzeinapp@gmail.com"; // [contact email]
-const ENTITY = "Bloom & Zein"; // [Company / legal entity]
+const ENTITY = "Bloomzein"; // [Company / legal entity]
 
 function LegalShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#FFF5F9] text-[#4a2338]">
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
         <a href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition">
-          <ArrowLeft className="h-4 w-4" /> Back to Bloom &amp; Zein
+          <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
         </a>
         <header className="mt-6 flex items-center gap-3">
           <AppIcon size={44} />
@@ -61,10 +61,10 @@ export function PrivacyPage() {
         <P>
           {ENTITY} (“we”, “us”) provides a wellness app for tracking your cycle, movement, nutrition,
           mood and more. This policy explains what we collect, why, and the choices you have. We built
-          Bloom &amp; Zein to keep your data yours — we never sell it.
+          Bloomzein to keep your data yours — we never sell it.
         </P>
         <P>
-          Bloom &amp; Zein is operated by an independent developer. The data controller responsible
+          Bloomzein is operated by an independent developer. The data controller responsible
           for your information is the <b>{ENTITY}</b> team, reachable at{" "}
           <a className="font-semibold text-[#EC4899]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </P>
@@ -152,7 +152,7 @@ export function PrivacyPage() {
 
       <section>
         <H>Children</H>
-        <P>Bloom &amp; Zein is not intended for anyone under 16. We do not knowingly collect data from children under 16.</P>
+        <P>Bloomzein is not intended for anyone under 16. We do not knowingly collect data from children under 16.</P>
       </section>
 
       <section>
@@ -173,7 +173,7 @@ export function TermsPage() {
     <LegalShell title="Terms of Service" subtitle="The agreement between you and us.">
       <section>
         <P>
-          Welcome to Bloom &amp; Zein. By creating an account or using the app, you agree to these Terms.
+          Welcome to Bloomzein. By creating an account or using the app, you agree to these Terms.
           Please read them together with our{" "}
           <a className="font-semibold text-[#EC4899]" href="/privacy">Privacy Policy</a>.
         </P>
@@ -182,7 +182,7 @@ export function TermsPage() {
       <section>
         <H>Not medical advice</H>
         <P>
-          Bloom &amp; Zein is a wellness and self-tracking tool for general information and personal
+          Bloomzein is a wellness and self-tracking tool for general information and personal
           organisation. It is <b>not a medical device</b> and does not provide medical, diagnostic or
           contraceptive advice. Cycle predictions and suggestions are estimates and must not be relied
           on for contraception, conception or diagnosing any condition. Always consult a qualified
@@ -191,7 +191,7 @@ export function TermsPage() {
       </section>
 
       <section>
-        <H>Who can use Bloom &amp; Zein</H>
+        <H>Who can use Bloomzein</H>
         <P>You must be at least 16 years old and able to form a binding agreement to use the app.</P>
       </section>
 

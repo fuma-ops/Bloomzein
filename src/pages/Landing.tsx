@@ -606,7 +606,7 @@ export default function Landing() {
 
           {/* Divider */}
           <div className="mt-10 border-t border-pink-300/40 pt-4 flex flex-col items-center gap-1.5 sm:flex-row sm:justify-between text-xs text-[#9d174d]/55">
-            <p>© {new Date().getFullYear()} Bloom &amp; Zein. All Rights Reserved.</p>
+            <p>© {new Date().getFullYear()} Bloomzein. All Rights Reserved.</p>
             <p className="flex items-center gap-1">🌸 Made with love for you <Heart className="h-3 w-3 fill-hotpink text-hotpink" /></p>
           </div>
         </div>

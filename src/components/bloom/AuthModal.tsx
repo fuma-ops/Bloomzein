@@ -77,7 +77,7 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
         <div className="flex flex-col items-center text-center">
           <AppIcon size={56} />
           <h2 className="mt-3 font-script text-3xl text-[#831843]">
-            {mode === "signin" ? "Welcome back ✿" : "Join Bloom & Zein ✿"}
+            {mode === "signin" ? "Welcome back ✿" : "Join Bloomzein ✿"}
           </h2>
           <p className="mt-1 text-sm text-[#9D5C7E] leading-snug">
             {mode === "signin"
