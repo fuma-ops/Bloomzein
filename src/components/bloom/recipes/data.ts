@@ -95,6 +95,36 @@ export function hasDietSetup(): boolean {
   }
 }
 
+// Merge-write the shared Diet profile. Preferences edited elsewhere (e.g. the
+// Meal Planner's setup guide: cooking time & allergies) flow through here so
+// there is exactly ONE profile — no forked copy. Fires a storage event so any
+// open tool re-reads immediately.
+export function updateDietProfile(
+  patch: Partial<DietProfile & { weight: number }>,
+): DietProfile & { weight: number } {
+  const next = { ...readDietProfile(), ...patch };
+  try {
+    localStorage.setItem(DIET_PROFILE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+  return next;
+}
+
+// Shared preference option lists (used by both Diet setup and the Meal Planner
+// setup guide) so labels never drift between tools.
+export const COOKING_OPTIONS: { key: CookingFrequency; label: string }[] = [
+  { key: "quick", label: "Quick — under 15 min" },
+  { key: "normal", label: "Normal — under 30 min" },
+  { key: "love", label: "Love cooking" },
+];
+export const ALLERGY_OPTIONS: { key: Allergy; label: string }[] = [
+  { key: "dairy", label: "Dairy" },
+  { key: "nuts", label: "Nuts" },
+  { key: "eggs", label: "Eggs" },
+  { key: "soy", label: "Soy" },
+  { key: "shellfish", label: "Shellfish" },
+];
+
 /* ---------- Pantry (for shopping list / ingredient categorisation) ---------- */
 
 export type PantryCategoryKey =
