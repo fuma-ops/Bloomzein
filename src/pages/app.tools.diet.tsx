@@ -1110,10 +1110,9 @@ function bestPostWorkoutRecipe(phase: DietPhase, profile: DietProfile, mealType:
 }
 
 function MealSlot({
-  type, meal, eaten, onToggleEaten, onAddRecipe, onRemove, candidates,
+  type, meal, onAddRecipe, onRemove, candidates,
 }: {
   type: MealType; meal: LoggedMeal | null;
-  eaten: boolean; onToggleEaten: () => void;
   onAddRecipe: (r: Recipe) => void; onRemove: () => void;
   candidates: Recipe[];
 }) {
@@ -1137,22 +1136,13 @@ function MealSlot({
         {MEAL_LABELS[type]}
       </p>
       {meal ? (
-        <div className="mt-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-sm font-bold text-magenta">{meal.name}</p>
-              <p className="text-xs text-rose/70">{fmtMacroLine(meal.macros)}</p>
-            </div>
-            <button onClick={onRemove} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
-              <X className="h-3.5 w-3.5" />
-            </button>
+        <div className="mt-1.5 flex items-start justify-between gap-2">
+          <div>
+            <p className="text-sm font-bold text-magenta">{meal.name}</p>
+            <p className="text-xs text-rose/70">{fmtMacroLine(meal.macros)}</p>
           </div>
-          {/* Tick when eaten → feeds today's macros & energy card */}
-          <button
-            onClick={onToggleEaten}
-            className={["mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition active:scale-95", eaten ? "bg-emerald-500 text-white" : "bg-white border border-petal/60 text-rose/70"].join(" ")}
-          >
-            <Check className="h-3.5 w-3.5" strokeWidth={3} /> {eaten ? "Eaten ✓" : "I ate this"}
+          <button onClick={onRemove} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : searching ? (
@@ -1194,14 +1184,12 @@ function MealSlot({
 }
 
 function TodayTab({
-  phase, cycleDay, profile, dayMeals, eatenSlots, onSetSlot, onToggleEaten,
+  phase, cycleDay, profile, dayMeals, onSetSlot,
 }: {
   phase: DietPhase; cycleDay: number; profile: DietProfile & { weight: number };
-  dayMeals: DayMeals; eatenSlots: PlanSlot[];
+  dayMeals: DayMeals;
   onSetSlot: (slot: MealType, recipe: Recipe | null) => void;
-  onToggleEaten: (slot: MealType) => void;
 }) {
-  const eaten = new Set(eatenSlots);
   const [dismissedPW, setDismissedPW] = useLS<Record<string, boolean>>(LS.dismissedPW, {});
   const [pwIndex, setPwIndex] = useState(0);
 
@@ -1217,13 +1205,11 @@ function TodayTab({
 
   const proteinBoostTarget = workoutToday ? Math.round(profile.weight * 1.8) : targets.protein;
 
-  // Consumed = only meals ticked as eaten, matching the energy card.
+  // Macros = today's PLANNED meals — planning your day fills the rings,
+  // matching the energy card (no separate "ate it" gating).
   const consumed = useMemo(() => {
-    const eatenMeals = (["breakfast", "lunch", "dinner", "snack", "lunchbox"] as MealType[])
-      .filter((s) => eaten.has(s as PlanSlot))
-      .map((s) => dayMeals[s])
-      .filter(Boolean) as LoggedMeal[];
-    return eatenMeals.reduce(
+    const meals = Object.values(dayMeals).filter(Boolean) as LoggedMeal[];
+    return meals.reduce(
       (acc, m) => ({
         calories: acc.calories + m.macros.calories,
         protein: acc.protein + m.macros.protein,
@@ -1238,8 +1224,7 @@ function TodayTab({
       }),
       { calories: 0, protein: 0, carbs: 0, fat: 0, iron: 0, magnesium: 0, omega3: 0, fibre: 0, vitaminB6: 0, vitaminC: 0 },
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dayMeals, eatenSlots]);
+  }, [dayMeals]);
 
   const ringColor = PHASE_RING[phase];
   const micros = PHASE_MICROS[phase];
@@ -1360,8 +1345,6 @@ function TodayTab({
           {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
             <MealSlot
               key={type} type={type} meal={dayMeals[type]}
-              eaten={eaten.has(type as PlanSlot)}
-              onToggleEaten={() => onToggleEaten(type)}
               onAddRecipe={(r) => assignMeal(type, r)}
               onRemove={() => onSetSlot(type, null)}
               candidates={candidatesFor(type)}
@@ -1769,7 +1752,7 @@ export default function DietPage() {
           />
         )}
         {tab === "today" && (
-          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} eatenSlots={eatenSlots} onSetSlot={onSetSlot} onToggleEaten={onToggleEaten} />
+          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} />
         )}
         {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
       </div>

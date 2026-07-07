@@ -192,15 +192,13 @@ export function calorieVerdict(total: number, target: number): "under" | "on" | 
    & yoga). One source of truth so Diet, Today and Meals never disagree.
 ============================================================================ */
 
-/** Sum of macros for today's PLANNED meals the user has ticked as eaten. One
- *  store: the meals live in the shared weekly plan; "eaten" is a thin marker. */
+/** Sum of macros for TODAY'S planned meals — planning your day fills the rings.
+ *  One store: the meals live in the shared weekly plan (bloom:meals-plan). */
 export function eatenToday(): MacroTargets {
   const empty = { calories: 0, protein: 0, carbs: 0, fat: 0 };
   try {
     const planned = readTodayPlannedDay();
-    const eaten = new Set(readEatenToday());
     return (["breakfast", "lunch", "dinner", "snack"] as const).reduce<MacroTargets>((acc, slot) => {
-      if (!eaten.has(slot)) return acc;
       const id = planned[slot];
       const r = id ? RECIPES.find((x) => x.id === id) : undefined;
       if (!r) return acc;

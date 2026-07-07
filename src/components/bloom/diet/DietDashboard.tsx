@@ -67,9 +67,9 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
   const planMeals = () => { onPlanMeals(); setFlash("meals"); };
   const planMovement = () => { onPlanMovement(); setFlash("movement"); };
   const verdictText =
-    e.verdict === "over" ? "A little over — an easy dinner evens it out"
-    : e.verdict === "close" ? "Almost there — you're right on target ✿"
-    : "On track — keep going ✿";
+    e.verdict === "over" ? "Your plan runs a little over target — swap a lighter dinner"
+    : e.verdict === "close" ? "Your plan hits your target beautifully ✿"
+    : "Your plan is on target ✿";
   const verdictCls = e.verdict === "over" ? "text-rose-500" : "text-emerald-600";
 
   return (
@@ -86,7 +86,7 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
           <div className="grid grid-cols-3 gap-1.5 text-center">
             <div className="rounded-xl bg-blush/60 py-1.5"><p className="text-sm font-black text-rose tabular-nums leading-none">{e.goal.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Goal</p></div>
             <div className="rounded-xl bg-emerald-50 py-1.5"><p className="text-sm font-black text-emerald-600 tabular-nums leading-none">+{e.burned}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Burned</p></div>
-            <div className="rounded-xl bg-amber-50 py-1.5"><p className="text-sm font-black text-amber-600 tabular-nums leading-none">{e.eaten.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Eaten</p></div>
+            <div className="rounded-xl bg-amber-50 py-1.5"><p className="text-sm font-black text-amber-600 tabular-nums leading-none">{e.eaten.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Planned</p></div>
           </div>
           <MacroBar label="Protein" eaten={e.protein.eaten} target={e.protein.target} cls="bg-amber-400" />
         </div>
