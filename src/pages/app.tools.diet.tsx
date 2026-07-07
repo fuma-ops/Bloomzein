@@ -1716,12 +1716,14 @@ export default function DietPage() {
       if (!localStorage.getItem("bloom:workout-program") && !localStorage.getItem("bloom:workout-active-program")) {
         localStorage.setItem("bloom:workout-plan-goal", profile.goal);
       }
-      // Workout: let HER choose her first setup (level / equipment / days). The
-      // Workout tool then auto-generates a goal-fit week from that profile.
+      // Workout: arm autoplan so that WHEN she opens the Workout tool (via its
+      // own CTA) it auto-generates a goal-fit week from her chosen setup.
       localStorage.setItem("bloom:workout-autoplan", "1");
       window.dispatchEvent(new Event("storage"));
     } catch {}
-    window.location.href = "/app/tools/workout";
+    // Stay on My Diet — planning is implicit (the CTA flips to "Movement
+    // planned" + shows View links). Opening a tool is only ever the user
+    // tapping the Workout or Yoga CTA, never an automatic redirect.
   };
 
   // Reset → preview a brand-new user: wipe the diet keys AND the shared plans
