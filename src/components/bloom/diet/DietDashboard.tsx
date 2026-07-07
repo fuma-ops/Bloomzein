@@ -75,7 +75,12 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
 
   return (
     <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
-      <p className="font-script text-2xl text-hotpink mb-3">Today's energy</p>
+      <div className="mb-3">
+        <p className="font-script text-2xl text-hotpink leading-none">Today's energy</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mt-1">
+          personalised to your {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
+        </p>
+      </div>
       <div className="flex items-center gap-4">
         <Ring pct={eatenPct}>
           <div>

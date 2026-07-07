@@ -1666,13 +1666,34 @@ export default function DietPage() {
   };
   const planMovementImplicit = () => {
     const phase = readCyclePhase() ?? "any";
-    const plan = generateWeeklyPlan(DEFAULT_WORKOUT_PROFILE, phase, 0);
+    // Tune the plan to her goal: build → strength 4×, lose → 4× active,
+    // maintain → 3× balanced. generateWeeklyPlan then spreads zones/intensity
+    // across the week and auto-inserts recovery on period/luteal.
+    const wkGoal = profile.goal === "gain" ? "strengthen" : "energy";
+    const wkDays: 2 | 3 | 4 | 5 = profile.goal === "maintain" ? 3 : 4;
+    const wp = { ...DEFAULT_WORKOUT_PROFILE, goal: wkGoal, daysPerWeek: wkDays } as typeof DEFAULT_WORKOUT_PROFILE;
+    const plan = generateWeeklyPlan(wp, phase, 0);
+
+    // Add 2 phase-appropriate yoga days on rest days, so "movement" is complete.
+    const yogaFocus = phase === "period" ? "Cycle sync"
+      : phase === "follicular" ? "Morning energy"
+      : phase === "ovulation" || phase === "fertile" ? "Strength"
+      : phase === "luteal" ? "Stress relief" : "Stress relief";
+    const week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const yogaSchedule: Record<string, string | null> = {};
+    week.forEach((d) => { yogaSchedule[d] = null; });
+    week.filter((d) => !plan[d]).slice(0, 2).forEach((d) => { yogaSchedule[d] = yogaFocus; });
+
     try {
       localStorage.setItem(WORKOUT_PROGRAM_KEY, JSON.stringify(plan));
       localStorage.setItem(WORKOUT_PROGRAM_PHASE_KEY, JSON.stringify(phase));
+      localStorage.setItem("bloom:yoga-schedule", JSON.stringify(yogaSchedule));
       window.dispatchEvent(new Event("storage"));
     } catch {}
-    refreshMeals(); // re-render so the 'movement planned' check flips to true
+    refreshMeals();
+    // Movement is more personal than meals — take her straight to the generated
+    // plan in the Workout tool so she can see & adjust it.
+    window.location.href = "/app/tools/workout";
   };
 
   // Reset → preview a brand-new user: wipe the diet keys AND the shared plans

@@ -312,6 +312,7 @@ export interface CoachPlan {
   targetCalories: number;
   workoutsPerWeek: number;
   yogaPerWeek: number;
+  goal: DietGoal;
 }
 
 /** A concrete, personalised recommendation for hitting her goal. */
@@ -345,5 +346,5 @@ export function coachRecommendation(): CoachPlan {
       ? "Your plan to stay strong, lean & steady"
       : "Set a goal weight to see your timeline";
 
-  return { headline, steps, targetCalories: t.calories, workoutsPerWeek, yogaPerWeek };
+  return { headline, steps, targetCalories: t.calories, workoutsPerWeek, yogaPerWeek, goal };
 }
