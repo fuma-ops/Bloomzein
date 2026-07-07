@@ -49,11 +49,12 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onViewTodayPlan }: {
+export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onViewTodayPlan }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
   mealsFromDiet?: boolean;
   movementPlanned: boolean;
+  movementFromDiet?: boolean;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
   onUnplanMeals?: () => void;
@@ -160,7 +161,10 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           onUndo={mealsFromDiet ? onUnplanMeals : undefined}
           onSync={mealsFromDiet ? undefined : () => setConfirmSync(true)}
           views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
-        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement} onUndo={onUnplanMovement}
+        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal"
+          doneLabel={movementFromDiet ? "Movement planned" : "Your movement is planned"}
+          onClick={planMovement}
+          onUndo={movementFromDiet ? onUnplanMovement : undefined}
           views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
       </div>
       {/* Once she's eating, the daily verdict */}

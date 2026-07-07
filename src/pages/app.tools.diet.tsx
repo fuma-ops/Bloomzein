@@ -911,6 +911,10 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   // Planner week — protected from Diet's un-plan, offered a "Sync" instead.
   // Recomputed each render (mealsVersion / trainTick drive re-renders).
   const mealsFromDiet = mealsPlanned && (() => { try { return !!localStorage.getItem("bloom:meals-from-diet"); } catch { return false; } })();
+  // Same ownership rule for movement: only a goal-tuned plan Diet set up (goal
+  // marker still present) can be un-planned from here; a plan the user built in
+  // the Workout/Yoga tool is protected.
+  const movementFromDiet = movementPlanned && (() => { try { return !!(localStorage.getItem("bloom:yoga-plan-goal") || localStorage.getItem("bloom:workout-plan-goal")); } catch { return false; } })();
 
   return (
     <div className="space-y-4">
@@ -921,6 +925,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
         mealsPlanned={mealsPlanned}
         mealsFromDiet={mealsFromDiet}
         movementPlanned={movementPlanned}
+        movementFromDiet={movementFromDiet}
         onPlanMeals={onPlanMeals}
         onPlanMovement={onPlanMovement}
         onUnplanMeals={onUnplanMeals}

@@ -176,15 +176,24 @@ export function clearMealPlan(): void {
   } catch {}
 }
 
-/** Un-plan the Diet-suggested movement — clears the yoga schedule it created and
- *  the goal/autoplan flags, but NEVER a real workout program the user built in
- *  the Workout tool (that stays their own). Powers the Diet "Movement" toggle. */
+/** Un-plan the Diet-created movement. A plan is "Diet-owned" when it still
+ *  carries its goal marker (bloom:*-plan-goal); the moment the user edits it in
+ *  the Workout/Yoga tool that marker is cleared and the plan becomes theirs —
+ *  so this NEVER wipes a plan the user built or customised themselves. */
 export function clearMovementPlan(): void {
   try {
-    [
-      YOGA_SCHEDULE_KEY, "bloom:yoga-plan-goal",
-      "bloom:workout-plan-goal", "bloom:workout-autoplan",
-    ].forEach((k) => localStorage.removeItem(k));
+    // Yoga schedule — clear only if it's the goal-tuned one Diet set up.
+    if (localStorage.getItem("bloom:yoga-plan-goal")) {
+      localStorage.removeItem(YOGA_SCHEDULE_KEY);
+      localStorage.removeItem("bloom:yoga-plan-goal");
+    }
+    // Workout program — clear only if it's the goal-tuned one Diet set up.
+    if (localStorage.getItem("bloom:workout-plan-goal")) {
+      localStorage.removeItem(WORKOUT_PROGRAM_KEY);
+      localStorage.removeItem(WORKOUT_ACTIVE_PROGRAM_KEY);
+      localStorage.removeItem("bloom:workout-plan-goal");
+    }
+    localStorage.removeItem("bloom:workout-autoplan");
     window.dispatchEvent(new Event("storage"));
   } catch {}
 }
