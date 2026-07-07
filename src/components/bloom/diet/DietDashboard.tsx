@@ -96,10 +96,10 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
         <MacroBar label="Carbs" eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
         <MacroBar label="Fat" eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
       </div>
-      {/* Why the rings are full — helps her understand it's her PLAN, not a log */}
-      <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
-        <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">Why?</span>
-        <span>These rings show <b className="text-hotpink">today's planned meals</b> — that's why they're filled. <b>Kcal left</b> = your target + what you burned − your plan.</span>
+      {/* Simple, friendly line so the filled rings make sense */}
+      <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-snug text-rose/70">
+        <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
+        <span><b className="text-hotpink">{Math.max(0, e.remaining).toLocaleString()} kcal</b> left from today's planned meals.</span>
       </p>
       {/* Coach in one line — target guidance. The 'set a goal weight' prompt
           lives only on the Goal-path card, so we don't repeat it here. */}
