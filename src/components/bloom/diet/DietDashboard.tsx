@@ -48,12 +48,13 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals, onPlanMovement }: {
+export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals, onPlanMovement, onViewTodayPlan }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
   movementPlanned: boolean;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
+  onViewTodayPlan: () => void;
 }) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
@@ -95,6 +96,11 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
         <MacroBar label="Carbs" eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
         <MacroBar label="Fat" eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
       </div>
+      {/* Why the rings are full — helps her understand it's her PLAN, not a log */}
+      <p className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
+        <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">Why?</span>
+        <span>These rings show <b className="text-hotpink">today's planned meals</b> — that's why they're filled. <b>Kcal left</b> = your target + what you burned − your plan.</span>
+      </p>
       {/* Coach in one line — target guidance. The 'set a goal weight' prompt
           lives only on the Goal-path card, so we don't repeat it here. */}
       <p className="mt-2.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-rose/80">
@@ -109,8 +115,10 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
       )}
       {/* Two guided setup steps — soft app rows; check off once each plan exists */}
       <div className="mt-3 grid gap-2">
-        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals} href="/app/tools/meals" />
-        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement} href="/app/tools/workout" />
+        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals}
+          views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
+        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement}
+          views={[{ label: "View", onClick: go("/app/tools/workout") }]} />
       </div>
       {/* Once she's eating, the daily verdict */}
       {e.logged && (
@@ -124,16 +132,21 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
 
 /** A guided setup step, app-style. Not done → soft to-do row you can tap to
  *  build the plan. Done → soft green check + a small 'View' CTA to the plan. */
-function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, href }: {
-  done: boolean; flashed?: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void; href: string;
+function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, views }: {
+  done: boolean; flashed?: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void;
+  views: { label: string; onClick: () => void }[];
 }) {
   if (done) {
     return (
-      <div className="w-full flex items-center gap-2.5 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
+      <div className="w-full flex items-center gap-2 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
-        <span className="flex-1 text-[12.5px] font-bold text-rose/70">{doneLabel}</span>
+        <span className="flex-1 min-w-0 text-[12.5px] font-bold text-rose/70 truncate">{doneLabel}</span>
         {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
-        <button onClick={go(href)} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink px-3 py-1 text-[11px] font-bold active:scale-95 transition">View <ChevronRight className="h-3 w-3" /></button>
+        <div className="shrink-0 flex items-center gap-1">
+          {views.map((v) => (
+            <button key={v.label} onClick={v.onClick} className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 text-hotpink px-2.5 py-1 text-[11px] font-bold active:scale-95 transition">{v.label} <ChevronRight className="h-3 w-3" /></button>
+          ))}
+        </div>
       </div>
     );
   }

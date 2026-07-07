@@ -872,6 +872,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
         movementPlanned={movementPlanned}
         onPlanMeals={onPlanMeals}
         onPlanMovement={onPlanMovement}
+        onViewTodayPlan={() => goTo("today")}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
@@ -1109,11 +1110,22 @@ function bestPostWorkoutRecipe(phase: DietPhase, profile: DietProfile, mealType:
   return fallback[0] ?? RECIPES.filter((r) => passesMyRules(r, profile))[0];
 }
 
+const MEAL_SLOT_FALLBACK: Record<string, string> = {
+  breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-buddha.jpg",
+  dinner: "/images/meal-stew.jpg", snack: "/images/meal-buddha.jpg", lunchbox: "/images/meal-lunchbox.jpg",
+};
+function mealSlotPhoto(type: string, r?: Recipe): string {
+  if (r?.image) return r.image;
+  if (r?.photo) return `/images/recipes/${r.photo}`;
+  return MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.jpg";
+}
+
 function MealSlot({
-  type, meal, onAddRecipe, onRemove, candidates,
+  type, meal, onAddRecipe, onRemove, onOpen, candidates,
 }: {
   type: MealType; meal: LoggedMeal | null;
   onAddRecipe: (r: Recipe) => void; onRemove: () => void;
+  onOpen: (r: Recipe) => void;
   candidates: Recipe[];
 }) {
   const [searching, setSearching] = useState(false);
@@ -1135,17 +1147,30 @@ function MealSlot({
         <MealIcon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
         {MEAL_LABELS[type]}
       </p>
-      {meal ? (
-        <div className="mt-1.5 flex items-start justify-between gap-2">
-          <div>
-            <p className="text-sm font-bold text-magenta">{meal.name}</p>
-            <p className="text-xs text-rose/70">{fmtMacroLine(meal.macros)}</p>
+      {meal ? (() => {
+        const r = meal.recipeId ? RECIPES.find((x) => x.id === meal.recipeId) : undefined;
+        return (
+          <div className="mt-1.5 flex items-center gap-3">
+            {/* Tap the meal → open the full recipe (like the Recipes tab) */}
+            <button onClick={() => r && onOpen(r)} className="flex flex-1 items-center gap-3 text-left active:scale-[0.99] transition">
+              <img
+                src={mealSlotPhoto(type, r)}
+                alt={meal.name}
+                className="h-14 w-14 shrink-0 rounded-xl object-cover border border-petal/60"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.jpg"; }}
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-magenta leading-snug line-clamp-2">{meal.name}</p>
+                <p className="text-[11px] text-rose/70 mt-0.5">{fmtMacroLine(meal.macros)}</p>
+                <p className="text-[10px] font-bold text-hotpink/70 mt-0.5">Tap for recipe →</p>
+              </div>
+            </button>
+            <button onClick={onRemove} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
-          <button onClick={onRemove} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      ) : searching ? (
+        );
+      })() : searching ? (
         <div className="mt-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-rose/50" />
@@ -1184,11 +1209,12 @@ function MealSlot({
 }
 
 function TodayTab({
-  phase, cycleDay, profile, dayMeals, onSetSlot,
+  phase, cycleDay, profile, dayMeals, onSetSlot, onOpenRecipe,
 }: {
   phase: DietPhase; cycleDay: number; profile: DietProfile & { weight: number };
   dayMeals: DayMeals;
   onSetSlot: (slot: MealType, recipe: Recipe | null) => void;
+  onOpenRecipe: (r: Recipe) => void;
 }) {
   const [dismissedPW, setDismissedPW] = useLS<Record<string, boolean>>(LS.dismissedPW, {});
   const [pwIndex, setPwIndex] = useState(0);
@@ -1347,6 +1373,7 @@ function TodayTab({
               key={type} type={type} meal={dayMeals[type]}
               onAddRecipe={(r) => assignMeal(type, r)}
               onRemove={() => onSetSlot(type, null)}
+              onOpen={onOpenRecipe}
               candidates={candidatesFor(type)}
             />
           ))}
@@ -1752,7 +1779,7 @@ export default function DietPage() {
           />
         )}
         {tab === "today" && (
-          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} />
+          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={setOpenRecipe} />
         )}
         {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
       </div>
