@@ -9,6 +9,7 @@ import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { ToolboxPreview } from "@/components/bloom/ToolboxPreview";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
+import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 export default function Landing() {
@@ -19,6 +20,7 @@ export default function Landing() {
   const universeTouchX = useRef<number | null>(null);
   const universeCarouselRef = useRef<HTMLDivElement>(null);
   const [carouselHintPlayed, setCarouselHintPlayed] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   // Nudge the universes carousel sideways the moment it scrolls into view, hinting it's swipeable
   useEffect(() => {
@@ -512,7 +514,7 @@ export default function Landing() {
                   { href: "https://www.facebook.com/profile.php?id=61590421363110", label: "Facebook",  icon: <Facebook className="h-4 w-4" />,  bg: "bg-rose-100 text-hotpink hover:bg-rose-200" },
                   { href: "https://pin.it/5EPJUAQPX", label: "Pinterest", icon: <Heart className="h-4 w-4" />,     bg: "bg-pink-200 text-[#be185d] hover:bg-pink-300" },
                   { href: "https://www.youtube.com/channel/UCbFxMiYx2rmJ_BZUjlMDN9w", label: "YouTube",   icon: <Youtube className="h-4 w-4" />,   bg: "bg-rose-200 text-rose-600 hover:bg-rose-300" },
-                  { href: "mailto:bloomzeinapp@gmail.com", label: "Email",     icon: <Mail className="h-4 w-4" />,      bg: "bg-petal text-hotpink hover:bg-blush" },
+                  { href: "/help", label: "Contact",     icon: <Mail className="h-4 w-4" />,      bg: "bg-petal text-hotpink hover:bg-blush" },
                 ].map(({ href, label, icon, bg }) => {
                   const external = href.startsWith("http");
                   return (
@@ -579,28 +581,37 @@ export default function Landing() {
               <p className="mb-3 text-sm font-bold text-hotpink">Support</p>
               <ul className="mb-4 space-y-2 text-sm text-[#9d174d]/70">
                 <li><a href="/help" className="hover:text-hotpink transition">Contact Us</a></li>
-                <li><a href="mailto:bloomzeinapp@gmail.com" className="hover:text-hotpink transition">bloomzeinapp@gmail.com</a></li>
+                <li><a href="/faq" className="hover:text-hotpink transition">FAQ &amp; Help</a></li>
               </ul>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const el = e.currentTarget.elements.namedItem("newsletter") as HTMLInputElement | null;
-                  const addr = el?.value.trim();
-                  window.location.href = `mailto:bloomzeinapp@gmail.com?subject=${encodeURIComponent("Add me to the Bloom list ✿")}&body=${encodeURIComponent(`Please add me to the newsletter${addr ? `: ${addr}` : ""}.`)}`;
-                }}
-                className="rounded-2xl border border-pink-300/50 bg-white/55 p-3 backdrop-blur"
-              >
-                <p className="font-bold text-hotpink text-sm">Stay in Bloom 🌸</p>
-                <p className="mt-1 mb-3 text-[11px] text-[#9d174d]/65 leading-snug">Get tips, updates &amp; gentle nudges straight to your inbox.</p>
-                <div className="flex gap-1.5">
-                  <input type="email" name="newsletter" placeholder="Enter your email"
-                    className="min-w-0 flex-1 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1.5 text-xs text-[#831843] outline-none focus:border-hotpink placeholder:text-[#9d174d]/40"
-                  />
-                  <button type="submit" aria-label="Join the newsletter" className="flex-shrink-0 grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white hover:bg-[#be185d] transition">
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
+              {subscribed ? (
+                <div className="rounded-2xl border border-pink-300/50 bg-white/55 p-3 backdrop-blur text-center">
+                  <p className="font-bold text-hotpink text-sm">You're on the list 🌸</p>
+                  <p className="mt-1 text-[11px] text-[#9d174d]/70 leading-snug">Thanks for joining — sweet things are coming your way ✿</p>
                 </div>
-              </form>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const el = e.currentTarget.elements.namedItem("newsletter") as HTMLInputElement | null;
+                    const addr = el?.value.trim();
+                    if (!addr) return;
+                    try { await supabase.from("contact_messages").insert({ email: addr, message: "Newsletter signup ✿", name: null }); } catch {}
+                    setSubscribed(true);
+                  }}
+                  className="rounded-2xl border border-pink-300/50 bg-white/55 p-3 backdrop-blur"
+                >
+                  <p className="font-bold text-hotpink text-sm">Stay in Bloom 🌸</p>
+                  <p className="mt-1 mb-3 text-[11px] text-[#9d174d]/65 leading-snug">Get tips, updates &amp; gentle nudges straight to your inbox.</p>
+                  <div className="flex gap-1.5">
+                    <input type="email" name="newsletter" required placeholder="Enter your email"
+                      className="min-w-0 flex-1 rounded-full border border-pink-200/60 bg-white/80 px-3 py-1.5 text-xs text-[#831843] outline-none focus:border-hotpink placeholder:text-[#9d174d]/40"
+                    />
+                    <button type="submit" aria-label="Join the newsletter" className="flex-shrink-0 grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white hover:bg-[#be185d] transition">
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
 

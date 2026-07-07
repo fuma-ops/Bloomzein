@@ -12,7 +12,6 @@ import { AppIcon } from "@/components/bloom/AppIcon";
  * ------------------------------------------------------------------ */
 
 const LAST_UPDATED = "July 6, 2026";
-const CONTACT_EMAIL = "bloomzeinapp@gmail.com"; // [contact email]
 const ENTITY = "Bloomzein"; // [Company / legal entity]
 
 function LegalShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
@@ -66,7 +65,7 @@ export function PrivacyPage() {
         <P>
           Bloomzein is operated by an independent developer. The data controller responsible
           for your information is the <b>{ENTITY}</b> team, reachable at{" "}
-          <a className="font-semibold text-[#EC4899]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+          <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a>.
         </P>
       </section>
 
@@ -139,7 +138,7 @@ export function PrivacyPage() {
           <li>Withdraw consent at any time, and object to or restrict certain processing.</li>
           <li>Lodge a complaint with your local data-protection authority.</li>
         </Ul>
-        <P>To exercise any of these, email us at <a className="font-semibold text-[#EC4899]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</P>
+        <P>To exercise any of these, reach us through <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a>.</P>
       </section>
 
       <section>
@@ -162,7 +161,7 @@ export function PrivacyPage() {
 
       <section>
         <H>Contact</H>
-        <P>Questions about your privacy? Write to us at <a className="font-semibold text-[#EC4899]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</P>
+        <P>Questions about your privacy? Reach us through <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a>.</P>
       </section>
     </LegalShell>
   );
@@ -258,7 +257,7 @@ export function TermsPage() {
 
       <section>
         <H>Contact</H>
-        <P>Questions about these Terms? Email <a className="font-semibold text-[#EC4899]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</P>
+        <P>Questions about these Terms? Message us through <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a>.</P>
       </section>
     </LegalShell>
   );
