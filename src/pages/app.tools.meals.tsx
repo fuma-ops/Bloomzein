@@ -325,6 +325,10 @@ export default function MealsPage() {
     setMealsTuned(g);
   };
   const clearMealsTuned = () => { try { localStorage.removeItem("bloom:meals-plan-goal"); } catch {} setMealsTuned(null); };
+  // Anything built or edited in the Meals Planner is the user's OWN week — drop
+  // the "from Diet" marker so Diet treats it as protected (offers Sync, never
+  // silently overwrites or clears it).
+  const ownThisPlan = () => { try { localStorage.removeItem("bloom:meals-from-diet"); } catch {} };
   // Whether the Diet tool has been set up — gates the daily calorie target and
   // the "tuned to your goal" badge. Re-read on focus/storage so a reset (or a
   // fresh setup) reflects immediately.
@@ -420,6 +424,7 @@ export default function MealsPage() {
     const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays);
     setPlan(p);
     markMealsTuned();
+    ownThisPlan(); // built here → the user's own week (Diet won't overwrite it)
     setStep(3);
     setTab("week");
   };
@@ -432,6 +437,7 @@ export default function MealsPage() {
     setPhase(ph);
     setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays));
     markMealsTuned();
+    ownThisPlan();
     setStep(3);
     setTab("week");
   };
@@ -483,6 +489,7 @@ export default function MealsPage() {
     const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
     if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
     clearMealsTuned(); // a manual swap makes it her own plan
+    ownThisPlan();
   };
 
   const regenDay = (day: string) => {
@@ -502,6 +509,7 @@ export default function MealsPage() {
     });
     setPlan({ ...plan, [day]: dayPlan });
     clearMealsTuned();
+    ownThisPlan();
   };
 
   const toggleFav = (id: string) => {

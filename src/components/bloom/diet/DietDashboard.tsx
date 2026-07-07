@@ -5,6 +5,7 @@
  * Meals always agree.
  */
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
@@ -48,9 +49,10 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onViewTodayPlan }: {
+export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onViewTodayPlan }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
+  mealsFromDiet?: boolean;
   movementPlanned: boolean;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
@@ -61,12 +63,16 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
   const coach = coachRecommendation();
+  const goalWord = coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain";
   const proj = goalProjection();
   const hasEta = !!proj && proj.etaWeeks != null; // only tease the timeline if a goal weight is set
 
   // Transient "✓ Planned!" flash after an implicit plan is built (same line).
   const [flash, setFlash] = useState<null | "meals" | "movement">(null);
   useEffect(() => { if (!flash) return; const t = setTimeout(() => setFlash(null), 2600); return () => clearTimeout(t); }, [flash]);
+  // Confirm before syncing/overwriting a plan the user already has.
+  const [confirmSync, setConfirmSync] = useState(false);
+  const doSync = () => { onPlanMeals(); setFlash("meals"); setConfirmSync(false); };
   const planMeals = () => { onPlanMeals(); setFlash("meals"); };
   const planMovement = () => { onPlanMovement(); setFlash("movement"); };
 
@@ -147,7 +153,12 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
       )}
       {/* Two guided setup steps — soft app rows; check off once each plan exists */}
       <div className="mt-3 grid gap-2">
-        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals} onUndo={onUnplanMeals}
+        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils}
+          todo="Plan my meals for my goal"
+          doneLabel={mealsFromDiet ? "Meals planned" : "Your week is planned"}
+          onClick={planMeals}
+          onUndo={mealsFromDiet ? onUnplanMeals : undefined}
+          onSync={mealsFromDiet ? undefined : () => setConfirmSync(true)}
           views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
         <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement} onUndo={onUnplanMovement}
           views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
@@ -158,23 +169,50 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
           <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
         </p>
       )}
+
+      {/* Confirm before syncing — the user already has their own Meals Planner
+          week, so we NEVER overwrite it silently. Portaled so a transformed
+          ancestor can't trap the fixed overlay. */}
+      {confirmSync && createPortal(
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={() => setConfirmSync(false)}>
+          <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
+          <div className="relative w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl animate-scale-in" onClick={(ev) => ev.stopPropagation()}>
+            <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-6 w-6" /></span>
+            <p className="text-center font-script text-2xl text-hotpink">Sync your week?</p>
+            <p className="mt-1.5 text-center text-[12.5px] text-rose/70 leading-snug">
+              You already have a week planned in your <b className="text-hotpink">Meals Planner</b>. Rebuild it tuned to your <b className="text-hotpink">{goalWord}</b> goal? This replaces your current week.
+            </p>
+            <div className="mt-4 grid gap-2">
+              <button onClick={doSync} className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2.5 text-sm font-bold shadow-lg shadow-hotpink/30 active:scale-95 transition">
+                <Sparkles className="h-4 w-4" /> Sync to my goal
+              </button>
+              <button onClick={() => setConfirmSync(false)} className="w-full rounded-2xl border border-petal/60 bg-white px-4 py-2.5 text-sm font-bold text-rose/70 hover:bg-blush active:scale-95 transition">
+                Keep my plan
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
 
 /** A guided setup step, app-style. Not done → soft to-do row you can tap to
  *  build the plan. Done → soft green check + a small 'View' CTA to the plan. */
-function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, views }: {
+function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, onSync, views }: {
   done: boolean; flashed?: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void;
   onUndo?: () => void;
+  onSync?: () => void;
   views: { label: string; onClick: () => void }[];
 }) {
   if (done) {
     return (
       <div className="w-full flex items-center gap-2 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
-        {/* Tap the tick to un-plan — it toggles off, back to the to-do state */}
+        {/* Tap the tick to un-plan. When the plan is the user's own (managed in
+            the Meals Planner) it's protected — no destructive un-plan here. */}
         <button
-          onClick={onUndo} disabled={!onUndo} title="Un-plan" aria-label="Un-plan"
+          onClick={onUndo} disabled={!onUndo} title={onUndo ? "Un-plan" : "Managed in your Meals Planner — safe from here"} aria-label={onUndo ? "Un-plan" : "Managed in your Meals Planner"}
           className="group relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600 enabled:hover:bg-rose-100 enabled:hover:text-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
         >
           <Check className="h-3.5 w-3.5 group-enabled:group-hover:hidden" strokeWidth={3} />
@@ -183,6 +221,9 @@ function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, views
         <span className="flex-1 min-w-0 text-[12.5px] font-bold text-rose/70 truncate">{doneLabel}</span>
         {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
         <div className="shrink-0 flex items-center gap-1">
+          {onSync && (
+            <button onClick={onSync} title="Sync this plan to your goal" className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition"><Sparkles className="h-3 w-3" /> Sync</button>
+          )}
           {views.map((v) => (
             <button key={v.label} onClick={v.onClick} className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 text-hotpink px-2.5 py-1 text-[11px] font-bold active:scale-95 transition">{v.label} <ChevronRight className="h-3 w-3" /></button>
           ))}
