@@ -950,15 +950,42 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
               <Pencil className="h-3 w-3" /> {editingPlan ? "Done" : "Edit"}
             </button>
           </div>
+          {!editingPlan && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {profile.allergies.length === 0
+                ? <span className="rounded-full bg-blush/60 px-2 py-0.5 text-[10px] font-bold text-rose/60">No allergies</span>
+                : profile.allergies.map((a) => <span key={a} className="rounded-full bg-blush/60 px-2 py-0.5 text-[10px] font-bold text-rose/60 capitalize">{a}-free</span>)}
+              <span className="rounded-full bg-blush/60 px-2 py-0.5 text-[10px] font-bold text-rose/60">{COOKING_OPTIONS.find((c) => c.key === profile.cookingFrequency)?.label}</span>
+            </div>
+          )}
           {editingPlan && (
-            <div className="mt-3 animate-fade-in">
-              <p className="text-[11px] text-rose/60 mb-1.5">Pick the diet every recipe is filtered to:</p>
-              <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
-                {DIET_REGIMES.map((r) => (
-                  <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
-                ))}
+            <div className="mt-3 space-y-3 animate-fade-in">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Diet</p>
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
+                  {DIET_REGIMES.map((r) => (
+                    <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-[11.5px] text-rose/70 leading-snug">{regime.blurb}</p>
               </div>
-              <p className="mt-2 text-[12px] text-rose/70 leading-snug">{regime.blurb}</p>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Allergies</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALLERGY_OPTIONS.map((o) => (
+                    <SelectPill key={o.key} active={profile.allergies.includes(o.key)} onClick={() => setProfile((p) => ({ ...p, allergies: p.allergies.includes(o.key) ? p.allergies.filter((x) => x !== o.key) : [...p.allergies, o.key] }))}>{o.label}</SelectPill>
+                  ))}
+                  <SelectPill active={profile.allergies.length === 0} onClick={() => setProfile((p) => ({ ...p, allergies: [] }))}>None</SelectPill>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Cooking time</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {COOKING_OPTIONS.map((o) => (
+                    <SelectPill key={o.key} active={profile.cookingFrequency === o.key} onClick={() => setProfile((p) => ({ ...p, cookingFrequency: o.key }))}>{o.label}</SelectPill>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </Glass>
@@ -1613,9 +1640,14 @@ export default function DietPage() {
     window.location.href = "/app/tools/meals";
   };
 
-  // Reset → wipe every diet key and reload into the first-run wizard (preview).
+  // Reset → preview a brand-new user: wipe the diet keys AND the shared plans
+  // (meals / workout / yoga) so the setup CTAs show unchecked, then reload.
   const onReset = async () => {
     resetToolState("diet");
+    resetToolState("meals");
+    resetToolState("workout");
+    resetToolState("yoga");
+    try { localStorage.removeItem("bloom:meals-plan"); localStorage.removeItem("bloom:diet-eaten"); } catch {}
     try { await flushCloudSync(); } catch {}
     window.location.reload();
   };
