@@ -1,6 +1,7 @@
-import { useEffect } from "react";
-import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
+import { supabase } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ *
  * Public, indexable content pages — Help Center, Guides, FAQ.
@@ -9,7 +10,6 @@ import { AppIcon } from "@/components/bloom/AppIcon";
  * + meta description; the FAQ also emits FAQPage structured data.
  * ------------------------------------------------------------------ */
 
-const CONTACT_EMAIL = "bloomzeinapp@gmail.com";
 const SITE = "https://www.bloomzein.com";
 
 /* ---------- SEO helpers ---------- */
@@ -127,6 +127,91 @@ function A({ href, children }: { href: string; children: React.ReactNode }) {
   return <a href={href} className="font-semibold text-[#EC4899] hover:text-[#DB2777] underline">{children}</a>;
 }
 
+/* ---------- Contact form — keeps your email private ---------- */
+
+/**
+ * Paste your free Web3Forms access key here to have messages emailed
+ * straight to your inbox (get one in ~1 min at https://web3forms.com —
+ * enter bloomzeinapp@gmail.com, copy the access key). Your email address
+ * is NEVER shown on the page; only this key is, which is safe to expose.
+ * Until a key is set, every message is still saved privately to the
+ * `contact_messages` table in your own Supabase project.
+ */
+const WEB3FORMS_KEY = "YOUR_WEB3FORMS_ACCESS_KEY";
+
+function ContactForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    setStatus("sending");
+    let ok = false;
+
+    // 1) Email it to the owner via Web3Forms (once a key is configured).
+    if (WEB3FORMS_KEY && !WEB3FORMS_KEY.startsWith("YOUR_")) {
+      try {
+        const r = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: "New Bloomzein message ✿",
+            from_name: name || "Bloomzein visitor",
+            name, email, message,
+          }),
+        });
+        ok = r.ok;
+      } catch { /* fall through to Supabase */ }
+    }
+
+    // 2) Always keep a private copy in your own database (nothing lost).
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: name.trim() || null,
+        email: email.trim() || null,
+        message: message.trim().slice(0, 4000),
+      });
+      if (!error) ok = true;
+    } catch { /* ignore */ }
+
+    setStatus(ok ? "sent" : "error");
+  };
+
+  if (status === "sent") {
+    return (
+      <div className="rounded-3xl border border-[#F4C6DD] bg-white p-6 text-center">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#FCE7F3] text-[#EC4899]"><Heart className="h-6 w-6" /></div>
+        <p className="mt-3 font-script text-2xl text-[#831843]">Message received ✿</p>
+        <p className="mt-1 text-sm text-[#8a5c74]">Thank you for reaching out — we read every note and will get back to you{email ? ` at ${email}` : ""} soon. 🌸</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="rounded-3xl border border-[#F4C6DD] bg-white p-5 sm:p-6">
+      <p className="font-script text-2xl text-[#831843]">Say hi ✿</p>
+      <p className="mt-0.5 mb-4 text-[13px] text-[#8a5c74]">Questions, feedback or a data request? Drop us a line — we'd love to hear from you.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name (optional)"
+          className="rounded-2xl border border-[#F4C6DD] bg-[#FFF5F9] px-4 py-2.5 text-sm text-[#5b3247] placeholder:text-[#c79bb2] outline-none focus:border-[#EC4899] transition" />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Your email (so we can reply)"
+          className="rounded-2xl border border-[#F4C6DD] bg-[#FFF5F9] px-4 py-2.5 text-sm text-[#5b3247] placeholder:text-[#c79bb2] outline-none focus:border-[#EC4899] transition" />
+      </div>
+      <textarea value={message} onChange={(e) => setMessage(e.target.value)} required rows={4} placeholder="How can we help? ✿"
+        className="mt-3 w-full resize-none rounded-2xl border border-[#F4C6DD] bg-[#FFF5F9] px-4 py-2.5 text-sm text-[#5b3247] placeholder:text-[#c79bb2] outline-none focus:border-[#EC4899] transition" />
+      {status === "error" && <p className="mt-2 text-xs font-semibold text-[#DB2777]">Something went wrong — please try again in a moment.</p>}
+      <button type="submit" disabled={status === "sending"}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#EC4899] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-[#EC4899]/30 hover:bg-[#DB2777] transition disabled:opacity-60">
+        {status === "sending" ? "Sending…" : <>Send with love <Send className="h-4 w-4" /></>}
+      </button>
+    </form>
+  );
+}
+
 /* ================================================================= *
  * HELP CENTER
  * ================================================================= */
@@ -167,6 +252,8 @@ export function HelpPage() {
         <P>Choose your diet (Balanced, Mediterranean, High-Protein, Vegan and more) and a weekly vibe. Your plan is filtered to your diet <em>and</em> nudged toward your current phase, so you eat what supports you right now. See the <A href="/guides/eating-for-your-cycle">eating-for-your-cycle guide</A>.</P>
         <H3>Workout &amp; Yoga</H3>
         <P>Get movement matched to your energy — strength when you're rising, gentle flows when you need rest. See <A href="/guides/cycle-synced-workouts">cycle-synced workouts</A>.</P>
+        <H3>Calendar</H3>
+        <P>Your whole month in one soft view — see your cycle phases, planned meals, workouts and reminders side by side. Tap any day to see what's happening and plan ahead with your cycle in mind.</P>
         <H3>Budget, Diary &amp; Notes</H3>
         <P>Plan your spending, journal your mood, and set gentle reminders — all in the same soft, private space.</P>
       </section>
@@ -178,12 +265,13 @@ export function HelpPage() {
 
       <section>
         <H2>Privacy &amp; your data</H2>
-        <P>Your health data is yours. We never sell it and don't run advertising trackers. Read our <A href="/privacy">Privacy Policy</A>, or email us to access, export or delete your data.</P>
+        <P>Your health data is yours. We never sell it and don't run advertising trackers. Read our <A href="/privacy">Privacy Policy</A>, or use the form below to access, export or delete your data.</P>
       </section>
 
       <section>
         <H2>Still need help?</H2>
-        <P>We're a small team and we read every message. Email <A href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</A> and we'll get back to you.</P>
+        <P>We're a small team and we read every message. Send us a note and we'll get back to you.</P>
+        <div className="mt-3"><ContactForm /></div>
       </section>
     </ContentShell>
   );
