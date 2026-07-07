@@ -1046,81 +1046,66 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   );
 }
 
-function CycleNutritionTab({
-  phase, cycleDay, profile, onEdit, cycleReady, onSyncedPlan, mealsToday,
-}: {
-  phase: DietPhase; cycleDay: number; profile: DietProfile; onEdit: () => void;
-  cycleReady: boolean; onSyncedPlan: () => void; mealsToday: boolean;
-}) {
+function CycleNutritionTab({ phase }: { phase: DietPhase }) {
   const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
-  const info = PHASE_INFO[phase];
-
-  // Guiding next-step banner — never leave the user unsure what to do here.
-  const next = !cycleReady
-    ? { Icon: Moon, text: "Sync your cycle to unlock this plan", cta: "Set up" as string | null, act: () => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; } }
-    : !mealsToday
-    ? { Icon: UtensilsCrossed, text: `Fill today with your ${info.label.toLowerCase()}-phase plan`, cta: "Synced plan" as string | null, act: onSyncedPlan }
-    : { Icon: Sparkles, text: "Today's meals are synced to your phase ✿", cta: null as string | null, act: () => {} };
 
   return (
     <div className="space-y-5">
-      {/* Guiding thread — same idea as the Budget planner's smart banner */}
-      <button onClick={next.act} className="w-full flex items-center gap-3 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white p-3.5 shadow-lg shadow-hotpink/30 active:scale-[0.99] transition text-left">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><next.Icon className="h-5 w-5" /></span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-[10px] font-bold uppercase tracking-widest text-white/70">Next step</span>
-          <span className="block text-sm font-bold leading-tight">{next.text}</span>
-        </span>
-        {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
-      </button>
-
-      {/* Cycle-synced plan (moved here from My Diet) */}
+      {/* Your cycle phases — what nourishes you all month */}
       <div id="diet-cycle">
-        <StepHeader step={1} title="Your cycle-synced plan" sub="eat in tune with today's phase" />
-        {!cycleReady ? (
-          <Glass className="p-5 text-center">
-            <span className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-6 w-6" /></span>
-            <p className="font-script text-xl text-hotpink">Sync your cycle first</p>
-            <p className="mt-1 text-[12px] text-rose/70 max-w-xs mx-auto">Set up the Cycle Tracker so your food plan matches your phase automatically.</p>
-            <div className="mt-3">
-              <PinkBtn onClick={() => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; }}>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn>
-            </div>
-          </Glass>
-        ) : (
-          <PhaseCarousel phase={phase} cycleDay={cycleDay} onSyncedPlan={onSyncedPlan} />
-        )}
-      </div>
-
-      <div>
-        <StepHeader step={2} title="Your cycle phases" sub="what nourishes you all month" />
+        <StepHeader step={1} title="Your cycle phases" sub="what nourishes you all month" />
         <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
           {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
         </div>
       </div>
 
-      <Glass className="p-4 sm:p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
-            <SlidersHorizontal className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> My Rules
-          </h3>
-          <button onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink hover:underline">
-            <Pencil className="h-3 w-3" /> Edit
-          </button>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-hotpink text-white px-2.5 py-1 text-xs font-bold capitalize">{profile.dietType}</span>
-          {profile.allergies.length === 0 ? (
-            <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">No allergies</span>
-          ) : profile.allergies.map((a) => (
-            <span key={a} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 capitalize">{a}-free</span>
-          ))}
-          <span className="rounded-full bg-blush px-2.5 py-1 text-xs font-semibold text-magenta">
-            {COOKING_OPTIONS.find((c) => c.key === profile.cookingFrequency)?.label}
-          </span>
-        </div>
-        <p className="mt-2 text-xs text-rose/60">These preferences filter your recipe library silently.</p>
-      </Glass>
+      {/* Read & learn — soft library of cycle, nutrition & women's-health reads */}
+      <CycleReads />
     </div>
+  );
+}
+
+/* A soft "keep learning" section — curated guides on nutrition, the menstrual
+   cycle and women's health. Links into the /guides content pages. */
+function CycleReads() {
+  const topics = ["Nutrition", "Cycle syncing", "Hormones", "Women's health", "Energy"];
+  const reads = [
+    { slug: "eating-for-your-cycle", title: "Eating for your cycle", desc: "A phase-by-phase nutrition guide.", mins: 7, Icon: Apple },
+    { slug: "cycle-syncing", title: "Cycle syncing 101", desc: "Live in tune with your four phases.", mins: 6, Icon: Moon },
+    { slug: "cycle-synced-workouts", title: "Training with your hormones", desc: "Move with your energy, not against it.", mins: 6, Icon: Activity },
+  ];
+  return (
+    <Glass className="p-4 sm:p-5">
+      <div className="flex items-center gap-1.5">
+        <BookOpen className="h-4 w-4 text-hotpink" strokeWidth={1.9} />
+        <h3 className="font-script text-xl text-hotpink">Read &amp; learn</h3>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {topics.map((t) => (
+          <span key={t} className="rounded-full bg-blush px-2.5 py-1 text-[11px] font-semibold text-magenta">{t}</span>
+        ))}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {reads.map((r, i) => (
+          <a
+            key={r.slug} href={`/guides/${r.slug}`}
+            className="flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/80 p-3 transition hover:bg-blush hover:shadow-md hover-scale active:scale-95 animate-fade-in"
+            style={{ animationDelay: `${i * 70}ms` }}
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><r.Icon className="h-5 w-5" /></span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-bold text-hotpink leading-tight">{r.title}</span>
+              <span className="block text-[11px] text-rose/60 leading-snug">{r.desc}</span>
+            </span>
+            <span className="shrink-0 flex flex-col items-end gap-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-rose/50">{r.mins} min</span>
+              <ChevronRight className="h-4 w-4 text-hotpink" />
+            </span>
+          </a>
+        ))}
+      </div>
+    </Glass>
   );
 }
 
@@ -1834,12 +1819,7 @@ export default function DietPage() {
           />
         )}
         {tab === "cycle" && (
-          <CycleNutritionTab
-            phase={cyclePhase} cycleDay={cycleDay} profile={profile}
-            onEdit={() => setEditingSetup(true)} cycleReady={cycleReady}
-            onSyncedPlan={onSyncedPlan}
-            mealsToday={mealsToday}
-          />
+          <CycleNutritionTab phase={cyclePhase} />
         )}
         {tab === "today" && (
           <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={setOpenRecipe} />
