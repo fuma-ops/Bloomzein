@@ -40,6 +40,7 @@ const STREAK_KEY = "bloom:workout-streak";
 const BADGES_KEY = "bloom:workout-badges";
 export const PROGRAM_KEY = "bloom:workout-program";
 export const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
+export const WORKOUT_PLAN_GOAL_KEY = "bloom:workout-plan-goal";
 const PROGRAM_BANNER_KEY = "bloom:workout-program-banner-seen";
 const CHALLENGE_KEY = "bloom:workout-challenge";
 const SOUND_KEY = "bloom:workout-sound";
@@ -1700,6 +1701,14 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   // Build-your-own-week: hand-pick a zone/intensity/duration per day.
   const [editing, setEditing] = useState(false);
 
+  // "Goal-tuned" marker: set when we auto-generate the week to her diet goal,
+  // cleared the moment she hand-edits it. Drives the soft badge + change warning.
+  const [tunedGoal, setTunedGoal] = useState<string | null>(() => { try { return localStorage.getItem(WORKOUT_PLAN_GOAL_KEY); } catch { return null; } });
+  const markTuned = () => { const g = readDietProfile().goal; try { localStorage.setItem(WORKOUT_PLAN_GOAL_KEY, g); } catch {} setTunedGoal(g); };
+  const clearTuned = () => { try { localStorage.removeItem(WORKOUT_PLAN_GOAL_KEY); } catch {} setTunedGoal(null); };
+  // A pending "this will change your plan" confirmation.
+  const [confirmChange, setConfirmChange] = useState<null | { title: string; body: string; onYes: () => void }>(null);
+
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
 
@@ -1714,6 +1723,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       setProgram(generateWeeklyPlan(profile, ph, seed + 1));
       setProgramPhase(ph);
       setSeed(seed + 1);
+      markTuned();
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1727,14 +1737,17 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
     setProgram(empty);
     setProgramPhase(phase);
     setEditing(true);
+    clearTuned(); // hand-built → no longer auto-tuned
   };
   const clearWeek = () => {
     const empty: Record<string, DayPlan | null> = {};
     DAYS.forEach((d) => { empty[d] = null; });
     setProgram(empty);
+    clearTuned();
   };
   const setDayPlan = (d: string, dp: DayPlan | null) => {
     setProgram({ ...(program ?? {}), [d]: dp });
+    clearTuned(); // a hand edit means it's her own plan now
   };
 
   // Generate a freestyle week (replaces an active program after confirmation).
@@ -1747,8 +1760,31 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
     setProgramPhase(phase);
     setSeed(nextSeed);
     setConfirmFreestyle(false);
+    markTuned(); // a fresh generated week is tuned to her goal again
   };
-  const onGenerateClick = () => { if (activeProgram) setConfirmFreestyle(true); else generateFreestyle(); };
+  const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
+  // Regenerate replaces the whole week → always warn first.
+  const onGenerateClick = () => {
+    if (activeProgram) { setConfirmFreestyle(true); return; }
+    if (!program) { generateFreestyle(); return; } // no plan yet → just build it
+    setConfirmChange({
+      title: "Regenerate your week?",
+      body: `This replaces your current plan with a fresh week tuned to your ${goalWord(readDietProfile().goal)} goal. Your Diet calorie target updates to match.`,
+      onYes: generateFreestyle,
+    });
+  };
+  // Editing a goal-tuned week makes it her own → warn it drops the auto-tuning.
+  const onEditClick = () => {
+    if (tunedGoal) {
+      setConfirmChange({
+        title: "Customise this week?",
+        body: `Editing makes it your own plan — it will no longer auto-follow your ${goalWord(tunedGoal)} goal, and your Diet calorie target updates to match your new week.`,
+        onYes: () => { setEditing(true); clearTuned(); },
+      });
+    } else {
+      setEditing(true);
+    }
+  };
 
   // ── Program → day mapping (sessions spread smartly across the week) ──────────
   const progDoneSet = activeProgram ? new Set(loadProgramProgress()[activeProgram.id] ?? []) : new Set<string>();
@@ -1823,6 +1859,12 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
           </div>
+          {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
+          {tunedGoal && !editing && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[10.5px] font-bold text-rose-500">
+              <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(tunedGoal)} goal
+            </div>
+          )}
           <div className="mt-2 flex items-center gap-1.5">
             {editing ? (
               <>
@@ -1831,7 +1873,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               </>
             ) : (
               <>
-                <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><Pencil className="h-3 w-3" /> Edit</button>
+                <button onClick={onEditClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><Pencil className="h-3 w-3" /> Edit</button>
                 <button onClick={onGenerateClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><RotateCcw className="h-3 w-3" /> Regenerate</button>
               </>
             )}
@@ -2029,6 +2071,19 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       )}
 
       {/* ── Confirm: freestyle replaces an active program — portaled & centered ── */}
+      {confirmChange && createPortal(
+        <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmChange(null)}>
+          <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <p className="font-script text-2xl text-hotpink leading-none mb-2">{confirmChange.title}</p>
+            <p className="text-sm text-rose/80 mb-4">{confirmChange.body}</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmChange(null)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
+              <button onClick={() => { const a = confirmChange.onYes; setConfirmChange(null); a(); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Continue</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       {confirmFreestyle && activeProgram && createPortal(
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
           <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
