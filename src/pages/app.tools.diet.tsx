@@ -1111,13 +1111,13 @@ function bestPostWorkoutRecipe(phase: DietPhase, profile: DietProfile, mealType:
 }
 
 const MEAL_SLOT_FALLBACK: Record<string, string> = {
-  breakfast: "/images/meal-oats.jpg", lunch: "/images/meal-buddha.jpg",
-  dinner: "/images/meal-stew.jpg", snack: "/images/meal-buddha.jpg", lunchbox: "/images/meal-lunchbox.jpg",
+  breakfast: "/images/meal-oats.webp", lunch: "/images/meal-buddha.webp",
+  dinner: "/images/meal-stew.webp", snack: "/images/meal-buddha.webp", lunchbox: "/images/meal-lunchbox.webp",
 };
 function mealSlotPhoto(type: string, r?: Recipe): string {
   if (r?.image) return r.image;
   if (r?.photo) return `/images/recipes/${r.photo}`;
-  return MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.jpg";
+  return MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.webp";
 }
 
 function MealSlot({
@@ -1157,7 +1157,7 @@ function MealSlot({
                 src={mealSlotPhoto(type, r)}
                 alt={meal.name}
                 className="h-14 w-14 shrink-0 rounded-xl object-cover border border-petal/60"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.jpg"; }}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.webp"; }}
               />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-magenta leading-snug line-clamp-2">{meal.name}</p>
