@@ -1854,8 +1854,8 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <div className="flex items-center gap-2">
             <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-4 w-4" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : "Freestyle week"}</p>
-              <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : `From your profile${phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()}` : ""}`}</p>
+              <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : tunedGoal ? "Goal-tuned week" : "Custom week"}</p>
+              <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : phase !== "any" ? `${PHASE_LABEL[phase]} phase` : "Your weekly plan"}</p>
             </div>
             <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
           </div>
