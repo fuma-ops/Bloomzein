@@ -10,15 +10,15 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, portionFor, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
 import { StepText } from "@/components/bloom/recipes/StepText";
-import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
+import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import {
-  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules,
+  RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity, recipeImageSrc,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
   type Recipe, type DietProfile, type DietPhase, type DietGoal, type MealType,
   type DietType, type Allergy, type CookingFrequency, type DietRegime,
@@ -258,10 +258,19 @@ function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) 
 }
 
 function RecipeModal({
-  recipe, onClose, onAddToPlan,
-}: { recipe: Recipe; onClose: () => void; onAddToPlan: (date: string, recipe: Recipe) => void }) {
+  recipe, portion = 1, onClose, onAddToPlan,
+}: { recipe: Recipe; portion?: number; onClose: () => void; onAddToPlan: (date: string, recipe: Recipe) => void }) {
   const [date, setDate] = useState(todayISO());
   const [added, setAdded] = useState(false);
+  // Portion baked in — show macros & ingredient amounts as the plan serves them.
+  const f = portion && portion > 0 ? portion : 1;
+  const scaled = f !== 1;
+  const mac = {
+    calories: Math.round(recipe.macros.calories * f),
+    protein: Math.round(recipe.macros.protein * f),
+    carbs: Math.round(recipe.macros.carbs * f),
+    fat: Math.round(recipe.macros.fat * f),
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
@@ -270,7 +279,16 @@ function RecipeModal({
           <button onClick={onClose} className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink">
             <X className="h-4 w-4" />
           </button>
-          <RecipePlaceholder name={recipe.name} className="aspect-[16/10]" />
+          <img
+            src={recipeImageSrc(recipe)}
+            alt={recipe.name}
+            className="w-full aspect-[16/10] object-cover rounded-2xl bg-blush"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              const fb = MEAL_SLOT_FALLBACK[recipe.mealType] ?? "/images/meal-buddha.webp";
+              if (el.src.endsWith(fb)) { el.style.display = "none"; } else { el.src = fb; }
+            }}
+          />
           <h2 className="mt-3 font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
           <p className="text-sm text-rose/70">{recipe.cuisine} cuisine</p>
 
@@ -292,12 +310,12 @@ function RecipeModal({
             )}
           </div>
 
-          {/* Nutrition rings */}
+          {/* Nutrition rings — scaled to the planned portion */}
           <div className="mt-4 grid grid-cols-4 gap-2">
-            <RingProgress value={recipe.macros.calories} target={recipe.macros.calories} label="kcal" sub="" colorClass="text-hotpink" size={64} />
-            <RingProgress value={recipe.macros.protein} target={recipe.macros.protein} label="protein" sub="g" colorClass="text-amber-500" size={64} />
-            <RingProgress value={recipe.macros.carbs} target={recipe.macros.carbs} label="carbs" sub="g" colorClass="text-rose-500" size={64} />
-            <RingProgress value={recipe.macros.fat} target={recipe.macros.fat} label="fat" sub="g" colorClass="text-violet-500" size={64} />
+            <RingProgress value={mac.calories} target={mac.calories} label="kcal" sub="" colorClass="text-hotpink" size={64} />
+            <RingProgress value={mac.protein} target={mac.protein} label="protein" sub="g" colorClass="text-amber-500" size={64} />
+            <RingProgress value={mac.carbs} target={mac.carbs} label="carbs" sub="g" colorClass="text-rose-500" size={64} />
+            <RingProgress value={mac.fat} target={mac.fat} label="fat" sub="g" colorClass="text-violet-500" size={64} />
           </div>
 
           {/* Micro bars */}
@@ -321,13 +339,13 @@ function RecipeModal({
             </>
           )}
 
-          {/* Ingredients */}
-          <h3 className="mt-4 font-script text-lg text-hotpink">Ingredients <span className="text-xs font-sans font-semibold text-rose/50">· makes {recipe.servings} serving{recipe.servings === 1 ? "" : "s"}</span></h3>
+          {/* Ingredients — amounts scaled to the planned portion */}
+          <h3 className="mt-4 font-script text-lg text-hotpink">Ingredients <span className="text-xs font-sans font-semibold text-rose/50">· {scaled ? "portioned for your goal ✿" : `makes ${recipe.servings} serving${recipe.servings === 1 ? "" : "s"}`}</span></h3>
           <ul className="mt-1 space-y-1 text-sm text-rose/90">
             {recipe.ingredients.map((ing) => (
               <li key={ing.name} className="flex items-start justify-between gap-3 border-b border-petal/40 py-1">
                 <span className="font-medium">{ing.name}</span>
-                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{ing.quantity}</span>
+                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{scaleQuantity(ing.quantity, f)}</span>
               </li>
             ))}
           </ul>
@@ -818,7 +836,7 @@ function PhaseCarousel({ phase, cycleDay, onSyncedPlan }: { phase: DietPhase; cy
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement }: {
+function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   mealsVersion: number;
@@ -832,6 +850,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   onDietWeek: () => void;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
+  onUnplanMeals: () => void;
+  onUnplanMovement: () => void;
 }) {
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
@@ -905,6 +925,14 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
     [mealsVersion],
   );
   const movementPlanned = readWorkoutPlanDays().length > 0 || readYogaPlanDays().length > 0;
+  // Did Diet create/sync this meal plan? If not, it's the user's own Meals
+  // Planner week — protected from Diet's un-plan, offered a "Sync" instead.
+  // Recomputed each render (mealsVersion / trainTick drive re-renders).
+  const mealsFromDiet = mealsPlanned && (() => { try { return !!localStorage.getItem("bloom:meals-from-diet"); } catch { return false; } })();
+  // Same ownership rule for movement: only a goal-tuned plan Diet set up (goal
+  // marker still present) can be un-planned from here; a plan the user built in
+  // the Workout/Yoga tool is protected.
+  const movementFromDiet = movementPlanned && (() => { try { return !!(localStorage.getItem("bloom:yoga-plan-goal") || localStorage.getItem("bloom:workout-plan-goal")); } catch { return false; } })();
 
   return (
     <div className="space-y-4">
@@ -913,9 +941,13 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
       <EnergyTodayCard
         e={energy}
         mealsPlanned={mealsPlanned}
+        mealsFromDiet={mealsFromDiet}
         movementPlanned={movementPlanned}
+        movementFromDiet={movementFromDiet}
         onPlanMeals={onPlanMeals}
         onPlanMovement={onPlanMovement}
+        onUnplanMeals={onUnplanMeals}
+        onUnplanMovement={onUnplanMovement}
         onViewTodayPlan={() => goTo("today")}
       />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -1047,81 +1079,66 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   );
 }
 
-function CycleNutritionTab({
-  phase, cycleDay, profile, onEdit, cycleReady, onSyncedPlan, mealsToday,
-}: {
-  phase: DietPhase; cycleDay: number; profile: DietProfile; onEdit: () => void;
-  cycleReady: boolean; onSyncedPlan: () => void; mealsToday: boolean;
-}) {
+function CycleNutritionTab({ phase }: { phase: DietPhase }) {
   const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
-  const info = PHASE_INFO[phase];
-
-  // Guiding next-step banner — never leave the user unsure what to do here.
-  const next = !cycleReady
-    ? { Icon: Moon, text: "Sync your cycle to unlock this plan", cta: "Set up" as string | null, act: () => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; } }
-    : !mealsToday
-    ? { Icon: UtensilsCrossed, text: `Fill today with your ${info.label.toLowerCase()}-phase plan`, cta: "Synced plan" as string | null, act: onSyncedPlan }
-    : { Icon: Sparkles, text: "Today's meals are synced to your phase ✿", cta: null as string | null, act: () => {} };
 
   return (
     <div className="space-y-5">
-      {/* Guiding thread — same idea as the Budget planner's smart banner */}
-      <button onClick={next.act} className="w-full flex items-center gap-3 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white p-3.5 shadow-lg shadow-hotpink/30 active:scale-[0.99] transition text-left">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25"><next.Icon className="h-5 w-5" /></span>
-        <span className="flex-1 min-w-0">
-          <span className="block text-[10px] font-bold uppercase tracking-widest text-white/70">Next step</span>
-          <span className="block text-sm font-bold leading-tight">{next.text}</span>
-        </span>
-        {next.cta && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{next.cta} <ChevronRight className="h-3.5 w-3.5" /></span>}
-      </button>
-
-      {/* Cycle-synced plan (moved here from My Diet) */}
+      {/* Your cycle phases — what nourishes you all month */}
       <div id="diet-cycle">
-        <StepHeader step={1} title="Your cycle-synced plan" sub="eat in tune with today's phase" />
-        {!cycleReady ? (
-          <Glass className="p-5 text-center">
-            <span className="mx-auto mb-2 grid h-11 w-11 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Moon className="h-6 w-6" /></span>
-            <p className="font-script text-xl text-hotpink">Sync your cycle first</p>
-            <p className="mt-1 text-[12px] text-rose/70 max-w-xs mx-auto">Set up the Cycle Tracker so your food plan matches your phase automatically.</p>
-            <div className="mt-3">
-              <PinkBtn onClick={() => { try { localStorage.setItem("bloom:diet-await-cycle", "1"); } catch {} window.location.href = "/app/tools/cycle"; }}>Set up Cycle Tracker <ChevronRight className="h-4 w-4" /></PinkBtn>
-            </div>
-          </Glass>
-        ) : (
-          <PhaseCarousel phase={phase} cycleDay={cycleDay} onSyncedPlan={onSyncedPlan} />
-        )}
-      </div>
-
-      <div>
-        <StepHeader step={2} title="Your cycle phases" sub="what nourishes you all month" />
+        <StepHeader step={1} title="Your cycle phases" sub="what nourishes you all month" />
         <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
           {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
         </div>
       </div>
 
-      <Glass className="p-4 sm:p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
-            <SlidersHorizontal className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> My Rules
-          </h3>
-          <button onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink hover:underline">
-            <Pencil className="h-3 w-3" /> Edit
-          </button>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-hotpink text-white px-2.5 py-1 text-xs font-bold capitalize">{profile.dietType}</span>
-          {profile.allergies.length === 0 ? (
-            <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">No allergies</span>
-          ) : profile.allergies.map((a) => (
-            <span key={a} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600 capitalize">{a}-free</span>
-          ))}
-          <span className="rounded-full bg-blush px-2.5 py-1 text-xs font-semibold text-magenta">
-            {COOKING_OPTIONS.find((c) => c.key === profile.cookingFrequency)?.label}
-          </span>
-        </div>
-        <p className="mt-2 text-xs text-rose/60">These preferences filter your recipe library silently.</p>
-      </Glass>
+      {/* Read & learn — soft library of cycle, nutrition & women's-health reads */}
+      <CycleReads />
     </div>
+  );
+}
+
+/* A soft "keep learning" section — curated guides on nutrition, the menstrual
+   cycle and women's health. Links into the /guides content pages. */
+function CycleReads() {
+  const topics = ["Nutrition", "Cycle syncing", "Hormones", "Women's health", "Energy"];
+  const reads = [
+    { slug: "eating-for-your-cycle", title: "Eating for your cycle", desc: "A phase-by-phase nutrition guide.", mins: 7, Icon: Apple },
+    { slug: "cycle-syncing", title: "Cycle syncing 101", desc: "Live in tune with your four phases.", mins: 6, Icon: Moon },
+    { slug: "cycle-synced-workouts", title: "Training with your hormones", desc: "Move with your energy, not against it.", mins: 6, Icon: Activity },
+  ];
+  return (
+    <Glass className="p-4 sm:p-5">
+      <div className="flex items-center gap-1.5">
+        <BookOpen className="h-4 w-4 text-hotpink" strokeWidth={1.9} />
+        <h3 className="font-script text-xl text-hotpink">Read &amp; learn</h3>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {topics.map((t) => (
+          <span key={t} className="rounded-full bg-blush px-2.5 py-1 text-[11px] font-semibold text-magenta">{t}</span>
+        ))}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {reads.map((r, i) => (
+          <a
+            key={r.slug} href={`/guides/${r.slug}`}
+            className="flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/80 p-3 transition hover:bg-blush hover:shadow-md hover-scale active:scale-95 animate-fade-in"
+            style={{ animationDelay: `${i * 70}ms` }}
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><r.Icon className="h-5 w-5" /></span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-bold text-hotpink leading-tight">{r.title}</span>
+              <span className="block text-[11px] text-rose/60 leading-snug">{r.desc}</span>
+            </span>
+            <span className="shrink-0 flex flex-col items-end gap-0.5">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-rose/50">{r.mins} min</span>
+              <ChevronRight className="h-4 w-4 text-hotpink" />
+            </span>
+          </a>
+        ))}
+      </div>
+    </Glass>
   );
 }
 
@@ -1159,8 +1176,7 @@ const MEAL_SLOT_FALLBACK: Record<string, string> = {
   dinner: "/images/meal-stew.webp", snack: "/images/meal-buddha.webp", lunchbox: "/images/meal-lunchbox.webp",
 };
 function mealSlotPhoto(type: string, r?: Recipe): string {
-  if (r?.image) return r.image;
-  if (r?.photo) return `/images/recipes/${r.photo}`;
+  if (r) return recipeImageSrc(r);
   return MEAL_SLOT_FALLBACK[type] ?? "/images/meal-buddha.webp";
 }
 
@@ -1169,7 +1185,7 @@ function MealSlot({
 }: {
   type: MealType; meal: LoggedMeal | null;
   onAddRecipe: (r: Recipe) => void; onRemove: () => void;
-  onOpen: (r: Recipe) => void;
+  onOpen: (r: Recipe, portion?: number) => void;
   candidates: Recipe[];
 }) {
   const [searching, setSearching] = useState(false);
@@ -1195,8 +1211,8 @@ function MealSlot({
         const r = meal.recipeId ? RECIPES.find((x) => x.id === meal.recipeId) : undefined;
         return (
           <div className="mt-1.5 flex items-center gap-3">
-            {/* Tap the meal → open the full recipe (like the Recipes tab) */}
-            <button onClick={() => r && onOpen(r)} className="flex flex-1 items-center gap-3 text-left active:scale-[0.99] transition">
+            {/* Tap the meal → open the full recipe, at its planned portion */}
+            <button onClick={() => r && onOpen(r, portionFor(todayWeekday(), type as PlanSlot))} className="flex flex-1 items-center gap-3 text-left active:scale-[0.99] transition">
               <img
                 src={mealSlotPhoto(type, r)}
                 alt={meal.name}
@@ -1258,7 +1274,7 @@ function TodayTab({
   phase: DietPhase; cycleDay: number; profile: DietProfile & { weight: number };
   dayMeals: DayMeals;
   onSetSlot: (slot: MealType, recipe: Recipe | null) => void;
-  onOpenRecipe: (r: Recipe) => void;
+  onOpenRecipe: (r: Recipe, portion?: number) => void;
 }) {
   const [dismissedPW, setDismissedPW] = useLS<Record<string, boolean>>(LS.dismissedPW, {});
   const [pwIndex, setPwIndex] = useState(0);
@@ -1445,7 +1461,7 @@ const GOAL_FILTERS = [
 
 function RecipesTab({
   phase, profile, onOpenRecipe,
-}: { phase: DietPhase; profile: DietProfile; onOpenRecipe: (r: Recipe) => void }) {
+}: { phase: DietPhase; profile: DietProfile; onOpenRecipe: (r: Recipe, portion?: number) => void }) {
   const [query, setQuery] = useState("");
   const [phaseFilters, setPhaseFilters] = useState<DietPhase[]>([]);
   const [mealFilters, setMealFilters] = useState<MealType[]>([]);
@@ -1605,7 +1621,10 @@ export default function DietPage() {
   const [profile, setProfile] = useLS<DietProfile & { weight: number }>(LS.profile, DEFAULT_PROFILE);
   const [tab, setTab] = useLS<TabKey>(LS.tab, "profile");
   const [editingSetup, setEditingSetup] = useState(false);
-  const [openRecipe, setOpenRecipe] = useState<Recipe | null>(null);
+  const [openRecipe, setOpenRecipe] = useState<{ recipe: Recipe; portion: number } | null>(null);
+  // Open a recipe, optionally at its planned portion so macros & ingredient
+  // amounts show what the plan actually serves.
+  const openRecipeAt = (r: Recipe, portion = 1) => setOpenRecipe({ recipe: r, portion });
   // Today's meals ARE the one shared weekly plan (bloom:meals-plan). We mirror
   // it in state and re-read after every write so edits here == the Planner.
   const [todayPlan, setTodayPlan] = useState(() => readTodayPlannedDay());
@@ -1701,9 +1720,17 @@ export default function DietPage() {
   const planMealsImplicit = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const slots = ["breakfast", "lunch", "dinner", "snack"] as const;
+    const target = computeTargets(true).calories;
     days.forEach((d, di) => slots.forEach((slot, si) => {
       const cands = RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
-      if (cands.length) addRecipeToMealPlan(cands[(di * 3 + si) % cands.length].id, d, slot);
+      if (!cands.length) return;
+      // Calorie-aware: among candidates, prefer the one closest to this slot's
+      // budget (so a build goal lands on denser dishes), varied by day index.
+      const budget = slotBudget(target, slot);
+      const byFit = [...cands].sort((a, b) => Math.abs(a.macros.calories - budget) - Math.abs(b.macros.calories - budget));
+      const pick = byFit[(di + si) % Math.min(byFit.length, 4)] ?? byFit[0];
+      addRecipeToMealPlan(pick.id, d, slot);
+      setMealPortion(d, slot as PlanSlot, portionForRecipe(pick.macros.calories || 0, slot, target));
     }));
     try {
       localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label);
@@ -1731,22 +1758,32 @@ export default function DietPage() {
       if (!localStorage.getItem("bloom:workout-program") && !localStorage.getItem("bloom:workout-active-program")) {
         localStorage.setItem("bloom:workout-plan-goal", profile.goal);
       }
-      // Workout: let HER choose her first setup (level / equipment / days). The
-      // Workout tool then auto-generates a goal-fit week from that profile.
+      // Workout: arm autoplan so that WHEN she opens the Workout tool (via its
+      // own CTA) it auto-generates a goal-fit week from her chosen setup.
       localStorage.setItem("bloom:workout-autoplan", "1");
       window.dispatchEvent(new Event("storage"));
     } catch {}
-    window.location.href = "/app/tools/workout";
+    // Stay on My Diet — planning is implicit (the CTA flips to "Movement
+    // planned" + shows View links). Opening a tool is only ever the user
+    // tapping the Workout or Yoga CTA, never an automatic redirect.
   };
 
-  // Reset → preview a brand-new user: wipe the diet keys AND the shared plans
-  // (meals / workout / yoga) so the setup CTAs show unchecked, then reload.
+  // Toggle the setup CTAs back OFF — un-plan meals / movement so the user can
+  // start fresh without opening a tool.
+  const unplanMealsImplicit = () => { clearMealPlan(); refreshMeals(); };
+  const unplanMovementImplicit = () => { clearMovementPlan(); };
+
+  // Reset the DIET tool only. Diet must never wipe plans the user built in the
+  // Meals / Workout / Yoga tools — those are theirs. So we clear Diet's own keys
+  // and un-plan ONLY what Diet itself created (meal plan with the from-diet
+  // marker, movement with the goal marker). User-owned plans survive the reset.
   const onReset = async () => {
     resetToolState("diet");
-    resetToolState("meals");
-    resetToolState("workout");
-    resetToolState("yoga");
-    try { localStorage.removeItem("bloom:meals-plan"); localStorage.removeItem("bloom:diet-eaten"); } catch {}
+    try {
+      if (localStorage.getItem("bloom:meals-from-diet")) clearMealPlan();
+      localStorage.removeItem("bloom:diet-eaten");
+    } catch {}
+    clearMovementPlan(); // marker-gated: only clears the goal-tuned yoga/workout
     try { await flushCloudSync(); } catch {}
     window.location.reload();
   };
@@ -1832,23 +1869,19 @@ export default function DietPage() {
             onReplayTour={() => setReplayTour(true)} cycleReady={cycleReady}
             onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
             onPlanMeals={planMealsImplicit} onPlanMovement={planMovementImplicit}
+            onUnplanMeals={unplanMealsImplicit} onUnplanMovement={unplanMovementImplicit}
           />
         )}
         {tab === "cycle" && (
-          <CycleNutritionTab
-            phase={cyclePhase} cycleDay={cycleDay} profile={profile}
-            onEdit={() => setEditingSetup(true)} cycleReady={cycleReady}
-            onSyncedPlan={onSyncedPlan}
-            mealsToday={mealsToday}
-          />
+          <CycleNutritionTab phase={cyclePhase} />
         )}
         {tab === "today" && (
-          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={setOpenRecipe} />
+          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />
         )}
-        {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={setOpenRecipe} />}
+        {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={openRecipeAt} />}
       </div>
 
-      {openRecipe && <RecipeModal recipe={openRecipe} onClose={() => setOpenRecipe(null)} onAddToPlan={addToPlan} />}
+      {openRecipe && <RecipeModal recipe={openRecipe.recipe} portion={openRecipe.portion} onClose={() => setOpenRecipe(null)} onAddToPlan={addToPlan} />}
     </div>
   );
 }

@@ -168,6 +168,60 @@ export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlo
   setMealPlanSlot(day, slot, recipeId);
 }
 
+// ── Portions: how many servings of each planned meal, so a day's calories can
+// actually hit the target (a build day needs bigger portions than a lean day).
+// Keyed day → slot → factor (1 = one serving). Read THROUGH here everywhere a
+// day's calories are summed, so Meals, Today & Diet agree. Default 1.
+export const MEALS_PORTIONS_KEY = "bloom:meals-portions";
+export function readMealPortions(): Record<string, Partial<Record<PlanSlot, number>>> {
+  return readJSON<Record<string, Partial<Record<PlanSlot, number>>>>(MEALS_PORTIONS_KEY, {});
+}
+export function portionFor(day: string, slot: PlanSlot): number {
+  const f = readMealPortions()[day]?.[slot];
+  return f && f > 0 ? f : 1;
+}
+export function setMealPortion(day: string, slot: PlanSlot, factor: number): void {
+  const all = readMealPortions();
+  const d = { ...(all[day] ?? {}) };
+  if (!factor || factor === 1) delete d[slot]; else d[slot] = factor;
+  all[day] = d;
+  try { localStorage.setItem(MEALS_PORTIONS_KEY, JSON.stringify(all)); window.dispatchEvent(new Event("storage")); } catch {}
+}
+/** Replace the whole portions map (used when a fresh week is generated). */
+export function writeMealPortions(portions: Record<string, Partial<Record<PlanSlot, number>>>): void {
+  try { localStorage.setItem(MEALS_PORTIONS_KEY, JSON.stringify(portions)); window.dispatchEvent(new Event("storage")); } catch {}
+}
+
+/** Un-plan the whole weekly meal plan — powers the Diet "Meals planned" toggle. */
+export function clearMealPlan(): void {
+  try {
+    ["bloom:meals-from-diet", "bloom:meals-plan-goal", MEALS_PORTIONS_KEY, MEALS_PLAN_KEY].forEach((k) => localStorage.removeItem(k));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
+/** Un-plan the Diet-created movement. A plan is "Diet-owned" when it still
+ *  carries its goal marker (bloom:*-plan-goal); the moment the user edits it in
+ *  the Workout/Yoga tool that marker is cleared and the plan becomes theirs —
+ *  so this NEVER wipes a plan the user built or customised themselves. */
+export function clearMovementPlan(): void {
+  try {
+    // Yoga schedule — clear only if it's the goal-tuned one Diet set up.
+    if (localStorage.getItem("bloom:yoga-plan-goal")) {
+      localStorage.removeItem(YOGA_SCHEDULE_KEY);
+      localStorage.removeItem("bloom:yoga-plan-goal");
+    }
+    // Workout program — clear only if it's the goal-tuned one Diet set up.
+    if (localStorage.getItem("bloom:workout-plan-goal")) {
+      localStorage.removeItem(WORKOUT_PROGRAM_KEY);
+      localStorage.removeItem(WORKOUT_ACTIVE_PROGRAM_KEY);
+      localStorage.removeItem("bloom:workout-plan-goal");
+    }
+    localStorage.removeItem("bloom:workout-autoplan");
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
 /** Set (or clear, with null) one slot of the weekly plan — the single writer. */
 export function setMealPlanSlot(day: string, slot: PlanSlot, recipeId: string | null): void {
   try {

@@ -72,6 +72,22 @@ export const DEFAULT_DIET_PROFILE: DietProfile & { weight: number } = {
   weightHistory: [],
 };
 
+// ── Recipe photos ───────────────────────────────────────────────────────────
+// Every recipe maps to ONE deterministic filename in /public/images/recipes.
+// Drop an image with that name and it appears automatically — no per-recipe
+// edit. Explicit `image`/`photo` fields still win when set.
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+export function recipeSlug(r: { mealType: string; cuisine?: string; name: string }): string {
+  return [r.mealType, slugify(r.cuisine || "global"), slugify(r.name)].join("-");
+}
+export function recipeImageSrc(r: { mealType: string; cuisine?: string; name: string; image?: string; photo?: string }): string {
+  if (r.image) return r.image;
+  if (r.photo) return `/images/recipes/${r.photo}`;
+  return `/images/recipes/${recipeSlug(r)}.png`;
+}
+
 export function readDietProfile(): DietProfile & { weight: number } {
   try {
     const raw = localStorage.getItem(DIET_PROFILE_KEY);
@@ -81,6 +97,85 @@ export function readDietProfile(): DietProfile & { weight: number } {
     return DEFAULT_DIET_PROFILE;
   }
 }
+
+// Has the user actually completed the Diet setup? Until they have, nothing that
+// depends on a personalised goal/target (calorie targets, "tuned to your goal")
+// should appear — meals then follow only the selected week vibe.
+export const DIET_SETUP_KEY = "bloom:diet-setup-complete";
+export function hasDietSetup(): boolean {
+  try {
+    const raw = localStorage.getItem(DIET_SETUP_KEY);
+    return raw ? JSON.parse(raw) === true : false;
+  } catch {
+    return false;
+  }
+}
+
+/* ---------- Portion scaling — bake the planned serving size straight into the
+   ingredient amounts (no "×1.4" label; the recipe just reads naturally). Scales
+   a quantity string ("200g", "1/2 cup", "1 tsp") by a factor, formatting mass
+   units glued ("280g") and counts as clear ASCII mixed numbers ("3/4 cup",
+   "1 1/2 tsp"). Non-numeric quantities ("a pinch", "to taste") are untouched. */
+// A whole and a fraction are separated by a space so "1 1/4 cup" can never be
+// misread as "1/4 cup".
+const NICE_FRACTIONS: [number, string][] = [
+  [0, ""], [0.25, "1/4"], [1 / 3, "1/3"], [0.5, "1/2"], [2 / 3, "2/3"], [0.75, "3/4"],
+];
+function niceFraction(n: number): string {
+  const whole = Math.floor(n + 1e-9);
+  const frac = n - whole;
+  let best = "", bestD = 1;
+  for (const [v, s] of NICE_FRACTIONS) { const d = Math.abs(frac - v); if (d < bestD) { bestD = d; best = s; } }
+  if (!best) return String(whole);              // whole number, no fraction
+  return whole > 0 ? `${whole} ${best}` : best; // "1 1/4"  or  "3/4"
+}
+export function scaleQuantity(qty: string, factor: number): string {
+  if (!qty || !factor || factor === 1) return qty;
+  const m = String(qty).match(/^\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.?\d+)\s*(.*)$/);
+  if (!m) return qty;
+  const numStr = m[1];
+  const rest = (m[2] || "").trim();
+  let val: number;
+  if (/\s/.test(numStr)) { const [w, fr] = numStr.split(/\s+/); const [a, b] = fr.split("/").map(Number); val = Number(w) + a / b; }
+  else if (numStr.includes("/")) { const [a, b] = numStr.split("/").map(Number); val = a / b; }
+  else val = parseFloat(numStr);
+  if (!isFinite(val)) return qty;
+  const scaled = val * factor;
+  const unit = rest.toLowerCase();
+  if (/^(g|ml)\b/.test(unit)) return `${scaled >= 20 ? Math.round(scaled / 5) * 5 : Math.round(scaled)}${rest}`;
+  if (/^(kg|l)\b/.test(unit)) return `${Math.round(scaled * 100) / 100}${rest}`;
+  return `${niceFraction(Math.round(scaled * 4) / 4)}${rest ? " " + rest : ""}`;
+}
+
+// Merge-write the shared Diet profile. Preferences edited elsewhere (e.g. the
+// Meal Planner's setup guide: cooking time & allergies) flow through here so
+// there is exactly ONE profile — no forked copy. Fires a storage event so any
+// open tool re-reads immediately.
+export function updateDietProfile(
+  patch: Partial<DietProfile & { weight: number }>,
+): DietProfile & { weight: number } {
+  const next = { ...readDietProfile(), ...patch };
+  try {
+    localStorage.setItem(DIET_PROFILE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+  return next;
+}
+
+// Shared preference option lists (used by both Diet setup and the Meal Planner
+// setup guide) so labels never drift between tools.
+export const COOKING_OPTIONS: { key: CookingFrequency; label: string }[] = [
+  { key: "quick", label: "Quick — under 15 min" },
+  { key: "normal", label: "Normal — under 30 min" },
+  { key: "love", label: "Love cooking" },
+];
+export const ALLERGY_OPTIONS: { key: Allergy; label: string }[] = [
+  { key: "dairy", label: "Dairy" },
+  { key: "nuts", label: "Nuts" },
+  { key: "eggs", label: "Eggs" },
+  { key: "soy", label: "Soy" },
+  { key: "shellfish", label: "Shellfish" },
+];
 
 /* ---------- Pantry (for shopping list / ingredient categorisation) ---------- */
 
@@ -541,7 +636,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: [],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
-    photo: "breakfast-mediterranean-greek-yogurt-power-bowl.jpg",
     macros: { calories: 320, protein: 28, carbs: 32, fat: 9 },
     micros: { vitaminB6: 0.4, fibre: 4, vitaminC: 10 },
     ingredients: [
@@ -566,7 +660,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Small pot", "Non-stick pan"],
     phases: ["follicular", "ovulatory", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["eggs"],
-    photo: "breakfast-mediterranean-avocado-egg-toast.jpg",
     macros: { calories: 360, protein: 16, carbs: 28, fat: 20 },
     micros: { fibre: 7, vitaminC: 12 },
     ingredients: [
@@ -593,7 +686,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Small pot"],
     phases: ["luteal", "menstrual"], goal: ["gain", "maintain"],
     dietTags: ["pescatarian", "gluten-free"], allergens: [],
-    photo: "breakfast-nordic-salmon-quinoa-breakfast-bowl.jpg",
     macros: { calories: 410, protein: 30, carbs: 34, fat: 16 },
     micros: { omega3: 1.8, iron: 2, magnesium: 60 },
     ingredients: [
@@ -621,7 +713,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Frying pan with lid"],
     phases: ["menstrual", "follicular"], goal: ["maintain", "gain", "lose"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs"],
-    photo: "breakfast-middle-eastern-spiced-chickpea-shakshuka.jpg",
     macros: { calories: 380, protein: 26, carbs: 36, fat: 14 },
     micros: { iron: 4, fibre: 9, vitaminC: 22 },
     ingredients: [
@@ -650,7 +741,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Blender"],
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    photo: "breakfast-latin-tropical-green-smoothie.jpg",
     macros: { calories: 240, protein: 8, carbs: 46, fat: 5 },
     micros: { vitaminC: 48, fibre: 6, vitaminB6: 0.3 },
     ingredients: [
@@ -676,7 +766,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Blender", "Non-stick pan"],
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
-    photo: "breakfast-nordic-banana-oat-pancakes-walnuts.jpg",
     macros: { calories: 420, protein: 14, carbs: 58, fat: 15 },
     micros: { magnesium: 70, fibre: 6 },
     ingredients: [
@@ -705,7 +794,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Non-stick pan"],
     phases: ["menstrual", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["halal"], allergens: ["eggs"],
-    photo: "breakfast-african-moroccan-spiced-egg-wrap.jpg",
     macros: { calories: 330, protein: 20, carbs: 30, fat: 13 },
     micros: { iron: 3, vitaminC: 14 },
     ingredients: [
@@ -734,7 +822,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Non-stick pan"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "gain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["soy"],
-    photo: "breakfast-asian-tofu-scramble.jpg",
     macros: { calories: 300, protein: 22, carbs: 18, fat: 16 },
     micros: { iron: 3, magnesium: 50 },
     ingredients: [
@@ -762,7 +849,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Jar or bowl"],
     phases: ["luteal", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    photo: "breakfast-mediterranean-berry-chia-pudding.jpg",
     macros: { calories: 280, protein: 9, carbs: 34, fat: 12 },
     micros: { omega3: 2.2, fibre: 11, calcium: 180 },
     ingredients: [
@@ -788,7 +874,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Toaster"],
     phases: ["menstrual", "luteal"], goal: ["gain", "maintain"],
     dietTags: ["pescatarian"], allergens: ["dairy"],
-    photo: "breakfast-nordic-smoked-salmon-bagel.jpg",
     macros: { calories: 390, protein: 26, carbs: 38, fat: 14 },
     micros: { omega3: 1.5, calcium: 90 },
     ingredients: [
@@ -820,7 +905,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 10, difficulty: "easy",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegan"], allergens: [],
-    photo: "lunch-middle-eastern-falafel-wrap-tahini.jpg",
     servings: 2,
     macros: { calories: 430, protein: 16, carbs: 50, fat: 18 },
     micros: { fibre: 10, iron: 3, vitaminB6: 0.3 },
@@ -861,7 +945,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 20, difficulty: "easy",
     phases: ["luteal", "menstrual"], goal: ["gain", "maintain"],
     dietTags: ["pescatarian", "gluten-free"], allergens: [],
-    photo: "dinner-nordic-herb-crusted-salmon-greens.jpg",
     macros: { calories: 520, protein: 36, carbs: 22, fat: 28 },
     micros: { omega3: 2.4, vitaminD: 400, magnesium: 55 },
     servings: 1,
@@ -889,7 +972,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 40, difficulty: "medium",
     phases: ["menstrual", "luteal"], goal: ["maintain"],
     dietTags: ["gluten-free", "halal"], allergens: [],
-    photo: "dinner-african-moroccan-chicken-tagine.jpg",
     macros: { calories: 480, protein: 31, carbs: 38, fat: 20 },
     micros: { iron: 4, magnesium: 60, vitaminC: 20 },
     servings: 2,
@@ -919,7 +1001,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 15, difficulty: "easy",
     phases: ["follicular", "ovulatory"], goal: ["lose", "gain"],
     dietTags: ["vegan"], allergens: ["soy"],
-    photo: "dinner-asian-miso-glazed-tofu-stir-fry.jpg",
     macros: { calories: 410, protein: 22, carbs: 40, fat: 17 },
     micros: { iron: 3, magnesium: 55, fibre: 6 },
     servings: 1,
@@ -948,7 +1029,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 35, difficulty: "medium",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: [],
-    photo: "dinner-mediterranean-stuffed-peppers.jpg",
     macros: { calories: 380, protein: 16, carbs: 46, fat: 14 },
     micros: { fibre: 10, vitaminC: 60, vitaminB6: 0.4 },
     servings: 2,
@@ -976,7 +1056,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 30, difficulty: "medium",
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: [],
-    photo: "dinner-latin-black-bean-sweet-potato-enchiladas.jpg",
     macros: { calories: 460, protein: 18, carbs: 62, fat: 16 },
     micros: { fibre: 14, magnesium: 65, iron: 3 },
     servings: 2,
@@ -1005,7 +1084,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 15, difficulty: "easy",
     phases: ["ovulatory", "follicular"], goal: ["gain"],
     dietTags: [], allergens: ["shellfish"],
-    photo: "dinner-mediterranean-lemon-garlic-shrimp-linguine.jpg",
     macros: { calories: 500, protein: 29, carbs: 56, fat: 16 },
     micros: { omega3: 0.8, vitaminC: 14 },
     servings: 1,
@@ -1033,7 +1111,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 10, cookTime: 30, difficulty: "easy",
     phases: ["menstrual", "luteal"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    photo: "dinner-middle-eastern-spiced-lentil-dal-brown-rice.jpg",
     macros: { calories: 420, protein: 26, carbs: 58, fat: 9 },
     micros: { iron: 6, fibre: 16, magnesium: 70 },
     servings: 2,
@@ -1062,7 +1139,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 20, difficulty: "easy",
     phases: ["ovulatory", "follicular"], goal: ["gain", "lose"],
     dietTags: ["gluten-free"], allergens: [],
-    photo: "dinner-asian-grilled-chicken-buddha-bowl.jpg",
     macros: { calories: 490, protein: 38, carbs: 42, fat: 17 },
     micros: { fibre: 9, vitaminB6: 0.8, vitaminC: 22 },
     servings: 1,
@@ -1090,7 +1166,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 0, difficulty: "quick",
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["nuts", "dairy"],
-    photo: "dinner-nordic-beet-walnut-salad-goat-cheese.jpg",
     macros: { calories: 410, protein: 25, carbs: 26, fat: 24 },
     micros: { fibre: 8, vitaminC: 16, magnesium: 50 },
     servings: 1,
@@ -1118,7 +1193,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 30, difficulty: "easy",
     phases: ["menstrual", "luteal"], goal: ["gain"],
     dietTags: ["gluten-free"], allergens: ["nuts"],
-    photo: "dinner-african-peanut-chicken-curry.jpg",
     macros: { calories: 540, protein: 34, carbs: 38, fat: 26 },
     micros: { iron: 4, magnesium: 70, omega3: 0.4 },
     servings: 2,
@@ -1147,7 +1221,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 30, difficulty: "easy",
     phases: ["luteal", "menstrual"], goal: ["lose", "maintain"],
     dietTags: ["gluten-free"], allergens: [],
-    photo: "dinner-mediterranean-zucchini-noodle-bolognese.jpg",
     macros: { calories: 410, protein: 28, carbs: 24, fat: 20 },
     micros: { iron: 4, vitaminC: 28, fibre: 6 },
     servings: 2,
@@ -1175,7 +1248,6 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 20, difficulty: "medium",
     phases: ["follicular", "ovulatory"], goal: ["gain"],
     dietTags: [], allergens: ["soy", "eggs"],
-    photo: "dinner-asian-korean-beef-bibimbap.jpg",
     macros: { calories: 530, protein: 32, carbs: 54, fat: 19 },
     micros: { iron: 5, vitaminC: 18, fibre: 7 },
     servings: 1,
@@ -1207,7 +1279,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: [],
     phases: ["menstrual", "luteal"], goal: ["maintain", "gain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["nuts"],
-    photo: "snack-global-dates-almond-butter.jpg",
     macros: { calories: 210, protein: 5, carbs: 28, fat: 10 },
     micros: { magnesium: 40, iron: 1, fibre: 4 },
     ingredients: [
@@ -1230,7 +1301,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: [],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
-    photo: "snack-mediterranean-greek-yoghurt-berries-flaxseed.jpg",
     macros: { calories: 180, protein: 16, carbs: 18, fat: 5 },
     micros: { vitaminC: 14, fibre: 4, omega3: 0.6 },
     ingredients: [
@@ -1254,7 +1324,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: [],
     phases: ["ovulatory", "follicular"], goal: ["lose"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    photo: "snack-middle-eastern-carrot-sticks-hummus-seeds.jpg",
     macros: { calories: 160, protein: 6, carbs: 18, fat: 8 },
     micros: { fibre: 5, vitaminC: 8, vitaminB6: 0.2 },
     ingredients: [
@@ -1278,7 +1347,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: [],
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
-    photo: "snack-global-banana-dark-chocolate-walnuts.jpg",
     macros: { calories: 230, protein: 4, carbs: 32, fat: 11 },
     micros: { magnesium: 45, fibre: 4 },
     ingredients: [
@@ -1301,7 +1369,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Baking tray"],
     phases: ["menstrual", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    photo: "snack-mediterranean-roasted-chickpea-crunch.jpg",
     macros: { calories: 190, protein: 8, carbs: 24, fat: 6 },
     micros: { fibre: 7, iron: 2 },
     ingredients: [
@@ -1326,7 +1393,6 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Mixing bowl"],
     phases: ["ovulatory", "luteal"], goal: ["gain", "maintain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
-    photo: "snack-global-protein-energy-balls.jpg",
     macros: { calories: 260, protein: 26, carbs: 22, fat: 9 },
     micros: { magnesium: 50, fibre: 5, iron: 2 },
     ingredients: [

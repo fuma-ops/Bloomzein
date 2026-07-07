@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -23,6 +23,9 @@ import {
   RotateCcw,
   Dumbbell,
   Flame,
+  SlidersHorizontal,
+  Moon,
+  Pencil,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -37,6 +40,14 @@ import {
   SEASONAL,
   passesMyRules,
   readDietProfile,
+  hasDietSetup,
+  updateDietProfile,
+  scaleQuantity,
+  recipeImageSrc,
+  COOKING_OPTIONS,
+  ALLERGY_OPTIONS,
+  type Allergy,
+  type CookingFrequency,
   type Recipe,
   type Intention,
   type CyclePhase,
@@ -47,13 +58,13 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState, writeMealPortions, setMealPortion, portionFor } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { todayISO } from "@/lib/localDate";
-import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, type TargetBreakdown } from "@/lib/nutritionTargets";
+import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, slotBudget, portionForRecipe, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
@@ -123,6 +134,7 @@ function pickForSlot(
   owned: Set<string>,
   used: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
+  budget?: number,
 ): Recipe | null {
   const base = pool.filter((r) => r.mealType === type && ratings[r.id] !== "never");
   let candidates = base;
@@ -149,6 +161,14 @@ function pickForSlot(
   //  · "budget" has no recipe tag — it scores the real cost field instead.
   const softIntention = intention !== "cycle" && intention !== "quick";
   const phaseAware = phase !== "any";
+  // Calorie-aware: prefer recipes sized near this slot's calorie budget so the
+  // day actually reaches the goal (a build day needs denser dishes than a lean
+  // day). Recipes within a scalable window of the budget score highest.
+  const calFit = (cals: number) => {
+    if (!budget || budget <= 0 || !cals) return 0;
+    const off = Math.abs(cals - budget) / budget;      // 0 = bang on budget
+    return (1 - Math.min(1, off)) * 0.7;               // up to +0.7 — matters, but vibe still counts
+  };
   const scored = candidates.map((r) => ({
     r,
     s: scoreRecipe(r, owned)
@@ -156,6 +176,7 @@ function pickForSlot(
       + (softIntention && intention !== "budget" && r.intention.includes(intention) ? 0.6 : 0)
       + (intention === "budget" && r.cost === "$" ? 0.6 : 0)
       + (phaseAware && (r.cyclePhase.includes(phase) || r.cyclePhase.includes("any")) ? 0.35 : 0)
+      + calFit(r.macros.calories || 0)
       + Math.random() * 0.3,
   }));
   scored.sort((a, b) => b.s - a.s);
@@ -173,18 +194,29 @@ function buildWeek(
   owned: Set<string>,
   ratings: Record<string, "love" | "ok" | "never">,
   proteinBoostDays?: Set<string>,
-) {
+  dailyTarget?: number,
+): { plan: Record<string, Record<MealType, string | null>>; portions: Record<string, Partial<Record<MealType, number>>> } {
   const used = new Set<string>();
   const plan: Record<string, Record<MealType, string | null>> = {};
+  const portions: Record<string, Partial<Record<MealType, number>>> = {};
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     (["breakfast", "lunch", "dinner", "snack"] as MealType[]).forEach((type) => {
       const slotIntention: Intention = proteinBoostDays?.has(d) && type === "dinner" ? "protein" : intention;
-      const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings);
-      if (r) { plan[d][type] = r.id; used.add(r.id); }
+      const budget = dailyTarget ? slotBudget(dailyTarget, type) : undefined;
+      const r = pickForSlot(pool, type, slotIntention, phase, owned, used, ratings, budget);
+      if (r) {
+        plan[d][type] = r.id;
+        used.add(r.id);
+        // Portion the serving so the day actually reaches the calorie target.
+        if (dailyTarget) {
+          const f = portionForRecipe(r.macros.calories || 0, type, dailyTarget);
+          if (f !== 1) (portions[d] ??= {})[type] = f;
+        }
+      }
     });
   });
-  return plan;
+  return { plan, portions };
 }
 
 // Workout → Meals: after a strength/tonify session today, bias tonight's
@@ -307,16 +339,45 @@ export default function MealsPage() {
   // "Goal-tuned" marker — set when the week is auto-generated to her diet goal,
   // cleared the moment she swaps/redoes a meal (then it's her own plan).
   const [mealsTuned, setMealsTuned] = useState<string | null>(() => { try { return localStorage.getItem("bloom:meals-plan-goal"); } catch { return null; } });
-  const markMealsTuned = () => { const g = readDietProfile().goal; try { localStorage.setItem("bloom:meals-plan-goal", g); } catch {} setMealsTuned(g); };
+  // A plan is only "tuned to a goal" if the user actually set a goal in Diet.
+  // Otherwise it just follows the selected week vibe — no goal, no target.
+  const markMealsTuned = () => {
+    if (!hasDietSetup()) { clearMealsTuned(); return; }
+    const g = readDietProfile().goal;
+    try { localStorage.setItem("bloom:meals-plan-goal", g); } catch {}
+    setMealsTuned(g);
+  };
   const clearMealsTuned = () => { try { localStorage.removeItem("bloom:meals-plan-goal"); } catch {} setMealsTuned(null); };
+  // Anything built or edited in the Meals Planner is the user's OWN week — drop
+  // the "from Diet" marker so Diet treats it as protected (offers Sync, never
+  // silently overwrites or clears it).
+  const ownThisPlan = () => { try { localStorage.removeItem("bloom:meals-from-diet"); } catch {} };
+  // Whether the Diet tool has been set up — gates the daily calorie target and
+  // the "tuned to your goal" badge. Re-read on focus/storage so a reset (or a
+  // fresh setup) reflects immediately.
+  const [dietSetup, setDietSetup] = useState(hasDietSetup);
+  // Bumped when the shared Diet profile changes (e.g. allergies/cooking set in
+  // the setup guide) so the recipe pool re-filters without a reload.
+  const [profileTick, setProfileTick] = useState(0);
+  useEffect(() => {
+    const refresh = () => { setDietSetup(hasDietSetup()); setProfileTick((t) => t + 1); };
+    window.addEventListener("storage", refresh);
+    window.addEventListener("focus", refresh);
+    return () => { window.removeEventListener("storage", refresh); window.removeEventListener("focus", refresh); };
+  }, []);
   const [kidPlan, setKidPlan] = useLS<Record<string, string | null>>(LS.kidPlan, {});
   const [favorites, setFavorites] = useLS<string[]>(LS.favorites, []);
   const [ratings, setRatings] = useLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
   const [shopChecked, setShopChecked] = useLS<string[]>(LS.shopChecked, []);
   const [freezer, setFreezer] = useLS<{ name: string; date: string }[]>(LS.freezer, []);
   const [step, setStep] = useLS<number>(LS.step, 0); // 0=welcome,1=pantry,2=vibe,3=ready
+  // "Continue without pantry" — user opted to plan from the whole library.
+  const [pantrySkip, setPantrySkip] = useLS<boolean>("bloom:meals-pantry-skip", false);
   const [phase, setPhase] = useLS<CyclePhase>(LS.phase as any, "any");
-  const [openRecipe, setOpenRecipe] = useState<string | null>(null);
+  const [openRecipe, setOpenRecipe] = useState<{ id: string; portion: number } | null>(null);
+  // Open a recipe, optionally at a planned portion so ingredients & macros show
+  // scaled to what the plan actually serves.
+  const openRecipeAt = (id: string, portion = 1) => setOpenRecipe({ id, portion });
   const [todaySymptoms, setTodaySymptoms] = useState<string[]>([]);
   const [onboarded, setOnboarded] = useLS<boolean>("bloom:meals-onboarded", false);
   const [showGuide, setShowGuide] = useState(false);
@@ -341,7 +402,7 @@ export default function MealsPage() {
     } catch {}
     // Deep-link from Today / Cycle: open the tapped recipe straight away.
     const recipeId = readLaunch<string>(LAUNCH_MEAL_KEY);
-    if (recipeId) setOpenRecipe(recipeId);
+    if (recipeId) setOpenRecipe({ id: recipeId, portion: 1 });
 
     return () => window.removeEventListener("storage", refresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -351,9 +412,11 @@ export default function MealsPage() {
   const planEmpty = Object.keys(plan).length === 0;
   const hasSetup = owned.size > 0 || !planEmpty;
 
-  // Auto-show the spotlight tour on first visit (nothing set up yet); also on
-  // manual trigger via the hero "Guide" button.
-  const guideVisible = showGuide || (hydrated && !onboarded && !hasSetup);
+  // The inline "Let's set up your week" step guide (shown on the empty Week
+  // tab) is now the first-run experience, so the spotlight tour is opt-in only
+  // via the hero "Guide" button — it no longer auto-pops over the steps guide.
+  const guideVisible = showGuide;
+  void hydrated; void onboarded; void hasSetup;
 
   // Scroll-hint on hero tabs: peek right then snap back so user sees there are more tabs
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -371,7 +434,8 @@ export default function MealsPage() {
   const myRulesPool = useMemo(() => {
     const profile = readDietProfile();
     return RECIPES.filter((r) => passesMyRules(r, profile));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileTick]);
 
   // Premium training↔meals loop: every planned WORKOUT day (plus today if she
   // already trained strength) gets a protein-forward dinner for recovery —
@@ -383,9 +447,12 @@ export default function MealsPage() {
   }, []);
 
   const generateWeek = () => {
-    const p = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays);
+    const target = computeTargets(true).calories;
+    const { plan: p, portions } = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays, target);
     setPlan(p);
+    writeMealPortions(portions);
     markMealsTuned();
+    ownThisPlan(); // built here → the user's own week (Diet won't overwrite it)
     setStep(3);
     setTab("week");
   };
@@ -396,8 +463,12 @@ export default function MealsPage() {
     const ph = (real && real !== "any" ? real : phase) as CyclePhase;
     setIntention("cycle");
     setPhase(ph);
-    setPlan(buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays));
+    const target = computeTargets(true).calories;
+    const { plan: p, portions } = buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays, target);
+    setPlan(p);
+    writeMealPortions(portions);
     markMealsTuned();
+    ownThisPlan();
     setStep(3);
     setTab("week");
   };
@@ -425,7 +496,10 @@ export default function MealsPage() {
       const savedPhase = readLS<CyclePhase>(LS.phase, "any");
       const savedOwned = pantrySet(readLS<Record<string, string[]>>(LS.pantry, {}));
       const savedRatings = readLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
-      setPlan(buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDays));
+      const target = computeTargets(true).calories;
+      const { plan: healed, portions } = buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDays, target);
+      setPlan(healed);
+      writeMealPortions(portions);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -445,10 +519,15 @@ export default function MealsPage() {
     const cur = plan[day]?.[type];
     if (cur) used.delete(cur);
     used.add(cur || "");
+    const target = computeTargets(true).calories;
     const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
-    const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
-    if (r) setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
+    const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings, slotBudget(target, type));
+    if (r) {
+      setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
+      setMealPortion(day, type as any, portionForRecipe(r.macros.calories || 0, type, target));
+    }
     clearMealsTuned(); // a manual swap makes it her own plan
+    ownThisPlan();
   };
 
   const regenDay = (day: string) => {
@@ -459,15 +538,25 @@ export default function MealsPage() {
       if (d === day || !meals) return;
       Object.values(meals).forEach((id) => { if (id) used.add(id as string); });
     });
+    const target = computeTargets(true).calories;
     const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
     const dayPlan: Record<MealType, string | null> = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
+    const dayPortions: Partial<Record<MealType, number>> = {};
     slots.forEach((type) => {
       const slotIntention: Intention = proteinBoostDays.has(day) && type === "dinner" ? "protein" : intention;
-      const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings);
-      if (r) { dayPlan[type] = r.id; used.add(r.id); }
+      const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings, slotBudget(target, type));
+      if (r) {
+        dayPlan[type] = r.id;
+        used.add(r.id);
+        const f = portionForRecipe(r.macros.calories || 0, type, target);
+        if (f !== 1) dayPortions[type] = f;
+      }
     });
     setPlan({ ...plan, [day]: dayPlan });
+    // Replace this day's portions (set the whole day at once).
+    slots.forEach((type) => setMealPortion(day, type as any, dayPortions[type] ?? 1));
     clearMealsTuned();
+    ownThisPlan();
   };
 
   const toggleFav = (id: string) => {
@@ -577,12 +666,13 @@ export default function MealsPage() {
             plan={plan} planEmpty={planEmpty}
             onGenerate={generateWeek}
             onGeneratePhase={generatePhasePlan}
-            onOpen={setOpenRecipe}
+            onOpen={openRecipeAt}
             onSwap={swapMeal}
             onRegen={regenDay}
             owned={owned}
             proteinBoostDays={proteinBoostDays}
-            mealsTuned={mealsTuned}
+            mealsTuned={mealsTuned} dietSetup={dietSetup}
+            pantrySkip={pantrySkip} onSkipPantry={() => setPantrySkip(true)}
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
@@ -591,7 +681,7 @@ export default function MealsPage() {
 
         {tab === "kids" && (
           <KidsTab
-            kidPlan={kidPlan} onGenerate={generateKids} onOpen={setOpenRecipe}
+            kidPlan={kidPlan} onGenerate={generateKids} onOpen={openRecipeAt}
           />
         )}
 
@@ -622,12 +712,12 @@ export default function MealsPage() {
         {tab === "favs" && (
           <FavsTab
             favorites={favorites} ratings={ratings} setRatings={setRatings}
-            onOpen={setOpenRecipe} toggleFav={toggleFav}
+            onOpen={openRecipeAt} toggleFav={toggleFav}
           />
         )}
 
         {/* Clever shortcuts */}
-        <CleverRow onOpen={setOpenRecipe} owned={owned} />
+        <CleverRow onOpen={openRecipeAt} owned={owned} />
       </div>
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
@@ -637,7 +727,7 @@ export default function MealsPage() {
         CSS transform on an ancestor breaks fixed positioning — moving it here fixes it. */}
     {openRecipe && (
       <RecipeSheet
-        id={openRecipe} onClose={() => setOpenRecipe(null)}
+        id={openRecipe.id} portion={openRecipe.portion} onClose={() => setOpenRecipe(null)}
         favorites={favorites} toggleFav={toggleFav}
         ratings={ratings} setRatings={setRatings}
       />
@@ -737,16 +827,24 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
   );
 }
 
-/** A day's actual calories/protein vs the daily target — the closed loop. */
+/** A day's actual calories/protein vs the daily target — the closed loop.
+ *  Scales each meal by its planned portion so the day lands on the goal. */
 function DayTotals({ plan, day, target }: { plan: any; day: string; target: TargetBreakdown }) {
   const dayPlan = plan?.[day];
   const recipes = dayPlan
     ? (["breakfast", "lunch", "dinner", "snack"] as MealType[])
-        .map((s) => (dayPlan[s] ? RECIPES.find((r) => r.id === dayPlan[s]) : null))
+        .map((s) => {
+          const r = dayPlan[s] ? RECIPES.find((x) => x.id === dayPlan[s]) : null;
+          if (!r) return null;
+          const f = portionFor(day, s as any);
+          return { macros: { calories: r.macros.calories * f, protein: r.macros.protein * f, carbs: r.macros.carbs * f, fat: r.macros.fat * f } };
+        })
         .filter(Boolean) as { macros: { calories: number; protein: number; carbs: number; fat: number } }[]
     : [];
   if (!recipes.length) return null;
   const totals = sumMacros(recipes);
+  totals.calories = Math.round(totals.calories);
+  totals.protein = Math.round(totals.protein);
   const verdict = calorieVerdict(totals.calories, target.calories);
   const pct = Math.min(100, Math.round((totals.calories / Math.max(1, target.calories)) * 100));
   const barCls = verdict === "on" ? "bg-emerald-400" : verdict === "under" ? "bg-amber-400" : "bg-rose-400";
@@ -765,13 +863,150 @@ function DayTotals({ plan, day, target }: { plan: any; day: string; target: Targ
   );
 }
 
+/* One numbered row of the fresh-start setup guide. */
+function StepRow({ n, done, title, desc, children }: { n: number; done: boolean; title: string; desc: string; children: ReactNode }) {
+  return (
+    <div className="flex gap-3 animate-fade-in" style={{ animationDelay: `${n * 70}ms` }}>
+      <span className={["mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-bold", done ? "bg-emerald-100 text-emerald-600" : "bg-hotpink text-white"].join(" ")}>
+        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : n}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-hotpink leading-tight">{title}</p>
+        <p className="text-[11.5px] text-rose/60 leading-snug">{desc}</p>
+        <div className="mt-2">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* A small selectable pill (cooking time / allergies). */
+function ChoicePill({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={["rounded-full px-3 py-1.5 text-[12px] font-semibold transition active:scale-95", active ? "bg-hotpink text-white shadow shadow-hotpink/30" : "border border-petal/60 bg-white/80 text-rose/70 hover:bg-blush"].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* Fresh-start / post-reset experience: an inline, step-by-step setup guide —
+   NOT the spotlight tour. The cycle phase is auto-synced from the Cycle Tracker
+   (never a manual step); the user just sets vibe, cooking time & allergies, and
+   pantry is optional (skippable). Cooking time & allergies write to the shared
+   Diet profile so there is one source of truth. */
+function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, generating, dietSetup, pantrySkip, onSkipPantry }: any) {
+  const initial = readDietProfile();
+  const [cooking, setCooking] = useState<CookingFrequency>(initial.cookingFrequency);
+  const [allergies, setAllergies] = useState<Allergy[]>(initial.allergies);
+  const [touched, setTouched] = useState({ vibe: false, cooking: false, allergy: false });
+
+  const phaseKnown = phase !== "any";
+  const pantryDone = owned.size > 0 || pantrySkip;
+
+  const chooseCooking = (k: CookingFrequency) => { setCooking(k); updateDietProfile({ cookingFrequency: k }); setTouched((t) => ({ ...t, cooking: true })); };
+  const toggleAllergy = (a: Allergy) => {
+    setAllergies((prev) => { const next = prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]; updateDietProfile({ allergies: next }); return next; });
+    setTouched((t) => ({ ...t, allergy: true }));
+  };
+  const chooseNoAllergy = () => { setAllergies([]); updateDietProfile({ allergies: [] }); setTouched((t) => ({ ...t, allergy: true })); };
+
+  return (
+    <Glass className="p-4 sm:p-5 animate-scale-in">
+      <p className="font-script text-2xl text-hotpink leading-none">Let's set up your week ✿</p>
+      <p className="mt-1 text-[12px] text-rose/60 leading-snug">A few quick picks — then I cook your whole week for you.</p>
+
+      {/* Cycle phase — automatic, from the Cycle Tracker (not a step) */}
+      <div className="mt-3 mb-4 flex items-start gap-2 rounded-2xl bg-blush/60 px-3 py-2.5">
+        {phaseKnown ? (
+          <>
+            <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" strokeWidth={2.8} />
+            <p className="text-[12px] text-rose/80 leading-snug">Synced to your <b className="text-hotpink capitalize">{phase}</b> phase — automatically, from your Cycle Tracker ✿</p>
+          </>
+        ) : (
+          <>
+            <Moon className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
+            <p className="text-[12px] text-rose/80 leading-snug">Meals adapt to your cycle. <a href="/app/tools/cycle" className="font-bold text-hotpink underline">Set up your Cycle Tracker</a> to sync your phase automatically.</p>
+          </>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        {/* 1 — Vibe */}
+        <StepRow n={1} done={touched.vibe} title="Choose this week's vibe" desc="The mood for this week — light, protein-rich, comfort or fully cycle-synced.">
+          <div data-tour="meals-vibe">
+            <PickerField
+              value={intention} title="This week's vibe"
+              options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+              onChange={(v: any) => { setIntention(v as Intention); setTouched((t) => ({ ...t, vibe: true })); }}
+              className="min-w-[9rem] !text-[13px] !py-1.5 !rounded-full"
+            />
+          </div>
+        </StepRow>
+
+        {/* 2 — Cooking time (shared Diet profile) */}
+        <StepRow n={2} done={touched.cooking} title="Cooking time" desc="How long do you want to spend in the kitchen?">
+          <div className="flex flex-wrap gap-1.5">
+            {COOKING_OPTIONS.map((o) => (
+              <ChoicePill key={o.key} active={touched.cooking && cooking === o.key} onClick={() => chooseCooking(o.key)}>{o.label}</ChoicePill>
+            ))}
+          </div>
+        </StepRow>
+
+        {/* 3 — Allergies (shared Diet profile) */}
+        <StepRow n={3} done={touched.allergy} title="Allergies" desc="Anything I should keep out of your plan?">
+          <div className="flex flex-wrap gap-1.5">
+            <ChoicePill active={touched.allergy && allergies.length === 0} onClick={chooseNoAllergy}>None</ChoicePill>
+            {ALLERGY_OPTIONS.map((o) => (
+              <ChoicePill key={o.key} active={allergies.includes(o.key)} onClick={() => toggleAllergy(o.key)}>{o.label}</ChoicePill>
+            ))}
+          </div>
+        </StepRow>
+
+        {/* 4 — Pantry (optional, skippable) */}
+        <StepRow n={4} done={pantryDone} title="Pantry — optional" desc={pantrySkip ? "Skipped — I'll plan from my whole recipe library." : "Plan from what you own, or skip and I'll use everything."}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={goPantry}
+              className={["inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition active:scale-95", owned.size > 0 ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
+            >
+              <Apple className="h-4 w-4" /> {owned.size > 0 ? "Edit pantry" : "Set up pantry"} <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            {!pantryDone && (
+              <button onClick={onSkipPantry} className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/70 px-3.5 py-2 text-[12.5px] font-semibold text-rose/70 hover:bg-blush transition active:scale-95">
+                Continue without pantry
+              </button>
+            )}
+          </div>
+        </StepRow>
+      </div>
+
+      {/* Plan — primary, always available (sensible defaults if a step is skipped) */}
+      <button
+        onClick={onPlan} disabled={generating}
+        data-tour="meals-plan"
+        className="mt-4 w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-3 text-[14px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
+      >
+        <Sparkles className="h-4 w-4" /> {generating ? "Building your week…" : "Plan my week"} <ChevronRight className="h-4 w-4" />
+      </button>
+      {/* Persistent reminder of what the plan follows */}
+      <p className="mt-2 text-center text-[11px] text-rose/55 leading-snug">
+        {dietSetup ? "Your week follows your Diet goal & this week's vibe ✿" : "Your week follows this week's vibe ✿"}
+      </p>
+    </Glass>
+  );
+}
+
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, fromDiet, onDismissFromDiet,
+  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup,
+  pantrySkip, onSkipPantry, fromDiet, onDismissFromDiet,
 }: any) {
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
+  const [editingVibe, setEditingVibe] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
   const dietNoteRef = useRef<HTMLDivElement>(null);
 
@@ -823,106 +1058,79 @@ function WeekTab({
     }, 400);
   };
 
+  const intentionLabel = INTENTIONS.find((i) => i.key === intention)?.label ?? "";
+
   return (
     <>
-      {/* ── YOUR SYNCED PLAN — training + phase nutrition in ONE green-bordered note ── */}
-      {(() => {
-        const comment = trainingAwarenessComment({
-          workoutDays: readWorkoutPlanDays().length,
-          yogaDays: readYogaPlanDays().length,
-          phase: normalizePhase(realPhase),
-          goal: readDietProfile().goal,
-        });
-        const dp = toDietPhase(phase);
-        const info = dp ? PHASE_INFO[dp] : null;
-        if (!phaseSynced) return null;
-        return (
-          <div className="mb-3 rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Your synced plan{info ? ` · ${info.label} phase` : ""}
-            </p>
-            {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
-            {info && (
-              <>
-                <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
-                </div>
-              </>
-            )}
-          </div>
-        );
-      })()}
+      {/* ①  YOUR DAILY TARGET — only once Diet is set up (a real goal + body).
+             Without it there is no personalised target to show, so instead we
+             gently offer to set a goal and get adequate meals. */}
+      {dietSetup ? (
+        <DailyTargetCard t={targets} />
+      ) : (
+        <button
+          onClick={() => { window.location.href = "/app/tools/diet"; }}
+          className="w-full flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-white/70 p-3.5 text-left transition hover:bg-blush hover-scale active:scale-[0.99] animate-fade-in"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-5 w-5" /></span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-bold text-hotpink leading-tight">Want a daily calorie target?</span>
+            <span className="block text-[11.5px] text-rose/65 leading-snug">Set a goal in Diet and I'll tune every week to it — for now, meals just follow your chosen vibe ✿</span>
+          </span>
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink">Set goal <ChevronRight className="h-3.5 w-3.5" /></span>
+        </button>
+      )}
 
-      {/* This week's vibe — compact app-styled pickers + guided actions */}
-      <Glass className="p-4 sm:p-5">
-        <p className="font-script text-2xl text-hotpink mb-1">This week's vibe</p>
-        <p className="text-[11px] text-rose/60 leading-snug mb-3">Why here? Your <b className="text-hotpink">Diet</b> is your overall style — this is just the mood for <b>this week's</b> meal plan.</p>
-        <div data-tour="meals-vibe" className="flex flex-wrap gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Cycle phase</p>
-            <PickerField
-              value={phase} title="Cycle phase"
-              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
-              onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[8.5rem] !text-sm !py-2 !rounded-full"
-            />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mb-1">Vibe</p>
-            <PickerField
-              value={intention} title="This week's vibe"
-              options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
-              onChange={(v) => setIntention(v as Intention)} className="min-w-[9.5rem] !text-sm !py-2 !rounded-full"
-            />
-          </div>
-        </div>
-        <p className="mt-2.5 text-[12px] text-rose/70 leading-snug">
-          <span className="italic">{INTENTIONS.find((i) => i.key === intention)?.blurb}</span>
-          {phase !== "any" && intention !== "cycle" && <> · <button onClick={() => setIntention("cycle")} className="font-bold text-hotpink underline">focus fully on my {phase} phase</button></>}
-        </p>
-        {/* Confirms BOTH picks are live — the plan leans to the vibe AND the phase. */}
-        {phase !== "any" && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-600">
-            <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2.6} />
-            {intention === "cycle"
-              ? <span>Fully synced to your <b className="capitalize">{phase}</b> phase ✿</span>
-              : <span><span className="capitalize">{INTENTIONS.find((i) => i.key === intention)?.label}</span>-leaning, tuned to your <b className="capitalize">{phase}</b> phase</span>}
+      {/* ②  Slim plan bar — once a week exists, "This week's vibe" collapses to
+             a one-line notification of what the plan follows, with a small Edit
+             to reopen the vibe controls + a Regenerate. */}
+      {!planEmpty && (
+      <Glass className="p-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 shrink-0 text-hotpink" />
+          <p className="flex-1 min-w-0 text-[12px] text-rose/80 leading-snug">
+            {dietSetup && mealsTuned
+              ? <>Plan tuned to your <b className="text-hotpink">{goalWord(mealsTuned)}</b> goal</>
+              : <>Plan tuned to your <b className="text-hotpink capitalize">{intentionLabel}</b> vibe</>}
+            {phase !== "any" && <span className="text-rose/50"> · <span className="capitalize">{phase}</span> phase</span>}
           </p>
+          <button onClick={() => setEditingVibe((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full border border-petal/60 bg-white/80 px-2.5 py-1.5 text-[11px] font-bold text-hotpink hover:bg-blush transition active:scale-95">
+            <Pencil className="h-3 w-3" /> Edit
+          </button>
+          <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
+            <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
+          </button>
+        </div>
+
+        {/* Expanded editor — vibe + phase override; cooking time & allergies live in Diet */}
+        {editingVibe && (
+          <div className="mt-3 pt-3 border-t border-petal/50 space-y-2.5 animate-fade-in">
+            <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
+              <PickerField
+                value={intention} title="This week's vibe"
+                options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+                onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
+              />
+              <PickerField
+                value={phase} title="Cycle phase"
+                options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+                onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
+              />
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <button onClick={goPantry} className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><Apple className="h-3 w-3" /> Pantry</button>
+              <a href="/app/tools/diet" className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><SlidersHorizontal className="h-3 w-3" /> Cooking time &amp; allergies</a>
+              <div className="flex-1" />
+              <button onClick={() => { handleGenerate(); setEditingVibe(false); }} className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3 py-1.5 text-[11px] font-bold active:scale-95"><RefreshCw className="h-3 w-3" /> Apply</button>
+            </div>
+          </div>
         )}
-
-        {/* Next-step hint — light, just an icon + instruction */}
-        <div className="mt-3 flex items-start gap-2 text-[12px] leading-snug text-rose/80">
-          {planEmpty ? <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" strokeWidth={2} /> : <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" strokeWidth={3} />}
-          <p className="flex-1"><span className="font-bold text-rose-500 uppercase text-[10px] tracking-wide">Next · </span>{planEmpty ? (owned.size ? "tap Plan my week to build it ✿" : "build your pantry, then plan your week ✿") : "your week is planned — scroll down to see it ✿"}</p>
-        </div>
-
-        {/* 3 vignettes — clear choices with descriptions */}
-        <div className="mt-3 space-y-2">
-          {[
-            { key: "pantry", Icon: Apple, title: "Build my pantry", desc: "Tell me what you already own — I plan from your shelves.", cta: "Set up", onClick: goPantry, primary: false, disabled: false, done: owned.size > 0 },
-            { key: "plan", Icon: Sparkles, title: "Plan my week", desc: "Generate a full week from your vibe & phase.", cta: generating ? "Building…" : "Plan", onClick: handleGenerate, primary: true, disabled: generating, done: !planEmpty },
-            { key: "regen", Icon: RefreshCw, title: "Regenerate", desc: "Not feeling it? Shuffle a fresh week.", cta: "Shuffle", onClick: handleGenerate, primary: false, disabled: planEmpty || generating, done: false },
-          ].map((v) => (
-            <button
-              key={v.key} onClick={v.onClick} disabled={v.disabled}
-              data-tour={v.key === "plan" ? "meals-plan" : undefined}
-              className={["w-full flex items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.99] disabled:opacity-40", v.primary ? "border-transparent bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow-lg shadow-hotpink/30 animate-cta-bounce" : "border-petal/60 bg-white/80 hover:bg-blush"].join(" ")}
-            >
-              <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", v.primary ? "bg-white/25 text-white" : "bg-hotpink/10 text-hotpink"].join(" ")}><v.Icon className="h-5 w-5" /></span>
-              <span className="flex-1 min-w-0">
-                <span className={["flex items-center gap-1 text-sm font-bold leading-tight", v.primary ? "text-white" : "text-hotpink"].join(" ")}>{v.title}{v.done && <Check className={["h-3.5 w-3.5", v.primary ? "text-white" : "text-emerald-500"].join(" ")} strokeWidth={3} />}</span>
-                <span className={["block text-[11px] leading-snug", v.primary ? "text-white/85" : "text-rose/60"].join(" ")}>{v.desc}</span>
-              </span>
-              <span className={["shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold", v.primary ? "bg-white/25 text-white" : "bg-hotpink/10 text-hotpink"].join(" ")}>{v.cta} <ChevronRight className="h-3.5 w-3.5" /></span>
-            </button>
-          ))}
-        </div>
       </Glass>
+      )}
 
-
-      {/* Diet-synced note — same green-bordered "synced plan" style, right before the week's meals */}
+      {/* Diet-synced note — small, only when arriving from the Diet tool */}
       {fromDiet && (
-        <div ref={dietNoteRef} className="rounded-2xl border-2 border-emerald-300/70 p-3.5 animate-fade-in">
+        <div ref={dietNoteRef} className="rounded-2xl border-2 border-emerald-300/70 p-3 animate-fade-in">
           <div className="flex items-start gap-2">
             <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600" strokeWidth={2.2} />
             <div className="flex-1">
@@ -934,22 +1142,12 @@ function WeekTab({
         </div>
       )}
 
-      {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
-      {!planEmpty && mealsTuned && (
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[11px] font-bold text-rose-500">
-          <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(mealsTuned)} goal
-        </div>
-      )}
-
-      {/* Premium: personalised daily nutrition target */}
-      <DailyTargetCard t={targets} />
-
+      {/* ③  THE PLAN — right here, no longer pushed down */}
       {planEmpty ? (
-        <EmptyState
-          icon={Calendar}
-          title="Your week is waiting"
-          blurb="Pick a vibe above and tap Plan my week. I'll build it from what you already own."
-          cta="Plan my week" onCta={handleGenerate}
+        <SetupSteps
+          phase={phase} intention={intention} setIntention={setIntention}
+          owned={owned} goPantry={goPantry} onPlan={handleGenerate} generating={generating}
+          dietSetup={dietSetup} pantrySkip={pantrySkip} onSkipPantry={onSkipPantry}
         />
       ) : (
         <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -973,15 +1171,16 @@ function WeekTab({
                 {(["breakfast","lunch","dinner","snack"] as MealType[]).map((slot) => {
                   const id = plan[d]?.[slot];
                   const r = id ? RECIPES.find((x) => x.id === id) : null;
+                  const portion = portionFor(d, slot as any);
                   const proteinBoosted = !!proteinBoostDays?.has(d) && slot === "dinner";
                   const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.webp';
-                  const photoSrc = r?.photo ? `/images/recipes/${r.photo}` : fallback;
+                  const photoSrc = r ? recipeImageSrc(r) : fallback;
                   return (
                     <div
                       key={slot}
                       className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
                       style={{ aspectRatio: '3/4' }}
-                      onClick={() => r && requestAnimationFrame(() => onOpen(r.id))}
+                      onClick={() => r && requestAnimationFrame(() => onOpen(r.id, portion))}
                     >
                       {/* Photo */}
                       <img
@@ -1007,15 +1206,13 @@ function WeekTab({
                         </div>
                       )}
 
-                      {/* Pink glass bottom strip — full width */}
-                      <div
-                        className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
-                        style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-                      >
+                      {/* Name over a slim bottom fade — the whole dish stays
+                          visible; no big pink block hiding the food. */}
+                      <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
                         {r ? (
-                          <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r.name}</p>
+                          <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r.name}</p>
                         ) : (
-                          <p className="text-[9px] text-white/50 italic">—</p>
+                          <p className="text-[9px] text-white/70 italic">—</p>
                         )}
                       </div>
 
@@ -1038,6 +1235,35 @@ function WeekTab({
           })}
         </div>
       )}
+
+      {/* Phase-nutrition context — moved BELOW the plan so it never pushes it
+          down. Supplementary "here's what this phase wants" note. */}
+      {phaseSynced && (() => {
+        const comment = trainingAwarenessComment({
+          workoutDays: readWorkoutPlanDays().length,
+          yogaDays: readYogaPlanDays().length,
+          phase: normalizePhase(realPhase),
+          goal: readDietProfile().goal,
+        });
+        const dp = toDietPhase(phase);
+        const info = dp ? PHASE_INFO[dp] : null;
+        return (
+          <div className="rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Why this week{info ? ` · ${info.label} phase` : ""}
+            </p>
+            {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
+            {info && (
+              <>
+                <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Sunday Prep CTA — only when a plan exists */}
       {!planEmpty && (
@@ -1125,12 +1351,9 @@ function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
               >
                 <Shuffle className="h-2.5 w-2.5" />
               </button>
-              {/* Pink glass bottom strip — full width */}
-              <div
-                className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
-                style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-              >
-                <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r?.name ?? '—'}</p>
+              {/* Name over a slim bottom fade — food stays visible */}
+              <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
+                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r?.name ?? '—'}</p>
               </div>
             </div>
           );
@@ -1462,9 +1685,7 @@ const CUISINE_GRADIENT: Record<string, string> = {
   Latin: "from-rose-50 to-pink-100",
 };
 function recipeImg(r: Recipe): string | null {
-  if (r.image) return r.image;
-  if (r.photo) return `/images/${r.photo}`;
-  return null;
+  return recipeImageSrc(r);
 }
 
 function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
@@ -1500,12 +1721,9 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
               >
                 <Heart className="h-2.5 w-2.5 text-white fill-white" />
               </button>
-              {/* Pink glass name strip */}
-              <div
-                className="absolute bottom-0 left-0 right-0 px-2 py-2 text-center"
-                style={{ background: 'rgba(219,39,119,0.62)', borderTop: '1px solid rgba(255,255,255,0.18)' }}
-              >
-                <p className="text-[9px] font-bold text-white leading-snug line-clamp-2">{r.name}</p>
+              {/* Name over a slim bottom fade — food stays visible */}
+              <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
+                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r.name}</p>
               </div>
             </div>
             {/* Rating pills */}
@@ -1554,12 +1772,21 @@ function CleverRow({ onOpen, owned }: { onOpen: (id: string) => void; owned: Set
 
 /* ---------- Recipe Sheet ---------- */
 
-function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }: any) {
+function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, setRatings }: any) {
   const r = RECIPES.find((x) => x.id === id);
   if (!r) return null;
   const fav = favorites.includes(r.id);
+  // Portion baked in: show macros & ingredient amounts for what the plan serves.
+  const f = portion && portion > 0 ? portion : 1;
+  const scaled = f !== 1;
+  const mac = {
+    calories: Math.round(r.macros.calories * f),
+    protein: Math.round(r.macros.protein * f),
+    carbs: Math.round(r.macros.carbs * f),
+    fat: Math.round(r.macros.fat * f),
+  };
   const fallback  = MEAL_PHOTO_FALLBACK[r.mealType] ?? '/images/meal-buddha.webp';
-  const photoSrc  = fallback;
+  const photoSrc  = recipeImg(r) ?? fallback;
 
   // Guard: ignore backdrop clicks for the first 80ms after mount so the
   // opening tap doesn't immediately close the modal via event propagation.
@@ -1614,13 +1841,13 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
         {/* Content */}
         <div className="p-5 space-y-4">
 
-          {/* Macros row */}
+          {/* Macros row — scaled to the planned portion */}
           <div className="grid grid-cols-4 gap-2 text-center">
             {[
-              { label: 'Cal', value: r.macros.calories },
-              { label: 'Protein', value: `${r.macros.protein}g` },
-              { label: 'Carbs', value: `${r.macros.carbs}g` },
-              { label: 'Fat', value: `${r.macros.fat}g` },
+              { label: 'Cal', value: mac.calories },
+              { label: 'Protein', value: `${mac.protein}g` },
+              { label: 'Carbs', value: `${mac.carbs}g` },
+              { label: 'Fat', value: `${mac.fat}g` },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-xl bg-blush/60 py-2 px-1">
                 <p className="text-[10px] text-rose/60 uppercase font-semibold">{label}</p>
@@ -1641,14 +1868,16 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
             </div>
           )}
 
-          {/* Ingredients */}
+          {/* Ingredients — amounts scaled to the planned portion */}
           <div>
-            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Ingredients · makes {r.servings} serving{r.servings === 1 ? "" : "s"}</p>
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">
+              Ingredients{scaled ? " · portioned for your goal ✿" : ` · makes ${r.servings} serving${r.servings === 1 ? "" : "s"}`}
+            </p>
             <ul className="space-y-1">
               {r.ingredients.map((i) => (
                 <li key={i.item} className="flex gap-2 text-sm text-rose">
                   <span className="text-hotpink mt-0.5">•</span>
-                  <span><b className="font-medium">{i.qty}</b> {i.item}</span>
+                  <span><b className="font-medium">{scaleQuantity(i.qty, f)}</b> {i.item}</span>
                 </li>
               ))}
             </ul>
