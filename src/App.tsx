@@ -5,6 +5,10 @@ import { AppIcon } from "./components/bloom/AppIcon";
 // bundle; each tool's code + heavy libs (charts, recipe data) load on demand.
 const PrivacyPage = lazy(() => import("./pages/Legal").then((m) => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
+const HelpPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
+const FaqPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
+const GuidesIndexPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
+const GuidePage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
 const ToolsIndex = lazy(() => import("./pages/app.tools.index"));
 const BudgetPage = lazy(() => import("./pages/budget"));
 const YogaPage = lazy(() => import("./pages/app.tools.yoga"));
@@ -101,6 +105,20 @@ function AppContent() {
   }
   if (path === "/terms") {
     return <Suspense fallback={<PageLoader />}><TermsPage /></Suspense>;
+  }
+
+  // Public SEO content pages — indexable, no auth
+  if (path === "/help") {
+    return <Suspense fallback={<PageLoader />}><HelpPage /></Suspense>;
+  }
+  if (path === "/faq") {
+    return <Suspense fallback={<PageLoader />}><FaqPage /></Suspense>;
+  }
+  if (path === "/guides") {
+    return <Suspense fallback={<PageLoader />}><GuidesIndexPage /></Suspense>;
+  }
+  if (path.startsWith("/guides/")) {
+    return <Suspense fallback={<PageLoader />}><GuidePage slug={path.split("/").pop() || ""} /></Suspense>;
   }
 
   // Inside-App routes wrapped with the interactive Navigation Menu & Sidebar (AppShell)
