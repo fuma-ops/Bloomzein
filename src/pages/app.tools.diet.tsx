@@ -14,6 +14,7 @@ import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan,
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
+import { StepText } from "@/components/bloom/recipes/StepText";
 import { computeTargets, energyBalance, goalProjection } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import {
@@ -337,7 +338,7 @@ function RecipeModal({
             {recipe.steps.map((s, i) => (
               <li key={i} className="flex gap-3 text-sm text-rose/90 leading-relaxed">
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink text-white text-xs font-bold">{i + 1}</span>
-                <span className="flex-1 pt-0.5">{s}</span>
+                <span className="flex-1 pt-0.5"><StepText text={s} /></span>
               </li>
             ))}
           </ol>

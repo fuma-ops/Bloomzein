@@ -43,6 +43,7 @@ import {
   type PantryCategoryKey,
   type MealType,
 } from "@/components/bloom/meals/data";
+import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
@@ -1658,7 +1659,7 @@ function RecipeSheet({ id, onClose, favorites, toggleFav, ratings, setRatings }:
               {r.steps.map((s, i) => (
                 <li key={i} className="flex gap-2.5 text-sm text-rose">
                   <span className="w-5 h-5 flex-shrink-0 rounded-full bg-hotpink text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
-                  <span className="leading-snug">{s}</span>
+                  <span className="leading-snug"><StepText text={s} /></span>
                 </li>
               ))}
             </ol>
