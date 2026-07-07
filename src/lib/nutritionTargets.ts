@@ -27,6 +27,8 @@ import {
   readSessionsThisWeek,
   readTodayPlannedDay,
   readEatenToday,
+  portionFor,
+  todayWeekday,
 } from "@/lib/crossToolData";
 import { readCyclePhase } from "@/components/bloom/cyclePhase";
 
@@ -177,6 +179,30 @@ export function sumMacros(recipes: { macros: MacroTargets }[]): DayTotals {
   );
 }
 
+/* ---------- Portion sizing — make a day's calories actually hit the target ----
+   A recipe's macros are per serving; a build day (2 400+ kcal) needs bigger
+   servings than a lean day. We give each eating occasion a share of the daily
+   target, then scale the chosen recipe toward that share. Shares are the common
+   evidence-based split (breakfast 25 %, lunch & dinner 30 % each, snack 15 %). */
+export const SLOT_CAL_SHARE: Record<string, number> = {
+  breakfast: 0.25, lunch: 0.30, dinner: 0.30, snack: 0.15, lunchbox: 0.30,
+};
+
+/** kcal a given eating occasion should provide for this daily target. */
+export function slotBudget(dailyTarget: number, slot: string): number {
+  return Math.round(dailyTarget * (SLOT_CAL_SHARE[slot] ?? 0.25));
+}
+
+/** Servings of `recipeCalories` needed to hit the slot's budget — clamped to a
+ *  realistic 0.75×–1.75× and rounded to the nearest quarter serving. Selection
+ *  already prefers appropriately-sized recipes, so this stays close to 1. */
+export function portionForRecipe(recipeCalories: number, slot: string, dailyTarget: number): number {
+  if (!recipeCalories || recipeCalories <= 0 || dailyTarget <= 0) return 1;
+  const raw = slotBudget(dailyTarget, slot) / recipeCalories;
+  const clamped = Math.max(0.75, Math.min(1.75, raw));
+  return Math.round(clamped * 4) / 4;
+}
+
 /** How close a day's calories land to target: "under" | "on" | "over" (±12 %). */
 export function calorieVerdict(total: number, target: number): "under" | "on" | "over" {
   if (target <= 0) return "on";
@@ -197,16 +223,18 @@ export function calorieVerdict(total: number, target: number): "under" | "on" | 
 export function eatenToday(): MacroTargets {
   const empty = { calories: 0, protein: 0, carbs: 0, fat: 0 };
   try {
+    const day = todayWeekday();
     const planned = readTodayPlannedDay();
     return (["breakfast", "lunch", "dinner", "snack"] as const).reduce<MacroTargets>((acc, slot) => {
       const id = planned[slot];
       const r = id ? RECIPES.find((x) => x.id === id) : undefined;
       if (!r) return acc;
+      const f = portionFor(day, slot); // servings — so the eaten figure matches the plated plan
       return {
-        calories: acc.calories + (r.macros.calories || 0),
-        protein: acc.protein + (r.macros.protein || 0),
-        carbs: acc.carbs + (r.macros.carbs || 0),
-        fat: acc.fat + (r.macros.fat || 0),
+        calories: acc.calories + (r.macros.calories || 0) * f,
+        protein: acc.protein + (r.macros.protein || 0) * f,
+        carbs: acc.carbs + (r.macros.carbs || 0) * f,
+        fat: acc.fat + (r.macros.fat || 0) * f,
       };
     }, empty);
   } catch {
