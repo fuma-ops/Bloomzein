@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   Sparkles,
@@ -23,6 +23,7 @@ import {
   RotateCcw,
   Dumbbell,
   Flame,
+  SlidersHorizontal,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -369,9 +370,11 @@ export default function MealsPage() {
   const planEmpty = Object.keys(plan).length === 0;
   const hasSetup = owned.size > 0 || !planEmpty;
 
-  // Auto-show the spotlight tour on first visit (nothing set up yet); also on
-  // manual trigger via the hero "Guide" button.
-  const guideVisible = showGuide || (hydrated && !onboarded && !hasSetup);
+  // The inline "Let's set up your week" step guide (shown on the empty Week
+  // tab) is now the first-run experience, so the spotlight tour is opt-in only
+  // via the hero "Guide" button — it no longer auto-pops over the steps guide.
+  const guideVisible = showGuide;
+  void hydrated; void onboarded; void hasSetup;
 
   // Scroll-hint on hero tabs: peek right then snap back so user sees there are more tabs
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -783,6 +786,81 @@ function DayTotals({ plan, day, target }: { plan: any; day: string; target: Targ
   );
 }
 
+/* One numbered row of the fresh-start setup guide. */
+function StepRow({ n, done, title, desc, children }: { n: number; done: boolean; title: string; desc: string; children: ReactNode }) {
+  return (
+    <div className="flex gap-3 animate-fade-in" style={{ animationDelay: `${n * 70}ms` }}>
+      <span className={["mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-bold", done ? "bg-emerald-100 text-emerald-600" : "bg-hotpink text-white"].join(" ")}>
+        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : n}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-hotpink leading-tight">{title}</p>
+        <p className="text-[11.5px] text-rose/60 leading-snug">{desc}</p>
+        <div className="mt-2">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* Fresh-start / post-reset experience: an inline, step-by-step setup guide
+   (pantry → vibe → plan) — NOT the spotlight tour. Walks the user through the
+   real controls so she's never dropped on an empty screen. */
+function SetupSteps({ phase, setPhase, intention, setIntention, owned, goPantry, onPlan, generating, dietSetup }: any) {
+  const pantryDone = owned.size > 0;
+  const vibeDone = phase !== "any";
+  return (
+    <Glass className="p-4 sm:p-5 animate-scale-in">
+      <p className="font-script text-2xl text-hotpink leading-none">Let's set up your week ✿</p>
+      <p className="mt-1 mb-4 text-[12px] text-rose/60 leading-snug">Three little steps — then I cook your whole week from what you already own.</p>
+
+      <div className="space-y-4">
+        {/* 1 — Pantry */}
+        <StepRow n={1} done={pantryDone} title="Build your pantry first" desc="Tap what you already have — I plan from your shelves before anything else.">
+          <button
+            onClick={goPantry}
+            className={["inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition active:scale-95", pantryDone ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
+          >
+            <Apple className="h-4 w-4" /> {pantryDone ? "Edit pantry" : "Set up pantry"} <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </StepRow>
+
+        {/* 2 — This week's vibe (real pickers, inline) */}
+        <StepRow n={2} done={vibeDone} title="Then choose this week's vibe" desc="Your cycle phase + the mood for this week — light, protein, comfort or fully cycle-synced.">
+          <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
+            <PickerField
+              value={phase} title="Cycle phase"
+              options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+              onChange={(v: any) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
+            />
+            <PickerField
+              value={intention} title="This week's vibe"
+              options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+              onChange={(v: any) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
+            />
+          </div>
+          {/* Cooking time & diet style live in the Diet tool — offer it softly, don't fork it here */}
+          {!dietSetup && (
+            <a href="/app/tools/diet" className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline">
+              <SlidersHorizontal className="h-3 w-3" /> Optional · set your diet style &amp; cooking time in Diet
+            </a>
+          )}
+        </StepRow>
+
+        {/* 3 — Plan */}
+        <StepRow n={3} done={false} title="Plan my week" desc="One tap builds all 7 days — breakfast, lunch, dinner & snack.">
+          <button
+            onClick={onPlan} disabled={generating}
+            data-tour="meals-plan"
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2 text-[13px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
+          >
+            <Sparkles className="h-4 w-4" /> {generating ? "Building…" : "Plan my week"} <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </StepRow>
+      </div>
+    </Glass>
+  );
+}
+
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
   onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup, fromDiet, onDismissFromDiet,
@@ -864,9 +942,9 @@ function WeekTab({
         </button>
       )}
 
-      {/* ②  Compact vibe toolbar — pickers + one primary action, no big card
-             pushing the plan down. Everything that used to be a stacked
-             vignette now lives on a single slim row. */}
+      {/* ②  Compact vibe toolbar — shown once the week exists. While empty, the
+             numbered setup guide below takes its place. */}
+      {!planEmpty && (
       <Glass className="p-3 sm:p-3.5">
         <div className="flex items-center justify-between gap-2 mb-2">
           <p className="font-script text-xl text-hotpink leading-none">This week's vibe</p>
@@ -928,13 +1006,8 @@ function WeekTab({
           </button>
         </div>
 
-        {/* Next-step nudge only while empty — one soft line, no banner */}
-        {planEmpty && (
-          <p className="mt-2 text-[11px] text-rose/55 leading-snug">
-            {owned.size ? "Tap Plan my week to build it from your shelves ✿" : "Tip: build your pantry first, then plan — I'll cook from what you own ✿"}
-          </p>
-        )}
       </Glass>
+      )}
 
       {/* Diet-synced note — small, only when arriving from the Diet tool */}
       {fromDiet && (
@@ -952,11 +1025,10 @@ function WeekTab({
 
       {/* ③  THE PLAN — right here, no longer pushed down */}
       {planEmpty ? (
-        <EmptyState
-          icon={Calendar}
-          title="Your week is waiting"
-          blurb="Pick a vibe above and tap Plan my week. I'll build it from what you already own."
-          cta="Plan my week" onCta={handleGenerate}
+        <SetupSteps
+          phase={phase} setPhase={setPhase} intention={intention} setIntention={setIntention}
+          owned={owned} goPantry={goPantry} onPlan={handleGenerate} generating={generating}
+          dietSetup={dietSetup}
         />
       ) : (
         <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
