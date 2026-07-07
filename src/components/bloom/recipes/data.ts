@@ -340,6 +340,9 @@ export function regimeToDietType(regime: DietRegime): DietType {
  * [[name]]. The user taps the word to reveal a one-line "how to make it",
  * so steps stay short but nothing is a mystery pre-made ingredient. */
 export const SUBRECIPES: Record<string, string> = {
+  "miso glaze": "Whisk 1 tbsp white miso, 1 tbsp soy sauce, 1 tsp maple syrup and 1 tsp sesame oil into a smooth glaze.",
+  "tahini dressing": "Loosen 1 tbsp tahini with lemon juice, a little water, salt and a grated garlic clove until pourable.",
+  "mint yoghurt": "Stir chopped mint and a pinch of salt through Greek yoghurt with a squeeze of lemon.",
   "mango salsa": "Toss diced ripe mango with finely chopped red onion, cilantro, a squeeze of lime and a pinch of salt.",
   "teriyaki sauce": "Simmer 3 tbsp soy sauce, 1 tbsp mirin, 1 tbsp honey and a little grated ginger until glossy.",
   "chimichurri": "Blitz (or finely chop) parsley, garlic, red wine vinegar, olive oil, dried oregano and a pinch of chili into a loose, spoonable sauce.",
@@ -861,29 +864,55 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-nordic-herb-crusted-salmon-greens.jpg",
     macros: { calories: 520, protein: 36, carbs: 22, fat: 28 },
     micros: { omega3: 2.4, vitaminD: 400, magnesium: 55 },
+    servings: 1,
+    equipment: ["Baking tray", "Small bowl"],
     ingredients: [
-      { name: "Salmon fillet", quantity: "180g" },
-      { name: "Herb breadcrumb crust", quantity: "1/4 cup" },
-      { name: "Asparagus", quantity: "1 cup" },
-      { name: "Lemon", quantity: "1/2" },
+      { name: "Salmon fillet", quantity: "180g, skin on" },
+      { name: "Gluten-free breadcrumbs", quantity: "1/4 cup" },
+      { name: "Dill & parsley", quantity: "2 tbsp, chopped" },
+      { name: "Dijon mustard", quantity: "1 tsp" },
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Asparagus", quantity: "1 cup, trimmed" },
+      { name: "Lemon", quantity: "1/2" }
     ],
-    steps: ["Press herb crust onto the salmon.", "Bake salmon and asparagus until salmon is cooked through.", "Finish with a squeeze of lemon."],
+    steps: [
+      "Heat oven to 200°C. Pat the **salmon** dry and brush the top with **dijon mustard**.",
+      "Mix **breadcrumbs**, **dill & parsley** and half the **olive oil** into a moist crumb, then press firmly onto the mustard.",
+      "Toss **asparagus** with the rest of the oil on a **baking tray**, lay the salmon beside it, and bake 14-16 min until the crust is golden and the fish flakes.",
+      "Finish with a squeeze of **lemon** over everything."
+    ],
+    batchTip: "Mix a double batch of the herb crumb and keep it in the fridge for up to 5 days.",
+    substitutionTip: "No salmon? Trout or a thick cod loin work the same way (cod cooks a touch faster)."
   },
   {
     id: "d02", name: "Moroccan Chicken Tagine", cuisine: "African", mealType: "dinner",
-    prepTime: 20, cookTime: 40, difficulty: "elaborate",
+    prepTime: 20, cookTime: 40, difficulty: "medium",
     phases: ["menstrual", "luteal"], goal: ["maintain"],
     dietTags: ["gluten-free", "halal"], allergens: [],
     photo: "dinner-african-moroccan-chicken-tagine.jpg",
     macros: { calories: 480, protein: 31, carbs: 38, fat: 20 },
     micros: { iron: 4, magnesium: 60, vitaminC: 20 },
+    servings: 2,
+    equipment: ["Heavy pot or tagine", "Small pot"],
     ingredients: [
-      { name: "Chicken thighs", quantity: "300g" },
-      { name: "Apricots & olives", quantity: "1/2 cup" },
+      { name: "Chicken thighs", quantity: "300g, bone-in" },
+      { name: "Onion", quantity: "1, sliced" },
+      { name: "Garlic", quantity: "2 cloves" },
       { name: "Ras el hanout", quantity: "1 tbsp" },
-      { name: "Couscous", quantity: "1 cup cooked" },
+      { name: "Dried apricots", quantity: "1/3 cup" },
+      { name: "Green olives", quantity: "1/4 cup" },
+      { name: "Chicken broth", quantity: "1 cup" },
+      { name: "Couscous", quantity: "1/2 cup dry" },
+      { name: "Coriander", quantity: "to garnish" }
     ],
-    steps: ["Brown chicken with spices.", "Add apricots, olives and a little broth, cover and simmer.", "Serve over couscous."],
+    steps: [
+      "Brown the **chicken thighs** in a little oil in a **heavy pot**, then lift out.",
+      "Soften the **onion** and **garlic** 4 min, stir in **ras el hanout** until fragrant.",
+      "Return the chicken with **dried apricots**, **green olives** and **chicken broth**. Cover and simmer gently 30-35 min until the chicken is falling off the bone.",
+      "Meanwhile pour boiling water over the **couscous**, cover 5 min, then fluff. Serve the tagine over it, scattered with **coriander**."
+    ],
+    batchTip: "The tagine deepens overnight - it keeps 3 days in the fridge and reheats gently with a splash of water.",
+    substitutionTip: "Swap couscous for cooked quinoa to keep it fully gluten-free."
   },
   {
     id: "d03", name: "Miso Glazed Tofu Stir-fry", cuisine: "Asian", mealType: "dinner",
@@ -893,45 +922,83 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-asian-miso-glazed-tofu-stir-fry.jpg",
     macros: { calories: 410, protein: 22, carbs: 40, fat: 17 },
     micros: { iron: 3, magnesium: 55, fibre: 6 },
+    servings: 1,
+    equipment: ["Non-stick pan or wok", "Small bowl"],
     ingredients: [
-      { name: "Firm tofu", quantity: "250g" },
-      { name: "Miso glaze", quantity: "2 tbsp" },
-      { name: "Broccoli & peppers", quantity: "2 cups" },
-      { name: "Brown rice", quantity: "1 cup cooked" },
+      { name: "Firm tofu", quantity: "250g, pressed" },
+      { name: "White miso paste", quantity: "1 tbsp" },
+      { name: "Soy sauce", quantity: "1 tbsp" },
+      { name: "Maple syrup", quantity: "1 tsp" },
+      { name: "Sesame oil", quantity: "1 tsp" },
+      { name: "Broccoli & peppers", quantity: "2 cups, chopped" },
+      { name: "Garlic & ginger", quantity: "1 tsp each, grated" },
+      { name: "Brown rice", quantity: "1/2 cup dry" }
     ],
-    steps: ["Pan-fry tofu until golden, then coat in miso glaze.", "Stir-fry broccoli and peppers.", "Serve everything over brown rice."],
+    steps: [
+      "Cut the **firm tofu** into cubes and pan-fry in a hot **non-stick pan** until golden on all sides, 6-8 min.",
+      "Whisk **white miso paste**, **soy sauce**, **maple syrup** and **sesame oil** into a [[miso glaze]] and toss it through the tofu off the heat.",
+      "In the same pan, stir-fry **broccoli & peppers** with **garlic & ginger** 4-5 min until crisp-tender.",
+      "Serve tofu and vegetables over cooked **brown rice**, spooning any glaze from the pan on top."
+    ],
+    batchTip: "Press and cube the tofu ahead - it keeps 3 days and crisps faster when already dry.",
+    substitutionTip: "No miso? Use 1 extra tbsp soy sauce plus a little tahini for the same savoury glaze."
   },
   {
     id: "d04", name: "Mediterranean Stuffed Peppers", cuisine: "Mediterranean", mealType: "dinner",
-    prepTime: 20, cookTime: 35, difficulty: "elaborate",
+    prepTime: 20, cookTime: 35, difficulty: "medium",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: [],
     photo: "dinner-mediterranean-stuffed-peppers.jpg",
     macros: { calories: 380, protein: 16, carbs: 46, fat: 14 },
     micros: { fibre: 10, vitaminC: 60, vitaminB6: 0.4 },
+    servings: 2,
+    equipment: ["Baking dish", "Mixing bowl"],
     ingredients: [
       { name: "Bell peppers", quantity: "4" },
       { name: "Cooked rice", quantity: "1.5 cups" },
-      { name: "Feta & herbs", quantity: "1/2 cup" },
-      { name: "Tomato sauce", quantity: "1 cup" },
+      { name: "Feta", quantity: "1/2 cup, crumbled" },
+      { name: "Cherry tomatoes", quantity: "1 cup, halved" },
+      { name: "Parsley & dill", quantity: "1/4 cup, chopped" },
+      { name: "Passata", quantity: "1 cup" },
+      { name: "Olive oil", quantity: "1 tbsp" }
     ],
-    steps: ["Mix rice with feta and herbs.", "Stuff peppers and top with tomato sauce.", "Bake until peppers are tender."],
+    steps: [
+      "Heat oven to 190°C. Slice the tops off the **bell peppers** and scoop out the seeds.",
+      "In a bowl mix **cooked rice**, **feta**, **cherry tomatoes** and **parsley & dill** with the **olive oil** and season.",
+      "Spoon **passata** across the base of a **baking dish**, stand the peppers in it and pack with the filling.",
+      "Cover with foil and bake 25 min, then uncover for 10 min until the peppers are tender and lightly charred."
+    ],
+    batchTip: "Assemble fully the night before and refrigerate - just add 5 min to the covered bake.",
+    substitutionTip: "Dairy-free? Swap feta for cubed firm tofu tossed with a pinch of salt and oregano."
   },
   {
     id: "d05", name: "Black Bean & Sweet Potato Enchiladas", cuisine: "Latin", mealType: "dinner",
-    prepTime: 20, cookTime: 30, difficulty: "elaborate",
+    prepTime: 20, cookTime: 30, difficulty: "medium",
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: [],
     photo: "dinner-latin-black-bean-sweet-potato-enchiladas.jpg",
     macros: { calories: 460, protein: 18, carbs: 62, fat: 16 },
     micros: { fibre: 14, magnesium: 65, iron: 3 },
+    servings: 2,
+    equipment: ["Baking dish", "Frying pan"],
     ingredients: [
+      { name: "Sweet potato", quantity: "1 large, diced" },
+      { name: "Black beans", quantity: "1.5 cups, drained" },
+      { name: "Cumin & smoked paprika", quantity: "1 tsp each" },
       { name: "Corn tortillas", quantity: "4" },
-      { name: "Black beans", quantity: "1.5 cups" },
-      { name: "Roasted sweet potato", quantity: "1 cup" },
-      { name: "Enchilada sauce & cheese", quantity: "1 cup" },
+      { name: "Passata", quantity: "1 cup" },
+      { name: "Chipotle or chilli powder", quantity: "1 tsp" },
+      { name: "Cheddar", quantity: "1/2 cup, grated" },
+      { name: "Coriander", quantity: "to garnish" }
     ],
-    steps: ["Fill tortillas with beans and sweet potato, roll up.", "Cover with enchilada sauce and cheese.", "Bake until bubbling."],
+    steps: [
+      "Heat oven to 200°C. Toss **sweet potato** with a little oil and roast 20 min until tender.",
+      "In a pan warm **black beans** with **cumin & smoked paprika** and the roasted sweet potato, mashing lightly to bind.",
+      "Stir **chipotle or chilli powder** into the **passata** for a quick [[enchilada sauce]]; spread a little in a **baking dish**.",
+      "Fill each **corn tortilla**, roll seam-down in the dish, blanket with the rest of the sauce and the **cheddar**, and bake 12-15 min until bubbling. Scatter with **coriander**."
+    ],
+    batchTip: "Roll and sauce the enchiladas ahead, refrigerate, then bake straight from cold adding 5 min.",
+    substitutionTip: "Vegan? Use a dairy-free cheese and check the tortillas - the filling is already plant-based."
   },
   {
     id: "d06", name: "Lemon Garlic Shrimp Linguine", cuisine: "Mediterranean", mealType: "dinner",
@@ -941,13 +1008,25 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-mediterranean-lemon-garlic-shrimp-linguine.jpg",
     macros: { calories: 500, protein: 29, carbs: 56, fat: 16 },
     micros: { omega3: 0.8, vitaminC: 14 },
+    servings: 1,
+    equipment: ["Pot", "Frying pan"],
     ingredients: [
-      { name: "Shrimp", quantity: "200g" },
       { name: "Linguine", quantity: "100g" },
-      { name: "Garlic & lemon", quantity: "to taste" },
-      { name: "Parsley & olive oil", quantity: "2 tbsp" },
+      { name: "Shrimp", quantity: "200g, peeled" },
+      { name: "Garlic", quantity: "3 cloves, sliced" },
+      { name: "Lemon", quantity: "1 (zest & juice)" },
+      { name: "Chilli flakes", quantity: "1 pinch" },
+      { name: "Olive oil", quantity: "1.5 tbsp" },
+      { name: "Parsley", quantity: "2 tbsp, chopped" }
     ],
-    steps: ["Cook linguine until al dente.", "Sauté shrimp with garlic and lemon.", "Toss pasta with shrimp, parsley and olive oil."],
+    steps: [
+      "Cook the **linguine** in well-salted water until al dente, saving a cup of pasta water before draining.",
+      "Gently warm **garlic** and **chilli flakes** in **olive oil** until just golden, then add the **shrimp** and cook 2 min a side until pink.",
+      "Add the **lemon** zest and juice with a splash of pasta water, swirling into a light sauce.",
+      "Toss in the pasta and **parsley**, loosening with more pasta water until glossy."
+    ],
+    batchTip: "Best fresh, but leftovers reheat well in a pan with a splash of water to revive the sauce.",
+    substitutionTip: "No shellfish? Sliced chicken breast or chunks of firm white fish work beautifully here."
   },
   {
     id: "d07", name: "Spiced Lentil Dal with Brown Rice", cuisine: "Middle Eastern", mealType: "dinner",
@@ -957,13 +1036,26 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-middle-eastern-spiced-lentil-dal-brown-rice.jpg",
     macros: { calories: 420, protein: 26, carbs: 58, fat: 9 },
     micros: { iron: 6, fibre: 16, magnesium: 70 },
+    servings: 2,
+    equipment: ["Pot", "Small pot"],
     ingredients: [
-      { name: "Red lentils", quantity: "1.5 cups" },
-      { name: "Coconut milk", quantity: "1/2 cup" },
+      { name: "Red lentils", quantity: "1 cup, rinsed" },
+      { name: "Onion", quantity: "1, diced" },
+      { name: "Garlic & ginger", quantity: "1 tbsp each, grated" },
       { name: "Turmeric & cumin", quantity: "1 tsp each" },
-      { name: "Brown rice", quantity: "1 cup cooked" },
+      { name: "Coconut milk", quantity: "1/2 cup" },
+      { name: "Vegetable broth", quantity: "2.5 cups" },
+      { name: "Brown rice", quantity: "1/2 cup dry" },
+      { name: "Lemon & coriander", quantity: "to finish" }
     ],
-    steps: ["Simmer lentils with spices until soft.", "Stir in coconut milk.", "Serve over brown rice."],
+    steps: [
+      "Soften the **onion** in a little oil, then stir in **garlic & ginger** and **turmeric & cumin** until fragrant.",
+      "Add **red lentils** and **vegetable broth**, and simmer 20-25 min until the lentils collapse into a soft dal.",
+      "Stir through the **coconut milk** and warm another 2 min; loosen with water if needed.",
+      "Serve over cooked **brown rice**, finished with **lemon & coriander**."
+    ],
+    batchTip: "Dal thickens as it sits and freezes for up to 2 months - loosen with water when reheating.",
+    substitutionTip: "No coconut milk? A spoon of tahini stirred in at the end gives the same creamy finish."
   },
   {
     id: "d08", name: "Grilled Chicken Buddha Bowl", cuisine: "Asian", mealType: "dinner",
@@ -973,13 +1065,25 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-asian-grilled-chicken-buddha-bowl.jpg",
     macros: { calories: 490, protein: 38, carbs: 42, fat: 17 },
     micros: { fibre: 9, vitaminB6: 0.8, vitaminC: 22 },
+    servings: 1,
+    equipment: ["Grill pan", "Baking tray"],
     ingredients: [
       { name: "Chicken breast", quantity: "180g" },
-      { name: "Quinoa", quantity: "1 cup cooked" },
-      { name: "Roasted vegetables", quantity: "1.5 cups" },
-      { name: "Tahini dressing", quantity: "2 tbsp" },
+      { name: "Quinoa", quantity: "1/3 cup dry" },
+      { name: "Sweet potato & broccoli", quantity: "1.5 cups, chopped" },
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Paprika & garlic powder", quantity: "1/2 tsp each" },
+      { name: "Tahini", quantity: "1 tbsp" },
+      { name: "Lemon", quantity: "1/2" }
     ],
-    steps: ["Grill the chicken breast and slice.", "Arrange quinoa, roasted vegetables and chicken in a bowl.", "Drizzle with tahini dressing."],
+    steps: [
+      "Heat oven to 200°C. Toss **sweet potato & broccoli** with half the **olive oil** and roast on a **baking tray** 20 min.",
+      "Rub the **chicken breast** with **paprika & garlic powder** and grill 5-6 min a side until cooked through, then rest and slice.",
+      "Cook the **quinoa** and loosen the **tahini** with **lemon** juice and water into a pourable [[tahini dressing]].",
+      "Build the bowl with quinoa, roasted veg and sliced chicken, then drizzle with the dressing."
+    ],
+    batchTip: "Roast the veg and cook the quinoa in bulk for 3 fast bowls across the week.",
+    substitutionTip: "Swap chicken for baked tofu or chickpeas to make it fully plant-based."
   },
   {
     id: "d09", name: "Nordic Beet & Walnut Salad with Goat Cheese", cuisine: "Nordic", mealType: "dinner",
@@ -989,13 +1093,25 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-nordic-beet-walnut-salad-goat-cheese.jpg",
     macros: { calories: 410, protein: 25, carbs: 26, fat: 24 },
     micros: { fibre: 8, vitaminC: 16, magnesium: 50 },
+    servings: 1,
+    equipment: ["Small bowl", "Frying pan"],
     ingredients: [
-      { name: "Roasted beets", quantity: "1.5 cups" },
+      { name: "Cooked beets", quantity: "1.5 cups, wedged" },
       { name: "Mixed greens", quantity: "2 cups" },
       { name: "Goat cheese", quantity: "50g" },
       { name: "Walnuts", quantity: "1/4 cup" },
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Red wine vinegar", quantity: "1 tsp" },
+      { name: "Honey & dijon", quantity: "1/2 tsp each" }
     ],
-    steps: ["Toss greens with roasted beets.", "Crumble goat cheese over the top.", "Sprinkle with walnuts and a light vinaigrette."],
+    steps: [
+      "Toast the **walnuts** in a dry **frying pan** 2-3 min until fragrant, then roughly chop.",
+      "Whisk **olive oil**, **red wine vinegar** and **honey & dijon** into a [[vinaigrette]].",
+      "Toss the **mixed greens** and **cooked beets** with most of the dressing and pile onto a plate.",
+      "Crumble over the **goat cheese**, scatter the walnuts and finish with the last of the vinaigrette."
+    ],
+    batchTip: "Keep the vinaigrette in a jar for up to a week - shake and pour when you need it.",
+    substitutionTip: "Dairy-free? Swap goat cheese for a few slices of avocado for the same creamy contrast."
   },
   {
     id: "d10", name: "African Peanut Chicken Curry", cuisine: "African", mealType: "dinner",
@@ -1005,13 +1121,26 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-african-peanut-chicken-curry.jpg",
     macros: { calories: 540, protein: 34, carbs: 38, fat: 26 },
     micros: { iron: 4, magnesium: 70, omega3: 0.4 },
+    servings: 2,
+    equipment: ["Heavy pot", "Small pot"],
     ingredients: [
-      { name: "Chicken thighs", quantity: "250g" },
+      { name: "Chicken thighs", quantity: "250g, diced" },
+      { name: "Onion", quantity: "1, diced" },
+      { name: "Ginger & garlic", quantity: "1 tbsp each, grated" },
+      { name: "Chopped tomatoes", quantity: "1 cup" },
       { name: "Peanut butter", quantity: "3 tbsp" },
-      { name: "Tomato & ginger", quantity: "1 cup" },
-      { name: "Rice", quantity: "1 cup cooked" },
+      { name: "Chicken broth", quantity: "1 cup" },
+      { name: "Spinach", quantity: "2 cups" },
+      { name: "Rice", quantity: "1/2 cup dry" }
     ],
-    steps: ["Brown chicken pieces.", "Add tomato, ginger and peanut butter, simmer until thick.", "Serve over rice."],
+    steps: [
+      "Brown the **chicken thighs** in a **heavy pot**, then lift out.",
+      "Soften the **onion** with **ginger & garlic**, add **chopped tomatoes** and cook down 5 min.",
+      "Whisk in **peanut butter** and **chicken broth**, return the chicken, and simmer 20 min until thick and glossy.",
+      "Wilt in the **spinach** for the last 2 min and serve over cooked **rice**."
+    ],
+    batchTip: "This curry deepens overnight and freezes well - store up to 2 months in single portions.",
+    substitutionTip: "Peanut allergy in the house? Sunflower seed butter gives the same creamy body."
   },
   {
     id: "d11", name: "Zucchini Noodle Bolognese", cuisine: "Mediterranean", mealType: "dinner",
@@ -1021,29 +1150,53 @@ const RAW_RECIPES: RawRecipe[] = [
     photo: "dinner-mediterranean-zucchini-noodle-bolognese.jpg",
     macros: { calories: 410, protein: 28, carbs: 24, fat: 20 },
     micros: { iron: 4, vitaminC: 28, fibre: 6 },
+    servings: 2,
+    equipment: ["Frying pan", "Spiralizer"],
     ingredients: [
       { name: "Lean turkey mince", quantity: "200g" },
-      { name: "Tomato sauce", quantity: "1.5 cups" },
-      { name: "Zucchini noodles", quantity: "2 cups" },
-      { name: "Basil & parmesan", quantity: "to taste" },
+      { name: "Onion & garlic", quantity: "1 small + 2 cloves" },
+      { name: "Passata", quantity: "1.5 cups" },
+      { name: "Tomato paste", quantity: "1 tbsp" },
+      { name: "Dried oregano", quantity: "1 tsp" },
+      { name: "Zucchini", quantity: "2 large" },
+      { name: "Basil & parmesan", quantity: "to serve" }
     ],
-    steps: ["Brown turkey mince and add tomato sauce, simmer.", "Sauté zucchini noodles briefly.", "Top noodles with bolognese, basil and parmesan."],
+    steps: [
+      "Brown the **turkey mince** in a **frying pan**, breaking it up, then add **onion & garlic** and soften 4 min.",
+      "Stir in **tomato paste**, **passata** and **dried oregano**, and simmer 20 min until rich.",
+      "Spiralize the **zucchini** into noodles and sauté in a hot dry pan 2 min - just to warm, not soften.",
+      "Twirl the noodles onto plates, spoon over the bolognese and finish with **basil & parmesan**."
+    ],
+    batchTip: "The bolognese keeps 4 days and freezes for 3 months - spiralize fresh zucchini each time.",
+    substitutionTip: "No spiralizer? A peeler makes wide zucchini ribbons that work just as well."
   },
   {
     id: "d12", name: "Korean Beef Bibimbap", cuisine: "Asian", mealType: "dinner",
-    prepTime: 20, cookTime: 20, difficulty: "elaborate",
+    prepTime: 20, cookTime: 20, difficulty: "medium",
     phases: ["follicular", "ovulatory"], goal: ["gain"],
     dietTags: [], allergens: ["soy", "eggs"],
     photo: "dinner-asian-korean-beef-bibimbap.jpg",
     macros: { calories: 530, protein: 32, carbs: 54, fat: 19 },
     micros: { iron: 5, vitaminC: 18, fibre: 7 },
+    servings: 1,
+    equipment: ["Frying pan", "Pot"],
     ingredients: [
       { name: "Thinly sliced beef", quantity: "150g" },
-      { name: "Rice", quantity: "1 cup cooked" },
-      { name: "Sautéed vegetables", quantity: "1.5 cups" },
-      { name: "Fried egg & gochujang", quantity: "1" },
+      { name: "Soy sauce & sesame oil", quantity: "1 tbsp each" },
+      { name: "Garlic", quantity: "1 clove, grated" },
+      { name: "Rice", quantity: "1/2 cup dry" },
+      { name: "Spinach & carrot", quantity: "1.5 cups" },
+      { name: "Egg", quantity: "1" },
+      { name: "Gochujang", quantity: "1 tbsp" }
     ],
-    steps: ["Marinate and quickly fry the beef.", "Arrange rice, vegetables and beef in a bowl.", "Top with a fried egg and gochujang."],
+    steps: [
+      "Marinate the **thinly sliced beef** in **soy sauce & sesame oil** with **garlic** for 10 min while the **rice** cooks.",
+      "Sauté the **spinach & carrot** separately in a hot pan, keeping each vegetable in its own pile, then set aside.",
+      "Sear the beef in the same **frying pan** 2-3 min until caramelised, then fry the **egg** sunny-side up.",
+      "Bowl the rice, arrange the beef and vegetables on top, crown with the egg and a spoon of **gochujang** to stir through."
+    ],
+    batchTip: "Prep and refrigerate the sautéed vegetables ahead - assembly then takes under 10 min.",
+    substitutionTip: "Swap beef for sliced mushrooms and extra egg for a lighter vegetarian bibimbap."
   },
 
   // ───────── Snacks (6) ─────────
@@ -1236,20 +1389,23 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["vegan", "vegetarian", "gluten-free"], allergens: [],
     macros: { calories: 380, protein: 14, carbs: 58, fat: 10 },
     micros: { iron: 5, fibre: 14, magnesium: 60 },
+    servings: 4,
+    equipment: ["Large pot"],
     ingredients: [
-      { name: "Lentils", quantity: "1 cup" },
-      { name: "Sweet potato", quantity: "2" },
-      { name: "Onion", quantity: "1" },
+      { name: "Green or brown lentils", quantity: "1 cup, rinsed" },
+      { name: "Sweet potato", quantity: "2, diced" },
+      { name: "Onion", quantity: "1, diced" },
       { name: "Garlic", quantity: "2 cloves" },
-      { name: "Carrots", quantity: "2" },
+      { name: "Carrots", quantity: "2, sliced" },
       { name: "Cumin", quantity: "1 tsp" },
       { name: "Turmeric", quantity: "1/2 tsp" },
-      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Olive oil", quantity: "1 tbsp" }
     ],
     steps: [
-      "Sauté onion, garlic and spices in olive oil 3 min.",
-      "Add chopped carrots and sweet potato, stir 2 min.",
-      "Add lentils + 4 cups water. Simmer 25 min until tender.",
+      "Soften the **onion** and **garlic** in **olive oil** with **cumin** and **turmeric** for 3 min until fragrant.",
+      "Stir in the **carrots** and **sweet potato** and cook 2 min to coat in the spices.",
+      "Add the **lentils** and 4 cups water, then simmer 25 min until the lentils and sweet potato are meltingly tender.",
+      "Season well and mash a few pieces of sweet potato against the pot to thicken."
     ],
     cyclePhase: ["period", "luteal", "any"],
     intention: ["comfort", "plant", "budget", "cycle"],
@@ -1257,7 +1413,7 @@ const RAW_RECIPES: RawRecipe[] = [
     vibe: "Balanced",
     conservation: { fridgeDays: 5, freezerWeeks: 8, container: "Airtight container or freezer bag" },
     batchTip: "Doubles beautifully — freeze half in single portions.",
-    substitutionTip: "Swap sweet potato for butternut squash.",
+    substitutionTip: "Swap sweet potato for butternut squash."
   },
   {
     id: "kid-bento", name: "Strawberry Bento Lunchbox", cuisine: "Global", mealType: "lunchbox",
@@ -1547,19 +1703,30 @@ const RAW_RECIPES: RawRecipe[] = [
   // ───────── Batch 2 — Dinner (+6) ─────────
   {
     id: "d13", name: "Vegan Mushroom Risotto", cuisine: "Mediterranean", mealType: "dinner",
-    prepTime: 15, cookTime: 30, difficulty: "elaborate",
+    prepTime: 15, cookTime: 30, difficulty: "medium",
     phases: ["luteal", "menstrual"], goal: ["maintain", "lose"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
     macros: { calories: 420, protein: 11, carbs: 64, fat: 12 },
     micros: { magnesium: 50, fibre: 5, vitaminB6: 0.3 },
+    servings: 2,
+    equipment: ["Wide pan", "Small pot"],
     ingredients: [
       { name: "Arborio rice", quantity: "1 cup" },
-      { name: "Mushrooms", quantity: "2 cups" },
-      { name: "Vegetable broth", quantity: "3 cups" },
-      { name: "Onion", quantity: "1/2" },
+      { name: "Mushrooms", quantity: "2 cups, sliced" },
+      { name: "Onion & garlic", quantity: "1/2 + 2 cloves" },
+      { name: "White wine", quantity: "1/4 cup (optional)" },
+      { name: "Vegetable broth", quantity: "3.5 cups, warm" },
       { name: "Nutritional yeast", quantity: "2 tbsp" },
+      { name: "Olive oil", quantity: "1 tbsp" }
     ],
-    steps: ["Sauté onion and mushrooms.", "Add rice and toast briefly.", "Gradually add warm broth, stirring until creamy, then finish with nutritional yeast."],
+    steps: [
+      "Sauté the **mushrooms** in **olive oil** until deeply golden, then set half aside for the top.",
+      "Soften the **onion & garlic**, stir in the **arborio rice** and toast 1 min, then deglaze with the **white wine**.",
+      "Add the warm **vegetable broth** a ladle at a time, stirring, until each is absorbed - about 18-20 min to creamy and al dente.",
+      "Beat in **nutritional yeast** off the heat, then crown with the reserved mushrooms."
+    ],
+    batchTip: "Risotto is best fresh; leftovers make excellent pan-fried rice cakes the next day.",
+    substitutionTip: "Skip the wine and add an extra splash of broth with a squeeze of lemon."
   },
   {
     id: "d14", name: "Halal Lamb Kofta with Couscous", cuisine: "Middle Eastern", mealType: "dinner",
@@ -1568,14 +1735,26 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["halal"], allergens: ["dairy"],
     macros: { calories: 540, protein: 34, carbs: 40, fat: 24 },
     micros: { iron: 5, magnesium: 55, vitaminC: 14 },
+    servings: 2,
+    equipment: ["Grill pan", "Mixing bowl"],
     ingredients: [
       { name: "Ground lamb", quantity: "200g" },
+      { name: "Onion", quantity: "1/4, grated" },
       { name: "Cumin & coriander", quantity: "1 tsp each" },
-      { name: "Couscous", quantity: "1 cup cooked" },
-      { name: "Tomato salad", quantity: "1 cup" },
-      { name: "Mint yoghurt", quantity: "2 tbsp" },
+      { name: "Garlic", quantity: "1 clove, grated" },
+      { name: "Couscous", quantity: "1/2 cup dry" },
+      { name: "Tomato & cucumber", quantity: "1 cup, diced" },
+      { name: "Greek yoghurt", quantity: "1/4 cup" },
+      { name: "Mint", quantity: "2 tbsp, chopped" }
     ],
-    steps: ["Mix lamb with spices and shape into koftas.", "Grill until cooked through.", "Serve over couscous with tomato salad and mint yoghurt."],
+    steps: [
+      "Mix **ground lamb** with **grated onion**, **garlic** and **cumin & coriander**, then shape around skewers into 4 koftas.",
+      "Grill the koftas on a hot **grill pan** 4-5 min a side until charred and cooked through.",
+      "Pour boiling water over the **couscous**, cover 5 min, then fluff; toss the **tomato & cucumber** into a quick salad.",
+      "Stir **mint** through the **greek yoghurt** for a [[mint yoghurt]] and serve alongside the kofta and couscous."
+    ],
+    batchTip: "Shape the koftas ahead - they hold 2 days raw in the fridge or freeze for a month.",
+    substitutionTip: "Dairy-free? A coconut yoghurt with mint keeps the cooling sauce without the dairy."
   },
   {
     id: "d15", name: "Baked Cod with Roasted Veg", cuisine: "Nordic", mealType: "dinner",
