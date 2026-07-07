@@ -14,7 +14,6 @@ import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
-import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
@@ -1355,23 +1354,15 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
 
   return (
     <div className="space-y-4">
-      {/* Cute motivation strip — real movement level + streak */}
-      <LevelStreak streak={readYogaStreak().count} />
-
-      {/* Post-tour guidance — once a week exists but no flow done yet */}
-      {!editing && !weekEmpty && readYogaSessionCount() === 0 && (
-        <NextStepBanner
-          label="Begin your first flow"
-          hint="Tap the glowing ▶ on today's card — or Edit to shape the week your way ✿"
-        />
-      )}
-
-      {/* ── The week, day by day ────────────────────────────────────────────── */}
+      {/* ── The week, day by day — starts right under the hero ──────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
-            <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
+              <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
+            </div>
+            <LevelStreak variant="chip" streak={readYogaStreak().count} />
           </div>
           <div className="flex items-center gap-2">
             <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose">

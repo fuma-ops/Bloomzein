@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
-  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils,
+  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
@@ -11,7 +11,6 @@ import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
-import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
@@ -1769,17 +1768,6 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   return (
     <div className="space-y-4">
 
-      {/* Cute motivation strip — real movement level + streak */}
-      <LevelStreak streak={readWorkoutStreak().count} />
-
-      {/* Post-tour guidance — keeps her guided until her first session */}
-      {source !== "none" && !editing && readWorkoutSessionCount() === 0 && (
-        <NextStepBanner
-          label="Start your first session"
-          hint="Tap the glowing ▶ on today's card below — your first bloom begins here ✿"
-        />
-      )}
-
       {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (
         <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden flex">
@@ -1788,9 +1776,12 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
           </div>
           <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
-              <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{activeProgram.title}</h2>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
+                <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{activeProgram.title}</h2>
+              </div>
+              <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -1809,42 +1800,58 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                   className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
               ))}
             </div>
-            <div className="flex items-center justify-between pt-0.5">
+            <div className="flex items-center gap-2 flex-wrap pt-0.5">
               <button onClick={onBrowsePrograms} className="text-[11px] font-bold text-hotpink">Change program</button>
               <button onClick={buildMyOwn} className="text-[11px] font-bold text-hotpink">Build my own</button>
-              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave program</button>
+              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave</button>
+              <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
+                <Utensils className="h-3.5 w-3.5" />
+                <span className={["relative h-4 w-7 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "0.875rem" : "0.125rem" }} /></span>
+              </button>
             </div>
           </div>
         </section>
       )}
 
       {source === "freestyle" && (
-        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm p-3.5 flex items-center gap-3">
-          <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-rose leading-tight">My plan · {editing ? "Edit your week" : "Freestyle week"}</p>
-            <p className="text-[11px] text-rose/65 leading-snug">{editing ? "Pick a zone, feel & length for each day." : `Auto-built from your profile${phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()} phase` : ""}`}</p>
+        <section className="rounded-2xl bg-white/90 border border-petal/60 shadow-sm px-3.5 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-4 w-4" strokeWidth={1.8} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : "Freestyle week"}</p>
+              <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : `From your profile${phase !== "any" ? ` · ${PHASE_LABEL[phase].toLowerCase()}` : ""}`}</p>
+            </div>
+            <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
           </div>
-          {editing ? (
-            <div className="flex shrink-0 items-center gap-1.5">
-              <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
-              <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1.5 text-[11px] font-bold shadow-sm">Done</button>
-            </div>
-          ) : (
-            <div className="flex shrink-0 items-center gap-1.5">
-              <button onClick={() => setEditing(true)} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Edit</button>
-              <button onClick={onGenerateClick} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink">Regenerate</button>
-            </div>
-          )}
+          <div className="mt-2 flex items-center gap-1.5">
+            {editing ? (
+              <>
+                <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
+                <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1 text-[11px] font-bold shadow-sm">Done</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><Pencil className="h-3 w-3" /> Edit</button>
+                <button onClick={onGenerateClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><RotateCcw className="h-3 w-3" /> Regenerate</button>
+              </>
+            )}
+            <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
+              <Utensils className="h-3.5 w-3.5" />
+              <span className={["relative h-4 w-7 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "0.875rem" : "0.125rem" }} /></span>
+            </button>
+          </div>
         </section>
       )}
 
       {/* ── Empty state — choose how to plan ────────────────────────────────── */}
       {source === "none" && (
         <section className="rounded-3xl bg-white/85 border border-petal/60 p-4 sm:p-5 space-y-3">
-          <div>
-            <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Set up your weekly plan ✿</h2>
-            <p className="text-sm text-rose/80">Choose one — your sessions appear day by day below, ready to start.</p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Set up your weekly plan ✿</h2>
+              <p className="text-sm text-rose/80">Choose one — your sessions appear day by day below, ready to start.</p>
+            </div>
+            <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
           </div>
           <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Trophy className="h-5 w-5" strokeWidth={1.8} /></span>
@@ -1871,25 +1878,6 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
           </button>
         </section>
-      )}
-
-      {/* ── Fuel toggle — show recovery meals in the plan, or keep it simple ──── */}
-      {source !== "none" && (
-        <button
-          onClick={toggleFuel}
-          className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 text-left active:scale-[0.99] transition"
-        >
-          <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-full", fuelInPlan ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
-            <Utensils className="h-4 w-4" strokeWidth={1.9} />
-          </span>
-          <span className="flex-1 min-w-0">
-            <span className="block text-[12px] font-bold text-rose leading-tight">Recovery meals in plan</span>
-            <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? "Each session shows what to eat after ✿" : "Plan shows sessions only"}</span>
-          </span>
-          <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
-            <span className={["absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all", fuelInPlan ? "left-4.5" : "left-0.5"].join(" ")} style={{ left: fuelInPlan ? "1.125rem" : "0.125rem" }} />
-          </span>
-        </button>
       )}
 
       {/* ── The week, day by day — image LEFT · info RIGHT (vignette, not banner) ── */}

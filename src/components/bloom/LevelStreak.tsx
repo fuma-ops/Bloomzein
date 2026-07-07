@@ -23,7 +23,7 @@ function Star({ size = 14, color = "#EC4899", style }: { size?: number; color?: 
   );
 }
 
-export function LevelStreak({ streak, className = "" }: { streak: number; className?: string }) {
+export function LevelStreak({ streak, className = "", variant = "bar" }: { streak: number; className?: string; variant?: "bar" | "chip" }) {
   const lvl = readMovementLevel();
   const [celebrate, setCelebrate] = useState<null | { level: number; name: string; icon: string }>(null);
 
@@ -40,6 +40,19 @@ export function LevelStreak({ streak, className = "" }: { streak: number; classN
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (variant === "chip") {
+    return (
+      <>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 pl-1 pr-2 py-1 shrink-0 ${className}`} title={`Lvl ${lvl.level} · ${lvl.name} · ${streak}-day streak`}>
+          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose"><BloomFlower size={12} /></span>
+          <span className="text-[11px] font-bold text-rose leading-none">Lvl {lvl.level}</span>
+          <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-hotpink leading-none"><Flame className="h-3 w-3" fill={streak > 0 ? "currentColor" : "none"} strokeWidth={2} />{streak}</span>
+        </span>
+        {celebrate && <LevelUpCelebration info={celebrate} onClose={() => setCelebrate(null)} />}
+      </>
+    );
+  }
 
   return (
     <>
