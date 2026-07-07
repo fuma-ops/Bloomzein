@@ -71,9 +71,14 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   // Transient "✓ Planned!" flash after an implicit plan is built (same line).
   const [flash, setFlash] = useState<null | "meals" | "movement">(null);
   useEffect(() => { if (!flash) return; const t = setTimeout(() => setFlash(null), 2600); return () => clearTimeout(t); }, [flash]);
-  // Confirm before syncing/overwriting a plan the user already has.
-  const [confirmSync, setConfirmSync] = useState(false);
-  const doSync = () => { onPlanMeals(); setFlash("meals"); setConfirmSync(false); };
+  // Confirm before syncing/overwriting a plan the user already has (meals or
+  // movement). Null = closed.
+  const [confirmSync, setConfirmSync] = useState<null | "meals" | "movement">(null);
+  const doSync = () => {
+    if (confirmSync === "meals") { onPlanMeals(); setFlash("meals"); }
+    else if (confirmSync === "movement") { onPlanMovement(); setFlash("movement"); }
+    setConfirmSync(null);
+  };
   const planMeals = () => { onPlanMeals(); setFlash("meals"); };
   const planMovement = () => { onPlanMovement(); setFlash("movement"); };
 
@@ -159,12 +164,13 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           doneLabel={mealsFromDiet ? "Meals planned" : "Your week is planned"}
           onClick={planMeals}
           onUndo={mealsFromDiet ? onUnplanMeals : undefined}
-          onSync={mealsFromDiet ? undefined : () => setConfirmSync(true)}
+          onSync={mealsFromDiet ? undefined : () => setConfirmSync("meals")}
           views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
         <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal"
           doneLabel={movementFromDiet ? "Movement planned" : "Your movement is planned"}
           onClick={planMovement}
           onUndo={movementFromDiet ? onUnplanMovement : undefined}
+          onSync={movementFromDiet ? undefined : () => setConfirmSync("movement")}
           views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
       </div>
       {/* Once she's eating, the daily verdict */}
@@ -174,23 +180,28 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
         </p>
       )}
 
-      {/* Confirm before syncing — the user already has their own Meals Planner
-          week, so we NEVER overwrite it silently. Portaled so a transformed
-          ancestor can't trap the fixed overlay. */}
+      {/* Confirm before syncing — the user already has their own plan (Meals
+          Planner week, or Workout/Yoga plans they built), so Diet NEVER adjusts
+          it silently. Portaled so a transformed ancestor can't trap the fixed
+          overlay. */}
       {confirmSync && createPortal(
-        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={() => setConfirmSync(false)}>
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={() => setConfirmSync(null)}>
           <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
           <div className="relative w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl animate-scale-in" onClick={(ev) => ev.stopPropagation()}>
             <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-6 w-6" /></span>
-            <p className="text-center font-script text-2xl text-hotpink">Sync your week?</p>
+            <p className="text-center font-script text-2xl text-hotpink">{confirmSync === "movement" ? "Adjust your movement?" : "Sync your week?"}</p>
             <p className="mt-1.5 text-center text-[12.5px] text-rose/70 leading-snug">
-              You already have a week planned in your <b className="text-hotpink">Meals Planner</b>. Rebuild it tuned to your <b className="text-hotpink">{goalWord}</b> goal? This replaces your current week.
+              {confirmSync === "movement" ? (
+                <>You already have <b className="text-hotpink">workout &amp; yoga</b> plans. Adjust them to your <b className="text-hotpink">{goalWord}</b> goal? If you'd rather keep them as they are, they'll stay yours — just not goal-synced.</>
+              ) : (
+                <>You already have a week planned in your <b className="text-hotpink">Meals Planner</b>. Rebuild it tuned to your <b className="text-hotpink">{goalWord}</b> goal? This replaces your current week.</>
+              )}
             </p>
             <div className="mt-4 grid gap-2">
               <button onClick={doSync} className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2.5 text-sm font-bold shadow-lg shadow-hotpink/30 active:scale-95 transition">
-                <Sparkles className="h-4 w-4" /> Sync to my goal
+                <Sparkles className="h-4 w-4" /> {confirmSync === "movement" ? "Adjust to my goal" : "Sync to my goal"}
               </button>
-              <button onClick={() => setConfirmSync(false)} className="w-full rounded-2xl border border-petal/60 bg-white px-4 py-2.5 text-sm font-bold text-rose/70 hover:bg-blush active:scale-95 transition">
+              <button onClick={() => setConfirmSync(null)} className="w-full rounded-2xl border border-petal/60 bg-white px-4 py-2.5 text-sm font-bold text-rose/70 hover:bg-blush active:scale-95 transition">
                 Keep my plan
               </button>
             </div>

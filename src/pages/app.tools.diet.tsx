@@ -1745,14 +1745,17 @@ export default function DietPage() {
   const unplanMealsImplicit = () => { clearMealPlan(); refreshMeals(); };
   const unplanMovementImplicit = () => { clearMovementPlan(); };
 
-  // Reset → preview a brand-new user: wipe the diet keys AND the shared plans
-  // (meals / workout / yoga) so the setup CTAs show unchecked, then reload.
+  // Reset the DIET tool only. Diet must never wipe plans the user built in the
+  // Meals / Workout / Yoga tools — those are theirs. So we clear Diet's own keys
+  // and un-plan ONLY what Diet itself created (meal plan with the from-diet
+  // marker, movement with the goal marker). User-owned plans survive the reset.
   const onReset = async () => {
     resetToolState("diet");
-    resetToolState("meals");
-    resetToolState("workout");
-    resetToolState("yoga");
-    try { localStorage.removeItem("bloom:meals-plan"); localStorage.removeItem("bloom:diet-eaten"); } catch {}
+    try {
+      if (localStorage.getItem("bloom:meals-from-diet")) clearMealPlan();
+      localStorage.removeItem("bloom:diet-eaten");
+    } catch {}
+    clearMovementPlan(); // marker-gated: only clears the goal-tuned yoga/workout
     try { await flushCloudSync(); } catch {}
     window.location.reload();
   };
