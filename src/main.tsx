@@ -4,6 +4,10 @@ import "./styles.css"
 import "./bloom-motion.css"
 import App from "./App"
 import { storePWAPrompt } from "./lib/pwa"
+import { initErrorLogging } from "./lib/errorLog"
+
+// Report uncaught async/promise errors to our Supabase crash log.
+initErrorLogging()
 
 // ── One-shot cache purge ───────────────────────────────────────────────────
 // Bump PURGE_KEY whenever a deploy keeps showing stale UI to force every
