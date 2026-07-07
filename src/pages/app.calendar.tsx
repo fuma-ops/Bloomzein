@@ -737,9 +737,9 @@ function DayDrawer({
   const meta = phase ? PHASE_META[phase] : null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4 bg-rose/30 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-rose/30 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="relative w-full sm:max-w-lg max-h-[88vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 pb-28 sm:pb-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
+        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-blush/60 text-rose hover:bg-blush transition">
