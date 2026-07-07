@@ -39,15 +39,16 @@ const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
 const BADGES_KEY = "bloom:workout-badges";
-const PROGRAM_KEY = "bloom:workout-program";
-const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
+export const PROGRAM_KEY = "bloom:workout-program";
+export const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
 const PROGRAM_BANNER_KEY = "bloom:workout-program-banner-seen";
 const CHALLENGE_KEY = "bloom:workout-challenge";
 const SOUND_KEY = "bloom:workout-sound";
 const VOICE_KEY = "bloom:workout-voice";
 export const WORKOUT_LOG_KEY = "bloom:workout-history";
 
-const DEFAULT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
+export const DEFAULT_WORKOUT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
+const DEFAULT_PROFILE = DEFAULT_WORKOUT_PROFILE;
 
 export interface HistoryEntry {
   date: string;
@@ -181,7 +182,7 @@ function buildIntentionWeek(phase: CyclePhase, goal: Goal, n: number, seed: numb
   return out;
 }
 
-function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, seed = 0): Record<string, DayPlan | null> {
+export function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, seed = 0): Record<string, DayPlan | null> {
   const activeDays = ACTIVE_DAY_PATTERNS[profile.daysPerWeek];
   const durationMin = durationForLevel(profile.level);
   const zones = buildZoneWeek(activeDays.length, seed);
