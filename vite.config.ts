@@ -22,8 +22,8 @@ export default defineConfig({
       },
       includeAssets: ["apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Bloom & Zein",
-        short_name: "Bloom & Zein",
+        name: "Bloomzein",
+        short_name: "Bloomzein",
         description: "Your softest era starts here ✿",
         theme_color: "#FF69B4",
         background_color: "#fff0f3",

@@ -47,10 +47,10 @@ self.addEventListener("push", (event: PushEvent) => {
   try {
     payload = event.data?.json() ?? {};
   } catch {
-    payload = { title: "Bloom & Zein", body: event.data?.text() ?? "" };
+    payload = { title: "Bloomzein", body: event.data?.text() ?? "" };
   }
 
-  const title = payload.title || "Bloom & Zein";
+  const title = payload.title || "Bloomzein";
   const data = payload.data || {};
 
   type AlarmNotificationOptions = NotificationOptions & {

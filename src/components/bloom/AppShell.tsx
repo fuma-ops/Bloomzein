@@ -31,7 +31,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
           <div className="mb-8 px-1">
             <div className="lg:block hidden"><BloomLogo /></div>
             <div className="lg:hidden">
-              <a href="/" aria-label="Bloom & Zein home">
+              <a href="/" aria-label="Bloomzein home">
                 <AppIcon size={38} />
               </a>
             </div>
