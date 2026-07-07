@@ -907,6 +907,10 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
     [mealsVersion],
   );
   const movementPlanned = readWorkoutPlanDays().length > 0 || readYogaPlanDays().length > 0;
+  // Did Diet create/sync this meal plan? If not, it's the user's own Meals
+  // Planner week — protected from Diet's un-plan, offered a "Sync" instead.
+  // Recomputed each render (mealsVersion / trainTick drive re-renders).
+  const mealsFromDiet = mealsPlanned && (() => { try { return !!localStorage.getItem("bloom:meals-from-diet"); } catch { return false; } })();
 
   return (
     <div className="space-y-4">
@@ -915,6 +919,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
       <EnergyTodayCard
         e={energy}
         mealsPlanned={mealsPlanned}
+        mealsFromDiet={mealsFromDiet}
         movementPlanned={movementPlanned}
         onPlanMeals={onPlanMeals}
         onPlanMovement={onPlanMovement}
