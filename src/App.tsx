@@ -9,6 +9,7 @@ const HelpPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.
 const FaqPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
 const GuidesIndexPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
 const GuidePage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
+const AdminMessagesPage = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminMessagesPage })));
 const ToolsIndex = lazy(() => import("./pages/app.tools.index"));
 const BudgetPage = lazy(() => import("./pages/budget"));
 const YogaPage = lazy(() => import("./pages/app.tools.yoga"));
@@ -119,6 +120,11 @@ function AppContent() {
   }
   if (path.startsWith("/guides/")) {
     return <Suspense fallback={<PageLoader />}><GuidePage slug={path.split("/").pop() || ""} /></Suspense>;
+  }
+
+  // Private admin inbox — gated by email + Supabase RLS inside the page
+  if (path === "/admin") {
+    return <Suspense fallback={<PageLoader />}><AdminMessagesPage /></Suspense>;
   }
 
   // Inside-App routes wrapped with the interactive Navigation Menu & Sidebar (AppShell)
