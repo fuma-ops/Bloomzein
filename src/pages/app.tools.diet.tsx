@@ -9,7 +9,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { WORKOUT_LOG_KEY, PROGRAM_KEY as WORKOUT_PROGRAM_KEY, PROGRAM_PHASE_KEY as WORKOUT_PROGRAM_PHASE_KEY, generateWeeklyPlan, DEFAULT_WORKOUT_PROFILE, type HistoryEntry } from "@/pages/app.tools.workout";
+import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
@@ -1666,33 +1666,22 @@ export default function DietPage() {
   };
   const planMovementImplicit = () => {
     const phase = readCyclePhase() ?? "any";
-    // Tune the plan to her goal: build → strength 4×, lose → 4× active,
-    // maintain → 3× balanced. generateWeeklyPlan then spreads zones/intensity
-    // across the week and auto-inserts recovery on period/luteal.
-    const wkGoal = profile.goal === "gain" ? "strengthen" : "energy";
-    const wkDays: 2 | 3 | 4 | 5 = profile.goal === "maintain" ? 3 : 4;
-    const wp = { ...DEFAULT_WORKOUT_PROFILE, goal: wkGoal, daysPerWeek: wkDays } as typeof DEFAULT_WORKOUT_PROFILE;
-    const plan = generateWeeklyPlan(wp, phase, 0);
-
-    // Add 2 phase-appropriate yoga days on rest days, so "movement" is complete.
+    // Yoga: 2 phase-appropriate weekend sessions (never clash with workout days)
+    // so "movement" always covers BOTH a workout and a yoga plan.
     const yogaFocus = phase === "period" ? "Cycle sync"
       : phase === "follicular" ? "Morning energy"
       : phase === "ovulation" || phase === "fertile" ? "Strength"
       : phase === "luteal" ? "Stress relief" : "Stress relief";
-    const week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const yogaSchedule: Record<string, string | null> = {};
-    week.forEach((d) => { yogaSchedule[d] = null; });
-    week.filter((d) => !plan[d]).slice(0, 2).forEach((d) => { yogaSchedule[d] = yogaFocus; });
-
+    const yogaSchedule: Record<string, string | null> = {
+      Mon: null, Tue: null, Wed: null, Thu: null, Fri: null, Sat: yogaFocus, Sun: yogaFocus,
+    };
     try {
-      localStorage.setItem(WORKOUT_PROGRAM_KEY, JSON.stringify(plan));
-      localStorage.setItem(WORKOUT_PROGRAM_PHASE_KEY, JSON.stringify(phase));
       localStorage.setItem("bloom:yoga-schedule", JSON.stringify(yogaSchedule));
+      // Workout: let HER choose her first setup (level / equipment / days). The
+      // Workout tool then auto-generates a goal-fit week from that profile.
+      localStorage.setItem("bloom:workout-autoplan", "1");
       window.dispatchEvent(new Event("storage"));
     } catch {}
-    refreshMeals();
-    // Movement is more personal than meals — take her straight to the generated
-    // plan in the Workout tool so she can see & adjust it.
     window.location.href = "/app/tools/workout";
   };
 

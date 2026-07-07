@@ -125,7 +125,7 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
         <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals}
           views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
         <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement}
-          views={[{ label: "View", onClick: go("/app/tools/workout") }]} />
+          views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
       </div>
       {/* Once she's eating, the daily verdict */}
       {e.logged && (
