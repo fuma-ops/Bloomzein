@@ -9,7 +9,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
+import { WORKOUT_LOG_KEY, PROGRAM_KEY as WORKOUT_PROGRAM_KEY, PROGRAM_PHASE_KEY as WORKOUT_PROGRAM_PHASE_KEY, generateWeeklyPlan, DEFAULT_WORKOUT_PROFILE, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, type PlanSlot } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
@@ -774,7 +774,7 @@ function PhaseCarousel({ phase, cycleDay, onSyncedPlan }: { phase: DietPhase; cy
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek }: {
+function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   mealsVersion: number;
@@ -786,6 +786,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   onSyncedPlan: () => void;
   onDietToday: () => void;
   onDietWeek: () => void;
+  onPlanMeals: () => void;
+  onPlanMovement: () => void;
 }) {
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
@@ -868,8 +870,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
         e={energy}
         mealsPlanned={mealsPlanned}
         movementPlanned={movementPlanned}
-        onPlanMeals={onDietWeek}
-        onPlanMovement={onSetupWorkouts}
+        onPlanMeals={onPlanMeals}
+        onPlanMovement={onPlanMovement}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
@@ -1640,6 +1642,29 @@ export default function DietPage() {
     window.location.href = "/app/tools/meals";
   };
 
+  // Plan IMPLICITLY from the Diet CTAs — build the plan in the background (no
+  // navigation) so the CTA flips to checked; only its 'View' link navigates.
+  const planMealsImplicit = () => {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const slots = ["breakfast", "lunch", "dinner", "snack"] as const;
+    days.forEach((d, di) => slots.forEach((slot, si) => {
+      const cands = RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
+      if (cands.length) addRecipeToMealPlan(cands[(di * 3 + si) % cands.length].id, d, slot);
+    }));
+    try { localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label); } catch {}
+    refreshMeals();
+  };
+  const planMovementImplicit = () => {
+    const phase = readCyclePhase() ?? "any";
+    const plan = generateWeeklyPlan(DEFAULT_WORKOUT_PROFILE, phase, 0);
+    try {
+      localStorage.setItem(WORKOUT_PROGRAM_KEY, JSON.stringify(plan));
+      localStorage.setItem(WORKOUT_PROGRAM_PHASE_KEY, JSON.stringify(phase));
+      window.dispatchEvent(new Event("storage"));
+    } catch {}
+    refreshMeals(); // re-render so the 'movement planned' check flips to true
+  };
+
   // Reset → preview a brand-new user: wipe the diet keys AND the shared plans
   // (meals / workout / yoga) so the setup CTAs show unchecked, then reload.
   const onReset = async () => {
@@ -1732,6 +1757,7 @@ export default function DietPage() {
             setProfile={setProfile} onEdit={() => setEditingSetup(true)} goTo={setTab}
             onReplayTour={() => setReplayTour(true)} cycleReady={cycleReady}
             onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
+            onPlanMeals={planMealsImplicit} onPlanMovement={planMovementImplicit}
           />
         )}
         {tab === "cycle" && (

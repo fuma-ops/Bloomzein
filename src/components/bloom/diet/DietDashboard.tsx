@@ -4,6 +4,7 @@
  * body & goal) through the shared nutritionTargets engine, so Diet, Today and
  * Meals always agree.
  */
+import { useState, useEffect } from "react";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check,
@@ -59,6 +60,12 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
   const coach = coachRecommendation();
   const proj = goalProjection();
   const hasEta = !!proj && proj.etaWeeks != null; // only tease the timeline if a goal weight is set
+
+  // Transient "✓ Planned!" flash after an implicit plan is built (same line).
+  const [flash, setFlash] = useState<null | "meals" | "movement">(null);
+  useEffect(() => { if (!flash) return; const t = setTimeout(() => setFlash(null), 2600); return () => clearTimeout(t); }, [flash]);
+  const planMeals = () => { onPlanMeals(); setFlash("meals"); };
+  const planMovement = () => { onPlanMovement(); setFlash("movement"); };
   const verdictText =
     e.verdict === "over" ? "A little over — an easy dinner evens it out"
     : e.verdict === "close" ? "Almost there — you're right on target ✿"
@@ -102,8 +109,8 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
       )}
       {/* Two guided setup steps — soft app rows; check off once each plan exists */}
       <div className="mt-3 grid gap-2">
-        <SetupCta done={mealsPlanned} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={onPlanMeals} href="/app/tools/meals" />
-        <SetupCta done={movementPlanned} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={onPlanMovement} href="/app/tools/workout" />
+        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils} todo="Plan my meals for my goal" doneLabel="Meals planned" onClick={planMeals} href="/app/tools/meals" />
+        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal" doneLabel="Movement planned" onClick={planMovement} href="/app/tools/workout" />
       </div>
       {/* Once she's eating, the daily verdict */}
       {e.logged && (
@@ -117,14 +124,15 @@ export function EnergyTodayCard({ e, mealsPlanned, movementPlanned, onPlanMeals,
 
 /** A guided setup step, app-style. Not done → soft to-do row you can tap to
  *  build the plan. Done → soft green check + a small 'View' CTA to the plan. */
-function SetupCta({ done, Icon, todo, doneLabel, onClick, href }: {
-  done: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void; href: string;
+function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, href }: {
+  done: boolean; flashed?: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void; href: string;
 }) {
   if (done) {
     return (
       <div className="w-full flex items-center gap-2.5 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
         <span className="flex-1 text-[12.5px] font-bold text-rose/70">{doneLabel}</span>
+        {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
         <button onClick={go(href)} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink px-3 py-1 text-[11px] font-bold active:scale-95 transition">View <ChevronRight className="h-3 w-3" /></button>
       </div>
     );
