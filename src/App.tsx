@@ -1,29 +1,51 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
 import Landing from "./pages/Landing";
 import { AppIcon } from "./components/bloom/AppIcon";
+
+// After a deploy, a browser holding a stale index.html may request a chunk
+// filename that no longer exists → the dynamic import rejects and the page
+// goes blank. This wrapper reloads ONCE (throttled) to fetch the fresh
+// index, which self-heals the stale-cache case instead of showing a grey page.
+function lazyRetry<T extends ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return lazy(() =>
+    factory().catch((err) => {
+      try {
+        const KEY = "bloom:chunk-reload-ts";
+        const last = Number(sessionStorage.getItem(KEY) || 0);
+        if (Date.now() - last > 30000) {
+          sessionStorage.setItem(KEY, String(Date.now()));
+          window.location.reload();
+          return new Promise<{ default: T }>(() => {}); // stay pending through reload
+        }
+      } catch { /* ignore */ }
+      throw err;
+    }),
+  );
+}
+
 // Route pages are lazy-loaded so the first paint (Landing) ships a small
 // bundle; each tool's code + heavy libs (charts, recipe data) load on demand.
-const PrivacyPage = lazy(() => import("./pages/Legal").then((m) => ({ default: m.PrivacyPage })));
-const TermsPage = lazy(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
-const HelpPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
-const FaqPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
-const GuidesIndexPage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
-const GuidePage = lazy(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
-const AdminMessagesPage = lazy(() => import("./pages/Admin").then((m) => ({ default: m.AdminMessagesPage })));
-const ToolsIndex = lazy(() => import("./pages/app.tools.index"));
-const BudgetPage = lazy(() => import("./pages/budget"));
-const YogaPage = lazy(() => import("./pages/app.tools.yoga"));
-const MealsPage = lazy(() => import("./pages/app.tools.meals"));
-const DietPage = lazy(() => import("./pages/app.tools.diet"));
-const WorkoutPage = lazy(() => import("./pages/app.tools.workout"));
-const TodayPage = lazy(() => import("./pages/app.today"));
-const ReadPage = lazy(() => import("./pages/app.read"));
-const ShopPage = lazy(() => import("./pages/app.shop"));
-const MePage = lazy(() => import("./pages/app.me"));
-const NotesPage = lazy(() => import("./pages/app.tools.notes"));
-const CalendarPage = lazy(() => import("./pages/app.calendar"));
-const DiaryPage = lazy(() => import("./pages/app.tools.diary"));
-const CycleTracker = lazy(() => import("./components/bloom/CycleTracker").then((m) => ({ default: m.CycleTracker })));
+const PrivacyPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
+const HelpPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
+const FaqPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
+const GuidesIndexPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
+const GuidePage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
+const AdminMessagesPage = lazyRetry(() => import("./pages/Admin").then((m) => ({ default: m.AdminMessagesPage })));
+const ToolsIndex = lazyRetry(() => import("./pages/app.tools.index"));
+const BudgetPage = lazyRetry(() => import("./pages/budget"));
+const YogaPage = lazyRetry(() => import("./pages/app.tools.yoga"));
+const MealsPage = lazyRetry(() => import("./pages/app.tools.meals"));
+const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
+const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
+const TodayPage = lazyRetry(() => import("./pages/app.today"));
+const ReadPage = lazyRetry(() => import("./pages/app.read"));
+const ShopPage = lazyRetry(() => import("./pages/app.shop"));
+const MePage = lazyRetry(() => import("./pages/app.me"));
+const NotesPage = lazyRetry(() => import("./pages/app.tools.notes"));
+const CalendarPage = lazyRetry(() => import("./pages/app.calendar"));
+const DiaryPage = lazyRetry(() => import("./pages/app.tools.diary"));
+const CycleTracker = lazyRetry(() => import("./components/bloom/CycleTracker").then((m) => ({ default: m.CycleTracker })));
 import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider } from "./contexts/AuthContext";
