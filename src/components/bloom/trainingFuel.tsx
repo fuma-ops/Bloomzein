@@ -10,6 +10,7 @@ import {
   type MealType,
 } from "@/components/bloom/recipes/data";
 import { addRecipeToMealPlan, addIngredientsToShopping } from "@/lib/crossToolData";
+import { toContentPhase } from "@/components/bloom/cyclePhase";
 
 /* ============================================================
    Training ↔ Fuel — the shared thread that lets the Workout,
@@ -34,19 +35,10 @@ export interface FuelCtx {
 }
 
 /** Map the app-wide cycle phase (which has a distinct "fertile" window) onto
- *  the recipe database's phase set, so meal filtering & copy line up. */
+ *  the recipe database's phase set, so meal filtering & copy line up.
+ *  Thin wrapper over the canonical mapping in cyclePhase.ts (single source). */
 export function normalizePhase(p: string | null | undefined): CyclePhase {
-  switch (p) {
-    case "period":
-    case "follicular":
-    case "ovulation":
-    case "luteal":
-      return p;
-    case "fertile":
-      return "ovulation";
-    default:
-      return "any";
-  }
+  return toContentPhase(p as CyclePhase) as CyclePhase;
 }
 
 /* ---------- Intensity inference (each tool speaks its own language) ---------- */

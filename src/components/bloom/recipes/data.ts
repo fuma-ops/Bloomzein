@@ -54,6 +54,10 @@ export interface DietProfile {
   weightHistory: WeightEntry[];
   /** Optional goal weight (kg) to progress toward. */
   targetWeight?: number;
+  /** Height in cm — used for an accurate BMR (Mifflin-St Jeor). */
+  heightCm?: number;
+  /** Age in years — used for an accurate BMR. */
+  age?: number;
 }
 
 export const DIET_PROFILE_KEY = "bloom:diet-profile";

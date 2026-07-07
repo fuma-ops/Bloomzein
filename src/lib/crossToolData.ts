@@ -2,6 +2,7 @@
  * Cross-tool data layer — mirrors the cyclePhase.ts pattern.
  * All tools read/write through these helpers so the shared keys stay consistent.
  */
+import { todayISO } from "@/lib/localDate";
 
 function readJSON<T>(key: string, fallback: T): T {
   try {
@@ -10,10 +11,6 @@ function readJSON<T>(key: string, fallback: T): T {
   } catch {
     return fallback;
   }
-}
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 // ── Keys (single source of truth) ───────────────────────────────────────────
@@ -136,10 +133,43 @@ export function readWorkoutPlanDays(): string[] {
 export const MEALS_PLAN_KEY       = "bloom:meals-plan";
 export const MEALS_SHOP_EXTRA_KEY = "bloom:meals-shop-extra";
 
-type PlanSlot = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
+export type PlanSlot = "breakfast" | "lunch" | "dinner" | "snack" | "lunchbox";
+
+// ── The ONE weekly meal plan — single source of truth for proposed meals ─────
+// Keyed by weekday label (Mon..Sun), slot → recipeId. Every tool that shows or
+// proposes "today's / this week's meals" (Meals Planner, Today, Diet) reads
+// THROUGH here so they can never disagree. See CLAUDE.md § Meal data contract.
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** Today's weekday label (Mon..Sun) — the key into the weekly plan. */
+export function todayWeekday(): string {
+  return WEEKDAYS[new Date().getDay()];
+}
+
+export type PlannedDay = Record<PlanSlot, string | null>;
+const EMPTY_PLANNED_DAY: PlannedDay = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
+
+/** The whole weekly plan (weekday → slot → recipeId). */
+export function readMealPlan(): Record<string, PlannedDay> {
+  return readJSON<Record<string, PlannedDay>>(MEALS_PLAN_KEY, {});
+}
+/** The planned recipes for one weekday (Mon..Sun) — slot → recipeId. */
+export function readPlannedDay(day: string): PlannedDay {
+  const plan = readMealPlan();
+  return { ...EMPTY_PLANNED_DAY, ...(plan[day] ?? {}) };
+}
+/** The planned recipes for TODAY — what every tool should show as today's meals. */
+export function readTodayPlannedDay(): PlannedDay {
+  return readPlannedDay(todayWeekday());
+}
 
 /** Drop a recipe into the Meals weekly plan at day + slot (from a Fuel card). */
 export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlot): void {
+  setMealPlanSlot(day, slot, recipeId);
+}
+
+/** Set (or clear, with null) one slot of the weekly plan — the single writer. */
+export function setMealPlanSlot(day: string, slot: PlanSlot, recipeId: string | null): void {
   try {
     const plan = readJSON<Record<string, Record<string, string | null>>>(MEALS_PLAN_KEY, {});
     const dayPlan = plan[day] ?? { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
@@ -148,6 +178,30 @@ export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlo
     localStorage.setItem(MEALS_PLAN_KEY, JSON.stringify(plan));
     window.dispatchEvent(new Event("storage"));
   } catch {}
+}
+
+// ── Meal "eaten" markers — what she actually ate, per date + slot ────────────
+// Thin layer over the ONE plan: the plan holds the meals; this records which of
+// today's planned meals she's ticked off, so "eaten" energy is truthful.
+
+export const MEALS_EATEN_KEY = "bloom:diet-eaten";
+
+/** Which slots she has marked eaten today (subset of breakfast/lunch/dinner/snack). */
+export function readEatenToday(): PlanSlot[] {
+  const all = readJSON<Record<string, PlanSlot[]>>(MEALS_EATEN_KEY, {});
+  const v = all[todayISO()];
+  return Array.isArray(v) ? v : [];
+}
+/** Toggle a slot's eaten state for today; returns the new eaten list. */
+export function toggleEatenToday(slot: PlanSlot): PlanSlot[] {
+  const all = readJSON<Record<string, PlanSlot[]>>(MEALS_EATEN_KEY, {});
+  const today = todayISO();
+  const cur = new Set(all[today] ?? []);
+  if (cur.has(slot)) cur.delete(slot); else cur.add(slot);
+  const next = [...cur];
+  all[today] = next;
+  try { localStorage.setItem(MEALS_EATEN_KEY, JSON.stringify(all)); window.dispatchEvent(new Event("storage")); } catch {}
+  return next;
 }
 
 /** Merge a recipe's ingredients into the Meals shopping list "extras" bucket. */
@@ -209,6 +263,51 @@ export function readYogaSessionCount(): number {
 /** Bump the yoga completed-flows counter by one (called when a flow finishes). */
 export function incrementYogaSession(): void {
   try { localStorage.setItem(YOGA_SESSIONS_KEY, String(readYogaSessionCount() + 1)); } catch {}
+}
+
+// ── Yoga energy log (so yoga counts toward the daily energy balance) ─────────
+
+export const YOGA_LOG_KEY = "bloom:yoga-history";
+
+/** Log a finished yoga flow's calories. MET ~2.8 (gentle hatha/vinyasa),
+ *  kcal = MET × 3.5 × weight(kg) / 200 × minutes — scaled by real bodyweight. */
+export function logYogaSession(durationMin: number, weightKg = 65): void {
+  try {
+    const kcal = Math.round(((2.8 * 3.5 * (weightKg > 0 ? weightKg : 65)) / 200) * durationMin);
+    const log = readJSON<{ date: string; calories: number; durationMin: number }[]>(YOGA_LOG_KEY, []);
+    log.push({ date: todayISO(), calories: kcal, durationMin });
+    localStorage.setItem(YOGA_LOG_KEY, JSON.stringify(log));
+    window.dispatchEvent(new Event("bloom:workout-updated"));
+  } catch {}
+}
+
+/** Calories burned in yoga flows today (0 if none). */
+export function readYogaCaloriesToday(): number {
+  try {
+    const log = readJSON<{ date: string; calories: number }[]>(YOGA_LOG_KEY, []);
+    const t = todayISO();
+    return log.filter((h) => h.date === t).reduce((s, h) => s + (h.calories || 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+/** All training calories burned today (workout + yoga) — the energy-out figure. */
+export function readTrainingCaloriesToday(): number {
+  return readWorkoutCaloriesToday() + readYogaCaloriesToday();
+}
+
+/** Count of workout + yoga sessions completed in the last 7 days. */
+export function readSessionsThisWeek(): { workouts: number; yoga: number } {
+  const cutoff = Date.now() - 7 * 864e5;
+  const inWeek = (d?: string) => {
+    if (!d) return false;
+    const t = new Date(d + "T00:00:00").getTime();
+    return !isNaN(t) && t >= cutoff;
+  };
+  const wk = readJSON<{ date?: string }[]>(WORKOUT_LOG_KEY, []).filter((h) => inWeek(h.date)).length;
+  const yg = readJSON<{ date?: string }[]>(YOGA_LOG_KEY, []).filter((h) => inWeek(h.date)).length;
+  return { workouts: wk, yoga: yg };
 }
 
 // A gentle, bloom-themed ladder. Thresholds ramp up so each level feels earned.
@@ -276,7 +375,7 @@ export function writeSeenLevel(n: number): void {
 
 /** Clears every localStorage key a tool owns (bloom:<tool>-*) plus the shared
  *  movement-level marker, so the next load looks like a brand-new user. */
-export function resetToolState(tool: "workout" | "yoga" | "meals"): void {
+export function resetToolState(tool: "workout" | "yoga" | "meals" | "diet"): void {
   try {
     const kill: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {

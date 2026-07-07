@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
-import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, toYogaPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
+import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -466,19 +467,13 @@ function readYogaProfileLevel(): Level {
   catch { return "Beginner"; }
 }
 
-/** Maps the app-wide 5-phase cycle to Yoga's 4-phase model. */
+/** Maps the app-wide 5-phase cycle to Yoga's 4-phase model.
+ *  Delegates to the canonical mapping (single source) — the fertile window
+ *  now resolves to ovulation, consistent with Meals & training. */
 function mapToYogaPhase(p: CyclePhase | null): Phase {
-  switch (p) {
-    case "period": return "menstrual";
-    case "fertile": return "follicular";
-    case "ovulation": return "ovulation";
-    case "luteal": return "luteal";
-    case "follicular": return "follicular";
-    default: return "follicular";
-  }
+  return toYogaPhase(p);
 }
 
-function todayISO() { return new Date().toISOString().slice(0, 10); }
 function fmtLocalDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -490,10 +485,6 @@ function addDays(d: Date, n: number) {
 const YOGA_PUSH_SYNC_WINDOW_DAYS = 14;
 // JS getDay(): 0=Sun..6=Sat — map to the Mon-first labels used by the schedule grid.
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-function isYesterday(iso: string) {
-  const d = new Date(iso); const y = new Date(); y.setDate(y.getDate() - 1);
-  return d.toISOString().slice(0,10) === y.toISOString().slice(0,10);
-}
 
 // ===================== TTS HOOK =====================
 
@@ -1905,6 +1896,9 @@ function SessionPlayer({
       window.dispatchEvent(new Event("bloom:yoga-updated"));
     } catch {}
     incrementYogaSession(); // feeds the movement level (logical, real count)
+    // Log the flow's calories so yoga counts toward the daily energy balance.
+    const practiceMin = Math.max(5, Math.round((flow.length * hold) / 60));
+    logYogaSession(practiceMin, readDietProfile().weight);
     onDone();
   }
 
@@ -2045,7 +2039,7 @@ function Summary({
       const moodMap: Record<string, string> = { tense: "sensitive", tired: "tired", ok: "calm", calm: "calm", light: "energetic" };
       entries.unshift({
         id: String(Date.now()),
-        date: now.toISOString().slice(0, 10),
+        date: fmtLocalDate(now),
         mood: moodMap[after ?? ""] ?? "calm",
         title: `Yoga · ${INTENTIONS.find(i => i.id === intention)?.label ?? "Practice"}`,
         html: `<p>🧘🏻‍♀️ ${note.trim()} (${durationMin}m)</p>`,

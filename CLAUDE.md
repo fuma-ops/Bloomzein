@@ -47,3 +47,44 @@ Phase names, "today's insight" text, and greetings fade in word-by-word on load
 ## 8. Page transitions
 Navigation should fade or slide (200ms), not jump — deeper = slide left,
 back = slide right. (App-wide change, applied incrementally across pages.)
+
+## 9. Cross-tool data contract — ONE source of truth per concept
+This is a premium app: a number or a proposed item must be **identical in every
+tool that shows it**. Never let a tool compute its own private copy of shared
+data. When tools interact, they read/write through a single shared helper.
+
+**Canonical stores (do not fork these):**
+- **Cycle phase** → `bloom:cycle-phase` via `cyclePhase.ts`. Map to a tool's
+  vocabulary only through `toContentPhase` / `toDietPhase` / `toYogaPhase`.
+- **Meal PLAN** (what is *proposed* to eat) → `bloom:meals-plan`, keyed by
+  **weekday** (Mon..Sun), slot → recipeId. Read it via
+  `readMealPlan` / `readPlannedDay` / `readTodayPlannedDay` (`crossToolData.ts`),
+  write it via `addRecipeToMealPlan`. The **Meals Planner** owns generation
+  (`buildWeek`); **Today** and the **Diet** tool must *show the same plan* for
+  today (`readTodayPlannedDay`) — they must NOT pick their own recipes.
+- **Meal LOG** (what was *actually eaten*) → `bloom:diet-today-meals`, keyed by
+  ISO date. This is distinct from the plan and feeds the energy "eaten" figure.
+- **Nutrition targets & energy** → `nutritionTargets.ts` only
+  (`computeTargets`, `energyBalance`, `goalProjection`). One BMR engine — never
+  a second calorie formula.
+- **Training burn / sessions** → `crossToolData.ts`
+  (`readTrainingCaloriesToday`, `readSessionsThisWeek`, workout + yoga logs).
+- **Training PLAN → food** — the planned workout + yoga days
+  (`readWorkoutPlanDays` / `readYogaPlanDays`) raise the calorie *target* via the
+  activity factor in `computeTargets`; surface the effect with
+  `movementFoodLine`. Workout days add a protein-forward dinner; yoga-only days
+  get a light, hydrating, anti-inflammatory recovery cue (never protein).
+
+**Recovery-fuel meals** (Workout/Yoga post-session `FuelCard`) are a *distinct
+purpose* — a suggested recovery add-on for after a session — and must be framed
+as such, not as a competing meal plan. When they add a meal, they add it to the
+one `bloom:meals-plan`.
+
+**Rule:** before adding anything that shows a meal, a calorie, a phase, or a
+weight, find the canonical helper above and use it. If one doesn't exist, add it
+to the shared module — do not read the raw localStorage key in a tool.
+
+**Dates are LOCAL, not UTC.** "Today" is the user's local calendar day. Stamp
+and compare days with `todayISO` / `localDateISO` / `isYesterday` from
+`src/lib/localDate.ts` — never `new Date().toISOString().slice(0,10)`, which is
+UTC and made late-night sessions land on the wrong day.

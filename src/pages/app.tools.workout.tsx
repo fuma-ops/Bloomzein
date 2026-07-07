@@ -13,6 +13,7 @@ import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { NextStepBanner } from "@/components/bloom/NextStepBanner";
 import { flushCloudSync } from "@/lib/cloudSync";
+import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, workoutIntensity, normalizePhase, type Intensity } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -38,15 +39,16 @@ const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
 const BADGES_KEY = "bloom:workout-badges";
-const PROGRAM_KEY = "bloom:workout-program";
-const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
+export const PROGRAM_KEY = "bloom:workout-program";
+export const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
 const PROGRAM_BANNER_KEY = "bloom:workout-program-banner-seen";
 const CHALLENGE_KEY = "bloom:workout-challenge";
 const SOUND_KEY = "bloom:workout-sound";
 const VOICE_KEY = "bloom:workout-voice";
 export const WORKOUT_LOG_KEY = "bloom:workout-history";
 
-const DEFAULT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
+export const DEFAULT_WORKOUT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
+const DEFAULT_PROFILE = DEFAULT_WORKOUT_PROFILE;
 
 export interface HistoryEntry {
   date: string;
@@ -75,11 +77,6 @@ function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] 
   return [value, setValue];
 }
 
-function todayISO() { return new Date().toISOString().slice(0, 10); }
-function isYesterday(iso: string) {
-  const d = new Date(iso); const y = new Date(); y.setDate(y.getDate() - 1);
-  return d.toISOString().slice(0, 10) === y.toISOString().slice(0, 10);
-}
 
 // ===================== SOUND LAYER =====================
 // Soft bip at 3s, clear bip at 0, gentle chime at rest end. No external audio files needed.
@@ -128,9 +125,21 @@ function speakNext(text: string) {
 
 // ===================== HELPERS =====================
 
-const CALORIES_PER_MIN: Record<WorkoutIntention, number> = {
-  tonify: 4, strengthen: 6, stretch: 2.5, recover: 2,
+// Real energy expenditure: MET × 3.5 × bodyweight(kg) / 200 = kcal/min.
+// MET values follow the Compendium of Physical Activities for each intention.
+const MET_BY_INTENTION: Record<WorkoutIntention, number> = {
+  tonify: 5.0,      // general resistance / toning circuit
+  strengthen: 6.0,  // vigorous resistance training
+  stretch: 2.5,     // stretching / mobility
+  recover: 2.3,     // light restorative movement
 };
+
+/** kcal burned for a session, scaled by the user's real bodyweight. */
+function sessionCalories(intention: WorkoutIntention, elapsedSec: number): number {
+  const weight = readDietProfile().weight || 65;
+  const kcalPerMin = (MET_BY_INTENTION[intention] * 3.5 * weight) / 200;
+  return Math.round((elapsedSec / 60) * kcalPerMin);
+}
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -173,7 +182,7 @@ function buildIntentionWeek(phase: CyclePhase, goal: Goal, n: number, seed: numb
   return out;
 }
 
-function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, seed = 0): Record<string, DayPlan | null> {
+export function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, seed = 0): Record<string, DayPlan | null> {
   const activeDays = ACTIVE_DAY_PATTERNS[profile.daysPerWeek];
   const durationMin = durationForLevel(profile.level);
   const zones = buildZoneWeek(activeDays.length, seed);
@@ -1694,6 +1703,21 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   const activeProgram = active ? getProgram(active.programId) : null;
   const source: "program" | "freestyle" | "none" = activeProgram ? "program" : program ? "freestyle" : "none";
+
+  // Coming from the Diet coach ("Set my workouts") → generate a proposed,
+  // phase-aware week on arrival so she lands on a real plan, not an empty tool.
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("bloom:workout-autoplan")) return;
+      localStorage.removeItem("bloom:workout-autoplan");
+      if (activeProgram || program) return; // never overwrite an existing plan
+      const ph = readCyclePhase() ?? "any";
+      setProgram(generateWeeklyPlan(profile, ph, seed + 1));
+      setProgramPhase(ph);
+      setSeed(seed + 1);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const todayKey = DAYS[(new Date().getDay() + 6) % 7]; // Mon..Sun
 
   // Start a blank custom week (leaves any active program) and open the editor.
@@ -2416,7 +2440,7 @@ function SessionActive({ session, onExit, onDone }: {
 function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void }) {
   const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
-  const calories = Math.round((elapsedSec / 60) * CALORIES_PER_MIN[session.intention]);
+  const calories = sessionCalories(session.intention, elapsedSec);
   const minutes = Math.floor(elapsedSec / 60);
   const seconds = elapsedSec % 60;
 
