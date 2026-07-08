@@ -1606,7 +1606,7 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Jar"],
     phases: ["luteal", "menstrual"], goal: ["gain", "maintain"],
     dietTags: ["vegan"], allergens: ["nuts"],
-    macros: { calories: 380, protein: 13, carbs: 52, fat: 14 },
+    macros: { calories: 425, protein: 15, carbs: 54, fat: 18 },
     micros: { magnesium: 65, fibre: 8 },
     ingredients: [
       { name: "Oats", quantity: "1/2 cup" },
@@ -1615,13 +1615,14 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Chia seeds", quantity: "1 tsp" },
       { name: "Cinnamon", quantity: "pinch" },
       { name: "Maple syrup", quantity: "1 tsp" },
-      { name: "Banana", quantity: "1/2" }
+      { name: "Banana", quantity: "1/2" },
+      { name: "Roasted peanuts", quantity: "1 tbsp" }
     ],
     steps: [
       "Stir **oats**, **plant milk**, **peanut butter**, **chia seeds** and a pinch of **cinnamon** in a jar until the peanut butter loosens through.",
       "Sweeten with a little **maple syrup** if you like.",
       "Chill overnight to thicken.",
-      "Top with sliced **banana** just before eating."
+      "Top with sliced **banana** and a scatter of **roasted peanuts** just before eating."
     ],
     batchTip: "Make several jars at once; they keep 4 days chilled.",
     substitutionTip: "Nut-free? Use sunflower seed butter or tahini in place of peanut butter."
@@ -1633,8 +1634,8 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Frying pan with lid"],
     phases: ["follicular", "ovulatory"], goal: ["maintain", "lose"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs", "dairy"],
-    macros: { calories: 310, protein: 19, carbs: 18, fat: 18 },
-    micros: { iron: 3, fibre: 6, vitaminC: 30 },
+    macros: { calories: 325, protein: 19, carbs: 21, fat: 18 },
+    micros: { iron: 3, fibre: 6, vitaminC: 36 },
     ingredients: [
       { name: "Spinach", quantity: "2 cups" },
       { name: "Green chili", quantity: "1" },
@@ -1642,15 +1643,18 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Garlic", quantity: "2 cloves" },
       { name: "Cumin", quantity: "1/2 tsp" },
       { name: "Eggs", quantity: "2" },
+      { name: "Cherry tomatoes", quantity: "1 cup, halved" },
       { name: "Feta", quantity: "30g" },
+      { name: "Spring onion", quantity: "2, sliced" },
       { name: "Olive oil", quantity: "1 tbsp" },
-      { name: "Lemon", quantity: "1/2" }
+      { name: "Lemon", quantity: "1/2" },
+      { name: "Fresh coriander", quantity: "handful" }
     ],
     steps: [
       "Soften **onion**, **garlic** and sliced **green chili** in **olive oil** for 3-4 min.",
       "Add **cumin**, then the **spinach** in handfuls, wilting until you have a soft green base; season.",
-      "Make two wells, crack in the **eggs**, cover and cook 5-6 min until the whites set.",
-      "Crumble over **feta**, add a squeeze of **lemon** and serve."
+      "Nestle the **cherry tomatoes** into the base, make two wells, crack in the **eggs**, cover and cook 5-6 min until the whites set.",
+      "Crumble over **feta**, scatter with **spring onion** and **coriander**, add a squeeze of **lemon** and serve."
     ],
     batchTip: "Make the green base ahead and chill 3 days; add fresh eggs when you reheat.",
     substitutionTip: "Dairy-free? Swap feta for a spoon of dairy-free yoghurt, or leave it out."
@@ -1659,9 +1663,9 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "b15", name: "Coconut Quinoa Porridge", cuisine: "Asian", mealType: "breakfast",
     prepTime: 5, cookTime: 12, difficulty: "easy",
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
-    dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 330, protein: 9, carbs: 48, fat: 12 },
-    micros: { magnesium: 60, fibre: 6, iron: 2 },
+    dietTags: ["vegan", "gluten-free"], allergens: ["nuts"],
+    macros: { calories: 440, protein: 12, carbs: 66, fat: 17 },
+    micros: { magnesium: 60, fibre: 8, iron: 2 },
     servings: 1,
     equipment: ["Small pot"],
     ingredients: [
@@ -1670,13 +1674,18 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Water", quantity: "1/2 cup" },
       { name: "Cinnamon", quantity: "1/2 tsp" },
       { name: "Mango", quantity: "1/2 cup, diced" },
+      { name: "Banana", quantity: "1/2, sliced" },
+      { name: "Blueberries", quantity: "2 tbsp" },
+      { name: "Chia seeds", quantity: "1 tsp" },
+      { name: "Chopped almonds", quantity: "1 tbsp" },
       { name: "Maple syrup", quantity: "1 tsp" },
       { name: "Toasted coconut flakes", quantity: "1 tbsp (optional)" }
     ],
     steps: [
       "Rinse **quinoa** well to wash off its bitter coating, then simmer with the **water** in a small pot for 10 min until the water is absorbed.",
-      "Stir in the **coconut milk** and **cinnamon** and cook 2 min more until creamy and the little tails uncurl.",
-      "Spoon into a bowl, top with **mango**, a drizzle of **maple syrup** and **toasted coconut flakes**."
+      "Stir in the **coconut milk**, **cinnamon** and **chia seeds** and cook 2 min more until creamy and the little tails uncurl.",
+      "Spoon into a bowl and arrange the **banana**, **blueberries** and **mango** on top.",
+      "Finish with **chopped almonds**, a drizzle of **maple syrup** and **toasted coconut flakes**."
     ],
     batchTip: "Cook a big batch of quinoa ahead - it keeps 4 days chilled and reheats with a splash of coconut milk in 2 min.",
     substitutionTip: "Swap mango for pineapple or banana, or use light coconut milk to trim the fat."
@@ -1685,9 +1694,9 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "b16", name: "Halal Beef Breakfast Hash", cuisine: "African", mealType: "breakfast",
     prepTime: 15, cookTime: 20, difficulty: "easy",
     phases: ["menstrual", "luteal"], goal: ["gain", "maintain"],
-    dietTags: ["halal", "gluten-free"], allergens: [],
-    macros: { calories: 430, protein: 28, carbs: 32, fat: 20 },
-    micros: { iron: 5, vitaminC: 16, fibre: 5 },
+    dietTags: ["halal", "gluten-free"], allergens: ["eggs"],
+    macros: { calories: 620, protein: 35, carbs: 38, fat: 36 },
+    micros: { iron: 5, vitaminC: 16, fibre: 7 },
     servings: 1,
     equipment: ["Large frying pan"],
     ingredients: [
@@ -1698,13 +1707,17 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Garlic", quantity: "1 clove, minced" },
       { name: "Paprika", quantity: "1 tsp" },
       { name: "Cumin", quantity: "1/2 tsp" },
-      { name: "Olive oil", quantity: "1 tbsp" }
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Egg", quantity: "1" },
+      { name: "Avocado", quantity: "1/2, sliced" },
+      { name: "Fresh coriander", quantity: "to garnish" }
     ],
     steps: [
       "Brown the **ground beef** in a dry pan over high heat, breaking it up, until crisp at the edges - 4-5 min. Lift out and set aside.",
       "Add the **olive oil** and **sweet potato** to the same pan, cover and cook 8 min until nearly tender, stirring now and then.",
       "Stir in the **onion**, **bell pepper**, **garlic**, **paprika** and **cumin**; cook uncovered 5 min until soft and caramelised.",
-      "Return the beef, toss to heat through, season with salt and serve straight from the pan."
+      "Return the beef and toss to heat through, then season with salt.",
+      "Fry the **egg** to your liking. Plate the hash with the fried egg and sliced **avocado**, and scatter with **fresh coriander**."
     ],
     batchTip: "Dice the sweet potato and pepper the night before so it comes together in one pan on busy mornings.",
     substitutionTip: "Ground lamb or turkey work just as well; swap sweet potato for regular potato if that's what you have."
@@ -2153,23 +2166,26 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 8, cookTime: 0, difficulty: "quick",
     phases: ["menstrual", "luteal"], goal: ["maintain", "lose"],
     dietTags: ["pescatarian"], allergens: ["dairy"],
-    macros: { calories: 350, protein: 24, carbs: 28, fat: 16 },
-    micros: { iron: 3, omega3: 1.6, fibre: 5 },
+    macros: { calories: 475, protein: 26, carbs: 35, fat: 27 },
+    micros: { iron: 3, omega3: 1.6, fibre: 8 },
     servings: 1,
     equipment: ["Toaster"],
     ingredients: [
       { name: "Rye bread", quantity: "2 slices" },
       { name: "Cream cheese", quantity: "1 tbsp" },
+      { name: "Avocado", quantity: "1/2, smashed" },
       { name: "Smoked mackerel", quantity: "80 g, skin removed" },
+      { name: "Red onion", quantity: "few rings" },
+      { name: "Capers", quantity: "1 tsp" },
       { name: "Radish", quantity: "3, thinly sliced" },
       { name: "Lemon", quantity: "1/4, for squeezing" },
       { name: "Fresh dill", quantity: "1 tsp, chopped" },
       { name: "Black pepper", quantity: "to taste" }
     ],
     steps: [
-      "Toast the **rye bread** until crisp, then spread each slice with **cream cheese**.",
+      "Toast the **rye bread** until crisp, then spread each slice with **cream cheese** and top with the smashed **avocado**.",
       "Flake the **smoked mackerel** into large chunks, discarding any bones, and pile onto the toast.",
-      "Top with **radish** slices, a squeeze of **lemon**, a scatter of **dill** and a grind of **black pepper**."
+      "Top with **red onion** rings, **capers**, **radish** slices, a squeeze of **lemon**, a scatter of **dill** and a grind of **black pepper**."
     ],
     batchTip: "Smoked mackerel keeps sealed in the fridge for days - a reliable protein to have on hand for fast breakfasts.",
     substitutionTip: "No mackerel? Hot-smoked salmon or canned sardines slot right in. Use dairy-free cream cheese to skip the dairy."
@@ -2179,8 +2195,8 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 10, cookTime: 12, difficulty: "easy",
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 280, protein: 12, carbs: 34, fat: 10 },
-    micros: { iron: 3, fibre: 6, vitaminB6: 0.3 },
+    macros: { calories: 350, protein: 14, carbs: 38, fat: 15 },
+    micros: { iron: 3, fibre: 7, vitaminB6: 0.3 },
     servings: 2,
     equipment: ["Mixing bowl", "Non-stick pan"],
     ingredients: [
@@ -2189,12 +2205,17 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Olive oil", quantity: "1 tbsp, plus more for the pan" },
       { name: "Salt", quantity: "1/2 tsp" },
       { name: "Rosemary", quantity: "1 tsp, chopped" },
-      { name: "Cherry tomatoes", quantity: "1/2 cup, halved" }
+      { name: "Cherry tomatoes", quantity: "1/2 cup, halved" },
+      { name: "Fresh parsley", quantity: "handful, chopped" },
+      { name: "Chili flakes", quantity: "pinch" },
+      { name: "Lemon", quantity: "1/2, in wedges" },
+      { name: "Hummus", quantity: "1/4 cup, to serve" }
     ],
     steps: [
       "Whisk **chickpea flour** with the **water**, **olive oil** and **salt** into a smooth batter, then rest it 10 min so the flour hydrates.",
       "Heat a little oil in a non-stick pan over medium-high, pour in a ladle of batter and swirl thin. Cook 3 min until the edges lift and the base is golden, then flip for 1 min more.",
-      "Scatter over **rosemary** and **cherry tomatoes**, fold or serve flat. Repeat with the rest of the batter."
+      "Scatter over **rosemary**, **cherry tomatoes**, **fresh parsley** and a pinch of **chili flakes**. Repeat with the rest of the batter.",
+      "Serve with **lemon** wedges and a bowl of **hummus** for dipping."
     ],
     batchTip: "The batter keeps 2 days in the fridge - whisk before using as the flour settles.",
     substitutionTip: "No rosemary? Thyme or a pinch of cumin both work; add a handful of spinach for extra greens."
