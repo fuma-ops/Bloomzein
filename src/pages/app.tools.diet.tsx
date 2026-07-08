@@ -234,7 +234,17 @@ function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) 
   return (
     <button onClick={onOpen} className="text-left">
       <Glass className="overflow-hidden p-2.5 transition hover:shadow-xl hover:shadow-hotpink/15 active:scale-[0.98]">
-        <RecipePlaceholder name={recipe.name} />
+        <img
+          src={recipeImageSrc(recipe)}
+          alt={recipe.name}
+          loading="lazy"
+          className="w-full aspect-[4/3] object-cover rounded-xl bg-blush"
+          onError={(e) => {
+            const el = e.currentTarget as HTMLImageElement;
+            const fb = MEAL_SLOT_FALLBACK[recipe.mealType] ?? "/images/meal-buddha.webp";
+            if (!el.src.endsWith(fb)) el.src = fb;
+          }}
+        />
         <div className="mt-2">
           <p className="text-sm font-bold text-magenta leading-snug">{recipe.name}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
