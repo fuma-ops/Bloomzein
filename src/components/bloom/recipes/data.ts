@@ -85,7 +85,7 @@ export function recipeSlug(r: { mealType: string; cuisine?: string; name: string
 export function recipeImageSrc(r: { mealType: string; cuisine?: string; name: string; image?: string; photo?: string }): string {
   if (r.image) return r.image;
   if (r.photo) return `/images/recipes/${r.photo}`;
-  return `/images/recipes/${recipeSlug(r)}.png`;
+  return `/images/recipes/${recipeSlug(r)}.webp`;
 }
 
 export function readDietProfile(): DietProfile & { weight: number } {
