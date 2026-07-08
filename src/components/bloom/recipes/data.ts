@@ -129,6 +129,12 @@ function niceFraction(n: number): string {
   if (!best) return String(whole);              // whole number, no fraction
   return whole > 0 ? `${whole} ${best}` : best; // "1 1/4"  or  "3/4"
 }
+// Attach the scaled number to its trailing text. A remainder that starts with
+// punctuation ("1, diced") is glued so we never print "2 , diced".
+function joinQty(num: string, rest: string): string {
+  if (!rest) return num;
+  return /^[,.;:)]/.test(rest) ? `${num}${rest}` : `${num} ${rest}`;
+}
 export function scaleQuantity(qty: string, factor: number): string {
   if (!qty || !factor || factor === 1) return qty;
   const m = String(qty).match(/^\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.?\d+)\s*(.*)$/);
@@ -142,9 +148,17 @@ export function scaleQuantity(qty: string, factor: number): string {
   if (!isFinite(val)) return qty;
   const scaled = val * factor;
   const unit = rest.toLowerCase();
+  // Metric mass/volume — glue the unit and round to tidy amounts ("280g").
   if (/^(g|ml)\b/.test(unit)) return `${scaled >= 20 ? Math.round(scaled / 5) * 5 : Math.round(scaled)}${rest}`;
   if (/^(kg|l)\b/.test(unit)) return `${Math.round(scaled * 100) / 100}${rest}`;
-  return `${niceFraction(Math.round(scaled * 4) / 4)}${rest ? " " + rest : ""}`;
+  // Spoons — keep to readable 1/2 steps ("1 1/2 tsp", never "1 3/4 tsp").
+  if (/^(tsp|tbsp|teaspoon|tablespoon)s?\b/.test(unit))
+    return joinQty(niceFraction(Math.max(0.5, Math.round(scaled * 2) / 2)), rest);
+  // Cups — quarter fractions read naturally ("3/4 cup", "2 3/4 cups").
+  if (/^cups?\b/.test(unit)) return joinQty(niceFraction(Math.round(scaled * 4) / 4), rest);
+  // Everything else is a countable item (onion, clove, slice, egg, wedge…):
+  // whole numbers only — nobody buys "1 3/4 onion" or peels "3 1/2 cloves".
+  return joinQty(String(Math.max(1, Math.round(scaled))), rest);
 }
 
 // Merge-write the shared Diet profile. Preferences edited elsewhere (e.g. the
