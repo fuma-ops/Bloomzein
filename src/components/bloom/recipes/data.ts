@@ -635,20 +635,26 @@ const RAW_RECIPES: RawRecipe[] = [
     servings: 1,
     equipment: [],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
-    dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
-    macros: { calories: 320, protein: 28, carbs: 32, fat: 9 },
-    micros: { vitaminB6: 0.4, fibre: 4, vitaminC: 10 },
+    dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy", "nuts"],
+    macros: { calories: 590, protein: 33, carbs: 61, fat: 28 },
+    micros: { vitaminB6: 0.4, fibre: 8, vitaminC: 30 },
     ingredients: [
       { name: "Greek yoghurt", quantity: "200g" },
+      { name: "Almond butter", quantity: "1 tbsp" },
       { name: "Mixed berries", quantity: "1/2 cup" },
+      { name: "Pomegranate seeds", quantity: "2 tbsp" },
+      { name: "Kiwi", quantity: "1/2, sliced" },
       { name: "Granola", quantity: "1/4 cup" },
+      { name: "Flaked almonds", quantity: "1 tbsp" },
       { name: "Pumpkin seeds", quantity: "1 tbsp" },
+      { name: "Chia seeds", quantity: "1 tsp" },
       { name: "Honey", quantity: "1 tsp" }
     ],
     steps: [
-      "Spoon **Greek yoghurt** into a bowl and smooth into a swirl.",
-      "Scatter over **mixed berries** and a handful of **granola** for crunch.",
-      "Finish with a few **pumpkin seeds** and a thread of **honey**; eat straight away so the granola stays crisp."
+      "Spoon **Greek yoghurt** into a bowl and smooth into a swirl, then add a dollop of **almond butter**.",
+      "Arrange **mixed berries**, **pomegranate seeds** and sliced **kiwi** over the top.",
+      "Scatter over **granola**, **flaked almonds**, **pumpkin seeds** and **chia seeds** for crunch.",
+      "Finish with a thread of **honey** and eat straight away so the granola stays crisp."
     ],
     batchTip: "Layer yoghurt and berries in a jar the night before; add granola only when you eat so it stays crunchy.",
     substitutionTip: "Dairy-free? Use thick coconut yoghurt and maple syrup instead of honey."
