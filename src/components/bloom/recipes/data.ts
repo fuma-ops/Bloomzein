@@ -674,13 +674,14 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Eggs", quantity: "2" },
       { name: "Lemon", quantity: "1/2" },
       { name: "Chili flakes", quantity: "pinch" },
-      { name: "Salt & pepper", quantity: "to taste" }
+      { name: "Salt & pepper", quantity: "to taste" },
+      { name: "Fresh thyme", quantity: "few sprigs" }
     ],
     steps: [
       "Bring a small pot of water to a gentle simmer to poach, or heat a **non-stick pan** to fry.",
       "Toast the **sourdough** until deep golden.",
       "Mash the **avocado** with a squeeze of **lemon**, salt and pepper, then spread thickly onto the toast.",
-      "Poach or fry the **eggs** to your liking, slide onto the avocado and finish with **chili flakes** and flaky salt."
+      "Poach or fry the **eggs** to your liking, slide onto the avocado and finish with **chili flakes**, a scatter of **fresh thyme** leaves and flaky salt."
     ],
     batchTip: "Minimal prep - but you can mash the avocado with lemon up to an hour ahead; the acid keeps it green.",
     substitutionTip: "No sourdough? Any hearty wholegrain bread works, or grilled sweet potato slices for gluten-free."
@@ -691,14 +692,18 @@ const RAW_RECIPES: RawRecipe[] = [
     servings: 1,
     equipment: ["Small pot"],
     phases: ["luteal", "menstrual"], goal: ["gain", "maintain"],
-    dietTags: ["pescatarian", "gluten-free"], allergens: [],
-    macros: { calories: 410, protein: 30, carbs: 34, fat: 16 },
+    dietTags: ["pescatarian", "gluten-free"], allergens: ["dairy", "nuts"],
+    macros: { calories: 600, protein: 37, carbs: 45, fat: 31 },
     micros: { omega3: 1.8, iron: 2, magnesium: 60 },
     ingredients: [
       { name: "Quinoa", quantity: "1/3 cup, dry" },
       { name: "Smoked salmon", quantity: "100g" },
       { name: "Egg", quantity: "1" },
       { name: "Baby spinach", quantity: "1 handful" },
+      { name: "Cherry tomatoes", quantity: "6, halved" },
+      { name: "Avocado", quantity: "1/2, sliced" },
+      { name: "Greek yoghurt", quantity: "2 tbsp" },
+      { name: "Flaked almonds", quantity: "1 tbsp" },
       { name: "Lemon", quantity: "1/2" },
       { name: "Fresh dill", quantity: "few sprigs" },
       { name: "Olive oil", quantity: "1 tsp" }
@@ -707,7 +712,8 @@ const RAW_RECIPES: RawRecipe[] = [
       "Rinse **quinoa** and simmer in 2/3 cup water for 12-15 min until the grains uncurl; fluff and let the steam escape.",
       "Meanwhile, lower the **egg** into boiling water for 6.5 min, then cool under cold water and peel.",
       "Wilt **baby spinach** through the warm quinoa and pile into a bowl.",
-      "Drape over the **smoked salmon**, halve the soft egg on top, and finish with **dill**, a squeeze of **lemon** and a drizzle of **olive oil**."
+      "Drape over the **smoked salmon** and arrange the **cherry tomatoes** and sliced **avocado** alongside.",
+      "Add a dollop of **Greek yoghurt**, halve the soft egg on top, then finish with **dill**, **flaked almonds**, a squeeze of **lemon** and a drizzle of **olive oil**."
     ],
     batchTip: "Cook a big batch of quinoa - it keeps 4 days chilled and the bowl assembles in minutes.",
     substitutionTip: "Swap smoked salmon for hot-smoked trout or flaked cooked salmon."
@@ -719,20 +725,21 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Frying pan with lid"],
     phases: ["menstrual", "follicular"], goal: ["maintain", "gain", "lose"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs"],
-    macros: { calories: 380, protein: 26, carbs: 36, fat: 14 },
-    micros: { iron: 4, fibre: 9, vitaminC: 22 },
+    macros: { calories: 395, protein: 26, carbs: 39, fat: 14 },
+    micros: { iron: 4, fibre: 9, vitaminC: 40 },
     ingredients: [
       { name: "Chickpeas", quantity: "1 cup, drained" },
       { name: "Crushed tomatoes", quantity: "1 cup" },
       { name: "Eggs", quantity: "2" },
       { name: "Onion", quantity: "1/2" },
+      { name: "Red bell pepper", quantity: "1, diced" },
       { name: "Garlic", quantity: "2 cloves" },
       { name: "Cumin & paprika", quantity: "1 tsp each" },
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Fresh coriander", quantity: "to finish" }
     ],
     steps: [
-      "Soften diced **onion** and **garlic** in **olive oil** in a frying pan for 3-4 min.",
+      "Soften diced **onion**, **red bell pepper** and **garlic** in **olive oil** in a frying pan for 4-5 min until the pepper softens.",
       "Stir in **cumin**, **paprika** and a pinch of salt until fragrant, then add **crushed tomatoes** and **chickpeas**; simmer 8-10 min until thick.",
       "Make two wells and crack in the **eggs**; cover and cook 5-6 min until the whites set but the yolks stay soft.",
       "Scatter with **coriander** and serve straight from the pan with bread."
@@ -747,20 +754,23 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Blender"],
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 240, protein: 8, carbs: 46, fat: 5 },
-    micros: { vitaminC: 48, fibre: 6, vitaminB6: 0.3 },
+    macros: { calories: 320, protein: 9, carbs: 57, fat: 10 },
+    micros: { vitaminC: 60, fibre: 7, vitaminB6: 0.3 },
     ingredients: [
       { name: "Mango", quantity: "1 cup" },
+      { name: "Pineapple", quantity: "1/2 cup" },
       { name: "Spinach", quantity: "1 cup" },
       { name: "Banana", quantity: "1/2" },
       { name: "Coconut water", quantity: "1 cup" },
       { name: "Lime", quantity: "1/2" },
-      { name: "Chia seeds", quantity: "1 tsp (optional)" }
+      { name: "Chia seeds", quantity: "1 tsp" },
+      { name: "Coconut flakes", quantity: "1 tbsp" }
     ],
     steps: [
       "Add **coconut water** to the blender first, then the **spinach**, so the leaves blend perfectly smooth.",
-      "Add **mango**, **banana**, a squeeze of **lime** and the **chia seeds**.",
-      "Blend on high for 45-60 sec until silky; loosen with a splash more coconut water if needed and drink straight away."
+      "Add **mango**, most of the **pineapple**, **banana**, a squeeze of **lime** and the **chia seeds**.",
+      "Blend on high for 45-60 sec until silky; loosen with a splash more coconut water if needed.",
+      "Pour into a glass and top with the reserved **pineapple** and a scatter of **coconut flakes**; drink straight away."
     ],
     batchTip: "Freeze mango and banana chunks in bags - blitz from frozen for an instant thick smoothie.",
     substitutionTip: "Swap coconut water for any plant milk to make it creamier and more filling."
@@ -800,23 +810,25 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Non-stick pan"],
     phases: ["menstrual", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["halal"], allergens: ["eggs"],
-    macros: { calories: 330, protein: 20, carbs: 30, fat: 13 },
-    micros: { iron: 3, vitaminC: 14 },
+    macros: { calories: 345, protein: 20, carbs: 33, fat: 13 },
+    micros: { iron: 3, vitaminC: 34 },
     ingredients: [
       { name: "Whole-wheat wrap", quantity: "1" },
       { name: "Eggs", quantity: "2" },
       { name: "Ras el hanout", quantity: "1 tsp" },
       { name: "Tomato", quantity: "1/2" },
+      { name: "Red bell pepper", quantity: "1/4, diced" },
       { name: "Onion", quantity: "1/4" },
       { name: "Olive oil", quantity: "1 tsp" },
       { name: "Lemon", quantity: "1/2" },
-      { name: "Fresh coriander", quantity: "handful" }
+      { name: "Fresh coriander", quantity: "handful" },
+      { name: "Chili flakes", quantity: "pinch" }
     ],
     steps: [
-      "Soften diced **onion** and **tomato** in **olive oil** for 3 min until juicy.",
+      "Soften diced **onion**, **red bell pepper** and **tomato** in **olive oil** for 3-4 min until juicy.",
       "Whisk the **eggs** with **ras el hanout** and salt, pour in and softly scramble for 2 min until just set.",
       "Warm the **wrap** in a dry pan for 20 sec a side until pliable.",
-      "Pile in the eggs and **coriander**, add a squeeze of **lemon**, then roll tightly and halve."
+      "Pile in the eggs and **coriander**, add a squeeze of **lemon** and a pinch of **chili flakes**, then roll tightly and halve."
     ],
     batchTip: "Scramble double and keep chilled 2 days; warm and wrap fresh for a fast breakfast.",
     substitutionTip: "No ras el hanout? Mix cumin, cinnamon, paprika and a little ground ginger."
