@@ -840,12 +840,15 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Non-stick pan"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "gain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["soy"],
-    macros: { calories: 300, protein: 22, carbs: 18, fat: 16 },
-    micros: { iron: 3, magnesium: 50 },
+    macros: { calories: 330, protein: 24, carbs: 23, fat: 16 },
+    micros: { iron: 3, magnesium: 50, vitaminC: 30 },
     ingredients: [
       { name: "Firm tofu", quantity: "200g" },
       { name: "Turmeric", quantity: "1/2 tsp" },
       { name: "Garlic", quantity: "1 clove" },
+      { name: "Mushrooms", quantity: "4, sliced" },
+      { name: "Red bell pepper", quantity: "1/4, diced" },
+      { name: "Baby spinach", quantity: "1 handful" },
       { name: "Spring onion", quantity: "2" },
       { name: "Soy sauce", quantity: "1 tbsp" },
       { name: "Sesame oil", quantity: "1 tsp" },
@@ -853,7 +856,8 @@ const RAW_RECIPES: RawRecipe[] = [
     ],
     steps: [
       "Press **firm tofu** in a clean towel for a few minutes, then crumble into rough curds.",
-      "Heat **sesame oil**, fry **garlic** for 30 sec, then add the tofu and **turmeric**; stir-fry 4-5 min until golden and dry.",
+      "Heat **sesame oil**, fry **garlic** for 30 sec, then add the **mushrooms** and **red bell pepper**; stir-fry 2-3 min until they soften.",
+      "Add the tofu and **turmeric**; stir-fry 4-5 min until golden, then wilt in the **baby spinach**.",
       "Splash in **soy sauce** and toss for a minute to glaze.",
       "Off the heat, fold through **spring onion** and a pinch of **chili flakes**."
     ],
@@ -1433,27 +1437,30 @@ const RAW_RECIPES: RawRecipe[] = [
   // ───────── Migrated from Meals Planner seed (4) ─────────
   {
     id: "rose-oats", name: "Rose-Berry Overnight Oats", cuisine: "Global", mealType: "breakfast",
-    image: "/images/meal-oats.webp",
     prepTime: 5, cookTime: 0, difficulty: "easy",
     servings: 1,
     equipment: ["Jar"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],
-    macros: { calories: 320, protein: 14, carbs: 50, fat: 8 },
-    micros: { calcium: 200, fibre: 6 },
+    macros: { calories: 355, protein: 15, carbs: 57, fat: 9 },
+    micros: { calcium: 200, fibre: 8 },
     ingredients: [
       { name: "Oats", quantity: "1/2 cup" },
       { name: "Greek yogurt", quantity: "1/2 cup" },
       { name: "Milk", quantity: "1/2 cup" },
       { name: "Strawberries", quantity: "1/2 cup" },
+      { name: "Blueberries", quantity: "2 tbsp" },
+      { name: "Raspberries", quantity: "2 tbsp" },
+      { name: "Chia seeds", quantity: "1 tsp" },
       { name: "Honey", quantity: "1 tsp" },
-      { name: "Rose water", quantity: "1/4 tsp" }
+      { name: "Rose water", quantity: "1/4 tsp" },
+      { name: "Dried rose petals", quantity: "1 tsp" }
     ],
     steps: [
-      "Stir **oats**, **Greek yogurt** and **milk** together in a jar until the oats are fully submerged.",
+      "Stir **oats**, **Greek yogurt**, **milk** and **chia seeds** together in a jar until the oats are fully submerged.",
       "Mix in **honey**, a drop of **rose water** and half the chopped **strawberries**.",
       "Seal and chill overnight to soften and thicken.",
-      "Top with the remaining strawberries in the morning."
+      "Top with the remaining strawberries, the **blueberries** and **raspberries**, and a scatter of **dried rose petals** in the morning."
     ],
     cyclePhase: ["follicular", "ovulation", "any"],
     intention: ["light", "energy", "quick"],
@@ -1567,12 +1574,15 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Non-stick pan"],
     phases: ["menstrual", "luteal"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["soy"],
-    macros: { calories: 340, protein: 18, carbs: 36, fat: 14 },
-    micros: { iron: 4, fibre: 7, vitaminC: 12 },
+    macros: { calories: 365, protein: 20, carbs: 41, fat: 14 },
+    micros: { iron: 4, fibre: 8, vitaminC: 30 },
     ingredients: [
       { name: "Firm tofu", quantity: "150g" },
       { name: "Corn tortilla", quantity: "1 large" },
       { name: "Black beans", quantity: "1/2 cup" },
+      { name: "Mushrooms", quantity: "3, sliced" },
+      { name: "Red bell pepper", quantity: "1/4, diced" },
+      { name: "Baby spinach", quantity: "1 handful" },
       { name: "Avocado", quantity: "1/4" },
       { name: "Turmeric", quantity: "1/2 tsp" },
       { name: "Cumin", quantity: "1/2 tsp" },
@@ -1581,10 +1591,10 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Salsa", quantity: "2 tbsp - tap in steps to make it" }
     ],
     steps: [
-      "Press and crumble **firm tofu**, then fry with **turmeric**, **cumin** and salt for 4-5 min until golden.",
+      "Press and crumble **firm tofu**, then fry with the **mushrooms**, **red bell pepper**, **turmeric**, **cumin** and salt for 4-5 min until golden; wilt in the **baby spinach** at the end.",
       "Warm the **black beans** and lightly crush them; heat the **corn tortilla** until soft and pliable.",
       "Slice the **avocado** and squeeze over **lime**.",
-      "Layer beans, tofu, avocado and a spoon of [[salsa]] down the tortilla, scatter with **coriander** and roll tight."
+      "Layer beans, the tofu scramble, avocado and a spoon of [[salsa]] down the tortilla, scatter with **coriander** and roll tight."
     ],
     batchTip: "Scramble the tofu and beans ahead; keep 3 days chilled and wrap fresh to serve.",
     substitutionTip: "Use a large gluten-free wrap if corn tortillas tear, or serve in lettuce cups."
