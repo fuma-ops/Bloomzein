@@ -130,9 +130,11 @@ function niceFraction(n: number): string {
   return whole > 0 ? `${whole} ${best}` : best; // "1 1/4"  or  "3/4"
 }
 // Attach the scaled number to its trailing text. A remainder that starts with
-// punctuation ("1, diced") is glued so we never print "2 , diced".
+// punctuation ("1, diced") is glued so we never print "2 , diced", and a lone
+// "1" singularises its unit so we read "1 clove" / "1 cup", not "1 cloves".
 function joinQty(num: string, rest: string): string {
   if (!rest) return num;
+  if (num === "1") rest = rest.replace(/^([a-z]+?)s\b/i, "$1");
   return /^[,.;:)]/.test(rest) ? `${num}${rest}` : `${num} ${rest}`;
 }
 export function scaleQuantity(qty: string, factor: number): string {
