@@ -1777,8 +1777,12 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
   if (!r) return null;
   const fav = favorites.includes(r.id);
   // Portion baked in: show macros & ingredient amounts for what the plan serves.
+  // `f` is how many single-servings this portion equals; the ingredient list is
+  // written for the recipe's full `servings`, so scale it by `f / servings` to
+  // land on ONE portion (matching the macro card) — not the whole batch × f.
   const f = portion && portion > 0 ? portion : 1;
   const scaled = f !== 1;
+  const ingF = scaled ? f / (r.servings || 1) : 1;
   const mac = {
     calories: Math.round(r.macros.calories * f),
     protein: Math.round(r.macros.protein * f),
@@ -1877,7 +1881,7 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
               {r.ingredients.map((i) => (
                 <li key={i.item} className="flex gap-2 text-sm text-rose">
                   <span className="text-hotpink mt-0.5">•</span>
-                  <span><b className="font-medium">{scaleQuantity(i.qty, f)}</b> {i.item}</span>
+                  <span><b className="font-medium">{scaleQuantity(i.qty, ingF)}</b> {i.item}</span>
                 </li>
               ))}
             </ul>

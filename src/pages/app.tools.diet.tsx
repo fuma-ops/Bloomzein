@@ -273,8 +273,12 @@ function RecipeModal({
   const [date, setDate] = useState(todayISO());
   const [added, setAdded] = useState(false);
   // Portion baked in — show macros & ingredient amounts as the plan serves them.
+  // `f` is how many single-servings this portion equals; the ingredient list is
+  // written for the recipe's full `servings`, so scale it by `f / servings` to
+  // land on ONE portion (matching the macro card) — not the whole batch × f.
   const f = portion && portion > 0 ? portion : 1;
   const scaled = f !== 1;
+  const ingF = scaled ? f / (recipe.servings || 1) : 1;
   const mac = {
     calories: Math.round(recipe.macros.calories * f),
     protein: Math.round(recipe.macros.protein * f),
@@ -355,7 +359,7 @@ function RecipeModal({
             {recipe.ingredients.map((ing) => (
               <li key={ing.name} className="flex items-start justify-between gap-3 border-b border-petal/40 py-1">
                 <span className="font-medium">{ing.name}</span>
-                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{scaleQuantity(ing.quantity, f)}</span>
+                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">{scaleQuantity(ing.quantity, ingF)}</span>
               </li>
             ))}
           </ul>
