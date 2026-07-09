@@ -1021,9 +1021,9 @@ export default function DiaryPage() {
               )}
               <button
                 ref={moodBtnRef}
-                onClick={() => { window.location.href = "/app/today"; }}
-                title={moodSet ? `Today's mood: ${mood} — set it on Today` : "Set your mood on Today ✿"}
-                aria-label="Your mood, set on Today"
+                onClick={() => openAtPage(0)}
+                title={moodSet ? `Today's mood: ${mood} — tap to start writing ✿` : "Tap to start a new entry ✿"}
+                aria-label="Start a new diary entry"
                 style={{ width: 46, height: 46, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,.85)", background: "linear-gradient(135deg,#F472B6,#DB2777)", display: "grid", placeItems: "center", color: "#fff", animation: "dd-mood-bounce 2.6s ease-in-out infinite", boxShadow: "0 6px 18px rgba(219,39,119,.38)", cursor: "pointer" }}
               >
                 {moodSet

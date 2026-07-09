@@ -20,12 +20,10 @@ const NAV: NavItem[] = [
 
 export function AppShell({ children, currentPath }: { children: React.ReactNode; currentPath: string }) {
   const isActive = (to: string) => currentPath === to || currentPath.startsWith(to + "/");
-  // The Tools index has its own moving-lines backdrop — no floating icons there.
-  const hideBackdrop = currentPath === "/app/tools" || currentPath === "/app/tools/";
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
-      {!hideBackdrop && <BloomBackground />}
+      <BloomBackground />
 
       {/* Desktop / Tablet sidebar */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col justify-between border-r border-[#EC4899]/15 bg-white/70 p-5 backdrop-blur md:flex md:w-20 lg:w-60">

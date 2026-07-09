@@ -544,12 +544,18 @@ export function CycleTracker() {
     const symptRuns = buildRuns(symptHybrid);
 
     // ── FUTURE estimate lines (today → end) ──
+    // Anchor the first point to TODAY's real logged value so the projection
+    // connects seamlessly to the mood/symptom you just picked (no vertical jump).
+    const realTodayMoodY  = moodHybrid[moodHybrid.length - 1]?.y;
+    const realTodaySymptY = symptHybrid[symptHybrid.length - 1]?.y;
     const futureMoodPts: [number, number][]  = [];
     const futureSymptPts: [number, number][] = [];
     for (let i = todayIdx; i < cycleLen; i++) {
       const ph = phaseForDay(new Date(currentCycleStart.getTime() + i * MS_DAY), settings) as Exclude<Phase, null>;
-      futureMoodPts.push([xAt(i),  PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH]);
-      futureSymptPts.push([xAt(i), PY_TOP + (PHASE_SYMPT_EST[ph] / maxSympt) * chartH]);
+      const moodY  = i === todayIdx && realTodayMoodY  != null ? realTodayMoodY  : PY_TOP + (1 - PHASE_MOOD_EST[ph] / 8) * chartH;
+      const symptY = i === todayIdx && realTodaySymptY != null ? realTodaySymptY : PY_TOP + (PHASE_SYMPT_EST[ph] / maxSympt) * chartH;
+      futureMoodPts.push([xAt(i),  moodY]);
+      futureSymptPts.push([xAt(i), symptY]);
     }
     const futureMoodLine  = smoothLinePath(futureMoodPts);
     const futureSymptLine = smoothLinePath(futureSymptPts);
