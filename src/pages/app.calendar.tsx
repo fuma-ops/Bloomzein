@@ -404,11 +404,13 @@ export default function CalendarPage() {
 
   return (
     <div className="relative animate-fade-in">
-      {/* HERO — Budget-style: soft pink gradient (no image), white title, a
-          phase pill under the subtitle, and the day's stats as filter chips. */}
-      <div className="relative w-full rounded-[1.75rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-hero-border-signal"
-        style={{ background: "linear-gradient(120deg, #F472B6 0%, #EC4899 55%, #C2186E 100%)" }}>
-        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-3.5">
+      {/* HERO — pink calendar image background, white title, a phase pill under
+          the subtitle. Left gradient keeps the text crisp over the photo. */}
+      <div className="relative w-full rounded-[1.75rem] sm:rounded-[2.5rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-card-pop-in"
+        style={{ animationDelay: "0ms" }}>
+        <img src="/images/calendar-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-magenta/70 via-hotpink/25 to-transparent" />
+        <div className="relative z-[2] flex flex-col justify-between gap-2 px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 min-h-[120px] sm:min-h-[156px]">
           {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
