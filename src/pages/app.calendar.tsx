@@ -406,8 +406,8 @@ export default function CalendarPage() {
     <div className="relative animate-fade-in">
       {/* HERO — pink calendar image background, white title, a phase pill under
           the subtitle. Left gradient keeps the text crisp over the photo. */}
-      <div className="relative w-full rounded-[1.75rem] sm:rounded-[2.5rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-card-pop-in"
-        style={{ animationDelay: "0ms" }}>
+      <div className="relative w-full rounded-[1.75rem] sm:rounded-[2.5rem] overflow-hidden border border-pink-200/60 mb-3 animate-card-pop-in"
+        style={{ animationDelay: "0ms", boxShadow: "0 16px 38px -14px oklch(0.6 0.27 350 / 0.6)" }}>
         <img src="/images/calendar-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-magenta/70 via-hotpink/25 to-transparent" />
         <div className="relative z-[2] flex flex-col justify-between gap-2 px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 min-h-[120px] sm:min-h-[156px]">

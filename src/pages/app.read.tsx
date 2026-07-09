@@ -177,7 +177,7 @@ export default function ReadPage() {
 
       {/* HERO — title + subtitle + filters, sized to match the Me page hero */}
       <section ref={heroRef} className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] shadow-[0_20px_50px_-24px_oklch(0.6_0.27_350/0.4)]">
+        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
           <img src={IMG.featured} alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-gradient-to-b from-magenta/55 via-hotpink/15 to-magenta/85" />
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-5 sm:top-6 sm:right-9 h-4 w-4 sm:h-5 sm:w-5 text-white/80" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
