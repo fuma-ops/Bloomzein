@@ -11,6 +11,7 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, toYogaPhase, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { PhaseSyncPill } from "@/components/bloom/PhaseSyncPill";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { todayISO, isYesterday } from "@/lib/localDate";
@@ -917,10 +918,12 @@ function YogaHero({
         )}
       </div>
       <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
-        <div><YogaPhaseSyncPill /></div>
-        <div key={active} className="animate-scale-in max-w-[62%]">
-          <h1 className="font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
-          <p className="mt-1 text-[11px] sm:text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+        <div key={active} className="animate-scale-in">
+          <div className="max-w-[62%]">
+            <h1 className="font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
+            <p className="mt-1 text-[11px] sm:text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+          </div>
+          <CyclePhasePill className="mt-1.5" />
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">

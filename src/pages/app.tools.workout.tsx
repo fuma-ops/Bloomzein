@@ -8,6 +8,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { PhaseSyncPill } from "@/components/bloom/PhaseSyncPill";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
@@ -252,10 +253,10 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
 // ===================== HERO HEADER (Workout Programs + tabs, on image) =====================
 
 const SECTION_META: Record<"discover" | "programs" | "program" | "library", { title: string; subtitle: string }> = {
-  program: { title: "My Plan", subtitle: "Your week, day by day — start today's session in one tap." },
-  discover: { title: "Discover", subtitle: "A quick one-off session, matched to today's energy & phase." },
-  programs: { title: "Programs", subtitle: "Pick a structured multi-week journey to make your plan." },
-  library: { title: "Library", subtitle: "Every move explained — how-to, form cues & mistakes to avoid." },
+  program: { title: "My Plan", subtitle: "Your week, day by day." },
+  discover: { title: "Discover", subtitle: "A one-off session for today." },
+  programs: { title: "Programs", subtitle: "Structured multi-week journeys." },
+  library: { title: "Library", subtitle: "Every move, explained." },
 };
 
 type WorkoutTab = "discover" | "programs" | "program" | "library";
@@ -352,9 +353,9 @@ function HeroHeader({
       </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
-          <div className="mb-1"><WorkoutPhaseSyncPill /></div>
           <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
-          <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow">{sectionSubtitle}</p>
+          <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 max-w-[9rem] sm:max-w-xs lg:max-w-sm drop-shadow">{sectionSubtitle}</p>
+          <CyclePhasePill className="mt-1.5" />
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
