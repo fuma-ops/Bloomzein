@@ -11,6 +11,7 @@ import {
   PHASE_META, type Phase,
 } from "@/components/bloom/CycleTracker";
 import { phaseForDay, readCycleSettings, PHASE_LABEL } from "@/components/bloom/cyclePhase";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
 import {
   STORAGE_KEYS as REMINDER_STORAGE_KEYS, type Reminder,
@@ -403,22 +404,21 @@ export default function CalendarPage() {
 
   return (
     <div className="relative animate-fade-in">
-      {/* HERO — synced with the Meals/Notes/Me hero style (image + soft pink
-          overlay + white title, with the day's stats as chips at the bottom). */}
-      <div className="relative w-full min-h-[172px] sm:min-h-[212px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
-        <img src="/images/landing-calendar.webp" alt="Bloom Calendar" className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/75 via-hotpink/25 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-        <div className="relative flex flex-col justify-between gap-2.5 p-3.5 sm:p-5 min-h-[172px] sm:min-h-[212px]">
-          {/* Title + subtitle (left) · Today / prev / next (right) */}
+      {/* HERO — Budget-style: soft pink gradient (no image), white title, a
+          phase pill under the subtitle, and the day's stats as filter chips. */}
+      <div className="relative w-full rounded-[1.75rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-hero-border-signal"
+        style={{ background: "linear-gradient(120deg, #F472B6 0%, #EC4899 55%, #C2186E 100%)" }}>
+        <div className="relative flex flex-col justify-between gap-2.5 p-4 sm:p-5">
+          {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none drop-shadow-md flex items-center gap-2">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none flex items-center gap-2" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
                 Bloom Calendar <CalendarDays className="h-5 w-5 sm:h-7 sm:w-7 shrink-0" strokeWidth={1.8} />
               </h1>
-              <p className="animate-fade-in mt-1.5 text-[11px] sm:text-sm italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: "150ms" }}>
+              <p className="animate-fade-in mt-1 text-[11px] sm:text-sm italic text-white/90 leading-snug" style={{ animationDelay: "150ms" }}>
                 Your life, beautifully planned.
               </p>
+              <CyclePhasePill className="mt-1.5 ring-1 ring-white/50" />
             </div>
             <div className="animate-fade-in shrink-0 flex items-center gap-1.5" style={{ animationDelay: "220ms" }}>
               <button onClick={goToday} className="rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/35 active:scale-95">
@@ -517,7 +517,6 @@ function FilterBar({ stats, activeFilter, onToggle }: {
   activeFilter: string | null;
   onToggle: (key: string) => void;
 }) {
-  const phaseMeta = stats.phase ? PHASE_META[stats.phase] : null;
   const fmtRange = (start: Date, end: Date) => {
     const sameMonth = start.getMonth() === end.getMonth();
     return sameMonth
@@ -526,7 +525,7 @@ function FilterBar({ stats, activeFilter, onToggle }: {
   };
 
   const items: { key: string; Icon: LucideIcon; label: string }[] = [];
-  if (phaseMeta && stats.phase) items.push({ key: stats.phase, Icon: phaseMeta.Icon, label: `${phaseMeta.label} · Day ${stats.cycleDay}` });
+  // Phase is shown in the hero pill now, so the filter row is activities only.
   items.push({ key: "workout", Icon: Dumbbell, label: `${stats.workouts} Workout${stats.workouts === 1 ? "" : "s"}` });
   items.push({ key: "yoga", Icon: PersonStanding, label: `${stats.yogaCount} Yoga Session${stats.yogaCount === 1 ? "" : "s"}` });
   items.push({ key: "journal", Icon: BookOpen, label: `${stats.journalCount} Journal Entr${stats.journalCount === 1 ? "y" : "ies"}` });
