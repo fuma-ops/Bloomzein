@@ -1,0 +1,258 @@
+import { useEffect, useMemo, useState } from "react";
+import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet } from "lucide-react";
+import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint } from "@/lib/meDashboard";
+
+/* One consistency dashboard for the Me page. Every number comes from a real
+   store (see meDashboard.ts). Visuals are single-hue pink (magnitude) with a
+   couple of status accents — no categorical rainbow — so it reads as one system
+   and looks lovely once the account has a few weeks of history. */
+
+const MOOD_EMOJI: Record<string, string> = {
+  happy: "😊", energetic: "⚡", calm: "😌", sensitive: "🥺",
+  sad: "😢", tired: "😴", cramps: "😣", bloated: "😮‍💨",
+};
+
+// Sequential single-hue ramp for the heatmap: light petal → deep magenta.
+const HEAT = [
+  "color-mix(in oklab, var(--petal) 45%, white)",
+  "color-mix(in oklab, var(--hotpink) 22%, white)",
+  "color-mix(in oklab, var(--hotpink) 42%, white)",
+  "color-mix(in oklab, var(--hotpink) 64%, white)",
+  "color-mix(in oklab, var(--hotpink) 84%, white)",
+  "var(--magenta)",
+];
+
+function BloomRing({ pct }: { pct: number }) {
+  const r = 52, c = 2 * Math.PI * r;
+  const offset = c * (1 - Math.min(100, Math.max(0, pct)) / 100);
+  return (
+    <div className="relative grid place-items-center shrink-0">
+      <svg viewBox="0 0 128 128" className="h-32 w-32 sm:h-36 sm:w-36 -rotate-90 animate-icon-breathe">
+        <defs>
+          <linearGradient id="bloomring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="var(--hotpink)" />
+            <stop offset="100%" stopColor="var(--magenta)" />
+          </linearGradient>
+        </defs>
+        <circle cx="64" cy="64" r={r} fill="none" stroke="var(--petal)" strokeOpacity="0.5" strokeWidth="12" />
+        <circle
+          cx="64" cy="64" r={r} fill="none" stroke="url(#bloomring)" strokeWidth="12" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">
+        <span className="font-script text-4xl sm:text-5xl leading-none text-hotpink">{pct}<span className="text-xl align-top">%</span></span>
+        <span className="mt-9 sm:mt-10 text-[9px] font-bold uppercase tracking-wider text-rose/60">bloomed</span>
+      </div>
+    </div>
+  );
+}
+
+function PillarBar({ label, pct, delay }: { label: string; pct: number; delay: number }) {
+  return (
+    <div className="animate-card-pop-in" style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex items-center justify-between text-[11px] font-bold text-rose/80">
+        <span>{label}</span><span className="text-hotpink">{pct}%</span>
+      </div>
+      <div className="mt-1 h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
+        <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${pct}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
+      </div>
+    </div>
+  );
+}
+
+function StatTile({ Icon, value, label, sub, spark, delay }: {
+  Icon: typeof Dumbbell; value: React.ReactNode; label: string; sub?: string;
+  spark?: { date: string; value: number }[]; delay: number;
+}) {
+  const max = spark && spark.length ? Math.max(1, ...spark.map((s) => s.value)) : 1;
+  return (
+    <div className="bloom-pearl-card pearl-sheen rounded-2xl p-3 sm:p-4 animate-card-pop-in" style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex items-center gap-2">
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink shrink-0"><Icon className="h-3.5 w-3.5" strokeWidth={1.8} /></span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-rose/60 leading-tight">{label}</span>
+      </div>
+      <div className="mt-1.5 flex items-end justify-between gap-2">
+        <span className="font-script text-3xl sm:text-4xl leading-none text-hotpink">{value}</span>
+        {spark && (
+          <svg viewBox={`0 0 ${spark.length * 6} 20`} className="h-5 w-16 shrink-0" preserveAspectRatio="none" aria-hidden>
+            {spark.map((s, i) => {
+              const h = s.value ? Math.max(2, (s.value / max) * 18) : 1.5;
+              return <rect key={s.date} x={i * 6} y={20 - h} width="4" height={h} rx="1.5" fill={s.value ? "var(--hotpink)" : "var(--petal)"} opacity={s.value ? 0.9 : 0.6} />;
+            })}
+          </svg>
+        )}
+      </div>
+      {sub && <p className="mt-0.5 text-[10px] text-rose/55">{sub}</p>}
+    </div>
+  );
+}
+
+function MoodChart({ mood }: { mood: MoodPoint[] }) {
+  if (mood.length < 2) {
+    return (
+      <div className="grid h-28 place-items-center rounded-2xl bg-blush/50 border border-petal/40">
+        <p className="text-xs text-rose/55 animate-pulse">Log your mood a few days and your curve blooms here ✿</p>
+      </div>
+    );
+  }
+  const W = 300, H = 96, padY = 12;
+  const stepX = W / Math.max(1, mood.length - 1);
+  const y = (s: number) => padY + (1 - (s - 1) / 4) * (H - padY * 2);
+  const pts = mood.map((m, i) => [i * stepX, y(m.score)] as const);
+  const line = pts.map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)},${yy.toFixed(1)}`).join(" ");
+  const area = `${line} L${W},${H} L0,${H} Z`;
+  const last = mood[mood.length - 1];
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="moodfill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="var(--hotpink)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#moodfill)" />
+        <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        {pts.map(([x, yy], i) => (
+          <circle key={mood[i].date} cx={x} cy={yy} r="2.6" fill="white" stroke="var(--hotpink)" strokeWidth="1.5" vectorEffect="non-scaling-stroke">
+            <title>{`${mood[i].date} · ${MOOD_EMOJI[mood[i].mood] ?? ""} ${mood[i].mood}`}</title>
+          </circle>
+        ))}
+      </svg>
+      <div className="mt-1 flex items-center justify-between text-[10px] text-rose/55">
+        <span>{mood[0].date.slice(5)}</span>
+        <span className="font-semibold text-hotpink">latest {MOOD_EMOJI[last.mood] ?? ""} {last.mood}</span>
+        <span>today</span>
+      </div>
+    </div>
+  );
+}
+
+function Heatmap({ calendar }: { calendar: CalendarDay[] }) {
+  // Chunk into weeks of 7 (calendar is week-aligned Mon→Sun, oldest first).
+  const weeks: CalendarDay[][] = [];
+  for (let i = 0; i < calendar.length; i += 7) weeks.push(calendar.slice(i, i + 7));
+  return (
+    <div>
+      <div className="flex gap-[3px]">
+        {weeks.map((w, wi) => (
+          <div key={wi} className="flex flex-col gap-[3px]">
+            {w.map((d) => (
+              <div
+                key={d.date}
+                className="h-4 w-4 sm:h-[18px] sm:w-[18px] rounded-[4px] border border-white/60"
+                style={{ background: HEAT[d.score] }}
+                title={`${d.date} · ${d.score}/5 rituals${d.score ? ` (${[d.workout && "workout", d.yoga && "yoga", d.journal && "journal", d.mood && "mood", d.hydrated && "hydration"].filter(Boolean).join(", ")})` : ""}`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-rose/55">
+        <span>less</span>
+        {HEAT.map((c, i) => <span key={i} className="h-3 w-3 rounded-[3px] border border-white/60" style={{ background: c }} />)}
+        <span>more</span>
+      </div>
+    </div>
+  );
+}
+
+function GoalBar({ Icon, label, pct, caption, over }: { Icon: typeof Droplets; label: string; pct: number; caption: string; over?: boolean }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] font-bold text-rose/80">
+        <span className="inline-flex items-center gap-1.5"><Icon className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} />{label}</span>
+        <span className={over ? "text-magenta" : "text-hotpink"}>{caption}</span>
+      </div>
+      <div className="mt-1 h-2.5 rounded-full bg-blush border border-petal/50 overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${Math.min(100, pct)}%`,
+            background: over ? "var(--magenta)" : "linear-gradient(90deg, var(--hotpink), var(--magenta))",
+            transition: "width 900ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function ConsistencyDashboard() {
+  const [data, setData] = useState<MeDashboard | null>(null);
+  useEffect(() => {
+    const refresh = () => setData(computeMeDashboard());
+    refresh();
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
+
+  const scoreLine = useMemo(() => {
+    const s = data?.bloomScore ?? 0;
+    if (s >= 80) return "You're on a beautiful streak ✿";
+    if (s >= 50) return "You're building real momentum";
+    if (s >= 20) return "Every logged day counts — keep blooming";
+    return "Your dashboard blooms as you log ✿";
+  }, [data?.bloomScore]);
+
+  if (!data) return null;
+  const b = data.budget;
+
+  return (
+    <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <h2 className="font-script text-3xl sm:text-4xl text-hotpink">Your bloom</h2>
+        <span className="text-xs text-rose/70 shrink-0">last {data.windowDays} days</span>
+      </div>
+
+      {/* Bloom score + pillars */}
+      <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+          <BloomRing pct={data.bloomScore} />
+          <div className="flex-1 w-full min-w-0">
+            <p className="font-script text-2xl text-hotpink leading-tight">{scoreLine}</p>
+            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2.5">
+              {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} delay={80 + i * 60} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat tiles — 2-up mobile, 4-up desktop */}
+      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts done" spark={data.workoutSpark} sub="all time" delay={100} />
+        <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub="all time" delay={160} />
+        <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={data.moveStreak === 1 ? "day" : "days in a row"} delay={220} />
+        <StatTile Icon={BookHeart} value={data.journalStreak} label="Journal streak" sub={data.journalStreak === 1 ? "day" : "days in a row"} delay={280} />
+      </div>
+
+      {/* Mood + consistency calendar */}
+      <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-rose/60 mb-2">Mood, day one → today</p>
+          <MoodChart mood={data.mood} />
+        </div>
+        <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-rose/60 mb-2">Consistency calendar</p>
+          <Heatmap calendar={data.calendar} />
+        </div>
+      </div>
+
+      {/* Goals respected */}
+      <div className="mt-3 bloom-pearl-card pearl-sheen rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Goals respected</p>
+        <GoalBar Icon={Droplets} label="Hydration" pct={data.hydrateRate} caption={`${data.hydrateRate}% of days`} />
+        <GoalBar Icon={Salad} label="Eating well" pct={data.nourishRate} caption={`${data.nourishRate}% of days`} />
+        {b.has && (
+          <GoalBar
+            Icon={Wallet} label="Budget" pct={b.plan > 0 ? b.pct : 100}
+            over={b.plan > 0 && b.spent > b.plan}
+            caption={b.plan > 0 ? `${b.currency}${Math.round(b.spent)} / ${b.currency}${Math.round(b.plan)}` : `${b.currency}${Math.round(b.spent)} spent`}
+          />
+        )}
+      </div>
+    </section>
+  );
+}

@@ -18,7 +18,11 @@ function LegalShell({ title, subtitle, children }: { title: string; subtitle: st
   return (
     <div className="min-h-screen bg-[#FFF5F9] text-[#4a2338]">
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
-        <a href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition">
+        <a
+          href="/"
+          onClick={(e) => { if (typeof window !== "undefined" && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
         </a>
         <header className="mt-6 flex items-center gap-3">

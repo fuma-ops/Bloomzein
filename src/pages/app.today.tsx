@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { energyBalance } from "@/lib/nutritionTargets";
 import { todayISO } from "@/lib/localDate";
+import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay } from "@/lib/crossToolData";
@@ -401,6 +402,9 @@ export default function TodayPage() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Keep the per-day hydration history current for the Me consistency dashboard.
+  useEffect(() => { stampWater(waterCount, waterGoal); }, [waterCount, waterGoal]);
 
   // Water reminders sync
   useEffect(() => {
