@@ -672,10 +672,20 @@ export default function YogaPage() {
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
     setHydrated(true);
-    // Deep-link from Today / Cycle: open straight into the prescribed flow setup.
+    // Deep-link from Today / Cycle: build the prescribed flow and drop straight
+    // into the session player — not the setup screen — so a planned flow starts
+    // with one tap. Uses the user's saved level + current phase; sensible
+    // defaults for the rest.
     const launch = readLaunch<{ intention: string; durationMin: number }>(LAUNCH_YOGA_KEY);
     if (launch) {
-      setView({ kind: "setup", preset: { intention: launch.intention as Intention, durationMin: launch.durationMin } });
+      const intention = launch.intention as Intention;
+      const durationMin = launch.durationMin;
+      const level = readYogaProfileLevel();
+      const phase = mapToYogaPhase(readCyclePhase());
+      const mode: Mode = "visual";
+      const lang: Lang = "en";
+      const flow = buildFlow({ intention, level, durationMin, phase, mode });
+      setView({ kind: "session", flow, lang, mode, intention, hold: holdSecondsFor(durationMin, level), durationMin });
     }
     setLowWater(readTodayWaterCount() < 3);
     const refresh = () => setLowWater(readTodayWaterCount() < 3);
