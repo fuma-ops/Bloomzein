@@ -1,7 +1,6 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { scrollToTopOf } from "@/lib/scrollToTopOf";
 
 /* ---------- data ---------- */
 const TOPICS = ["All", "Cycle & Body", "Self-care", "Money", "Movement", "Mindset", "Recipes"] as const;
@@ -129,11 +128,6 @@ export default function ReadPage() {
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [openId, setOpenId] = useState<string | null>(null);
   const heroRef = useRef<HTMLElement>(null);
-
-  useLayoutEffect(() => {
-    if (openId) return;
-    scrollToTopOf(heroRef.current);
-  }, [openId]);
 
   const toggleSave = (id: string) => setSaved((s) => ({ ...s, [id]: !s[id] }));
 

@@ -6,7 +6,8 @@ import {
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { type CyclePhase, PHASE_LABEL, readCyclePhase } from "@/components/bloom/cyclePhase";
+import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
+import { PhaseSyncPill } from "@/components/bloom/PhaseSyncPill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
@@ -259,6 +260,48 @@ const SECTION_META: Record<"discover" | "programs" | "program" | "library", { ti
 
 type WorkoutTab = "discover" | "programs" | "program" | "library";
 
+const WORKOUT_PHASE_META: Record<Exclude<CyclePhase, "any">, { emoji: string; label: string }> = {
+  period: { emoji: "🌙", label: "Menstrual" },
+  follicular: { emoji: "🌱", label: "Follicular" },
+  fertile: { emoji: "🌷", label: "Fertile" },
+  ovulation: { emoji: "🌸", label: "Ovulatory" },
+  luteal: { emoji: "🍂", label: "Luteal" },
+};
+
+/** Hero pill: names the cycle phase and shows whether My Plan was built for the
+ *  current phase (bloom:workout-program-phase); tapping regenerates the week for
+ *  the phase (or opens cycle setup if the cycle isn't tracked yet). */
+function WorkoutPhaseSyncPill() {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const r = () => force((t) => t + 1);
+    window.addEventListener("storage", r);
+    window.addEventListener("bloom:workout-updated", r);
+    return () => { window.removeEventListener("storage", r); window.removeEventListener("bloom:workout-updated", r); };
+  }, []);
+  const phase = readCyclePhase();
+  const known = hasCycleSettings() && phase != null && phase !== "any";
+  const meta = phase && phase !== "any" ? WORKOUT_PHASE_META[phase] : { emoji: "🌸", label: "" };
+  let program: unknown = null, programPhase: CyclePhase | null = null;
+  try { const v = localStorage.getItem(PROGRAM_KEY); program = v && v !== "null" ? JSON.parse(v) : null; } catch { program = null; }
+  try { const v = localStorage.getItem(PROGRAM_PHASE_KEY); programPhase = v ? JSON.parse(v) : null; } catch { programPhase = null; }
+  const synced = known && !!program && programPhase === phase;
+  const onSync = () => {
+    if (!known) { window.location.href = "/app/calendar"; return; }
+    let profile = DEFAULT_PROFILE;
+    try { const v = localStorage.getItem(PROFILE_KEY); if (v) profile = JSON.parse(v); } catch { profile = DEFAULT_PROFILE; }
+    const plan = generateWeeklyPlan(profile, phase as CyclePhase, Math.floor(Math.random() * 10000));
+    try {
+      localStorage.setItem(PROGRAM_KEY, JSON.stringify(plan));
+      localStorage.setItem(PROGRAM_PHASE_KEY, JSON.stringify(phase));
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("bloom:workout-updated"));
+    } catch {}
+    force((t) => t + 1);
+  };
+  return <PhaseSyncPill emoji={meta.emoji} label={meta.label} synced={synced} known={known} onSync={onSync} />;
+}
+
 function HeroHeader({
   src,
   tab,
@@ -309,6 +352,7 @@ function HeroHeader({
       </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
+          <div className="mb-1"><WorkoutPhaseSyncPill /></div>
           <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
           <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow">{sectionSubtitle}</p>
         </div>
@@ -1691,6 +1735,17 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const [seed, setSeed] = useLS<number>("bloom:workout-freestyle-seed", 0);
 
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
+
+  // Re-read the plan when it changes elsewhere (e.g. the hero's "sync to phase"
+  // pill regenerates the week) so the grid reflects it live.
+  useEffect(() => {
+    const reload = () => {
+      try { const v = localStorage.getItem(PROGRAM_KEY); setProgram(v && v !== "null" ? JSON.parse(v) : null); } catch {}
+      try { const v = localStorage.getItem(PROGRAM_PHASE_KEY); setProgramPhase(v ? JSON.parse(v) : null); } catch {}
+    };
+    window.addEventListener("bloom:workout-updated", reload);
+    return () => window.removeEventListener("bloom:workout-updated", reload);
+  }, [setProgram, setProgramPhase]);
 
   // Body goal drives which recovery meals we surface after each session.
   const goal = readDietProfile().goal;

@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
-import { readCyclePhase, toYogaPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, toYogaPhase, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { PhaseSyncPill } from "@/components/bloom/PhaseSyncPill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
 import { todayISO, isYesterday } from "@/lib/localDate";
@@ -820,6 +821,47 @@ const HERO_CONTENT: Record<"home" | "library" | "plan", { title: string; subtitl
   plan: { title: "Your soft week", subtitle: "your personalized plan, gently synced to your cycle." },
 };
 
+const YOGA_PHASE_META: Record<Phase, { emoji: string; label: string }> = {
+  menstrual: { emoji: "🌙", label: "Menstrual" },
+  follicular: { emoji: "🌱", label: "Follicular" },
+  ovulation: { emoji: "🌸", label: "Ovulatory" },
+  luteal: { emoji: "🍂", label: "Luteal" },
+};
+
+/** Hero pill: names the cycle phase and shows whether the yoga week matches the
+ *  phase-recommended plan; tapping syncs the week to the phase (or opens cycle
+ *  setup if the cycle isn't tracked yet). Self-contained — reads/writes the same
+ *  bloom:yoga-schedule the My Plan tab uses. */
+function YogaPhaseSyncPill() {
+  const [, force] = useState(0);
+  useEffect(() => {
+    const r = () => force((t) => t + 1);
+    window.addEventListener("storage", r);
+    window.addEventListener("bloom:yoga-updated", r);
+    return () => { window.removeEventListener("storage", r); window.removeEventListener("bloom:yoga-updated", r); };
+  }, []);
+  const known = hasCycleSettings();
+  const phase = mapToYogaPhase(readCyclePhase());
+  const meta = YOGA_PHASE_META[phase];
+  const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const rec = PHASE_DEFAULT_PLAN[phase];
+  let schedule: Record<string, string | null> = {};
+  try { schedule = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || "{}"); } catch { schedule = {}; }
+  const synced = known && WEEK.every((d, i) => (schedule[d] ?? null) === rec[i]);
+  const onSync = () => {
+    if (!known) { window.location.href = "/app/calendar"; return; }
+    const next: Record<string, string | null> = {};
+    WEEK.forEach((d, i) => { next[d] = rec[i]; });
+    try {
+      localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("bloom:yoga-updated"));
+    } catch {}
+    force((t) => t + 1);
+  };
+  return <PhaseSyncPill emoji={meta.emoji} label={meta.label} synced={synced} known={known} onSync={onSync} />;
+}
+
 function YogaHero({
   active, onDiscover, onLibrary, onMyPlan, onTryFlow, onGuide, onReset,
 }: {
@@ -865,6 +907,7 @@ function YogaHero({
         )}
       </div>
       <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
+        <div><YogaPhaseSyncPill /></div>
         <div key={active} className="animate-scale-in max-w-[62%]">
           <h1 className="font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
           <p className="mt-1 text-[11px] sm:text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
@@ -1256,6 +1299,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
       const dr = localStorage.getItem(YOGA_DURATIONS_KEY); if (dr) setDurations(JSON.parse(dr));
     } catch {}
   }, [phase]);
+
+  // Re-read the schedule when it changes elsewhere (e.g. the hero's "sync to
+  // phase" pill) so the week grid reflects it live.
+  useEffect(() => {
+    const reload = () => { try { const raw = localStorage.getItem(SCHEDULE_KEY); setSchedule(raw ? JSON.parse(raw) : {}); } catch {} };
+    window.addEventListener("bloom:yoga-updated", reload);
+    return () => window.removeEventListener("bloom:yoga-updated", reload);
+  }, []);
 
   // Fill the week with flows matched to the current cycle phase (opt-in).
   const syncToCycle = () => {
