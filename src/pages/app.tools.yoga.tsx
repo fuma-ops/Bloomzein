@@ -6,11 +6,11 @@ import {
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw,
+  Trash2, CircleCheck, Circle,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, toYogaPhase, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { PhaseSyncPill } from "@/components/bloom/PhaseSyncPill";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
@@ -440,6 +440,16 @@ const CLOSING: Record<Lang, string> = {
 
 const ONBOARD_KEY = "bloom:yoga-onboarded";
 const YOGA_TOUR_KEY = "bloom:yoga-tour-done";
+
+/** Reset the Yoga tool to its first-time state (with a confirm). Shared by the
+ *  hero and the plan controls. */
+async function resetYogaTool() {
+  if (window.confirm("Reset the Yoga tool to a fresh start? This clears your week, sessions and progress here so you can see the first-time experience.")) {
+    resetToolState("yoga");
+    await flushCloudSync(); // push the deletions before reload, else cloud restores them
+    window.location.reload();
+  }
+}
 const STEP_KEY = "bloom:yoga-step"; // 1 learn, 2 visual, 3 audio
 const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
@@ -732,13 +742,6 @@ export default function YogaPage() {
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
           onGuide={() => setShowTour(true)}
-          onReset={async () => {
-            if (window.confirm("Reset the Yoga tool to a fresh start? This clears your week, sessions and progress here so you can see the first-time experience.")) {
-              resetToolState("yoga");
-              await flushCloudSync(); // push the deletions before reload, else cloud restores them
-              window.location.reload();
-            }
-          }}
         />
       )}
 
@@ -870,7 +873,18 @@ function YogaPhaseSyncPill() {
     } catch {}
     force((t) => t + 1);
   };
-  return <PhaseSyncPill emoji={meta.emoji} label={meta.label} synced={synced} known={known} onSync={onSync} />;
+  return (
+    <button
+      onClick={onSync}
+      disabled={synced}
+      title={!known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`}
+      className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
+        synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
+    >
+      {synced ? <CircleCheck className="h-3.5 w-3.5" strokeWidth={2.4} /> : <Circle className="h-3.5 w-3.5" strokeWidth={2} />}
+      {synced ? "In sync" : "Sync"}
+    </button>
+  );
 }
 
 function YogaHero({
@@ -1435,6 +1449,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
             </div>
             <LevelStreak variant="chip" streak={readYogaStreak().count} />
+            <YogaPhaseSyncPill />
           </div>
           <div className="flex items-center gap-2">
             <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose">
@@ -1444,6 +1459,9 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             </label>
             <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1 text-[11px] font-bold border transition", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60"].join(" ")}>
               {editing ? "Done" : "Edit"}
+            </button>
+            <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold border border-petal/50 bg-white/70 text-rose/50 hover:text-hotpink transition">
+              <Trash2 className="h-3 w-3" /> Reset
             </button>
           </div>
         </div>
