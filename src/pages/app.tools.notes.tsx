@@ -4,7 +4,7 @@ import {
   Sparkles, Bell, BellRing, Smartphone, Check, Calendar, Clock,
   Heart, Palette, Tag, AlertCircle, X, ChevronDown, ChevronUp, RotateCcw,
   Pill, Users, Sparkle, Cake, Stethoscope, Plane, Briefcase, CalendarClock,
-  Droplets, Dumbbell, Moon, Flower2, NotebookPen, type LucideIcon
+  Droplets, Dumbbell, Moon, Flower2, NotebookPen, Repeat, type LucideIcon
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
@@ -129,7 +129,7 @@ function fromTodoText(stored: string): string {
 }
 
 const KIND_OPTIONS: { key: ReminderKind; label: string; emoji: string; Icon: LucideIcon; hint: string }[] = [
-  { key: "medication", label: "Medication", emoji: "💊", Icon: Pill, hint: "Pills, vitamins & daily habits" },
+  { key: "medication", label: "Habit", emoji: "🌿", Icon: Repeat, hint: "Habits, routines, meds & vitamins" },
   { key: "event", label: "Appointment & events", emoji: "📅", Icon: CalendarClock, hint: "Meetings, doctor visits, vacations…" },
   { key: "birthday", label: "Birthday", emoji: "🎂", Icon: Cake, hint: "Repeats every year, forever ✿" },
 ];
@@ -264,8 +264,8 @@ function upcomingFires(rem: Reminder, from: Date, userId: string | null): FireIt
           if (fireAt < from) continue;
           const body =
             n === 0
-              ? `Time to take ${rem.title} · ${slot} 💊`
-              : `Still waiting — take your ${rem.title} (${slot}) 💊`;
+              ? `Time for ${rem.title} · ${slot} 🌿`
+              : `Still waiting — ${rem.title} (${slot}) 🌿`;
           out.push({ dedupeKey: `${doseKey}|${n}`, fireAt, body, data });
         }
       }
@@ -308,7 +308,7 @@ function turningAge(rem: Reminder): number | null {
 }
 
 function reminderVisual(rem: Reminder): { Icon: LucideIcon; color: string; label: string } {
-  if (rem.kind === "medication") return { Icon: Pill, color: "text-emerald-600 bg-emerald-50", label: "Medication" };
+  if (rem.kind === "medication") return { Icon: Repeat, color: "text-emerald-600 bg-emerald-50", label: "Habit" };
   if (rem.kind === "birthday") return { Icon: Cake, color: "text-pink-600 bg-pink-50", label: "Birthday" };
   const cat = EVENT_CATEGORIES.find((c) => c.key === rem.category);
   return cat ? { Icon: cat.Icon, color: cat.color, label: cat.label } : { Icon: Heart, color: "text-hotpink bg-blush", label: "Event" };
@@ -704,7 +704,7 @@ export default function NotesPage() {
     const fireAlert = (rem: Reminder, body: string, medKey?: string) => {
       if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         try {
-          new Notification("BloomyGirl Nudge ✿", { body: `${body} 💕`, icon: "/images/me-avatar.webp" });
+          new Notification("Bloomzein Nudge ✿", { body: `${body} 💕`, icon: "/images/me-avatar.webp" });
         } catch (e) {
           console.error("Browser notification failed to fire:", e);
         }
@@ -732,13 +732,13 @@ export default function NotesPage() {
 
             if (!rem.medAlarm || rem.medAlarm.key !== key) {
               changed = true;
-              fireAlert(rem, `Time to take ${rem.title} · ${dueSlot}`, key);
+              fireAlert(rem, `Time for ${rem.title} · ${dueSlot}`, key);
               return { ...rem, notifiedKey: key, medAlarm: { key, lastNudgeAt: now.toISOString() } };
             }
             const minsSinceLastNudge = (now.getTime() - new Date(rem.medAlarm.lastNudgeAt).getTime()) / 60000;
             if (minsSinceLastNudge < MED_ALARM_INTERVAL_MIN) return rem;
             changed = true;
-            fireAlert(rem, `Still waiting — take your ${rem.title} (${dueSlot})`, key);
+            fireAlert(rem, `Still waiting — ${rem.title} (${dueSlot})`, key);
             return { ...rem, medAlarm: { key, lastNudgeAt: now.toISOString() } };
           }
 
@@ -781,7 +781,7 @@ export default function NotesPage() {
         upcomingFires(rem, new Date(), userId).map((fire) => ({
           dedupeKey: `${rem.id}:${fire.dedupeKey}`,
           fireAt: fire.fireAt.toISOString(),
-          title: "BloomyGirl Nudge ✿",
+          title: "Bloomzein Nudge ✿",
           body: fire.body,
           data: fire.data ?? { url: "/app/tools/notes", reminderId: rem.id },
         }))
@@ -882,7 +882,7 @@ export default function NotesPage() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Gentle Bloom Nudge</p>
               <h4 className="font-semibold text-rose text-sm truncate">{activeAlert.title}</h4>
               <p className="text-xs text-rose/70 mt-0.5">
-                {activeAlert.kind === "medication" ? "Like an alarm — it'll keep nudging you until you confirm 💊" : "It's time to bloom! 💕"}
+                {activeAlert.kind === "medication" ? "Like an alarm — it'll keep nudging you until you mark it done 🌿" : "It's time to bloom! 💕"}
               </p>
               <div className="flex gap-2 mt-4">
                 {activeAlert.kind === "medication" ? (
@@ -894,7 +894,7 @@ export default function NotesPage() {
                       }}
                       className="bloom-luxury-btn px-3 py-1.5 text-xs font-bold text-white flex-1"
                     >
-                      Taken ✓
+                      Done ✓
                     </button>
                     <button
                       onClick={() => setActiveAlert(null)}
@@ -939,7 +939,7 @@ export default function NotesPage() {
               <div className="flex-1 text-left">
                 <h4 className="text-xs font-bold text-[#831843]">Remind you on your lockscreen?</h4>
                 <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
-                  Add BloomyGirl to your phone's home screen as an app to receive self-care nudges even when closed.
+                  Add Bloomzein to your phone's home screen as an app to receive self-care nudges even when closed.
                 </p>
               </div>
               <button onClick={handleDismissPwaPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
@@ -957,7 +957,7 @@ export default function NotesPage() {
               <div className="flex-1 text-left">
                 <h4 className="text-xs font-bold text-[#831843]">Enable lovely desktop notification nudges? 💕</h4>
                 <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
-                  Allow BloomyGirl to send gentle reminders while the tab is open.
+                  Allow Bloomzein to send gentle reminders while the tab is open.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button onClick={handleRequestNotifPermission} className="bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white">
@@ -976,8 +976,8 @@ export default function NotesPage() {
         )}
       </div>
 
-      {/* HERO */}
-      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+      {/* HERO — sized to match the Read hero (compact banner) */}
+      <div className="relative w-full min-h-[152px] sm:min-h-[224px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
         <img src="/images/notes-hero.webp" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
@@ -1149,13 +1149,21 @@ export default function NotesPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Category Tag</label>
-                    <select
-                      value={noteTag}
-                      onChange={(e) => setNoteTag(e.target.value)}
-                      className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
-                    >
-                      {NOTE_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                    <div className="flex flex-wrap gap-1.5">
+                      {NOTE_TAGS.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setNoteTag(t)}
+                          className={["rounded-full px-2.5 py-1 text-[11px] font-semibold border transition active:scale-95",
+                            noteTag === t
+                              ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30"
+                              : "bg-white text-rose border-pink-200 hover:bg-blush/50"].join(" ")}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Paper shade</label>
@@ -1225,7 +1233,7 @@ export default function NotesPage() {
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
-                    {remKind === "medication" ? "Medication or habit name" : remKind === "birthday" ? "Whose birthday?" : "Title"}
+                    {remKind === "medication" ? "Habit name" : remKind === "birthday" ? "Whose birthday?" : "Title"}
                   </label>
                   <input
                     type="text"
@@ -1234,7 +1242,7 @@ export default function NotesPage() {
                     onChange={(e) => setRemTitle(e.target.value)}
                     placeholder={
                       remKind === "medication"
-                        ? "e.g. Vitamin D, Iron pills, Allergy meds..."
+                        ? "e.g. Morning workout, Vitamin D, Drink water..."
                         : remKind === "birthday"
                           ? "e.g. Mom's birthday, Lina's birthday..."
                           : "e.g. Dentist appointment, Team meeting..."
@@ -1305,9 +1313,21 @@ export default function NotesPage() {
                   <>
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Category</label>
-                      <select value={remCategory} onChange={(e) => setRemCategory(e.target.value)} className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20">
-                        {EVENT_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-                      </select>
+                      <div className="flex flex-wrap gap-1.5">
+                        {EVENT_CATEGORIES.map((c) => (
+                          <button
+                            key={c.key}
+                            type="button"
+                            onClick={() => setRemCategory(c.key)}
+                            className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border transition active:scale-95",
+                              remCategory === c.key
+                                ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30"
+                                : "bg-white text-rose border-pink-200 hover:bg-blush/50"].join(" ")}
+                          >
+                            <c.Icon className="h-3 w-3" strokeWidth={2} /> {c.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <label className="flex items-center gap-2 text-xs font-semibold text-rose/70">
                       <input type="checkbox" checked={remIsRange} onChange={(e) => setRemIsRange(e.target.checked)} className="h-4 w-4 rounded accent-hotpink" />
@@ -1697,33 +1717,6 @@ export default function NotesPage() {
         {/* ── RIGHT PANEL (40%) ── */}
         <aside className="hidden lg:flex lg:col-span-2 lg:sticky lg:top-4 flex-col gap-4 mt-0">
 
-          {/* QUICK CAPTURE */}
-          <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-[#831843]">Quick Capture</h3>
-              <Edit3 className="h-4 w-4 text-rose/30" />
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { icon: Edit3,    label: "Note",    color: "bg-[#FCE7F3] text-hotpink",      onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
-                { icon: Bell,     label: "Remind",  color: "bg-[#FBCFE8] text-[#DB2777]",    onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
-                { icon: Heart,    label: "Mood",    color: "bg-[#F9A8D4] text-[#BE185D]",    onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); } },
-                { icon: Sparkles, label: "Insight", color: "bg-[#EC4899]/20 text-[#9D174D]", onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); setShowMoodPicker(false); } },
-              ].map(({ icon: Icon, label, color, onClick }) => (
-                <button
-                  key={label}
-                  onClick={onClick}
-                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100/60 hover:border-pink-200 transition active:scale-95 w-full"
-                >
-                  <span className={["grid h-8 w-8 place-items-center rounded-xl", color].join(" ")}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="text-[9px] font-bold text-rose/70">{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* NOTES THIS WEEK */}
           <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-1">
@@ -1844,8 +1837,8 @@ export default function NotesPage() {
             </div>
           </div>
 
-          {/* YOUR THOUGHTS */}
-          <div className="rounded-3xl bg-gradient-to-br from-[#F9A8D4] via-[#FCE7F3] to-[#DDD6FE] border border-pink-200/60 p-5 shadow-sm relative overflow-hidden">
+          {/* YOUR THOUGHTS — strong pink so the white copy reads clearly */}
+          <div className="rounded-3xl bg-gradient-to-br from-[#F472B6] via-[#EC4899] to-[#C2186E] border border-hotpink/40 p-5 shadow-md shadow-hotpink/20 relative overflow-hidden">
             <div className="absolute -bottom-3 -right-3 text-8xl opacity-20 pointer-events-none select-none rotate-[-20deg] leading-none">🌸</div>
             <div className="absolute top-2 right-2 text-3xl opacity-25 pointer-events-none select-none">🌷</div>
             <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-1 relative z-10">Your Thoughts</p>
@@ -1914,30 +1907,6 @@ export default function NotesPage() {
             </div>
           </div>
         )}
-
-        {/* Quick Capture strip */}
-        <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
-          <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Capture</h3>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { icon: Edit3,    label: "Note",    color: "bg-[#FCE7F3] text-hotpink",      onClick: () => { setTab("notes"); setEditingNoteId(null); setNoteTitle(""); setNoteText(""); setNoteColor("sakura"); setNoteTag("Self-care"); setShowNoteForm(true); setShowMoodPicker(false); } },
-              { icon: Bell,     label: "Remind",  color: "bg-[#FBCFE8] text-[#DB2777]",    onClick: () => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); } },
-              { icon: Heart,    label: "Mood",    color: "bg-[#F9A8D4] text-[#BE185D]",    onClick: () => { setTab("notes"); setShowMoodPicker(true); setShowNoteForm(false); } },
-              { icon: Sparkles, label: "Insight", color: "bg-[#EC4899]/20 text-[#9D174D]", onClick: () => { setTab("notes"); setNoteTag("Ideas"); setShowNoteForm(true); setShowMoodPicker(false); } },
-            ].map(({ icon: Icon, label, color, onClick }) => (
-              <button
-                key={label}
-                onClick={onClick}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 transition active:scale-95 w-full"
-              >
-                <span className={["grid h-8 w-8 place-items-center rounded-xl", color].join(" ")}>
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-[9px] font-bold text-rose/70">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Quick Reminder Ideas strip — infinite marquee, pauses on hover */}
         <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm overflow-hidden">

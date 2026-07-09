@@ -67,10 +67,12 @@ self.addEventListener("push", (event: PushEvent) => {
   };
 
   if (payload.alarm && data.kind === "medication") {
-    options.icon = "/medication-icon-192.png";
+    // "medication" is the internal id for the general Habit reminder kind — use
+    // the soft Bloomzein brand icon (no pill), and confirm with "Done".
+    options.icon = "/pwa-192x192.png";
     options.requireInteraction = true;
     options.silent = false;
-    options.tag = `medication-${data.dedupePrefix ?? data.doseKey ?? "alarm"}`;
+    options.tag = `habit-${data.dedupePrefix ?? data.doseKey ?? "alarm"}`;
     options.renotify = true;
     options.vibrate = [
       400, 200, 400, 200, 400, 600,
@@ -78,7 +80,7 @@ self.addEventListener("push", (event: PushEvent) => {
       400, 200, 400, 200, 400,
     ];
     options.actions = [
-      { action: "taken", title: "Taken ✓" },
+      { action: "taken", title: "Done ✓" },
       { action: "snooze", title: "Snooze" },
     ];
   }

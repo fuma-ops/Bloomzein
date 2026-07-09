@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ShoppingBag, Heart, Star, Plus, Minus, X, ArrowRight, Sparkles,
-  Flower2, Gift, Percent, Crown,
+  Gift, Percent, Crown,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
 
 /* ---------- data ---------- */
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "bestsellers";
@@ -112,10 +113,8 @@ export default function ShopPage() {
       <div>
         {/* HERO */}
         <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-          <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-            <img src="/images/shop-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 z-[1] bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
-            <div className="relative z-[2] px-4 py-6 sm:px-10 sm:py-14 max-w-md">
+          <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ background: "linear-gradient(135deg,#FFF1F8 0%,#FFE1EF 60%,#FFD2E8 100%)" }}>
+            <div className="relative z-[2] px-4 py-5 sm:px-10 sm:py-11 max-w-md">
               <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2">
                 Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
               </h1>
@@ -149,7 +148,7 @@ export default function ShopPage() {
 
         {/* SEARCH */}
         <section className="mt-3 sm:mt-5 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-          <div className="relative">
+          <div className="relative max-w-xs sm:max-w-sm">
             <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
             <input
               id="search-boutique"
@@ -347,8 +346,8 @@ function CategoryTile(
         ].join(" ")}
       >
         {props.allMode ? (
-          <span className="grid h-full w-full place-items-center bg-blush/70 text-hotpink">
-            <Flower2 className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
+          <span className="grid h-full w-full place-items-center bg-blush/70">
+            <BloomFlower size={26} petal="#EC4899" className="h-6 w-6 sm:h-7 sm:w-7" />
           </span>
         ) : (
           <img src={props.img} alt="" loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />

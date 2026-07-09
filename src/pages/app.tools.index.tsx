@@ -60,21 +60,10 @@ export default function ToolsIndex() {
   return (
     <div className="relative animate-fade-in">
 
-      {/* HERO — title left, dynamic vintage two-tone moving lines behind it.
-          Height hugs the title + subtitle (no empty space above/below). */}
+      {/* HERO — title left on a soft pink gradient. The app-wide drifting
+          flowers provide the page's dynamic background. */}
       <section>
         <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ background: 'linear-gradient(135deg,#FFF1F8 0%,#FFE1EF 60%,#FFD2E8 100%)' }}>
-          {/* Moving horizontal lines — cute clear-pink + strong-pink retro texture */}
-          <div
-            className="animate-vintage-lines absolute inset-0 opacity-60"
-            style={{
-              backgroundImage: 'linear-gradient(0deg, #EC4899 0, #EC4899 2px, transparent 2px, transparent 10px, #FF9ED2 10px, #FF9ED2 12px, transparent 12px, transparent 24px)',
-              backgroundSize: '100% 24px',
-              backgroundRepeat: 'repeat',
-            }}
-          />
-          {/* Soft left vignette so the title stays crisp over the lines */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/35 to-transparent" />
           {/* Floating sparkles */}
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/45 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-hotpink/35 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
