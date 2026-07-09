@@ -725,8 +725,8 @@ export function CycleTracker() {
           {/* ── PHASE HERO CARD ── */}
           <div
             data-tour="phase"
-            className="relative overflow-hidden rounded-[22px]"
-            style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px', scrollMarginTop: 90, scrollMarginBottom: 90 }}
+            className="relative overflow-hidden rounded-[22px] animate-card-pop-in"
+            style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px', scrollMarginTop: 90, scrollMarginBottom: 90, animationDelay: '0ms' }}
           >
             {/* Background photo — full-width, masked to fade left→right seamlessly */}
             <img
