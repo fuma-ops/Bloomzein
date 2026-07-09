@@ -4,13 +4,14 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb, CalendarDays,
   Droplet, Sprout, Star, Moon, Circle,
   Dumbbell, PersonStanding, BookOpen, CalendarClock, Bell, Soup, Heart, Droplets, Cake, Plane,
+  ArrowRight,
   type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/bloom/PageHeader";
 import {
   PHASE_META, type Phase,
 } from "@/components/bloom/CycleTracker";
-import { phaseForDay, readCycleSettings } from "@/components/bloom/cyclePhase";
+import { phaseForDay, readCycleSettings, PHASE_LABEL } from "@/components/bloom/cyclePhase";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
 import {
   STORAGE_KEYS as REMINDER_STORAGE_KEYS, type Reminder,
@@ -684,21 +685,27 @@ function MonthGrid({
 /** Today view — a detailed, image-rich look at everything planned for today:
  *  yoga, each planned meal (with macros), workout session details, reminders,
  *  and the day's planned calories. */
-function TodayCard({ href, image, Icon, label, title, meta }: {
-  href: string; image: string; Icon: LucideIcon; label: string; title: string; meta: string;
+/** Matches the Today-page plan card: clean rounded image, title + meta, a
+ *  time · phase chip row, and a soft-glowing pink arrow CTA (kept alive). */
+function TodayCard({ href, image, title, meta, time, phaseLabel }: {
+  href: string; image: string; title: string; meta: string; time?: string; phaseLabel: string;
 }) {
   return (
-    <a href={href} className="flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-3.5 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/10">
-      <div className="relative shrink-0 h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl">
+    <a href={href} className="group flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/90 backdrop-blur border border-petal/50 p-2.5 sm:p-3 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/15 active:scale-[0.99]">
+      <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[78px] sm:w-[78px] overflow-hidden rounded-2xl ring-1 ring-petal/60">
         <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-        <p className="absolute inset-x-0 bottom-1 px-1 text-center text-[8px] font-bold uppercase tracking-tight text-white drop-shadow leading-none truncate">{label}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug">{title}</p>
-        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/65">{meta}</p>
+        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug truncate">{title}</p>
+        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/60 leading-snug">{meta}</p>
+        <div className="mt-1 flex items-center gap-2">
+          {time && <span className="text-[9px] font-semibold text-rose/40">{time}</span>}
+          <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">✿ {phaseLabel} phase</span>
+        </div>
       </div>
-      <Icon className="h-4 w-4 text-hotpink/50 shrink-0" strokeWidth={2} />
+      <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow transition group-hover:bg-hotpink group-hover:text-white group-active:scale-90">
+        <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+      </span>
     </a>
   );
 }
@@ -725,6 +732,7 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
   // Show a planned workout (from the program) when nothing was logged today.
   const plannedWorkout = !workouts.length && workoutPlanDays.includes(dayName);
   const todayReminders = remindersForDate(reminders, today);
+  const phaseLabel = PHASE_LABEL[phaseForDay(today, readCycleSettings())];
   const empty = !meals.length && !yogaFocus && !workouts.length && !plannedWorkout && !todayReminders.length;
 
   return (
@@ -754,24 +762,25 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
           )}
 
           {yogaFocus && (
-            <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" Icon={PersonStanding} label="Yoga" title={`${yogaFocus} flow`} meta={`${yogaReminder} · gentle movement`} />
+            <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel}
+              title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
           )}
 
           {meals.map(({ slot, r }) => (
-            <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} Icon={Soup}
-              label={SLOT_LABEL[slot]} title={r.name}
-              meta={`${SLOT_TIME[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
+            <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel}
+              title={r.name} time={SLOT_TIME[slot]}
+              meta={`${SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
           ))}
 
           {workouts.map((w, i) => (
-            <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" Icon={Dumbbell}
-              label="Workout" title={w.sessionName || "Workout"}
-              meta={`${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
+            <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel}
+              title={w.sessionName || "Workout"}
+              meta={`Workout · ${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
           ))}
 
           {plannedWorkout && (
-            <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" Icon={Dumbbell}
-              label="Workout" title="Workout planned" meta="Tap to start today's session" />
+            <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel}
+              title="Workout planned" time="17:30" meta="Workout · tap to start today's session" />
           )}
 
           {todayReminders.length > 0 && (
