@@ -7,7 +7,6 @@ import {
   ArrowRight,
   type LucideIcon,
 } from "lucide-react";
-import { PageHeader } from "@/components/bloom/PageHeader";
 import {
   PHASE_META, type Phase,
 } from "@/components/bloom/CycleTracker";
@@ -404,28 +403,39 @@ export default function CalendarPage() {
 
   return (
     <div className="relative animate-fade-in">
-      <PageHeader title="Bloom Calendar" emoji={<CalendarDays className="inline h-7 w-7 text-hotpink align-middle" />}>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={goToday}
-            className="rounded-full bg-white/80 border border-petal/60 px-3.5 py-1.5 text-xs font-bold text-hotpink shadow-sm hover:bg-blush/60 transition"
-          >
-            Today
-          </button>
-          <button onClick={goPrev} aria-label="Previous" className="grid h-8 w-8 place-items-center rounded-full bg-white/80 border border-petal/60 text-rose hover:bg-blush/60 transition shadow-sm">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button onClick={goNext} aria-label="Next" className="grid h-8 w-8 place-items-center rounded-full bg-white/80 border border-petal/60 text-rose hover:bg-blush/60 transition shadow-sm">
-            <ChevronRight className="h-4 w-4" />
-          </button>
+      {/* HERO — synced with the Meals/Notes/Me hero style (image + soft pink
+          overlay + white title, with the day's stats as chips at the bottom). */}
+      <div className="relative w-full min-h-[172px] sm:min-h-[212px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+        <img src="/images/landing-calendar.webp" alt="Bloom Calendar" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/75 via-hotpink/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        <div className="relative flex flex-col justify-between gap-2.5 p-3.5 sm:p-5 min-h-[172px] sm:min-h-[212px]">
+          {/* Title + subtitle (left) · Today / prev / next (right) */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none drop-shadow-md flex items-center gap-2">
+                Bloom Calendar <CalendarDays className="h-5 w-5 sm:h-7 sm:w-7 shrink-0" strokeWidth={1.8} />
+              </h1>
+              <p className="animate-fade-in mt-1.5 text-[11px] sm:text-sm italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: "150ms" }}>
+                Your life, beautifully planned.
+              </p>
+            </div>
+            <div className="animate-fade-in shrink-0 flex items-center gap-1.5" style={{ animationDelay: "220ms" }}>
+              <button onClick={goToday} className="rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/35 active:scale-95">
+                Today
+              </button>
+              <button onClick={goPrev} aria-label="Previous" className="grid h-8 w-8 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button onClick={goNext} aria-label="Next" className="grid h-8 w-8 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          {/* Stats / quick-filter chips */}
+          <FilterBar stats={monthStats} activeFilter={activeFilter} onToggle={toggleFilter} />
         </div>
-      </PageHeader>
-
-      <p className="-mt-3 mb-4 text-xs text-rose/70 max-w-md">
-        Your life, beautifully planned.
-      </p>
-
-      <FilterBar stats={monthStats} activeFilter={activeFilter} onToggle={toggleFilter} />
+      </div>
 
       <div className="flex items-center justify-between mb-3 px-1">
         <p className="text-sm font-bold text-hotpink inline-flex items-center gap-1">
@@ -524,7 +534,7 @@ function FilterBar({ stats, activeFilter, onToggle }: {
   if (stats.vacation) items.push({ key: "vacation", Icon: Plane, label: `Vacation · ${fmtRange(stats.vacation.start, stats.vacation.end)}` });
 
   return (
-    <div className="overflow-x-auto scrollbar-hide pb-1 mb-4 -mx-1 px-1">
+    <div className="overflow-x-auto scrollbar-hide pb-0.5 -mx-1 px-1">
       <div className="flex items-center gap-2 w-max sm:w-auto md:flex-wrap animate-scroll-hint">
         {items.map((it, i) => {
           const active = activeFilter === it.key;
@@ -532,8 +542,8 @@ function FilterBar({ stats, activeFilter, onToggle }: {
             <button
               key={it.key}
               onClick={() => onToggle(it.key)}
-              className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in",
-                active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/80 border-petal/60 text-[#831843] hover:bg-blush/60"].join(" ")}
+              className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in backdrop-blur",
+                active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/90 border-white/70 text-[#831843] hover:bg-white"].join(" ")}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <it.Icon className={["h-4 w-4 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
