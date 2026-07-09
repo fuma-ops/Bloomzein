@@ -3651,20 +3651,22 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Blender"],
     phases: ["ovulatory", "follicular"], goal: ["lose"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 140, protein: 4, carbs: 22, fat: 5 },
+    macros: { calories: 145, protein: 4, carbs: 23, fat: 5 },
     micros: { vitaminC: 40, fibre: 5, vitaminB6: 0.3 },
     ingredients: [
       { name: "Ripe tomatoes", quantity: "4 large" },
       { name: "Cucumber", quantity: "1" },
       { name: "Red pepper", quantity: "1" },
+      { name: "Red onion", quantity: "1/4" },
       { name: "Garlic", quantity: "1 clove" },
       { name: "Olive oil", quantity: "1 tbsp, plus extra to serve" },
-      { name: "Red wine vinegar", quantity: "1 tbsp" }
+      { name: "Red wine vinegar", quantity: "1 tbsp" },
+      { name: "Fresh basil", quantity: "to garnish" }
     ],
     steps: [
-      "Roughly chop **ripe tomatoes**, **cucumber** and **red pepper**, then blend with **garlic**, **olive oil** and **red wine vinegar** until very smooth.",
+      "Set aside a little diced **cucumber**, **red pepper** and **red onion** for the garnish. Roughly chop the rest with the **ripe tomatoes**, then blend with **garlic**, **olive oil** and **red wine vinegar** until very smooth.",
       "Season generously with salt and pepper and blend again for a few seconds.",
-      "Chill at least 1 hour and serve cold with an extra drizzle of olive oil."
+      "Chill at least 1 hour and serve cold, topped with the reserved diced veg, a **fresh basil** leaf and an extra drizzle of olive oil."
     ],
     batchTip: "Best made a day ahead so the flavours round out; keeps 3 days chilled.",
     substitutionTip: "Blend in a slice of stale bread for a richer, more traditional body (drop the gluten-free tag)."
@@ -3704,7 +3706,7 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Pot", "Blender"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: ["nuts"],
-    macros: { calories: 220, protein: 8, carbs: 20, fat: 12 },
+    macros: { calories: 250, protein: 8, carbs: 21, fat: 15 },
     micros: { vitaminC: 70, fibre: 7, calcium: 80 },
     ingredients: [
       { name: "Broccoli", quantity: "400g, cut into florets" },
@@ -3714,13 +3716,14 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Vegetable broth", quantity: "2 cups" },
       { name: "Nutritional yeast", quantity: "1 tbsp" },
+      { name: "Coconut cream", quantity: "3 tbsp" },
       { name: "Toasted flaked almonds", quantity: "1 tbsp" },
       { name: "Nutmeg", quantity: "1 pinch" }
     ],
     steps: [
-      "Warm **olive oil** and soften **onion** and **garlic** for 3 min, then add **broccoli** and **vegetable broth**.",
-      "Simmer 12-15 min until the broccoli is very tender but still vivid green.",
-      "Blend with **almond milk**, **nutritional yeast** and **nutmeg** until smooth; top with **toasted flaked almonds** to serve."
+      "Warm **olive oil** and soften **onion** and **garlic** for 3 min, then add **broccoli** and **vegetable broth**; reserve a few small florets for the top.",
+      "Simmer 12-15 min until the broccoli is very tender but still vivid green, steaming the reserved florets until just tender.",
+      "Blend with **almond milk**, **nutritional yeast** and **nutmeg** until smooth; serve topped with the reserved florets, a swirl of **coconut cream** and **toasted flaked almonds**."
     ],
     batchTip: "Reheat gently and keep the lid off - blitzed broccoli soup dulls in colour if boiled hard.",
     substitutionTip: "Nut-free? Use oat milk and swap the almonds for toasted pumpkin seeds."
