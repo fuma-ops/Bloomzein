@@ -183,44 +183,18 @@ export default function ReadPage() {
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-5 sm:top-6 sm:right-9 h-4 w-4 sm:h-5 sm:w-5 text-white/80" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-8 right-14 sm:top-12 sm:right-24 h-3 w-3 sm:h-4 sm:w-4 text-white/70" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
 
-          <div className="relative z-[2] flex flex-col px-4 pt-7 pb-5 sm:px-8 sm:pt-9 sm:pb-8 min-h-[160px] sm:min-h-[224px]">
+          <div className="relative z-[2] flex flex-col px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 min-h-[120px] sm:min-h-[156px]">
             <div className="text-left">
               <h1 className="font-script text-4xl sm:text-6xl text-white leading-none drop-shadow-[0_2px_8px_oklch(0.4_0.2_350/0.6)]">Read</h1>
               <p className="mt-1 sm:mt-1.5 text-xs sm:text-base font-medium text-white/95 drop-shadow">soft reads for your softest era ✿</p>
             </div>
-
-            {/* FILTERS — bottom-centre of the hero */}
-            <nav className="relative mt-auto pt-4 -mx-1">
-              <div className="flex gap-2 justify-start sm:justify-center overflow-x-auto no-scrollbar animate-bloom-scroll-hint px-1">
-                {TOPICS.map((t) => {
-                  const active = topic === t;
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => setTopic(t)}
-                      className={[
-                        "shrink-0 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition border active:scale-95 backdrop-blur",
-                        active
-                          ? "bloom-shine bg-white text-hotpink border-transparent shadow-[0_6px_18px_-6px_oklch(0.3_0.1_350/0.55)]"
-                          : "bg-white/25 text-white border-white/40 hover:bg-white/40",
-                      ].join(" ")}
-                    >
-                      {TOPIC_LABELS[t]}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* edge fades hint there's more to scroll (mobile) */}
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-magenta/60 to-transparent sm:hidden" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-magenta/60 to-transparent sm:hidden" />
-            </nav>
           </div>
         </div>
       </section>
 
       {/* SEARCH */}
       <div className="mt-3 sm:mt-5 relative max-w-xl mx-auto">
-        <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={1.8} />
+        <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
         <input
           id="search-reads"
           value={query}
@@ -229,6 +203,29 @@ export default function ReadPage() {
           className="w-full rounded-full bg-white/90 backdrop-blur pl-11 pr-4 py-2 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/60 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
         />
       </div>
+
+      {/* FILTERS — under the search bar */}
+      <nav className="mt-3 max-w-xl mx-auto">
+        <div className="flex gap-2 justify-start sm:justify-center overflow-x-auto no-scrollbar animate-bloom-scroll-hint -mx-1 px-1">
+          {TOPICS.map((t) => {
+            const active = topic === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setTopic(t)}
+                className={[
+                  "shrink-0 rounded-full px-3 sm:px-4 py-1 text-xs sm:text-sm font-semibold whitespace-nowrap transition border active:scale-95",
+                  active
+                    ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30"
+                    : "bg-white/85 text-rose border-petal/60 hover:bg-blush/60",
+                ].join(" ")}
+              >
+                {TOPIC_LABELS[t]}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* GRID */}
       <section className="mt-5 sm:mt-6">
