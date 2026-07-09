@@ -973,7 +973,7 @@ const RAW_RECIPES: RawRecipe[] = [
   { id: "l06", name: "Sweet Potato Black Bean Bowl", cuisine: "Latin", mealType: "lunch", prepTime: 15, cookTime: 25, difficulty: "easy", servings: 2, equipment: ["Baking tray", "Small pot"], phases: ["luteal", "menstrual"], goal: ["gain", "maintain"], dietTags: ["vegan", "gluten-free"], allergens: [], photo: "lunch-latin-sweet-potato-black-bean-bowl.jpg", macros: { calories: 420, protein: 14, carbs: 64, fat: 12 }, micros: { fibre: 15, magnesium: 70, iron: 3 }, ingredients: [ { name: "Sweet potato", quantity: "2 medium, cubed" }, { name: "Black beans", quantity: "1 can (400g), drained" }, { name: "Olive oil", quantity: "1 tbsp" }, { name: "Cumin & smoked paprika", quantity: "1 tsp each" }, { name: "Avocado", quantity: "1" }, { name: "Lime", quantity: "1" }, { name: "Coriander", quantity: "handful" } ], steps: [ "Toss cubed **sweet potato** with **olive oil**, **cumin** and **smoked paprika**, spread on a **baking tray** and roast at 220°C for 25 min, turning once.", "Warm the **black beans** in a small pot with a splash of water and a squeeze of **lime**.", "Divide between bowls and top with sliced **avocado**, a spoon of [[salsa]] and torn **coriander**." ], batchTip: "Roast a double tray of sweet potato - it reheats crisp and builds three lunches.", substitutionTip: "Swap black beans for kidney beans or lentils; both hold the smoky spice well." },
   { id: "l07", name: "Greek Chicken Souvlaki Plate", cuisine: "Mediterranean", mealType: "lunch", prepTime: 15, cookTime: 20, difficulty: "easy", servings: 2, equipment: ["Grill pan", "Small pot"], phases: ["follicular", "ovulatory"], goal: ["gain"], dietTags: ["gluten-free"], allergens: ["dairy"], photo: "lunch-mediterranean-greek-chicken-souvlaki-plate.jpg", macros: { calories: 460, protein: 35, carbs: 30, fat: 18 }, micros: { vitaminB6: 0.7, fibre: 5 }, ingredients: [ { name: "Chicken thighs", quantity: "4 boneless (~350 g)" }, { name: "Greek yoghurt", quantity: "3 tbsp" }, { name: "Garlic", quantity: "2 cloves" }, { name: "Lemon", quantity: "1" }, { name: "Dried oregano", quantity: "1 tsp" }, { name: "Rice", quantity: "1 cup, cooked" }, { name: "Tzatziki", quantity: "4 tbsp - tap in steps to make it" }, { name: "Tomato & cucumber salad", quantity: "to serve" } ], steps: [ "Coat the **chicken thighs** in a [[yoghurt marinade]] of **greek yoghurt**, **garlic**, **lemon** and **oregano**, and leave 15 min (or overnight).", "Thread onto skewers and cook on a hot **grill pan** for 5-6 min per side until charred and cooked through.", "Cook the **rice**, then plate the chicken with a crisp **tomato & cucumber salad** and a generous spoon of [[tzatziki]]." ], batchTip: "Marinate the chicken the night before - the yoghurt tenderises it and deepens the flavour.", substitutionTip: "No grill pan? Roast the skewers at 220°C for 18-20 min, turning halfway." },
   { id: "l08", name: "Nordic Salmon Rye Sandwich", cuisine: "Nordic", mealType: "lunch", prepTime: 10, cookTime: 0, difficulty: "quick", servings: 1, equipment: [], phases: ["menstrual", "luteal"], goal: ["maintain"], dietTags: ["pescatarian"], allergens: ["dairy"], photo: "lunch-nordic-salmon-rye-sandwich.jpg", macros: { calories: 360, protein: 28, carbs: 32, fat: 13 }, micros: { omega3: 1.6, calcium: 80 }, ingredients: [ { name: "Rye bread", quantity: "2 slices" }, { name: "Smoked salmon", quantity: "100 g" }, { name: "Cream cheese", quantity: "20 g" }, { name: "Cucumber", quantity: "1/4, sliced" }, { name: "Fresh dill", quantity: "few sprigs" }, { name: "Lemon", quantity: "1 wedge" }, { name: "Capers", quantity: "1 tsp (optional)" } ], steps: [ "Spread the **rye bread** with **cream cheese**.", "Layer over the **smoked salmon** and thin ribbons of **cucumber**.", "Scatter with **dill** and **capers**, add a squeeze of **lemon**, then top with the second slice (or serve open-faced)." ], batchTip: "Best assembled fresh, but the dill-caper topping can be prepped a day ahead.", substitutionTip: "Dairy-free? Swap cream cheese for a thick layer of mashed avocado." },
-  { id: "l09", name: "Quinoa Tabbouleh with Grilled Halloumi", cuisine: "Middle Eastern", mealType: "lunch", prepTime: 15, cookTime: 10, difficulty: "easy", servings: 2, equipment: ["Grill pan", "Small pot"], phases: ["ovulatory", "follicular"], goal: ["maintain", "lose"], dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"], photo: "lunch-middle-eastern-quinoa-tabbouleh-grilled-halloumi.jpg", macros: { calories: 450, protein: 27, carbs: 38, fat: 20 }, micros: { fibre: 8, vitaminC: 26, vitaminB6: 0.4 }, ingredients: [ { name: "Quinoa", quantity: "1/2 cup dry" }, { name: "Parsley", quantity: "1 cup, finely chopped" }, { name: "Mint", quantity: "1/4 cup, chopped" }, { name: "Cherry tomatoes", quantity: "1 cup, diced" }, { name: "Spring onion", quantity: "2" }, { name: "Halloumi", quantity: "120 g, sliced" }, { name: "Lemon", quantity: "1" }, { name: "Olive oil", quantity: "2 tbsp" } ], steps: [ "Cook the **quinoa** in 1 cup water for 12-15 min, then spread out to cool.", "Toss with finely chopped **parsley**, **mint**, diced **cherry tomatoes** and **spring onion**, dressed with **lemon** juice and **olive oil**.", "Fry the **halloumi** in a dry **grill pan** for 1-2 min per side until golden and squeaky, then lay over the tabbouleh." ], batchTip: "The herby quinoa base keeps 2 days; grill the halloumi fresh so it stays soft inside.", substitutionTip: "Dairy-free or vegan? Swap halloumi for grilled firm tofu tossed in a little oil." },
+  { id: "l09", name: "Quinoa Tabbouleh with Grilled Halloumi", cuisine: "Middle Eastern", mealType: "lunch", prepTime: 15, cookTime: 10, difficulty: "easy", servings: 2, equipment: ["Grill pan", "Small pot"], phases: ["ovulatory", "follicular"], goal: ["maintain", "lose"], dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"], macros: { calories: 455, protein: 27, carbs: 40, fat: 20 }, micros: { fibre: 8, vitaminC: 26, vitaminB6: 0.4 }, ingredients: [ { name: "Quinoa", quantity: "1/2 cup dry" }, { name: "Parsley", quantity: "1 cup, finely chopped" }, { name: "Mint", quantity: "1/4 cup, chopped" }, { name: "Cherry tomatoes", quantity: "1 cup, diced" }, { name: "Cucumber", quantity: "1/2, diced" }, { name: "Red onion", quantity: "2 tbsp, diced" }, { name: "Spring onion", quantity: "2" }, { name: "Halloumi", quantity: "120 g, sliced" }, { name: "Lemon", quantity: "1" }, { name: "Olive oil", quantity: "2 tbsp" } ], steps: [ "Cook the **quinoa** in 1 cup water for 12-15 min, then spread out to cool.", "Toss with finely chopped **parsley**, **mint**, diced **cherry tomatoes**, **cucumber**, **red onion** and **spring onion**, dressed with **lemon** juice and **olive oil**.", "Fry the **halloumi** in a dry **grill pan** for 1-2 min per side until golden and squeaky, then lay over the tabbouleh." ], batchTip: "The herby quinoa base keeps 2 days; grill the halloumi fresh so it stays soft inside.", substitutionTip: "Dairy-free or vegan? Swap halloumi for grilled firm tofu tossed in a little oil." },
   { id: "l10", name: "Spicy Tuna Poke Bowl", cuisine: "Asian", mealType: "lunch", prepTime: 20, cookTime: 0, difficulty: "easy", servings: 1, equipment: ["Small pot"], phases: ["luteal", "ovulatory"], goal: ["lose", "gain"], dietTags: ["pescatarian", "gluten-free"], allergens: ["soy"], macros: { calories: 490, protein: 35, carbs: 49, fat: 16 }, micros: { omega3: 1.4, iron: 2, vitaminC: 18 }, ingredients: [ { name: "Sushi-grade tuna", quantity: "150 g" }, { name: "Sushi rice", quantity: "1/2 cup dry" }, { name: "Rice vinegar", quantity: "1 tsp" }, { name: "Edamame", quantity: "1/2 cup, shelled" }, { name: "Cucumber", quantity: "1/2, diced" }, { name: "Avocado", quantity: "1/4" }, { name: "Radish", quantity: "3, sliced" }, { name: "Wakame seaweed salad", quantity: "1/4 cup" }, { name: "Spring onion", quantity: "1, sliced" }, { name: "Spicy soy dressing", quantity: "2 tbsp - tap in steps to make it" }, { name: "Sesame seeds & nori", quantity: "to garnish" } ], steps: [ "Cook the **sushi rice**, then fold through **rice vinegar** and let it cool to room temperature.", "Cut the **tuna** into 2 cm cubes and gently coat in [[spicy soy dressing]].", "Bowl up the rice and top with the tuna, **edamame**, **cucumber**, **avocado**, **radish**, **wakame seaweed salad** and **spring onion**; finish with **sesame seeds** and shredded **nori**." ], batchTip: "Cube and dress the tuna only when ready to eat - it should be served the same day.", substitutionTip: "No sushi-grade fish? Use cooked prawns or diced smoked tofu for a safe swap." },
   { id: "l11", name: "African Peanut Stew with Greens", cuisine: "African", mealType: "lunch", prepTime: 15, cookTime: 25, difficulty: "easy", servings: 4, equipment: ["Large pot"], phases: ["menstrual", "luteal"], goal: ["maintain"], dietTags: ["vegan", "gluten-free"], allergens: ["nuts"], photo: "lunch-african-peanut-stew-greens.jpg", macros: { calories: 400, protein: 15, carbs: 42, fat: 20 }, micros: { iron: 4, magnesium: 75, fibre: 9 }, ingredients: [ { name: "Sweet potato", quantity: "2, cubed" }, { name: "Onion", quantity: "1, chopped" }, { name: "Garlic & ginger", quantity: "1 tbsp each, grated" }, { name: "Chopped tomatoes", quantity: "1 can" }, { name: "Peanut butter", quantity: "4 tbsp" }, { name: "Vegetable broth", quantity: "3 cups" }, { name: "Collard greens", quantity: "4 cups, shredded" }, { name: "Chilli flakes", quantity: "pinch" } ], steps: [ "Soften the **onion** with **garlic & ginger** in a **large pot**, then stir in the **chopped tomatoes** and **chilli flakes**.", "Add the **sweet potato**, **peanut butter** and **vegetable broth**; simmer 20 min until the potato is tender and the stew thickens.", "Fold through the **collard greens** and cook 3-4 min until just wilted. Season and serve over rice." ], batchTip: "Freezes well for 2 months - the peanut base only gets richer on reheating.", substitutionTip: "Nut-free? Sunflower seed butter mimics the creaminess; spinach can stand in for collards." },
   { id: "l12", name: "Turkey & Avocado Power Wrap", cuisine: "Latin", mealType: "lunch", prepTime: 10, cookTime: 5, difficulty: "quick", servings: 1, equipment: ["Non-stick pan"], phases: ["follicular", "ovulatory"], goal: ["gain", "lose"], dietTags: [], allergens: [], photo: "lunch-latin-turkey-avocado-power-wrap.jpg", macros: { calories: 420, protein: 33, carbs: 34, fat: 16 }, micros: { vitaminB6: 0.6, fibre: 8 }, ingredients: [ { name: "Turkey breast", quantity: "150 g" }, { name: "Whole-wheat tortilla", quantity: "1 large" }, { name: "Avocado", quantity: "1/2" }, { name: "Lime", quantity: "1/2" }, { name: "Baby lettuce", quantity: "handful" }, { name: "Salsa", quantity: "2 tbsp - tap in steps to make it" }, { name: "Cumin", quantity: "pinch" } ], steps: [ "Season the **turkey breast** with **cumin**, salt and pepper, then pan-fry 3-4 min per side until cooked through; slice.", "Mash the **avocado** with **lime** and spread it across the **tortilla**.", "Layer with **lettuce**, the turkey and a spoon of [[salsa]], fold in the sides and roll tightly, then halve on the diagonal." ], batchTip: "Cook the turkey ahead and keep sliced in the fridge for 3 days of fast wraps.", substitutionTip: "Swap turkey for shredded chicken or black beans for a vegetarian version." },
@@ -3368,13 +3368,15 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["vegan"], allergens: [],
     servings: 4,
     equipment: ["Large pot"],
-    macros: { calories: 280, protein: 12, carbs: 44, fat: 6 },
-    micros: { iron: 4, fibre: 10, vitaminC: 24 },
+    macros: { calories: 295, protein: 13, carbs: 46, fat: 6 },
+    micros: { iron: 4, fibre: 11, vitaminC: 28 },
     ingredients: [
       { name: "Cannellini beans", quantity: "1 cup, cooked" },
+      { name: "Red kidney beans", quantity: "1/2 cup, cooked" },
       { name: "Small pasta", quantity: "1/2 cup, ditalini or elbow" },
       { name: "Diced tomatoes", quantity: "1 cup" },
       { name: "Zucchini, carrot & celery", quantity: "1 each, diced" },
+      { name: "Kale", quantity: "1 cup, chopped" },
       { name: "Onion & garlic", quantity: "1 onion + 2 cloves" },
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Vegetable broth", quantity: "4 cups" },
@@ -3382,8 +3384,8 @@ const RAW_RECIPES: RawRecipe[] = [
     ],
     steps: [
       "Sweat **onion & garlic** with the **zucchini, carrot & celery** in **olive oil** for 5 min until glossy.",
-      "Add **cannellini beans**, **diced tomatoes** and **vegetable broth**; simmer 15 min.",
-      "Stir in **small pasta** and cook until al dente, then finish with torn **fresh basil** and a grind of pepper."
+      "Add **cannellini beans**, **red kidney beans**, **diced tomatoes** and **vegetable broth**; simmer 15 min.",
+      "Stir in **small pasta** and the **kale** and cook until the pasta is al dente and the kale wilts, then finish with torn **fresh basil** and a grind of pepper."
     ],
     batchTip: "Cook the soup base ahead; add pasta only when reheating so it doesn't turn mushy.",
     substitutionTip: "Gluten-free? Use a GF pasta or swap in cooked barley or extra beans."
@@ -3561,19 +3563,22 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Large pot"],
     phases: ["menstrual", "luteal", "follicular"], goal: ["maintain", "lose"],
     dietTags: ["halal", "gluten-free"], allergens: [],
-    macros: { calories: 300, protein: 28, carbs: 22, fat: 8 },
-    micros: { iron: 3, fibre: 6, vitaminC: 20 },
+    macros: { calories: 340, protein: 30, carbs: 30, fat: 8 },
+    micros: { iron: 3, fibre: 8, vitaminC: 40 },
     ingredients: [
       { name: "Chicken breast", quantity: "150g" },
       { name: "Carrots", quantity: "1, sliced" },
       { name: "Celery", quantity: "2 stalks, sliced" },
       { name: "Onion", quantity: "1, diced" },
+      { name: "Zucchini", quantity: "1, diced" },
+      { name: "Red bell pepper", quantity: "1/2, diced" },
+      { name: "Green beans", quantity: "1 cup, trimmed" },
       { name: "Chicken broth", quantity: "3 cups" },
       { name: "Fresh thyme & parsley", quantity: "to taste" }
     ],
     steps: [
       "Bring **chicken broth** to a gentle simmer with **onion**, **carrots** and **celery**, then slip in the whole **chicken breast** and poach 18-20 min.",
-      "Lift out the chicken, shred it with two forks and return it to the pot; simmer 2 min to heat through.",
+      "Lift out the chicken, shred it with two forks and return it to the pot with the **zucchini**, **red bell pepper** and **green beans**; simmer 6-8 min until the veg is just tender.",
       "Season well and finish with **fresh thyme & parsley**."
     ],
     batchTip: "Make a double batch of broth and veg, then add freshly poached chicken each day so it stays tender.",
@@ -3586,8 +3591,8 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Pot", "Blender"],
     phases: ["menstrual", "luteal"], goal: ["maintain", "lose"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 290, protein: 14, carbs: 46, fat: 5 },
-    micros: { iron: 5, fibre: 15, magnesium: 55 },
+    macros: { calories: 395, protein: 15, carbs: 52, fat: 12 },
+    micros: { iron: 5, fibre: 16, magnesium: 55 },
     ingredients: [
       { name: "Black beans", quantity: "1.5 cups, cooked or canned" },
       { name: "Onion", quantity: "1, diced" },
@@ -3597,12 +3602,16 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Vegetable broth", quantity: "2 cups" },
       { name: "Lime juice", quantity: "1 tbsp" },
+      { name: "Avocado", quantity: "1, diced" },
+      { name: "Red onion", quantity: "1/4 cup, diced" },
+      { name: "Coconut yoghurt", quantity: "3 tbsp" },
       { name: "Fresh cilantro", quantity: "to garnish" }
     ],
     steps: [
       "Warm **olive oil** and soften **onion** and **garlic** with **cumin** and **smoked paprika** until fragrant, about 4 min.",
       "Add **black beans** and **vegetable broth** and simmer 15 min to let the flavours meld.",
-      "Blend about half the pot until creamy, stir back together, then finish with **lime juice** and **fresh cilantro**."
+      "Blend about half the pot until creamy, stir back together, then finish with **lime juice**.",
+      "Ladle into bowls and top with diced **avocado**, **red onion**, a dollop of **coconut yoghurt** and **fresh cilantro**."
     ],
     batchTip: "Deepens overnight and keeps 4 days - a spoonful of the whole beans held back adds nice texture on reheating.",
     substitutionTip: "No black beans? Pinto or kidney beans work just as well."
@@ -3983,19 +3992,20 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["vegetarian", "gluten-free"], allergens: ["nuts", "dairy"],
     servings: 2,
     equipment: ["Small dry pan"],
-    macros: { calories: 320, protein: 10, carbs: 24, fat: 22 },
+    macros: { calories: 365, protein: 10, carbs: 36, fat: 22 },
     micros: { calcium: 120, fibre: 5, omega3: 0.8 },
     ingredients: [
       { name: "Arugula", quantity: "3 cups" },
       { name: "Pear", quantity: "1, thinly sliced" },
       { name: "Walnuts", quantity: "1/4 cup" },
+      { name: "Dried cranberries", quantity: "1/4 cup" },
       { name: "Gorgonzola or goat cheese", quantity: "30 g" },
       { name: "Honey balsamic dressing", quantity: "2 tbsp - tap in steps to make it" },
     ],
     steps: [
       "Toast the **walnuts** in a dry pan over medium heat for 3-4 min until fragrant, then roughly chop.",
       "Arrange the **arugula** and **pear** slices across a plate.",
-      "Scatter over the walnuts and crumble on the **gorgonzola or goat cheese**.",
+      "Scatter over the walnuts, **dried cranberries** and crumble on the **gorgonzola or goat cheese**.",
       "Drizzle with [[honey balsamic dressing]] and finish with a crack of black pepper.",
     ],
     batchTip: "Toast a jar of walnuts at once - they keep in an airtight tin for a week and are ready to scatter.",
