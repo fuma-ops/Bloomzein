@@ -79,11 +79,11 @@ interface PlanningItem {
 
 /** Calendar Key categories — order here drives the legend order too. */
 const CATEGORY_META: Record<string, { label: string; Icon: LucideIcon; chip: string; cell?: string }> = {
-  period:      { label: "Period",           Icon: Droplet,        chip: "bg-rose-100 text-rose-600",       cell: "bg-rose-50/80 border-rose-200" },
-  fertile:     { label: "Fertile Window",   Icon: Sprout,         chip: "bg-amber-100 text-amber-600",     cell: "bg-amber-50/70 border-amber-200" },
-  ovulation:   { label: "Ovulation",        Icon: Star,           chip: "bg-fuchsia-100 text-fuchsia-600", cell: "bg-fuchsia-50/80 border-fuchsia-200" },
-  luteal:      { label: "Luteal Phase",     Icon: Moon,           chip: "bg-violet-100 text-violet-600",   cell: "bg-violet-50/70 border-violet-200" },
-  follicular:  { label: "Follicular Phase", Icon: Circle,         chip: "bg-sky-100 text-sky-600",         cell: "bg-sky-50/60 border-sky-200" },
+  period:      { label: "Period",           Icon: Droplet,        chip: "bg-rose-100 text-rose-600",       cell: "bg-rose-50 border-rose-200" },
+  fertile:     { label: "Fertile Window",   Icon: Sprout,         chip: "bg-amber-100 text-amber-600",     cell: "bg-amber-50 border-amber-200" },
+  ovulation:   { label: "Ovulation",        Icon: Star,           chip: "bg-fuchsia-100 text-fuchsia-600", cell: "bg-fuchsia-50 border-fuchsia-200" },
+  luteal:      { label: "Luteal Phase",     Icon: Moon,           chip: "bg-violet-100 text-violet-600",   cell: "bg-violet-50 border-violet-200" },
+  follicular:  { label: "Follicular Phase", Icon: Circle,         chip: "bg-sky-100 text-sky-600",         cell: "bg-sky-50 border-sky-200" },
   workout:     { label: "Workout",          Icon: Dumbbell,       chip: "bg-orange-100 text-orange-600" },
   yoga:        { label: "Yoga",             Icon: PersonStanding, chip: "bg-teal-100 text-teal-600" },
   journal:     { label: "Journal",          Icon: BookOpen,       chip: "bg-indigo-100 text-indigo-600" },
@@ -93,7 +93,7 @@ const CATEGORY_META: Record<string, { label: string; Icon: LucideIcon; chip: str
   selfcare:    { label: "Self Care",        Icon: Heart,          chip: "bg-pink-100 text-pink-600" },
   water:       { label: "Water Goal",       Icon: Droplets,       chip: "bg-cyan-100 text-cyan-600" },
   birthday:    { label: "Birthday",         Icon: Cake,           chip: "bg-fuchsia-100 text-fuchsia-600" },
-  vacation:    { label: "Vacation",         Icon: Plane,          chip: "bg-blue-100 text-blue-600",       cell: "bg-blue-50/80 border-blue-200" },
+  vacation:    { label: "Vacation",         Icon: Plane,          chip: "bg-blue-100 text-blue-600",       cell: "bg-blue-50 border-blue-200" },
 };
 
 /** Maps a Reminders "event" sub-category onto a Calendar Key category. */
@@ -267,7 +267,7 @@ function loadJSON<T>(key: string, fallback: T): T {
 /** A soft, cute moving two-tone-pink horizontal-lines layer (vintage vibe).
  *  Drop it as the first child of a `relative overflow-hidden` container so it
  *  sits *inside* that section, behind its content. */
-function VintageLines({ opacity = 0.18 }: { opacity?: number }) {
+function VintageLines({ opacity = 0.12 }: { opacity?: number }) {
   return (
     <div
       aria-hidden
@@ -565,7 +565,7 @@ function WeekView({
   onSelect: (d: Date) => void;
 }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-white/55 backdrop-blur border border-petal/60 p-4 sm:p-6">
+    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
       <VintageLines />
       <div className="relative z-[1] space-y-2.5">
         {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
@@ -584,7 +584,7 @@ function WeekView({
               key={fmtLocalDate(day)}
               onClick={() => onSelect(day)}
               className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
-                isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50",
+                isToday ? "bg-blush/70 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/90 border-petal/50",
                 activeFilter ? "ring-2 ring-hotpink/50" : ""].join(" ")}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
@@ -628,7 +628,7 @@ function MonthGrid({
 }) {
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-white/55 backdrop-blur border border-petal/60 p-3 sm:p-6">
+    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
       <VintageLines />
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
         {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
@@ -648,7 +648,7 @@ function MonthGrid({
               key={fmtLocalDate(cell.date)}
               onClick={() => onSelect(cell.date)}
               className={["min-h-[60px] sm:min-h-[78px] lg:min-h-[110px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 lg:p-2 gap-0.5 lg:gap-1 text-left transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
-                cellTone ?? "bg-white/60 border-petal/30",
+                cellTone ?? "bg-white/90 border-petal/40",
                 cell.inMonth ? "" : "opacity-40",
                 activeFilter ? (matches ? "ring-2 ring-hotpink/60 shadow-md shadow-hotpink/20" : "opacity-15 grayscale") : ""].join(" ")}
               style={{ animationDelay: `${i * 0.015}s` }}
@@ -752,7 +752,7 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
       </div>
 
       {/* Plans + reminders — the big section, on the soft moving-lines backdrop */}
-      <section className="relative overflow-hidden rounded-3xl bg-white/45 backdrop-blur border border-petal/60 p-3 sm:p-4">
+      <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
         <VintageLines />
         <div className="relative z-[1] space-y-3">
           {empty && (
