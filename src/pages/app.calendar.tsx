@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb, CalendarDays,
+  ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb,
   Droplet, Sprout, Star, Moon, Circle,
   Dumbbell, PersonStanding, BookOpen, CalendarClock, Bell, Soup, Heart, Droplets, Cake, Plane,
   ArrowRight,
@@ -408,27 +408,27 @@ export default function CalendarPage() {
           phase pill under the subtitle, and the day's stats as filter chips. */}
       <div className="relative w-full rounded-[1.75rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-hero-border-signal"
         style={{ background: "linear-gradient(120deg, #F472B6 0%, #EC4899 55%, #C2186E 100%)" }}>
-        <div className="relative flex flex-col justify-between gap-2.5 p-4 sm:p-5">
+        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-3.5">
           {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none flex items-center gap-2" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
-                Bloom Calendar <CalendarDays className="h-5 w-5 sm:h-7 sm:w-7 shrink-0" strokeWidth={1.8} />
+              <h1 className="animate-fade-in font-script text-2xl sm:text-3xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
+                Bloom Calendar
               </h1>
-              <p className="animate-fade-in mt-1 text-[11px] sm:text-sm italic text-white/90 leading-snug" style={{ animationDelay: "150ms" }}>
+              <p className="animate-fade-in mt-0.5 text-[10px] sm:text-xs italic text-white/90 leading-snug" style={{ animationDelay: "150ms" }}>
                 Your life, beautifully planned.
               </p>
-              <CyclePhasePill className="mt-1.5 ring-1 ring-white/50" />
+              <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
             </div>
-            <div className="animate-fade-in shrink-0 flex items-center gap-1.5" style={{ animationDelay: "220ms" }}>
-              <button onClick={goToday} className="rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/35 active:scale-95">
+            <div className="animate-fade-in shrink-0 flex items-center gap-1" style={{ animationDelay: "220ms" }}>
+              <button onClick={goToday} className="rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-2.5 py-1 text-[11px] font-bold text-white transition hover:bg-white/35 active:scale-95">
                 Today
               </button>
-              <button onClick={goPrev} aria-label="Previous" className="grid h-8 w-8 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
-                <ChevronLeft className="h-4 w-4" />
+              <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
+                <ChevronLeft className="h-3.5 w-3.5" />
               </button>
-              <button onClick={goNext} aria-label="Next" className="grid h-8 w-8 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
-                <ChevronRight className="h-4 w-4" />
+              <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
+                <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
