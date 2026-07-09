@@ -120,6 +120,9 @@
   .animate-bloom-sparkle { animation: bloom-sparkle calc(2.8s * var(--bloom-pace)) ease-in-out infinite; }
   .animate-bloom-orbit   { animation: bloom-orbit calc(22s * var(--bloom-pace)) linear infinite; }
 
+  /* --- Vintage moving horizontal lines (two-tone pink retro texture) --- */
+  .animate-vintage-lines { animation: bloom-vintage-lines calc(3.4s * var(--bloom-pace)) linear infinite; }
+
   /* Glossy bubble surface (BloomBubbles uses .bloom-bubble) */
   .bloom-bubble {
     background: radial-gradient(circle at 32% 28%,
@@ -207,6 +210,11 @@
 @keyframes ctaBreathe {
   0%, 100% { transform: scale(1); box-shadow: 0 10px 24px rgba(219,39,119,.4); }
   50%       { transform: scale(1.02); box-shadow: 0 16px 36px rgba(219,39,119,.58); }
+}
+/* One full tile (24px) of vertical travel, so the stripes loop seamlessly. */
+@keyframes bloom-vintage-lines {
+  from { background-position: 0 0; }
+  to   { background-position: 0 24px; }
 }
 
 /* =====================================================================
