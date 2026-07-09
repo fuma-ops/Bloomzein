@@ -432,8 +432,6 @@ export default function CalendarPage() {
               </button>
             </div>
           </div>
-          {/* Stats / quick-filter chips */}
-          <FilterBar stats={monthStats} activeFilter={activeFilter} onToggle={toggleFilter} />
         </div>
       </div>
 
@@ -454,6 +452,9 @@ export default function CalendarPage() {
           ))}
         </div>
       </div>
+
+      {/* Quick filters — just above the calendar */}
+      <FilterBar stats={monthStats} activeFilter={activeFilter} onToggle={toggleFilter} />
 
       {view === "week" && (
         <WeekView
@@ -533,19 +534,19 @@ function FilterBar({ stats, activeFilter, onToggle }: {
   if (stats.vacation) items.push({ key: "vacation", Icon: Plane, label: `Vacation · ${fmtRange(stats.vacation.start, stats.vacation.end)}` });
 
   return (
-    <div className="overflow-x-auto scrollbar-hide pb-0.5 -mx-1 px-1">
-      <div className="flex items-center gap-2 w-max sm:w-auto md:flex-wrap animate-scroll-hint">
+    <div className="overflow-x-auto scrollbar-hide pb-0.5 mb-2.5 -mx-1 px-1">
+      <div className="flex items-center gap-1.5 w-max sm:w-auto md:flex-wrap animate-scroll-hint">
         {items.map((it, i) => {
           const active = activeFilter === it.key;
           return (
             <button
               key={it.key}
               onClick={() => onToggle(it.key)}
-              className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in backdrop-blur",
-                active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/90 border-white/70 text-[#831843] hover:bg-white"].join(" ")}
+              className={["inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap shrink-0 transition animate-card-pop-in",
+                active ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30" : "bg-white/85 border-petal/60 text-[#831843] hover:bg-blush/60"].join(" ")}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
-              <it.Icon className={["h-4 w-4 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
+              <it.Icon className={["h-3 w-3 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
               {it.label}
             </button>
           );
