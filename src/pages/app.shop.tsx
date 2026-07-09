@@ -1,10 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search, ShoppingBag, Heart, Star, Plus, Minus, X, ArrowRight, Sparkles,
   Flower2, Gift, Percent, Crown,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { scrollToTopOf } from "@/lib/scrollToTopOf";
 
 /* ---------- data ---------- */
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "bestsellers";
@@ -66,10 +65,6 @@ export default function ShopPage() {
   const [bumped, setBumped] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
   const categoriesRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    scrollToTopOf(categoriesRef.current);
-  }, []);
 
   useEffect(() => {
     try {

@@ -1,12 +1,11 @@
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Sparkles, Search, Pin, ChevronRight } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { readTodayAffirmation } from "@/components/bloom/affirmations";
-import { scrollToTopOf } from "@/lib/scrollToTopOf";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { isToolVisited } from "@/components/bloom/visitedTools";
 
@@ -27,10 +26,6 @@ export default function ToolsIndex() {
 
   // Echo the exact affirmation the Today page is showing (shared source).
   useEffect(() => { try { setAffirmation(readTodayAffirmation()); } catch {} }, []);
-
-  useLayoutEffect(() => {
-    scrollToTopOf(heroRef.current);
-  }, []);
 
   useEffect(() => {
     try {
