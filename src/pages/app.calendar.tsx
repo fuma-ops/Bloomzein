@@ -272,15 +272,15 @@ function AuroraGlow() {
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       <div
         className="animate-bloom-aurora absolute -top-16 -left-10 h-56 w-56 rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(236,72,153,0.22), transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%)" }}
       />
       <div
         className="animate-bloom-aurora absolute top-1/4 right-[-4rem] h-72 w-72 rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(255,158,210,0.28), transparent 70%)", animationDelay: "-6s", animationDuration: "26s" }}
+        style={{ background: "radial-gradient(circle, rgba(255,190,224,0.4), transparent 70%)", animationDelay: "-6s", animationDuration: "26s" }}
       />
       <div
         className="animate-bloom-aurora absolute bottom-[-5rem] left-1/3 h-64 w-64 rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(251,207,232,0.5), transparent 70%)", animationDelay: "-12s", animationDuration: "30s" }}
+        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.28), transparent 70%)", animationDelay: "-12s", animationDuration: "30s" }}
       />
     </div>
   );
@@ -578,11 +578,11 @@ function WeekView({
   onSelect: (d: Date) => void;
 }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
+    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ background: "linear-gradient(135deg, #ff7ec8 0%, #ff1493 45%, #e0007f 78%, #cc0073 100%)" }}>
       <AuroraGlow />
       <div className="relative z-[1] space-y-2.5">
         {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
-          <p className="text-center text-sm text-rose/60 py-6">Nothing with this in view — try another week or filter ✿</p>
+          <p className="text-center text-sm text-white/90 py-6 drop-shadow-sm">Nothing with this in view — try another week or filter ✿</p>
         )}
         {days.map((day, i) => {
           const phase = phaseForDay(day, readCycleSettings());
@@ -641,10 +641,10 @@ function MonthGrid({
 }) {
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
-    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
+    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(135deg, #ff7ec8 0%, #ff1493 45%, #e0007f 78%, #cc0073 100%)" }}>
       <AuroraGlow />
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
-        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
+        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-white/85 drop-shadow-sm">{d}</p>)}
       </div>
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
@@ -765,7 +765,7 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
       </div>
 
       {/* Plans + reminders — the big section, on the soft moving-lines backdrop */}
-      <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
+      <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(135deg, #ff7ec8 0%, #ff1493 45%, #e0007f 78%, #cc0073 100%)" }}>
         <AuroraGlow />
         <div className="relative z-[1] space-y-3">
           {empty && (
