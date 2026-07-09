@@ -1,8 +1,7 @@
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Sparkles, Search, Pin, ChevronRight } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { readTodayAffirmation } from "@/components/bloom/affirmations";
@@ -22,7 +21,6 @@ export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [affirmation, setAffirmation] = useState("");
-  const heroRef = useRef<HTMLDivElement>(null);
 
   // Echo the exact affirmation the Today page is showing (shared source).
   useEffect(() => { try { setAffirmation(readTodayAffirmation()); } catch {} }, []);
@@ -61,11 +59,11 @@ export default function ToolsIndex() {
 
   return (
     <div className="relative animate-fade-in">
-      <BloomBubbles count={10} />
 
-      {/* HERO — title left, dynamic vintage two-tone moving lines behind it */}
-      <section ref={heroRef}>
-        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ minHeight: '11rem', background: 'linear-gradient(135deg,#FFF1F8 0%,#FFE1EF 60%,#FFD2E8 100%)' }}>
+      {/* HERO — title left, dynamic vintage two-tone moving lines behind it.
+          Height hugs the title + subtitle (no empty space above/below). */}
+      <section>
+        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ background: 'linear-gradient(135deg,#FFF1F8 0%,#FFE1EF 60%,#FFD2E8 100%)' }}>
           {/* Moving horizontal lines — cute clear-pink + strong-pink retro texture */}
           <div
             className="animate-vintage-lines absolute inset-0 opacity-60"
@@ -81,7 +79,7 @@ export default function ToolsIndex() {
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/45 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-hotpink/35 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
           {/* Title + subtitle stacked on the left */}
-          <div className="relative z-[4] p-5 sm:p-7 flex flex-col items-start gap-2 sm:gap-3 max-w-[62%]">
+          <div className="relative z-[4] px-5 py-4 sm:px-7 sm:py-5 flex flex-col items-start gap-1 sm:gap-1.5 max-w-[62%]">
             <h1
               className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2"
               style={{ textShadow: '0 0 20px rgba(255,255,255,1), 0 2px 8px rgba(255,255,255,0.85)' }}
