@@ -26,6 +26,7 @@ import {
 } from "./app.tools.workout";
 import { MEALS_PLAN_KEY } from "./app.tools.meals";
 import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
+import { readWorkoutPlanDays } from "@/lib/crossToolData";
 import { TODAY_WATER_KEY } from "./app.today";
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
@@ -182,6 +183,19 @@ function workoutForDate(history: HistoryEntry[], date: Date): PlanningItem[] {
     }));
 }
 
+/** A workout the user has *planned* for this weekday (from the Workout program),
+ *  shown on the calendar like the yoga schedule. Skipped when a workout is
+ *  already logged that day so it isn't duplicated. */
+function plannedWorkoutForDate(planDays: string[], history: HistoryEntry[], date: Date): PlanningItem[] {
+  const dateStr = fmtLocalDate(date);
+  if (history.some((h) => h.date === dateStr)) return [];
+  if (!planDays.includes(mondayFirstLabel(date))) return [];
+  return [{
+    id: `workout-plan:${dateStr}`, time: "17:30", emoji: "🏋️", category: "workout",
+    label: "Workout", sourceLabel: "Open Workout →", sourceHref: "/app/tools/workout",
+  }];
+}
+
 function mealForDate(plan: Record<string, Record<string, string | null>>, date: Date): PlanningItem[] {
   const dayPlan = plan[mondayFirstLabel(date)];
   if (!dayPlan) return [];
@@ -249,6 +263,24 @@ function loadJSON<T>(key: string, fallback: T): T {
   }
 }
 
+/** A soft, cute moving two-tone-pink horizontal-lines backdrop (vintage vibe),
+ *  used behind the calendar grid and the Today section. */
+function LinedPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={["relative overflow-hidden rounded-3xl bg-white/40", className].join(" ")}>
+      <div
+        className="animate-vintage-lines pointer-events-none absolute inset-0 opacity-[0.16]"
+        style={{
+          backgroundImage: "linear-gradient(0deg, #EC4899 0, #EC4899 2px, transparent 2px, transparent 10px, #FF9ED2 10px, #FF9ED2 12px, transparent 12px, transparent 24px)",
+          backgroundSize: "100% 24px",
+          backgroundRepeat: "repeat",
+        }}
+      />
+      <div className="relative z-[1] p-2.5 sm:p-3.5">{children}</div>
+    </div>
+  );
+}
+
 export default function CalendarPage() {
   const [view, setView] = useState<"month" | "week" | "today">("month");
   const [cursor, setCursor] = useState(() => new Date());
@@ -261,6 +293,7 @@ export default function CalendarPage() {
   const [yogaReminder, setYogaReminder] = useState("07:30");
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [workoutPlanDays, setWorkoutPlanDays] = useState<string[]>([]);
   const [mealsPlan, setMealsPlan] = useState<Record<string, Record<string, string | null>>>({});
   const [water, setWater] = useState<{ date: string; count: number }>({ date: "", count: 0 });
 
@@ -273,6 +306,7 @@ export default function CalendarPage() {
     } catch {}
     setDiaryEntries(loadJSON<DiaryEntry[]>(STORAGE.diary, []));
     setHistory(loadJSON<HistoryEntry[]>(STORAGE.workout, []));
+    setWorkoutPlanDays(readWorkoutPlanDays());
     setMealsPlan(loadJSON<Record<string, Record<string, string | null>>>(STORAGE.mealsPlan, {}));
     setWater(loadJSON<{ date: string; count: number }>(STORAGE.water, { date: "", count: 0 }));
   }, []);
@@ -285,13 +319,14 @@ export default function CalendarPage() {
       ...remindersForDate(reminders, date),
       ...yogaForDate(yogaSchedule, yogaReminder, date),
       ...workoutForDate(history, date),
+      ...plannedWorkoutForDate(workoutPlanDays, history, date),
       ...mealForDate(mealsPlan, date),
       ...journalForDate(diaryEntries, date),
       ...waterTodayItem(today, date, water),
     ];
     items.sort((a, b) => (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
     return items;
-  }, [reminders, yogaSchedule, yogaReminder, history, mealsPlan, diaryEntries, water, today]);
+  }, [reminders, yogaSchedule, yogaReminder, history, workoutPlanDays, mealsPlan, diaryEntries, water, today]);
 
   const weekDays = useMemo(() => {
     const start = startOfWeek(cursor);
@@ -405,36 +440,43 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {view === "week" && (
-        <WeekView
-          days={weekDays}
-          today={today}
-          planningFor={planningFor}
-          hiddenCats={hiddenCats}
-          activeFilter={activeFilter}
-          moodFor={(d) => moodForDate(diaryEntries, d)}
-          onSelect={setSelected}
-        />
-      )}
-      {view === "month" && (
-        <MonthGrid
-          cells={monthCells}
-          today={today}
-          planningFor={planningFor}
-          hiddenCats={hiddenCats}
-          activeFilter={activeFilter}
-          onSelect={setSelected}
-        />
+      {(view === "week" || view === "month") && (
+        <LinedPanel>
+          {view === "week" && (
+            <WeekView
+              days={weekDays}
+              today={today}
+              planningFor={planningFor}
+              hiddenCats={hiddenCats}
+              activeFilter={activeFilter}
+              moodFor={(d) => moodForDate(diaryEntries, d)}
+              onSelect={setSelected}
+            />
+          )}
+          {view === "month" && (
+            <MonthGrid
+              cells={monthCells}
+              today={today}
+              planningFor={planningFor}
+              hiddenCats={hiddenCats}
+              activeFilter={activeFilter}
+              onSelect={setSelected}
+            />
+          )}
+        </LinedPanel>
       )}
       {view === "today" && (
-        <TodayView
-          today={today}
-          mealsPlan={mealsPlan}
-          reminders={reminders}
-          yogaSchedule={yogaSchedule}
-          yogaReminder={yogaReminder}
-          history={history}
-        />
+        <LinedPanel>
+          <TodayView
+            today={today}
+            mealsPlan={mealsPlan}
+            reminders={reminders}
+            yogaSchedule={yogaSchedule}
+            yogaReminder={yogaReminder}
+            history={history}
+            workoutPlanDays={workoutPlanDays}
+          />
+        </LinedPanel>
       )}
 
       <CalendarKey hiddenCats={hiddenCats} onToggle={toggleCat} />
@@ -665,13 +707,14 @@ function TodayCard({ href, image, Icon, label, title, meta }: {
   );
 }
 
-function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, history }: {
+function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, history, workoutPlanDays }: {
   today: Date;
   mealsPlan: Record<string, Record<string, string | null>>;
   reminders: Reminder[];
   yogaSchedule: Record<string, string | null>;
   yogaReminder: string;
   history: HistoryEntry[];
+  workoutPlanDays: string[];
 }) {
   const dayName = mondayFirstLabel(today);
   const dayPlan = mealsPlan[dayName] || {};
@@ -683,8 +726,10 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
   const plannedCalories = meals.reduce((s, m) => s + m.r.macros.calories, 0);
   const yogaFocus = yogaSchedule[dayName];
   const workouts = history.filter((h) => h.date === fmtLocalDate(today));
+  // Show a planned workout (from the program) when nothing was logged today.
+  const plannedWorkout = !workouts.length && workoutPlanDays.includes(dayName);
   const todayReminders = remindersForDate(reminders, today);
-  const empty = !meals.length && !yogaFocus && !workouts.length && !todayReminders.length;
+  const empty = !meals.length && !yogaFocus && !workouts.length && !plannedWorkout && !todayReminders.length;
 
   return (
     <section className="space-y-3.5">
@@ -723,6 +768,11 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
           label="Workout" title={w.sessionName || "Workout"}
           meta={`${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
       ))}
+
+      {plannedWorkout && (
+        <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" Icon={Dumbbell}
+          label="Workout" title="Workout planned" meta="Tap to start today's session" />
+      )}
 
       {todayReminders.length > 0 && (
         <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
@@ -832,7 +882,9 @@ function DayDrawer({
                   href={item.sourceHref}
                   className="flex items-center gap-3 rounded-2xl bg-white/80 border border-petal/50 p-3 hover:border-hotpink/40 hover:shadow-md hover:shadow-hotpink/10 transition group"
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blush/60 text-base">{item.emoji}</span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-hotpink/10 text-hotpink">
+                    {(() => { const Ico = CATEGORY_META[item.category]?.Icon ?? Bell; return <Ico className="h-4 w-4" strokeWidth={2} />; })()}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[#831843] truncate">{item.label}</p>
                     {item.time && (
