@@ -4,13 +4,14 @@ import {
   ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb, CalendarDays,
   Droplet, Sprout, Star, Moon, Circle,
   Dumbbell, PersonStanding, BookOpen, CalendarClock, Bell, Soup, Heart, Droplets, Cake, Plane,
+  ArrowRight,
   type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/bloom/PageHeader";
 import {
   PHASE_META, type Phase,
 } from "@/components/bloom/CycleTracker";
-import { phaseForDay, readCycleSettings } from "@/components/bloom/cyclePhase";
+import { phaseForDay, readCycleSettings, PHASE_LABEL } from "@/components/bloom/cyclePhase";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
 import {
   STORAGE_KEYS as REMINDER_STORAGE_KEYS, type Reminder,
@@ -263,21 +264,21 @@ function loadJSON<T>(key: string, fallback: T): T {
   }
 }
 
-/** A soft, cute moving two-tone-pink horizontal-lines backdrop (vintage vibe),
- *  used behind the calendar grid and the Today section. */
-function LinedPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+/** A soft, cute moving two-tone-pink horizontal-lines layer (vintage vibe).
+ *  Drop it as the first child of a `relative overflow-hidden` container so it
+ *  sits *inside* that section, behind its content. */
+function VintageLines({ opacity = 0.18 }: { opacity?: number }) {
   return (
-    <div className={["relative overflow-hidden rounded-3xl bg-white/40", className].join(" ")}>
-      <div
-        className="animate-vintage-lines pointer-events-none absolute inset-0 opacity-[0.16]"
-        style={{
-          backgroundImage: "linear-gradient(0deg, #EC4899 0, #EC4899 2px, transparent 2px, transparent 10px, #FF9ED2 10px, #FF9ED2 12px, transparent 12px, transparent 24px)",
-          backgroundSize: "100% 24px",
-          backgroundRepeat: "repeat",
-        }}
-      />
-      <div className="relative z-[1] p-2.5 sm:p-3.5">{children}</div>
-    </div>
+    <div
+      aria-hidden
+      className="animate-vintage-lines pointer-events-none absolute inset-0"
+      style={{
+        opacity,
+        backgroundImage: "linear-gradient(0deg, #EC4899 0, #EC4899 2px, transparent 2px, transparent 10px, #FF9ED2 10px, #FF9ED2 12px, transparent 12px, transparent 24px)",
+        backgroundSize: "100% 24px",
+        backgroundRepeat: "repeat",
+      }}
+    />
   );
 }
 
@@ -440,43 +441,37 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {(view === "week" || view === "month") && (
-        <LinedPanel>
-          {view === "week" && (
-            <WeekView
-              days={weekDays}
-              today={today}
-              planningFor={planningFor}
-              hiddenCats={hiddenCats}
-              activeFilter={activeFilter}
-              moodFor={(d) => moodForDate(diaryEntries, d)}
-              onSelect={setSelected}
-            />
-          )}
-          {view === "month" && (
-            <MonthGrid
-              cells={monthCells}
-              today={today}
-              planningFor={planningFor}
-              hiddenCats={hiddenCats}
-              activeFilter={activeFilter}
-              onSelect={setSelected}
-            />
-          )}
-        </LinedPanel>
+      {view === "week" && (
+        <WeekView
+          days={weekDays}
+          today={today}
+          planningFor={planningFor}
+          hiddenCats={hiddenCats}
+          activeFilter={activeFilter}
+          moodFor={(d) => moodForDate(diaryEntries, d)}
+          onSelect={setSelected}
+        />
+      )}
+      {view === "month" && (
+        <MonthGrid
+          cells={monthCells}
+          today={today}
+          planningFor={planningFor}
+          hiddenCats={hiddenCats}
+          activeFilter={activeFilter}
+          onSelect={setSelected}
+        />
       )}
       {view === "today" && (
-        <LinedPanel>
-          <TodayView
-            today={today}
-            mealsPlan={mealsPlan}
-            reminders={reminders}
-            yogaSchedule={yogaSchedule}
-            yogaReminder={yogaReminder}
-            history={history}
-            workoutPlanDays={workoutPlanDays}
-          />
-        </LinedPanel>
+        <TodayView
+          today={today}
+          mealsPlan={mealsPlan}
+          reminders={reminders}
+          yogaSchedule={yogaSchedule}
+          yogaReminder={yogaReminder}
+          history={history}
+          workoutPlanDays={workoutPlanDays}
+        />
       )}
 
       <CalendarKey hiddenCats={hiddenCats} onToggle={toggleCat} />
@@ -570,8 +565,9 @@ function WeekView({
   onSelect: (d: Date) => void;
 }) {
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
-      <div className="space-y-2.5">
+    <section className="relative overflow-hidden rounded-3xl bg-white/55 backdrop-blur border border-petal/60 p-4 sm:p-6">
+      <VintageLines />
+      <div className="relative z-[1] space-y-2.5">
         {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
           <p className="text-center text-sm text-rose/60 py-6">Nothing with this in view — try another week or filter ✿</p>
         )}
@@ -632,11 +628,12 @@ function MonthGrid({
 }) {
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-6">
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
+    <section className="relative overflow-hidden rounded-3xl bg-white/55 backdrop-blur border border-petal/60 p-3 sm:p-6">
+      <VintageLines />
+      <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
         {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
       </div>
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+      <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
           const phase = phaseForDay(cell.date, readCycleSettings());
           const allItems = planningFor(cell.date).filter((it) => !hiddenCats.has(it.category));
@@ -688,21 +685,27 @@ function MonthGrid({
 /** Today view — a detailed, image-rich look at everything planned for today:
  *  yoga, each planned meal (with macros), workout session details, reminders,
  *  and the day's planned calories. */
-function TodayCard({ href, image, Icon, label, title, meta }: {
-  href: string; image: string; Icon: LucideIcon; label: string; title: string; meta: string;
+/** Matches the Today-page plan card: clean rounded image, title + meta, a
+ *  time · phase chip row, and a soft-glowing pink arrow CTA (kept alive). */
+function TodayCard({ href, image, title, meta, time, phaseLabel }: {
+  href: string; image: string; title: string; meta: string; time?: string; phaseLabel: string;
 }) {
   return (
-    <a href={href} className="flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-3.5 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/10">
-      <div className="relative shrink-0 h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl">
+    <a href={href} className="group flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/90 backdrop-blur border border-petal/50 p-2.5 sm:p-3 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/15 active:scale-[0.99]">
+      <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[78px] sm:w-[78px] overflow-hidden rounded-2xl ring-1 ring-petal/60">
         <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-        <p className="absolute bottom-1 left-1.5 text-[8px] font-bold uppercase tracking-wide text-white drop-shadow">{label}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug">{title}</p>
-        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/65">{meta}</p>
+        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug truncate">{title}</p>
+        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/60 leading-snug">{meta}</p>
+        <div className="mt-1 flex items-center gap-2">
+          {time && <span className="text-[9px] font-semibold text-rose/40">{time}</span>}
+          <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">✿ {phaseLabel} phase</span>
+        </div>
       </div>
-      <Icon className="h-4 w-4 text-hotpink/50 shrink-0" strokeWidth={2} />
+      <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow transition group-hover:bg-hotpink group-hover:text-white group-active:scale-90">
+        <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+      </span>
     </a>
   );
 }
@@ -729,11 +732,12 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
   // Show a planned workout (from the program) when nothing was logged today.
   const plannedWorkout = !workouts.length && workoutPlanDays.includes(dayName);
   const todayReminders = remindersForDate(reminders, today);
+  const phaseLabel = PHASE_LABEL[phaseForDay(today, readCycleSettings())];
   const empty = !meals.length && !yogaFocus && !workouts.length && !plannedWorkout && !todayReminders.length;
 
   return (
-    <section className="space-y-3.5">
-      {/* Header with planned calories */}
+    <div className="space-y-3.5">
+      {/* Date header — standalone, NOT on the lined background */}
       <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">{today.toLocaleDateString(undefined, { weekday: "long" })}</p>
@@ -747,50 +751,59 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
         )}
       </div>
 
-      {empty && (
-        <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
-          Nothing planned today yet — open your tools to fill the day ✿
+      {/* Plans + reminders — the big section, on the soft moving-lines backdrop */}
+      <section className="relative overflow-hidden rounded-3xl bg-white/45 backdrop-blur border border-petal/60 p-3 sm:p-4">
+        <VintageLines />
+        <div className="relative z-[1] space-y-3">
+          {empty && (
+            <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
+              Nothing planned today yet — open your tools to fill the day ✿
+            </div>
+          )}
+
+          {yogaFocus && (
+            <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel}
+              title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
+          )}
+
+          {meals.map(({ slot, r }) => (
+            <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel}
+              title={r.name} time={SLOT_TIME[slot]}
+              meta={`${SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
+          ))}
+
+          {workouts.map((w, i) => (
+            <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel}
+              title={w.sessionName || "Workout"}
+              meta={`Workout · ${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
+          ))}
+
+          {plannedWorkout && (
+            <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel}
+              title="Workout planned" time="17:30" meta="Workout · tap to start today's session" />
+          )}
+
+          {todayReminders.length > 0 && (
+            <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
+              <div className="space-y-2">
+                {todayReminders.map((it) => (
+                  <a key={it.id} href={it.sourceHref} className="flex items-center gap-2.5 rounded-2xl bg-blush/40 border border-petal/50 p-2.5 hover:bg-blush/60 transition">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-hotpink/10 text-hotpink">
+                      {(() => { const Ico = CATEGORY_META[it.category]?.Icon ?? Bell; return <Ico className="h-4 w-4" strokeWidth={2} />; })()}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#831843] truncate">{it.label}</p>
+                      {it.time && <p className="text-[11px] text-rose/60">{it.time}</p>}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {yogaFocus && (
-        <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" Icon={PersonStanding} label="Yoga" title={`${yogaFocus} flow`} meta={`${yogaReminder} · gentle movement`} />
-      )}
-
-      {meals.map(({ slot, r }) => (
-        <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} Icon={Soup}
-          label={SLOT_LABEL[slot]} title={r.name}
-          meta={`${SLOT_TIME[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
-      ))}
-
-      {workouts.map((w, i) => (
-        <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" Icon={Dumbbell}
-          label="Workout" title={w.sessionName || "Workout"}
-          meta={`${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
-      ))}
-
-      {plannedWorkout && (
-        <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" Icon={Dumbbell}
-          label="Workout" title="Workout planned" meta="Tap to start today's session" />
-      )}
-
-      {todayReminders.length > 0 && (
-        <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
-          <div className="space-y-2">
-            {todayReminders.map((it) => (
-              <a key={it.id} href={it.sourceHref} className="flex items-center gap-2.5 rounded-2xl bg-blush/40 border border-petal/50 p-2.5 hover:bg-blush/60 transition">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white text-base">{it.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#831843] truncate">{it.label}</p>
-                  {it.time && <p className="text-[11px] text-rose/60">{it.time}</p>}
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
+      </section>
+    </div>
   );
 }
 
