@@ -2241,23 +2241,25 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 10, cookTime: 15, difficulty: "easy",
     phases: ["menstrual", "luteal"], goal: ["gain", "maintain"],
     dietTags: ["halal", "gluten-free"], allergens: ["eggs"],
-    macros: { calories: 410, protein: 30, carbs: 26, fat: 20 },
-    micros: { iron: 4, vitaminC: 18, fibre: 5 },
+    macros: { calories: 640, protein: 36, carbs: 52, fat: 33 },
+    micros: { iron: 4, vitaminC: 18, fibre: 8 },
     servings: 1,
     equipment: ["Frying pan"],
     ingredients: [
       { name: "Turkey breakfast sausages", quantity: "2" },
       { name: "Sweet potato", quantity: "1 cup, diced small" },
+      { name: "Quinoa", quantity: "1/2 cup, cooked" },
       { name: "Spinach", quantity: "1 cup" },
       { name: "Egg", quantity: "1" },
+      { name: "Avocado", quantity: "1/2, sliced" },
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Smoked paprika", quantity: "1/2 tsp" }
     ],
     steps: [
       "Fry the **turkey sausages** in a dry pan over medium heat, turning, until browned and cooked through - about 8 min. Set aside and slice.",
       "Add the **olive oil** and **sweet potato** to the pan, sprinkle with **smoked paprika**, cover and cook 8 min until tender and crisped.",
-      "Push the hash aside, wilt the **spinach** for 1 min, then fry the **egg** in a clear spot until the white sets.",
-      "Pile it all into a bowl, sliced sausage on top of the hash with the egg alongside."
+      "Push the hash aside, wilt the **spinach** for 1 min, then scramble or fry the **egg** in a clear spot until set.",
+      "Spoon the **quinoa** into a bowl as a base, pile on the hash and sliced sausage with the egg, and finish with the sliced **avocado** alongside."
     ],
     batchTip: "Roast a tray of diced sweet potato ahead - it crisps up in the pan in minutes through the week.",
     substitutionTip: "Swap the egg for a spoon of hummus to keep it egg-free, or use chicken sausages."
@@ -2277,12 +2279,13 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Figs", quantity: "2, sliced" },
       { name: "Honey", quantity: "1 tsp" },
       { name: "Walnuts", quantity: "1 tbsp, crushed" },
-      { name: "Lemon zest", quantity: "a pinch (optional)" }
+      { name: "Lemon zest", quantity: "a pinch (optional)" },
+      { name: "Fresh thyme", quantity: "few sprigs" }
     ],
     steps: [
       "Toast the **sourdough** until golden and crisp.",
       "Beat the **ricotta** with a fork until smooth and spread it thickly over the warm toast.",
-      "Fan over the **figs**, drizzle with **honey**, scatter **walnuts** and finish with a little **lemon zest**."
+      "Fan over the **figs**, drizzle with **honey**, scatter **walnuts**, and finish with a little **lemon zest** and a few **fresh thyme** leaves."
     ],
     batchTip: "Whip a small tub of ricotta with a pinch of lemon zest at the start of the week for instant toasts.",
     substitutionTip: "Out of figs? Use sliced pear or fresh berries. Swap in gluten-free bread if needed."
@@ -2291,8 +2294,8 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "b21", name: "Buckwheat Crepes with Berries", cuisine: "Global", mealType: "breakfast",
     prepTime: 10, cookTime: 10, difficulty: "easy",
     phases: ["luteal", "menstrual"], goal: ["lose", "maintain"],
-    dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 290, protein: 8, carbs: 50, fat: 7 },
+    dietTags: ["vegan", "gluten-free"], allergens: ["nuts"],
+    macros: { calories: 385, protein: 11, carbs: 55, fat: 15 },
     micros: { magnesium: 50, fibre: 6, vitaminC: 14 },
     servings: 1,
     equipment: ["Mixing bowl", "Non-stick pan"],
@@ -2302,12 +2305,16 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Maple syrup", quantity: "1 tbsp, plus a little extra" },
       { name: "Salt", quantity: "1 pinch" },
       { name: "Oil", quantity: "for the pan" },
-      { name: "Mixed berries", quantity: "1/2 cup" }
+      { name: "Mixed berries", quantity: "1/2 cup" },
+      { name: "Coconut yoghurt", quantity: "2 tbsp" },
+      { name: "Flaked almonds", quantity: "1 tbsp" },
+      { name: "Chia seeds", quantity: "1 tsp" }
     ],
     steps: [
       "Whisk **buckwheat flour** with the **plant milk**, 1 tbsp **maple syrup** and a pinch of **salt** into a thin, pourable batter; rest 5 min.",
       "Wipe a non-stick pan with **oil** over medium heat. Pour in a thin ladle, swirl to coat, and cook 1-2 min until the edges lift, then flip for 30 sec.",
-      "Fill each warm crepe with **mixed berries**, fold into quarters and finish with a last drizzle of maple syrup."
+      "Fill each warm crepe with **mixed berries** and fold into quarters.",
+      "Top with a dollop of **coconut yoghurt**, a scatter of **flaked almonds** and **chia seeds**, and a last drizzle of maple syrup."
     ],
     batchTip: "Stack cooked crepes with baking paper between them - they keep 2 days chilled and reheat in a warm pan.",
     substitutionTip: "Any berry works, fresh or frozen (thaw first); swap maple for a mashed ripe banana in the batter."
@@ -2866,9 +2873,9 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "b22", name: "Mango Lassi Overnight Oats", cuisine: "Asian", mealType: "breakfast",
     prepTime: 5, cookTime: 0, difficulty: "quick",
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
-    dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
-    macros: { calories: 310, protein: 14, carbs: 48, fat: 7 },
-    micros: { vitaminC: 30, fibre: 5, calcium: 160 },
+    dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy", "nuts"],
+    macros: { calories: 405, protein: 17, carbs: 53, fat: 15 },
+    micros: { vitaminC: 30, fibre: 6, calcium: 160 },
     servings: 1,
     equipment: ["Jar or bowl"],
     ingredients: [
@@ -2876,13 +2883,16 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Greek yoghurt", quantity: "1/3 cup" },
       { name: "Milk", quantity: "1/3 cup" },
       { name: "Mango", quantity: "1/2 cup, diced" },
+      { name: "Chia seeds", quantity: "1 tsp" },
       { name: "Cardamom", quantity: "1 pinch, ground" },
-      { name: "Honey", quantity: "1 tsp" }
+      { name: "Honey", quantity: "1 tsp" },
+      { name: "Shredded coconut", quantity: "1 tbsp" },
+      { name: "Pistachios", quantity: "1 tbsp, chopped" }
     ],
     steps: [
-      "In a jar, stir the **rolled oats** with the **milk**, half the **Greek yoghurt** and a pinch of **cardamom**.",
+      "In a jar, stir the **rolled oats** with the **milk**, half the **Greek yoghurt**, the **chia seeds** and a pinch of **cardamom**.",
       "Mash half the **mango** into a rough puree and swirl it through, then seal and chill overnight.",
-      "In the morning top with the remaining yoghurt, the rest of the mango and a drizzle of **honey**."
+      "In the morning top with the remaining yoghurt, the rest of the mango, a drizzle of **honey**, and a scatter of **shredded coconut** and chopped **pistachios**."
     ],
     batchTip: "Make 3 jars at once - they hold well for up to 3 days in the fridge.",
     substitutionTip: "Use dairy-free yoghurt and plant milk for a vegan version; frozen mango works and thaws overnight."
@@ -2892,8 +2902,8 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 8, cookTime: 8, difficulty: "quick",
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs", "dairy"],
-    macros: { calories: 290, protein: 22, carbs: 6, fat: 20 },
-    micros: { calcium: 120, iron: 3, vitaminC: 8 },
+    macros: { calories: 310, protein: 23, carbs: 9, fat: 20 },
+    micros: { calcium: 120, iron: 3, vitaminC: 18 },
     servings: 1,
     equipment: ["Non-stick pan", "Bowl"],
     ingredients: [
@@ -2902,13 +2912,16 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Baby spinach", quantity: "1 cup" },
       { name: "Feta", quantity: "25 g, crumbled" },
       { name: "Olive oil", quantity: "1 tsp" },
-      { name: "Salt & pepper", quantity: "to taste" }
+      { name: "Salt & pepper", quantity: "to taste" },
+      { name: "Rocket (arugula)", quantity: "1 cup" },
+      { name: "Cherry tomatoes", quantity: "5, halved" }
     ],
     steps: [
       "Whisk the **eggs** with a pinch of **salt & pepper** until just combined.",
       "Sauté the **mushrooms** in **olive oil** over medium-high heat until golden, 3 min, then add the **baby spinach** and toss until wilted. Tip onto a plate.",
       "Pour the eggs into the pan, swirl, and cook 1-2 min until the base sets but the top is still glossy.",
-      "Spoon the mushroom-spinach back over one half, scatter with **feta**, fold and slide onto the plate."
+      "Spoon the mushroom-spinach back over one half, scatter with **feta**, fold and slide onto the plate.",
+      "Serve with a side salad of **rocket** and **cherry tomatoes**, lightly dressed with a little olive oil."
     ],
     batchTip: "Cook the mushrooms and spinach the night before so the omelette is a 3-minute job.",
     substitutionTip: "No feta? Grated cheddar or a spoon of ricotta work; leave out for dairy-free."
@@ -2918,7 +2931,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 10, cookTime: 20, difficulty: "easy",
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs", "dairy"],
-    macros: { calories: 350, protein: 20, carbs: 28, fat: 18 },
+    macros: { calories: 405, protein: 24, carbs: 28, fat: 22 },
     micros: { iron: 4, vitaminC: 30, fibre: 6 },
     servings: 2,
     equipment: ["Oven-safe pan", "Bowl"],
@@ -2928,6 +2941,7 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Kale", quantity: "1 cup, stems removed" },
       { name: "Onion", quantity: "1/2, sliced" },
       { name: "Parmesan", quantity: "2 tbsp, grated" },
+      { name: "Goat cheese", quantity: "40 g, crumbled" },
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Salt & pepper", quantity: "to taste" }
     ],
@@ -2935,7 +2949,7 @@ const RAW_RECIPES: RawRecipe[] = [
       "Heat the oven to 180°C. Sauté the **sweet potato** and **onion** in **olive oil** in an oven-safe pan for 8 min until the potato is tender.",
       "Add the **kale** and toss until just wilted, 2 min.",
       "Whisk the **eggs** with the **parmesan** and **salt & pepper**, pour into the pan and swirl to settle the veg evenly.",
-      "Bake 12-15 min until the centre is just set and the top is golden. Cool 2 min, then slice into wedges."
+      "Dot the crumbled **goat cheese** over the top, then bake 12-15 min until the centre is just set and the top is golden. Cool 2 min, then slice into wedges."
     ],
     batchTip: "Bake ahead and chill - wedges are great cold in a lunchbox and keep 3 days.",
     substitutionTip: "Swap kale for spinach or chard, and parmesan for a hard vegetarian cheese or nutritional yeast."
