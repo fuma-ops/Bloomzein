@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
-  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil,
+  Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
@@ -36,6 +36,16 @@ import { getCoaching } from "@/components/bloom/workout/coaching";
 
 const ONBOARD_KEY = "bloom:workout-onboarded";
 const TOUR_KEY = "bloom:workout-tour-done";
+
+/** Reset the Workout tool to its first-time state (with a confirm). Shared by
+ *  the hero and the My-Plan controls. */
+async function resetWorkoutTool() {
+  if (window.confirm("Reset the Workout tool to a fresh start? This clears your plan, sessions and progress here so you can see the first-time experience.")) {
+    resetToolState("workout");
+    await flushCloudSync(); // push the deletions before reload, else cloud restores them
+    window.location.reload();
+  }
+}
 const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
@@ -354,7 +364,7 @@ function HeroHeader({
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
           <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
-          <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic leading-snug text-white/90 max-w-[9rem] sm:max-w-xs lg:max-w-sm drop-shadow">{sectionSubtitle}</p>
+          <p className="mt-0.5 text-[11px] sm:text-sm lg:text-base italic leading-snug whitespace-nowrap text-white/90 drop-shadow">{sectionSubtitle}</p>
           <CyclePhasePill className="mt-1.5" />
         </div>
         <div className="flex justify-center">
@@ -540,13 +550,6 @@ export default function WorkoutPage() {
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
           onGuide={() => setShowTour(true)}
-          onReset={async () => {
-            if (window.confirm("Reset the Workout tool to a fresh start? This clears your plan, sessions and progress here so you can see the first-time experience.")) {
-              resetToolState("workout");
-              await flushCloudSync(); // push the deletions before reload, else cloud restores them
-              window.location.reload();
-            }
-          }}
         />
       )}
 
@@ -1931,6 +1934,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <>
                 <button onClick={onEditClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><Pencil className="h-3 w-3" /> Edit</button>
                 <button onClick={onGenerateClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><RotateCcw className="h-3 w-3" /> Regenerate</button>
+                <button onClick={resetWorkoutTool} title="Reset — preview the first-time experience" className="inline-flex items-center gap-1 rounded-full bg-white/70 border border-petal/50 px-3 py-1 text-[11px] font-bold text-rose/50 hover:text-hotpink transition"><Trash2 className="h-3 w-3" /> Reset</button>
               </>
             )}
             <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
