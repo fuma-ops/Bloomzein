@@ -113,12 +113,14 @@ export default function ShopPage() {
       <div>
         {/* HERO */}
         <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-          <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ background: "linear-gradient(135deg,#FFF1F8 0%,#FFE1EF 60%,#FFD2E8 100%)" }}>
+          <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
+            <img src="/images/shop-hero-bg.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/15 to-transparent" />
             <div className="relative z-[2] px-4 py-5 sm:px-10 sm:py-11 max-w-md">
-              <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2">
+              <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2" style={{ textShadow: "0 1px 6px rgba(255,255,255,0.9)" }}>
                 Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
               </h1>
-              <p className="mt-1.5 sm:mt-3 text-xs sm:text-base text-rose/90">Curated treasures for your softest era ✿</p>
+              <p className="mt-1.5 sm:mt-3 text-xs sm:text-base font-medium text-rose/90" style={{ textShadow: "0 1px 5px rgba(255,255,255,0.85)" }}>Curated treasures for your softest era ✿</p>
               <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
                 Beauty • Wellness • Self-care • Cycle Care
               </p>
