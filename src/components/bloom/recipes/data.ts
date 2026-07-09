@@ -944,7 +944,7 @@ const RAW_RECIPES: RawRecipe[] = [
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegan"], allergens: [],
     servings: 2,
-    macros: { calories: 430, protein: 16, carbs: 50, fat: 18 },
+    macros: { calories: 435, protein: 16, carbs: 51, fat: 18 },
     micros: { fibre: 10, iron: 3, vitaminB6: 0.3 },
     equipment: ["Food processor", "Frying pan"],
     ingredients: [
@@ -959,6 +959,7 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Pita or flatbread", quantity: "2" },
       { name: "Tahini sauce", quantity: "3 tbsp — tap in steps to make it" },
       { name: "Cucumber, tomato & lettuce", quantity: "to fill" },
+      { name: "Pickled red onion", quantity: "1/4 cup" },
     ],
     steps: [
       "Soak **dried chickpeas** overnight, then drain — don't cook them (raw soaked chickpeas are what hold falafel together).",
@@ -1804,20 +1805,24 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["vegetarian"], allergens: ["dairy"],
     servings: 1,
     equipment: ["Non-stick pan"],
-    macros: { calories: 440, protein: 20, carbs: 46, fat: 18 },
+    macros: { calories: 530, protein: 22, carbs: 57, fat: 23 },
     micros: { fibre: 10, iron: 3, calcium: 140 },
     ingredients: [
       { name: "Flour tortillas", quantity: "2" },
       { name: "Black beans", quantity: "1 cup, drained" },
       { name: "Cheddar", quantity: "50g, grated" },
       { name: "Bell pepper", quantity: "1/2, finely diced" },
+      { name: "Corn", quantity: "1/4 cup" },
+      { name: "Red onion", quantity: "2 tbsp, diced" },
       { name: "Cumin", quantity: "1/2 tsp" },
-      { name: "Salsa", quantity: "2 tbsp - tap in steps to make it" }
+      { name: "Salsa", quantity: "2 tbsp - tap in steps to make it" },
+      { name: "Guacamole", quantity: "2 tbsp, to serve" },
+      { name: "Fresh coriander", quantity: "to garnish" }
     ],
     steps: [
       "Roughly mash **black beans** with **cumin** and a pinch of salt so they still have texture.",
-      "Spread the beans over one **tortilla**, scatter with **bell pepper** and **cheddar**, then top with the second tortilla.",
-      "Dry-fry in a **non-stick pan** over medium heat 2-3 min a side, pressing gently, until golden and the cheese melts. Cut into wedges and serve with [[salsa]]."
+      "Spread the beans over one **tortilla**, scatter with **bell pepper**, **corn**, **red onion** and **cheddar**, then top with the second tortilla.",
+      "Dry-fry in a **non-stick pan** over medium heat 2-3 min a side, pressing gently, until golden and the cheese melts. Cut into wedges, scatter with **fresh coriander** and serve with [[salsa]] and **guacamole**."
     ],
     batchTip: "Assemble and wrap uncooked; refrigerate up to a day, then pan-fry to order.",
     substitutionTip: "Dairy-free? Use a plant-based cheese or skip it and add extra mashed avocado to bind."
@@ -2388,7 +2393,7 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["halal"], allergens: ["dairy"],
     servings: 1,
     equipment: ["Frying pan"],
-    macros: { calories: 480, protein: 32, carbs: 38, fat: 20 },
+    macros: { calories: 490, protein: 32, carbs: 40, fat: 20 },
     micros: { iron: 5, vitaminC: 10, fibre: 4 },
     ingredients: [
       { name: "Ground beef", quantity: "150g" },
@@ -2397,12 +2402,15 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Garlic", quantity: "1 clove, minced" },
       { name: "Flatbread", quantity: "1" },
       { name: "Lettuce & tomato", quantity: "to fill" },
+      { name: "Cucumber", quantity: "1/4, diced" },
+      { name: "Red onion", quantity: "few slices" },
+      { name: "Fresh parsley", quantity: "to garnish" },
       { name: "Tzatziki", quantity: "2 tbsp - tap in steps to make it" }
     ],
     steps: [
       "Knead **ground beef** with the grated **onion**, **garlic**, **cumin & paprika** and a good pinch of salt, then mould around into 3-4 finger-shaped koftas.",
       "Pan-fry over medium-high heat 10-12 min, turning, until browned all over and cooked through.",
-      "Warm the **flatbread**, spread with [[tzatziki]], add **lettuce & tomato** and the koftas, then roll tight."
+      "Warm the **flatbread**, spread with [[tzatziki]], add **lettuce & tomato**, **cucumber**, **red onion** and the koftas, scatter with **fresh parsley**, then roll tight."
     ],
     batchTip: "Shape koftas ahead and chill up to a day - they hold together better cooked cold from the fridge.",
     substitutionTip: "Use ground lamb, turkey or a plant mince; dairy-free tzatziki with coconut yoghurt works too."
@@ -2411,21 +2419,22 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "l22", name: "Caprese Panini", cuisine: "Mediterranean", mealType: "lunch",
     prepTime: 8, cookTime: 6, difficulty: "quick",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
-    dietTags: ["vegetarian"], allergens: ["dairy"],
+    dietTags: ["vegetarian"], allergens: ["dairy", "nuts"],
     servings: 1,
     equipment: ["Panini press or frying pan"],
-    macros: { calories: 410, protein: 18, carbs: 40, fat: 18 },
+    macros: { calories: 490, protein: 19, carbs: 41, fat: 26 },
     micros: { calcium: 200, vitaminC: 12, fibre: 3 },
     ingredients: [
       { name: "Ciabatta roll", quantity: "1, halved" },
       { name: "Mozzarella", quantity: "60g, sliced" },
       { name: "Tomato", quantity: "1, sliced" },
       { name: "Fresh basil", quantity: "small handful" },
+      { name: "Basil pesto", quantity: "1 tbsp" },
       { name: "Olive oil", quantity: "1 tsp" },
       { name: "Balsamic glaze", quantity: "1 tsp" }
     ],
     steps: [
-      "Layer **mozzarella**, **tomato** and **fresh basil** inside the **ciabatta roll**; season with salt and pepper.",
+      "Spread **basil pesto** inside the **ciabatta roll**, then layer in **mozzarella**, **tomato** and **fresh basil**; season with salt and pepper.",
       "Brush the outside with **olive oil** and press in a hot panini press (or a pan with a weight on top) 4-6 min until crisp and the cheese melts.",
       "Open, drizzle with **balsamic glaze**, close and slice on the diagonal."
     ],
@@ -2465,19 +2474,20 @@ const RAW_RECIPES: RawRecipe[] = [
     dietTags: ["gluten-free"], allergens: ["dairy", "eggs"],
     servings: 1,
     equipment: ["Frying pan"],
-    macros: { calories: 380, protein: 34, carbs: 12, fat: 22 },
+    macros: { calories: 440, protein: 36, carbs: 22, fat: 24 },
     micros: { calcium: 90, fibre: 3, vitaminC: 8 },
     ingredients: [
       { name: "Chicken breast", quantity: "150g" },
       { name: "Romaine lettuce", quantity: "4 large leaves" },
       { name: "Parmesan", quantity: "2 tbsp, shaved" },
+      { name: "Gluten-free croutons", quantity: "1/4 cup" },
       { name: "Olive oil", quantity: "1 tsp" },
       { name: "Caesar dressing", quantity: "2 tbsp - tap in steps to make it" }
     ],
     steps: [
       "Season the **chicken breast**, then pan-fry in **olive oil** over medium-high heat 4-5 min a side until golden and cooked through. Rest 2 min, then slice.",
       "Cup the **romaine lettuce** leaves and load with the sliced chicken.",
-      "Spoon over [[caesar dressing]] and finish with shaved **parmesan** and black pepper."
+      "Spoon over [[caesar dressing]], scatter with **gluten-free croutons**, and finish with shaved **parmesan** and black pepper."
     ],
     batchTip: "Cook the chicken ahead and chill - assemble cold wraps in 3 minutes.",
     substitutionTip: "No egg? Use a Greek-yoghurt Caesar; swap chicken for chickpeas to go vegetarian."
