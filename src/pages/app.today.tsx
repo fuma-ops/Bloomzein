@@ -739,22 +739,23 @@ export default function TodayPage() {
                   onClick={() => setActivePlan(item)}
                   className="flex flex-1 min-w-0 items-center gap-3 sm:gap-4 text-left transition active:scale-[0.99]"
                 >
-                  {/* Image */}
-                  <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
+                  {/* Image — a strong-pink ring marks it done/selected (never hides it) */}
+                  <div className={["relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl transition",
+                    done ? "ring-2 ring-hotpink shadow-md shadow-hotpink/30" : ""].join(" ")}>
                     <img
                       src={item.image} alt="" className="h-full w-full object-cover" loading="lazy"
                       onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
                     />
-                    {done && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-                        <Check className="h-5 w-5 text-hotpink" strokeWidth={3} />
-                      </div>
-                    )}
                   </div>
                   {/* Text */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className={["text-sm font-bold leading-snug", done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>
+                      {done && (
+                        <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-hotpink/15 text-hotpink">
+                          <Check className="h-2.5 w-2.5" strokeWidth={3.5} />
+                        </span>
+                      )}
+                      <p className="text-sm font-bold leading-snug text-[#831843]">
                         {item.label}
                       </p>
                       {timing === "now" && (
