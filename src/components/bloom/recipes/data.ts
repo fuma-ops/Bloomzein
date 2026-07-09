@@ -2983,8 +2983,8 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "b26", name: "Matcha Chia Pudding", cuisine: "Asian", mealType: "breakfast",
     prepTime: 5, cookTime: 0, difficulty: "quick",
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
-    dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 260, protein: 8, carbs: 30, fat: 12 },
+    dietTags: ["vegan", "gluten-free"], allergens: ["nuts"],
+    macros: { calories: 355, protein: 10, carbs: 38, fat: 19 },
     micros: { calcium: 160, fibre: 10, omega3: 1.8 },
     servings: 1,
     equipment: ["Jar", "Small whisk"],
@@ -2993,12 +2993,16 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Matcha powder", quantity: "1 tsp" },
       { name: "Maple syrup", quantity: "1 tsp" },
       { name: "Chia seeds", quantity: "3 tbsp" },
-      { name: "Kiwi", quantity: "1, sliced" }
+      { name: "Kiwi", quantity: "1, sliced" },
+      { name: "Blueberries", quantity: "2 tbsp" },
+      { name: "Strawberries", quantity: "2, sliced" },
+      { name: "Shredded coconut", quantity: "1 tbsp" },
+      { name: "Flaked almonds", quantity: "1 tbsp" }
     ],
     steps: [
       "Whisk the **matcha powder** with a splash of the **coconut milk** into a smooth paste to stop it clumping, then whisk in the rest of the milk and the **maple syrup**.",
       "Stir in the **chia seeds**, wait 5 min, then stir again to break up any clumps. Seal and chill overnight until thick and set.",
-      "Top with sliced **kiwi** before serving."
+      "Top with sliced **kiwi**, **blueberries**, **strawberries**, a scatter of **shredded coconut** and **flaked almonds** before serving."
     ],
     batchTip: "Make 2-3 jars at once - the pudding holds its texture for up to 4 days.",
     substitutionTip: "Any plant milk works; swap kiwi for mango or berries and adjust maple to taste."
@@ -3008,13 +3012,14 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 8, cookTime: 12, difficulty: "quick",
     phases: ["menstrual", "follicular"], goal: ["maintain", "lose"],
     dietTags: ["vegetarian", "gluten-free", "halal"], allergens: ["eggs"],
-    macros: { calories: 280, protein: 18, carbs: 14, fat: 16 },
-    micros: { iron: 3, vitaminC: 35, fibre: 4 },
+    macros: { calories: 295, protein: 18, carbs: 18, fat: 16 },
+    micros: { iron: 3, vitaminC: 45, fibre: 4 },
     servings: 1,
     equipment: ["Frying pan"],
     ingredients: [
       { name: "Eggs", quantity: "3" },
       { name: "Green pepper", quantity: "1, diced" },
+      { name: "Red bell pepper", quantity: "1/2, diced" },
       { name: "Tomatoes", quantity: "2, diced" },
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Cumin", quantity: "1/2 tsp" },
@@ -3023,7 +3028,7 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Salt", quantity: "to taste" }
     ],
     steps: [
-      "Soften the **green pepper** in **olive oil** over medium heat for 4 min until it loses its raw bite.",
+      "Soften the **green pepper** and **red bell pepper** in **olive oil** over medium heat for 4 min until they lose their raw bite.",
       "Add the **tomatoes**, **cumin** and a pinch of **chili flakes** and simmer 5 min until jammy and most of the liquid cooks off.",
       "Crack in the **eggs** and stir gently through the sauce, cooking 2-3 min until softly set - keep them creamy, not dry.",
       "Season with **salt** and scatter with **parsley**; serve straight from the pan."
@@ -3036,7 +3041,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 8, cookTime: 0, difficulty: "quick",
     phases: ["menstrual", "luteal"], goal: ["maintain", "gain"],
     dietTags: ["pescatarian"], allergens: [],
-    macros: { calories: 370, protein: 28, carbs: 24, fat: 18 },
+    macros: { calories: 385, protein: 28, carbs: 27, fat: 18 },
     micros: { omega3: 2.2, calcium: 180, iron: 3 },
     servings: 1,
     equipment: ["Toaster"],
@@ -3045,13 +3050,18 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Avocado", quantity: "1/2, ripe" },
       { name: "Lemon juice", quantity: "1 tsp" },
       { name: "Canned sardines in olive oil", quantity: "1 tin (90 g), drained" },
+      { name: "Cherry tomatoes", quantity: "4, halved" },
+      { name: "Red onion", quantity: "few rings" },
+      { name: "Capers", quantity: "1 tsp" },
       { name: "Chili flakes", quantity: "1 pinch" },
+      { name: "Fresh parsley", quantity: "to garnish" },
       { name: "Salt & pepper", quantity: "to taste" }
     ],
     steps: [
       "Toast the **rye bread** until crisp.",
       "Mash the **avocado** with the **lemon juice** and a pinch of **salt & pepper**, then spread thickly over the toast.",
-      "Lay the **sardines** on top, breaking them slightly, and finish with a pinch of **chili flakes**."
+      "Lay the **sardines** on top, breaking them slightly, then scatter with **cherry tomatoes**, **red onion** rings and **capers**.",
+      "Finish with a pinch of **chili flakes** and a little **fresh parsley**."
     ],
     batchTip: "Keep a couple of tins of sardines in the cupboard - this comes together in under 5 minutes any morning.",
     substitutionTip: "Swap sardines for canned mackerel or smoked salmon; use gluten-free bread if needed."
@@ -3061,7 +3071,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 8, cookTime: 0, difficulty: "quick",
     phases: ["follicular", "ovulatory", "luteal"], goal: ["gain", "maintain"],
     dietTags: ["vegan"], allergens: ["nuts", "soy"],
-    macros: { calories: 420, protein: 26, carbs: 42, fat: 18 },
+    macros: { calories: 490, protein: 29, carbs: 45, fat: 23 },
     micros: { magnesium: 70, fibre: 8, iron: 3 },
     servings: 1,
     equipment: ["Blender"],
@@ -3071,12 +3081,14 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Peanut butter", quantity: "1 tbsp" },
       { name: "Plant milk", quantity: "1/2 cup" },
       { name: "Granola", quantity: "2 tbsp" },
-      { name: "Blueberries", quantity: "1/4 cup" }
+      { name: "Blueberries", quantity: "1/4 cup" },
+      { name: "Roasted peanuts", quantity: "1 tbsp, crushed" },
+      { name: "Chia seeds", quantity: "1 tsp" }
     ],
     steps: [
       "Blend the **frozen banana**, **protein powder**, **peanut butter** and just enough **plant milk** to move the blades - keep it thick and spoonable, not pourable.",
       "Scrape into a bowl and smooth the top.",
-      "Finish with **granola**, **blueberries** and an extra swirl of peanut butter."
+      "Finish with **granola**, **blueberries**, crushed **roasted peanuts**, a sprinkle of **chia seeds** and an extra swirl of peanut butter."
     ],
     batchTip: "Peel and freeze ripe bananas in chunks so you always have a smoothie-bowl base ready to go.",
     substitutionTip: "Use almond or sunflower butter if avoiding peanuts; any frozen berry works in place of blueberries."
@@ -3085,10 +3097,10 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "b30", name: "Cinnamon Baked Pear Oats", cuisine: "Nordic", mealType: "breakfast",
     prepTime: 5, cookTime: 25, difficulty: "easy",
     phases: ["luteal", "follicular"], goal: ["maintain", "lose"],
-    dietTags: ["vegan", "gluten-free"], allergens: [],
+    dietTags: ["vegan", "gluten-free"], allergens: ["nuts"],
     servings: 2,
     equipment: ["Baking dish", "Oven"],
-    macros: { calories: 330, protein: 8, carbs: 58, fat: 8 },
+    macros: { calories: 380, protein: 9, carbs: 59, fat: 13 },
     micros: { fibre: 9, magnesium: 55, vitaminC: 6 },
     ingredients: [
       { name: "Rolled oats", quantity: "1 cup" },
@@ -3097,11 +3109,12 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Cinnamon", quantity: "1 tsp" },
       { name: "Maple syrup", quantity: "1 tbsp" },
       { name: "Pumpkin seeds", quantity: "1 tbsp" },
+      { name: "Walnuts", quantity: "2 tbsp, chopped" },
     ],
     steps: [
       "Heat oven to 180°C. Stir **rolled oats**, **plant milk**, **cinnamon** and half the diced **pear** in a baking dish.",
       "Scatter the rest of the pear on top and bake 20-25 min until set and bubbling at the edges.",
-      "Drizzle with **maple syrup** and scatter over **pumpkin seeds** while warm.",
+      "Drizzle with **maple syrup** and scatter over **pumpkin seeds** and chopped **walnuts** while warm.",
     ],
     batchTip: "Bake in individual ramekins and refrigerate up to 3 days - reheat with a splash of milk.",
     substitutionTip: "Swap pear for apple, and pumpkin seeds for chopped walnuts if you like.",
