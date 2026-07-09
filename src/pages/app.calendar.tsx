@@ -406,9 +406,9 @@ export default function CalendarPage() {
     <div className="relative animate-fade-in">
       {/* HERO — Budget-style: soft pink gradient (no image), white title, a
           phase pill under the subtitle, and the day's stats as filter chips. */}
-      <div className="relative w-full rounded-[1.75rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-hero-border-signal"
-        style={{ background: "linear-gradient(120deg, #F472B6 0%, #EC4899 55%, #C2186E 100%)" }}>
-        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-3.5">
+      <div className="relative w-full rounded-[1.75rem] sm:rounded-[2.5rem] overflow-hidden border border-pink-200/60 shadow-xl mb-3 animate-card-pop-in"
+        style={{ background: "linear-gradient(120deg, #F472B6 0%, #EC4899 55%, #C2186E 100%)", animationDelay: "0ms" }}>
+        <div className="relative flex flex-col justify-between gap-2 px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 min-h-[120px] sm:min-h-[156px]">
           {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
