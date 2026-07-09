@@ -4,10 +4,10 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
+  CircleCheck, Circle,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
-import { PhaseSyncPill } from "@/components/bloom/PhaseSyncPill";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
@@ -310,7 +310,18 @@ function WorkoutPhaseSyncPill() {
     } catch {}
     force((t) => t + 1);
   };
-  return <PhaseSyncPill emoji={meta.emoji} label={meta.label} synced={synced} known={known} onSync={onSync} />;
+  return (
+    <button
+      onClick={onSync}
+      disabled={synced}
+      title={!known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`}
+      className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
+        synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
+    >
+      {synced ? <CircleCheck className="h-3.5 w-3.5" strokeWidth={2.4} /> : <Circle className="h-3.5 w-3.5" strokeWidth={2} />}
+      {synced ? "In sync" : "Sync"}
+    </button>
+  );
 }
 
 function HeroHeader({
@@ -1917,6 +1928,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : phase !== "any" ? `${PHASE_LABEL[phase]} phase` : "Your weekly plan"}</p>
             </div>
             <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
+            <WorkoutPhaseSyncPill />
           </div>
           {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
           {tunedGoal && !editing && (
