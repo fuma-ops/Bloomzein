@@ -16,7 +16,7 @@ import { todayISO } from "@/lib/localDate";
 import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
 import {
   getCurrentUserId,
@@ -315,6 +315,7 @@ export default function TodayPage() {
   const [showCycleSetupBanner, setShowCycleSetupBanner] = useState(false);
   const [pillTaken,           setPillTaken]           = useState(false);
   const [moodPickerOpen,      setMoodPickerOpen]      = useState(false);
+  const [affirmDismissed,     setAffirmDismissed]     = useState(false);
   const [moodHintIdx,         setMoodHintIdx]         = useState(0);
   const [workoutStreak,       setWorkoutStreak]       = useState(0);
   const [yogaStreak,          setYogaStreak]          = useState(0);
@@ -333,7 +334,12 @@ export default function TodayPage() {
   useEffect(() => {
     const iso = todayISO();
 
-    try { setMood(localStorage.getItem(KEYS.mood)); } catch {}
+    // Read today's mood from the shared log first (synced across the app),
+    // falling back to the local key.
+    try {
+      const log = JSON.parse(localStorage.getItem("bloom:mood-log-v2") || "{}");
+      setMood(log[ymdLocal(new Date())] ?? localStorage.getItem(KEYS.mood));
+    } catch { try { setMood(localStorage.getItem(KEYS.mood)); } catch {} }
     setStreak(computeBloomStreak());
 
     try {
@@ -448,6 +454,13 @@ export default function TodayPage() {
   const pickMood = (key: string) => {
     setMood(key);
     try { localStorage.setItem(KEYS.mood, key); } catch {}
+    // Sync to the ONE shared mood log so the Diary, the Me page and the bloom
+    // streak everywhere read the same value.
+    try {
+      const log = JSON.parse(localStorage.getItem("bloom:mood-log-v2") || "{}");
+      log[ymdLocal(new Date())] = key;
+      localStorage.setItem("bloom:mood-log-v2", JSON.stringify(log));
+    } catch {}
     setStreak(computeBloomStreak()); // logging today keeps the bloom streak alive
   };
 
@@ -509,7 +522,39 @@ export default function TodayPage() {
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
-  const planItems = useMemo(() => buildPlanItems(phase), [phase]);
+  // Today's Plan in the marketing order: yoga (if planned) · breakfast · lunch ·
+  // snack · workout (if planned) · dinner · journal. Meals come from the one
+  // shared weekly plan; yoga/workout appear only on days they're scheduled.
+  const planItems = useMemo<PlanItem[]>(() => {
+    const p = SHARED_PHASE_PLAN[phase];
+    const dow = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][(new Date().getDay() + 6) % 7];
+    const yogaPlanned = readYogaPlanDays().includes(dow);
+    const workoutPlanned = readWorkoutPlanDays().includes(dow);
+    const mealItem = (slot: "breakfast" | "lunch" | "snack" | "dinner"): PlanItem => {
+      const rid = todayMeals[slot];
+      const r = rid ? RECIPES.find((x) => x.id === rid) : null;
+      if (r) return {
+        id: `meal-${slot}`, label: r.name, time: MEAL_SLOT_TIME[slot], Icon: Heart,
+        tool: "/app/tools/meals", image: MEAL_PHOTO[slot],
+        blurb: `${MEAL_SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`,
+        launch: { key: LAUNCH_MEAL_KEY, val: r.id },
+      };
+      return {
+        id: `meal-${slot}`, label: `Plan your ${MEAL_SLOT_LABEL[slot].toLowerCase()}`, time: MEAL_SLOT_TIME[slot], Icon: Heart,
+        tool: "/app/tools/meals", image: MEAL_PHOTO[slot],
+        blurb: `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`,
+      };
+    };
+    const items: PlanItem[] = [];
+    if (yogaPlanned) items.push({ id: "yoga", label: p.yoga.title, time: p.yoga.time, Icon: Flower2, tool: "/app/tools/yoga", image: p.yoga.image, blurb: p.yoga.blurb, launch: { key: LAUNCH_YOGA_KEY, val: p.yoga.launch } });
+    items.push(mealItem("breakfast"));
+    items.push(mealItem("lunch"));
+    items.push(mealItem("snack"));
+    if (workoutPlanned) items.push({ id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell, tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } });
+    items.push(mealItem("dinner"));
+    items.push({ id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
+    return items;
+  }, [phase, todayMeals]);
   const moodHint  = MOODS[moodHintIdx];
   const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
   const affirmPool = AFFIRMATIONS[phase];
@@ -549,27 +594,27 @@ export default function TodayPage() {
         className="pearl-frame relative overflow-hidden -mx-3 sm:-mx-6 md:mx-0 -mt-3 sm:-mt-5 md:mt-0 rounded-b-[1.75rem] sm:rounded-b-[2.5rem] md:rounded-[2.5rem] rounded-t-none md:rounded-t-[2.5rem] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
-        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
+        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
 
-        <div className="relative z-[2] px-4 py-5 pb-14 sm:px-12 sm:py-12 sm:pb-14 w-[68%] sm:max-w-xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
+        <div className="relative z-[2] px-4 py-4 pb-11 sm:px-8 sm:py-6 sm:pb-12 w-[68%] sm:max-w-md">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
-          <h1 className="mt-2 sm:mt-3 animate-text-pop font-script text-[2rem] sm:text-7xl text-hotpink leading-tight break-words drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
+          <h1 className="mt-1.5 sm:mt-2 animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
 
-          <div className="mt-2 sm:mt-3 inline-flex items-center gap-1.5 rounded-full bg-hotpink/90 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
+          <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
             ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
           </div>
 
-          <p className="mt-2 sm:mt-4 text-xs sm:text-base text-rose/90 leading-snug max-w-xs">
+          <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-xs">
             {PHASE_QUOTES[phase]}
           </p>
 
-          <div className="mt-3 sm:mt-5 flex items-center gap-3">
+          <div className="mt-2.5 sm:mt-3.5 flex items-center gap-3">
             <button
               ref={moodTileRef}
               onClick={() => setMoodPickerOpen((v) => !v)}
@@ -579,8 +624,12 @@ export default function TodayPage() {
               className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
             >
               <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
-              {!mood && (
-                <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm">
+              {mood ? (
+                <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-white">
+                  <Check className="h-3 w-3" strokeWidth={3.5} />
+                </span>
+              ) : (
+                <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
                   <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
                 </span>
               )}
@@ -644,6 +693,18 @@ export default function TodayPage() {
 
       {/* ── MAIN COLUMN (lg:col-span-3) ─────────────────────────────────────── */}
       <div className="lg:col-span-3">
+
+      {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible ── */}
+      {!affirmDismissed && (
+        <div className="relative mt-4 sm:mt-6 flex items-center justify-center gap-2 px-8 animate-fade-in">
+          <Flower2 className="h-4 w-4 shrink-0 text-hotpink/70" strokeWidth={1.8} />
+          <p className="font-script text-lg sm:text-xl text-hotpink text-center leading-tight text-balance">{affirmText}</p>
+          <Flower2 className="h-4 w-4 shrink-0 text-hotpink/70" strokeWidth={1.8} />
+          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-0 top-0 text-rose/35 hover:text-hotpink transition">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) ───────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
@@ -722,91 +783,6 @@ export default function TodayPage() {
         <TodayEnergyStrip e={energyBalance()} />
       </section>
 
-      {/* ── 2b. TODAY'S MEALS ────────────────────────────────────────────────── */}
-      {(() => {
-        const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
-        const dietPhase  = toDietPhase(phase);
-        const phaseMicros = dietPhase ? PHASE_MICROS[dietPhase] ?? [] : [];
-        const primaryMicro = phaseMicros[0];
-        const planned = MEAL_SLOTS.filter((s) => todayMeals[s]);
-
-        return (
-          <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "75ms" }}>
-            <SectionTitle hint="nutrition">Today's Meals ✿</SectionTitle>
-            {planned.length === 0 ? (
-              <a href="/app/tools/meals" className="bloom-pearl-card pearl-sheen rounded-3xl p-4 flex items-center gap-3 transition hover:-translate-y-0.5">
-                <span className="clay-blob grid h-9 w-9 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
-                  <Heart className="h-4 w-4" strokeWidth={1.8} />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#831843]">Plan your meals ✿</p>
-                  <p className="text-[10px] text-rose/60 leading-snug">Generate a full day — breakfast, lunch, dinner & snack — for your {PHASE_LABEL[phase]} phase</p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
-              </a>
-            ) : (
-              <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
-                {planned.map((slot) => {
-                  const recipeId = todayMeals[slot];
-                  const recipe   = recipeId ? RECIPES.find((r) => r.id === recipeId) : null;
-                  if (!recipe) return null;
-                  const timing   = planItemTiming(MEAL_SLOT_TIME[slot]);
-                  const microVal = primaryMicro ? recipe.micros[primaryMicro.key] : undefined;
-                  return (
-                    <a
-                      key={slot}
-                      href="/app/tools/meals"
-                      onClick={() => writeLaunch(LAUNCH_MEAL_KEY, recipe.id)}
-                      className="flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20 active:scale-[0.99]"
-                    >
-                      {/* Meal image with slot label */}
-                      <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
-                        <img src={MEAL_PHOTO[slot]} alt="" className="h-full w-full object-cover" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-                        <p className="absolute bottom-1 left-1.5 text-[8px] font-bold uppercase tracking-wide text-white drop-shadow">
-                          {MEAL_SLOT_LABEL[slot]}
-                        </p>
-                      </div>
-                      {/* Text + nutrition */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="text-sm font-bold text-[#831843] leading-snug truncate">{recipe.name}</p>
-                          {timing === "now" && (
-                            <span className="shrink-0 rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">
-                              Now
-                            </span>
-                          )}
-                        </div>
-                        {/* Nutrition pills */}
-                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[9px] font-semibold text-rose/70 bg-blush/50 rounded-full px-2 py-0.5">
-                            {recipe.macros.calories} kcal
-                          </span>
-                          <span className="text-[9px] font-semibold text-rose/70 bg-blush/50 rounded-full px-2 py-0.5">
-                            {recipe.macros.protein}g protein
-                          </span>
-                          {microVal !== undefined && primaryMicro && (
-                            <span className="text-[9px] font-semibold text-hotpink bg-petal/40 rounded-full px-2 py-0.5">
-                              {microVal}{primaryMicro.unit} {primaryMicro.label}
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
-                          ✿ {PHASE_LABEL[phase]} phase · {MEAL_SLOT_TIME[slot]}
-                        </p>
-                      </div>
-                      <ArrowRight className="h-3.5 w-3.5 text-rose/30 shrink-0" strokeWidth={2} />
-                    </a>
-                  );
-                })}
-              </div>
-            )}
-            <a href="/app/tools/meals" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
-              Manage meals <ArrowRight className="h-3 w-3" strokeWidth={2} />
-            </a>
-          </section>
-        );
-      })()}
 
       </div>{/* /MAIN COLUMN */}
 
@@ -1035,25 +1011,6 @@ export default function TodayPage() {
           </div>
           <p className="mt-2.5 text-right font-script text-2xl sm:text-3xl text-hotpink leading-none">{waterCount}/{waterGoal}</p>
           <p className="text-right text-[10px] text-rose/60">glasses · keep going, beautiful ✿</p>
-        </div>
-      </section>
-
-      {/* ── 7. BLOOM AFFIRMATION ────────────────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 mb-4 animate-card-pop-in" style={{ animationDelay: "280ms" }}>
-        <div className="pearl-frame relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
-          <img src="/images/tools-hero-affirmation.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
-          <div className="absolute inset-0 z-[2]" style={{ background: "radial-gradient(65% 90% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.6) 45%, transparent 80%)" }} />
-          <div className="relative z-[2] flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5">
-            <div className="text-center sm:text-left">
-              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">
-                <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} fill="currentColor" /> {PHASE_LABEL[phase]} Affirmation
-              </span>
-              <p className="mt-1 font-script text-lg sm:text-2xl text-[#831843] leading-snug">"{affirmText}"</p>
-            </div>
-            <button onClick={newAffirmation} className="bloom-luxury-btn inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-white">
-              New <RefreshCw className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </button>
-          </div>
         </div>
       </section>
 
