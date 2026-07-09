@@ -567,7 +567,7 @@ export default function MealsPage() {
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
       {/* HERO — compact, matches Budget Planner height */}
-      <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+      <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-card-pop-in">
         <img src="/images/meals-hero-new.webp" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />

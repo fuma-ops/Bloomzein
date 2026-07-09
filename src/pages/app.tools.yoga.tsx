@@ -907,7 +907,7 @@ function YogaHero({
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative w-full rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
+    <div className="relative w-full rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-card-pop-in">
       <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />

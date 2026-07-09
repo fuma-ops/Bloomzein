@@ -343,7 +343,7 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[8/3] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-hero-border-signal">
+    <div className="relative w-full aspect-[8/3] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-card-pop-in">
       {broken ? (
         <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
@@ -1613,7 +1613,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
   return (
     <div className="space-y-3">
       {/* Hero — same aspect as workout, title inside */}
-      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 animate-hero-border-signal">
+      <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 animate-card-pop-in">
         <img src={HERO_IMAGES.bestShape} alt="Best Shape Calculator" className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />

@@ -977,7 +977,7 @@ export default function NotesPage() {
       </div>
 
       {/* HERO — sized to match the Read hero (compact banner) */}
-      <div className="relative w-full min-h-[152px] sm:min-h-[224px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-hero-border-signal">
+      <div className="relative w-full min-h-[152px] sm:min-h-[224px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-card-pop-in">
         <img src="/images/notes-hero.webp" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
