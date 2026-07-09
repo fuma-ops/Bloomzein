@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Cloud, Smile, Zap, Heart, Moon, Battery, type LucideIcon } from "lucide-react";
-import { readTodayMood, writeTodayMood } from "@/lib/crossToolData";
+import { readTodayMood } from "@/lib/crossToolData";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 
 /* ─── Types & persistence ─────────────────────────────────────────── */
@@ -124,6 +124,8 @@ const MOOD_DATA = [
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M13 3 6 13h4.4l-1 8 7.6-11H12l1-7Z"/></svg> },
   { name: "Sensitive", tint: "#F5C6E0",
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M12 20S4.5 15 4.5 9.8A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7.5 2.8C19.5 15 12 20 12 20Z"/></svg> },
+  { name: "Sad",       tint: "#DAD7F2",
+    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M8.8 15.2c.8-1.1 1.9-1.6 3.2-1.6s2.4.5 3.2 1.6"/><circle cx="9.4" cy="10" r=".85" fill="currentColor" stroke="none"/><circle cx="14.6" cy="10" r=".85" fill="currentColor" stroke="none"/></svg> },
   { name: "Dreamy",    tint: "#E2D2FB",
     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M20.5 14.6A7.5 7.5 0 1 1 10.8 5a6 6 0 0 0 9.7 9.6Z"/><path d="M17.5 4l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6Z"/></svg> },
   { name: "Tired",     tint: "#DAD7F2",
@@ -765,21 +767,20 @@ export default function DiaryPage() {
   const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < 860);
   const [mobile, setMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
 
-  // UI state — pre-populate mood from Today if user already logged one today
-  const [mood, setMood] = useState(() => {
+  // Mood is a single source of truth: it's chosen on the Today page and only
+  // MIRRORED here (and everywhere else). We read `bloom:today-mood` and display
+  // that exact mood — tapping the circle opens Today to change it.
+  const moodFromToday = () => {
     const todayMood = readTodayMood();
-    if (!todayMood) return "Calm";
-    const DIARY_MOODS = ["Calm","Happy","Energetic","Sensitive","Dreamy","Tired"];
-    const match = DIARY_MOODS.find((m) => m.toLowerCase() === todayMood);
-    return match ?? "Calm";
-  });
+    if (!todayMood) return null;
+    return MOOD_DATA.find((m) => m.name.toLowerCase() === todayMood)?.name ?? null;
+  };
+  const [mood, setMood] = useState(() => moodFromToday() ?? "Calm");
   const [draft, setDraft] = useState("");
   const [savedCount, setSavedCount] = useState(0);
-  const [moodOpen, setMoodOpen] = useState(false);
-  const [moodSet, setMoodSet] = useState(false);
+  const [moodSet, setMoodSet] = useState(() => !!readTodayMood());
   const [toast, setToast] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
-  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
   const [calPickerDate, setCalPickerDate] = useState<Date | null>(null);
   const [calViewMonth, setCalViewMonth] = useState(() => new Date());
   const [filterOpen, setFilterOpen] = useState(false);
@@ -802,6 +803,21 @@ export default function DiaryPage() {
   const moodTint = MOOD_DATA.find((m) => m.name === mood)?.tint ?? "#FBCFE8";
 
   useEffect(() => { saveEntries(entries); }, [entries]);
+
+  // Mirror the mood chosen on Today — live. Keeps the hero circle showing the
+  // exact same mood everywhere (updates when Today's mood changes).
+  useEffect(() => {
+    const sync = () => {
+      const name = moodFromToday();
+      if (name) { setMood(name); setMoodSet(true); }
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("bloom:today-updated", sync);
+    return () => { window.removeEventListener("storage", sync); window.removeEventListener("bloom:today-updated", sync); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const onResize = () => {
       setNarrow(window.innerWidth < 860);
@@ -871,8 +887,7 @@ export default function DiaryPage() {
     setToast(true);
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast(false), 1800);
-    // Sync diary mood → Today page so Space Stats shows the same mood
-    writeTodayMood(mood.toLowerCase());
+    // Mood is owned by Today — the diary only mirrors it, never writes it.
   };
 
   useEffect(() => () => {
@@ -983,23 +998,8 @@ export default function DiaryPage() {
       )}
 
       {/* Mood popover — rendered at root level to escape hero's backdrop-filter stacking context */}
-      {moodOpen && (
-        <>
-          <div onClick={() => setMoodOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 198 }} />
-          <div style={{ position: "fixed", top: popoverPos.top, left: popoverPos.left, zIndex: 199, background: "rgba(255,240,246,.98)", borderRadius: 20, border: "1px solid rgba(236,72,153,.2)", boxShadow: "0 16px 36px rgba(219,39,119,.24)", padding: "12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, width: 196 }}>
-            {MOOD_DATA.map((m) => {
-              const sel = m.name === mood;
-              return (
-                <button key={m.name} onClick={() => { setMood(m.name); setMoodSet(true); setMoodOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 12, border: sel ? "none" : "1px solid rgba(236,72,153,.18)", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: sel ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: sel ? "#fff" : "#9D5C7E", transition: "all .18s ease" }}>
-                  <span style={{ color: sel ? "#fff" : "#DB2777", display: "flex" }}>{m.icon}</span>
-                  {m.name}
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-
+      {/* Mood is set on Today only — no in-diary picker; the hero circle mirrors
+          Today's mood and taps through to Today to change it. */}
 
       {/* ── Hero section (title + Today's Bloom unified) ── */}
       <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
@@ -1021,15 +1021,9 @@ export default function DiaryPage() {
               )}
               <button
                 ref={moodBtnRef}
-                onClick={() => {
-                  if (moodBtnRef.current) {
-                    const r = moodBtnRef.current.getBoundingClientRect();
-                    const popW = 196;
-                    const idealLeft = r.right - popW;
-                    setPopoverPos({ top: r.bottom + 10, left: Math.min(Math.max(12, idealLeft), window.innerWidth - popW - 12) });
-                  }
-                  setMoodOpen((o) => !o);
-                }}
+                onClick={() => { window.location.href = "/app/today"; }}
+                title={moodSet ? `Today's mood: ${mood} — set it on Today` : "Set your mood on Today ✿"}
+                aria-label="Your mood, set on Today"
                 style={{ width: 46, height: 46, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,.85)", background: "linear-gradient(135deg,#F472B6,#DB2777)", display: "grid", placeItems: "center", color: "#fff", animation: "dd-mood-bounce 2.6s ease-in-out infinite", boxShadow: "0 6px 18px rgba(219,39,119,.38)", cursor: "pointer" }}
               >
                 {moodSet
