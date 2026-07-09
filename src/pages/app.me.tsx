@@ -9,6 +9,7 @@ import {
 /** Only this account sees the private admin inbox link. */
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
 import { ConsistencyDashboard } from "@/components/bloom/me/ConsistencyDashboard";
@@ -154,6 +155,7 @@ export default function MePage() {
               <span className="mt-1.5 sm:mt-2 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
                 <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2} /> Soft Soul
               </span>
+              <div className="mt-1.5"><CyclePhasePill /></div>
               {memberSince && <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs text-rose/80">Blooming since {memberSince} ✿</p>}
 
               <div className="mt-2 sm:mt-3 max-w-xs">

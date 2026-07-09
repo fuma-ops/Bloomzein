@@ -1042,12 +1042,6 @@ function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; dura
       {/* TODAY HERO + WEEK (day by day, tappable to start) */}
       <Organizer phase={phaseSuggestion.phase} onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
 
-      {/* STREAK + CYCLE SUGGESTION */}
-      <section className="grid gap-3 sm:grid-cols-2">
-        <StreakCard streak={streak} />
-        <CycleSyncCard phase={phaseSuggestion.phase} label={phaseSuggestion.label} onClick={() => onSetup({ intention: "cycle", durationMin: 20 })} />
-      </section>
-
       {/* SAFETY */}
       <p className="animate-scale-in text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5" style={{ animationDelay: "640ms" }}>
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
