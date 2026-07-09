@@ -65,7 +65,7 @@ export default function ToolsIndex() {
       <section>
         <div className="relative w-full overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-pink-200/60 animate-card-pop-in"
           style={{ animationDelay: "0ms", boxShadow: "0 16px 38px -14px oklch(0.6 0.27 350 / 0.6)" }}>
-          <img src="/images/tools-hero-bg.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
+          <img src="/images/tools-hero-bg.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-bottom" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-gradient-to-r from-magenta/55 via-hotpink/15 to-transparent" />
           {/* Floating sparkles */}
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-white/70 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
