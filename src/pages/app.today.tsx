@@ -18,7 +18,7 @@ import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays } from "@/lib/crossToolData";
-import { RECIPES, PHASE_MICROS } from "@/components/bloom/recipes/data";
+import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import {
   getCurrentUserId,
   doseConfirmToken,
@@ -183,6 +183,8 @@ const PHASE_GRADIENT: Record<Exclude<CyclePhase, "any">, string> = {
 type PlanItem = {
   id: string; label: string; time: string; Icon: typeof Heart; tool: string;
   image: string; blurb: string; prompt?: string;
+  /** Shown if `image` fails to load (e.g. a recipe photo not yet uploaded). */
+  fallback?: string;
   launch?: { key: string; val: unknown };
 };
 
@@ -537,7 +539,7 @@ export default function TodayPage() {
       const r = rid ? RECIPES.find((x) => x.id === rid) : null;
       if (r) return {
         id: `meal-${slot}`, label: r.name, time: MEAL_SLOT_TIME[slot], Icon: Heart,
-        tool: "/app/tools/meals", image: MEAL_PHOTO[slot],
+        tool: "/app/tools/meals", image: recipeImageSrc(r), fallback: MEAL_PHOTO[slot],
         blurb: `${MEAL_SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`,
         launch: { key: LAUNCH_MEAL_KEY, val: r.id },
       };
@@ -600,13 +602,13 @@ export default function TodayPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
 
-        <div className="relative z-[2] px-4 py-4 pb-11 sm:px-8 sm:py-6 sm:pb-12 w-[68%] sm:max-w-md">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
-            <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
-          </div>
-          <h1 className="mt-1.5 sm:mt-2 animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
+        <div className="relative z-[2] flex flex-col items-start px-4 py-4 pb-11 sm:px-8 sm:py-6 sm:pb-12 w-[68%] sm:max-w-md">
+          <h1 className="animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
+          <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
+            <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
+          </div>
 
           <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
             ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
@@ -746,7 +748,10 @@ export default function TodayPage() {
                 >
                   {/* Image */}
                   <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
-                    <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    <img
+                      src={item.image} alt="" className="h-full w-full object-cover" loading="lazy"
+                      onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
+                    />
                     {done && (
                       <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
                         <Check className="h-5 w-5 text-hotpink" strokeWidth={3} />
@@ -1125,7 +1130,10 @@ function PlanDetailModal({
       >
         {/* Hero image */}
         <div className="relative h-44 w-full overflow-hidden">
-          <img src={item.image} alt="" className="h-full w-full object-cover" />
+          <img
+            src={item.image} alt="" className="h-full w-full object-cover"
+            onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
           <button
             onClick={onClose}
