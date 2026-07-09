@@ -123,6 +123,9 @@
   /* --- Vintage moving horizontal lines (two-tone pink retro texture) --- */
   .animate-vintage-lines { animation: bloom-vintage-lines calc(3.4s * var(--bloom-pace)) linear infinite; }
 
+  /* --- Aurora bloom glow: soft blurred orbs that slowly drift + breathe --- */
+  .animate-bloom-aurora { animation: bloom-aurora calc(20s * var(--bloom-pace)) ease-in-out infinite; }
+
   /* Glossy bubble surface (BloomBubbles uses .bloom-bubble) */
   .bloom-bubble {
     background: radial-gradient(circle at 32% 28%,
@@ -215,6 +218,12 @@
 @keyframes bloom-vintage-lines {
   from { background-position: 0 0; }
   to   { background-position: 0 24px; }
+}
+/* Slow, dreamy drift + breathe for the aurora orbs. */
+@keyframes bloom-aurora {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(7%, -5%) scale(1.1); }
+  66%       { transform: translate(-5%, 6%) scale(0.94); }
 }
 
 /* =====================================================================

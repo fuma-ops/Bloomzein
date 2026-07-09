@@ -264,21 +264,25 @@ function loadJSON<T>(key: string, fallback: T): T {
   }
 }
 
-/** A soft, cute moving two-tone-pink horizontal-lines layer (vintage vibe).
- *  Drop it as the first child of a `relative overflow-hidden` container so it
- *  sits *inside* that section, behind its content. */
-function VintageLines({ opacity = 0.12 }: { opacity?: number }) {
+/** Aurora bloom glow — a few big, soft, blurred pink orbs that slowly drift and
+ *  breathe behind the content. Dreamy and elegant; never competes with text.
+ *  Drop it as the first child of a `relative overflow-hidden` container. */
+function AuroraGlow() {
   return (
-    <div
-      aria-hidden
-      className="animate-vintage-lines pointer-events-none absolute inset-0"
-      style={{
-        opacity,
-        backgroundImage: "linear-gradient(0deg, #EC4899 0, #EC4899 2px, transparent 2px, transparent 10px, #FF9ED2 10px, #FF9ED2 12px, transparent 12px, transparent 24px)",
-        backgroundSize: "100% 24px",
-        backgroundRepeat: "repeat",
-      }}
-    />
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <div
+        className="animate-bloom-aurora absolute -top-16 -left-10 h-56 w-56 rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(236,72,153,0.22), transparent 70%)" }}
+      />
+      <div
+        className="animate-bloom-aurora absolute top-1/4 right-[-4rem] h-72 w-72 rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(255,158,210,0.28), transparent 70%)", animationDelay: "-6s", animationDuration: "26s" }}
+      />
+      <div
+        className="animate-bloom-aurora absolute bottom-[-5rem] left-1/3 h-64 w-64 rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(251,207,232,0.5), transparent 70%)", animationDelay: "-12s", animationDuration: "30s" }}
+      />
+    </div>
   );
 }
 
@@ -566,7 +570,7 @@ function WeekView({
 }) {
   return (
     <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
-      <VintageLines />
+      <AuroraGlow />
       <div className="relative z-[1] space-y-2.5">
         {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
           <p className="text-center text-sm text-rose/60 py-6">Nothing with this in view — try another week or filter ✿</p>
@@ -629,7 +633,7 @@ function MonthGrid({
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
     <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
-      <VintageLines />
+      <AuroraGlow />
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
         {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-rose/50">{d}</p>)}
       </div>
@@ -753,7 +757,7 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
 
       {/* Plans + reminders — the big section, on the soft moving-lines backdrop */}
       <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(160deg, #FFF4FA 0%, #FFE7F2 100%)" }}>
-        <VintageLines />
+        <AuroraGlow />
         <div className="relative z-[1] space-y-3">
           {empty && (
             <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
