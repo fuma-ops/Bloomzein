@@ -1,8 +1,11 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { Sparkles, Search, Pin, ChevronRight, ArrowRight, Heart, Play } from "lucide-react";
+import { Sparkles, Search, Pin, ChevronRight } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
+import { AnimatedWords } from "@/components/bloom/AnimatedWords";
+import { readTodayAffirmation } from "@/components/bloom/affirmations";
 import { scrollToTopOf } from "@/lib/scrollToTopOf";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { isToolVisited } from "@/components/bloom/visitedTools";
@@ -19,7 +22,11 @@ function linkPropsFor(t: Tool) {
 export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+  const [affirmation, setAffirmation] = useState("");
   const heroRef = useRef<HTMLDivElement>(null);
+
+  // Echo the exact affirmation the Today page is showing (shared source).
+  useEffect(() => { try { setAffirmation(readTodayAffirmation()); } catch {} }, []);
 
   useLayoutEffect(() => {
     scrollToTopOf(heroRef.current);
@@ -61,40 +68,37 @@ export default function ToolsIndex() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      {/* HERO — title left, fitness image fills */}
+      {/* HERO — title left, dynamic vintage two-tone moving lines behind it */}
       <section ref={heroRef}>
-        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ minHeight: '11rem' }}>
-          {/* New bloom fitness image */}
-          <img
-            src="/images/tools-hero-bloom.webp" alt=""
-            className="animate-hero-breathe absolute inset-0 h-full w-full object-cover"
-            style={{ objectPosition: 'center' }}
+        <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]" style={{ minHeight: '11rem', background: 'linear-gradient(135deg,#FFF1F8 0%,#FFE1EF 60%,#FFD2E8 100%)' }}>
+          {/* Moving horizontal lines — cute clear-pink + strong-pink retro texture */}
+          <div
+            className="animate-vintage-lines absolute inset-0 opacity-60"
+            style={{
+              backgroundImage: 'linear-gradient(0deg, #EC4899 0, #EC4899 2px, transparent 2px, transparent 10px, #FF9ED2 10px, #FF9ED2 12px, transparent 12px, transparent 24px)',
+              backgroundSize: '100% 24px',
+              backgroundRepeat: 'repeat',
+            }}
           />
+          {/* Soft left vignette so the title stays crisp over the lines */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/35 to-transparent" />
           {/* Floating sparkles */}
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-white/70 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-white/55 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
-          {/* Title + subtitle + CTA stacked on the left */}
-          <div className="relative z-[4] p-5 sm:p-7 flex flex-col items-start gap-2 sm:gap-3 max-w-[58%]">
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/45 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
+          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-hotpink/35 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
+          {/* Title + subtitle stacked on the left */}
+          <div className="relative z-[4] p-5 sm:p-7 flex flex-col items-start gap-2 sm:gap-3 max-w-[62%]">
             <h1
               className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2"
-              style={{ textShadow: '0 0 20px rgba(255,255,255,1), 0 2px 8px rgba(255,255,255,0.8)' }}
+              style={{ textShadow: '0 0 20px rgba(255,255,255,1), 0 2px 8px rgba(255,255,255,0.85)' }}
             >
               Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
             </h1>
             <p
               className="text-xs sm:text-sm text-rose/90"
-              style={{ textShadow: '0 1px 6px rgba(255,255,255,0.9)' }}
+              style={{ textShadow: '0 1px 6px rgba(255,255,255,0.95)' }}
             >
               ✦ pick your bloom for today
             </p>
-            {/* "Play welcome tour" CTA — poppy pink with ctaBreathe animation */}
-            <button
-              className="bloom-luxury-btn mt-0.5 inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-xs font-semibold text-white transition active:scale-95"
-              style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
-            >
-              <Play className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="currentColor" strokeWidth={0} />
-              Play welcome tour
-            </button>
           </div>
         </div>
       </section>
@@ -128,7 +132,7 @@ export default function ToolsIndex() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {ordered.map((t, i) => (
               <ToolCard
                 key={t.slug}
@@ -143,30 +147,19 @@ export default function ToolsIndex() {
         )}
       </section>
 
-      {/* HERO — Daily Bloom Affirmation */}
-      <section className="mt-4 sm:mt-6">
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-          <img src="/images/tools-hero-affirmation.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-left" />
-          <div
-            className="absolute inset-0 z-[2]"
-            style={{ background: "radial-gradient(65% 90% at 50% 50%, oklch(1 0 0 / 0.92) 0%, oklch(1 0 0 / 0.6) 45%, transparent 80%)" }}
+      {/* DAILY AFFIRMATION — same soft flower-flanked, self-writing line as Today */}
+      {affirmation && (
+        <section className="mt-6 sm:mt-8 mb-2 flex items-center justify-center gap-2.5 sm:gap-3.5 px-6 animate-fade-in">
+          <BloomFlower size={22} petal="#EC4899" className="shrink-0 opacity-80 animate-icon-breathe" />
+          <AnimatedWords
+            key={affirmation}
+            text={affirmation}
+            stagger={95}
+            className="font-script text-xl sm:text-2xl text-hotpink text-center leading-snug text-balance"
           />
-          <div className="relative z-[2] mx-auto px-4 py-3 sm:px-8 sm:py-5 max-w-sm text-center flex flex-col items-center">
-            <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink">
-              <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2} fill="currentColor" /> Daily Bloom Affirmation
-            </span>
-            <p className="mt-1.5 sm:mt-2 font-script text-xl sm:text-3xl text-[#831843] leading-snug">"I choose myself, every single day."</p>
-
-            <a
-              href="/app/today"
-              className="bloom-luxury-btn mt-2 sm:mt-3 inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white"
-              style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
-            >
-              Read more <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.5} />
-            </a>
-          </div>
-        </div>
-      </section>
+          <BloomFlower size={22} petal="#EC4899" className="shrink-0 opacity-80 animate-icon-breathe" />
+        </section>
+      )}
     </div>
   );
 }

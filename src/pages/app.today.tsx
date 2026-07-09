@@ -19,6 +19,7 @@ import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
+import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
   getCurrentUserId,
   doseConfirmToken,
@@ -201,14 +202,6 @@ function buildPlanItems(phase: Exclude<CyclePhase, "any">): PlanItem[] {
   ];
   return items.sort((a, b) => a.time.localeCompare(b.time));
 }
-
-const AFFIRMATIONS: Record<Exclude<CyclePhase, "any">, string[]> = {
-  period:     ["Rest is a radical act of self-love.", "Your body is working hard. Let it.", "Softness is strength."],
-  follicular: ["I choose myself, every single day.", "Fresh starts live inside of me.", "What I begin today, I will grow."],
-  fertile:    ["I am magnetic. I draw what I need.", "My energy is a gift I share wisely.", "I bloom in my own time, beautifully."],
-  ovulation:  ["I am radiant — the world feels it.", "My body is wise, and I trust its rhythm.", "Every phase of my cycle has its gift."],
-  luteal:     ["I am allowed to rest without earning it.", "Being tender is a soft kind of strength.", "I move at my own gentle pace."],
-};
 
 function greeting() {
   const h = new Date().getHours();
