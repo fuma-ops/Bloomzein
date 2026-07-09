@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet } from "lucide-react";
-import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint } from "@/lib/meDashboard";
+import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint, type GoalSummary } from "@/lib/meDashboard";
 
 /* One consistency dashboard for the Me page. Every number comes from a real
    store (see meDashboard.ts). Visuals are single-hue pink (magnitude) with a
@@ -85,6 +85,71 @@ function StatTile({ Icon, value, label, sub, spark, delay }: {
         )}
       </div>
       {sub && <p className="mt-0.5 text-[10px] text-rose/55">{sub}</p>}
+    </div>
+  );
+}
+
+function WeightLine({ series }: { series: { date: string; kg: number }[] }) {
+  if (series.length < 2) return null;
+  const W = 300, H = 60, padY = 8;
+  const kgs = series.map((s) => s.kg);
+  const min = Math.min(...kgs), max = Math.max(...kgs), span = max - min || 1;
+  const stepX = W / (series.length - 1);
+  const y = (kg: number) => padY + (1 - (kg - min) / span) * (H - padY * 2);
+  const pts = series.map((s, i) => [i * stepX, y(s.kg)] as const);
+  const line = pts.map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)},${yy.toFixed(1)}`).join(" ");
+  const [lx, ly] = pts[pts.length - 1];
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-14" preserveAspectRatio="none">
+      <defs><linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.24" /><stop offset="100%" stopColor="var(--hotpink)" stopOpacity="0" /></linearGradient></defs>
+      <path d={`${line} L${W},${H} L0,${H} Z`} fill="url(#wfill)" />
+      <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={lx} cy={ly} r="3" fill="var(--magenta)" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+const GOAL_META = {
+  lose: { Icon: TrendingDown, label: "Losing weight" },
+  maintain: { Icon: Minus, label: "Maintaining" },
+  gain: { Icon: TrendingUp, label: "Building" },
+} as const;
+
+function GoalCard({ goal }: { goal: GoalSummary }) {
+  const meta = GOAL_META[goal.goal];
+  const caption = (() => {
+    if (goal.goal === "maintain") return "steady ✿";
+    if (goal.toGo != null && Math.abs(goal.toGo) < 0.1) return "goal reached ✿";
+    if (goal.toGo != null) return `${Math.abs(goal.toGo).toFixed(1)} kg to go${goal.etaWeeks ? ` · ~${goal.etaWeeks}w` : ""}`;
+    return "set a target in Diet";
+  })();
+  return (
+    <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+      <div className="flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose/60">
+          <Scale className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} /> Your goal
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold text-hotpink border border-petal/60">
+          <meta.Icon className="h-3 w-3" strokeWidth={2} /> {meta.label}
+        </span>
+      </div>
+      {goal.has && goal.current != null ? (
+        <>
+          <div className="mt-2 flex items-end gap-2">
+            <span className="font-script text-4xl leading-none text-hotpink">{goal.current}<span className="text-lg">kg</span></span>
+            {goal.target != null && <span className="mb-1 text-sm text-rose/60">→ {goal.target}kg</span>}
+            <span className="mb-1 ml-auto text-xs font-semibold text-hotpink">{caption}</span>
+          </div>
+          {goal.series.length >= 2 && <div className="mt-1.5"><WeightLine series={goal.series} /></div>}
+          {goal.goal !== "maintain" && goal.target != null && (
+            <div className="mt-2 h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${goal.pct}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="mt-2 text-xs text-rose/55 animate-pulse">Set your goal & log your weight in Diet to track progress ✿</p>
+      )}
     </div>
   );
 }
@@ -218,6 +283,11 @@ export function ConsistencyDashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Diet goal + weight progress */}
+      <div className="mt-3">
+        <GoalCard goal={data.goal} />
       </div>
 
       {/* Stat tiles — 2-up mobile, 4-up desktop */}

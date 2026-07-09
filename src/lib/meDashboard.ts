@@ -6,6 +6,7 @@
 // stamped by dailyLog.ts). Keep it that way — read stores, don't fork them.
 import { localDateISO } from "./localDate";
 import { readDailyWaterLog, DEFAULT_WATER_GOAL } from "./dailyLog";
+import { goalProjection } from "./nutritionTargets";
 
 function read<T>(key: string, fallback: T): T {
   try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : fallback; }
@@ -38,6 +39,18 @@ export interface CalendarDay {
 export interface Sparkbar { date: string; value: number }
 export interface Pillar { key: string; label: string; pct: number }
 export interface BudgetSummary { has: boolean; plan: number; spent: number; pct: number; currency: string }
+export interface GoalSummary {
+  has: boolean;
+  goal: "lose" | "maintain" | "gain";
+  current: number | null;      // kg
+  target: number | null;       // kg (null for maintain / not set)
+  startKg: number | null;      // first logged weight
+  pct: number;                 // progress toward target (0–100); 100 = maintaining/reached
+  toGo: number | null;         // kg still to go (signed)
+  etaWeeks: number | null;     // projected weeks to target when the plan pushes that way
+  onTrack: boolean;
+  series: { date: string; kg: number }[];
+}
 
 export interface MeDashboard {
   workoutsTotal: number;
@@ -53,6 +66,7 @@ export interface MeDashboard {
   hydrateRate: number;             // % of tracked days hitting the water goal
   nourishRate: number;             // % of days with ≥2 meals logged
   budget: BudgetSummary;
+  goal: GoalSummary;               // diet goal (lose/maintain/gain) + weight progress
   weight: { date: string; kg: number }[];
 }
 
@@ -176,13 +190,26 @@ export function computeMeDashboard(windowDays = 30): MeDashboard {
     currency: CURRENCY_SYMBOL[currency] ?? "$",
   };
 
-  // ── Weight trend (already dated in the diet profile) ──
-  const profile = read<{ weightHistory?: { date: string; kg: number }[] }>("bloom:diet-profile", {});
+  // ── Diet goal + weight progress (canonical: goalProjection) ──
+  const profile = read<{ goal?: string; targetWeight?: number; weight?: number; weightHistory?: { date: string; kg: number }[] }>("bloom:diet-profile", {});
   const weight = (profile?.weightHistory ?? []).filter((w) => w && w.date && typeof w.kg === "number").slice(-30);
+  const dietGoal = (profile?.goal === "lose" || profile?.goal === "gain" || profile?.goal === "maintain") ? profile.goal : "maintain";
+  const currentKg = weight.length ? weight[weight.length - 1].kg : (typeof profile?.weight === "number" ? profile.weight : null);
+  const startKg = weight.length ? weight[0].kg : currentKg;
+  const proj = goalProjection(); // null when no targetWeight set
+  const goal: GoalSummary = proj
+    ? { has: true, goal: dietGoal, current: proj.current, target: proj.target, startKg, pct: proj.pct, toGo: proj.toGo, etaWeeks: proj.etaWeeks, onTrack: dietGoal === "maintain" ? true : proj.etaWeeks != null, series: weight }
+    : {
+        has: currentKg != null || weight.length > 0,
+        goal: dietGoal, current: currentKg, target: typeof profile?.targetWeight === "number" ? profile.targetWeight : null, startKg,
+        pct: dietGoal === "maintain" ? 100 : 0,
+        toGo: typeof profile?.targetWeight === "number" && currentKg != null ? +(currentKg - profile.targetWeight).toFixed(1) : null,
+        etaWeeks: null, onTrack: dietGoal === "maintain", series: weight,
+      };
 
   return {
     workoutsTotal, yogaTotal, moveStreak, journalStreak,
     bloomScore, windowDays, pillars, mood, calendar, workoutSpark,
-    hydrateRate, nourishRate, budget, weight,
+    hydrateRate, nourishRate, budget, goal, weight,
   };
 }
