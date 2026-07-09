@@ -21,7 +21,7 @@ export function CyclePhasePill({ className = "" }: { className?: string }) {
   const phase = phaseForDay(new Date(), readCycleSettings());
   const day = cycleDayNumber();
   return (
-    <div className={["inline-flex items-center gap-1.5 rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm", className].join(" ")}>
+    <div className={["inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm", className].join(" ")}>
       ✿ Day {day} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
     </div>
   );
