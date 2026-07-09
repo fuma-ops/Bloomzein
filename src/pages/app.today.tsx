@@ -621,11 +621,7 @@ export default function TodayPage() {
               className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
             >
               <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
-              {mood ? (
-                <span className="absolute -top-1 -right-1 text-hotpink drop-shadow-[0_1px_2.5px_oklch(1_0_0/0.95)]">
-                  <Check className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={4} />
-                </span>
-              ) : (
+              {!mood && (
                 <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
                   <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
                 </span>
@@ -637,8 +633,9 @@ export default function TodayPage() {
               </p>
               <p
                 key={mood ?? `hint-${moodHintIdx}`}
-                className={["font-script text-lg leading-tight animate-fade-in", mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
+                className={["font-script text-lg leading-tight animate-fade-in inline-flex items-center gap-1", mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
               >
+                {mood && <Check className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={3.5} />}
                 {mood ? MOOD_LABEL[mood] : moodHint.label}
               </p>
             </div>
