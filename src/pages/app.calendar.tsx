@@ -7,7 +7,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/bloom/PageHeader";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import {
   PHASE_META, type Phase,
 } from "@/components/bloom/CycleTracker";
@@ -26,6 +25,7 @@ import {
   WORKOUT_LOG_KEY, type HistoryEntry,
 } from "./app.tools.workout";
 import { MEALS_PLAN_KEY } from "./app.tools.meals";
+import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { TODAY_WATER_KEY } from "./app.today";
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
@@ -99,6 +99,16 @@ function eventCategoryToCal(cat: string): string {
   if (cat === "vacation") return "vacation";
   if (cat === "social") return "selfcare";
   return "appointment";
+}
+
+/** A filter chip may cover several item categories (e.g. "reminder" covers
+ *  medication reminders, appointments and birthdays — all from the Reminders
+ *  tool). This maps a chip key to the categories it should match. */
+const FILTER_GROUPS: Record<string, string[]> = {
+  reminder: ["reminder", "appointment", "birthday"],
+};
+function filterMatch(category: string, filter: string): boolean {
+  return (FILTER_GROUPS[filter] ?? [filter]).includes(category);
 }
 
 function phaseItemsForDate(date: Date): PlanningItem[] {
@@ -240,7 +250,7 @@ function loadJSON<T>(key: string, fallback: T): T {
 }
 
 export default function CalendarPage() {
-  const [view, setView] = useState<"month" | "week" | "list">("month");
+  const [view, setView] = useState<"month" | "week" | "today">("month");
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState<Date | null>(null);
   const [hiddenCats, setHiddenCats] = useState<Set<string>>(new Set());
@@ -308,7 +318,7 @@ export default function CalendarPage() {
       if (items.some((i) => i.category === "workout")) workouts++;
       if (items.some((i) => i.category === "yoga")) yogaCount++;
       if (items.some((i) => i.category === "journal")) journalCount++;
-      reminderCount += items.filter((i) => i.category === "reminder").length;
+      reminderCount += items.filter((i) => filterMatch(i.category, "reminder")).length;
     }
     let vacation: { start: Date; end: Date } | null = null;
     for (const rem of reminders) {
@@ -354,7 +364,6 @@ export default function CalendarPage() {
 
   return (
     <div className="relative animate-fade-in">
-      <BloomBubbles count={14} />
       <PageHeader title="Bloom Calendar" emoji={<CalendarDays className="inline h-7 w-7 text-hotpink align-middle" />}>
         <div className="flex items-center gap-2">
           <button
@@ -383,7 +392,7 @@ export default function CalendarPage() {
           {rangeLabel} <ChevronDown className="h-3.5 w-3.5 opacity-50" />
         </p>
         <div className="inline-flex rounded-full bg-white/80 border border-petal/60 p-1 shadow-sm">
-          {(["month", "week", "list"] as const).map((v) => (
+          {(["month", "week", "today"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -417,14 +426,14 @@ export default function CalendarPage() {
           onSelect={setSelected}
         />
       )}
-      {view === "list" && (
-        <ListView
-          cursor={cursor}
+      {view === "today" && (
+        <TodayView
           today={today}
-          planningFor={planningFor}
-          hiddenCats={hiddenCats}
-          activeFilter={activeFilter}
-          onSelect={setSelected}
+          mealsPlan={mealsPlan}
+          reminders={reminders}
+          yogaSchedule={yogaSchedule}
+          yogaReminder={yogaReminder}
+          history={history}
         />
       )}
 
@@ -521,11 +530,15 @@ function WeekView({
   return (
     <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
       <div className="space-y-2.5">
+        {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
+          <p className="text-center text-sm text-rose/60 py-6">Nothing with this in view — try another week or filter ✿</p>
+        )}
         {days.map((day, i) => {
           const phase = phaseForDay(day, readCycleSettings());
           const allItems = planningFor(day).filter((it) => !hiddenCats.has(it.category));
-          const matches = !activeFilter || allItems.some((it) => it.category === activeFilter);
-          const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
+          const matches = !activeFilter || allItems.some((it) => filterMatch(it.category, activeFilter));
+          if (activeFilter && !matches) return null; // show only days that have this item
+          const items = activeFilter ? allItems.filter((it) => filterMatch(it.category, activeFilter)) : allItems;
           const mood = moodFor(day);
           const isToday = sameDay(day, today);
           return (
@@ -534,7 +547,7 @@ function WeekView({
               onClick={() => onSelect(day)}
               className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
                 isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50",
-                activeFilter ? (matches ? "ring-2 ring-hotpink/50" : "opacity-30 grayscale") : ""].join(" ")}
+                activeFilter ? "ring-2 ring-hotpink/50" : ""].join(" ")}
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <div className="flex items-center gap-2 flex-wrap">
@@ -588,8 +601,8 @@ function MonthGrid({
           const isToday = sameDay(cell.date, today);
           const isVacation = allItems.some((it) => it.category === "vacation");
           const cellTone = isVacation ? CATEGORY_META.vacation.cell : CATEGORY_META[phase]?.cell;
-          const matches = !activeFilter || allItems.some((it) => it.category === activeFilter);
-          const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
+          const matches = !activeFilter || allItems.some((it) => filterMatch(it.category, activeFilter));
+          const items = activeFilter ? allItems.filter((it) => filterMatch(it.category, activeFilter)) : allItems;
 
           return (
             <button
@@ -598,7 +611,7 @@ function MonthGrid({
               className={["min-h-[60px] sm:min-h-[78px] lg:min-h-[110px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 lg:p-2 gap-0.5 lg:gap-1 text-left transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
                 cellTone ?? "bg-white/60 border-petal/30",
                 cell.inMonth ? "" : "opacity-40",
-                activeFilter ? (matches ? "ring-2 ring-hotpink/50" : "opacity-25 grayscale") : ""].join(" ")}
+                activeFilter ? (matches ? "ring-2 ring-hotpink/60 shadow-md shadow-hotpink/20" : "opacity-15 grayscale") : ""].join(" ")}
               style={{ animationDelay: `${i * 0.015}s` }}
             >
               <span className={["text-[10px] sm:text-xs lg:text-sm font-bold leading-none shrink-0",
@@ -630,61 +643,101 @@ function MonthGrid({
   );
 }
 
-function ListView({
-  cursor, today, planningFor, hiddenCats, activeFilter, onSelect,
-}: {
-  cursor: Date;
-  today: Date;
-  planningFor: (d: Date) => PlanningItem[];
-  hiddenCats: Set<string>;
-  activeFilter: string | null;
-  onSelect: (d: Date) => void;
+/** Today view — a detailed, image-rich look at everything planned for today:
+ *  yoga, each planned meal (with macros), workout session details, reminders,
+ *  and the day's planned calories. */
+function TodayCard({ href, image, Icon, label, title, meta }: {
+  href: string; image: string; Icon: LucideIcon; label: string; title: string; meta: string;
 }) {
-  const days = useMemo(() => {
-    const year = cursor.getFullYear(), month = cursor.getMonth();
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    const result: { date: Date; items: PlanningItem[] }[] = [];
-    for (let d = 1; d <= totalDays; d++) {
-      const date = new Date(year, month, d);
-      const allItems = planningFor(date).filter((it) => !hiddenCats.has(it.category));
-      const items = activeFilter ? allItems.filter((it) => it.category === activeFilter) : allItems;
-      if (items.length) result.push({ date, items });
-    }
-    return result;
-  }, [cursor, planningFor, hiddenCats, activeFilter]);
+  return (
+    <a href={href} className="flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-3.5 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/10">
+      <div className="relative shrink-0 h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl">
+        <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+        <p className="absolute bottom-1 left-1.5 text-[8px] font-bold uppercase tracking-wide text-white drop-shadow">{label}</p>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug">{title}</p>
+        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/65">{meta}</p>
+      </div>
+      <Icon className="h-4 w-4 text-hotpink/50 shrink-0" strokeWidth={2} />
+    </a>
+  );
+}
+
+function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, history }: {
+  today: Date;
+  mealsPlan: Record<string, Record<string, string | null>>;
+  reminders: Reminder[];
+  yogaSchedule: Record<string, string | null>;
+  yogaReminder: string;
+  history: HistoryEntry[];
+}) {
+  const dayName = mondayFirstLabel(today);
+  const dayPlan = mealsPlan[dayName] || {};
+  const SLOT_LABEL: Record<string, string> = { breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner" };
+  const SLOT_TIME: Record<string, string> = { breakfast: "08:00", lunch: "13:00", snack: "16:00", dinner: "19:30" };
+  const meals = (["breakfast", "lunch", "snack", "dinner"] as const)
+    .map((slot) => { const rid = dayPlan[slot]; const r = rid ? RECIPES.find((x) => x.id === rid) : null; return r ? { slot, r } : null; })
+    .filter((m): m is { slot: "breakfast" | "lunch" | "snack" | "dinner"; r: (typeof RECIPES)[number] } => !!m);
+  const plannedCalories = meals.reduce((s, m) => s + m.r.macros.calories, 0);
+  const yogaFocus = yogaSchedule[dayName];
+  const workouts = history.filter((h) => h.date === fmtLocalDate(today));
+  const todayReminders = remindersForDate(reminders, today);
+  const empty = !meals.length && !yogaFocus && !workouts.length && !todayReminders.length;
 
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
-      {days.length === 0 ? (
-        <p className="text-center text-sm text-rose/60 py-8">Nothing planned this month yet ✿</p>
-      ) : (
-        <div className="space-y-2.5">
-          {days.map(({ date, items }, i) => {
-            const isToday = sameDay(date, today);
-            return (
-              <button
-                key={fmtLocalDate(date)}
-                onClick={() => onSelect(date)}
-                className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
-                  isToday ? "bg-blush/50 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/70 border-petal/50",
-                  activeFilter ? "ring-2 ring-hotpink/50" : ""].join(" ")}
-                style={{ animationDelay: `${i * 0.05}s` }}
-              >
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-bold",
-                    isToday ? "bg-hotpink text-white" : "bg-blush/70 text-rose"].join(" ")}>
-                    {date.getDate()}
-                  </span>
-                  <span className="text-xs font-bold uppercase tracking-wide text-rose/70">
-                    {date.toLocaleDateString(undefined, { weekday: "short", month: "short" })}
-                  </span>
+    <section className="space-y-3.5">
+      {/* Header with planned calories */}
+      <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">{today.toLocaleDateString(undefined, { weekday: "long" })}</p>
+          <h3 className="font-script text-3xl text-hotpink leading-none">{MONTHS[today.getMonth()]} {today.getDate()}</h3>
+        </div>
+        {plannedCalories > 0 && (
+          <div className="text-center rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-1.5">
+            <p className="font-script text-2xl text-hotpink leading-none">{plannedCalories}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60">kcal planned</p>
+          </div>
+        )}
+      </div>
+
+      {empty && (
+        <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
+          Nothing planned today yet — open your tools to fill the day ✿
+        </div>
+      )}
+
+      {yogaFocus && (
+        <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" Icon={PersonStanding} label="Yoga" title={`${yogaFocus} flow`} meta={`${yogaReminder} · gentle movement`} />
+      )}
+
+      {meals.map(({ slot, r }) => (
+        <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} Icon={Soup}
+          label={SLOT_LABEL[slot]} title={r.name}
+          meta={`${SLOT_TIME[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
+      ))}
+
+      {workouts.map((w, i) => (
+        <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" Icon={Dumbbell}
+          label="Workout" title={w.sessionName || "Workout"}
+          meta={`${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
+      ))}
+
+      {todayReminders.length > 0 && (
+        <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
+          <div className="space-y-2">
+            {todayReminders.map((it) => (
+              <a key={it.id} href={it.sourceHref} className="flex items-center gap-2.5 rounded-2xl bg-blush/40 border border-petal/50 p-2.5 hover:bg-blush/60 transition">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white text-base">{it.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#831843] truncate">{it.label}</p>
+                  {it.time && <p className="text-[11px] text-rose/60">{it.time}</p>}
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5 pl-11">
-                  {items.map((item) => <ItemChip key={item.id} item={item} />)}
-                </div>
-              </button>
-            );
-          })}
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </section>

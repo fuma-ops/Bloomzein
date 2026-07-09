@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronUp, AlarmClock, Star,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
@@ -315,6 +316,7 @@ export default function TodayPage() {
   const [showCycleSetupBanner, setShowCycleSetupBanner] = useState(false);
   const [pillTaken,           setPillTaken]           = useState(false);
   const [moodPickerOpen,      setMoodPickerOpen]      = useState(false);
+  const [activePlan,          setActivePlan]          = useState<PlanItem | null>(null);
   const [affirmDismissed,     setAffirmDismissed]     = useState(false);
   const [moodHintIdx,         setMoodHintIdx]         = useState(0);
   const [workoutStreak,       setWorkoutStreak]       = useState(0);
@@ -625,8 +627,8 @@ export default function TodayPage() {
             >
               <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
               {mood ? (
-                <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-white">
-                  <Check className="h-3 w-3" strokeWidth={3.5} />
+                <span className="absolute -top-1 -right-1 text-hotpink drop-shadow-[0_1px_2.5px_oklch(1_0_0/0.95)]">
+                  <Check className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={4} />
                 </span>
               ) : (
                 <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
@@ -672,6 +674,15 @@ export default function TodayPage() {
         triggerRef={moodTileRef}
       />
 
+      {/* PlanDetailModal — centred on every device, opened by tapping a plan item */}
+      <PlanDetailModal
+        item={activePlan}
+        phase={phase}
+        done={activePlan ? planDone.includes(activePlan.id) : false}
+        onToggleDone={() => { if (activePlan) togglePlanItem(activePlan.id); }}
+        onClose={() => setActivePlan(null)}
+      />
+
       {/* ── CYCLE SETUP NUDGE ─────────────────────────────────────────────────── */}
       {showCycleSetupBanner && (
         <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
@@ -694,12 +705,18 @@ export default function TodayPage() {
       {/* ── MAIN COLUMN (lg:col-span-3) ─────────────────────────────────────── */}
       <div className="lg:col-span-3">
 
-      {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible ── */}
+      {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
+             Flanked by two logo flowers; the words softly self-write on open. ── */}
       {!affirmDismissed && (
-        <div className="relative mt-4 sm:mt-6 flex items-center justify-center gap-2 px-8 animate-fade-in">
-          <Flower2 className="h-4 w-4 shrink-0 text-hotpink/70" strokeWidth={1.8} />
-          <p className="font-script text-lg sm:text-xl text-hotpink text-center leading-tight text-balance">{affirmText}</p>
-          <Flower2 className="h-4 w-4 shrink-0 text-hotpink/70" strokeWidth={1.8} />
+        <div className="relative mt-4 sm:mt-6 flex items-center justify-center gap-2.5 sm:gap-3.5 px-9 animate-fade-in">
+          <BloomFlower className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 text-hotpink/80 animate-icon-breathe" />
+          <AnimatedWords
+            key={affirmText}
+            text={affirmText}
+            stagger={95}
+            className="font-script text-xl sm:text-2xl text-hotpink text-center leading-snug text-balance"
+          />
+          <BloomFlower className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 text-hotpink/80 animate-icon-breathe" />
           <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-0 top-0 text-rose/35 hover:text-hotpink transition">
             <X className="h-3.5 w-3.5" />
           </button>
@@ -717,59 +734,62 @@ export default function TodayPage() {
             const done   = planDone.includes(item.id);
             const timing = planItemTiming(item.time);
             return (
-              <a
+              <div
                 key={item.id}
-                href={item.tool}
-                onClick={() => {
-                  if (item.launch) writeLaunch(item.launch.key, item.launch.val);
-                  if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
-                }}
-                className="flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20 active:bg-blush/40 active:scale-[0.99]"
+                className="relative flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                {/* Image */}
-                <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
-                  <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
-                  {done && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-                      <Check className="h-5 w-5 text-hotpink" strokeWidth={3} />
-                    </div>
-                  )}
-                </div>
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className={["text-sm font-bold leading-snug", done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>
-                      {item.label}
-                    </p>
-                    {timing === "now" && (
-                      <span className="rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">
-                        Now
-                      </span>
-                    )}
-                  </div>
-                  <p className={["mt-0.5 text-[10px] sm:text-[11px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/55"].join(" ")}>{item.prompt ? `"${item.blurb}"` : item.blurb}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    {item.time && (
-                      <span className="text-[9px] font-semibold text-rose/40">{item.time}</span>
-                    )}
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
-                      ✿ {PHASE_LABEL[phase]} phase
-                    </span>
-                  </div>
-                </div>
-                {/* Checkbox */}
+                {/* Tapping the image / text opens a centred detail popup */}
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePlanItem(item.id); }}
-                  aria-label={done ? "Mark as not done" : "Mark as done"}
-                  className={[
-                    "shrink-0 grid h-7 w-7 place-items-center rounded-full border-2 transition active:scale-90",
-                    done ? "bg-hotpink border-hotpink text-white" : "border-petal text-transparent hover:border-hotpink/60",
-                  ].join(" ")}
+                  onClick={() => setActivePlan(item)}
+                  className="flex flex-1 min-w-0 items-center gap-3 sm:gap-4 text-left transition active:scale-[0.99]"
                 >
-                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                  {/* Image */}
+                  <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl">
+                    <img src={item.image} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    {done && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+                        <Check className="h-5 w-5 text-hotpink" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className={["text-sm font-bold leading-snug", done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>
+                        {item.label}
+                      </p>
+                      {timing === "now" && (
+                        <span className="rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">
+                          Now
+                        </span>
+                      )}
+                    </div>
+                    <p className={["mt-0.5 text-[10px] sm:text-[11px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/55"].join(" ")}>{item.prompt ? `"${item.blurb}"` : item.blurb}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {item.time && (
+                        <span className="text-[9px] font-semibold text-rose/40">{item.time}</span>
+                      )}
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
+                        ✿ {PHASE_LABEL[phase]} phase
+                      </span>
+                    </div>
+                  </div>
                 </button>
-              </a>
+                {/* Soft, always-alive CTA — a rapid deep-link straight into the tool */}
+                <a
+                  href={item.tool}
+                  onClick={() => {
+                    if (item.launch) writeLaunch(item.launch.key, item.launch.val);
+                    if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
+                  }}
+                  aria-label={`Open ${item.label}`}
+                  title="Open tool"
+                  className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow hover:bg-hotpink hover:text-white transition active:scale-90"
+                >
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                </a>
+              </div>
             );
           })}
         </div>
@@ -1052,6 +1072,117 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
       <h2 className="font-script text-3xl sm:text-4xl text-hotpink">{children}</h2>
       {hint && <span className="text-xs text-rose/60 pb-1">{hint}</span>}
     </div>
+  );
+}
+
+/** The Bloomzein logo flower (6 petals + soft centre), tinted via currentColor. */
+function BloomFlower({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 512 512" className={className} aria-hidden="true">
+      <g fill="currentColor">
+        {[0, 60, 120, 180, 240, 300].map((deg) => (
+          <ellipse key={deg} cx="256" cy="161" rx="46" ry="92" transform={`rotate(${deg} 256 256)`} />
+        ))}
+      </g>
+      <circle cx="256" cy="256" r="42" fill="#FFD9EC" />
+    </svg>
+  );
+}
+
+/**
+ * PlanDetailModal — a soft, centred popup with the full detail of a plan item.
+ * Portaled to <body> so it is perfectly centred on every device size, matching
+ * the Calendar day popup. Carries the item's primary "open tool" CTA plus a
+ * gentle "mark done" toggle so the row itself stays tap-to-preview.
+ */
+function PlanDetailModal({
+  item, phase, done, onToggleDone, onClose,
+}: {
+  item: PlanItem | null;
+  phase: Exclude<CyclePhase, "any">;
+  done: boolean;
+  onToggleDone: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!item) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [item, onClose]);
+
+  if (!item) return null;
+  const timing = planItemTiming(item.time);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-rose/30 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-white/95 backdrop-blur-xl shadow-2xl shadow-hotpink/30 animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Hero image */}
+        <div className="relative h-44 w-full overflow-hidden">
+          <img src={item.image} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/85 text-rose hover:bg-white transition active:scale-90"
+          >
+            <X className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+          <div className="absolute bottom-3 left-4 right-4">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {item.time && (
+                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink">{item.time}</span>
+              )}
+              {timing === "now" && (
+                <span className="rounded-full bg-hotpink px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Now</span>
+              )}
+              <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/80">✿ {PHASE_LABEL[phase]}</span>
+            </div>
+            <h3 className="mt-1.5 font-script text-2xl text-white leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">{item.label}</h3>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-5">
+          <p className={["text-sm leading-relaxed", item.prompt ? "italic text-hotpink/80" : "text-rose/70"].join(" ")}>
+            {item.prompt ? `“${item.blurb}”` : item.blurb}
+          </p>
+
+          <div className="mt-5 flex items-center gap-2.5">
+            {/* Primary CTA — open the tool (carries the deep-link launch) */}
+            <a
+              href={item.tool}
+              onClick={() => {
+                if (item.launch) writeLaunch(item.launch.key, item.launch.val);
+                if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
+              }}
+              className="bloom-luxury-btn flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-white animate-selected-glow"
+            >
+              Open <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            </a>
+            {/* Gentle mark-done toggle */}
+            <button
+              onClick={onToggleDone}
+              aria-pressed={done}
+              aria-label={done ? "Mark as not done" : "Mark as done"}
+              className={[
+                "shrink-0 grid h-12 w-12 place-items-center rounded-2xl border-2 transition active:scale-90",
+                done ? "bg-hotpink border-hotpink text-white" : "border-petal text-hotpink/40 hover:border-hotpink/60",
+              ].join(" ")}
+            >
+              <Check className="h-5 w-5" strokeWidth={3} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
