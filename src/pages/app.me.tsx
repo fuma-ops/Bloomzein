@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
-  Pencil, Sparkles, Wallet,
-  Flower2, ChevronRight,
+  Sparkles, Wallet,
+  ChevronRight,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
   Check, Inbox,
 } from "lucide-react";
@@ -11,6 +11,8 @@ const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
+import { ConsistencyDashboard } from "@/components/bloom/me/ConsistencyDashboard";
+import { stampTodayWater } from "@/lib/dailyLog";
 
 // ── Real data helpers ─────────────────────────────────────────────────────────
 function readJSON<T>(key: string, fb: T): T {
@@ -113,6 +115,7 @@ export default function MePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [favs, setFavs] = useState<{ items: FavItem[]; isReal: boolean }>({ items: CURATED_READS, isReal: false });
   useEffect(() => {
+    stampTodayWater(); // keep the hydration history current for the dashboard
     setStats(computeMeStats());
     setFavs(readFavorites());
   }, []);
@@ -142,9 +145,6 @@ export default function MePage() {
                 className="relative h-16 w-16 sm:h-28 sm:w-28 rounded-full border-2 sm:border-4 border-white object-cover shadow-xl shadow-hotpink/30"
                 referrerPolicy="no-referrer"
               />
-              <button onClick={() => setEditOpen(true)} aria-label="Edit profile" className="absolute -bottom-1 -right-1 grid h-6 w-6 sm:h-8 sm:w-8 place-items-center rounded-full bg-white text-hotpink border border-petal/60 shadow-md transition hover:scale-105 active:scale-95">
-                <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={1.8} />
-              </button>
             </div>
 
             <div className="flex-1 min-w-0">
@@ -166,20 +166,13 @@ export default function MePage() {
                 </div>
                 <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70">{100 - (stats?.pct ?? 0)}% to next bloom</p>
               </div>
-
-              <button onClick={() => setEditOpen(true)} className="mt-2.5 sm:mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold text-hotpink shadow-md transition hover:bg-white hover:-translate-y-0.5 active:scale-95">
-                <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={1.8} /> Edit profile
-              </button>
-            </div>
-
-            <div className="hidden sm:flex shrink-0 items-center justify-center">
-              <div className="clay-blob pearl-sheen animate-icon-breathe grid h-24 w-24 sm:h-32 sm:w-32 place-items-center rounded-full text-white">
-                <Flower2 className="h-12 w-12 sm:h-16 sm:w-16 drop-shadow-[0_2px_4px_oklch(0.4_0.22_350/0.3)]" strokeWidth={1.5} />
-              </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* CONSISTENCY DASHBOARD */}
+      <ConsistencyDashboard />
 
       {/* FAVORITES */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
