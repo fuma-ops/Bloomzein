@@ -922,7 +922,7 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   currency: CurrencyKey;
   income: number;
 }) {
-  const R = 44, ri = 22, cx = 56, cy = 56;
+  const R = 50, ri = 40, cx = 56, cy = 56;
   const hasExtra = totalOverage > 0;
   const total = totalPlanned + totalOverage;
   const isOverIncome = income > 0 && total > income;
@@ -945,8 +945,29 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   const extraColor   = isOverIncome ? "#F87171" : "#F9A8D4";
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <svg viewBox="0 0 112 112" width="108" height="108">
+    <div className="flex items-center justify-center gap-6 sm:gap-9">
+      {/* Legend stacked on the left — PLANNED over EXTRA, matched sizes */}
+      <div className="flex flex-col gap-4">
+        <div className="text-left">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
+          </div>
+          <p className={`text-xl font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
+        </div>
+        <div className="text-left">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
+            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
+          </div>
+          <p className={`text-xl font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
+            {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
+          </p>
+        </div>
+      </div>
+
+      {/* Bigger, thinner ring on the right — center figure now clearly readable */}
+      <svg viewBox="0 0 112 112" width="128" height="128" className="shrink-0">
         {/* planned slice — full ring when no extra (arc degenerates at 2π), arc otherwise */}
         {!hasExtra ? (
           <circle cx={cx} cy={cy} r={(R + ri) / 2} fill="none"
@@ -961,45 +982,27 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
         {/* center label */}
         {isOverIncome ? (
           <>
-            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EF4444" fontWeight="700">
+            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#EF4444" fontWeight="700">
               −{fmt(Math.abs(income - total), currency)}
             </text>
-            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#EF4444">over income ⚠</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#EF4444">over income ⚠</text>
           </>
         ) : hasExtra ? (
           <>
-            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#EC4899" fontWeight="700">
+            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#EC4899" fontWeight="700">
               +{fmt(totalOverage, currency)}
             </text>
-            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#9D5C7E">over budget</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">over budget</text>
           </>
         ) : (
           <>
-            <text x={cx} y={cy - 5} textAnchor="middle" fontSize="7.5" fill="#831843" fontWeight="700">
+            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#831843" fontWeight="700">
               {fmt(totalPlanned, currency)}
             </text>
-            <text x={cx} y={cy + 7} textAnchor="middle" fontSize="5.5" fill="#9D5C7E">on budget ✓</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">on budget ✓</text>
           </>
         )}
       </svg>
-      <div className="flex gap-8 justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
-            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
-          </div>
-          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
-        </div>
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
-            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
-          </div>
-          <p className={`text-lg font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
-            {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
