@@ -4,7 +4,7 @@ import {
   Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
-  ChevronDown, AlarmClock, Star, Activity,
+  ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -98,6 +98,16 @@ const MOODS = [
 const MOOD_LABEL: Record<string, string> = {
   calm: "Calm", happy: "Happy", energetic: "Energetic", sensitive: "Sensitive", sad: "Sad", tired: "Tired",
 };
+
+// When nothing is planned yet, Today's Plan becomes a little "how it all syncs"
+// menu instead of empty placeholders — so she understands what each tool does
+// and how they connect (goal → every tool, phase, programs).
+const PLAN_SETUP = [
+  { title: "Set your goal in Diet",  desc: "Pick a goal once and every tool balances your energy around it.",          href: "/app/tools/diet",    Icon: Apple },
+  { title: "Plan your meals",        desc: "Set a goal and we plan your week — synced to your phase, workouts & yoga.", href: "/app/tools/meals",   Icon: UtensilsCrossed },
+  { title: "Plan your workouts",     desc: "Phase-matched, freestyle or a program — and fuel it from your meals.",      href: "/app/tools/workout", Icon: Dumbbell },
+  { title: "Flow with yoga",         desc: "Sync to your phase, freestyle, or follow a soft program.",                  href: "/app/tools/yoga",    Icon: Flower2 },
+] as const;
 
 
 // ── Bloom streak ─────────────────────────────────────────────────────────────
@@ -283,7 +293,11 @@ export default function TodayPage() {
   const movementPlanned = useMemo(hasMovementPlan, []);
   // Today's Plan only appears once she's begun building her world — a brand-new
   // (or freshly reset) user sees the setup checklist instead of a placeholder plan.
-  const showPlan        = cycleReady || mealPlanned || movementPlanned;
+  // Real plan only once she's actually planned meals or movement. If she's set
+  // up her cycle but planned nothing yet, Today's Plan turns into a "how it syncs"
+  // setup menu instead of empty placeholders. A brand-new user (no cycle) sees
+  // neither — the "Build your Bloom world" checklist guides her first.
+  const hasPlanContent  = mealPlanned || movementPlanned;
   const cycleSettings   = useMemo(readCycleSettings, []);
   const pillLabel       = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
   const displayName     = profile?.name?.split(" ")[0] || "Beautiful";
@@ -813,9 +827,35 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) — only once she's begun setting
-             up (cycle, meals or movement); a fresh user gets the checklist instead. ── */}
-      {showPlan && (
+      {/* ── 2. TODAY'S BLOOM PLAN — the real plan once she's planned meals/movement;
+             a "how it all syncs" setup menu once her cycle's set but nothing's
+             planned; nothing at all for a brand-new user (the checklist guides her). ── */}
+      {!hasPlanContent && cycleReady && (
+        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
+          <SectionTitle>Today's Plan ✿</SectionTitle>
+          <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
+            Nothing planned yet — set up a tool and Today fills itself. Everything syncs to your <span className="font-bold text-hotpink">goal</span> &amp; <span className="font-bold text-hotpink">phase</span> ✿
+          </p>
+          <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
+            {PLAN_SETUP.map((t, i) => (
+              <a key={t.href} href={t.href} className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5 transition hover:bg-blush/20 active:scale-[0.99]" style={{ animationDelay: `${i * 60}ms` }}>
+                <span className="clay-blob pearl-sheen grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white">
+                  <t.Icon className="h-5 w-5" strokeWidth={1.8} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-[#831843] leading-tight">{t.title}</p>
+                  <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{t.desc}</p>
+                </div>
+                <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow">
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {hasPlanContent && (
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle>Today's Plan ✿</SectionTitle>
         <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
