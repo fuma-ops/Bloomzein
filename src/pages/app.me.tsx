@@ -15,6 +15,7 @@ import { RECIPES } from "@/components/bloom/recipes/data";
 import { ConsistencyDashboard } from "@/components/bloom/me/ConsistencyDashboard";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
+import { resetEverything } from "@/lib/crossToolData";
 
 // ── Real data helpers ─────────────────────────────────────────────────────────
 function readJSON<T>(key: string, fb: T): T {
@@ -73,7 +74,7 @@ function readFavorites(): { items: FavItem[]; isReal: boolean } {
   };
 }
 
-type SettingAction = "edit" | "logout" | "replay";
+type SettingAction = "edit" | "logout" | "replay" | "reset";
 type SettingItem = { Icon: typeof User; label: string; href?: string; action?: SettingAction; soon?: boolean };
 const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
   {
@@ -87,7 +88,13 @@ const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
       { Icon: RotateCcw, label: "Replay welcome tour", action: "replay" },
     ],
   },
-  { items: [{ Icon: LogOut, label: "Log out", action: "logout" }], danger: true },
+  {
+    items: [
+      { Icon: RotateCcw, label: "Start fresh — reset my whole world", action: "reset" },
+      { Icon: LogOut, label: "Log out", action: "logout" },
+    ],
+    danger: true,
+  },
 ];
 
 export default function MePage() {
@@ -110,6 +117,17 @@ export default function MePage() {
       localStorage.removeItem("bloomzein_visited_tools");
     } catch {}
     await updateProfile({ setup_done: false });
+    window.location.href = "/app/today";
+  }
+
+  // Wipes every on-device Bloom key so Today (and every tool) shows the true
+  // brand-new-user experience — nothing pre-filled, ready to set up from scratch.
+  function resetWorld() {
+    const ok = window.confirm(
+      "Start fresh? This clears your cycle, meals, movement, mood, water, budget and every tool's data on this device so you can set up your Bloom world from scratch. This can't be undone."
+    );
+    if (!ok) return;
+    resetEverything();
     window.location.href = "/app/today";
   }
 
@@ -251,6 +269,7 @@ export default function MePage() {
                 if (item.href) return <a key={item.label} href={item.href} className={cls}>{inner}</a>;
                 const onClick = item.action === "logout" ? () => signOut()
                   : item.action === "replay" ? () => replayOnboarding()
+                  : item.action === "reset" ? () => resetWorld()
                   : item.action === "edit" ? () => setEditOpen(true)
                   : undefined;
                 return <button key={item.label} onClick={onClick} disabled={item.soon} className={cls}>{inner}</button>;
