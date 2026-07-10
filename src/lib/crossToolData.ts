@@ -68,6 +68,33 @@ export function readTodaySymptoms(): string[] {
   }
 }
 
+// ── Symptom log (v2) — the ONE store shared by Today (logging) and the Cycle
+// Tracker (graph). Keyed by LOCAL date (YYYY-MM-DD) → array of symptom labels.
+// Today owns the daily check-in; the Cycle Tracker only reads it to draw its
+// symptom line, so the two can never disagree. ───────────────────────────────
+export const SYMPTOMS_LOG_KEY = "bloom:symptoms-log-v2";
+export const SYMPTOM_OPTIONS = ["Cramps", "Bloating", "Tender", "Fatigue", "Headache", "Nausea", "Backache"] as const;
+
+/** The whole symptom log (date → labels). */
+export function readSymptomsLog(): Record<string, string[]> {
+  return readJSON<Record<string, string[]>>(SYMPTOMS_LOG_KEY, {});
+}
+/** Symptom labels logged for one LOCAL date (YYYY-MM-DD). */
+export function readSymptomsForDay(day: string): string[] {
+  const v = readSymptomsLog()[day];
+  return Array.isArray(v) ? v : [];
+}
+/** Toggle one symptom label for a LOCAL date; persists and returns the new list. */
+export function toggleSymptomForDay(day: string, label: string): string[] {
+  const log = readSymptomsLog();
+  const cur = new Set(log[day] ?? []);
+  if (cur.has(label)) cur.delete(label); else cur.add(label);
+  const next = [...cur];
+  if (next.length) log[day] = next; else delete log[day];
+  try { localStorage.setItem(SYMPTOMS_LOG_KEY, JSON.stringify(log)); window.dispatchEvent(new Event("storage")); } catch {}
+  return next;
+}
+
 // ── Workout ──────────────────────────────────────────────────────────────────
 
 /** Returns the workout streak object. */

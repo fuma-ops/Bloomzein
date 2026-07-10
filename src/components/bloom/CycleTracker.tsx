@@ -46,6 +46,7 @@ import {
   CYCLE_PHASE_KEY,
 } from "./cyclePhase";
 import { CycleOnboarding } from "./CycleOnboarding";
+import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
@@ -147,10 +148,7 @@ const MOODS = [
   { key: "bloated",   label: "Bloated",   Icon: Cloud     },
 ] as const;
 
-const SYMPTOM_OPTIONS = ["Cramps", "Bloating", "Tender", "Fatigue", "Headache", "Nausea", "Backache"];
-
 const MOOD_LOG_KEY     = "bloom:mood-log-v2";
-const SYMPTOMS_LOG_KEY = "bloom:symptoms-log-v2";
 const PILL_LOG_KEY     = "bloom:pill-log-v2";
 
 const MOOD_BG_COLOR: Record<string, string> = {
@@ -345,8 +343,6 @@ export function CycleTracker() {
   // Derived today values
   const moodChecked     = todayKey in moodLog;
   const mood            = moodLog[todayKey] ?? "happy";
-  const symptoms        = symptomsLog[todayKey] ?? [];
-  const symptomsChecked = symptoms.length > 0;
   const pillTaken       = pillLog[todayKey] ?? false;
 
   const days = useMemo(() => {
@@ -452,19 +448,6 @@ export function CycleTracker() {
     return { bands, moodPts, symptPts, moodLine, symptLine, moodArea, symptArea, moodEstLine, symptEstLine, todayX, VW, VH, PX, PY_TOP, chartH, chartW, cycleLen };
   }, [settings, currentCycleStart, cycleDay, moodLog, symptomsLog]);
 
-  const toggleSymptom = (s: string) => {
-    const isAdding = !symptoms.includes(s);
-    setSymptomsLog((prev) => {
-      const current = prev[todayKey] ?? [];
-      const updated = current.includes(s) ? current.filter((x) => x !== s) : [...current, s];
-      const next = { ...prev, [todayKey]: updated };
-      try { localStorage.setItem(SYMPTOMS_LOG_KEY, JSON.stringify(next)); } catch {}
-      return next;
-    });
-    if (isAdding && symptoms.length === 0) {
-      setTimeout(() => graphRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 350);
-    }
-  };
 
   function renderWellnessGraph(_gradSuffix: string) {
     const VW = 360, PX = 20, PY_TOP = 14, chartH = 98, VH = PY_TOP + chartH + 26;
@@ -1136,36 +1119,6 @@ export function CycleTracker() {
             </div>
           </div>
 
-          {/* ── SYMPTOMS CARD ── */}
-          <div style={{ ...cardStyle }}>
-            <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>Log symptoms</h3>
-            <div className="flex flex-wrap mt-[11px]" style={{ gap: '7px' }}>
-              {SYMPTOM_OPTIONS.map((s) => {
-                const active = symptoms.includes(s);
-                return (
-                  <button
-                    key={s}
-                    onClick={() => toggleSymptom(s)}
-                    style={{
-                      border: active ? 'none' : '1px solid rgba(236,72,153,.18)',
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      fontWeight: 700,
-                      fontSize: '11.5px',
-                      padding: '8px 13px',
-                      borderRadius: '999px',
-                      transition: 'transform .15s cubic-bezier(.34,1.56,.64,1)',
-                      background: active ? '#EC4899' : '#FFF0F6',
-                      color: active ? '#fff' : '#9D5C7E',
-                      boxShadow: active ? '0 6px 14px rgba(236,72,153,.3)' : 'none',
-                    }}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
           <div data-tour="recommend" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="reveal-on-scroll lg:hidden">
