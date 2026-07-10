@@ -513,7 +513,9 @@ export default function TodayPage() {
       return {
         id: `meal-${slot}`, label: `Plan your ${MEAL_SLOT_LABEL[slot].toLowerCase()}`, time: MEAL_SLOT_TIME[slot], Icon: Heart,
         tool: "/app/tools/meals", image: MEAL_PHOTO[slot],
-        blurb: `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`,
+        blurb: cycleReady
+          ? `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`
+          : `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} ✿`,
       };
     };
     const items: PlanItem[] = [];
@@ -525,7 +527,7 @@ export default function TodayPage() {
     items.push(mealItem("dinner"));
     items.push({ id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
     return items;
-  }, [phase, todayMeals]);
+  }, [phase, todayMeals, cycleReady]);
   const moodHint  = MOODS[moodHintIdx];
   const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
   const affirmPool = AFFIRMATIONS[phase];
@@ -673,6 +675,7 @@ export default function TodayPage() {
       <PlanDetailModal
         item={activePlan}
         phase={phase}
+        cycleReady={cycleReady}
         done={activePlan ? planDone.includes(activePlan.id) : false}
         onToggleDone={() => { if (activePlan) togglePlanItem(activePlan.id); }}
         onClose={() => setActivePlan(null)}
@@ -806,9 +809,11 @@ export default function TodayPage() {
                       {item.time && (
                         <span className="text-[9px] font-semibold text-rose/40">{item.time}</span>
                       )}
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
-                        ✿ {PHASE_LABEL[phase]} phase
-                      </span>
+                      {cycleReady && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
+                          ✿ {PHASE_LABEL[phase]} phase
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -1092,10 +1097,11 @@ function BloomFlower({ className = "" }: { className?: string }) {
  * gentle "mark done" toggle so the row itself stays tap-to-preview.
  */
 function PlanDetailModal({
-  item, phase, done, onToggleDone, onClose,
+  item, phase, cycleReady, done, onToggleDone, onClose,
 }: {
   item: PlanItem | null;
   phase: Exclude<CyclePhase, "any">;
+  cycleReady: boolean;
   done: boolean;
   onToggleDone: () => void;
   onClose: () => void;
@@ -1141,7 +1147,9 @@ function PlanDetailModal({
               {timing === "now" && (
                 <span className="rounded-full bg-hotpink px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Now</span>
               )}
-              <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/80">✿ {PHASE_LABEL[phase]}</span>
+              {cycleReady && (
+                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/80">✿ {PHASE_LABEL[phase]}</span>
+              )}
             </div>
             <h3 className="mt-1.5 font-script text-2xl text-white leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">{item.label}</h3>
           </div>
