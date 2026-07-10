@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
 import { ConsistencyDashboard } from "@/components/bloom/me/ConsistencyDashboard";
 import { stampTodayWater } from "@/lib/dailyLog";
+import { seedEmma, clearEmma } from "@/lib/seedEmma";
 
 // ── Real data helpers ─────────────────────────────────────────────────────────
 function readJSON<T>(key: string, fb: T): T {
@@ -127,9 +128,28 @@ export default function MePage() {
     try { return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch { return null; }
   })();
 
+  // Marketing demo controls — only when the URL carries ?demo (invisible to
+  // normal users). Load the "Emma" hero account to film the tour, or clear it.
+  const demoMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("demo");
+
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
+
+      {demoMode && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-petal/60 bg-white/90 p-3 shadow-sm">
+          <span className="text-xs font-bold uppercase tracking-wider text-hotpink">Demo</span>
+          <button
+            onClick={() => { seedEmma(); window.location.href = "/app/today"; }}
+            className="rounded-full bg-gradient-to-r from-hotpink to-magenta px-3 py-1.5 text-xs font-bold text-white active:scale-95"
+          >🌸 Seed Emma</button>
+          <button
+            onClick={() => { clearEmma(); window.location.reload(); }}
+            className="rounded-full border border-petal/60 bg-blush px-3 py-1.5 text-xs font-bold text-hotpink active:scale-95"
+          >Clear demo</button>
+          <span className="text-[10px] text-rose/60">Tip: set your profile name to “Emma” for the film.</span>
+        </div>
+      )}
 
       {/* HERO */}
       <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
