@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Flower2, Bell, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { CuteTimePicker } from "./CutePicker";
 import { DatePicker } from "./onboarding/DatePicker";
@@ -64,9 +65,9 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
     setShowScrollHint(el.scrollTop + el.clientHeight < el.scrollHeight - 12);
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-rose/15 p-3 backdrop-blur-[2px] animate-fade-in sm:p-4"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-rose/15 p-3 backdrop-blur-[2px] animate-fade-in sm:p-4"
       onClick={onClose}
     >
       <div
@@ -187,7 +188,8 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

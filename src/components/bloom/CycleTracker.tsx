@@ -280,9 +280,11 @@ export function CycleTracker() {
   const [awaitDiet] = useState(() => { try { return localStorage.getItem("bloom:diet-await-cycle") === "1"; } catch { return false; } });
   const returnToDiet = () => { try { localStorage.removeItem("bloom:diet-await-cycle"); } catch {} window.location.href = "/app/tools/diet"; };
 
-  // First visit to the Cycle Tracker → play the "Meet your cycle" tour once.
+  // Play the "Meet your cycle" tour once — but only after she's actually set up
+  // her cycle, so it highlights a populated page (the magic), never grayed cards.
+  // A brand-new user gets the tour right after she saves her setup (see onSave).
   useEffect(() => {
-    try { if (!localStorage.getItem(CYCLE_ONBOARDED_KEY)) setShowOnboarding(true); } catch {}
+    try { if (!localStorage.getItem(CYCLE_ONBOARDED_KEY) && hasCycleSettings()) setShowOnboarding(true); } catch {}
   }, []);
   const finishOnboarding = () => {
     try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
@@ -705,10 +707,12 @@ export function CycleTracker() {
         {/* ══════════════ LEFT COLUMN (60%) ══════════════ */}
         <div className="lg:col-span-3 space-y-3.5 pb-32 lg:pb-0">
 
-          {/* ── PHASE HERO CARD ── */}
+          {/* ── PHASE HERO CARD ── (tap to set up while she still hasn't) */}
           <div
             data-tour="phase"
-            className="relative overflow-hidden rounded-[22px] animate-card-pop-in"
+            onClick={!isSetup ? () => setSetupOpen(true) : undefined}
+            role={!isSetup ? "button" : undefined}
+            className={["relative overflow-hidden rounded-[22px] animate-card-pop-in", !isSetup ? "cursor-pointer active:scale-[0.99] transition" : ""].join(" ")}
             style={{ background: 'linear-gradient(125deg,#EC4899,#DB2777 65%,#9D174D)', padding: '18px 18px 16px', scrollMarginTop: 90, scrollMarginBottom: 90, animationDelay: '0ms' }}
           >
             {/* Background photo — full-width, masked to fade left→right seamlessly */}
@@ -758,6 +762,13 @@ export function CycleTracker() {
             <p style={{ fontSize: '13px', fontWeight: 500, marginTop: '6px', color: 'rgba(255,255,255,.92)' }}>
               {isSetup ? PHASE_SUBTITLE[currentPhase] : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
             </p>
+
+            {/* Big obvious CTA while she hasn't set up — the whole card is tappable too */}
+            {!isSetup && (
+              <span className="mt-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-[12px] font-bold text-hotpink shadow-md animate-cta-bounce">
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Tap to set up your cycle ✿
+              </span>
+            )}
 
             {/* Journey stepper — two-row layout so labels sit exactly under their nodes */}
             {isSetup && (
@@ -1263,7 +1274,17 @@ export function CycleTracker() {
         open={setupOpen}
         onClose={() => setSetupOpen(false)}
         initial={settings}
-        onSave={(s) => { setSettings(s); writeCycleSettings(s); setIsSetup(true); if (awaitDiet) setTimeout(returnToDiet, 700); }}
+        onSave={(s) => {
+          setSettings(s); writeCycleSettings(s); setIsSetup(true);
+          if (awaitDiet) { setTimeout(returnToDiet, 700); return; }
+          // Glide back to the top so she sees her freshly-drawn hero, then run the
+          // soft guided highlight of everything she just unlocked (skippable).
+          setTimeout(() => {
+            try { document.querySelector("[data-tour='phase']")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {}
+            try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
+          }, 150);
+          setTimeout(() => setShowOnboarding(true), 850);
+        }}
       />
     </div>
   );
