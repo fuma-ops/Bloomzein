@@ -611,6 +611,14 @@ export default function TodayPage() {
     return () => clearTimeout(t);
   }, []);
 
+  // Once the structural world is built (cycle + meals + movement), the guided
+  // "hand back to Today after a tool" flow is done — clear its flag.
+  useEffect(() => {
+    if (cycleReady && mealPlanned && movementPlanned) {
+      try { sessionStorage.removeItem("bloom:setup-guide"); } catch {}
+    }
+  }, [cycleReady, mealPlanned, movementPlanned]);
+
   return (
     <div className="relative">
       <BloomBubbles count={10} />
@@ -810,8 +818,11 @@ export default function TodayPage() {
                   const cls = ["flex items-center gap-3 rounded-2xl px-3 py-2 transition active:scale-[0.99]",
                     s.done ? "bg-blush/30" : isNext ? "bg-white ring-2 ring-hotpink/70 animate-selected-glow" : "bg-white/70 hover:bg-blush/40"].join(" ");
                   const marker = isNext ? { "data-next-step": "1" } : {};
+                  // Tapping a step marks that she's in the guided setup flow, so the
+                  // tool she lands on knows to hand her back to Today afterwards.
+                  const markGuide = () => { try { sessionStorage.setItem("bloom:setup-guide", "1"); } catch {} };
                   return s.href
-                    ? <a key={s.key} href={s.href} className={cls} {...marker}>{inner}</a>
+                    ? <a key={s.key} href={s.href} onClick={markGuide} className={cls} {...marker}>{inner}</a>
                     : <button key={s.key} onClick={s.onClick} className={`w-full ${cls}`} {...marker}>{inner}</button>;
                 })}
               </div>
@@ -882,6 +893,9 @@ export default function TodayPage() {
             <>A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.</>
           )}
         </p>
+        <div className="-mt-1 mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
+          <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
+        </div>
         <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
           {planItems.map((item, i) => {
             const done   = planDone.includes(item.id);

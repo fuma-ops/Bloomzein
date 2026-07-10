@@ -1,5 +1,6 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowLeft,
   Sparkles,
@@ -1004,6 +1005,7 @@ function WeekTab({
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
   const [editingVibe, setEditingVibe] = useState(false);
+  const [weekDone, setWeekDone] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
   const dietNoteRef = useRef<HTMLDivElement>(null);
 
@@ -1039,10 +1041,16 @@ function WeekTab({
   const phaseSynced = intention === "cycle" && phase !== "any";
 
   const handleGenerate = () => {
+    const wasEmpty = planEmpty;
     setGenerating(true);
     onGenerate();
     setTimeout(() => {
       setGenerating(false);
+      // Guided-setup chain: after her FIRST week is planned, if she came here from
+      // the Today setup guide, celebrate briefly then hand back to Today's next step.
+      let inGuide = false;
+      try { inGuide = sessionStorage.getItem("bloom:setup-guide") === "1"; } catch {}
+      if (wasEmpty && inGuide) { setWeekDone(true); return; }
       planRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 400);
   };
@@ -1076,6 +1084,16 @@ function WeekTab({
           </span>
           <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink">Set goal <ChevronRight className="h-3.5 w-3.5" /></span>
         </button>
+      )}
+
+      {/* A clear OR between the two ways to plan: set a goal in Diet (auto-tuned)
+          or simply set up this week yourself below. */}
+      {!dietSetup && planEmpty && (
+        <div className="flex items-center gap-3 px-1 -my-0.5">
+          <span className="h-px flex-1 bg-petal/60" />
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-[10px] font-bold uppercase tracking-[.12em] text-hotpink/70 shadow-sm ring-1 ring-petal/60">or</span>
+          <span className="h-px flex-1 bg-petal/60" />
+        </div>
       )}
 
       {/* ②  Slim plan bar — once a week exists, "This week's vibe" collapses to
@@ -1284,7 +1302,42 @@ function WeekTab({
           <ChevronRight className="h-5 w-5 text-hotpink flex-shrink-0" />
         </button>
       )}
+
+      {weekDone && (
+        <MealsPlannedCelebration
+          onContinue={() => { window.location.href = "/app/today"; }}
+          onStay={() => setWeekDone(false)}
+        />
+      )}
     </>
+  );
+}
+
+/** Soft "your week is planned!" moment during guided setup — hands her back to
+ *  Today to continue building her world (mirrors the Cycle Tracker celebration). */
+function MealsPlannedCelebration({ onContinue, onStay }: { onContinue: () => void; onStay: () => void }) {
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden p-5 animate-fade-in"
+      style={{ background: "radial-gradient(120% 120% at 50% 0%, rgba(255,182,217,0.97) 0%, rgba(252,231,243,0.98) 46%, rgba(255,240,248,0.99) 100%)" }}
+    >
+      {Array.from({ length: 10 }).map((_, i) => (
+        <Sparkles key={i} aria-hidden className="pointer-events-none absolute animate-bloom-sparkle text-hotpink/40" strokeWidth={1.6}
+          style={{ left: `${8 + (i * 37) % 84}%`, top: `${12 + (i * 53) % 70}%`, width: 10 + (i % 3) * 6, height: 10 + (i % 3) * 6, animationDelay: `${(i % 5) * 0.4}s` }} />
+      ))}
+      <div className="relative w-full max-w-sm text-center animate-scale-in">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-hotpink to-[#DB2777] shadow-xl shadow-hotpink/40 animate-icon-breathe">
+          <Sparkles className="h-8 w-8 text-white" strokeWidth={1.8} />
+        </div>
+        <h2 className="mt-4 font-script text-4xl leading-tight text-hotpink">Your week is planned ✿</h2>
+        <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-rose/80">Beautiful — your meals are set. Let's head back to Today and pick up your next little step.</p>
+        <button onClick={onContinue} className="bloom-luxury-btn hover-scale animate-cta-bounce mt-6 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
+          <Sparkles className="h-4 w-4" strokeWidth={2} /> Continue on Today
+        </button>
+        <button onClick={onStay} className="mt-3 text-xs font-semibold text-rose/50 transition hover:text-hotpink">See my week first</button>
+      </div>
+    </div>,
+    document.body
   );
 }
 
