@@ -745,21 +745,22 @@ export function CycleTracker() {
                 <path d={PHASE_ICON_PATH[currentPhase]} />
               </svg>
               <span style={{ color: 'white', fontSize: '10px', fontWeight: 800, letterSpacing: '.08em' }}>
-                {PHASE_LABEL[currentPhase].toUpperCase()} PHASE
+                {isSetup ? `${PHASE_LABEL[currentPhase].toUpperCase()} PHASE` : "NOT SET UP YET"}
               </span>
             </div>
 
             {/* Day heading */}
-            <h2 className="font-script" style={{ fontSize: '38px', lineHeight: 1, marginTop: '11px', color: 'white' }}>
-              Day {cycleDay}
+            <h2 className="font-script" style={{ fontSize: isSetup ? '38px' : '30px', lineHeight: isSetup ? 1 : 1.05, marginTop: '11px', color: 'white' }}>
+              {isSetup ? `Day ${cycleDay}` : "Let's map your cycle ✿"}
             </h2>
 
             {/* Phase subtitle */}
             <p style={{ fontSize: '13px', fontWeight: 500, marginTop: '6px', color: 'rgba(255,255,255,.92)' }}>
-              {PHASE_SUBTITLE[currentPhase]}
+              {isSetup ? PHASE_SUBTITLE[currentPhase] : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
             </p>
 
             {/* Journey stepper — two-row layout so labels sit exactly under their nodes */}
+            {isSetup && (
             <div className="w-full mt-4" style={{ paddingBottom: '4px' }}>
               {/* Row 1: nodes + connectors flat */}
               <div className="flex items-center w-full">
@@ -824,6 +825,7 @@ export function CycleTracker() {
                 })}
               </div>
             </div>
+            )}
           </div>
 
           {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}

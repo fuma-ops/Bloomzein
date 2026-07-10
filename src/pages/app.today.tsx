@@ -281,6 +281,9 @@ export default function TodayPage() {
   const cycleReady      = useMemo(hasCycleSettings, []);
   const mealPlanned     = useMemo(hasMealPlan, []);
   const movementPlanned = useMemo(hasMovementPlan, []);
+  // Today's Plan only appears once she's begun building her world — a brand-new
+  // (or freshly reset) user sees the setup checklist instead of a placeholder plan.
+  const showPlan        = cycleReady || mealPlanned || movementPlanned;
   const cycleSettings   = useMemo(readCycleSettings, []);
   const pillLabel       = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
   const displayName     = profile?.name?.split(" ")[0] || "Beautiful";
@@ -810,7 +813,9 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) ───────────────────────────── */}
+      {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) — only once she's begun setting
+             up (cycle, meals or movement); a fresh user gets the checklist instead. ── */}
+      {showPlan && (
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle>Today's Plan ✿</SectionTitle>
         <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
@@ -894,6 +899,7 @@ export default function TodayPage() {
           Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
         </a>
       </section>
+      )}
 
       {/* ── 2a. TODAY'S ENERGY (slim) — the daily balance, links into Diet.
              Hidden until she's set up her cycle or planned meals, so a brand-new
