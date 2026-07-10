@@ -1104,36 +1104,33 @@ export function CycleTracker() {
             {renderWellnessGraph("mob")}
           </div>
 
-          {/* ── MOOD CARD (mobile/tablet, lg:hidden in desktop right panel) ── */}
-          <div data-tour="checkin" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="lg:hidden">
-            <h3 className="font-script" style={{ fontSize: '23px', color: '#DB2777' }}>How are you feeling?</h3>
+          {/* ── MOOD CARD (mobile/tablet) — read-only mirror of Today's mood ── */}
+          <div data-tour="checkin" onClick={() => { window.location.href = "/app/today"; }} title="Your mood is set on Today" style={{ ...cardStyle, cursor: 'pointer', scrollMarginTop: 90, scrollMarginBottom: 90 }} className="lg:hidden">
+            <div className="flex items-center justify-between">
+              <h3 className="font-script" style={{ fontSize: '23px', color: '#DB2777' }}>How are you feeling?</h3>
+              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.04em', color: '#C58CA8' }}>set on Today ✿</span>
+            </div>
             <div className="grid grid-cols-4 gap-[7px] mt-3">
               {MOODS.map((m) => {
                 const isActive = moodLog[todayKey] === m.key;
                 return (
-                  <button
+                  <div
                     key={m.key}
-                    onClick={() => {
-                      const next = { ...moodLog, [todayKey]: m.key };
-                      setMoodLog(next);
-                      try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
-                    }}
                     style={{
-                      border: 'none',
-                      cursor: 'pointer',
                       fontFamily: 'inherit',
                       fontWeight: 700,
                       fontSize: '10.5px',
                       padding: '9px 3px',
                       borderRadius: '13px',
-                      transition: 'transform .15s cubic-bezier(.34,1.56,.64,1)',
+                      textAlign: 'center',
                       background: isActive ? 'linear-gradient(135deg,#EC4899,#DB2777)' : '#FCE7F3',
                       color: isActive ? '#fff' : '#9D5C7E',
                       boxShadow: isActive ? '0 6px 16px rgba(236,72,153,.35)' : 'none',
+                      opacity: isActive ? 1 : 0.5,
                     }}
                   >
                     {m.label}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -1219,36 +1216,33 @@ export function CycleTracker() {
             boxShadow: '0 8px 24px rgba(236,72,153,.12)',
           }}
         >
-          {/* Mood picker */}
-          <div data-tour="checkin" className="mb-5" style={{ scrollMarginTop: 90, scrollMarginBottom: 90 }}>
-            <h3 className="font-script mb-3" style={{ fontSize: '21px', color: '#DB2777' }}>How are you feeling?</h3>
+          {/* Mood — read-only mirror of Today's mood */}
+          <div data-tour="checkin" className="mb-5" onClick={() => { window.location.href = "/app/today"; }} title="Your mood is set on Today" style={{ scrollMarginTop: 90, scrollMarginBottom: 90, cursor: 'pointer' }}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-script" style={{ fontSize: '21px', color: '#DB2777' }}>How are you feeling?</h3>
+              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '.04em', color: '#C58CA8' }}>set on Today ✿</span>
+            </div>
             <div className="grid grid-cols-4 gap-[7px]">
               {MOODS.map((m) => {
                 const isActive = moodLog[todayKey] === m.key;
                 return (
-                  <button
+                  <div
                     key={m.key}
-                    onClick={() => {
-                      const next = { ...moodLog, [todayKey]: m.key };
-                      setMoodLog(next);
-                      try { localStorage.setItem(MOOD_LOG_KEY, JSON.stringify(next)); } catch {}
-                    }}
                     style={{
-                      border: 'none',
-                      cursor: 'pointer',
                       fontFamily: 'inherit',
                       fontWeight: 700,
                       fontSize: '10.5px',
                       padding: '9px 3px',
                       borderRadius: '13px',
-                      transition: 'transform .15s cubic-bezier(.34,1.56,.64,1)',
+                      textAlign: 'center',
                       background: isActive ? 'linear-gradient(135deg,#EC4899,#DB2777)' : '#FCE7F3',
                       color: isActive ? '#fff' : '#9D5C7E',
                       boxShadow: isActive ? '0 6px 16px rgba(236,72,153,.35)' : 'none',
+                      opacity: isActive ? 1 : 0.5,
                     }}
                   >
                     {m.label}
-                  </button>
+                  </div>
                 );
               })}
             </div>
