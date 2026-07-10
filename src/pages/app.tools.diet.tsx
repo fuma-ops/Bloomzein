@@ -11,7 +11,9 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
-import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, portionFor, type PlanSlot } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, portionFor, hasMealPlan, type PlanSlot } from "@/lib/crossToolData";
+import { isGuided } from "@/lib/guidedSetup";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
@@ -1649,6 +1651,10 @@ export default function DietPage() {
   const [onboarded, setOnboarded] = useLS<boolean>(LS.onboarded, false);
   const [replayTour, setReplayTour] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
+  // Guided setup: after she sets her goal, celebrate with her kcal target and
+  // offer to sync her already-planned meals to it, then hand back to Today.
+  const [guidedGoalKcal, setGuidedGoalKcal] = useState<number | null>(null);
+  const [guidedSynced, setGuidedSynced] = useState(false);
 
   const cyclePhase = useMemo(() => mapCyclePhase(readCyclePhase()), []);
   const cycleDay = useMemo(() => getCycleDay(), []);
@@ -1670,6 +1676,15 @@ export default function DietPage() {
     setEditingSetup(false);
     setTab("profile");
     try { localStorage.setItem(LS.meGoal, p.goal); } catch {}
+    // Guided flow → celebrate her goal + energy target, then continue on Today.
+    if (isGuided()) {
+      // Persist the new profile synchronously so computeTargets reads it now.
+      try { localStorage.setItem(LS.profile, JSON.stringify(p)); } catch {}
+      let kcal: number | null = null;
+      try { kcal = computeTargets(false).calories; } catch {}
+      setGuidedSynced(false);
+      setGuidedGoalKcal(kcal ?? 0);
+    }
   };
 
   // Today's meals, derived from the shared plan (recipeId → full meal).
@@ -1818,6 +1833,29 @@ export default function DietPage() {
           onDone={() => { setOnboarded(true); setReplayTour(false); }}
         />
       )}
+
+      {guidedGoalKcal !== null && (
+        <SetupCelebration
+          title="Your goal is set ✿"
+          message={`Based on your goal, your body needs about ${guidedGoalKcal.toLocaleString()} kcal a day. Everything now tunes to it.`}
+          extra={hasMealPlan() ? (
+            <button
+              onClick={() => { if (!guidedSynced) { planMealsImplicit(); setGuidedSynced(true); } }}
+              className={["mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-bold transition active:scale-95",
+                guidedSynced ? "bg-emerald-100 text-emerald-700" : "bg-white text-hotpink ring-2 ring-hotpink/60 animate-selected-glow"].join(" ")}
+            >
+              {guidedSynced
+                ? <><Check className="h-4 w-4" strokeWidth={3} /> Meals synced to your goal</>
+                : <><Sparkles className="h-4 w-4" strokeWidth={2} /> Sync my meals to this goal</>}
+            </button>
+          ) : undefined}
+          continueLabel="Continue on Today"
+          onContinue={() => { window.location.href = "/app/today"; }}
+          onStay={() => setGuidedGoalKcal(null)}
+          stayLabel="Stay in Diet"
+        />
+      )}
+
       <BloomBubbles count={10} />
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">

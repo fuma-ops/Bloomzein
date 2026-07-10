@@ -17,6 +17,9 @@ import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay } from "@/lib/crossToolData";
+import { hasDietSetup } from "@/components/bloom/recipes/data";
+import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
@@ -290,7 +293,10 @@ export default function TodayPage() {
   // and the setup checklist, so a fresh user never sees defaults dressed as data.
   const cycleReady      = useMemo(hasCycleSettings, []);
   const mealPlanned     = useMemo(hasMealPlan, []);
+  const dietSetup       = useMemo(hasDietSetup, []);
   const movementPlanned = useMemo(hasMovementPlan, []);
+  const [finaleOpen,    setFinaleOpen]    = useState(false);
+  const [finaleGlow,    setFinaleGlow]    = useState(false);
   // Today's Plan only appears once she's begun building her world — a brand-new
   // (or freshly reset) user sees the setup checklist instead of a placeholder plan.
   // Real plan only once she's actually planned meals or movement. If she's set
@@ -611,13 +617,17 @@ export default function TodayPage() {
     return () => clearTimeout(t);
   }, []);
 
-  // Once the structural world is built (cycle + meals + movement), the guided
-  // "hand back to Today after a tool" flow is done — clear its flag.
+  // FINALE — when her whole world is built (cycle + meals + diet + movement +
+  // today's mood) AND she's still on the guided flow, play the closing moment:
+  // a "your Today plan is ready" celebration, then a soft pink outline sweeps
+  // over Today's Plan. endGuide() first so it can only ever fire once.
   useEffect(() => {
-    if (cycleReady && mealPlanned && movementPlanned) {
-      try { sessionStorage.removeItem("bloom:setup-guide"); } catch {}
+    const allDone = cycleReady && mealPlanned && dietSetup && movementPlanned && !!mood;
+    if (isGuided() && allDone) {
+      endGuide();
+      setFinaleOpen(true);
     }
-  }, [cycleReady, mealPlanned, movementPlanned]);
+  }, [cycleReady, mealPlanned, dietSetup, movementPlanned, mood]);
 
   return (
     <div className="relative">
@@ -762,6 +772,25 @@ export default function TodayPage() {
         triggerRef={symptomTileRef}
       />
 
+      {/* FINALE — the closing "your world is built" moment, then a pink sweep over Today's Plan */}
+      {finaleOpen && (
+        <SetupCelebration
+          title="Your Today plan is ready ✿"
+          message="Everything's set, gorgeous — your cycle, meals, movement and mood all flow into this one day. This is your Bloom."
+          continueLabel="See my plan ✿"
+          onContinue={() => {
+            setFinaleOpen(false);
+            setTimeout(() => {
+              try { document.getElementById("todays-plan")?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
+              setFinaleGlow(true);
+              setTimeout(() => setFinaleGlow(false), 2200);
+            }, 150);
+          }}
+          stayLabel="Done"
+          onStay={() => setFinaleOpen(false)}
+        />
+      )}
+
       {/* PlanDetailModal — centred on every device, opened by tapping a plan item */}
       <PlanDetailModal
         item={activePlan}
@@ -778,6 +807,7 @@ export default function TodayPage() {
         const steps = [
           { key: "cycle", label: "Set up your cycle",   desc: "Unlocks your real phase everywhere", done: cycleReady,      href: "/app/tools/cycle",   onClick: undefined as (() => void) | undefined },
           { key: "meals", label: "Plan your meals",     desc: "Fills Today's Plan & your energy",    done: mealPlanned,     href: "/app/tools/meals",   onClick: undefined as (() => void) | undefined },
+          { key: "diet",  label: "Set your goal in Diet", desc: "Tunes your energy & meals to you",  done: dietSetup,       href: "/app/tools/diet",    onClick: undefined as (() => void) | undefined },
           { key: "move",  label: "Plan your movement",  desc: "Yoga & workouts matched to you",      done: movementPlanned, href: "/app/tools/workout", onClick: undefined as (() => void) | undefined },
           { key: "mood",  label: "Log today's mood",    desc: "One tap on the flower above",         done: !!mood,          href: "",                   onClick: () => setMoodPickerOpen(true) },
         ];
@@ -820,7 +850,7 @@ export default function TodayPage() {
                   const marker = isNext ? { "data-next-step": "1" } : {};
                   // Tapping a step marks that she's in the guided setup flow, so the
                   // tool she lands on knows to hand her back to Today afterwards.
-                  const markGuide = () => { try { sessionStorage.setItem("bloom:setup-guide", "1"); } catch {} };
+                  const markGuide = () => startGuide();
                   return s.href
                     ? <a key={s.key} href={s.href} onClick={markGuide} className={cls} {...marker}>{inner}</a>
                     : <button key={s.key} onClick={s.onClick} className={`w-full ${cls}`} {...marker}>{inner}</button>;
@@ -884,7 +914,7 @@ export default function TodayPage() {
       )}
 
       {hasPlanContent && (
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
+      <section id="todays-plan" className={["mt-4 sm:mt-6 animate-card-pop-in rounded-[2rem] transition-all duration-500", finaleGlow ? "ring-4 ring-hotpink/70 ring-offset-2 ring-offset-blush/40 animate-selected-glow" : "ring-0"].join(" ")} style={{ animationDelay: "50ms" }}>
         <SectionTitle>Today's Plan ✿</SectionTitle>
         <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
           {cycleReady ? (
