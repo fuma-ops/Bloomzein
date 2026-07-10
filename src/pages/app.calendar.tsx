@@ -581,11 +581,11 @@ function WeekView({
   onSelect: (d: Date) => void;
 }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ background: "linear-gradient(135deg, #ff7ec8 0%, #ff1493 45%, #e0007f 78%, #cc0073 100%)" }}>
+    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ background: "linear-gradient(135deg, #F9A8D4 0%, #F472B6 50%, #EC4899 100%)" }}>
       <AuroraGlow />
       <div className="relative z-[1] space-y-2.5">
         {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
-          <p className="text-center text-sm text-white/90 py-6 drop-shadow-sm">Nothing with this in view — try another week or filter ✿</p>
+          <p className="text-center text-sm text-white py-6" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>Nothing with this in view — try another week or filter ✿</p>
         )}
         {days.map((day, i) => {
           const phase = phaseForDay(day, readCycleSettings());
@@ -644,10 +644,10 @@ function MonthGrid({
 }) {
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
-    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(135deg, #ff7ec8 0%, #ff1493 45%, #e0007f 78%, #cc0073 100%)" }}>
+    <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(135deg, #F9A8D4 0%, #F472B6 50%, #EC4899 100%)" }}>
       <AuroraGlow />
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
-        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-white/85 drop-shadow-sm">{d}</p>)}
+        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-white" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>{d}</p>)}
       </div>
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
@@ -703,11 +703,11 @@ function MonthGrid({
  *  and the day's planned calories. */
 /** Matches the Today-page plan card: clean rounded image, title + meta, a
  *  time · phase chip row, and a soft-glowing pink arrow CTA (kept alive). */
-function TodayCard({ href, image, title, meta, time, phaseLabel }: {
-  href: string; image: string; title: string; meta: string; time?: string; phaseLabel: string;
+function TodayCard({ href, image, title, meta, time, phaseLabel, delay = 0 }: {
+  href: string; image: string; title: string; meta: string; time?: string; phaseLabel: string; delay?: number;
 }) {
   return (
-    <a href={href} className="group flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/90 backdrop-blur border border-petal/50 p-2.5 sm:p-3 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/15 active:scale-[0.99]">
+    <a href={href} style={{ animationDelay: `${delay}s` }} className="group flex items-center gap-3 sm:gap-4 rounded-3xl bg-white/90 backdrop-blur border border-petal/50 p-2.5 sm:p-3 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
       <div className="relative shrink-0 h-[68px] w-[68px] sm:h-[78px] sm:w-[78px] overflow-hidden rounded-2xl ring-1 ring-petal/60">
         <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" />
       </div>
@@ -750,6 +750,7 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
   const todayReminders = remindersForDate(reminders, today);
   const phaseLabel = PHASE_LABEL[phaseForDay(today, readCycleSettings())];
   const empty = !meals.length && !yogaFocus && !workouts.length && !plannedWorkout && !todayReminders.length;
+  let cardIdx = 0;
 
   return (
     <div className="space-y-3.5">
@@ -768,7 +769,7 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
       </div>
 
       {/* Plans + reminders — the big section, on the soft moving-lines backdrop */}
-      <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(135deg, #ff7ec8 0%, #ff1493 45%, #e0007f 78%, #cc0073 100%)" }}>
+      <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(135deg, #F9A8D4 0%, #F472B6 50%, #EC4899 100%)" }}>
         <AuroraGlow />
         <div className="relative z-[1] space-y-3">
           {empty && (
@@ -778,29 +779,29 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
           )}
 
           {yogaFocus && (
-            <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel}
+            <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
               title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
           )}
 
           {meals.map(({ slot, r }) => (
-            <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel}
+            <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
               title={r.name} time={SLOT_TIME[slot]}
               meta={`${SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
           ))}
 
           {workouts.map((w, i) => (
-            <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel}
+            <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
               title={w.sessionName || "Workout"}
               meta={`Workout · ${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
           ))}
 
           {plannedWorkout && (
-            <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel}
+            <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
               title="Workout planned" time="17:30" meta="Workout · tap to start today's session" />
           )}
 
           {todayReminders.length > 0 && (
-            <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+            <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: `${cardIdx++ * 0.06}s` }}>
               <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
               <div className="space-y-2">
                 {todayReminders.map((it) => (
