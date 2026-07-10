@@ -557,18 +557,33 @@ export default function TodayPage() {
   const affirmPool = AFFIRMATIONS[phase];
   const affirmText = affirmPool[affirmIdx % affirmPool.length];
 
-  const checklist = useMemo(() => {
-    const yogaItem    = planItems.find((i) => i.id === "yoga" || i.id === "workout");
-    const journalItem = planItems.find((i) => i.id === "journal" || i.id === "meditation");
-    return [
-      { key: "mood",    label: "Log your mood",  done: !!mood,                                                   href: "",                tool: "" },
-      { key: "water",   label: "Hit water goal",  done: waterCount >= waterGoal,                                  href: "#hydration",      tool: "" },
-      { key: "move",    label: yogaItem?.label ?? "Move",    done: yogaItem    ? planDone.includes(yogaItem.id)    : false, href: yogaItem?.tool    ?? "/app/tools/yoga",  tool: yogaItem?.tool    ?? "" },
-      { key: "journal", label: "Write in diary",  done: journalItem ? planDone.includes(journalItem.id) : false, href: "/app/tools/diary", tool: "/app/tools/diary" },
-    ];
-  }, [mood, waterCount, waterGoal, planDone, planItems]);
+  // Every item in Today's Plan (each meal, workout, yoga, journal) counts toward
+  // the bloom ring, alongside the two standalone daily goals (mood + water), so
+  // the ring is ALWAYS in sync with what the plan shows as done (planDone).
+  const mealItems    = useMemo(() => planItems.filter((i) => i.id.startsWith("meal-")), [planItems]);
+  const moveItems    = useMemo(() => planItems.filter((i) => i.id === "yoga" || i.id === "workout"), [planItems]);
+  const journalItem  = useMemo(() => planItems.find((i) => i.id === "journal" || i.id === "meditation"), [planItems]);
 
-  const bloomPercent  = Math.round((checklist.filter((c) => c.done).length / checklist.length) * 100);
+  const checklist = useMemo(() => {
+    const mealsDone = mealItems.filter((m) => planDone.includes(m.id)).length;
+    const moveDone  = moveItems.filter((m) => planDone.includes(m.id)).length;
+    const rows: { key: string; label: string; done: boolean; href: string; tool: string }[] = [
+      { key: "mood",  label: "Log your mood",  done: !!mood,                  href: "",           tool: "" },
+      { key: "water", label: "Hit water goal", done: waterCount >= waterGoal, href: "#hydration", tool: "" },
+    ];
+    if (mealItems.length)
+      rows.push({ key: "meals", label: `Eat your meals (${mealsDone}/${mealItems.length})`, done: mealsDone === mealItems.length, href: "/app/tools/meals", tool: "/app/tools/meals" });
+    if (moveItems.length)
+      rows.push({ key: "move", label: moveItems.length > 1 ? `Move your body (${moveDone}/${moveItems.length})` : (moveItems[0].label ?? "Move"), done: moveDone === moveItems.length, href: moveItems[0].tool, tool: moveItems[0].tool });
+    if (journalItem)
+      rows.push({ key: "journal", label: "Write in diary", done: planDone.includes(journalItem.id), href: "/app/tools/diary", tool: "/app/tools/diary" });
+    return rows;
+  }, [mood, waterCount, waterGoal, planDone, mealItems, moveItems, journalItem]);
+
+  // Ring progress is granular: mood + water + one unit per plan item, so ticking
+  // any single meal or the workout moves the ring immediately.
+  const bloomUnits    = [!!mood, waterCount >= waterGoal, ...planItems.map((i) => planDone.includes(i.id))];
+  const bloomPercent  = Math.round((bloomUnits.filter(Boolean).length / bloomUnits.length) * 100);
   const bloomFull     = bloomPercent === 100;
   const bloomMessage  =
     bloomPercent === 0  ? "Your day awaits — start with one small bloom ✿" :

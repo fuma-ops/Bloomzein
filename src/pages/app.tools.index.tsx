@@ -7,6 +7,7 @@ import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { readTodayAffirmation } from "@/components/bloom/affirmations";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { isToolVisited } from "@/components/bloom/visitedTools";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 
 const LAST_KEY = "bloom:last-tool";
 const PINS_KEY = "bloom:pinned-tools";
@@ -71,7 +72,7 @@ export default function ToolsIndex() {
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-white/70 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-white/55 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
           {/* Title + subtitle stacked on the left */}
-          <div className="relative z-[4] px-5 py-5 sm:px-7 sm:py-6 flex flex-col items-start justify-center gap-1 sm:gap-1.5 max-w-[62%] min-h-[120px] sm:min-h-[156px]">
+          <div className="relative z-[4] px-5 py-5 sm:px-7 sm:py-6 flex flex-col items-start justify-center gap-1 sm:gap-1.5 max-w-[85%] sm:max-w-[65%] min-h-[120px] sm:min-h-[156px]">
             <h1
               className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none flex items-center gap-2"
               style={{ textShadow: '0 2px 8px rgba(0,0,0,0.28)' }}
@@ -84,6 +85,7 @@ export default function ToolsIndex() {
             >
               ✦ pick your bloom for today
             </p>
+            <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
           </div>
         </div>
       </section>
