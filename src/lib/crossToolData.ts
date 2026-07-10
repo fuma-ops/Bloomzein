@@ -440,3 +440,34 @@ export function resetToolState(tool: "workout" | "yoga" | "meals" | "diet"): voi
     localStorage.removeItem(MOVEMENT_LEVEL_SEEN_KEY);
   } catch {}
 }
+
+// ── "Is this part of my world set up yet?" — one source of truth per concept ──
+// Today (and any other dashboard) reads THESE to decide populated-vs-empty, so
+// the "have I set this up?" question is answered in one place, never guessed.
+
+/** True once the user has planned at least one meal anywhere in the weekly plan. */
+export function hasMealPlan(): boolean {
+  const plan = readMealPlan();
+  return Object.values(plan).some((day) => day && Object.values(day).some((rid) => !!rid));
+}
+
+/** True once the user has any planned movement (workout program/freestyle or a yoga schedule). */
+export function hasMovementPlan(): boolean {
+  return readWorkoutPlanDays().length > 0 || readYogaPlanDays().length > 0;
+}
+
+/** Wipe EVERY Bloomzein key from localStorage — a true "start fresh" so the app
+ *  looks exactly like a brand-new user's first visit. The account/profile live
+ *  server-side and are intentionally left untouched. */
+export function resetEverything(): void {
+  try {
+    const kill: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      // Covers both the "bloom:" tool keys and the "bloomzein_" onboarding keys.
+      if (k && k.startsWith("bloom")) kill.push(k);
+    }
+    kill.forEach((k) => localStorage.removeItem(k));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}

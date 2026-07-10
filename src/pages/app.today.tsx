@@ -3,9 +3,8 @@ import { createPortal } from "react-dom";
 import {
   Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
-  BookHeart, Check, Plus, Minus, Zap, Wind, Frown, BatteryLow, Waves,
-  Leaf, Cookie, Bone, CircleDot, Meh, Bell, BellOff, Pill, CalendarDays,
-  ChevronDown, ChevronUp, AlarmClock, Star,
+  BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
+  ChevronDown, AlarmClock, Star,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -17,7 +16,7 @@ import { todayISO } from "@/lib/localDate";
 import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
@@ -277,6 +276,11 @@ export default function TodayPage() {
   const phase           = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
   const cycleDay        = useMemo(cycleDayNumber, []);
   const daysToPeriod    = useMemo(daysToPeriodNumber, []);
+  // "Has this part of her world been set up?" — drives the honest empty states
+  // and the setup checklist, so a fresh user never sees defaults dressed as data.
+  const cycleReady      = useMemo(hasCycleSettings, []);
+  const mealPlanned     = useMemo(hasMealPlan, []);
+  const movementPlanned = useMemo(hasMovementPlan, []);
   const cycleSettings   = useMemo(readCycleSettings, []);
   const pillLabel       = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
   const displayName     = profile?.name?.split(" ")[0] || "Beautiful";
@@ -291,7 +295,6 @@ export default function TodayPage() {
   const [affirmIdx,           setAffirmIdx]           = useState(0);
   const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
   const [reminderBusy,        setReminderBusy]        = useState(false);
-  const [showCycleSetupBanner, setShowCycleSetupBanner] = useState(false);
   const [pillTaken,           setPillTaken]           = useState(false);
   const [moodPickerOpen,      setMoodPickerOpen]      = useState(false);
   const [activePlan,          setActivePlan]          = useState<PlanItem | null>(null);
@@ -353,7 +356,6 @@ export default function TodayPage() {
       setTodayMeals(readTodayPlannedDay());
     } catch {}
 
-    setShowCycleSetupBanner(!hasCycleSettings());
     broadcastCyclePhase();
   }, []);
 
@@ -590,13 +592,27 @@ export default function TodayPage() {
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
 
-          <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
-            ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
-          </div>
+          {cycleReady ? (
+            <>
+              <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
+                ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
+              </div>
 
-          <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-xs">
-            {PHASE_QUOTES[phase]}
-          </p>
+              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-xs">
+                {PHASE_QUOTES[phase]}
+              </p>
+            </>
+          ) : (
+            <>
+              <a href="/app/tools/cycle" className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 transition hover:bg-hotpink active:scale-95">
+                <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Set up your cycle
+              </a>
+
+              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-xs">
+                Welcome to your Bloom ✿ Let's set up your world — start below.
+              </p>
+            </>
+          )}
 
           <div className="mt-2.5 sm:mt-3.5 flex items-center gap-3">
             <button
@@ -662,21 +678,54 @@ export default function TodayPage() {
         onClose={() => setActivePlan(null)}
       />
 
-      {/* ── CYCLE SETUP NUDGE ─────────────────────────────────────────────────── */}
-      {showCycleSetupBanner && (
-        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
-          <a href="/app/tools/cycle" className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 transition hover:-translate-y-0.5">
-            <span className="clay-blob pearl-sheen animate-icon-breathe grid h-11 w-11 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-full text-white">
-              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="font-script text-lg sm:text-2xl text-hotpink leading-tight">Personalize your Bloom ✿</p>
-              <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">Set up your cycle so Today, Calendar, Yoga & Diet sync to your real phase.</p>
+      {/* ── BUILD YOUR WORLD — a guided checklist that lights up as she sets up
+             each tool; disappears once everything is configured. ── */}
+      {(() => {
+        const steps = [
+          { key: "cycle", label: "Set up your cycle",   desc: "Unlocks your real phase everywhere", done: cycleReady,      href: "/app/tools/cycle",   onClick: undefined as (() => void) | undefined },
+          { key: "meals", label: "Plan your meals",     desc: "Fills Today's Plan & your energy",    done: mealPlanned,     href: "/app/tools/meals",   onClick: undefined as (() => void) | undefined },
+          { key: "move",  label: "Plan your movement",  desc: "Yoga & workouts matched to you",      done: movementPlanned, href: "/app/tools/workout", onClick: undefined as (() => void) | undefined },
+          { key: "mood",  label: "Log today's mood",    desc: "One tap on the flower above",         done: !!mood,          href: "",                   onClick: () => setMoodPickerOpen(true) },
+        ];
+        const doneCount = steps.filter((s) => s.done).length;
+        if (doneCount === steps.length) return null;
+        return (
+          <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
+            <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="clay-blob pearl-sheen animate-icon-breathe grid h-11 w-11 shrink-0 place-items-center rounded-full text-white">
+                  <Sparkles className="h-5 w-5" strokeWidth={1.8} />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-script text-lg sm:text-2xl text-hotpink leading-tight">Build your Bloom world ✿</p>
+                  <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">Watch Today come alive as you set each one up.</p>
+                </div>
+                <span className="shrink-0 font-script text-2xl sm:text-3xl text-hotpink leading-none">{doneCount}/{steps.length}</span>
+              </div>
+              <div className="space-y-2">
+                {steps.map((s) => {
+                  const inner = (
+                    <>
+                      <span className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition", s.done ? "bg-hotpink text-white" : "bg-blush/60"].join(" ")}>
+                        {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <span className="h-2 w-2 rounded-full bg-hotpink/40" />}
+                      </span>
+                      <span className="flex-1 min-w-0 text-left">
+                        <span className={["block text-sm font-bold leading-tight", s.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>{s.label}</span>
+                        {!s.done && <span className="block text-[10px] text-rose/55 leading-tight">{s.desc}</span>}
+                      </span>
+                      {!s.done && <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />}
+                    </>
+                  );
+                  const cls = ["flex items-center gap-3 rounded-2xl px-3 py-2 transition active:scale-[0.99]", s.done ? "bg-blush/30" : "bg-white/70 hover:bg-blush/40"].join(" ");
+                  return s.href
+                    ? <a key={s.key} href={s.href} className={cls}>{inner}</a>
+                    : <button key={s.key} onClick={s.onClick} className={`w-full ${cls}`}>{inner}</button>;
+                })}
+              </div>
             </div>
-            <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />
-          </a>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* ══ DESKTOP: 60% main content + 40% sticky smart panel (CLAUDE.md) ══ */}
       <div className="lg:grid lg:grid-cols-5 lg:gap-x-6 lg:items-start">
@@ -706,7 +755,11 @@ export default function TodayPage() {
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <SectionTitle>Today's Plan ✿</SectionTitle>
         <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
-          Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.
+          {cycleReady ? (
+            <>Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.</>
+          ) : (
+            <>A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.</>
+          )}
         </p>
         <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
           {planItems.map((item, i) => {
@@ -781,10 +834,14 @@ export default function TodayPage() {
         </a>
       </section>
 
-      {/* ── 2a. TODAY'S ENERGY (slim) — the daily balance, links into Diet ── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
-        <TodayEnergyStrip e={energyBalance()} />
-      </section>
+      {/* ── 2a. TODAY'S ENERGY (slim) — the daily balance, links into Diet.
+             Hidden until she's set up her cycle or planned meals, so a brand-new
+             user never sees a default calorie target dressed up as real data. ── */}
+      {(cycleReady || mealPlanned) && (
+        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
+          <TodayEnergyStrip e={energyBalance()} />
+        </section>
+      )}
 
 
       </div>{/* /MAIN COLUMN */}
