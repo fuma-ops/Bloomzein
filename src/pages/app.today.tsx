@@ -601,6 +601,16 @@ export default function TodayPage() {
   // circumference for SVG ring (r=15.9)
   const CIRC = 2 * Math.PI * 15.9; // ≈ 99.9
 
+  // Gentle guidance: whenever setup isn't finished, softly glide to the next
+  // undone step in the "Build your Bloom world" checklist so she's always led to
+  // her next tap — until everything's set. Runs each time she lands on Today.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try { document.querySelector('[data-next-step="1"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
+    }, 700);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div className="relative">
       <BloomBubbles count={10} />
@@ -765,6 +775,7 @@ export default function TodayPage() {
         ];
         const doneCount = steps.filter((s) => s.done).length;
         if (doneCount === steps.length) return null;
+        const nextIdx = steps.findIndex((s) => !s.done);
         return (
           <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
             <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5">
@@ -779,23 +790,29 @@ export default function TodayPage() {
                 <span className="shrink-0 font-script text-2xl sm:text-3xl text-hotpink leading-none">{doneCount}/{steps.length}</span>
               </div>
               <div className="space-y-2">
-                {steps.map((s) => {
+                {steps.map((s, i) => {
+                  const isNext = i === nextIdx;
                   const inner = (
                     <>
-                      <span className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition", s.done ? "bg-hotpink text-white" : "bg-blush/60"].join(" ")}>
-                        {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <span className="h-2 w-2 rounded-full bg-hotpink/40" />}
+                      <span className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition", s.done ? "bg-hotpink text-white" : isNext ? "bg-hotpink text-white animate-icon-breathe" : "bg-blush/60"].join(" ")}>
+                        {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <span className={["rounded-full", isNext ? "h-2 w-2 bg-white" : "h-2 w-2 bg-hotpink/40"].join(" ")} />}
                       </span>
                       <span className="flex-1 min-w-0 text-left">
-                        <span className={["block text-sm font-bold leading-tight", s.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>{s.label}</span>
+                        <span className={["flex items-center gap-1.5 text-sm font-bold leading-tight", s.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>
+                          {s.label}
+                          {isNext && <span className="rounded-full bg-hotpink px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Start here ✿</span>}
+                        </span>
                         {!s.done && <span className="block text-[10px] text-rose/55 leading-tight">{s.desc}</span>}
                       </span>
-                      {!s.done && <ArrowRight className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.5} />}
+                      {!s.done && <ArrowRight className={["h-4 w-4 shrink-0", isNext ? "text-hotpink" : "text-rose/30"].join(" ")} strokeWidth={2.5} />}
                     </>
                   );
-                  const cls = ["flex items-center gap-3 rounded-2xl px-3 py-2 transition active:scale-[0.99]", s.done ? "bg-blush/30" : "bg-white/70 hover:bg-blush/40"].join(" ");
+                  const cls = ["flex items-center gap-3 rounded-2xl px-3 py-2 transition active:scale-[0.99]",
+                    s.done ? "bg-blush/30" : isNext ? "bg-white ring-2 ring-hotpink/70 animate-selected-glow" : "bg-white/70 hover:bg-blush/40"].join(" ");
+                  const marker = isNext ? { "data-next-step": "1" } : {};
                   return s.href
-                    ? <a key={s.key} href={s.href} className={cls}>{inner}</a>
-                    : <button key={s.key} onClick={s.onClick} className={`w-full ${cls}`}>{inner}</button>;
+                    ? <a key={s.key} href={s.href} className={cls} {...marker}>{inner}</a>
+                    : <button key={s.key} onClick={s.onClick} className={`w-full ${cls}`} {...marker}>{inner}</button>;
                 })}
               </div>
             </div>

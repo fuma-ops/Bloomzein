@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   ChevronLeft,
@@ -276,16 +277,14 @@ export function CycleTracker() {
   const [isSetup,        setIsSetup]        = useState(() => hasCycleSettings());
   const [showResetMenu,  setShowResetMenu]  = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [celebrate, setCelebrate] = useState<Exclude<Phase, null> | null>(null);
   // Came here from the Diet tool's "sync your cycle first" gate → guide her back.
   const [awaitDiet] = useState(() => { try { return localStorage.getItem("bloom:diet-await-cycle") === "1"; } catch { return false; } });
   const returnToDiet = () => { try { localStorage.removeItem("bloom:diet-await-cycle"); } catch {} window.location.href = "/app/tools/diet"; };
 
-  // Play the "Meet your cycle" tour once — but only after she's actually set up
-  // her cycle, so it highlights a populated page (the magic), never grayed cards.
-  // A brand-new user gets the tour right after she saves her setup (see onSave).
-  useEffect(() => {
-    try { if (!localStorage.getItem(CYCLE_ONBOARDED_KEY) && hasCycleSettings()) setShowOnboarding(true); } catch {}
-  }, []);
+  // The full step-by-step tour is retired in favour of a soft one-page "you're
+  // set!" celebration after setup (see onSave), then a gentle guided checklist on
+  // Today. We keep the CycleOnboarding component around only as a manual replay.
   const finishOnboarding = () => {
     try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
     setShowOnboarding(false);
@@ -1276,16 +1275,64 @@ export function CycleTracker() {
         initial={settings}
         onSave={(s) => {
           setSettings(s); writeCycleSettings(s); setIsSetup(true);
+          try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
           if (awaitDiet) { setTimeout(returnToDiet, 700); return; }
-          // Glide back to the top so she sees her freshly-drawn hero, then run the
-          // soft guided highlight of everything she just unlocked (skippable).
-          setTimeout(() => {
-            try { document.querySelector("[data-tour='phase']")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {}
-            try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
-          }, 150);
-          setTimeout(() => setShowOnboarding(true), 850);
+          // One soft, gentle "you're set!" moment — her phase + a little advice —
+          // then Continue whisks her to Today to finish setting up her world.
+          setCelebrate(phaseForDay(new Date(), s));
         }}
       />
+
+      {celebrate && (
+        <CycleSetupCelebration
+          phase={celebrate}
+          onContinue={() => { window.location.href = "/app/today"; }}
+          onStay={() => setCelebrate(null)}
+        />
+      )}
     </div>
+  );
+}
+
+/** Soft one-page "you're set!" moment after cycle setup — her phase + a little
+ *  advice, then Continue takes her to Today to finish building her world. */
+function CycleSetupCelebration({ phase, onContinue, onStay }: {
+  phase: Exclude<Phase, null>;
+  onContinue: () => void;
+  onStay: () => void;
+}) {
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden p-5 animate-fade-in"
+      style={{ background: "radial-gradient(120% 120% at 50% 0%, rgba(255,182,217,0.97) 0%, rgba(252,231,243,0.98) 46%, rgba(255,240,248,0.99) 100%)" }}
+    >
+      {Array.from({ length: 10 }).map((_, i) => (
+        <Sparkles
+          key={i}
+          aria-hidden
+          className="pointer-events-none absolute animate-bloom-sparkle text-hotpink/40"
+          strokeWidth={1.6}
+          style={{ left: `${8 + (i * 37) % 84}%`, top: `${12 + (i * 53) % 70}%`, width: 10 + (i % 3) * 6, height: 10 + (i % 3) * 6, animationDelay: `${(i % 5) * 0.4}s` }}
+        />
+      ))}
+      <div className="relative w-full max-w-sm text-center animate-scale-in">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-hotpink to-[#DB2777] shadow-xl shadow-hotpink/40 animate-icon-breathe">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[phase]} /></svg>
+        </div>
+        <h2 className="mt-4 font-script text-4xl leading-tight text-hotpink">You're all set, gorgeous ✿</h2>
+        <p className="mt-2 text-[11px] font-bold uppercase tracking-[.15em] text-hotpink/70">You're in your {PHASE_LABEL[phase]} phase</p>
+        <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-rose/80">{PHASE_INSIGHT[phase]}</p>
+        <button
+          onClick={onContinue}
+          className="bloom-luxury-btn hover-scale animate-cta-bounce mt-6 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white"
+        >
+          <Sparkles className="h-4 w-4" strokeWidth={2} /> Continue on Today
+        </button>
+        <button onClick={onStay} className="mt-3 text-xs font-semibold text-rose/50 transition hover:text-hotpink">
+          Stay on my cycle
+        </button>
+      </div>
+    </div>,
+    document.body
   );
 }
