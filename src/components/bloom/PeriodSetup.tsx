@@ -107,25 +107,6 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             </div>
           </div>
 
-          <div className="animate-scale-in" style={{ animationDelay: "160ms" }}>
-            <Section label="Tracker Mode" glow={!isSet("trackerMode")}>
-              <div className="grid grid-cols-2 gap-1.5 rounded-full bg-blush/70 p-1">
-                {(["protection","conception"] as TrackerMode[]).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => update("trackerMode", m)}
-                    className={[
-                      "hover-scale rounded-full py-1.5 text-[11px] font-semibold transition",
-                      draft.trackerMode === m ? "bg-hotpink text-white shadow" : "text-rose",
-                    ].join(" ")}
-                  >
-                    {m === "protection" ? "Protection 🛡️" : "Conception 🌷"}
-                  </button>
-                ))}
-              </div>
-            </Section>
-          </div>
-
           <div className="animate-scale-in" style={{ animationDelay: "200ms" }}>
             <Section label="Contraceptive Method" glow={!isSet("contraceptiveMethod")}>
               <div className="grid grid-cols-3 gap-1.5">

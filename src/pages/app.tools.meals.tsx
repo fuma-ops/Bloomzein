@@ -1090,7 +1090,7 @@ function WeekTab({
       {!dietSetup && planEmpty && (
         <div className="flex items-center gap-3 px-1 -my-0.5">
           <span className="h-px flex-1 bg-petal/60" />
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-[10px] font-bold uppercase tracking-[.12em] text-hotpink/70 shadow-sm ring-1 ring-petal/60">or</span>
+          <span className="shrink-0 inline-flex items-center rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-hotpink/70 shadow-sm ring-1 ring-petal/60">or</span>
           <span className="h-px flex-1 bg-petal/60" />
         </div>
       )}

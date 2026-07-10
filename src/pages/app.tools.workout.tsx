@@ -1160,7 +1160,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
     <button
       onClick={onClick}
       className={[
-        "rounded-full px-4 py-2 text-sm font-semibold border shadow-sm transition active:scale-95",
+        "rounded-full px-3.5 py-1.5 text-[13px] font-semibold border shadow-sm transition active:scale-95",
         active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
       ].join(" ")}
     >
@@ -1169,66 +1169,76 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
   );
 
   return (
-    <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-5 sm:p-7 shadow-xl shadow-rose/10">
-      <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none">Let's set you up</h1>
-      <p className="mt-2 text-sm text-rose/80">Four quick questions — editable anytime in Me settings.</p>
-
-      <div className="mt-6 space-y-5">
-        <div>
-          <p className="text-sm font-bold text-rose mb-2">Your level</p>
-          <div className="flex flex-wrap gap-2">
-            {(["Beginner", "Intermediate", "Advanced"] as Level[]).map((l) => (
-              <Pill key={l} active={level === l} label={l} onClick={() => setLevel(l)} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-sm font-bold text-rose mb-2">Your main goal</p>
-          <div className="flex flex-wrap gap-2">
-            {([
-              { key: "energy", label: "Energy" },
-              { key: "tonify", label: "Tonify" },
-              { key: "strengthen", label: "Strengthen" },
-              { key: "flexibility", label: "Flexibility" },
-            ] as { key: Goal; label: string }[]).map((g) => (
-              <Pill key={g.key} active={goal === g.key} label={g.label} onClick={() => setGoal(g.key)} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-sm font-bold text-rose mb-2">Equipment available</p>
-          <div className="flex flex-wrap gap-2">
-            {([
-              { key: "none", label: "Nothing" },
-              { key: "mat", label: "Mat only" },
-              { key: "bands", label: "Bands" },
-              { key: "dumbbells", label: "Dumbbells" },
-              { key: "gym", label: "Full gym" },
-            ] as { key: Equipment; label: string }[]).map((e) => (
-              <Pill key={e.key} active={equipment === e.key} label={e.label} onClick={() => setEquipment(e.key)} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-sm font-bold text-rose mb-2">Days available per week</p>
-          <div className="flex flex-wrap gap-2">
-            {([2, 3, 4, 5] as const).map((d) => (
-              <Pill key={d} active={days === d} label={d === 5 ? "5+" : String(d)} onClick={() => setDays(d)} />
-            ))}
-          </div>
+    <div className="animate-fade-in">
+      {/* Compact hero — same photo banner every workout tab uses, so setup feels
+          like part of the tool, not a bare form. */}
+      <div className="relative w-full overflow-hidden rounded-3xl border border-petal/60 shadow-md shadow-rose/10 mb-3 animate-card-pop-in">
+        <img src={HERO_IMAGES.program} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/80 via-hotpink/30 to-transparent" />
+        <div className="relative z-10 px-4 py-4 sm:px-5 sm:py-5 max-w-[72%] min-h-[92px] sm:min-h-[110px] flex flex-col justify-center">
+          <h1 className="font-script text-2xl sm:text-4xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Let's set you up ✿</h1>
+          <p className="mt-1 text-[11px] sm:text-sm font-medium text-white/95 leading-snug" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>Four quick questions — editable anytime in Me.</p>
         </div>
       </div>
 
-      <button
-        onClick={() => onDone({ level, goal, equipment, daysPerWeek: days })}
-        className="bloom-luxury-btn mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white"
-      >
-        Start <ChevronRight className="h-4 w-4" />
-      </button>
-    </section>
+      <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 shadow-xl shadow-rose/10">
+        <div className="space-y-3.5">
+          <div>
+            <p className="text-[13px] font-bold text-rose mb-1.5">Your level</p>
+            <div className="flex flex-wrap gap-1.5">
+              {(["Beginner", "Intermediate", "Advanced"] as Level[]).map((l) => (
+                <Pill key={l} active={level === l} label={l} onClick={() => setLevel(l)} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[13px] font-bold text-rose mb-1.5">Your main goal</p>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { key: "energy", label: "Energy" },
+                { key: "tonify", label: "Tonify" },
+                { key: "strengthen", label: "Strengthen" },
+                { key: "flexibility", label: "Flexibility" },
+              ] as { key: Goal; label: string }[]).map((g) => (
+                <Pill key={g.key} active={goal === g.key} label={g.label} onClick={() => setGoal(g.key)} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[13px] font-bold text-rose mb-1.5">Equipment available</p>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { key: "none", label: "Nothing" },
+                { key: "mat", label: "Mat only" },
+                { key: "bands", label: "Bands" },
+                { key: "dumbbells", label: "Dumbbells" },
+                { key: "gym", label: "Full gym" },
+              ] as { key: Equipment; label: string }[]).map((e) => (
+                <Pill key={e.key} active={equipment === e.key} label={e.label} onClick={() => setEquipment(e.key)} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[13px] font-bold text-rose mb-1.5">Days available per week</p>
+            <div className="flex flex-wrap gap-1.5">
+              {([2, 3, 4, 5] as const).map((d) => (
+                <Pill key={d} active={days === d} label={d === 5 ? "5+" : String(d)} onClick={() => setDays(d)} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onDone({ level, goal, equipment, daysPerWeek: days })}
+          className="bloom-luxury-btn mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white"
+        >
+          Start <ChevronRight className="h-4 w-4" />
+        </button>
+      </section>
+    </div>
   );
 }
 
