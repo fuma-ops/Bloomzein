@@ -4,7 +4,7 @@ import {
   Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
-  ChevronDown, AlarmClock, Star,
+  ChevronDown, AlarmClock, Star, Activity,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -16,7 +16,7 @@ import { todayISO } from "@/lib/localDate";
 import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay } from "@/lib/crossToolData";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
@@ -287,6 +287,8 @@ export default function TodayPage() {
 
   // Core state
   const [mood,                setMood]                = useState<string | null>(null);
+  const [symptomsToday,       setSymptomsToday]       = useState<string[]>([]);
+  const [symptomPickerOpen,   setSymptomPickerOpen]   = useState(false);
   const [waterCount,          setWaterCount]          = useState(0);
   const [waterGoal,           setWaterGoal]           = useState(8);
   const [waterModalOpen,      setWaterModalOpen]      = useState(false);
@@ -307,6 +309,7 @@ export default function TodayPage() {
   const [todayMeals,          setTodayMeals]          = useState<Record<string, string | null>>({});
 
   const moodTileRef = useRef<HTMLButtonElement>(null);
+  const symptomTileRef = useRef<HTMLButtonElement>(null);
 
   // Iron recipe for period/luteal nudge (used in plan section)
   const ironRecipe = useMemo(() =>
@@ -323,6 +326,8 @@ export default function TodayPage() {
       const log = JSON.parse(localStorage.getItem("bloom:mood-log-v2") || "{}");
       setMood(log[ymdLocal(new Date())] ?? localStorage.getItem(KEYS.mood));
     } catch { try { setMood(localStorage.getItem(KEYS.mood)); } catch {} }
+
+    try { setSymptomsToday(readSymptomsForDay(todayISO())); } catch {}
     setStreak(computeBloomStreak());
 
 
@@ -442,6 +447,12 @@ export default function TodayPage() {
     setStreak(computeBloomStreak()); // logging today keeps the bloom streak alive
   };
 
+  // Body check-in — writes to the ONE symptom log the Cycle Tracker graph reads,
+  // keyed by today's LOCAL date, so the two always agree.
+  const toggleSymptomToday = (label: string) => {
+    setSymptomsToday(toggleSymptomForDay(todayISO(), label));
+  };
+
 
   const tapWater = (idx: number) => {
     setWaterCount((prev) => {
@@ -513,7 +524,9 @@ export default function TodayPage() {
       return {
         id: `meal-${slot}`, label: `Plan your ${MEAL_SLOT_LABEL[slot].toLowerCase()}`, time: MEAL_SLOT_TIME[slot], Icon: Heart,
         tool: "/app/tools/meals", image: MEAL_PHOTO[slot],
-        blurb: `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`,
+        blurb: cycleReady
+          ? `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`
+          : `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} ✿`,
       };
     };
     const items: PlanItem[] = [];
@@ -525,7 +538,7 @@ export default function TodayPage() {
     items.push(mealItem("dinner"));
     items.push({ id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
     return items;
-  }, [phase, todayMeals]);
+  }, [phase, todayMeals, cycleReady]);
   const moodHint  = MOODS[moodHintIdx];
   const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
   const affirmPool = AFFIRMATIONS[phase];
@@ -614,33 +627,69 @@ export default function TodayPage() {
             </>
           )}
 
-          <div className="mt-2.5 sm:mt-3.5 flex items-center gap-3">
-            <button
-              ref={moodTileRef}
-              onClick={() => setMoodPickerOpen((v) => !v)}
-              aria-label="How are you feeling?"
-              aria-haspopup="dialog"
-              aria-expanded={moodPickerOpen}
-              className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
-            >
-              <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
-              {!mood && (
-                <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
-                  <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
-                </span>
-              )}
-            </button>
-            <div className="text-left">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
-                {mood ? "Feeling" : "How are you?"}
-              </p>
-              <p
-                key={mood ?? `hint-${moodHintIdx}`}
-                className={["font-script text-lg leading-tight animate-fade-in inline-flex items-center gap-1", mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
+          <div className="mt-2.5 sm:mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2.5">
+            {/* Mood check-in */}
+            <div className="flex items-center gap-2.5">
+              <button
+                ref={moodTileRef}
+                onClick={() => setMoodPickerOpen((v) => !v)}
+                aria-label="How are you feeling?"
+                aria-haspopup="dialog"
+                aria-expanded={moodPickerOpen}
+                className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
               >
-                {mood && <Check className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={3.5} />}
-                {mood ? MOOD_LABEL[mood] : moodHint.label}
-              </p>
+                <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+                {!mood && (
+                  <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
+                    <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
+                  </span>
+                )}
+              </button>
+              <div className="text-left">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
+                  {mood ? "Feeling" : "How are you?"}
+                </p>
+                <p
+                  key={mood ?? `hint-${moodHintIdx}`}
+                  className={["font-script text-lg leading-tight animate-fade-in inline-flex items-center gap-1", mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
+                >
+                  {mood && <Check className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={3.5} />}
+                  {mood ? MOOD_LABEL[mood] : moodHint.label}
+                </p>
+              </div>
+            </div>
+
+            {/* Body / symptoms check-in — same tile, right beside mood */}
+            <div className="flex items-center gap-2.5">
+              <button
+                ref={symptomTileRef}
+                onClick={() => setSymptomPickerOpen((v) => !v)}
+                aria-label="How's your body today?"
+                aria-haspopup="dialog"
+                aria-expanded={symptomPickerOpen}
+                className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
+              >
+                <Activity className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+                {symptomsToday.length === 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
+                    <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
+                  </span>
+                )}
+              </button>
+              <div className="text-left">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
+                  {symptomsToday.length ? "Body" : "How's your body?"}
+                </p>
+                <p
+                  key={symptomsToday.length ? `sym-${symptomsToday.length}` : "sym-none"}
+                  className={["font-script text-lg leading-tight animate-fade-in inline-flex items-center gap-1", symptomsToday.length ? "text-hotpink" : "italic text-rose/40"].join(" ")}
+                >
+                  {symptomsToday.length > 0 && <Check className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={3.5} />}
+                  {symptomsToday.length
+                    ? `${symptomsToday.length} noted`
+                    : "Tap to check in"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -669,10 +718,20 @@ export default function TodayPage() {
         triggerRef={moodTileRef}
       />
 
+      {/* SymptomPopover — multi-select body check-in, mirrors the mood popover */}
+      <SymptomPopover
+        open={symptomPickerOpen}
+        onClose={() => setSymptomPickerOpen(false)}
+        selected={symptomsToday}
+        onToggle={toggleSymptomToday}
+        triggerRef={symptomTileRef}
+      />
+
       {/* PlanDetailModal — centred on every device, opened by tapping a plan item */}
       <PlanDetailModal
         item={activePlan}
         phase={phase}
+        cycleReady={cycleReady}
         done={activePlan ? planDone.includes(activePlan.id) : false}
         onToggleDone={() => { if (activePlan) togglePlanItem(activePlan.id); }}
         onClose={() => setActivePlan(null)}
@@ -806,9 +865,11 @@ export default function TodayPage() {
                       {item.time && (
                         <span className="text-[9px] font-semibold text-rose/40">{item.time}</span>
                       )}
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
-                        ✿ {PHASE_LABEL[phase]} phase
-                      </span>
+                      {cycleReady && (
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
+                          ✿ {PHASE_LABEL[phase]} phase
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -1092,10 +1153,11 @@ function BloomFlower({ className = "" }: { className?: string }) {
  * gentle "mark done" toggle so the row itself stays tap-to-preview.
  */
 function PlanDetailModal({
-  item, phase, done, onToggleDone, onClose,
+  item, phase, cycleReady, done, onToggleDone, onClose,
 }: {
   item: PlanItem | null;
   phase: Exclude<CyclePhase, "any">;
+  cycleReady: boolean;
   done: boolean;
   onToggleDone: () => void;
   onClose: () => void;
@@ -1141,7 +1203,9 @@ function PlanDetailModal({
               {timing === "now" && (
                 <span className="rounded-full bg-hotpink px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Now</span>
               )}
-              <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/80">✿ {PHASE_LABEL[phase]}</span>
+              {cycleReady && (
+                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/80">✿ {PHASE_LABEL[phase]}</span>
+              )}
             </div>
             <h3 className="mt-1.5 font-script text-2xl text-white leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">{item.label}</h3>
           </div>
@@ -1233,6 +1297,68 @@ function MoodPopover({
           </button>
         ))}
       </div>
+    </div>,
+    document.body
+  );
+}
+
+const SYMPTOM_POPOVER_SIZE = { width: 248, height: 236 };
+
+function SymptomPopover({
+  open, onClose, selected, onToggle, triggerRef,
+}: {
+  open: boolean;
+  onClose: () => void;
+  selected: string[];
+  onToggle: (label: string) => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+}) {
+  const style = useSmartPopoverPosition(triggerRef, open, SYMPTOM_POPOVER_SIZE);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (triggerRef.current?.contains(target as Node)) return;
+      if (target.closest?.("[data-symptom-popover]")) return;
+      onClose();
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open, onClose, triggerRef]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      data-symptom-popover
+      style={style}
+      className="rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
+    >
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">HOW'S YOUR BODY? ✿</p>
+      <div className="flex flex-wrap justify-center gap-1.5" style={{ maxWidth: 224 }}>
+        {SYMPTOM_OPTIONS.map((s) => {
+          const active = selected.includes(s);
+          return (
+            <button
+              key={s}
+              onClick={() => onToggle(s)}
+              className={["rounded-full px-2.5 py-1 text-[11px] font-bold border transition active:scale-95",
+                active
+                  ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30"
+                  : "bg-blush/50 text-rose border-petal/50 hover:bg-blush/70"].join(" ")}
+            >
+              {s}
+            </button>
+          );
+        })}
+      </div>
+      <button
+        onClick={onClose}
+        className="mt-2.5 w-full rounded-full bg-hotpink py-1.5 text-[11px] font-bold text-white active:scale-95 transition"
+      >
+        Done ✿
+      </button>
     </div>,
     document.body
   );

@@ -80,12 +80,18 @@ export function writeCycleSettings(settings: CycleSettings): void {
 }
 
 /**
- * Refreshes `CYCLE_PHASE_KEY` from whatever settings are currently in effect
- * (saved or default) without marking the user as having completed setup.
+ * Refreshes `CYCLE_PHASE_KEY` for tools that read the shared phase — but ONLY
+ * when the user has actually saved her cycle. With no settings we CLEAR the key
+ * so `readCyclePhase()` returns null everywhere (Calendar, Yoga, Meals, Diet…)
+ * and no tool shows a phase computed from the placeholder default date.
  */
 export function broadcastCyclePhase(): void {
   try {
-    localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(phaseForDay(new Date(), readCycleSettings())));
+    if (hasCycleSettings()) {
+      localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(phaseForDay(new Date(), readCycleSettings())));
+    } else {
+      localStorage.removeItem(CYCLE_PHASE_KEY);
+    }
   } catch {}
 }
 
