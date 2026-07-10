@@ -414,10 +414,10 @@ export default function CalendarPage() {
           {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="animate-fade-in font-script text-2xl sm:text-3xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
                 Bloom Calendar
               </h1>
-              <p className="animate-fade-in mt-0.5 text-[10px] sm:text-xs italic text-white/90 leading-snug" style={{ animationDelay: "150ms" }}>
+              <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: "150ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
                 Your life, beautifully planned.
               </p>
               <CyclePhasePill className="mt-1 ring-1 ring-white/50" />

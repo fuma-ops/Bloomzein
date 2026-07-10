@@ -933,11 +933,11 @@ function YogaHero({
       </div>
       <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
         <div key={active} className="animate-scale-in">
-          <div className="max-w-[62%]">
-            <h1 className="font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md">{title}</h1>
-            <p className="mt-1 text-[11px] sm:text-xs italic leading-snug text-white/90 drop-shadow">{subtitle}</p>
+          <div className="max-w-[72%]">
+            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{title}</h1>
+            <p className="mt-0.5 text-xs sm:text-sm font-medium leading-snug text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{subtitle}</p>
           </div>
-          <CyclePhasePill className="mt-1.5" />
+          <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
         </div>
         <div className="flex justify-center">
           <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
