@@ -1838,15 +1838,18 @@ export default function DietPage() {
           <RotateCcw className="h-3 w-3" /> Reset
         </button>
         <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-5 lg:p-7 min-h-[150px] sm:min-h-[176px] lg:min-h-[210px]">
-          {/* Title block */}
-          <div className="flex-1 flex flex-col justify-center max-w-[70%] sm:max-w-[58%] lg:max-w-[48%]">
-            <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ animationDelay: "0ms", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
-              {TAB_HERO[tab].title}
-            </h1>
-            <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: "200ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
-              {TAB_HERO[tab].subtitle}
-            </p>
-            <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
+          {/* Title block — title + subtitle stay narrow to clear the food photo,
+              but the phase pill sits full-width below so it reads on one line. */}
+          <div className="flex-1 flex flex-col justify-center items-start">
+            <div className="max-w-[70%] sm:max-w-[58%] lg:max-w-[52%]">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ animationDelay: "0ms", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
+                {TAB_HERO[tab].title}
+              </h1>
+              <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: "200ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
+                {TAB_HERO[tab].subtitle}
+              </p>
+            </div>
+            <CyclePhasePill className="mt-1.5 ring-1 ring-white/50" />
           </div>
           {/* Tab pills at bottom of hero */}
           <div id="diet-tabs" ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: "320ms" }}>
