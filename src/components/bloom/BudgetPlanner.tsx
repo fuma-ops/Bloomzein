@@ -14,7 +14,7 @@ import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
 import { SparkleOnboarding, type SparkleContent } from "./SparkleOnboarding";
 import { estimateWeeklyGroceryCost } from "./mealsBudget";
-import { readCyclePhase, hasCycleSettings, type CyclePhase } from "./cyclePhase";
+import { CyclePhasePill } from "./CyclePhasePill";
 
 /* ============================================================
    TOKENS / CONSTANTS
@@ -78,14 +78,6 @@ const MOODS = [
 type MoodKey = typeof MOODS[number]["key"];
 
 const PRESET_GOALS = ["Emergency Fund","Vacation","New Device","Investment","Wedding","Home","Education","Car"];
-
-const BP_CYCLE_TIPS: Partial<Record<string, { Icon: LucideIcon; headline: string; sub: string; grad: string }>> = {
-  luteal:     { Icon: Moon,     headline: "Luteal phase — your inner PMS budget",  sub: "Budget a little extra self-care this week. Cravings are real.",       grad: "from-purple-50 to-pink-50" },
-  period:     { Icon: Heart,    headline: "Period week — gentle care first",        sub: "Rest & warmth over everything. You deserve every cent of it.",         grad: "from-pink-50 to-rose-50" },
-  follicular: { Icon: Sprout,   headline: "Follicular — rising energy mode",        sub: "Great week for big financial decisions. Your mind is clear.",           grad: "from-emerald-50 to-pink-50" },
-  ovulation:  { Icon: Sparkles, headline: "Ovulation peak — full power mode",       sub: "Your best week to tackle financial goals. Go for it.",                 grad: "from-yellow-50 to-pink-50" },
-  fertile:    { Icon: Flower2,  headline: "Fertile window — peak vitality",         sub: "High energy, high clarity. Perfect week to review your budget.",        grad: "from-pink-50 to-purple-50" },
-};
 
 const HERO_CONFIG: Record<string, { title: string; sub: string }> = {
   Dashboard:       { title: "You're blooming",         sub: "Your budget. Your dreams. Your future." },
@@ -1093,9 +1085,7 @@ export function BudgetPlanner() {
 
   // State lifted from DashboardTab for hero placement before the tab bar
   const [viewPeriod, setViewPeriod] = useState<"week"|"month">("month");
-  const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
   const [goalIdx, setGoalIdx] = useState(0);
-  useEffect(() => { if (hasCycleSettings()) setCyclePhase(readCyclePhase()); }, []);
 
   const tabScrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -1110,7 +1100,6 @@ export function BudgetPlanner() {
 
   const clampedHeroGoalIdx = viewGoals.length > 0 ? Math.min(goalIdx, viewGoals.length - 1) : 0;
   const heroGoalPct = (() => { const g = viewGoals[clampedHeroGoalIdx]; return g?.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0; })();
-  const cycleTip = cyclePhase && cyclePhase !== "any" ? BP_CYCLE_TIPS[cyclePhase] : undefined;
   const weekBand = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
     const iso = d.toISOString().slice(0, 10);
@@ -1287,21 +1276,12 @@ export function BudgetPlanner() {
             <img src="/images/budget-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
             <div className={["relative z-10 flex items-center justify-between gap-3 p-4 sm:p-5 lg:p-5", isDash ? "min-h-[120px] sm:min-h-[140px]" : "min-h-[88px] sm:min-h-[100px]"].join(" ")}>
-              <div className="max-w-[65%]">
-                <h2 className="font-script text-2xl sm:text-3xl text-white leading-tight" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+              <div className="max-w-[72%]">
+                <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.28)' }}>
                   {hc.title}
                 </h2>
-                {isDash && cycleTip ? (
-                  <div className="mt-1 space-y-0.5">
-                    <div className="inline-flex items-center gap-1.5">
-                      <cycleTip.Icon className="h-3.5 w-3.5 text-white shrink-0" strokeWidth={2} style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.2))' }} />
-                      <span className="text-[11px] font-bold text-white tracking-wide" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>{cycleTip.headline}</span>
-                    </div>
-                    <p className="text-[10px] text-white/85 italic leading-snug pl-0.5">{cycleTip.sub}</p>
-                  </div>
-                ) : (
-                  <p className="mt-0.5 text-[11px] sm:text-xs text-white/90">{hc.sub}</p>
-                )}
+                <p className="mt-0.5 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.35)' }}>{hc.sub}</p>
+                <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
                 <div className="mt-2 flex items-center gap-2">
                   {isDash && (
                     <button onClick={() => setShowMonthPicker(true)}

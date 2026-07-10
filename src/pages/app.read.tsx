@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 
 /* ---------- data ---------- */
 const TOPICS = ["All", "Cycle & Body", "Self-care", "Money", "Movement", "Mindset", "Recipes"] as const;
@@ -185,8 +186,9 @@ export default function ReadPage() {
 
           <div className="relative z-[2] flex flex-col justify-end px-4 pt-6 pb-6 sm:px-10 sm:pt-8 sm:pb-8 min-h-[180px] sm:min-h-[298px]">
             <div className="text-left">
-              <h1 className="font-script text-4xl sm:text-6xl text-white leading-none drop-shadow-[0_2px_8px_oklch(0.4_0.2_350/0.6)]">Read</h1>
-              <p className="mt-1 sm:mt-1.5 text-xs sm:text-base font-medium text-white/95 drop-shadow">soft reads for your softest era ✿</p>
+              <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Read</h1>
+              <p className="mt-1 text-xs sm:text-sm font-medium text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>soft reads for your softest era ✿</p>
+              <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
             </div>
           </div>
         </div>
