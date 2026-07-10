@@ -374,9 +374,9 @@ function HeroHeader({
       </div>
       <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
         <div>
-          <h2 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-tight drop-shadow-md">{sectionTitle}</h2>
-          <p className="mt-0.5 text-[11px] sm:text-sm lg:text-base italic leading-snug whitespace-nowrap text-white/90 drop-shadow">{sectionSubtitle}</p>
-          <CyclePhasePill className="mt-1.5" />
+          <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{sectionTitle}</h2>
+          <p className="mt-0.5 text-xs sm:text-sm font-medium leading-snug text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{sectionSubtitle}</p>
+          <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
         </div>
         <div className="flex justify-center">
           <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
