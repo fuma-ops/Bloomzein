@@ -1592,8 +1592,9 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       v: plannedBudget + goalsMonthly + realExpenses,
       sub: "extra spends this month",
       glow: null as Glow | null,
-      // A soft red glow behind all the card's text the moment there's extra spend
-      textGlow: (realExpenses > 0 ? "red" : null) as TGlow | null,
+      // Kept visually simple like the other cards — the extra spend shows as a
+      // small rose "€… extra" label, with no coloured glow behind the content.
+      textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,
       growthIcon: false,
       badge: null,
@@ -1613,10 +1614,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
+    <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-fr gap-2 sm:gap-3 animate-fade-in">
       {cards.map((it) => (
         <Card key={it.label}
-          className={`relative overflow-hidden hover:-translate-y-1 bg-gradient-to-br from-pink-50 to-rose-50 ${it.glow ? GLOW[it.glow] : ""}`}
+          className={`relative h-full overflow-hidden hover:-translate-y-1 bg-gradient-to-br from-pink-50 to-rose-50 ${it.glow ? GLOW[it.glow] : ""}`}
           style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
         >
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>

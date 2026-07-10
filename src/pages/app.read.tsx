@@ -184,7 +184,7 @@ export default function ReadPage() {
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-5 sm:top-6 sm:right-9 h-4 w-4 sm:h-5 sm:w-5 text-white/80" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
           <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-8 right-14 sm:top-12 sm:right-24 h-3 w-3 sm:h-4 sm:w-4 text-white/70" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
 
-          <div className="relative z-[2] flex flex-col justify-end px-4 pt-6 pb-6 sm:px-10 sm:pt-8 sm:pb-8 min-h-[180px] sm:min-h-[298px]">
+          <div className="relative z-[2] flex flex-col justify-start px-4 pt-6 pb-6 sm:px-10 sm:pt-8 sm:pb-8 min-h-[180px] sm:min-h-[298px]">
             <div className="text-left">
               <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Read</h1>
               <p className="mt-1 text-xs sm:text-sm font-medium text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>soft reads for your softest era ✿</p>

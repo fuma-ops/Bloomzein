@@ -845,27 +845,27 @@ export function CycleTracker() {
 
           {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}
           <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-3 mt-3.5">
+            <div className="grid grid-cols-4 gap-[6px] md:gap-3 mt-3.5">
               {/* Next Period */}
-              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>in {daysToPeriod} days</p>
               </div>
               {/* Fertile */}
-              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Fertile</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#F472B6' }}>{fmtDate(fertileStart)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>→ {fmtDate(fertileEnd)}</p>
               </div>
               {/* Ovulation */}
-              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Ovulation</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#DB2777' }}>{fmtDate(ovulationDate)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>day {ovulationDayOfCycle + 1}</p>
               </div>
               {/* Daily Pill */}
-              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '18px', padding: '10px 12px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
+              <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#BE185D' }}>
                   {pillTaken ? "Taken ✓" : "Log it"}

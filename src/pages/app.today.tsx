@@ -100,21 +100,6 @@ const MOOD_LABEL: Record<string, string> = {
   calm: "Calm", happy: "Happy", energetic: "Energetic", sensitive: "Sensitive", sad: "Sad", tired: "Tired",
 };
 
-// ── Symptoms ──────────────────────────────────────────────────────────────────
-const SYMPTOMS = [
-  { key: "cramps",    label: "Cramps",      Icon: Zap },
-  { key: "bloated",   label: "Bloated",     Icon: Wind },
-  { key: "headache",  label: "Headache",    Icon: Frown },
-  { key: "fatigue",   label: "Fatigue",     Icon: BatteryLow },
-  { key: "tender",    label: "Tender",      Icon: Heart },
-  { key: "moody",     label: "Moody",       Icon: Waves },
-  { key: "nausea",    label: "Nausea",      Icon: Leaf },
-  { key: "cravings",  label: "Cravings",    Icon: Cookie },
-  { key: "backpain",  label: "Back pain",   Icon: Bone },
-  { key: "spotting",  label: "Spotting",    Icon: Droplet },
-  { key: "lowenergy", label: "Low energy",  Icon: CircleDot },
-  { key: "acne",      label: "Acne",        Icon: Meh },
-] as const;
 
 // ── Bloom streak ─────────────────────────────────────────────────────────────
 function ymdLocal(d: Date): string {
@@ -298,8 +283,6 @@ export default function TodayPage() {
 
   // Core state
   const [mood,                setMood]                = useState<string | null>(null);
-  const [symptoms,            setSymptoms]            = useState<string[]>([]);
-  const [symptomsOpen,        setSymptomsOpen]        = useState(false);
   const [waterCount,          setWaterCount]          = useState(0);
   const [waterGoal,           setWaterGoal]           = useState(8);
   const [waterModalOpen,      setWaterModalOpen]      = useState(false);
@@ -339,10 +322,6 @@ export default function TodayPage() {
     } catch { try { setMood(localStorage.getItem(KEYS.mood)); } catch {} }
     setStreak(computeBloomStreak());
 
-    try {
-      const raw = readJSON<{ date: string; list: string[] }>(KEYS.symptoms, { date: "", list: [] });
-      setSymptoms(raw.date === iso ? raw.list : []);
-    } catch {}
 
     try {
       const raw = readJSON<{ date: string; count: number }>(KEYS.water, { date: "", count: 0 });
@@ -461,13 +440,6 @@ export default function TodayPage() {
     setStreak(computeBloomStreak()); // logging today keeps the bloom streak alive
   };
 
-  const toggleSymptom = (key: string) => {
-    setSymptoms((prev) => {
-      const next = prev.includes(key) ? prev.filter((s) => s !== key) : [...prev, key];
-      try { localStorage.setItem(KEYS.symptoms, JSON.stringify({ date: todayISO(), list: next })); } catch {}
-      return next;
-    });
-  };
 
   const tapWater = (idx: number) => {
     setWaterCount((prev) => {
@@ -618,7 +590,7 @@ export default function TodayPage() {
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
 
-          <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
+          <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
             ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
           </div>
 
@@ -732,7 +704,7 @@ export default function TodayPage() {
 
       {/* ── 2. TODAY'S BLOOM PLAN (vertical rows) ───────────────────────────── */}
       <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
-        <SectionTitle hint={`${PHASE_LABEL[phase]} phase`}>Today's Plan ✿</SectionTitle>
+        <SectionTitle>Today's Plan ✿</SectionTitle>
         <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
           Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.
         </p>
@@ -950,50 +922,6 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* ── 5. SYMPTOMS (collapsed) ─────────────────────────────────────────── */}
-      <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "150ms" }}>
-        <button
-          onClick={() => setSymptomsOpen((v) => !v)}
-          className="w-full bloom-pearl-card pearl-sheen rounded-3xl px-4 py-3 sm:px-5 sm:py-3.5 flex items-center gap-3 transition hover:bg-blush/30 active:scale-[0.99]"
-        >
-          <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white">
-            <Heart className="h-3.5 w-3.5" strokeWidth={1.8} />
-          </span>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-xs sm:text-sm font-bold text-[#831843]">How's your body today? ✿</p>
-            <p className="text-[10px] sm:text-xs text-rose/60">
-              {symptoms.length === 0 ? "No symptoms logged" : `${symptoms.length} symptom${symptoms.length > 1 ? "s" : ""} · ${symptoms.slice(0, 3).map((k) => SYMPTOMS.find((s) => s.key === k)?.label).filter(Boolean).join(", ")}`}
-            </p>
-          </div>
-          {symptomsOpen ? <ChevronUp className="h-4 w-4 text-rose/40 shrink-0" /> : <ChevronDown className="h-4 w-4 text-rose/40 shrink-0" />}
-        </button>
-
-        {symptomsOpen && (
-          <div className="bloom-pearl-card pearl-sheen rounded-3xl px-3 py-3 mt-1.5 animate-fade-in">
-            <div className="flex flex-wrap gap-1.5">
-              {SYMPTOMS.map((s) => {
-                const active = symptoms.includes(s.key);
-                return (
-                  <button
-                    key={s.key}
-                    onClick={() => toggleSymptom(s.key)}
-                    className={["shrink-0 inline-flex items-center gap-1 rounded-full pl-0.5 pr-2.5 py-1 text-[10px] sm:text-[11px] font-semibold border transition-all duration-200",
-                      active
-                        ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30 scale-105"
-                        : "bg-white/80 border-petal/40 text-rose/70 hover:bg-blush/60",
-                    ].join(" ")}
-                  >
-                    <span className="clay-blob grid h-5 w-5 place-items-center rounded-full text-white shrink-0">
-                      <s.Icon className="h-2.5 w-2.5" strokeWidth={2} />
-                    </span>
-                    {s.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </section>
 
       {/* ── 6. HYDRATION ────────────────────────────────────────────────────── */}
       <section id="hydration" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
