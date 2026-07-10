@@ -13,7 +13,9 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, toYogaPhase, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
+import { isGuided } from "@/lib/guidedSetup";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -669,6 +671,19 @@ export default function YogaPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "plan" });
   const [lowWater, setLowWater] = useState(false);
+
+  // Guided setup: any schedule commit dispatches "bloom:yoga-updated"; the first
+  // time a plan exists while she's in the guided flow, celebrate and hand back.
+  const [guidedDone, setGuidedDone] = useState(false);
+  const guidedShownRef = useRef(false);
+  useEffect(() => {
+    const onUpdate = () => {
+      if (guidedShownRef.current) return;
+      if (isGuided() && readYogaPlanDays().length > 0) { guidedShownRef.current = true; setGuidedDone(true); }
+    };
+    window.addEventListener("bloom:yoga-updated", onUpdate);
+    return () => window.removeEventListener("bloom:yoga-updated", onUpdate);
+  }, []);
   // Guided sparkle tour — auto on first visit, replayable via the hero Guide chip.
   const [tourDone, setTourDone] = useState(false);
   const [showTour, setShowTour] = useState(false);
@@ -727,6 +742,16 @@ export default function YogaPage() {
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
+
+      {guidedDone && (
+        <SetupCelebration
+          title="Your movement is planned ✿"
+          message="Gorgeous — your week is set to flow with you. Let's head back to Today for your last little step."
+          onContinue={() => { window.location.href = "/app/today"; }}
+          onStay={() => setGuidedDone(false)}
+          stayLabel="See my plan first"
+        />
+      )}
 
       {tourVisible && <YogaOnboarding onTab={goTourTab} onDone={finishTour} />}
 

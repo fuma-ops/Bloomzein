@@ -10,7 +10,9 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState } from "@/lib/crossToolData";
+import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
+import { isGuided } from "@/lib/guidedSetup";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -454,6 +456,19 @@ export default function WorkoutPage() {
   useEffect(() => { setHydrated(true); }, []);
   const goTourTab = (t: WorkoutTourTab) => { setTab(t); setView({ kind: t }); };
 
+  // Guided setup: any plan commit dispatches "bloom:workout-updated"; the first
+  // time a plan exists while she's in the guided flow, celebrate and hand back.
+  const [guidedDone, setGuidedDone] = useState(false);
+  const guidedShownRef = useRef(false);
+  useEffect(() => {
+    const onUpdate = () => {
+      if (guidedShownRef.current) return;
+      if (isGuided() && readWorkoutPlanDays().length > 0) { guidedShownRef.current = true; setGuidedDone(true); }
+    };
+    window.addEventListener("bloom:workout-updated", onUpdate);
+    return () => window.removeEventListener("bloom:workout-updated", onUpdate);
+  }, []);
+
   useEffect(() => {
     setLowWater(readTodayWaterCount() < 3);
     const refresh = () => setLowWater(readTodayWaterCount() < 3);
@@ -541,6 +556,16 @@ export default function WorkoutPage() {
   return (
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
+
+      {guidedDone && (
+        <SetupCelebration
+          title="Your movement is planned ✿"
+          message="Gorgeous — your week is set to move with you. Let's head back to Today for your last little step."
+          onContinue={() => { window.location.href = "/app/today"; }}
+          onStay={() => setGuidedDone(false)}
+          stayLabel="See my plan first"
+        />
+      )}
 
       {tourVisible && (
         <WorkoutOnboarding
