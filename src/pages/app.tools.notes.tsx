@@ -9,6 +9,7 @@ import {
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { CuteTimePicker } from "@/components/bloom/CutePicker";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import {
   subscribeToPush,
   syncScheduledNotifications,
@@ -983,8 +984,9 @@ export default function NotesPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div className="animate-scale-in">
-            <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Notes & Reminders</h1>
-            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/90 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">Scribble thoughts, let dreams nudge ✿</p>
+            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Notes & Reminders</h1>
+            <p className="mt-0.5 text-xs sm:text-sm font-medium text-white/95 max-w-[10rem] sm:max-w-xs lg:max-w-sm leading-snug" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>Scribble thoughts, let dreams nudge ✿</p>
+            <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
           </div>
           {/* Tab toggle — bottom of hero, yoga-style */}
           <div className="flex justify-center">

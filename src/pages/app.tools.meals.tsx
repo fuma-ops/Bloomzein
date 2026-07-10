@@ -63,6 +63,7 @@ import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { todayISO } from "@/lib/localDate";
 import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, slotBudget, portionForRecipe, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
@@ -574,14 +575,10 @@ export default function MealsPage() {
         <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
           {/* Title block — left-anchored */}
           <div className="flex items-start justify-between gap-2">
-            <div className="max-w-[62%]">
-              <h1 className="animate-fade-in font-script text-2xl sm:text-3xl text-white leading-none drop-shadow-md" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
-              {phase !== "any" && tab === "week" && (
-                <p className="animate-fade-in mt-1 text-[10px] sm:text-xs font-semibold uppercase tracking-[.12em] text-white/75 drop-shadow leading-none" style={{ animationDelay: '120ms' }}>
-                  {phase} phase
-                </p>
-              )}
-              <p className="animate-fade-in mt-1 text-[11px] sm:text-xs italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
+            <div className="max-w-[68%]">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ animationDelay: '0ms', textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{TAB_HERO[tab].title}</h1>
+              <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: '200ms', textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{TAB_HERO[tab].subtitle}</p>
+              <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
             </div>
             {/* Reset + Guide chips */}
             <div className="animate-fade-in shrink-0 flex items-center gap-1.5" style={{ animationDelay: '260ms' }}>

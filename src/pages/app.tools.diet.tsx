@@ -7,6 +7,7 @@ import {
   Scale, TrendingUp, TrendingDown, Minus, RotateCcw,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
@@ -1836,18 +1837,16 @@ export default function DietPage() {
         >
           <RotateCcw className="h-3 w-3" /> Reset
         </button>
-        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5 lg:p-7">
+        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-5 lg:p-7 min-h-[150px] sm:min-h-[176px] lg:min-h-[210px]">
           {/* Title block */}
-          <div className="flex-1 flex flex-col justify-center max-w-[55%] sm:max-w-[45%] lg:max-w-[38%]">
-            <h1 className="animate-fade-in font-script text-2xl sm:text-3xl lg:text-4xl text-white leading-none drop-shadow-md" style={{ animationDelay: "0ms" }}>
+          <div className="flex-1 flex flex-col justify-center max-w-[70%] sm:max-w-[58%] lg:max-w-[48%]">
+            <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ animationDelay: "0ms", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
               {TAB_HERO[tab].title}
             </h1>
-            <p className="animate-fade-in mt-1 text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-white/75 drop-shadow" style={{ animationDelay: "120ms" }}>
-              {PHASE_INFO[cyclePhase].label} phase
-            </p>
-            <p className="animate-fade-in mt-2 text-xs sm:text-sm italic text-white/90 drop-shadow leading-snug" style={{ animationDelay: "200ms" }}>
+            <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: "200ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
               {TAB_HERO[tab].subtitle}
             </p>
+            <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
           </div>
           {/* Tab pills at bottom of hero */}
           <div id="diet-tabs" ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: "320ms" }}>
