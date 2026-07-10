@@ -15,8 +15,8 @@ const CONTENT: SparkleContent = {
 const STEPS: SparkleStep[] = [
   { key: "phase",     selector: "[data-tour='phase']",     title: "Your cycle, at a glance", desc: "This shows exactly where you are today — your phase, your day, your little journey." },
   { key: "today",     selector: "[data-tour='today']",     title: "Today's little wisdom",   desc: "Every day gets its own gentle insight, tuned to the phase you're in." },
-  { key: "calendar",  selector: "[data-tour='calendar']",  title: "Your month in bloom",     desc: "Tap Settings to set up your cycle first — then every day blooms into its phase colour, and you can tap any day to peek." },
-  { key: "checkin",   selector: "[data-tour='checkin']",   title: "Check in, beautifully",   desc: "Log your mood & symptoms in a tap — Bloom quietly learns your rhythm." },
+  { key: "calendar",  selector: "[data-tour='calendar']",  title: "Your month in bloom",     desc: "Every day blooms into its phase colour — tap any day to peek at what's planned." },
+  { key: "checkin",   selector: "[data-tour='checkin']",   title: "Check in, beautifully",   desc: "Log your mood & body on Today in a tap — Bloom quietly learns your rhythm." },
   { key: "recommend", selector: "[data-tour='recommend']", title: "Matched to your phase",   desc: "Yoga, workouts & meals, picked for exactly how you feel right now." },
 ];
 
