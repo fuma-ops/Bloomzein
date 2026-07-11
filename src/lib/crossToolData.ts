@@ -334,13 +334,14 @@ export function readShoppingExtras(): string[] {
 export const FUEL_IN_PLAN_KEY = "bloom:fuel-in-plan";
 export const FUEL_IN_PLAN_EVENT = "bloom:fuel-in-plan";
 
-/** Whether the plan should show recovery meals under each session. Default on. */
+/** Whether the plan should show recovery meals under each session. Default OFF
+ *  so the week stays compact on screen — she can toggle recovery meals on. */
 export function readFuelInPlan(): boolean {
   try {
     const v = localStorage.getItem(FUEL_IN_PLAN_KEY);
-    return v === null ? true : v === "true";
+    return v === null ? false : v === "true";
   } catch {
-    return true;
+    return false;
   }
 }
 
