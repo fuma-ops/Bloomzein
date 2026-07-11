@@ -927,7 +927,10 @@ export default function TodayPage() {
       {!affirmDismissed && (
         /* Soft one-/two-line quote flanked by two flowers; a small X to close
            (top-right) and a centred tiny love-count below. */
-        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 pt-3.5 pb-3 animate-fade-in">
+        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 pt-6 pb-3 animate-fade-in">
+          <p className="absolute left-3 top-2 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-hotpink/60">
+            <BloomFlower className="h-2.5 w-2.5" /> Today's affirmation
+          </p>
           <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
             <X className="h-3.5 w-3.5" />
           </button>
