@@ -213,8 +213,8 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
         <p className="text-[11px] font-black uppercase tracking-wide text-hotpink inline-flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Your coach today
         </p>
-        <span className="text-[11px] font-bold text-hotpink inline-flex items-center gap-0.5 opacity-70 group-hover:opacity-100 transition">
-          Full plan <ChevronRight className="h-3.5 w-3.5" />
+        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white animate-selected-glow">
+          Full plan <ChevronRight className="h-3 w-3" />
         </span>
       </div>
       <p className="mt-2 text-[13px] leading-snug text-[#831843] font-medium">{coach.need}</p>

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
+import { NotifCard } from "@/components/bloom/NotifCard";
 import {
   ArrowLeft,
   Sparkles,
@@ -1009,6 +1010,9 @@ function WeekTab({
   const [generating, setGenerating] = useState(false);
   const [editingVibe, setEditingVibe] = useState(false);
   const [weekDone, setWeekDone] = useState(false);
+  // "Want a daily calorie target?" notice — dismissible, remembered.
+  const [targetDismissed, setTargetDismissed] = useState(() => { try { return localStorage.getItem("bloom:meals-target-dismissed") === "1"; } catch { return false; } });
+  const dismissTargetNotif = () => { try { localStorage.setItem("bloom:meals-target-dismissed", "1"); } catch {} setTargetDismissed(true); };
   const planRef = useRef<HTMLDivElement>(null);
   const dietNoteRef = useRef<HTMLDivElement>(null);
 
@@ -1084,19 +1088,17 @@ function WeekTab({
              gently offer to set a goal and get adequate meals. */}
       {dietSetup ? (
         <DailyTargetCard t={targets} />
-      ) : (
-        <button
-          onClick={() => { window.location.href = "/app/tools/diet"; }}
-          className="w-full flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-white/70 p-3.5 text-left transition hover:bg-blush hover-scale active:scale-[0.99] animate-fade-in"
-        >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-5 w-5" /></span>
-          <span className="flex-1 min-w-0">
-            <span className="block text-sm font-bold text-hotpink leading-tight">Want a daily calorie target?</span>
-            <span className="block text-[11.5px] text-rose/65 leading-snug">Set a goal in Diet and I'll tune every week to it — for now, meals just follow your chosen vibe ✿</span>
-          </span>
-          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink">Set goal <ChevronRight className="h-3.5 w-3.5" /></span>
-        </button>
-      )}
+      ) : !targetDismissed ? (
+        <NotifCard
+          icon={<Sparkles className="h-5 w-5" />}
+          title="Want a daily calorie target?"
+          body="Set a goal in Diet and I'll tune every week to it — for now, meals just follow your chosen vibe ✿"
+          action={
+            <button onClick={() => { window.location.href = "/app/tools/diet"; }} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink transition hover:bg-hotpink/15 active:scale-95">Set goal <ChevronRight className="h-3.5 w-3.5" /></button>
+          }
+          onDismiss={dismissTargetNotif}
+        />
+      ) : null}
 
       {/* A clear OR between the two ways to plan: set a goal in Diet (auto-tuned)
           or simply set up this week yourself below. */}
@@ -1108,68 +1110,9 @@ function WeekTab({
         </div>
       )}
 
-      {/* ②  Slim plan bar — once a week exists, "This week's vibe" collapses to
-             a one-line notification of what the plan follows, with a small Edit
-             to reopen the vibe controls + a Regenerate. */}
-      {!planEmpty && (
-      <Glass className="p-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 shrink-0 text-hotpink" />
-          <p className="flex-1 min-w-0 text-[12px] text-rose/80 leading-snug">
-            {dietSetup && mealsTuned
-              ? <>Plan tuned to your <b className="text-hotpink">{goalWord(mealsTuned)}</b> goal</>
-              : <>Plan tuned to your <b className="text-hotpink capitalize">{intentionLabel}</b> vibe</>}
-            {phase !== "any" && <span className="text-rose/50"> · <span className="capitalize">{phase}</span> phase</span>}
-          </p>
-          <button onClick={() => setEditingVibe((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full border border-petal/60 bg-white/80 px-2.5 py-1.5 text-[11px] font-bold text-hotpink hover:bg-blush transition active:scale-95">
-            <Pencil className="h-3 w-3" /> Edit
-          </button>
-          <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
-            <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
-          </button>
-        </div>
-
-        {/* Expanded editor — vibe + phase override; cooking time & allergies live in Diet */}
-        {editingVibe && (
-          <div className="mt-3 pt-3 border-t border-petal/50 space-y-2.5 animate-fade-in">
-            <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
-              <PickerField
-                value={intention} title="This week's vibe"
-                options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
-                onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
-              />
-              <PickerField
-                value={phase} title="Cycle phase"
-                options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
-                onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
-              />
-            </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <button onClick={goPantry} className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><Apple className="h-3 w-3" /> Pantry</button>
-              <a href="/app/tools/diet" className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><SlidersHorizontal className="h-3 w-3" /> Cooking time &amp; allergies</a>
-              <div className="flex-1" />
-              <button onClick={() => { handleGenerate(); setEditingVibe(false); }} className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3 py-1.5 text-[11px] font-bold active:scale-95"><RefreshCw className="h-3 w-3" /> Apply</button>
-            </div>
-          </div>
-        )}
-      </Glass>
-      )}
-
-      {/* Diet-synced note — small, only when arriving from the Diet tool */}
-      {fromDiet && (
-        <div ref={dietNoteRef} className="rounded-2xl border-2 border-emerald-300/70 p-3 animate-fade-in">
-          <div className="flex items-start gap-2">
-            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600" strokeWidth={2.2} />
-            <div className="flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Your synced plan · {fromDiet} diet</p>
-              <p className="mt-0.5 text-[11.5px] text-rose/80 leading-snug">We set up this week's meals to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</p>
-            </div>
-            <button onClick={onDismissFromDiet} aria-label="Dismiss" className="text-rose/40 hover:text-hotpink"><X className="h-4 w-4" /></button>
-          </div>
-        </div>
-      )}
-
-      {/* ③  THE PLAN — right here, no longer pushed down */}
+      {/* ②③  THE PLAN — setup steps while empty; once a week exists everything
+             (the tuned-plan notice with Edit/Regenerate, any post-setup notes and
+             the 7 days) lives together in ONE titled "meal week plan" section. */}
       {planEmpty ? (
         <div id="meals-setup" className={isGuided() ? "animate-section-attention" : ""}>
           <SetupSteps
@@ -1179,7 +1122,66 @@ function WeekTab({
           />
         </div>
       ) : (
-        <div id="meals-week-plan" ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="space-y-3">
+          <p className="font-script text-2xl text-hotpink leading-none px-0.5">Your meal week plan ✿</p>
+
+          {/* Tuned-plan notice — notif style, with Edit + Regenerate + editor */}
+          <div className="rounded-2xl border border-dashed border-hotpink/40 bg-white/70 p-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-5 w-5" /></span>
+              <p className="flex-1 min-w-0 text-[12px] text-rose/80 leading-snug">
+                {dietSetup && mealsTuned
+                  ? <>Plan tuned to your <b className="text-hotpink">{goalWord(mealsTuned)}</b> goal</>
+                  : <>Plan tuned to your <b className="text-hotpink capitalize">{intentionLabel}</b> vibe</>}
+                {phase !== "any" && <span className="text-rose/50"> · <span className="capitalize">{phase}</span> phase</span>}
+              </p>
+              <button onClick={() => setEditingVibe((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full border border-petal/60 bg-white/80 px-2.5 py-1.5 text-[11px] font-bold text-hotpink hover:bg-blush transition active:scale-95">
+                <Pencil className="h-3 w-3" /> Edit
+              </button>
+              <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
+                <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
+              </button>
+            </div>
+
+            {/* Expanded editor — vibe + phase override; cooking time & allergies live in Diet */}
+            {editingVibe && (
+              <div className="mt-3 pt-3 border-t border-petal/50 space-y-2.5 animate-fade-in">
+                <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
+                  <PickerField
+                    value={intention} title="This week's vibe"
+                    options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
+                    onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
+                  />
+                  <PickerField
+                    value={phase} title="Cycle phase"
+                    options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
+                    onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
+                  />
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <button onClick={goPantry} className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><Apple className="h-3 w-3" /> Pantry</button>
+                  <a href="/app/tools/diet" className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><SlidersHorizontal className="h-3 w-3" /> Cooking time &amp; allergies</a>
+                  <div className="flex-1" />
+                  <button onClick={() => { handleGenerate(); setEditingVibe(false); }} className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3 py-1.5 text-[11px] font-bold active:scale-95"><RefreshCw className="h-3 w-3" /> Apply</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Post-setup notice (arriving from a Diet sync) — notif style, X to close */}
+          {fromDiet && (
+            <div ref={dietNoteRef}>
+              <NotifCard
+                icon={<Sparkles className="h-5 w-5" strokeWidth={2.2} />}
+                title={<>Your synced plan · <span className="capitalize">{fromDiet}</span> diet</>}
+                body={<>We set up this week's meals to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</>}
+                onDismiss={onDismissFromDiet}
+              />
+            </div>
+          )}
+
+          {/* The 7 days */}
+          <div id="meals-week-plan" ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DAYS.map((d, di) => {
             const isToday = d === todayDayName();
             return (
@@ -1262,7 +1264,8 @@ function WeekTab({
             </Glass>
             );
           })}
-        </div>
+          </div>
+        </section>
       )}
 
       {/* Phase-nutrition context — moved BELOW the plan so it never pushes it
