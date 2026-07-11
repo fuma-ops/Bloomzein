@@ -364,7 +364,7 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
       <div className="h-2 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${eatenPct}%` }} /></div>
       <div className="mt-1.5 flex items-center justify-between text-[10px] font-bold text-rose/50">
         <span className="tabular-nums">Goal {e.goal.toLocaleString()} · burned +{e.burned}</span>
-        <span className="inline-flex items-center gap-1 text-hotpink">Open Diet <ChevronRight className="h-3 w-3" /></span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white animate-selected-glow">Open Diet <ChevronRight className="h-3 w-3" /></span>
       </div>
     </button>
   );
