@@ -607,16 +607,6 @@ export default function TodayPage() {
   // circumference for SVG ring (r=15.9)
   const CIRC = 2 * Math.PI * 15.9; // ≈ 99.9
 
-  // Gentle guidance: whenever setup isn't finished, softly glide to the next
-  // undone step in the "Build your Bloom world" checklist so she's always led to
-  // her next tap — until everything's set. Runs each time she lands on Today.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      try { document.querySelector('[data-next-step="1"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
-    }, 700);
-    return () => clearTimeout(t);
-  }, []);
-
   // FINALE — when her whole world is built (cycle + meals + diet + movement +
   // today's mood) AND she's still on the guided flow, play the closing moment:
   // a "your Today plan is ready" celebration, then a soft pink outline sweeps
