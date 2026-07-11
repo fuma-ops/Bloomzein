@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Clock, Lightbulb,
+  ChevronLeft, ChevronRight, ChevronDown, X, Sparkles, Lightbulb,
   Droplet, Sprout, Star, Moon, Circle,
   Dumbbell, PersonStanding, BookOpen, CalendarClock, Bell, Soup, Heart, Droplets, Cake, Plane,
   ArrowRight,
@@ -506,6 +506,12 @@ export default function CalendarPage() {
           items={planningFor(selected)}
           mood={moodForDate(diaryEntries, selected)}
           onClose={() => setSelected(null)}
+          mealsPlan={mealsPlan}
+          reminders={reminders}
+          yogaSchedule={yogaSchedule}
+          yogaReminder={yogaReminder}
+          history={history}
+          workoutPlanDays={workoutPlanDays}
         />
       )}
     </div>
@@ -726,6 +732,91 @@ function TodayCard({ href, image, title, meta, time, phaseLabel, delay = 0 }: {
   );
 }
 
+/** The image-rich plan for ANY date — the exact same cards the Today view uses:
+ *  each planned meal (photo + macros), the day's yoga flow, workouts (logged or
+ *  planned) and reminders. Shared so the Today tab and the day pop-up never drift
+ *  apart — curiosity about "what's my July 13 plan?" gets the full, pretty view. */
+function DayPlanCards({ date, mealsPlan, reminders, yogaSchedule, yogaReminder, history, workoutPlanDays, startDelay = 0 }: {
+  date: Date;
+  mealsPlan: Record<string, Record<string, string | null>>;
+  reminders: Reminder[];
+  yogaSchedule: Record<string, string | null>;
+  yogaReminder: string;
+  history: HistoryEntry[];
+  workoutPlanDays: string[];
+  startDelay?: number;
+}) {
+  const dayName = mondayFirstLabel(date);
+  const dayPlan = mealsPlan[dayName] || {};
+  const SLOT_LABEL: Record<string, string> = { breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner" };
+  const SLOT_TIME: Record<string, string> = { breakfast: "08:00", lunch: "13:00", snack: "16:00", dinner: "19:30" };
+  const meals = (["breakfast", "lunch", "snack", "dinner"] as const)
+    .map((slot) => { const rid = dayPlan[slot]; const r = rid ? RECIPES.find((x) => x.id === rid) : null; return r ? { slot, r } : null; })
+    .filter((m): m is { slot: "breakfast" | "lunch" | "snack" | "dinner"; r: (typeof RECIPES)[number] } => !!m);
+  const yogaFocus = yogaSchedule[dayName];
+  const workouts = history.filter((h) => h.date === fmtLocalDate(date));
+  // Show a planned workout (from the program) when nothing was logged that day.
+  const plannedWorkout = !workouts.length && workoutPlanDays.includes(dayName);
+  const dayReminders = remindersForDate(reminders, date);
+  const phaseLabel = PHASE_LABEL[phaseForDay(date, readCycleSettings())];
+  const empty = !meals.length && !yogaFocus && !workouts.length && !plannedWorkout && !dayReminders.length;
+  let cardIdx = 0;
+  const nextDelay = () => startDelay + cardIdx++ * 0.06;
+
+  if (empty) {
+    return (
+      <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
+        Nothing planned this day yet — open your tools to fill it ✿
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {yogaFocus && (
+        <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel} delay={nextDelay()}
+          title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
+      )}
+
+      {meals.map(({ slot, r }) => (
+        <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel} delay={nextDelay()}
+          title={r.name} time={SLOT_TIME[slot]}
+          meta={`${SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
+      ))}
+
+      {workouts.map((w, i) => (
+        <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={nextDelay()}
+          title={w.sessionName || "Workout"}
+          meta={`Workout · ${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
+      ))}
+
+      {plannedWorkout && (
+        <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={nextDelay()}
+          title="Workout planned" time="17:30" meta="Workout · tap to start today's session" />
+      )}
+
+      {dayReminders.length > 0 && (
+        <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: `${nextDelay()}s` }}>
+          <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
+          <div className="space-y-2">
+            {dayReminders.map((it) => (
+              <a key={it.id} href={it.sourceHref} className="flex items-center gap-2.5 rounded-2xl bg-blush/40 border border-petal/50 p-2.5 hover:bg-blush/60 transition">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-hotpink/10 text-hotpink">
+                  {(() => { const Ico = CATEGORY_META[it.category]?.Icon ?? Bell; return <Ico className="h-4 w-4" strokeWidth={2} />; })()}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#831843] truncate">{it.label}</p>
+                  {it.time && <p className="text-[11px] text-rose/60">{it.time}</p>}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, history, workoutPlanDays }: {
   today: Date;
   mealsPlan: Record<string, Record<string, string | null>>;
@@ -737,20 +828,8 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
 }) {
   const dayName = mondayFirstLabel(today);
   const dayPlan = mealsPlan[dayName] || {};
-  const SLOT_LABEL: Record<string, string> = { breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner" };
-  const SLOT_TIME: Record<string, string> = { breakfast: "08:00", lunch: "13:00", snack: "16:00", dinner: "19:30" };
-  const meals = (["breakfast", "lunch", "snack", "dinner"] as const)
-    .map((slot) => { const rid = dayPlan[slot]; const r = rid ? RECIPES.find((x) => x.id === rid) : null; return r ? { slot, r } : null; })
-    .filter((m): m is { slot: "breakfast" | "lunch" | "snack" | "dinner"; r: (typeof RECIPES)[number] } => !!m);
-  const plannedCalories = meals.reduce((s, m) => s + m.r.macros.calories, 0);
-  const yogaFocus = yogaSchedule[dayName];
-  const workouts = history.filter((h) => h.date === fmtLocalDate(today));
-  // Show a planned workout (from the program) when nothing was logged today.
-  const plannedWorkout = !workouts.length && workoutPlanDays.includes(dayName);
-  const todayReminders = remindersForDate(reminders, today);
-  const phaseLabel = PHASE_LABEL[phaseForDay(today, readCycleSettings())];
-  const empty = !meals.length && !yogaFocus && !workouts.length && !plannedWorkout && !todayReminders.length;
-  let cardIdx = 0;
+  const plannedCalories = (["breakfast", "lunch", "snack", "dinner"] as const)
+    .reduce((s, slot) => { const rid = dayPlan[slot]; const r = rid ? RECIPES.find((x) => x.id === rid) : null; return s + (r?.macros.calories ?? 0); }, 0);
 
   return (
     <div className="space-y-3.5">
@@ -771,53 +850,12 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
       {/* Plans + reminders — the big section, on the soft moving-lines backdrop */}
       <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-4" style={{ background: "linear-gradient(135deg, #F9A8D4 0%, #F472B6 50%, #EC4899 100%)" }}>
         <AuroraGlow />
-        <div className="relative z-[1] space-y-3">
-          {empty && (
-            <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
-              Nothing planned today yet — open your tools to fill the day ✿
-            </div>
-          )}
-
-          {yogaFocus && (
-            <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
-              title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
-          )}
-
-          {meals.map(({ slot, r }) => (
-            <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
-              title={r.name} time={SLOT_TIME[slot]}
-              meta={`${SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
-          ))}
-
-          {workouts.map((w, i) => (
-            <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
-              title={w.sessionName || "Workout"}
-              meta={`Workout · ${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
-          ))}
-
-          {plannedWorkout && (
-            <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={cardIdx++ * 0.06}
-              title="Workout planned" time="17:30" meta="Workout · tap to start today's session" />
-          )}
-
-          {todayReminders.length > 0 && (
-            <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: `${cardIdx++ * 0.06}s` }}>
-              <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
-              <div className="space-y-2">
-                {todayReminders.map((it) => (
-                  <a key={it.id} href={it.sourceHref} className="flex items-center gap-2.5 rounded-2xl bg-blush/40 border border-petal/50 p-2.5 hover:bg-blush/60 transition">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-hotpink/10 text-hotpink">
-                      {(() => { const Ico = CATEGORY_META[it.category]?.Icon ?? Bell; return <Ico className="h-4 w-4" strokeWidth={2} />; })()}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#831843] truncate">{it.label}</p>
-                      {it.time && <p className="text-[11px] text-rose/60">{it.time}</p>}
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="relative z-[1]">
+          <DayPlanCards
+            date={today} mealsPlan={mealsPlan} reminders={reminders}
+            yogaSchedule={yogaSchedule} yogaReminder={yogaReminder}
+            history={history} workoutPlanDays={workoutPlanDays}
+          />
         </div>
       </section>
     </div>
@@ -860,15 +898,25 @@ function PhaseChip({ phase }: { phase: Phase }) {
 }
 
 function DayDrawer({
-  date, items, mood, onClose,
+  date, items, mood, onClose, mealsPlan, reminders, yogaSchedule, yogaReminder, history, workoutPlanDays,
 }: {
   date: Date;
   items: PlanningItem[];
   mood: ReturnType<typeof moodMeta> | null;
   onClose: () => void;
+  mealsPlan: Record<string, Record<string, string | null>>;
+  reminders: Reminder[];
+  yogaSchedule: Record<string, string | null>;
+  yogaReminder: string;
+  history: HistoryEntry[];
+  workoutPlanDays: string[];
 }) {
   const phase = phaseForDay(date, readCycleSettings());
   const meta = phase ? PHASE_META[phase] : null;
+  // Same planned-calories pill the Today view shows.
+  const dayPlan = mealsPlan[mondayFirstLabel(date)] || {};
+  const plannedCalories = (["breakfast", "lunch", "snack", "dinner"] as const)
+    .reduce((s, slot) => { const rid = dayPlan[slot]; const r = rid ? RECIPES.find((x) => x.id === rid) : null; return s + (r?.macros.calories ?? 0); }, 0);
 
   // Portal to <body> so `fixed` centers on the real screen, not inside the
   // calendar column (a transformed/blurred parent would otherwise offset it).
@@ -882,12 +930,22 @@ function DayDrawer({
           <X className="h-4 w-4" />
         </button>
 
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
-          {date.toLocaleDateString(undefined, { weekday: "long" })}
-        </p>
-        <h2 className="font-script text-3xl text-hotpink leading-tight">
-          {MONTHS[date.getMonth()]} {date.getDate()}
-        </h2>
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
+              {date.toLocaleDateString(undefined, { weekday: "long" })}
+            </p>
+            <h2 className="font-script text-3xl text-hotpink leading-tight">
+              {MONTHS[date.getMonth()]} {date.getDate()}
+            </h2>
+          </div>
+          {plannedCalories > 0 && (
+            <div className="text-center shrink-0 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-1.5">
+              <p className="font-script text-2xl text-hotpink leading-none">{plannedCalories}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60">kcal planned</p>
+            </div>
+          )}
+        </div>
 
         {meta && (
           <div className={["mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide", meta.color].join(" ")}>
@@ -901,33 +959,12 @@ function DayDrawer({
         </div>
 
         <div className="mt-5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">Today's plans</p>
-          {items.length === 0 ? (
-            <p className="text-xs text-rose/60">Nothing scheduled — a clean, open day ✿</p>
-          ) : (
-            <div className="space-y-2">
-              {items.map((item) => (
-                <a
-                  key={item.id}
-                  href={item.sourceHref}
-                  className="flex items-center gap-3 rounded-2xl bg-white/80 border border-petal/50 p-3 hover:border-hotpink/40 hover:shadow-md hover:shadow-hotpink/10 transition group"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-hotpink/10 text-hotpink">
-                    {(() => { const Ico = CATEGORY_META[item.category]?.Icon ?? Bell; return <Ico className="h-4 w-4" strokeWidth={2} />; })()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#831843] truncate">{item.label}</p>
-                    {item.time && (
-                      <p className="text-[11px] text-rose/60 inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {item.time}</p>
-                    )}
-                  </div>
-                  <span className="text-[11px] font-semibold text-hotpink opacity-70 group-hover:opacity-100 transition shrink-0">
-                    {item.sourceLabel}
-                  </span>
-                </a>
-              ))}
-            </div>
-          )}
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">Plans this day</p>
+          <DayPlanCards
+            date={date} mealsPlan={mealsPlan} reminders={reminders}
+            yogaSchedule={yogaSchedule} yogaReminder={yogaReminder}
+            history={history} workoutPlanDays={workoutPlanDays}
+          />
         </div>
 
         {mood && (
