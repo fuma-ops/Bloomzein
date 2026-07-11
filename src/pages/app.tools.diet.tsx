@@ -21,7 +21,8 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
 import { buildDayCoach, phaseUnlocks } from "@/lib/todayCoach";
-import { CoachTodayCard, PhaseUnlockStrip, TomorrowCard } from "@/components/bloom/coach/CoachCards";
+import { readsForPhase } from "@/lib/readsData";
+import { CoachTodayCard, PhaseUnlockStrip, TomorrowCard, PhaseReads } from "@/components/bloom/coach/CoachCards";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity, recipeImageSrc,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
@@ -1019,10 +1020,11 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   );
 }
 
-function CycleNutritionTab({ phase, cycleReady, onSyncedPlan }: { phase: DietPhase; cycleReady: boolean; onSyncedPlan: () => void }) {
+function CycleNutritionTab({ cycleReady }: { cycleReady: boolean }) {
   // One source of truth for the whole emotional-coach layer.
   const coach = useMemo(() => buildDayCoach(), []);
   const unlocks = useMemo(() => phaseUnlocks(), []);
+  const phaseReads = useMemo(() => readsForPhase(coach.phase), [coach.phase]);
 
   return (
     <div className="space-y-5">
@@ -1030,7 +1032,7 @@ function CycleNutritionTab({ phase, cycleReady, onSyncedPlan }: { phase: DietPha
       <div id="diet-cycle">
         <StepHeader step={1} title="Your coach today" sub="how you feel, what you need, one little joy" />
         {cycleReady ? (
-          <CoachTodayCard coach={coach} onSyncedPlan={onSyncedPlan} />
+          <CoachTodayCard coach={coach} />
         ) : (
           <a href="/app/tools/cycle" className="block rounded-[1.5rem] border border-hotpink/30 bg-white/85 p-5 text-center animate-card-pop-in">
             <p className="font-script text-2xl text-hotpink">Set up your cycle ✿</p>
@@ -1048,55 +1050,17 @@ function CycleNutritionTab({ phase, cycleReady, onSyncedPlan }: { phase: DietPha
       {/* 3 — Tomorrow with Bloomzein — a soft hook to come back */}
       {cycleReady && <TomorrowCard coach={coach} />}
 
-      {/* Read & learn — soft library of cycle, nutrition & women's-health reads */}
-      <CycleReads />
+      {/* 4 — Reads tuned to your phase (replaces the old generic Read & learn) */}
+      {cycleReady && (
+        <div>
+          <StepHeader step={3} title="Reads for you" sub="soft reads chosen for your phase" />
+          <PhaseReads reads={phaseReads} unlocks={unlocks} phaseLabel={coach.phaseLabel} cycleDay={coach.cycleDay} />
+        </div>
+      )}
     </div>
   );
 }
 
-/* A soft "keep learning" section — curated guides on nutrition, the menstrual
-   cycle and women's health. Links into the /guides content pages. */
-function CycleReads() {
-  const topics = ["Nutrition", "Cycle syncing", "Hormones", "Women's health", "Energy"];
-  const reads = [
-    { slug: "eating-for-your-cycle", title: "Eating for your cycle", desc: "A phase-by-phase nutrition guide.", mins: 7, Icon: Apple },
-    { slug: "cycle-syncing", title: "Cycle syncing 101", desc: "Live in tune with your four phases.", mins: 6, Icon: Moon },
-    { slug: "cycle-synced-workouts", title: "Training with your hormones", desc: "Move with your energy, not against it.", mins: 6, Icon: Activity },
-  ];
-  return (
-    <Glass className="p-4 sm:p-5">
-      <div className="flex items-center gap-1.5">
-        <BookOpen className="h-4 w-4 text-hotpink" strokeWidth={1.9} />
-        <h3 className="font-script text-xl text-hotpink">Read &amp; learn</h3>
-      </div>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {topics.map((t) => (
-          <span key={t} className="rounded-full bg-blush px-2.5 py-1 text-[11px] font-semibold text-magenta">{t}</span>
-        ))}
-      </div>
-
-      <div className="mt-3 space-y-2">
-        {reads.map((r, i) => (
-          <a
-            key={r.slug} href={`/guides/${r.slug}`}
-            className="flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/80 p-3 transition hover:bg-blush hover:shadow-md hover-scale active:scale-95 animate-fade-in"
-            style={{ animationDelay: `${i * 70}ms` }}
-          >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><r.Icon className="h-5 w-5" /></span>
-            <span className="flex-1 min-w-0">
-              <span className="block text-sm font-bold text-hotpink leading-tight">{r.title}</span>
-              <span className="block text-[11px] text-rose/60 leading-snug">{r.desc}</span>
-            </span>
-            <span className="shrink-0 flex flex-col items-end gap-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-rose/50">{r.mins} min</span>
-              <ChevronRight className="h-4 w-4 text-hotpink" />
-            </span>
-          </a>
-        ))}
-      </div>
-    </Glass>
-  );
-}
 
 /* ---------- Tab 2: Today ---------- */
 
@@ -1880,7 +1844,7 @@ export default function DietPage() {
           />
         )}
         {tab === "cycle" && (
-          <CycleNutritionTab phase={cyclePhase} cycleReady={cycleReady} onSyncedPlan={onSyncedPlan} />
+          <CycleNutritionTab cycleReady={cycleReady} />
         )}
         {tab === "today" && (
           <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />

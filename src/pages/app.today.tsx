@@ -298,6 +298,15 @@ export default function TodayPage() {
   const cycleReady      = useMemo(hasCycleSettings, []);
   const coach           = useMemo(() => buildDayCoach(), []);
   const mealPlanned     = useMemo(hasMealPlan, []);
+
+  // Deep-link from the Diet coach's "See today's plan" → scroll to the plan.
+  useEffect(() => {
+    if (typeof window === "undefined" || window.location.hash !== "#todays-plan") return;
+    const id = setTimeout(() => {
+      try { document.getElementById("todays-plan")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {}
+    }, 400);
+    return () => clearTimeout(id);
+  }, []);
   const dietSetup       = useMemo(hasDietSetup, []);
   const movementPlanned = useMemo(hasMovementPlan, []);
   const [finaleOpen,    setFinaleOpen]    = useState(false);
