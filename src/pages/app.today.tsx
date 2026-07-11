@@ -4,7 +4,7 @@ import {
   Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
-  ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple, Share2,
+  ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -604,13 +604,6 @@ export default function TodayPage() {
       return next;
     });
   };
-  const shareAffirmation = async () => {
-    const text = `${affirmText} ✿ — Bloomzein`;
-    try {
-      if (typeof navigator !== "undefined" && (navigator as any).share) await (navigator as any).share({ text, title: "Bloomzein affirmation" });
-      else if (typeof navigator !== "undefined" && navigator.clipboard) await navigator.clipboard.writeText(text);
-    } catch {}
-  };
 
   // Every item in Today's Plan (each meal, workout, yoga, journal) counts toward
   // the bloom ring, alongside the two standalone daily goals (mood + water), so
@@ -932,9 +925,9 @@ export default function TodayPage() {
       {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
              Flanked by two logo flowers; the words softly self-write on open. ── */}
       {!affirmDismissed && (
-        /* Soft one-line quote flanked by two flowers; a small X to close (top-
-           right) and a tiny love-count + share tucked in the bottom-right. */
-        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 pt-3.5 pb-7 animate-fade-in">
+        /* Soft one-/two-line quote flanked by two flowers; a small X to close
+           (top-right) and a centred tiny love-count below. */
+        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 pt-3.5 pb-3 animate-fade-in">
           <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
             <X className="h-3.5 w-3.5" />
           </button>
@@ -950,8 +943,8 @@ export default function TodayPage() {
             <BloomFlower className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-hotpink/80 animate-icon-breathe" />
           </div>
 
-          {/* Bottom-right: small outline heart + count, and share */}
-          <div className="absolute bottom-1.5 right-2.5 flex items-center gap-2.5">
+          {/* Centred tiny love-count */}
+          <div className="mt-2 flex justify-center">
             <button
               onClick={toggleAffirmLike}
               aria-pressed={affirmLiked}
@@ -960,13 +953,6 @@ export default function TodayPage() {
             >
               <Heart className={["h-3.5 w-3.5", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2} />
               {affirmLikeCount.toLocaleString()}
-            </button>
-            <button
-              onClick={shareAffirmation}
-              aria-label="Share this affirmation"
-              className="text-hotpink/70 transition hover:text-hotpink active:scale-90"
-            >
-              <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
           </div>
         </div>
