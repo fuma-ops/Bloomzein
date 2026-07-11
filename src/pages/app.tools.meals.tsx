@@ -716,8 +716,8 @@ export default function MealsPage() {
           />
         )}
 
-        {/* Clever shortcuts */}
-        <CleverRow onOpen={openRecipeAt} owned={owned} />
+        {/* Clever shortcuts — only once a week is actually planned */}
+        {!planEmpty && <CleverRow onOpen={openRecipeAt} owned={owned} />}
       </div>
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
@@ -1110,7 +1110,7 @@ function WeekTab({
           />
         </div>
       ) : (
-        <section className="space-y-3">
+        <section className="rounded-3xl bg-white/85 border border-petal/60 shadow-sm p-3.5 sm:p-4 space-y-3">
           <p className="font-script text-2xl text-hotpink leading-none px-0.5">Your meal week plan ✿</p>
 
           {/* Tuned-plan notice — notif style, with Edit + Regenerate + editor */}
@@ -1130,6 +1130,34 @@ function WeekTab({
                 <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
               </button>
             </div>
+
+            {/* Phase-nutrition guidance — integrated right here (no separate title;
+                the line above already names her phase). Dismissible with an X. */}
+            {phaseSynced && whyOpen && (() => {
+              const comment = trainingAwarenessComment({
+                workoutDays: readWorkoutPlanDays().length,
+                yogaDays: readYogaPlanDays().length,
+                phase: normalizePhase(realPhase),
+                goal: readDietProfile().goal,
+              });
+              const dp = toDietPhase(phase);
+              const info = dp ? PHASE_INFO[dp] : null;
+              if (!comment && !info) return null;
+              return (
+                <div className="relative mt-3 pt-3 border-t border-petal/50 pr-7 space-y-2 animate-fade-in">
+                  <button onClick={() => setWhyOpen(false)} aria-label="Dismiss" className="absolute right-0 top-2 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
+                  {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
+                  {info && (
+                    <>
+                      <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Expanded editor — vibe + phase override; cooking time & allergies live in Diet */}
             {editingVibe && (
@@ -1155,38 +1183,6 @@ function WeekTab({
               </div>
             )}
           </div>
-
-          {/* Why this week — phase-nutrition guidance, right under the tuned bar.
-              The bar already names her phase, so we don't repeat it here (no
-              double info). Closable with an X. */}
-          {phaseSynced && whyOpen && (() => {
-            const comment = trainingAwarenessComment({
-              workoutDays: readWorkoutPlanDays().length,
-              yogaDays: readYogaPlanDays().length,
-              phase: normalizePhase(realPhase),
-              goal: readDietProfile().goal,
-            });
-            const dp = toDietPhase(phase);
-            const info = dp ? PHASE_INFO[dp] : null;
-            if (!comment && !info) return null;
-            return (
-              <div className="relative rounded-2xl border-2 border-emerald-300/70 p-3.5 pr-9 space-y-2 animate-fade-in">
-                <button onClick={() => setWhyOpen(false)} aria-label="Dismiss" className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full text-emerald-500/60 transition hover:bg-emerald-50 hover:text-emerald-600 active:scale-90"><X className="h-4 w-4" /></button>
-                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Why this week
-                </p>
-                {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
-                {info && (
-                  <>
-                    <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })()}
 
           {/* Post-setup notice (arriving from a Diet sync) — notif style, X to close */}
           {fromDiet && (
