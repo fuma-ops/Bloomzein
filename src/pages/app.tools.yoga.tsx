@@ -978,6 +978,9 @@ function YogaHero({
       <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
         <div key={active} className="animate-scale-in">
           <div className="max-w-[72%]">
+            <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-white backdrop-blur-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}>
+              <Flower className="h-2.5 w-2.5" strokeWidth={2.5} /> Yoga
+            </p>
             <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{title}</h1>
             <p className="mt-0.5 text-xs sm:text-sm font-medium leading-snug text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{subtitle}</p>
           </div>

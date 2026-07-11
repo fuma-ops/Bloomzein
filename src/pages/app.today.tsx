@@ -1232,7 +1232,7 @@ export default function TodayPage() {
           {/* Phase-aware hydration tip */}
           {(phase === "fertile" || phase === "ovulation") && waterCount < waterGoal && (
             <p className="mb-2 text-[10px] sm:text-xs font-semibold text-rose/70 animate-fade-in">
-              💧 Ovulation raises your fluid needs — try 1-2 extra glasses today.
+              Ovulation raises your fluid needs — try 1-2 extra glasses today.
             </p>
           )}
 
