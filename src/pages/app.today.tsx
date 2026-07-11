@@ -925,31 +925,30 @@ export default function TodayPage() {
       {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
              Flanked by two logo flowers; the words softly self-write on open. ── */}
       {!affirmDismissed && (
-        /* Notif-style card (dashed border, round flower-icon bubble, X to close),
-           but transparent background + handwritten, self-writing affirmation. */
-        <div className="mt-4 sm:mt-6 flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-transparent p-3.5 animate-fade-in">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
-            <BloomFlower className="h-5 w-5 animate-icon-breathe" />
-          </span>
+        /* Centred quote card — flower on top, the handwritten affirmation fills
+           the width, and a "loved" heart-count sits as a balanced footer (no
+           dead space). Notif-style dashed border, transparent background. */
+        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 py-4 sm:px-6 sm:py-5 text-center animate-fade-in">
+          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
+            <X className="h-4 w-4" />
+          </button>
+          <BloomFlower className="mx-auto h-6 w-6 sm:h-7 sm:w-7 text-hotpink/80 animate-icon-breathe" />
           <AnimatedWords
             key={affirmText}
             text={affirmText}
             stagger={95}
-            className="flex-1 min-w-0 font-script text-xl sm:text-2xl text-hotpink leading-snug text-balance"
+            className="mt-1.5 font-script text-2xl sm:text-3xl text-hotpink leading-snug text-balance"
           />
-          {/* Love this affirmation — a soft heart + count that fills the space */}
+          {/* Loved by — a soft heart + count, tap to add your own love */}
           <button
             onClick={toggleAffirmLike}
             aria-pressed={affirmLiked}
             aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
-            className={["shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-bold tabular-nums transition active:scale-90",
+            className={["mx-auto mt-2.5 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold tabular-nums transition active:scale-90",
               affirmLiked ? "border-hotpink/40 bg-hotpink/10 text-hotpink" : "border-hotpink/25 bg-white/40 text-hotpink/80 hover:bg-blush"].join(" ")}
           >
             <Heart className={["h-3.5 w-3.5 transition", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2.2} />
-            {affirmLikeCount.toLocaleString()}
-          </button>
-          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="shrink-0 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
-            <X className="h-4 w-4" />
+            {affirmLiked ? "Loved" : "Love this"} · {affirmLikeCount.toLocaleString()}
           </button>
         </div>
       )}
