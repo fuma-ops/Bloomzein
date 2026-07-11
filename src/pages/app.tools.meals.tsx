@@ -846,9 +846,11 @@ function DayTotals({ plan, day, target }: { plan: any; day: string; target: Targ
   totals.protein = Math.round(totals.protein);
   const verdict = calorieVerdict(totals.calories, target.calories);
   const pct = Math.min(100, Math.round((totals.calories / Math.max(1, target.calories)) * 100));
-  const barCls = verdict === "on" ? "bg-emerald-400" : verdict === "under" ? "bg-amber-400" : "bg-rose-400";
+  // The bar always stays on-palette (pink); the verdict lives in the coloured
+  // label only — green = on target, purple = under, red = over.
+  const barCls = "bg-gradient-to-r from-hotpink to-[#DB2777]";
   const label = verdict === "on" ? "on target" : verdict === "under" ? "under" : "over";
-  const labelCls = verdict === "on" ? "text-emerald-600" : verdict === "under" ? "text-amber-600" : "text-rose-500";
+  const labelCls = verdict === "on" ? "text-emerald-600" : verdict === "under" ? "text-violet-600" : "text-red-600";
   return (
     <div className="mt-2.5 pt-2.5 border-t border-petal/50">
       <div className="flex items-center justify-between text-[10px] font-bold mb-1">
