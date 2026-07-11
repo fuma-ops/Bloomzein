@@ -1,7 +1,10 @@
 import { useMemo, useRef, useState } from "react";
-import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
+import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2, Lock } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
+import { hasCycleSettings } from "@/components/bloom/cyclePhase";
+import { buildDayCoach, phaseUnlocks } from "@/lib/todayCoach";
+import type { DietPhase } from "@/components/bloom/diet/data";
 
 /* ---------- data ---------- */
 const TOPICS = ["All", "Cycle & Body", "Self-care", "Money", "Movement", "Mindset", "Recipes"] as const;
@@ -16,6 +19,8 @@ interface Article {
   blooms: string;
   image: string;
   body: string;
+  /** Phase this read is tuned to (drives the "For your phase" carousel). */
+  phase?: DietPhase;
 }
 
 const TOPIC_LABELS: Record<Topic, string> = {
@@ -57,7 +62,7 @@ const ARTICLES: Article[] = [
   { id: "a6", title: "Strawberry oat bowl", topic: "Recipes", minutes: 3, blooms: "2.6k", image: IMG["Recipes"],
     excerpt: "A pink breakfast that feels like a hug in a bowl.",
     body: "Blend frozen strawberries with banana and oat milk until creamy. Top with toasted oats, coconut, and a swirl of almond butter. Eat with your favorite spoon." },
-  { id: "a7", title: "Luteal phase glow-up", topic: "Cycle & Body", minutes: 7, blooms: "1.8k", image: IMG["Cycle & Body"],
+  { id: "a7", title: "Luteal phase glow-up", topic: "Cycle & Body", minutes: 7, blooms: "1.8k", image: IMG["Cycle & Body"], phase: "luteal",
     excerpt: "Why the week before your period can be your most creative.",
     body: "Luteal is finishing energy. It's when you tidy projects, journal honestly, and crave warmth. Honor the inward pull — schedule deep work and decline what doesn't matter." },
   { id: "a8", title: "The 7-minute skincare edit", topic: "Self-care", minutes: 4, blooms: "2.0k", image: IMG["Self-care"],
@@ -69,6 +74,36 @@ const ARTICLES: Article[] = [
   { id: "a10", title: "Rose latte at home", topic: "Recipes", minutes: 3, blooms: "1.2k", image: IMG["Recipes"],
     excerpt: "Café vibes for the cost of one rose petal.",
     body: "Warm oat milk with a teaspoon of rose syrup and a shot of espresso. Top with foam and a dusting of cardamom. Drink slowly by the window." },
+
+  /* ── Phase-tuned reads — power the "For your phase" carousel ── */
+  // Menstrual
+  { id: "m1", title: "Your rest-day face-care ritual", topic: "Self-care", minutes: 4, blooms: "1.1k", image: IMG["Self-care"], phase: "menstrual",
+    excerpt: "Puffy, tender skin? Keep it soft and simple this week.",
+    body: "Menstrual skin loves gentleness. Cleanse with lukewarm water, press a cool jade roller along your jaw, and layer a rich moisturizer on damp skin. Skip actives — this is a comfort week, not a project. Warm compress, deep breath, early night." },
+  { id: "m2", title: "Comfort foods that love your period", topic: "Cycle & Body", minutes: 5, blooms: "1.4k", image: IMG["Cycle & Body"], phase: "menstrual",
+    excerpt: "Iron, magnesium and warmth — what your body is asking for.",
+    body: "Lean into iron (lentils, spinach, beets) with a squeeze of vitamin-C citrus to absorb it. Magnesium — dark chocolate, pumpkin seeds — eases cramps. Keep meals warm and cooked; save raw and cold for later phases. Ginger tea is your friend." },
+  // Follicular
+  { id: "f1", title: "Fresh-start glow face routine", topic: "Self-care", minutes: 4, blooms: "1.7k", image: IMG["Self-care"], phase: "follicular",
+    excerpt: "Rising estrogen = your skin's comeback week.",
+    body: "Follicular skin is resilient — a great time for a gentle exfoliation and a vitamin-C serum to catch that natural glow. Cleanse, treat, moisturize, SPF. Add a two-minute facial massage and your favorite song. New-you energy, radiant skin." },
+  { id: "f2", title: "Fuel the momentum", topic: "Cycle & Body", minutes: 5, blooms: "1.3k", image: IMG["Cycle & Body"], phase: "follicular",
+    excerpt: "Light, bright food for your rising-energy days.",
+    body: "Estrogen is climbing and so is your appetite for novelty. Try fermented foods (yoghurt, kefir), fresh greens, eggs and citrus. It's the perfect week to try a new recipe you've been eyeing — your body is primed for change." },
+  // Ovulatory
+  { id: "o1", title: "Your glow-week face edit", topic: "Self-care", minutes: 4, blooms: "2.2k", image: IMG["Self-care"], phase: "ovulatory",
+    excerpt: "You're at peak radiance — let your skin show it.",
+    body: "Ovulation is your natural highlight reel. Keep it dewy: hydrating mist, lightweight moisturizer, a touch of cream blush on the cheekbones. Less is more this week — your skin is doing the work. Take the photo; you'll want to remember this glow." },
+  { id: "o2", title: "The radiant ovulation plate", topic: "Recipes", minutes: 4, blooms: "1.5k", image: IMG["Recipes"], phase: "ovulatory",
+    excerpt: "Crunchy, colorful, antioxidant-rich — eat to perform.",
+    body: "Peak energy loves fiber and antioxidants: raw crunchy veg, cruciferous greens, quinoa and bright fruit. A vibrant plate now supports the way you feel — social, strong and glowing. Add a fresh-pressed juice and savor it slowly." },
+  // Luteal
+  { id: "l1", title: "Luteal wind-down ritual", topic: "Self-care", minutes: 5, blooms: "1.9k", image: IMG["Self-care"], phase: "luteal",
+    excerpt: "Soothe skin and nerves as your energy turns inward.",
+    body: "Luteal skin can be reactive — simplify and calm. A warm cleanse, a barrier-loving moisturizer, and a few drops of facial oil to seal it. Pair it with warm juice, a comfort playlist and no screens. Cozy over busy: this is your soft landing." },
+  { id: "l2", title: "Satisfy cravings, kindly", topic: "Cycle & Body", minutes: 6, blooms: "2.0k", image: IMG["Cycle & Body"], phase: "luteal",
+    excerpt: "Cravings are real — here's how to meet them well.",
+    body: "Serotonin dips before your period, so cravings for carbs and chocolate are biology, not weakness. Reach for complex carbs (sweet potato, oats), dark chocolate and walnuts. A healthy dessert made with love beats restriction every time." },
 ];
 
 const RECOMMENDED_IDS = ["a2", "a6", "a3", "a9", "a5"];
@@ -145,6 +180,13 @@ export default function ReadPage() {
   const savedArticles = ARTICLES.filter((a) => saved[a.id]);
   const open = openId ? ARTICLES.find((a) => a.id === openId) : null;
 
+  // Phase-tuned reveal: only the current phase's reads are open; the rest are
+  // locked & teasing, so there's always something to look forward to.
+  const cycleReady = hasCycleSettings();
+  const coach = useMemo(() => buildDayCoach(), []);
+  const unlocks = useMemo(() => phaseUnlocks(), []);
+  const phaseReads = useMemo(() => ARTICLES.filter((a) => a.phase === coach.phase), [coach.phase]);
+
   if (open) {
     return (
       <article className="relative animate-fade-in">
@@ -194,8 +236,21 @@ export default function ReadPage() {
         </div>
       </section>
 
+      {/* FOR YOUR PHASE — a swipeable photo carousel tuned to today's phase,
+          with the other phases locked & teasing to keep the curiosity alive. */}
+      {cycleReady && phaseReads.length > 0 && (
+        <section className="mt-4 sm:mt-6">
+          <div className="mb-2 px-1">
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">For your {coach.phaseLabel} phase ✿</h2>
+            <p className="text-xs text-rose/70">Reads chosen for how you feel today · Day {coach.cycleDay}</p>
+          </div>
+          <PhaseReadCarousel reads={phaseReads} onOpen={setOpenId} />
+          <LockedPhaseReads unlocks={unlocks} />
+        </section>
+      )}
+
       {/* SEARCH */}
-      <div className="mt-3 sm:mt-5 relative max-w-xl mx-auto">
+      <div className="mt-6 sm:mt-8 relative max-w-xl mx-auto">
         <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
         <input
           id="search-reads"
@@ -345,6 +400,58 @@ function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: A
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* Full-bleed, swipeable photo cards for the current phase's reads. */
+function PhaseReadCarousel({ reads, onOpen }: { reads: Article[]; onOpen: (id: string) => void }) {
+  return (
+    <div className="relative -mx-3 px-3 sm:mx-0 sm:px-0">
+      <div className="flex gap-3 sm:gap-4 pb-2 overflow-x-auto no-scrollbar snap-x">
+        {reads.map((a, i) => (
+          <button
+            key={a.id}
+            onClick={() => onOpen(a.id)}
+            style={{ animationDelay: `${i * 0.06}s` }}
+            className="group relative snap-start shrink-0 w-[80%] sm:w-[22rem] text-left overflow-hidden rounded-3xl border border-petal/60 shadow-[0_12px_30px_-14px_oklch(0.7_0.22_350/0.45)] transition hover:-translate-y-1 active:scale-[0.98] animate-card-pop-in"
+          >
+            <div className="relative h-52 sm:h-60">
+              <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 bg-gradient-to-t from-magenta/85 via-magenta/20 to-transparent" />
+              <div className="absolute top-3 left-3"><TopicBadge topic={a.topic} /></div>
+              <div className="absolute inset-x-0 bottom-0 p-4">
+                <h3 className="font-script text-2xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{a.title}</h3>
+                <p className="mt-1 text-[12px] text-white/95 leading-snug line-clamp-2" style={{ textShadow: "0 1px 5px rgba(0,0,0,0.4)" }}>{a.excerpt}</p>
+                <div className="mt-2 flex items-center gap-3">
+                  <ReadTime minutes={a.minutes} light />
+                  <BloomCount count={a.blooms} light />
+                </div>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
+    </div>
+  );
+}
+
+/* The other phases' reads — locked & teasing, so curiosity keeps her coming back. */
+function LockedPhaseReads({ unlocks }: { unlocks: { phase: DietPhase; label: string; daysUntil: number; current: boolean; teaser: string }[] }) {
+  const locked = unlocks.filter((u) => !u.current);
+  if (!locked.length) return null;
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2.5">
+      {locked.map((u) => (
+        <div key={u.phase} className="relative overflow-hidden rounded-2xl border border-petal/50 bg-blush/40 p-3 text-center">
+          <span className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm">
+            <Lock className="h-4 w-4" strokeWidth={2} />
+          </span>
+          <p className="mt-1.5 font-script text-base text-hotpink leading-none">{u.label}</p>
+          <p className="mt-1 text-[10px] font-bold text-rose/60 leading-tight">{u.teaser}</p>
+        </div>
+      ))}
     </div>
   );
 }
