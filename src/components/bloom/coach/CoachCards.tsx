@@ -21,7 +21,7 @@ function EnergyMeter({ level, label }: { level: number; label: string }) {
     <div>
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] font-bold uppercase tracking-wide text-rose/60 inline-flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} /> Your energy
+          <Sparkles className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} /> Phase energy
         </p>
         <p className="text-xs font-bold text-hotpink">{label}</p>
       </div>
@@ -210,7 +210,7 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
   return (
     <a href="/app/tools/diet?tab=cycle" className="group block rounded-[1.5rem] border border-hotpink/25 bg-white/90 backdrop-blur p-4 shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-hotpink/70 inline-flex items-center gap-1.5">
+        <p className="text-[11px] font-black uppercase tracking-wide text-hotpink inline-flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Your coach today
         </p>
         <span className="text-[11px] font-bold text-hotpink inline-flex items-center gap-0.5 opacity-70 group-hover:opacity-100 transition">
