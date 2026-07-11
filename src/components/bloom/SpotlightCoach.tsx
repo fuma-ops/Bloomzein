@@ -20,17 +20,21 @@ export function SpotlightCoach({
   secondaryLabel = "Look around",
   onClose,
   padding = 10,
+  autoDismissMs,
 }: {
   targetId: string;
   title: string;
   message: string;
   /** Optional extra content (e.g. a secondary action) above the primary CTA. */
   extra?: ReactNode;
-  primaryLabel: string;
-  onPrimary: () => void;
+  /** Optional primary CTA — omit for an auto-dismissing, button-less spotlight. */
+  primaryLabel?: string;
+  onPrimary?: () => void;
   secondaryLabel?: string;
   onClose: () => void;
   padding?: number;
+  /** If set, the spotlight closes itself this many ms after it appears. */
+  autoDismissMs?: number;
 }) {
   const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
 
@@ -39,20 +43,27 @@ export function SpotlightCoach({
     if (!el) return;
     // Bring the section into view, then measure once it settles.
     try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
+    let dismiss: ReturnType<typeof setTimeout> | undefined;
     const measure = () => {
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
-    const t = setTimeout(measure, 480);
+    const t = setTimeout(() => {
+      measure();
+      // Auto-dismiss timer starts once the spotlight is actually visible.
+      if (autoDismissMs) dismiss = setTimeout(onClose, autoDismissMs);
+    }, 480);
     // Keep the cutout glued to the section through any scroll/resize.
     const onMove = () => measure();
     window.addEventListener("scroll", onMove, true);
     window.addEventListener("resize", onMove);
     return () => {
       clearTimeout(t);
+      if (dismiss) clearTimeout(dismiss);
       window.removeEventListener("scroll", onMove, true);
       window.removeEventListener("resize", onMove);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetId]);
 
   if (!rect) return null;
@@ -109,18 +120,22 @@ export function SpotlightCoach({
           </div>
           <p className="mt-2 text-[12.5px] leading-snug text-rose/75">{message}</p>
           {extra}
-          <button
-            onClick={onPrimary}
-            className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-bold text-white"
-          >
-            <Sparkles className="h-4 w-4" strokeWidth={2} /> {primaryLabel}
-          </button>
-          <button
-            onClick={onClose}
-            className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/55 transition hover:text-hotpink"
-          >
-            {secondaryLabel}
-          </button>
+          {primaryLabel && onPrimary && (
+            <>
+              <button
+                onClick={onPrimary}
+                className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-bold text-white"
+              >
+                <Sparkles className="h-4 w-4" strokeWidth={2} /> {primaryLabel}
+              </button>
+              <button
+                onClick={onClose}
+                className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/55 transition hover:text-hotpink"
+              >
+                {secondaryLabel}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,

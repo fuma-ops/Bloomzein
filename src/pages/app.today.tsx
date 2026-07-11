@@ -21,7 +21,7 @@ import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, L
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
 import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { BloomDayCelebration } from "@/components/bloom/BloomDayCelebration";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
@@ -310,7 +310,6 @@ export default function TodayPage() {
   const dietSetup       = useMemo(hasDietSetup, []);
   const movementPlanned = useMemo(hasMovementPlan, []);
   const [finaleOpen,    setFinaleOpen]    = useState(false);
-  const [finaleGlow,    setFinaleGlow]    = useState(false);
   const [dayCelebrate,  setDayCelebrate]  = useState(false);
   // Today's Plan only appears once she's begun building her world — a brand-new
   // (or freshly reset) user sees the setup checklist instead of a placeholder plan.
@@ -818,22 +817,15 @@ export default function TodayPage() {
         triggerRef={symptomTileRef}
       />
 
-      {/* FINALE — the closing "your world is built" moment, then a pink sweep over Today's Plan */}
+      {/* FINALE — the closing "your world is built" moment: a Barbie spotlight on
+          Today's Plan for ~2s, matching every tool's setup step. */}
       {finaleOpen && (
-        <SetupCelebration
-          title="Your Today plan is ready ✿"
-          message="Everything's set, gorgeous — your cycle, meals, movement and mood all flow into this one day. This is your Bloom."
-          continueLabel="See my plan ✿"
-          onContinue={() => {
-            setFinaleOpen(false);
-            setTimeout(() => {
-              try { document.getElementById("todays-plan")?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
-              setFinaleGlow(true);
-              setTimeout(() => setFinaleGlow(false), 2200);
-            }, 150);
-          }}
-          stayLabel="Done"
-          onStay={() => setFinaleOpen(false)}
+        <SpotlightCoach
+          targetId="todays-plan"
+          title="Your Bloom day is ready ✿"
+          message="Everything you set up — your cycle, meals, movement and mood — flows into this one plan. This is your Bloom."
+          autoDismissMs={2000}
+          onClose={() => setFinaleOpen(false)}
         />
       )}
 
@@ -963,7 +955,7 @@ export default function TodayPage() {
       )}
 
       {hasPlanContent && (
-      <section id="todays-plan" className={["mt-4 sm:mt-6 animate-card-pop-in rounded-[2rem] transition-all duration-500", finaleGlow ? "ring-4 ring-hotpink/70 ring-offset-2 ring-offset-blush/40 animate-selected-glow" : "ring-0"].join(" ")} style={{ animationDelay: "50ms" }}>
+      <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in rounded-[2rem]" style={{ animationDelay: "50ms" }}>
         <SectionTitle>Today's Plan ✿</SectionTitle>
         <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
           {cycleReady ? (
