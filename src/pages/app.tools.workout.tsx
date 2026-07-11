@@ -556,9 +556,10 @@ export default function WorkoutPage() {
 
       {guidedDone && (
         <SetupCelebration
-          title="Your movement is planned ✿"
-          message="Gorgeous — your week is set to move with you. Let's head back to Today for your last little step."
-          onContinue={() => { window.location.href = "/app/today"; }}
+          title="Your workout is planned ✿"
+          message="Gorgeous — your strength week is set. One soft step more: let's plan your yoga flow to balance it."
+          continueLabel="Set up my yoga flow →"
+          onContinue={() => { window.location.href = "/app/tools/yoga?setup=1"; }}
           onStay={() => setGuidedDone(false)}
           stayLabel="See my plan first"
         />
