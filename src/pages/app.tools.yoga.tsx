@@ -698,22 +698,15 @@ export default function YogaPage() {
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
     setHydrated(true);
-    // Guided hand-off from the workout step (?setup=1): build a real, phase-matched
-    // yoga week right away and land her on her plan — so an actual schedule exists,
-    // the movement step completes, and the celebration can hand her back to Today.
+    // Guided hand-off from the workout step (?setup=1): land her on her (empty)
+    // plan to CHOOSE — sync to her cycle, pick a curated plan, or build her own.
+    // We never auto-pick for her; the celebration appears only once she commits a
+    // plan, which is what makes her movement step complete.
     let setupDeepLink = false;
     try {
       if (new URLSearchParams(window.location.search).get("setup") === "1") {
         setupDeepLink = true;
         setOnboarded(true);
-        try {
-          const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-          const rec = PHASE_DEFAULT_PLAN[mapToYogaPhase(readCyclePhase())];
-          const next: Record<string, string | null> = {};
-          WEEK.forEach((d, i) => { next[d] = rec[i]; });
-          localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next));
-          window.dispatchEvent(new Event("bloom:yoga-updated"));
-        } catch {}
         setView({ kind: "plan" });
       }
     } catch {}
@@ -765,11 +758,16 @@ export default function YogaPage() {
       {guidedDone && (
         <SetupCelebration
           title="Your yoga flow is planned ✿"
-          message="Beautiful — workout and yoga are both set. Let's head back to Today to finish your last little step."
+          message="Beautiful — workout and yoga are both set."
+          extra={
+            <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
+              Ready to head back and finish setting up the rest of your day on <b className="text-hotpink">Today</b>? ↓
+            </p>
+          }
           continueLabel="Finish on Today →"
           onContinue={() => { window.location.href = "/app/today"; }}
           onStay={() => setGuidedDone(false)}
-          stayLabel="See my plan first"
+          stayLabel="Stay & tweak my plan"
         />
       )}
 
@@ -1381,7 +1379,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     const next: Record<string, string | null> = {};
     dayList.forEach((d, i) => { next[d] = plan[i] ?? null; });
     setSchedule(next);
-    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
     askForNotifications();
     clearYogaTuned(); // cycle-sync is her choice, not the Diet goal plan
   };
@@ -1395,7 +1393,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d) => { next[d] = null; });
     activeDays.forEach((d, i) => { next[d] = focuses[i % focuses.length]; });
     setSchedule(next);
-    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
     askForNotifications();
     setBuildStep(false);
     setEditing(true); // land in the editor to fine-tune the suggested week
@@ -1415,7 +1413,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   const update = (day: string, val: string | null) => {
     const next = { ...schedule, [day]: val };
     setSchedule(next);
-    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
     clearYogaTuned(); // a hand edit means it's her own week now
     if (val) askForNotifications();
   };
@@ -1546,7 +1544,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           <YogaPlanSetup onBack={() => setBuildStep(false)} onCreate={createOwnWeek} />
         ) : /* Empty week (first-time / after reset) → choose how to start */
         !editing && weekEmpty ? (
-          <div className="space-y-2.5">
+          <div className={["space-y-2.5", isGuided() ? "animate-section-attention" : ""].join(" ")}>
             <div>
               <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Set up your soft week ✿</h3>
               <p className="text-[12px] text-rose/70">Choose how to start — you can always change it.</p>
