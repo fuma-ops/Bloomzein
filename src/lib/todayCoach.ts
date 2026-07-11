@@ -220,25 +220,45 @@ export function dietPhaseLabel(p: DietPhase): string {
   return PHASE_INFO[p].label;
 }
 
-/* ---------- snack proposed from our Meals (with a real photo) ---------- */
+/* ---------- a little treat, from our Meals — rotates snack / juice / dessert ---------- */
 
-/** The phase's snack, drawn from the recipe library so we can show its photo. */
-const SNACK_RECIPE_ID: Record<DietPhase, string> = {
-  menstrual: "s01",   // Dates + Almond Butter
-  follicular: "s02",  // Greek Yoghurt, Berries & Flaxseed
-  ovulatory: "s03",   // Carrot Sticks, Hummus & Seeds
-  luteal: "s04",      // Banana, Dark Chocolate & Walnuts
+export type TreatKind = "snack" | "juice" | "dessert";
+
+const TREAT_TITLE: Record<TreatKind, string> = {
+  snack: "A little snack for you",
+  juice: "A fresh juice for you",
+  dessert: "A sweet treat for you",
 };
 
-export interface CoachSnack {
-  id: string; name: string; image: string; calories: number; protein: number;
+/** Per-phase rotation of real recipes, each framed as a snack / juice / dessert.
+ *  A different one shows each day, so the "treat" never feels repetitive. */
+const TREATS: Record<DietPhase, { kind: TreatKind; id: string }[]> = {
+  menstrual:  [{ kind: "snack", id: "s01" }, { kind: "dessert", id: "s04" }, { kind: "juice", id: "s14" }],
+  follicular: [{ kind: "snack", id: "s02" }, { kind: "dessert", id: "s06" }, { kind: "juice", id: "s14" }],
+  ovulatory:  [{ kind: "snack", id: "s03" }, { kind: "juice", id: "s14" }, { kind: "dessert", id: "s06" }],
+  luteal:     [{ kind: "dessert", id: "s04" }, { kind: "snack", id: "s01" }, { kind: "juice", id: "s14" }],
+};
+
+export interface CoachTreat {
+  kind: TreatKind;
+  title: string;              // soft framing ("A sweet treat for you")
+  recipeId: string;           // → opens the recipe modal (stay on page)
+  name: string;
+  image: string;
+  calories: number;
+  protein: number;
 }
 
-function snackFor(phase: DietPhase): CoachSnack | null {
-  const r = RECIPES.find((x) => x.id === SNACK_RECIPE_ID[phase])
+function treatFor(phase: DietPhase, iso: string): CoachTreat | null {
+  const bank = TREATS[phase];
+  const pick = bank[dayHash(iso) % bank.length];
+  const r = RECIPES.find((x) => x.id === pick.id)
     ?? RECIPES.find((x) => x.mealType === "snack" && x.phases.includes(phase));
   if (!r) return null;
-  return { id: r.id, name: r.name, image: recipeImageSrc(r), calories: r.macros.calories, protein: r.macros.protein };
+  return {
+    kind: pick.kind, title: TREAT_TITLE[pick.kind], recipeId: r.id,
+    name: r.name, image: recipeImageSrc(r), calories: r.macros.calories, protein: r.macros.protein,
+  };
 }
 
 /** The next phase transition ahead — a little curiosity for the Tomorrow card. */
@@ -264,7 +284,7 @@ export interface DayCoach {
   avoid: string[];
   keyNutrients: string[];
   snack: string;               // fallback text
-  snackRecipe: CoachSnack | null; // proposed snack from Meals, with photo
+  treat: CoachTreat | null;    // rotating snack / juice / dessert, with photo → opens recipe
   feelGood: FeelGood;
   tomorrow: {
     phase: DietPhase;
@@ -301,7 +321,7 @@ export function buildDayCoach(date = new Date(), iso = todayISO()): DayCoach {
     avoid: info.avoid,
     keyNutrients: info.keyNutrients,
     snack: info.snack,
-    snackRecipe: snackFor(phase),
+    treat: treatFor(phase, iso),
     feelGood: feelGoodFor(phase, iso),
     tomorrow: {
       phase: tPhase,

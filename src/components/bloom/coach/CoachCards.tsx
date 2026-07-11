@@ -10,7 +10,7 @@ import { useState } from "react";
 import { ArrowRight, Moon, Sparkles, ChevronRight, Flower2, Clock, Check, CalendarHeart } from "lucide-react";
 import {
   isFeelGoodDone, toggleFeelGoodDone, feelGoodStreak,
-  type DayCoach, type FeelGood, type CoachSnack,
+  type DayCoach, type FeelGood, type CoachTreat,
 } from "@/lib/todayCoach";
 import type { Article } from "@/lib/readsData";
 
@@ -57,28 +57,47 @@ function ChipRow({ label, items, tone }: { label: string; items: string[]; tone:
   );
 }
 
-/* ---------- snack proposed from Meals (with photo) ---------- */
+/* ---------- soft section signal (a gentle little title) ---------- */
 
-function SnackCard({ snack, fallback, phaseLabel }: { snack: CoachSnack | null; fallback: string; phaseLabel: string }) {
-  if (!snack) {
-    return <p className="text-[11px] text-rose/70"><b className="text-hotpink">Snack idea ·</b> {fallback}</p>;
-  }
+function Signal({ children }: { children: React.ReactNode }) {
   return (
-    <a href="/app/tools/meals" className="group flex items-center gap-3 rounded-2xl bg-blush/40 border border-petal/50 p-2 transition hover:bg-blush/60 active:scale-[0.99]">
+    <p className="mb-1.5 text-[12px] font-bold uppercase tracking-widest text-hotpink/75 inline-flex items-center gap-1.5">
+      <Flower2 className="h-3.5 w-3.5" strokeWidth={2} /> {children}
+    </p>
+  );
+}
+
+/* ---------- a little treat from Meals — opens the recipe in a popup ---------- */
+
+const TREAT_KIND_LABEL: Record<CoachTreat["kind"], string> = { snack: "Snack", juice: "Juice", dessert: "Sweet treat" };
+
+function TreatCard({ treat, fallback, phaseLabel, onOpenRecipe }: {
+  treat: CoachTreat | null; fallback: string; phaseLabel: string; onOpenRecipe?: (recipeId: string) => void;
+}) {
+  if (!treat) {
+    return <p className="text-[11px] text-rose/70"><b className="text-hotpink">Idea ·</b> {fallback}</p>;
+  }
+  const inner = (
+    <>
       <div className="relative shrink-0 h-14 w-14 overflow-hidden rounded-xl ring-1 ring-petal/60 bg-blush">
         <img
-          src={snack.image} alt="" className="h-full w-full object-cover" loading="lazy"
+          src={treat.image} alt="" className="h-full w-full object-cover" loading="lazy"
           onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/read-recipes.webp")) el.src = "/images/read-recipes.webp"; }}
         />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Snack for your {phaseLabel} phase</p>
-        <p className="text-sm font-bold text-[#831843] leading-snug truncate">{snack.name}</p>
-        <p className="text-[11px] text-rose/60">{snack.calories} kcal · {snack.protein}g protein</p>
+      <div className="min-w-0 flex-1 text-left">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">{TREAT_KIND_LABEL[treat.kind]} for your {phaseLabel} phase</p>
+        <p className="text-sm font-bold text-[#831843] leading-snug truncate">{treat.name}</p>
+        <p className="text-[11px] text-rose/60">{treat.calories} kcal · {treat.protein}g protein</p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-hotpink opacity-70 group-hover:opacity-100 transition" />
-    </a>
+    </>
   );
+  const cls = "group w-full flex items-center gap-3 rounded-2xl bg-blush/40 border border-petal/50 p-2 transition hover:bg-blush/60 active:scale-[0.99]";
+  // Prefer an in-page recipe popup (no navigation); fall back to Meals.
+  return onOpenRecipe
+    ? <button type="button" onClick={() => onOpenRecipe(treat.recipeId)} className={cls}>{inner}</button>
+    : <a href="/app/tools/meals" className={cls}>{inner}</a>;
 }
 
 /* ---------- feel-good "your moment" — big image + a daily streak ---------- */
@@ -135,7 +154,7 @@ export function FeelGoodCard({ fg, className = "" }: { fg: FeelGood; className?:
 
 /* ---------- FULL coach card (Diet · Cycle Nutrition) ---------- */
 
-export function CoachTodayCard({ coach }: { coach: DayCoach }) {
+export function CoachTodayCard({ coach, onOpenRecipe }: { coach: DayCoach; onOpenRecipe?: (recipeId: string) => void }) {
   return (
     <div className="rounded-[1.6rem] border border-hotpink/30 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-lg shadow-hotpink/10 animate-card-pop-in">
       {/* header */}
@@ -160,11 +179,17 @@ export function CoachTodayCard({ coach }: { coach: DayCoach }) {
         <ChipRow label="Ease up on" items={coach.avoid.slice(0, 4)} tone="avoid" />
       </div>
 
-      {/* snack proposed from Meals, with a photo */}
-      <div className="mt-3"><SnackCard snack={coach.snackRecipe} fallback={coach.snack} phaseLabel={coach.phaseLabel} /></div>
+      {/* a treat (snack / juice / dessert), from Meals, opens in a popup */}
+      <div className="mt-4">
+        <Signal>For your soft self</Signal>
+        <TreatCard treat={coach.treat} fallback={coach.snack} phaseLabel={coach.phaseLabel} onOpenRecipe={onOpenRecipe} />
+      </div>
 
       {/* feel-good */}
-      <FeelGoodCard fg={coach.feelGood} className="mt-3" />
+      <div className="mt-4">
+        <Signal>Make yourself comfortable</Signal>
+        <FeelGoodCard fg={coach.feelGood} />
+      </div>
 
       {/* → the real Today's Plan on the Today page */}
       <div className="mt-4 flex justify-center">
@@ -183,7 +208,7 @@ export function CoachTodayCard({ coach }: { coach: DayCoach }) {
 
 export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
   return (
-    <a href="/app/tools/diet" className="group block rounded-[1.5rem] border border-hotpink/25 bg-white/90 backdrop-blur p-4 shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
+    <a href="/app/tools/diet?tab=cycle" className="group block rounded-[1.5rem] border border-hotpink/25 bg-white/90 backdrop-blur p-4 shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-bold uppercase tracking-widest text-hotpink/70 inline-flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Your coach today

@@ -1030,18 +1030,18 @@ function CoachHeader({ title, sub }: { title: string; sub: string }) {
   );
 }
 
-function CycleNutritionTab({ cycleReady }: { cycleReady: boolean }) {
+function CycleNutritionTab({ cycleReady, onOpenRecipe }: { cycleReady: boolean; onOpenRecipe: (recipeId: string) => void }) {
   // One source of truth for the whole emotional-coach layer.
   const coach = useMemo(() => buildDayCoach(), []);
   const phaseReads = useMemo(() => readsForPhase(coach.phase), [coach.phase]);
 
   return (
     <div className="space-y-6">
-      {/* Your coach today: energy · what you need · eat/avoid · snack · your moment */}
+      {/* Your coach today: energy · what you need · eat/avoid · treat · your moment */}
       <div id="diet-cycle">
         <CoachHeader title="Your coach today" sub="how you feel, what you need, one little joy" />
         {cycleReady ? (
-          <CoachTodayCard coach={coach} />
+          <CoachTodayCard coach={coach} onOpenRecipe={onOpenRecipe} />
         ) : (
           <a href="/app/tools/cycle" className="block rounded-[1.5rem] border border-hotpink/30 bg-white/85 p-5 text-center animate-card-pop-in">
             <p className="font-script text-2xl text-hotpink">Set up your cycle ✿</p>
@@ -1534,6 +1534,15 @@ export default function DietPage() {
   const [setupComplete, setSetupComplete] = useLS<boolean>(LS.setup, false);
   const [profile, setProfile] = useLS<DietProfile & { weight: number }>(LS.profile, DEFAULT_PROFILE);
   const [tab, setTab] = useLS<TabKey>(LS.tab, "profile");
+  // Deep-link: /app/tools/diet?tab=cycle opens straight on that tab (e.g. from
+  // the Today page's "Full plan" link → Cycle Nutrition).
+  useEffect(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t === "profile" || t === "cycle" || t === "today" || t === "recipes") setTab(t);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [editingSetup, setEditingSetup] = useState(false);
   const [openRecipe, setOpenRecipe] = useState<{ recipe: Recipe; portion: number } | null>(null);
   // Open a recipe, optionally at its planned portion so macros & ingredient
@@ -1839,7 +1848,7 @@ export default function DietPage() {
           />
         )}
         {tab === "cycle" && (
-          <CycleNutritionTab cycleReady={cycleReady} />
+          <CycleNutritionTab cycleReady={cycleReady} onOpenRecipe={(id) => { const r = RECIPES.find((x) => x.id === id); if (r) openRecipeAt(r); }} />
         )}
         {tab === "today" && (
           <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />
