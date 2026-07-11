@@ -356,50 +356,12 @@ export const PHASE_MICROS: Record<DietPhase, { key: keyof Recipe["micros"]; labe
   ],
 };
 
-/* ---------- Daily target calculator ---------- */
-
-export interface DailyTargets {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
-
-export function calculateDailyTargets(opts: {
-  goal: DietGoal;
-  phase: DietPhase;
-  weight: number; // kg
-  caloriesBurned: number;
-}): DailyTargets {
-  const { goal, phase, weight, caloriesBurned } = opts;
-
-  const baseMultiplier = goal === "lose" ? 28 : goal === "gain" ? 35 : 31;
-  const baseCals = weight * baseMultiplier;
-
-  const phaseMultiplier: Record<DietPhase, number> = {
-    menstrual: 1.0,
-    follicular: 0.95,
-    ovulatory: 0.93,
-    luteal: 1.05,
-  };
-
-  const dailyTarget = baseCals * phaseMultiplier[phase] + caloriesBurned * 0.5;
-
-  const proteinPerKg = goal === "lose" ? 1.8 : goal === "gain" ? 2.0 : 1.6;
-  const fatRatio = goal === "lose" ? 0.28 : goal === "gain" ? 0.25 : 0.3;
-
-  const protein = weight * proteinPerKg;
-  const fat = (dailyTarget * fatRatio) / 9;
-  const remaining = dailyTarget - protein * 4 - fat * 9;
-  const carbs = Math.max(0, remaining / 4);
-
-  return {
-    calories: Math.round(dailyTarget),
-    protein: Math.round(protein),
-    carbs: Math.round(carbs),
-    fat: Math.round(fat),
-  };
-}
+/* ----------------------------------------------------------------------------
+   Daily calorie/macro targets live in ONE place only: nutritionTargets.ts
+   (`computeTargets`, Mifflin-St Jeor). A second, cruder weight×multiplier
+   formula used to live here — it ignored height & age and could disagree with
+   the real engine, so it was removed to honour the "one BMR engine" contract.
+---------------------------------------------------------------------------- */
 
 /* ---------- My Rules silent filter ---------- */
 
