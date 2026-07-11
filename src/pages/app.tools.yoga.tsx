@@ -698,14 +698,23 @@ export default function YogaPage() {
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
     setHydrated(true);
-    // Guided hand-off from the workout step (?setup=1): land her straight on the
-    // flow-setup screen so the movement journey flows workout → yoga in one go.
+    // Guided hand-off from the workout step (?setup=1): build a real, phase-matched
+    // yoga week right away and land her on her plan — so an actual schedule exists,
+    // the movement step completes, and the celebration can hand her back to Today.
     let setupDeepLink = false;
     try {
       if (new URLSearchParams(window.location.search).get("setup") === "1") {
         setupDeepLink = true;
         setOnboarded(true);
-        setView({ kind: "setup" });
+        try {
+          const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+          const rec = PHASE_DEFAULT_PLAN[mapToYogaPhase(readCyclePhase())];
+          const next: Record<string, string | null> = {};
+          WEEK.forEach((d, i) => { next[d] = rec[i]; });
+          localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next));
+          window.dispatchEvent(new Event("bloom:yoga-updated"));
+        } catch {}
+        setView({ kind: "plan" });
       }
     } catch {}
     // Deep-link from Today / Cycle: build the prescribed flow and drop straight

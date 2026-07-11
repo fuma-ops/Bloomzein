@@ -338,6 +338,13 @@ export function CycleTracker() {
   const [moodLog,             setMoodLog]           = useState<Record<string, string>>(() => readJSON(MOOD_LOG_KEY, {}));
   const [symptomsLog,         setSymptomsLog]       = useState<Record<string, string[]>>(() => readJSON(SYMPTOMS_LOG_KEY, {}));
   const [pillLog,             setPillLog]           = useState<Record<string, boolean>>(() => readJSON(PILL_LOG_KEY, {}));
+  // Keep the pill log in sync when Today toggles it (shared bloom:pill-log-v2).
+  useEffect(() => {
+    const resync = () => { try { setPillLog(readJSON(PILL_LOG_KEY, {})); } catch {} };
+    window.addEventListener("bloom:pill-updated", resync);
+    window.addEventListener("storage", resync);
+    return () => { window.removeEventListener("bloom:pill-updated", resync); window.removeEventListener("storage", resync); };
+  }, []);
   const [showMoodPickerCard,  setShowMoodPickerCard] = useState(false);
   const [slideDir,            setSlideDir]          = useState<"l"|"r">("r");
 
@@ -868,9 +875,11 @@ export function CycleTracker() {
                 <div className="flex items-center gap-2 mt-[5px]">
                   <button
                     onClick={() => {
-                      const next = { ...pillLog, [todayKey]: !pillTaken };
+                      const next = { ...pillLog };
+                      if (!pillTaken) next[todayKey] = true; else delete next[todayKey];
                       setPillLog(next);
-                      try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); } catch {}
+                      // Same shared log Today writes — notify it so both stay in sync.
+                      try { localStorage.setItem(PILL_LOG_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("bloom:pill-updated")); } catch {}
                     }}
                     style={{
                       background: pillTaken ? '#FCE7F3' : '#BE185D',

@@ -490,7 +490,21 @@ export default function WorkoutPage() {
         <BloomBubbles count={10} />
         <SetupProfile
           initial={profile}
-          onDone={(p) => { setProfile(p); setOnboarded(true); }}
+          onDone={(p) => {
+            setProfile(p);
+            setOnboarded(true);
+            // Guided flow: hand her a real, phase-matched starter week right after
+            // the questions so she lands on an actual plan — the movement step
+            // completes and the celebration can appear to guide her on to yoga.
+            if (isGuided()) {
+              try {
+                const ph = (readCyclePhase() ?? "any") as CyclePhase;
+                localStorage.setItem(PROGRAM_KEY, JSON.stringify(generateWeeklyPlan(p, ph, 1)));
+                localStorage.setItem(PROGRAM_PHASE_KEY, JSON.stringify(ph));
+                window.dispatchEvent(new Event("bloom:workout-updated"));
+              } catch {}
+            }
+          }}
         />
       </div>
     );
@@ -823,6 +837,8 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
     setActive(loadActiveProgram());
     setConfirmReplace(false);
     onMakeMyPlan();
+    // Signal every tool (and the guided celebration) that a workout plan now exists.
+    try { window.dispatchEvent(new Event("bloom:workout-updated")); } catch {}
   };
   const makeMyPlan = () => { if (replacesExisting) setConfirmReplace(true); else commitPlan(); };
 
@@ -1849,8 +1865,12 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
     clearTuned();
   };
   const setDayPlan = (d: string, dp: DayPlan | null) => {
-    setProgram({ ...(program ?? {}), [d]: dp });
+    const next = { ...(program ?? {}), [d]: dp };
+    setProgram(next);
     clearTuned(); // a hand edit means it's her own plan now
+    // useLS persists in an effect (deferred), so write + signal synchronously
+    // here — the guided celebration reads the plan the instant this fires.
+    try { localStorage.setItem(PROGRAM_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("bloom:workout-updated")); } catch {}
   };
 
   // Generate a freestyle week (replaces an active program after confirmation).
@@ -1859,11 +1879,15 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const generateFreestyle = () => {
     if (activeProgram) { saveActiveProgram(null); setActive(null); }
     const nextSeed = seed + 1;
-    setProgram(generateWeeklyPlan(profile, phase, nextSeed));
+    const wk = generateWeeklyPlan(profile, phase, nextSeed);
+    setProgram(wk);
     setProgramPhase(phase);
     setSeed(nextSeed);
     setConfirmFreestyle(false);
     markTuned(); // a fresh generated week is tuned to her goal again
+    // useLS persists in an effect (deferred) — write + signal synchronously so
+    // the guided celebration sees the fresh plan immediately.
+    try { localStorage.setItem(PROGRAM_KEY, JSON.stringify(wk)); window.dispatchEvent(new Event("bloom:workout-updated")); } catch {}
   };
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
   // Regenerate replaces the whole week → always warn first.

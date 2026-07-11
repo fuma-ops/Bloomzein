@@ -185,7 +185,7 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           it silently. Portaled so a transformed ancestor can't trap the fixed
           overlay. */}
       {confirmSync && createPortal(
-        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={() => setConfirmSync(null)}>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4" onClick={() => setConfirmSync(null)}>
           <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
           <div className="relative w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl animate-scale-in" onClick={(ev) => ev.stopPropagation()}>
             <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-6 w-6" /></span>

@@ -451,7 +451,7 @@ function BodyGoalEditModal({ profile, onClose, onSave }: {
   const [height, setHeight] = useState(profile.heightCm != null ? String(profile.heightCm) : "");
   const [target, setTarget] = useState(profile.targetWeight != null ? String(profile.targetWeight) : "");
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-3 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
       <div className="relative w-full max-w-sm rounded-3xl bg-white border border-petal/60 shadow-2xl shadow-rose/20 p-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
