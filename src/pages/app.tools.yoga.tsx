@@ -698,11 +698,21 @@ export default function YogaPage() {
       if ([1,2,3].includes(s)) setStep(s as 1|2|3);
     } catch {}
     setHydrated(true);
+    // Guided hand-off from the workout step (?setup=1): land her straight on the
+    // flow-setup screen so the movement journey flows workout → yoga in one go.
+    let setupDeepLink = false;
+    try {
+      if (new URLSearchParams(window.location.search).get("setup") === "1") {
+        setupDeepLink = true;
+        setOnboarded(true);
+        setView({ kind: "setup" });
+      }
+    } catch {}
     // Deep-link from Today / Cycle: build the prescribed flow and drop straight
     // into the session player — not the setup screen — so a planned flow starts
     // with one tap. Uses the user's saved level + current phase; sensible
     // defaults for the rest.
-    const launch = readLaunch<{ intention: string; durationMin: number }>(LAUNCH_YOGA_KEY);
+    const launch = setupDeepLink ? null : readLaunch<{ intention: string; durationMin: number }>(LAUNCH_YOGA_KEY);
     if (launch) {
       const intention = launch.intention as Intention;
       const durationMin = launch.durationMin;
@@ -745,8 +755,9 @@ export default function YogaPage() {
 
       {guidedDone && (
         <SetupCelebration
-          title="Your movement is planned ✿"
-          message="Gorgeous — your week is set to flow with you. Let's head back to Today for your last little step."
+          title="Your yoga flow is planned ✿"
+          message="Beautiful — workout and yoga are both set. Let's head back to Today to finish your last little step."
+          continueLabel="Finish on Today →"
           onContinue={() => { window.location.href = "/app/today"; }}
           onStay={() => setGuidedDone(false)}
           stayLabel="See my plan first"
