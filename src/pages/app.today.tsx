@@ -16,7 +16,7 @@ import { todayISO } from "@/lib/localDate";
 import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
 import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
 import { SetupCelebration } from "@/components/bloom/SetupCelebration";
@@ -323,6 +323,9 @@ export default function TodayPage() {
   const [pillTaken,           setPillTaken]           = useState(false);
   const [moodPickerOpen,      setMoodPickerOpen]      = useState(false);
   const [activePlan,          setActivePlan]          = useState<PlanItem | null>(null);
+  // When she taps an unfinished bloom-checklist step, we scroll to + squeeze the
+  // matching item in Today's Plan (this DOM id) instead of leaving for the tool.
+  const [highlightId,         setHighlightId]         = useState<string | null>(null);
   const [affirmDismissed,     setAffirmDismissed]     = useState(false);
   const [moodHintIdx,         setMoodHintIdx]         = useState(0);
   const [workoutStreak,       setWorkoutStreak]       = useState(0);
@@ -369,10 +372,9 @@ export default function TodayPage() {
     try { setAffirmIdx(Number(localStorage.getItem(KEYS.affirmIdx)) || 0); } catch {}
     try { setWaterRemindersEnabled(localStorage.getItem(KEYS.waterReminders) === "true"); } catch {}
 
-    try {
-      const raw = readJSON<{ date: string; taken: boolean }>(KEYS.pill, { date: "", taken: false });
-      setPillTaken(raw.date === iso ? raw.taken : false);
-    } catch {}
+    // Pill state comes from the ONE shared log (also written by My Cycle), so the
+    // two pages always agree on whether today's pill is taken.
+    try { setPillTaken(isPillTaken(iso)); } catch {}
 
     setWorkoutStreak(readWorkoutStreak().count);
     setYogaStreak(readYogaStreak().count);
@@ -385,6 +387,14 @@ export default function TodayPage() {
     } catch {}
 
     broadcastCyclePhase();
+  }, []);
+
+  // Stay in sync with My Cycle: if the pill is toggled there, reflect it here.
+  useEffect(() => {
+    const resync = () => { try { setPillTaken(isPillTaken(todayISO())); } catch {} };
+    window.addEventListener("bloom:pill-updated", resync);
+    window.addEventListener("storage", resync);
+    return () => { window.removeEventListener("bloom:pill-updated", resync); window.removeEventListener("storage", resync); };
   }, []);
 
   // Mood hint cycling when mood not yet set
@@ -502,7 +512,7 @@ export default function TodayPage() {
   const togglePill = () => {
     setPillTaken((prev) => {
       const next = !prev;
-      try { localStorage.setItem(KEYS.pill, JSON.stringify({ date: todayISO(), taken: next })); } catch {}
+      savePillTaken(todayISO(), next); // ONE shared log — keeps My Cycle in sync
       return next;
     });
   };
@@ -589,6 +599,25 @@ export default function TodayPage() {
       rows.push({ key: "journal", label: "Write in diary", done: planDone.includes(journalItem.id), href: "/app/tools/diary", tool: "/app/tools/diary" });
     return rows;
   }, [mood, waterCount, waterGoal, planDone, mealItems, moveItems, journalItem]);
+
+  // Tapping a bloom-checklist step keeps her on Today and points at the exact
+  // thing to complete: scroll the matching plan item (or the hydration card) into
+  // view and squeeze it — "this is your next step" — rather than jumping away.
+  const focusPlanStep = (key: string) => {
+    let domId: string | null = null;
+    if (key === "water") domId = "hydration";
+    else if (key === "meals") { const m = mealItems.find((x) => !planDone.includes(x.id)) ?? mealItems[0]; domId = m ? `plan-${m.id}` : null; }
+    else if (key === "move")  { const m = moveItems.find((x) => !planDone.includes(x.id)) ?? moveItems[0]; domId = m ? `plan-${m.id}` : null; }
+    else if (key === "journal") domId = journalItem ? `plan-${journalItem.id}` : null;
+    if (!domId) return;
+    try {
+      const el = document.getElementById(domId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightId(domId);
+      window.setTimeout(() => setHighlightId((cur) => (cur === domId ? null : cur)), 1500);
+    } catch {}
+  };
 
   // Ring progress is granular: mood + water + one unit per plan item, so ticking
   // any single meal or the workout moves the ring immediately.
@@ -923,7 +952,9 @@ export default function TodayPage() {
             return (
               <div
                 key={item.id}
-                className="relative flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20"
+                id={`plan-${item.id}`}
+                className={["relative flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20",
+                  highlightId === `plan-${item.id}` ? "animate-attention-squeeze" : ""].join(" ")}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 {/* Tapping the image / text opens a centred detail popup */}
@@ -1068,10 +1099,10 @@ export default function TodayPage() {
                     {!c.done && <Sparkles className="h-3 w-3 text-hotpink/50 shrink-0" />}
                   </button>
                 ) : (
-                  <a
+                  <button
                     key={c.key}
-                    href={c.href || undefined}
-                    className={["flex items-center gap-2 rounded-2xl px-3 py-1.5 transition active:scale-95",
+                    onClick={() => focusPlanStep(c.key)}
+                    className={["flex w-full items-center gap-2 rounded-2xl px-3 py-1.5 transition text-left active:scale-95",
                       c.done ? "bg-blush/50" : "bg-white/70 hover:bg-blush/40"].join(" ")}
                   >
                     <span className={["grid h-5 w-5 shrink-0 place-items-center rounded-full transition", c.done ? "bg-hotpink" : "bg-blush/60"].join(" ")}>
@@ -1079,7 +1110,7 @@ export default function TodayPage() {
                     </span>
                     <span className={["text-xs font-semibold flex-1", c.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>{c.label}</span>
                     {!c.done && <ArrowRight className="h-3 w-3 text-rose/30 shrink-0" />}
-                  </a>
+                  </button>
                 );
                 return el;
               })}
@@ -1140,7 +1171,7 @@ export default function TodayPage() {
 
       {/* ── 6. HYDRATION ────────────────────────────────────────────────────── */}
       <section id="hydration" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5">
+        <div className={["bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 transition", highlightId === "hydration" ? "animate-attention-squeeze" : ""].join(" ")}>
           <div className="flex items-center justify-between mb-3">
             <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">Daily Hydration ✿</p>
             <div className="flex items-center gap-1.5">

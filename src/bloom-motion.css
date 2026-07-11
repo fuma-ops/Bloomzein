@@ -107,6 +107,14 @@
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* NEW — "look here" squeeze: points the eye at the exact plan step to complete */
+@keyframes bloom-attention-squeeze {
+  0%, 100% { transform: scale(1); }
+  15%      { transform: scale(0.965); }
+  45%      { transform: scale(1.035); }
+  70%      { transform: scale(0.99); }
+}
+
 /* =====================================================================
    UTILITY CLASSES  (wrapped so Tailwind keeps them)
    ===================================================================== */
@@ -153,6 +161,15 @@
   /* --- Selected / current item glow --- */
   .animate-selected-glow {
     animation: bloom-selected-glow calc(2.6s * var(--bloom-pace)) ease-in-out infinite;
+  }
+
+  /* --- "Look here" attention squeeze (bloom checklist → the plan step to do) --- */
+  .animate-attention-squeeze {
+    animation: bloom-attention-squeeze 0.62s var(--bloom-ease-soft) 2;
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.6), 0 14px 32px rgba(236,72,153,0.4);
+    border-radius: 1.25rem;
+    position: relative;
+    z-index: 10;
   }
 
   /* --- Living CTA + card breathe --- */

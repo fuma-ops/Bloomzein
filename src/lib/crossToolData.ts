@@ -22,6 +22,30 @@ export const WORKOUT_LOG_KEY    = "bloom:workout-history";
 export const WORKOUT_STREAK_KEY = "bloom:workout-streak";
 export const YOGA_STREAK_KEY    = "bloom:yoga-streak";
 
+// ── Daily contraceptive pill log — ONE source of truth ───────────────────────
+// "Did she take her pill on day X" is shared by Today (today's tick) and the
+// Cycle tracker (per-day calendar log). Keyed by LOCAL ISO date (YYYY-MM-DD) so
+// both agree on which day is "today". Toggling on either page writes here and
+// fires "bloom:pill-updated" so the other view stays in sync. See CLAUDE.md § 9.
+export const PILL_LOG_KEY = "bloom:pill-log-v2";
+
+export function readPillLog(): Record<string, boolean> {
+  return readJSON<Record<string, boolean>>(PILL_LOG_KEY, {});
+}
+/** Was the pill taken on this local ISO date (defaults to today)? */
+export function isPillTaken(iso: string = todayISO()): boolean {
+  return !!readPillLog()[iso];
+}
+/** Mark (or clear) the pill for a local ISO date; notifies every open view. */
+export function setPillTaken(iso: string, taken: boolean): void {
+  const log = readPillLog();
+  if (taken) log[iso] = true; else delete log[iso];
+  try {
+    localStorage.setItem(PILL_LOG_KEY, JSON.stringify(log));
+    window.dispatchEvent(new Event("bloom:pill-updated"));
+  } catch {}
+}
+
 // ── Today mood ───────────────────────────────────────────────────────────────
 
 /** Returns the lowercase mood key currently stored for today (e.g. "calm"). */
