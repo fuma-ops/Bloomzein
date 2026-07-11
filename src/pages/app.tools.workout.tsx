@@ -12,7 +12,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -561,18 +561,19 @@ export default function WorkoutPage() {
       <BloomBubbles count={10} />
 
       {guidedDone && (
-        <SetupCelebration
-          title="Your workout is planned ✿"
-          message="Gorgeous — your strength week is set."
+        <SpotlightCoach
+          targetId="workout-week-plan"
+          title="Your workout week ✿"
+          message="Here it is — your strength week, laid out day by day. Tap any day to tweak it."
           extra={
             <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
-              Do you want to set up your <b className="text-hotpink">yoga flow</b> now to balance your training? ↓
+              Do you want to set up your <b className="text-hotpink">yoga flow</b> now to balance your training?
             </p>
           }
-          continueLabel="Set up my yoga flow →"
-          onContinue={() => { window.location.href = "/app/tools/yoga?setup=1"; }}
-          onStay={() => setGuidedDone(false)}
-          stayLabel="Stay & tweak my plan"
+          primaryLabel="Set up my yoga flow →"
+          onPrimary={() => { window.location.href = "/app/tools/yoga?setup=1"; }}
+          secondaryLabel="Stay & tweak my plan"
+          onClose={() => setGuidedDone(false)}
         />
       )}
 
@@ -2050,7 +2051,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── The week, day by day — image LEFT · info RIGHT (vignette, not banner) ── */}
       {source !== "none" && (
-        <section className="rounded-3xl bg-white/85 border border-petal/60 p-3 sm:p-4">
+        <section id="workout-week-plan" className="rounded-3xl bg-white/85 border border-petal/60 p-3 sm:p-4">
           {/* Edit-mode instruction — helps first-timers build their own week */}
           {editing && source === "freestyle" && (
             <div className="mb-2.5 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">

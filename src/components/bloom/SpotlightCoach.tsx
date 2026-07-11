@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { Sparkles, X } from "lucide-react";
 
 /**
@@ -13,6 +14,7 @@ export function SpotlightCoach({
   targetId,
   title,
   message,
+  extra,
   primaryLabel,
   onPrimary,
   secondaryLabel = "Look around",
@@ -22,6 +24,8 @@ export function SpotlightCoach({
   targetId: string;
   title: string;
   message: string;
+  /** Optional extra content (e.g. a secondary action) above the primary CTA. */
+  extra?: ReactNode;
   primaryLabel: string;
   onPrimary: () => void;
   secondaryLabel?: string;
@@ -104,6 +108,7 @@ export function SpotlightCoach({
             </div>
           </div>
           <p className="mt-2 text-[12.5px] leading-snug text-rose/75">{message}</p>
+          {extra}
           <button
             onClick={onPrimary}
             className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-bold text-white"
