@@ -12,7 +12,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SetupCelebration, GuidedFinishBar } from "@/components/bloom/SetupCelebration";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -488,13 +488,11 @@ export default function WorkoutPage() {
     return (
       <div className="relative animate-fade-in">
         <BloomBubbles count={10} />
-        <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-          <ArrowLeft className="h-4 w-4" /> All tools
-        </a>
         <SetupProfile
           initial={profile}
           onDone={(p) => { setProfile(p); setOnboarded(true); }}
         />
+        <GuidedFinishBar />
       </div>
     );
   }
@@ -566,8 +564,9 @@ export default function WorkoutPage() {
           stayLabel="See my plan first"
         />
       )}
+      <GuidedFinishBar />
 
-      {tourVisible && (
+      {tourVisible && !isGuided() && (
         <WorkoutOnboarding
           onTab={goTourTab}
           onDone={() => { setTourDone(true); setShowTour(false); }}
@@ -1183,7 +1182,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 shadow-xl shadow-rose/10">
         <div className="space-y-3.5">
-          <div>
+          <div className="animate-card-pop-in" style={{ animationDelay: "60ms" }}>
             <p className="text-[13px] font-bold text-rose mb-1.5">Your level</p>
             <div className="flex flex-wrap gap-1.5">
               {(["Beginner", "Intermediate", "Advanced"] as Level[]).map((l) => (
@@ -1192,7 +1191,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
             </div>
           </div>
 
-          <div>
+          <div className="animate-card-pop-in" style={{ animationDelay: "120ms" }}>
             <p className="text-[13px] font-bold text-rose mb-1.5">Your main goal</p>
             <div className="flex flex-wrap gap-1.5">
               {([
@@ -1206,7 +1205,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
             </div>
           </div>
 
-          <div>
+          <div className="animate-card-pop-in" style={{ animationDelay: "180ms" }}>
             <p className="text-[13px] font-bold text-rose mb-1.5">Equipment available</p>
             <div className="flex flex-wrap gap-1.5">
               {([
@@ -1221,7 +1220,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
             </div>
           </div>
 
-          <div>
+          <div className="animate-card-pop-in" style={{ animationDelay: "240ms" }}>
             <p className="text-[13px] font-bold text-rose mb-1.5">Days available per week</p>
             <div className="flex flex-wrap gap-1.5">
               {([2, 3, 4, 5] as const).map((d) => (

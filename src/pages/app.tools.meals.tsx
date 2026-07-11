@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SetupCelebration, GuidedFinishBar } from "@/components/bloom/SetupCelebration";
 import {
   ArrowLeft,
   Sparkles,
@@ -1018,6 +1018,17 @@ function WeekTab({
     }
   }, [fromDiet]);
 
+  // Guided setup: land her straight on "Let's set up your week" so she knows
+  // exactly what to do — no hunting.
+  useEffect(() => {
+    if (isGuided() && planEmpty) {
+      const t = setTimeout(() => {
+        try { document.getElementById("meals-setup")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {}
+      }, 400);
+      return () => clearTimeout(t);
+    }
+  }, [planEmpty]);
+
   // Premium: a real, personalised daily nutrition target (body + goal +
   // training load + cycle phase). Recompute when the plan changes OR a
   // workout/yoga is logged, so the eat-back flows in live.
@@ -1158,13 +1169,15 @@ function WeekTab({
 
       {/* ③  THE PLAN — right here, no longer pushed down */}
       {planEmpty ? (
-        <SetupSteps
-          phase={phase} intention={intention} setIntention={setIntention}
-          owned={owned} goPantry={goPantry} onPlan={handleGenerate} generating={generating}
-          dietSetup={dietSetup} pantrySkip={pantrySkip} onSkipPantry={onSkipPantry}
-        />
+        <div id="meals-setup">
+          <SetupSteps
+            phase={phase} intention={intention} setIntention={setIntention}
+            owned={owned} goPantry={goPantry} onPlan={handleGenerate} generating={generating}
+            dietSetup={dietSetup} pantrySkip={pantrySkip} onSkipPantry={onSkipPantry}
+          />
+        </div>
       ) : (
-        <div ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div id="meals-week-plan" ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DAYS.map((d, di) => {
             const isToday = d === todayDayName();
             return (
@@ -1305,12 +1318,14 @@ function WeekTab({
       {weekDone && (
         <SetupCelebration
           title="Your week is planned ✿"
-          message="Beautiful — your meals are set. Next, set your goal in Diet so we tune your energy. Let's head back to Today."
+          message="Beautiful — your meals are set (scroll down to see them). Next, set your goal in Diet so we tune your energy."
+          scrollToId="meals-week-plan"
           onContinue={() => { window.location.href = "/app/today"; }}
           onStay={() => setWeekDone(false)}
           stayLabel="See my week first"
         />
       )}
+      <GuidedFinishBar />
     </>
   );
 }

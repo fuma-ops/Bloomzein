@@ -15,7 +15,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SetupCelebration, GuidedFinishBar } from "@/components/bloom/SetupCelebration";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -752,8 +752,9 @@ export default function YogaPage() {
           stayLabel="See my plan first"
         />
       )}
+      <GuidedFinishBar />
 
-      {tourVisible && <YogaOnboarding onTab={goTourTab} onDone={finishTour} />}
+      {tourVisible && !isGuided() && <YogaOnboarding onTab={goTourTab} onDone={finishTour} />}
 
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
