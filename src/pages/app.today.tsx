@@ -15,6 +15,8 @@ import { energyBalance } from "@/lib/nutritionTargets";
 import { todayISO } from "@/lib/localDate";
 import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
+import { buildDayCoach } from "@/lib/todayCoach";
+import { CoachTodayCompact, TomorrowCard } from "@/components/bloom/coach/CoachCards";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
@@ -292,6 +294,7 @@ export default function TodayPage() {
   // "Has this part of her world been set up?" — drives the honest empty states
   // and the setup checklist, so a fresh user never sees defaults dressed as data.
   const cycleReady      = useMemo(hasCycleSettings, []);
+  const coach           = useMemo(() => buildDayCoach(), []);
   const mealPlanned     = useMemo(hasMealPlan, []);
   const dietSetup       = useMemo(hasDietSetup, []);
   const movementPlanned = useMemo(hasMovementPlan, []);
@@ -1029,6 +1032,16 @@ export default function TodayPage() {
       {(cycleReady || mealPlanned) && (
         <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
           <TodayEnergyStrip e={energyBalance()} />
+        </section>
+      )}
+
+      {/* ── 2b. YOUR COACH TODAY + TOMORROW — the emotional daily ritual: how you
+             feel, what you need, one little joy, and a soft peek at tomorrow.
+             Full version lives in Diet · Cycle Nutrition. ── */}
+      {cycleReady && (
+        <section className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 animate-card-pop-in" style={{ animationDelay: "80ms" }}>
+          <CoachTodayCompact coach={coach} />
+          <TomorrowCard coach={coach} />
         </section>
       )}
 

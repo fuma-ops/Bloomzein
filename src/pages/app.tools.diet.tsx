@@ -20,6 +20,8 @@ import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/comp
 import { StepText } from "@/components/bloom/recipes/StepText";
 import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
+import { buildDayCoach, phaseUnlocks } from "@/lib/todayCoach";
+import { CoachTodayCard, PhaseUnlockStrip, TomorrowCard } from "@/components/bloom/coach/CoachCards";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity, recipeImageSrc,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
@@ -655,51 +657,6 @@ function SetupScreen({
   );
 }
 
-/* ---------- Tab 1: Cycle Nutrition ---------- */
-
-function PhaseCard({ phase, active }: { phase: DietPhase; active: boolean }) {
-  const info = PHASE_INFO[phase];
-  return (
-    <div
-      className={[
-        "shrink-0 w-[78%] sm:w-auto snap-start rounded-[1.5rem] border p-4 transition",
-        active
-          ? "bg-white shadow-xl shadow-hotpink/20 border-hotpink/40 opacity-100 scale-100"
-          : "bg-white/70 border-petal/40 opacity-50 scale-[0.98]",
-      ].join(" ")}
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="font-script text-2xl text-hotpink">{info.label}</h3>
-        {active && <span className="rounded-full bg-hotpink px-2 py-0.5 text-[10px] font-bold uppercase text-white">Today</span>}
-      </div>
-      <p className="mt-1 text-xs italic text-rose/80">"{info.tone}"</p>
-
-      <div className="mt-3">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-rose/60">Eat</p>
-        <div className="mt-1 flex flex-wrap gap-1">
-          {info.eat.map((e) => <span key={e} className="rounded-full bg-blush px-2 py-0.5 text-[11px] font-semibold text-magenta">{e}</span>)}
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-rose/60">Avoid</p>
-        <div className="mt-1 flex flex-wrap gap-1">
-          {info.avoid.map((e) => <span key={e} className="rounded-full bg-white border border-petal/60 px-2 py-0.5 text-[11px] font-semibold text-rose/70">{e}</span>)}
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-rose/60">Key nutrients</p>
-        <div className="mt-1 flex flex-wrap gap-1">
-          {info.keyNutrients.map((e) => <span key={e} className="rounded-full bg-hotpink/10 px-2 py-0.5 text-[11px] font-semibold text-hotpink">{e}</span>)}
-        </div>
-      </div>
-
-      <p className="mt-3 text-xs text-rose/80"><b>Snack idea:</b> {info.snack}</p>
-    </div>
-  );
-}
-
 /* ---------- Profile / home dashboard ---------- */
 
 /** Numbered section header for the guided My Diet flow. */
@@ -815,40 +772,6 @@ function WeightChart({ history, target, projection }: {
         {hasProj && <span className="inline-flex items-center gap-1"><span className="h-0.5 w-3 rounded bg-[#DB2777]" style={{ backgroundImage: "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)" }} /> Projected (~{Math.abs(projection!.weeklyRateKg)}kg/wk)</span>}
         {target != null && <span className="inline-flex items-center gap-1">🎯 Goal · {target}kg {target < lastReal.kg ? "(below)" : target > lastReal.kg ? "(above)" : ""}</span>}
       </div>
-    </div>
-  );
-}
-
-/** Step 1 — the phase-nutrition cards as a carousel, today's phase highlighted. */
-function PhaseCarousel({ phase, cycleDay, onSyncedPlan }: { phase: DietPhase; cycleDay: number; onSyncedPlan: () => void }) {
-  const order: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
-  const cards = [phase, ...order.filter((p) => p !== phase)]; // current first
-  return (
-    <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1">
-      {cards.map((ph) => {
-        const info = PHASE_INFO[ph];
-        const active = ph === phase;
-        return (
-          <div key={ph} className={["snap-center shrink-0 w-[86%] sm:w-[47%] rounded-[1.5rem] p-4 border transition", active ? "bg-white ring-2 ring-hotpink shadow-lg shadow-hotpink/20 animate-selected-glow" : "bg-white/70 border-petal/50 opacity-80"].join(" ")}>
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-script text-xl text-hotpink leading-none">{info.label}{active ? " · today" : ""}</p>
-              {active && <span className="rounded-full bg-hotpink text-white text-[9px] font-bold px-2 py-0.5">Day {cycleDay}</span>}
-            </div>
-            <p className="mt-1 text-[11.5px] italic text-rose/70 leading-snug">{info.tone}.</p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {info.eat.slice(0, 5).map((f) => (
-                <span key={f} className="rounded-full bg-blush text-hotpink text-[10px] font-bold px-2 py-0.5 border border-petal/60">{f}</span>
-              ))}
-            </div>
-            <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-rose/45">Key · {info.keyNutrients.slice(0, 3).join(" · ")}</p>
-            {active ? (
-              <PinkBtn onClick={onSyncedPlan} className="w-full justify-center mt-3">✿ Synced plan → Today <ChevronRight className="h-4 w-4" /></PinkBtn>
-            ) : (
-              <p className="mt-3 text-[10.5px] text-rose/45 text-center">comes around on your {info.label.toLowerCase()} days</p>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -1096,18 +1019,34 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   );
 }
 
-function CycleNutritionTab({ phase }: { phase: DietPhase }) {
-  const phases: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
+function CycleNutritionTab({ phase, cycleReady, onSyncedPlan }: { phase: DietPhase; cycleReady: boolean; onSyncedPlan: () => void }) {
+  // One source of truth for the whole emotional-coach layer.
+  const coach = useMemo(() => buildDayCoach(), []);
+  const unlocks = useMemo(() => phaseUnlocks(), []);
 
   return (
     <div className="space-y-5">
-      {/* Your cycle phases — what nourishes you all month */}
+      {/* 1 — Your coach today: energy · what you need · eat/avoid · your moment */}
       <div id="diet-cycle">
-        <StepHeader step={1} title="Your cycle phases" sub="what nourishes you all month" />
-        <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
-          {phases.map((p) => <PhaseCard key={p} phase={p} active={p === phase} />)}
-        </div>
+        <StepHeader step={1} title="Your coach today" sub="how you feel, what you need, one little joy" />
+        {cycleReady ? (
+          <CoachTodayCard coach={coach} onSyncedPlan={onSyncedPlan} />
+        ) : (
+          <a href="/app/tools/cycle" className="block rounded-[1.5rem] border border-hotpink/30 bg-white/85 p-5 text-center animate-card-pop-in">
+            <p className="font-script text-2xl text-hotpink">Set up your cycle ✿</p>
+            <p className="mt-1 text-sm text-rose/70">Then your coach greets you every day — your energy, your foods, your moment.</p>
+          </a>
+        )}
       </div>
+
+      {/* 2 — Your cycle ahead: current phase alive, the rest locked & teasing */}
+      <div>
+        <StepHeader step={2} title="Your cycle ahead" sub="what unlocks next — a little something to look forward to" />
+        <PhaseUnlockStrip unlocks={unlocks} />
+      </div>
+
+      {/* 3 — Tomorrow with Bloomzein — a soft hook to come back */}
+      {cycleReady && <TomorrowCard coach={coach} />}
 
       {/* Read & learn — soft library of cycle, nutrition & women's-health reads */}
       <CycleReads />
@@ -1927,7 +1866,7 @@ export default function DietPage() {
           />
         )}
         {tab === "cycle" && (
-          <CycleNutritionTab phase={cyclePhase} />
+          <CycleNutritionTab phase={cyclePhase} cycleReady={cycleReady} onSyncedPlan={onSyncedPlan} />
         )}
         {tab === "today" && (
           <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />
