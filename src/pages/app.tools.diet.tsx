@@ -13,7 +13,7 @@ import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type 
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, portionFor, hasMealPlan, type PlanSlot } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
@@ -1738,11 +1738,12 @@ export default function DietPage() {
       )}
 
       {guidedGoalKcal !== null && (
-        <SetupCelebration
+        <SpotlightCoach
+          targetId="diet-energy"
           title="Your goal is set ✿"
-          message={`Based on your goal, your body needs about ${guidedGoalKcal.toLocaleString()} kcal a day. Everything now tunes to it.`}
+          message={`Here's your daily energy — your body needs about ${guidedGoalKcal.toLocaleString()} kcal a day, and everything now tunes to it.`}
           extra={
-            <div className="mt-4 space-y-3">
+            <div className="mt-3 space-y-3">
               {hasMealPlan() && (
                 <div>
                   {/* Clarify exactly what this button does before she taps it */}
@@ -1760,16 +1761,16 @@ export default function DietPage() {
                   </button>
                 </div>
               )}
-              {/* Clarify the primary CTA below (SetupCelebration renders it next) */}
+              {/* Clarify the primary CTA below (SpotlightCoach renders it next) */}
               <p className="text-[11.5px] font-semibold leading-snug text-rose/75">
                 Or simply carry on and set up the rest of your day on Today ↓
               </p>
             </div>
           }
-          continueLabel="Continue to set up Today"
-          onContinue={() => { window.location.href = "/app/today"; }}
-          onStay={() => setGuidedGoalKcal(null)}
-          stayLabel="Stay in Diet"
+          primaryLabel="Continue to set up Today"
+          onPrimary={() => { window.location.href = "/app/today"; }}
+          secondaryLabel="Stay in Diet"
+          onClose={() => setGuidedGoalKcal(null)}
         />
       )}
 

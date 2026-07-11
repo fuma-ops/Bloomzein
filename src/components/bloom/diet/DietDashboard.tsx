@@ -104,7 +104,7 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   const verdictCls = e.verdict === "over" ? "text-rose-500" : "text-emerald-600";
 
   return (
-    <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
+    <div id="diet-energy" className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <p className="font-script text-2xl text-hotpink leading-none">Today's energy</p>

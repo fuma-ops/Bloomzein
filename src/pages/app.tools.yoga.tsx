@@ -15,7 +15,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -756,18 +756,19 @@ export default function YogaPage() {
       <BloomBubbles count={10} />
 
       {guidedDone && (
-        <SetupCelebration
-          title="Your yoga flow is planned ✿"
-          message="Beautiful — workout and yoga are both set."
+        <SpotlightCoach
+          targetId="yoga-week-plan"
+          title="Your yoga week ✿"
+          message="Beautiful — your soft week is set, day by day. Tap any day to change its flow."
           extra={
             <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
-              Ready to head back and finish setting up the rest of your day on <b className="text-hotpink">Today</b>? ↓
+              Ready to head back and finish setting up the rest of your day on <b className="text-hotpink">Today</b>?
             </p>
           }
-          continueLabel="Finish on Today →"
-          onContinue={() => { window.location.href = "/app/today"; }}
-          onStay={() => setGuidedDone(false)}
-          stayLabel="Stay & tweak my plan"
+          primaryLabel="Finish on Today →"
+          onPrimary={() => { window.location.href = "/app/today"; }}
+          secondaryLabel="Stay & tweak my plan"
+          onClose={() => setGuidedDone(false)}
         />
       )}
 
@@ -1567,7 +1568,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             </button>
           </div>
         ) : (
-        <div className="flex flex-col gap-2.5">
+        <div id="yoga-week-plan" className="flex flex-col gap-2.5">
           {days.map((d) => {
             const focus = schedule[d];
             const meta = focus ? FOCUS_META[focus] : null;
