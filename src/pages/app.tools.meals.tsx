@@ -782,47 +782,75 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
     { k: "Carbs", v: t.carbs, cls: "text-rose-500", bg: "bg-rose-50", br: "border-rose-200/70" },
     { k: "Fat", v: t.fat, cls: "text-violet-500", bg: "bg-violet-50", br: "border-violet-200/70" },
   ];
+  // Collapsed by default — just the summary; tap to reveal the detail. X to close.
+  const [expanded, setExpanded] = useState(false);
+  const [closed, setClosed] = useState(() => { try { return localStorage.getItem("bloom:meals-target-card-closed") === "1"; } catch { return false; } });
+  if (closed) return null;
+  const hasDetail = !!movementFoodLine(t) || t.eatBack > 0;
   return (
-    <Glass className="p-4 sm:p-5 animate-fade-in" data-tour="meals-target">
-      <div className="flex items-center justify-between mb-2.5">
-        <p className="font-script text-2xl text-hotpink">Your daily target</p>
-        <span className="rounded-full bg-hotpink/10 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20">{goalLabel} goal</span>
-      </div>
-      <div className="flex items-end gap-4">
-        <div className="shrink-0">
-          <p className="text-4xl sm:text-5xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}</p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mt-1">kcal / day</p>
+    <Glass className="relative p-4 sm:p-5 animate-fade-in" data-tour="meals-target">
+      {/* Close the whole card */}
+      <button
+        onClick={() => { try { localStorage.setItem("bloom:meals-target-card-closed", "1"); } catch {} setClosed(true); }}
+        aria-label="Close" title="Hide daily target"
+        className="absolute right-2.5 top-2.5 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/70 text-rose/60 transition hover:bg-petal hover:text-hotpink active:scale-90"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      {/* Summary — always shown; tap anywhere here to expand/collapse the detail */}
+      <div onClick={() => setExpanded((v) => !v)} className="cursor-pointer">
+        <div className="flex items-center justify-between mb-2.5 pr-8">
+          <p className="font-script text-2xl text-hotpink">Your daily target</p>
+          <span className="rounded-full bg-hotpink/10 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20">{goalLabel} goal</span>
         </div>
-        <div className="flex-1 grid grid-cols-3 gap-1.5">
-          {macros.map((m) => (
-            <div key={m.k} className={`rounded-xl ${m.bg} border ${m.br} py-2 text-center`}>
-              <p className={`text-lg font-black leading-none ${m.cls} tabular-nums`}>{m.v}<span className="text-[10px] font-bold">g</span></p>
-              <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{m.k}</p>
-            </div>
-          ))}
+        <div className="flex items-end gap-4">
+          <div className="shrink-0">
+            <p className="text-4xl sm:text-5xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mt-1">kcal / day</p>
+          </div>
+          <div className="flex-1 grid grid-cols-3 gap-1.5">
+            {macros.map((m) => (
+              <div key={m.k} className={`rounded-xl ${m.bg} border ${m.br} py-2 text-center`}>
+                <p className={`text-lg font-black leading-none ${m.cls} tabular-nums`}>{m.v}<span className="text-[10px] font-bold">g</span></p>
+                <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{m.k}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <p className="mt-2.5 flex items-start gap-1.5 text-[11px] leading-snug text-rose/70">
-        <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-        <span>Tuned from your body &amp; {targetRationale(t)}.</span>
-      </p>
-      {/* Movement → food: the training plan's real effect on the target */}
-      {movementFoodLine(t) && (
-        <p className="mt-1.5 flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 text-[10.5px] font-bold text-emerald-700 w-fit">
-          <Dumbbell className="h-3 w-3 shrink-0" /> {movementFoodLine(t)}
+        <p className="mt-2.5 flex items-start gap-1.5 text-[11px] leading-snug text-rose/70">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+          <span>Tuned from your body &amp; {targetRationale(t)}.</span>
         </p>
-      )}
-      {/* Eat-back: calories actually burned today are added to the target */}
-      {t.eatBack > 0 && (
-        <p className="mt-1.5 flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-1 text-[10.5px] font-black text-amber-700 w-fit">
-          <Flame className="h-3 w-3 shrink-0" /> +{t.eatBack} kcal burned today — added to your target
-        </p>
-      )}
-      {/* Guided instruction — helps her understand the number from day one */}
-      <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
-        <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How to use</span>
-        <span>This is your goal for the day. Each day below shows a little bar of how close its meals land — aim for <b className="text-emerald-600">on target</b>. Add your height &amp; age in <b className="text-hotpink">Diet</b> to make it exact.</span>
+        {/* Soft "more / less" affordance so she knows it opens */}
+        <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-hotpink/70">
+          {expanded ? "Show less" : (hasDetail ? "Your movement, burn & how to use" : "How to use")}
+          <ChevronDown className={["h-3.5 w-3.5 transition-transform", expanded ? "rotate-180" : ""].join(" ")} />
+        </span>
       </div>
+
+      {/* Detail — revealed on tap */}
+      {expanded && (
+        <div className="mt-2 space-y-1.5 animate-fade-in">
+          {/* Movement → food: the training plan's real effect on the target */}
+          {movementFoodLine(t) && (
+            <p className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 text-[10.5px] font-bold text-emerald-700 w-fit">
+              <Dumbbell className="h-3 w-3 shrink-0" /> {movementFoodLine(t)}
+            </p>
+          )}
+          {/* Eat-back: calories actually burned today are added to the target */}
+          {t.eatBack > 0 && (
+            <p className="flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-1 text-[10.5px] font-black text-amber-700 w-fit">
+              <Flame className="h-3 w-3 shrink-0" /> +{t.eatBack} kcal burned today — added to your target
+            </p>
+          )}
+          {/* Guided instruction — helps her understand the number */}
+          <div className="flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
+            <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How to use</span>
+            <span>This is your goal for the day. Each day below shows a little bar of how close its meals land — aim for <b className="text-emerald-600">on target</b>. Add your height &amp; age in <b className="text-hotpink">Diet</b> to make it exact.</span>
+          </div>
+        </div>
+      )}
     </Glass>
   );
 }
