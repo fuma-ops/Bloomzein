@@ -4,7 +4,7 @@ import {
   Sparkles, Flower2, Heart, ArrowRight, Sun, Moon, Smile, Cloud,
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
-  ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
+  ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple, Share2,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -604,6 +604,13 @@ export default function TodayPage() {
       return next;
     });
   };
+  const shareAffirmation = async () => {
+    const text = `${affirmText} ✿ — Bloomzein`;
+    try {
+      if (typeof navigator !== "undefined" && (navigator as any).share) await (navigator as any).share({ text, title: "Bloomzein affirmation" });
+      else if (typeof navigator !== "undefined" && navigator.clipboard) await navigator.clipboard.writeText(text);
+    } catch {}
+  };
 
   // Every item in Today's Plan (each meal, workout, yoga, journal) counts toward
   // the bloom ring, alongside the two standalone daily goals (mood + water), so
@@ -925,31 +932,43 @@ export default function TodayPage() {
       {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
              Flanked by two logo flowers; the words softly self-write on open. ── */}
       {!affirmDismissed && (
-        /* Centred quote card — flower on top, the handwritten affirmation fills
-           the width, and a "loved" heart-count sits as a balanced footer (no
-           dead space). Notif-style dashed border, transparent background. */
-        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 py-4 sm:px-6 sm:py-5 text-center animate-fade-in">
-          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
-            <X className="h-4 w-4" />
+        /* Soft one-line quote flanked by two flowers; a small X to close (top-
+           right) and a tiny love-count + share tucked in the bottom-right. */
+        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 pt-3.5 pb-7 animate-fade-in">
+          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
+            <X className="h-3.5 w-3.5" />
           </button>
-          <BloomFlower className="mx-auto h-6 w-6 sm:h-7 sm:w-7 text-hotpink/80 animate-icon-breathe" />
-          <AnimatedWords
-            key={affirmText}
-            text={affirmText}
-            stagger={95}
-            className="mt-1.5 font-script text-2xl sm:text-3xl text-hotpink leading-snug text-balance"
-          />
-          {/* Loved by — a soft heart + count, tap to add your own love */}
-          <button
-            onClick={toggleAffirmLike}
-            aria-pressed={affirmLiked}
-            aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
-            className={["mx-auto mt-2.5 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold tabular-nums transition active:scale-90",
-              affirmLiked ? "border-hotpink/40 bg-hotpink/10 text-hotpink" : "border-hotpink/25 bg-white/40 text-hotpink/80 hover:bg-blush"].join(" ")}
-          >
-            <Heart className={["h-3.5 w-3.5 transition", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2.2} />
-            {affirmLiked ? "Loved" : "Love this"} · {affirmLikeCount.toLocaleString()}
-          </button>
+
+          <div className="flex items-center justify-center gap-2 sm:gap-3 px-5">
+            <BloomFlower className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-hotpink/80 animate-icon-breathe" />
+            <AnimatedWords
+              key={affirmText}
+              text={affirmText}
+              stagger={95}
+              className="font-script text-lg sm:text-2xl text-hotpink text-center leading-snug text-balance"
+            />
+            <BloomFlower className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-hotpink/80 animate-icon-breathe" />
+          </div>
+
+          {/* Bottom-right: small outline heart + count, and share */}
+          <div className="absolute bottom-1.5 right-2.5 flex items-center gap-2.5">
+            <button
+              onClick={toggleAffirmLike}
+              aria-pressed={affirmLiked}
+              aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
+              className="inline-flex items-center gap-1 text-[10px] font-bold tabular-nums text-hotpink/70 transition hover:text-hotpink active:scale-90"
+            >
+              <Heart className={["h-3.5 w-3.5", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2} />
+              {affirmLikeCount.toLocaleString()}
+            </button>
+            <button
+              onClick={shareAffirmation}
+              aria-label="Share this affirmation"
+              className="text-hotpink/70 transition hover:text-hotpink active:scale-90"
+            >
+              <Share2 className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+          </div>
         </div>
       )}
 
