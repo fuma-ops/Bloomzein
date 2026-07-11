@@ -20,9 +20,9 @@ import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/comp
 import { StepText } from "@/components/bloom/recipes/StepText";
 import { computeTargets, energyBalance, goalProjection, portionForRecipe, slotBudget } from "@/lib/nutritionTargets";
 import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/bloom/diet/DietDashboard";
-import { buildDayCoach, phaseUnlocks } from "@/lib/todayCoach";
+import { buildDayCoach } from "@/lib/todayCoach";
 import { readsForPhase } from "@/lib/readsData";
-import { CoachTodayCard, PhaseUnlockStrip, TomorrowCard, PhaseReads } from "@/components/bloom/coach/CoachCards";
+import { CoachTodayCard, TomorrowCard, PhaseReads } from "@/components/bloom/coach/CoachCards";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity, recipeImageSrc,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
@@ -1020,17 +1020,26 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   );
 }
 
+/** A soft, un-numbered section header for the coach flow. */
+function CoachHeader({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div className="mb-2.5 mt-1">
+      <h2 className="font-script text-[1.7rem] sm:text-3xl text-hotpink leading-none">{title}</h2>
+      <p className="mt-0.5 text-[12px] text-rose/55 leading-tight">{sub}</p>
+    </div>
+  );
+}
+
 function CycleNutritionTab({ cycleReady }: { cycleReady: boolean }) {
   // One source of truth for the whole emotional-coach layer.
   const coach = useMemo(() => buildDayCoach(), []);
-  const unlocks = useMemo(() => phaseUnlocks(), []);
   const phaseReads = useMemo(() => readsForPhase(coach.phase), [coach.phase]);
 
   return (
-    <div className="space-y-5">
-      {/* 1 — Your coach today: energy · what you need · eat/avoid · your moment */}
+    <div className="space-y-6">
+      {/* Your coach today: energy · what you need · eat/avoid · snack · your moment */}
       <div id="diet-cycle">
-        <StepHeader step={1} title="Your coach today" sub="how you feel, what you need, one little joy" />
+        <CoachHeader title="Your coach today" sub="how you feel, what you need, one little joy" />
         {cycleReady ? (
           <CoachTodayCard coach={coach} />
         ) : (
@@ -1041,20 +1050,14 @@ function CycleNutritionTab({ cycleReady }: { cycleReady: boolean }) {
         )}
       </div>
 
-      {/* 2 — Your cycle ahead: current phase alive, the rest locked & teasing */}
-      <div>
-        <StepHeader step={2} title="Your cycle ahead" sub="what unlocks next — a little something to look forward to" />
-        <PhaseUnlockStrip unlocks={unlocks} />
-      </div>
-
-      {/* 3 — Tomorrow with Bloomzein — a soft hook to come back */}
+      {/* Tomorrow with Bloomzein — the single "what's ahead" hook, made curious */}
       {cycleReady && <TomorrowCard coach={coach} />}
 
-      {/* 4 — Reads tuned to your phase (replaces the old generic Read & learn) */}
-      {cycleReady && (
+      {/* Reads tuned to your phase (one clear title, carousel below) */}
+      {cycleReady && phaseReads.length > 0 && (
         <div>
-          <StepHeader step={3} title="Reads for you" sub="soft reads chosen for your phase" />
-          <PhaseReads reads={phaseReads} unlocks={unlocks} phaseLabel={coach.phaseLabel} cycleDay={coach.cycleDay} />
+          <CoachHeader title={`Reads for your ${coach.phaseLabel} phase`} sub={`chosen for how you feel today · Day ${coach.cycleDay}`} />
+          <PhaseReads reads={phaseReads} />
         </div>
       )}
     </div>
@@ -1270,15 +1273,6 @@ function TodayTab({
 
   return (
     <div className="space-y-5">
-      {/* Header row */}
-      <Glass className="p-4 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-sm font-bold text-magenta">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
-          <p className="text-xs text-rose/60">Day {cycleDay} of your cycle</p>
-        </div>
-        <span className="rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-hotpink">{PHASE_INFO[phase].label}</span>
-      </Glass>
-
       {/* Macro rings */}
       <Glass className="p-4 sm:p-5">
         <h3 className="font-script text-xl text-hotpink mb-3 flex items-center gap-1.5">

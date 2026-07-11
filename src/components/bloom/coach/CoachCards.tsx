@@ -1,16 +1,16 @@
 /**
  * The "emotional coach" UI — a warm, phase-aware daily ritual.
  * All data comes from buildDayCoach() (lib/todayCoach.ts), so the full card
- * (Diet), the compact summary (Today), the Tomorrow preview, the phase-reads
- * carousel and the locked-peek strip always tell the same story.
+ * (Diet), the compact summary (Today), the Tomorrow preview and the phase-reads
+ * carousel always tell the same story.
  *
  * Icons are intentionally consistent & pink — no per-phase icon swapping.
  */
 import { useState } from "react";
-import { ArrowRight, Lock, Moon, Sparkles, ChevronRight, Flower2, Clock, Check } from "lucide-react";
+import { ArrowRight, Moon, Sparkles, ChevronRight, Flower2, Clock, Check, CalendarHeart } from "lucide-react";
 import {
   isFeelGoodDone, toggleFeelGoodDone, feelGoodStreak,
-  type DayCoach, type FeelGood, type PhaseUnlock,
+  type DayCoach, type FeelGood, type CoachSnack,
 } from "@/lib/todayCoach";
 import type { Article } from "@/lib/readsData";
 
@@ -57,7 +57,31 @@ function ChipRow({ label, items, tone }: { label: string; items: string[]; tone:
   );
 }
 
-/* ---------- feel-good "your moment" block — image-led + a daily streak ---------- */
+/* ---------- snack proposed from Meals (with photo) ---------- */
+
+function SnackCard({ snack, fallback, phaseLabel }: { snack: CoachSnack | null; fallback: string; phaseLabel: string }) {
+  if (!snack) {
+    return <p className="text-[11px] text-rose/70"><b className="text-hotpink">Snack idea ·</b> {fallback}</p>;
+  }
+  return (
+    <a href="/app/tools/meals" className="group flex items-center gap-3 rounded-2xl bg-blush/40 border border-petal/50 p-2 transition hover:bg-blush/60 active:scale-[0.99]">
+      <div className="relative shrink-0 h-14 w-14 overflow-hidden rounded-xl ring-1 ring-petal/60 bg-blush">
+        <img
+          src={snack.image} alt="" className="h-full w-full object-cover" loading="lazy"
+          onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/read-recipes.webp")) el.src = "/images/read-recipes.webp"; }}
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/70">Snack for your {phaseLabel} phase</p>
+        <p className="text-sm font-bold text-[#831843] leading-snug truncate">{snack.name}</p>
+        <p className="text-[11px] text-rose/60">{snack.calories} kcal · {snack.protein}g protein</p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-hotpink opacity-70 group-hover:opacity-100 transition" />
+    </a>
+  );
+}
+
+/* ---------- feel-good "your moment" — big image + a daily streak ---------- */
 
 export function FeelGoodCard({ fg, className = "" }: { fg: FeelGood; className?: string }) {
   const [done, setDone] = useState(() => isFeelGoodDone());
@@ -65,43 +89,46 @@ export function FeelGoodCard({ fg, className = "" }: { fg: FeelGood; className?:
   const toggle = () => { const n = toggleFeelGoodDone(); setDone(n); setStreak(feelGoodStreak()); };
 
   return (
-    <div className={["relative overflow-hidden rounded-[1.4rem] border border-hotpink/25 bg-gradient-to-br from-blush/70 via-white to-petal/30 p-3 animate-selected-glow", className].join(" ")}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-hotpink/70 inline-flex items-center gap-1"><Sparkles className="h-3 w-3 text-hotpink" strokeWidth={2} /> A moment for you</p>
+    <div className={["relative overflow-hidden rounded-[1.5rem] border border-hotpink/25 bg-gradient-to-br from-blush/70 via-white to-petal/30 animate-selected-glow", className].join(" ")}>
+      {/* big attention-grabbing image */}
+      <div className="relative h-32 sm:h-36 w-full overflow-hidden">
+        <img src={fg.image} alt="" className="h-full w-full object-cover" loading="lazy" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+        <p className="absolute top-2.5 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-hotpink">
+          <Sparkles className="h-3 w-3" strokeWidth={2} /> A moment for you
+        </p>
         {streak > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2 py-0.5 text-[10px] font-bold text-hotpink">
+          <span className="absolute top-2.5 right-3 inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2.5 py-1 text-[10px] font-bold shadow">
             <Flower2 className="h-3 w-3" strokeWidth={2} /> {streak}-day streak
           </span>
         )}
+        <span className="absolute bottom-2 left-3 text-3xl leading-none drop-shadow-lg">{fg.emoji}</span>
       </div>
 
-      <div className="mt-2 flex items-stretch gap-3">
-        <div className="relative shrink-0 h-[74px] w-[74px] overflow-hidden rounded-2xl ring-1 ring-petal/60">
-          <img src={fg.image} alt="" className="h-full w-full object-cover" loading="lazy" />
-          <span className="absolute bottom-1 left-1 text-lg leading-none drop-shadow">{fg.emoji}</span>
-        </div>
-        <div className="min-w-0 flex-1 flex flex-col">
-          <p className="text-[13px] leading-snug text-[#831843] font-medium">{fg.text}</p>
+      <div className="p-3.5">
+        <p className="text-[13.5px] leading-snug text-[#831843] font-medium">{fg.text}</p>
+        <div className="mt-3 flex items-center gap-2">
           {fg.ctaLabel && fg.ctaHref && (
             <a
               href={fg.ctaHref}
-              className="mt-1.5 self-start inline-flex items-center gap-1 rounded-full bg-hotpink px-3 py-1 text-[11px] font-bold text-white transition hover:bg-magenta active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-magenta px-4 py-2 text-[12px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95"
             >
-              {fg.ctaLabel} <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+              {fg.ctaLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
             </a>
           )}
+          <button
+            onClick={toggle}
+            className={[
+              "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12px] font-bold transition active:scale-95",
+              done
+                ? "bg-hotpink text-white shadow-md shadow-hotpink/25"
+                : "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50",
+            ].join(" ")}
+          >
+            {done ? <><Check className="h-3.5 w-3.5" strokeWidth={3} /> Loved it ✿</> : <><Flower2 className="h-3.5 w-3.5" strokeWidth={2.2} /> I did it ✿</>}
+          </button>
         </div>
       </div>
-
-      <button
-        onClick={toggle}
-        className={[
-          "mt-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold transition active:scale-95",
-          done ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50",
-        ].join(" ")}
-      >
-        {done ? <><Check className="h-3.5 w-3.5" strokeWidth={3} /> Loved it today ✿</> : <>I did it ✿</>}
-      </button>
     </div>
   );
 }
@@ -132,18 +159,22 @@ export function CoachTodayCard({ coach }: { coach: DayCoach }) {
         <ChipRow label="Eat more" items={coach.eat.slice(0, 5)} tone="eat" />
         <ChipRow label="Ease up on" items={coach.avoid.slice(0, 4)} tone="avoid" />
       </div>
-      <p className="mt-2 text-[11px] text-rose/70"><b className="text-hotpink">Snack idea ·</b> {coach.snack}</p>
+
+      {/* snack proposed from Meals, with a photo */}
+      <div className="mt-3"><SnackCard snack={coach.snackRecipe} fallback={coach.snack} phaseLabel={coach.phaseLabel} /></div>
 
       {/* feel-good */}
       <FeelGoodCard fg={coach.feelGood} className="mt-3" />
 
       {/* → the real Today's Plan on the Today page */}
-      <a
-        href="/app/today#todays-plan"
-        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-full bloom-luxury-btn text-white px-4 py-2 text-sm font-semibold"
-      >
-        ✿ See today's plan <ChevronRight className="h-4 w-4" />
-      </a>
+      <div className="mt-4 flex justify-center">
+        <a
+          href="/app/today#todays-plan"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-hotpink to-magenta px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-hotpink/25 transition hover:brightness-105 active:scale-95"
+        >
+          <CalendarHeart className="h-4 w-4" strokeWidth={2} /> See today's plan <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+        </a>
+      </div>
     </div>
   );
 }
@@ -165,9 +196,9 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
       <div className="mt-2.5"><EnergyMeter level={coach.energy.level} label={coach.energy.label} /></div>
       {/* the feel-good peek — with the proposed read/meal photo */}
       <div className="mt-2.5 flex items-center gap-3 rounded-2xl bg-blush/40 border border-petal/40 p-2">
-        <div className="relative shrink-0 h-14 w-14 overflow-hidden rounded-xl ring-1 ring-petal/60">
+        <div className="relative shrink-0 h-16 w-16 overflow-hidden rounded-xl ring-1 ring-petal/60">
           <img src={coach.feelGood.image} alt="" className="h-full w-full object-cover" loading="lazy" />
-          <span className="absolute bottom-0.5 left-0.5 text-base leading-none drop-shadow">{coach.feelGood.emoji}</span>
+          <span className="absolute bottom-0.5 left-0.5 text-lg leading-none drop-shadow">{coach.feelGood.emoji}</span>
         </div>
         <p className="text-[12px] leading-snug text-[#831843] line-clamp-3">{coach.feelGood.text}</p>
       </div>
@@ -175,7 +206,7 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
   );
 }
 
-/* ---------- Tomorrow preview ---------- */
+/* ---------- Tomorrow preview — richer, curious ---------- */
 
 export function TomorrowCard({ coach }: { coach: DayCoach }) {
   const t = coach.tomorrow;
@@ -184,117 +215,60 @@ export function TomorrowCard({ coach }: { coach: DayCoach }) {
       <p className="text-[10px] font-bold uppercase tracking-widest text-magenta/70 inline-flex items-center gap-1.5">
         <Moon className="h-3.5 w-3.5 text-magenta" strokeWidth={2} /> Tomorrow with Bloomzein
       </p>
-      <p className="mt-1.5 font-script text-xl text-hotpink leading-tight">
-        {t.phaseLabel} · Day {t.cycleDay}
-      </p>
+      <div className="mt-1.5 flex items-baseline justify-between gap-2">
+        <p className="font-script text-xl text-hotpink leading-tight">{t.phaseLabel} · Day {t.cycleDay}</p>
+        <span className="text-[11px] font-bold text-hotpink inline-flex items-center gap-1"><Sparkles className="h-3 w-3" strokeWidth={2} /> {t.energyLabel}</span>
+      </div>
       <p className="mt-0.5 text-[13px] leading-snug text-[#831843]">
         Here's how you'll live it: {t.liveIt}
       </p>
-    </div>
-  );
-}
-
-/* ---------- Locked-peek phase strip ---------- */
-
-const UNLOCK_TEASE_TEXT: Record<string, string> = {
-  menstrual: "rest & deep nourishment",
-  follicular: "fresh energy & new starts",
-  ovulatory: "your glow & social peak",
-  luteal: "comfort & honest, creative calm",
-};
-
-export function PhaseUnlockStrip({ unlocks }: { unlocks: PhaseUnlock[] }) {
-  return (
-    <div className="flex gap-2.5 overflow-x-auto no-scrollbar snap-x pb-1">
-      {unlocks.map((u) => {
-        if (u.current) {
-          return (
-            <div key={u.phase} className="snap-start shrink-0 w-[62%] sm:w-[30%] rounded-[1.3rem] border-2 border-hotpink/50 bg-white p-3.5 shadow-lg shadow-hotpink/15 animate-selected-glow">
-              <div className="flex items-center justify-between gap-1">
-                <Flower2 className="h-4 w-4 text-hotpink" strokeWidth={2} />
-                <span className="rounded-full bg-hotpink text-white text-[9px] font-bold uppercase px-2 py-0.5">Today</span>
-              </div>
-              <p className="mt-1.5 font-script text-xl text-hotpink leading-none">{u.label}</p>
-              <p className="mt-1 text-[11px] font-semibold text-rose/65 leading-snug">{u.teaser}</p>
-            </div>
-          );
-        }
-        return (
-          <div key={u.phase} className="relative snap-start shrink-0 w-[46%] sm:w-[24%] rounded-[1.3rem] border border-petal/50 bg-white/60 p-3.5 overflow-hidden">
-            <div className="blur-[3px] select-none opacity-70">
-              <Flower2 className="h-4 w-4 text-hotpink/60" strokeWidth={2} />
-              <p className="mt-1.5 font-script text-lg text-hotpink/70 leading-none">{u.label}</p>
-              <p className="mt-1 text-[10.5px] font-medium text-rose/55 leading-snug">{UNLOCK_TEASE_TEXT[u.phase]}</p>
-            </div>
-            <div className="absolute inset-0 grid place-items-center bg-white/30">
-              <div className="text-center px-1">
-                <span className="mx-auto grid h-7 w-7 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm">
-                  <Lock className="h-3.5 w-3.5" strokeWidth={2} />
-                </span>
-                <p className="mt-1 text-[10px] font-bold text-hotpink leading-tight">{u.teaser}</p>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ---------- Phase reads — swipeable photo carousel + locked peek (Diet) ---------- */
-
-export function PhaseReads({ reads, unlocks, phaseLabel, cycleDay }: {
-  reads: Article[]; unlocks: PhaseUnlock[]; phaseLabel: string; cycleDay: number;
-}) {
-  const locked = unlocks.filter((u) => !u.current);
-  if (!reads.length) return null;
-  return (
-    <div>
-      <div className="mb-2">
-        <h3 className="font-script text-xl text-hotpink leading-none inline-flex items-center gap-1.5"><Flower2 className="h-4 w-4 text-hotpink" strokeWidth={2} /> Reads for your {phaseLabel} phase</h3>
-        <p className="text-[11px] text-rose/60">Chosen for how you feel today · Day {cycleDay}</p>
-      </div>
-
-      <div className="relative -mx-1 px-1">
-        <div className="flex gap-3 pb-1 overflow-x-auto no-scrollbar snap-x">
-          {reads.map((a, i) => (
-            <a
-              key={a.id}
-              href={`/app/read?a=${a.id}`}
-              style={{ animationDelay: `${i * 0.06}s` }}
-              className="group relative snap-start shrink-0 w-[74%] sm:w-[16rem] overflow-hidden rounded-3xl border border-petal/60 shadow-[0_12px_30px_-14px_oklch(0.7_0.22_350/0.45)] transition hover:-translate-y-1 active:scale-[0.98] animate-card-pop-in"
-            >
-              <div className="relative h-44 sm:h-48">
-                <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-magenta/85 via-magenta/20 to-transparent" />
-                <span className="absolute top-3 left-3 inline-block rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">{a.topic}</span>
-                <div className="absolute inset-x-0 bottom-0 p-3.5">
-                  <h4 className="font-script text-xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{a.title}</h4>
-                  <p className="mt-1 text-[11px] text-white/95 leading-snug line-clamp-2" style={{ textShadow: "0 1px 5px rgba(0,0,0,0.4)" }}>{a.excerpt}</p>
-                  <div className="mt-1.5 flex items-center gap-3 text-white/95">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold"><Clock className="h-3 w-3" strokeWidth={2} /> {a.minutes} min</span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold"><Flower2 className="h-3 w-3" strokeWidth={2} /> {a.blooms}</span>
-                  </div>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {locked.length > 0 && (
-        <div className="mt-3 grid grid-cols-3 gap-2.5">
-          {locked.map((u) => (
-            <div key={u.phase} className="relative overflow-hidden rounded-2xl border border-petal/50 bg-blush/40 p-3 text-center">
-              <span className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm">
-                <Lock className="h-4 w-4" strokeWidth={2} />
-              </span>
-              <p className="mt-1.5 font-script text-base text-hotpink leading-none">{u.label}</p>
-              <p className="mt-1 text-[10px] font-bold text-rose/60 leading-tight">{u.teaser}</p>
-            </div>
+      {t.eatPeek.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-rose/50">On the menu ·</span>
+          {t.eatPeek.map((f) => (
+            <span key={f} className="rounded-full bg-white/80 border border-petal/50 px-2 py-0.5 text-[10.5px] font-semibold text-magenta">{f}</span>
           ))}
         </div>
       )}
+      {t.comingUp && (
+        <p className="mt-2.5 rounded-xl bg-hotpink/8 border border-hotpink/15 px-3 py-1.5 text-[11.5px] font-semibold text-hotpink inline-flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Coming up: your {t.comingUp.phaseLabel} phase in {t.comingUp.inDays} day{t.comingUp.inDays === 1 ? "" : "s"} ✨
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Phase reads — swipeable photo carousel (Diet) ---------- */
+
+export function PhaseReads({ reads }: { reads: Article[] }) {
+  if (!reads.length) return null;
+  return (
+    <div className="relative -mx-1 px-1">
+      <div className="flex gap-3 pb-1 overflow-x-auto no-scrollbar snap-x">
+        {reads.map((a, i) => (
+          <a
+            key={a.id}
+            href={`/app/read?a=${a.id}`}
+            style={{ animationDelay: `${i * 0.06}s` }}
+            className="group relative snap-start shrink-0 w-[76%] sm:w-[17rem] overflow-hidden rounded-3xl border border-petal/60 shadow-[0_12px_30px_-14px_oklch(0.7_0.22_350/0.45)] transition hover:-translate-y-1 active:scale-[0.98] animate-card-pop-in"
+          >
+            <div className="relative h-48 sm:h-52">
+              <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-magenta/85 via-magenta/20 to-transparent" />
+              <span className="absolute top-3 left-3 inline-block rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">{a.topic}</span>
+              <div className="absolute inset-x-0 bottom-0 p-3.5">
+                <h4 className="font-script text-2xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{a.title}</h4>
+                <p className="mt-1 text-[11.5px] text-white/95 leading-snug line-clamp-2" style={{ textShadow: "0 1px 5px rgba(0,0,0,0.4)" }}>{a.excerpt}</p>
+                <div className="mt-1.5 flex items-center gap-3 text-white/95">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold"><Clock className="h-3 w-3" strokeWidth={2} /> {a.minutes} min</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold"><Flower2 className="h-3 w-3" strokeWidth={2} /> {a.blooms}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

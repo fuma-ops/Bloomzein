@@ -14,7 +14,7 @@ import {
   type CyclePhase,
 } from "@/components/bloom/cyclePhase";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
-import { PHASE_INFO, type DietPhase } from "@/components/bloom/recipes/data";
+import { PHASE_INFO, RECIPES, recipeImageSrc, type DietPhase } from "@/components/bloom/recipes/data";
 import { todayISO, localDateISO } from "@/lib/localDate";
 
 /* ---------- phase energy read (drives the cute meter) ---------- */
@@ -220,6 +220,36 @@ export function dietPhaseLabel(p: DietPhase): string {
   return PHASE_INFO[p].label;
 }
 
+/* ---------- snack proposed from our Meals (with a real photo) ---------- */
+
+/** The phase's snack, drawn from the recipe library so we can show its photo. */
+const SNACK_RECIPE_ID: Record<DietPhase, string> = {
+  menstrual: "s01",   // Dates + Almond Butter
+  follicular: "s02",  // Greek Yoghurt, Berries & Flaxseed
+  ovulatory: "s03",   // Carrot Sticks, Hummus & Seeds
+  luteal: "s04",      // Banana, Dark Chocolate & Walnuts
+};
+
+export interface CoachSnack {
+  id: string; name: string; image: string; calories: number; protein: number;
+}
+
+function snackFor(phase: DietPhase): CoachSnack | null {
+  const r = RECIPES.find((x) => x.id === SNACK_RECIPE_ID[phase])
+    ?? RECIPES.find((x) => x.mealType === "snack" && x.phases.includes(phase));
+  if (!r) return null;
+  return { id: r.id, name: r.name, image: recipeImageSrc(r), calories: r.macros.calories, protein: r.macros.protein };
+}
+
+/** The next phase transition ahead — a little curiosity for the Tomorrow card. */
+function comingUpFrom(date: Date, s: CycleSettings, current: DietPhase): { phaseLabel: string; inDays: number } | null {
+  for (let i = 1; i <= s.cycleLength; i++) {
+    const p = toDietPhase(phaseForDay(addDays(date, i), s));
+    if (p && p !== current) return { phaseLabel: dietPhaseLabel(p), inDays: i };
+  }
+  return null;
+}
+
 /* ---------- the assembled coach ---------- */
 
 export interface DayCoach {
@@ -233,13 +263,17 @@ export interface DayCoach {
   eat: string[];
   avoid: string[];
   keyNutrients: string[];
-  snack: string;
+  snack: string;               // fallback text
+  snackRecipe: CoachSnack | null; // proposed snack from Meals, with photo
   feelGood: FeelGood;
   tomorrow: {
     phase: DietPhase;
     phaseLabel: string;
     cycleDay: number;
     liveIt: string;
+    energyLabel: string;
+    eatPeek: string[];         // a couple of foods to look forward to
+    comingUp: { phaseLabel: string; inDays: number } | null;
   };
 }
 
@@ -253,6 +287,7 @@ export function buildDayCoach(date = new Date(), iso = todayISO()): DayCoach {
 
   const tomorrowDate = addDays(date, 1);
   const tPhase = toDietPhase(phaseForDay(tomorrowDate, s)) ?? "follicular";
+  const tInfo = PHASE_INFO[tPhase];
 
   return {
     ready,
@@ -266,12 +301,16 @@ export function buildDayCoach(date = new Date(), iso = todayISO()): DayCoach {
     avoid: info.avoid,
     keyNutrients: info.keyNutrients,
     snack: info.snack,
+    snackRecipe: snackFor(phase),
     feelGood: feelGoodFor(phase, iso),
     tomorrow: {
       phase: tPhase,
       phaseLabel: dietPhaseLabel(tPhase),
       cycleDay: cycleDayForDate(tomorrowDate, s),
       liveIt: LIVE_IT[tPhase],
+      energyLabel: ENERGY_BY_PHASE[tPhase].label,
+      eatPeek: tInfo.eat.slice(0, 3),
+      comingUp: comingUpFrom(date, s, phase),
     },
   };
 }
