@@ -915,26 +915,20 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
   const chooseNoAllergy = () => { setAllergies([]); updateDietProfile({ allergies: [] }); setTouched((t) => ({ ...t, allergy: true })); };
 
   return (
-    <Glass className="p-4 sm:p-5 animate-scale-in">
+    <Glass className="p-3.5 sm:p-4 animate-scale-in">
       <p className="font-script text-2xl text-hotpink leading-none">Let's set up your week ✿</p>
-      <p className="mt-1 text-[12px] text-rose/60 leading-snug">A few quick picks — then I cook your whole week for you.</p>
+      <p className="mt-0.5 text-[12px] text-rose/60 leading-snug">A few quick picks — then I cook your whole week for you.</p>
 
-      {/* Cycle phase — automatic, from the Cycle Tracker (not a step) */}
-      <div className="mt-3 mb-4 flex items-start gap-2 rounded-2xl bg-blush/60 px-3 py-2.5">
-        {phaseKnown ? (
-          <>
-            <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500" strokeWidth={2.8} />
-            <p className="text-[12px] text-rose/80 leading-snug">Synced to your <b className="text-hotpink capitalize">{phase}</b> phase — automatically, from your Cycle Tracker ✿</p>
-          </>
-        ) : (
-          <>
-            <Moon className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
-            <p className="text-[12px] text-rose/80 leading-snug">Meals adapt to your cycle. <a href="/app/tools/cycle" className="font-bold text-hotpink underline">Set up your Cycle Tracker</a> to sync your phase automatically.</p>
-          </>
-        )}
-      </div>
+      {/* Cycle phase — when synced we say nothing (keeps setup compact); only
+          nudge to set up the Cycle Tracker if her phase isn't known yet. */}
+      {!phaseKnown && (
+        <div className="mt-2.5 mb-3 flex items-start gap-2 rounded-2xl bg-blush/60 px-3 py-2">
+          <Moon className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
+          <p className="text-[12px] text-rose/80 leading-snug">Meals adapt to your cycle. <a href="/app/tools/cycle" className="font-bold text-hotpink underline">Set up your Cycle Tracker</a> to sync your phase automatically.</p>
+        </div>
+      )}
 
-      <div className="space-y-4">
+      <div className={["space-y-3", phaseKnown ? "mt-3.5" : ""].join(" ")}>
         {/* 1 — Vibe */}
         <StepRow n={1} done={touched.vibe} title="Choose this week's vibe" desc="The mood for this week — light, protein-rich, comfort or fully cycle-synced.">
           <div data-tour="meals-vibe">
@@ -968,16 +962,17 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
 
         {/* 4 — Pantry (optional, skippable) */}
         <StepRow n={4} done={pantryDone} title="Pantry — optional" desc={pantrySkip ? "Skipped — I'll plan from my whole recipe library." : "Plan from what you own, or skip and I'll use everything."}>
-          <div className="flex flex-wrap gap-2">
+          {/* Two CTAs share one row — stays on a single line on a phone */}
+          <div className="flex items-stretch gap-2">
             <button
               onClick={goPantry}
-              className={["inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition active:scale-95", owned.size > 0 ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
+              className={["flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-bold transition active:scale-95", owned.size > 0 ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
             >
-              <Apple className="h-4 w-4" /> {owned.size > 0 ? "Edit pantry" : "Set up pantry"} <ChevronRight className="h-3.5 w-3.5" />
+              <Apple className="h-4 w-4 shrink-0" /> {owned.size > 0 ? "Edit pantry" : "Set up pantry"}
             </button>
             {!pantryDone && (
-              <button onClick={onSkipPantry} className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/70 px-3.5 py-2 text-[12.5px] font-semibold text-rose/70 hover:bg-blush transition active:scale-95">
-                Continue without pantry
+              <button onClick={onSkipPantry} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white/70 px-3 py-2 text-[12px] font-semibold text-rose/70 hover:bg-blush transition active:scale-95">
+                Skip for now
               </button>
             )}
           </div>
@@ -988,12 +983,12 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
       <button
         onClick={onPlan} disabled={generating}
         data-tour="meals-plan"
-        className="mt-4 w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-3 text-[14px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
+        className="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-3 text-[14px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
       >
         <Sparkles className="h-4 w-4" /> {generating ? "Building your week…" : "Plan my week"} <ChevronRight className="h-4 w-4" />
       </button>
       {/* Persistent reminder of what the plan follows */}
-      <p className="mt-2 text-center text-[11px] text-rose/55 leading-snug">
+      <p className="mt-1.5 text-center text-[11px] text-rose/55 leading-snug">
         {dietSetup ? "Your week follows your Diet goal & this week's vibe ✿" : "Your week follows this week's vibe ✿"}
       </p>
     </Glass>
@@ -1013,6 +1008,9 @@ function WeekTab({
   // "Want a daily calorie target?" notice — dismissible, remembered.
   const [targetDismissed, setTargetDismissed] = useState(() => { try { return localStorage.getItem("bloom:meals-target-dismissed") === "1"; } catch { return false; } });
   const dismissTargetNotif = () => { try { localStorage.setItem("bloom:meals-target-dismissed", "1"); } catch {} setTargetDismissed(true); };
+  // "Why this week" phase-nutrition note — closable for the session (returns on
+  // reload / when the phase changes, so she still gets each phase's guidance).
+  const [whyOpen, setWhyOpen] = useState(true);
   const planRef = useRef<HTMLDivElement>(null);
   const dietNoteRef = useRef<HTMLDivElement>(null);
 
@@ -1083,12 +1081,12 @@ function WeekTab({
 
   return (
     <>
-      {/* ①  YOUR DAILY TARGET — only once Diet is set up (a real goal + body).
-             Without it there is no personalised target to show, so instead we
-             gently offer to set a goal and get adequate meals. */}
+      {/* ①  YOUR DAILY TARGET — once Diet is set up, show her real target. If she
+             hasn't set a goal, gently offer to — but ONLY once her week exists, so
+             a fresh setup goes straight to "Let's set up your week" without clutter. */}
       {dietSetup ? (
         <DailyTargetCard t={targets} />
-      ) : !targetDismissed ? (
+      ) : (!planEmpty && !targetDismissed) ? (
         <NotifCard
           icon={<Sparkles className="h-5 w-5" />}
           title="Want a daily calorie target?"
@@ -1099,16 +1097,6 @@ function WeekTab({
           onDismiss={dismissTargetNotif}
         />
       ) : null}
-
-      {/* A clear OR between the two ways to plan: set a goal in Diet (auto-tuned)
-          or simply set up this week yourself below. */}
-      {!dietSetup && planEmpty && (
-        <div className="flex items-center gap-3 px-1 -my-0.5">
-          <span className="h-px flex-1 bg-petal/60" />
-          <span className="shrink-0 inline-flex items-center rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-hotpink/70 shadow-sm ring-1 ring-petal/60">or</span>
-          <span className="h-px flex-1 bg-petal/60" />
-        </div>
-      )}
 
       {/* ②③  THE PLAN — setup steps while empty; once a week exists everything
              (the tuned-plan notice with Edit/Regenerate, any post-setup notes and
@@ -1167,6 +1155,38 @@ function WeekTab({
               </div>
             )}
           </div>
+
+          {/* Why this week — phase-nutrition guidance, right under the tuned bar.
+              The bar already names her phase, so we don't repeat it here (no
+              double info). Closable with an X. */}
+          {phaseSynced && whyOpen && (() => {
+            const comment = trainingAwarenessComment({
+              workoutDays: readWorkoutPlanDays().length,
+              yogaDays: readYogaPlanDays().length,
+              phase: normalizePhase(realPhase),
+              goal: readDietProfile().goal,
+            });
+            const dp = toDietPhase(phase);
+            const info = dp ? PHASE_INFO[dp] : null;
+            if (!comment && !info) return null;
+            return (
+              <div className="relative rounded-2xl border-2 border-emerald-300/70 p-3.5 pr-9 space-y-2 animate-fade-in">
+                <button onClick={() => setWhyOpen(false)} aria-label="Dismiss" className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full text-emerald-500/60 transition hover:bg-emerald-50 hover:text-emerald-600 active:scale-90"><X className="h-4 w-4" /></button>
+                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Why this week
+                </p>
+                {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
+                {info && (
+                  <>
+                    <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Post-setup notice (arriving from a Diet sync) — notif style, X to close */}
           {fromDiet && (
@@ -1267,35 +1287,6 @@ function WeekTab({
           </div>
         </section>
       )}
-
-      {/* Phase-nutrition context — moved BELOW the plan so it never pushes it
-          down. Supplementary "here's what this phase wants" note. */}
-      {phaseSynced && (() => {
-        const comment = trainingAwarenessComment({
-          workoutDays: readWorkoutPlanDays().length,
-          yogaDays: readYogaPlanDays().length,
-          phase: normalizePhase(realPhase),
-          goal: readDietProfile().goal,
-        });
-        const dp = toDietPhase(phase);
-        const info = dp ? PHASE_INFO[dp] : null;
-        return (
-          <div className="rounded-2xl border-2 border-emerald-300/70 p-3.5 space-y-2 animate-fade-in">
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Why this week{info ? ` · ${info.label} phase` : ""}
-            </p>
-            {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
-            {info && (
-              <>
-                <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
-                </div>
-              </>
-            )}
-          </div>
-        );
-      })()}
 
       {/* Sunday Prep CTA — only when a plan exists */}
       {!planEmpty && (

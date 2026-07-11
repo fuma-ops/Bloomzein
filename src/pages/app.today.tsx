@@ -1039,7 +1039,7 @@ export default function TodayPage() {
             );
           })}
         </div>
-        <a href="/app/calendar" className="mt-2.5 flex items-center justify-center gap-1 text-xs font-semibold text-hotpink">
+        <a href="/app/calendar" className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">
           Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
         </a>
       </section>
