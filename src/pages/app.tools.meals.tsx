@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration, GuidedFinishBar } from "@/components/bloom/SetupCelebration";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import {
   ArrowLeft,
   Sparkles,
@@ -1325,7 +1325,6 @@ function WeekTab({
           stayLabel="See my week first"
         />
       )}
-      <GuidedFinishBar />
     </>
   );
 }
