@@ -12,7 +12,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration, GuidedFinishBar } from "@/components/bloom/SetupCelebration";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
@@ -492,7 +492,6 @@ export default function WorkoutPage() {
           initial={profile}
           onDone={(p) => { setProfile(p); setOnboarded(true); }}
         />
-        <GuidedFinishBar />
       </div>
     );
   }
@@ -564,7 +563,6 @@ export default function WorkoutPage() {
           stayLabel="See my plan first"
         />
       )}
-      <GuidedFinishBar />
 
       {tourVisible && !isGuided() && (
         <WorkoutOnboarding

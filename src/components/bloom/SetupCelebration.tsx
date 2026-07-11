@@ -1,15 +1,13 @@
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
-import { Sparkles, X, ArrowRight } from "lucide-react";
+import { useEffect } from "react";
+import { Sparkles, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { isGuided } from "@/lib/guidedSetup";
 
 /**
  * A soft "you did it!" moment for each guided-setup step — but NON-blocking: it
  * sits at the TOP of the screen and gently scrolls her freshly-made plan into
  * view below, so she actually SEES what she just set up. She can Continue on
- * Today, or dismiss and keep exploring the tool (GuidedFinishBar keeps a
- * "finish on Today" CTA around until her whole world is built).
+ * Today, or dismiss and keep exploring the tool.
  */
 export function SetupCelebration({
   title,
@@ -74,29 +72,6 @@ export function SetupCelebration({
         </button>
         <p className="mt-1.5 text-center text-[10px] text-rose/45">or dismiss to look around — your progress is saved ✿</p>
       </div>
-    </div>,
-    document.body
-  );
-}
-
-/**
- * A persistent little CTA that floats above the bottom nav on any TOOL page while
- * she's still mid-guided-setup — so however far she wanders to explore, there's
- * always one tap back to finish building her world on Today.
- */
-export function GuidedFinishBar() {
-  const [show, setShow] = useState(false);
-  useEffect(() => { setShow(isGuided()); }, []);
-  if (!show) return null;
-  return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 bottom-[86px] z-[80] flex justify-center px-4">
-      <a
-        href="/app/today"
-        className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-4 py-2.5 text-[13px] font-bold text-white shadow-xl shadow-hotpink/40 animate-cta-bounce active:scale-95"
-      >
-        <Sparkles className="h-4 w-4" strokeWidth={2} /> Finish setting up on Today
-        <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-      </a>
     </div>,
     document.body
   );

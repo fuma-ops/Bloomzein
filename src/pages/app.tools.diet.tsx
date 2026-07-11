@@ -13,7 +13,7 @@ import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type 
 import { WORKOUT_LOG_KEY, type HistoryEntry } from "@/pages/app.tools.workout";
 import { addRecipeToMealPlan, resetToolState, readTodayPlannedDay, readMealPlan, setMealPlanSlot, todayWeekday, readEatenToday, toggleEatenToday, readYogaPlanDays, readWorkoutPlanDays, clearMealPlan, clearMovementPlan, setMealPortion, portionFor, hasMealPlan, type PlanSlot } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration, GuidedFinishBar } from "@/components/bloom/SetupCelebration";
+import { SetupCelebration } from "@/components/bloom/SetupCelebration";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import { SparkleOnboarding, type SparkleContent, type SparkleStep } from "@/components/bloom/SparkleOnboarding";
@@ -1855,7 +1855,6 @@ export default function DietPage() {
           stayLabel="Stay in Diet"
         />
       )}
-      <GuidedFinishBar />
 
       <BloomBubbles count={10} />
 
