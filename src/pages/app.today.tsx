@@ -911,17 +911,20 @@ export default function TodayPage() {
       {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
              Flanked by two logo flowers; the words softly self-write on open. ── */}
       {!affirmDismissed && (
-        <div className="relative mt-4 sm:mt-6 flex items-center justify-center gap-2.5 sm:gap-3.5 px-9 animate-fade-in">
-          <BloomFlower className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 text-hotpink/80 animate-icon-breathe" />
+        /* Notif-style card (dashed border, round flower-icon bubble, X to close),
+           but transparent background + handwritten, self-writing affirmation. */
+        <div className="mt-4 sm:mt-6 flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-transparent p-3.5 animate-fade-in">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
+            <BloomFlower className="h-5 w-5 animate-icon-breathe" />
+          </span>
           <AnimatedWords
             key={affirmText}
             text={affirmText}
             stagger={95}
-            className="font-script text-xl sm:text-2xl text-hotpink text-center leading-snug text-balance"
+            className="flex-1 min-w-0 font-script text-xl sm:text-2xl text-hotpink leading-snug text-balance"
           />
-          <BloomFlower className="h-5 w-5 sm:h-6 sm:w-6 shrink-0 text-hotpink/80 animate-icon-breathe" />
-          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-0 top-0 text-rose/35 hover:text-hotpink transition">
-            <X className="h-3.5 w-3.5" />
+          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="shrink-0 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
+            <X className="h-4 w-4" />
           </button>
         </div>
       )}

@@ -29,6 +29,7 @@ import {
   SlidersHorizontal,
   Moon,
   Pencil,
+  Flower2,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -1235,7 +1236,7 @@ function WeekTab({
                   {d}
                   {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}
                   {yogaDaySet.has(d) && !proteinBoostDays?.has(d) && (
-                    <span className="rounded-full bg-violet-50 border border-violet-200 text-violet-600 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5" title="Yoga day — keep it light, hydrating & anti-inflammatory">🧘 recovery</span>
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 border border-hotpink/20 text-hotpink text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5" title="Yoga day — keep it light, hydrating & anti-inflammatory"><Flower2 className="h-2.5 w-2.5" strokeWidth={2.4} /> Recovery</span>
                   )}
                 </p>
                 <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
