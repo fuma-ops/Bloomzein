@@ -130,11 +130,11 @@
   60%      { transform: scale(1.015); box-shadow: 0 0 0 5px rgba(236,72,153,0.16), 0 16px 36px rgba(236,72,153,0.28); }
 }
 
-/* NEW — soft gloss/glow for text-link CTAs (no background): a gentle pink halo
-   on the text + icon that quietly breathes to draw the eye. */
+/* NEW — gloss/glow for text-link CTAs (no background): a pink halo on the text
+   + icon plus a gentle scale pulse, lively enough to clearly catch the eye. */
 @keyframes bloom-soft-glow {
-  0%, 100% { filter: drop-shadow(0 0 0 rgba(236,72,153,0));    opacity: 0.9; }
-  50%      { filter: drop-shadow(0 0 5px rgba(236,72,153,0.7)); opacity: 1; }
+  0%, 100% { filter: drop-shadow(0 0 1px rgba(236,72,153,0.35)); opacity: 0.82; transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 9px rgba(236,72,153,0.95)); opacity: 1;    transform: scale(1.07); }
 }
 
 /* =====================================================================
@@ -209,9 +209,10 @@
     border-radius: 1.5rem;
   }
 
-  /* --- Soft gloss/glow for text-link CTAs (Open Diet · Full plan · Full calendar) --- */
+  /* --- Gloss/glow for text-link CTAs (Open Diet · Full plan · Full calendar) --- */
   .animate-soft-glow {
-    animation: bloom-soft-glow calc(2.4s * var(--bloom-pace)) ease-in-out infinite;
+    animation: bloom-soft-glow calc(1.9s * var(--bloom-pace)) ease-in-out infinite;
+    transform-origin: center;
   }
 
   /* --- Living CTA + card breathe --- */
