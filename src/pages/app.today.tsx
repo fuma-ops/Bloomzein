@@ -341,6 +341,9 @@ export default function TodayPage() {
   // matching item in Today's Plan (this DOM id) instead of leaving for the tool.
   const [highlightId,         setHighlightId]         = useState<string | null>(null);
   const [affirmDismissed,     setAffirmDismissed]     = useState(false);
+  // Which affirmations she's "loved" (persisted). Each affirmation carries a
+  // playful base like-count (starts ~1k) so it feels shared & cherished.
+  const [affirmLikes,         setAffirmLikes]         = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem("bloom:affirm-likes") || "[]"); } catch { return []; } });
   const [moodHintIdx,         setMoodHintIdx]         = useState(0);
   const [workoutStreak,       setWorkoutStreak]       = useState(0);
   const [yogaStreak,          setYogaStreak]          = useState(0);
@@ -590,6 +593,17 @@ export default function TodayPage() {
   const MoodIcon  = mood ? (MOODS.find((m) => m.key === mood)?.Icon ?? Sparkles) : moodHint.Icon;
   const affirmPool = AFFIRMATIONS[phase];
   const affirmText = affirmPool[affirmIdx % affirmPool.length];
+  // Playful "loved by the community" count — deterministic base per affirmation
+  // (~1k), +1 once she loves it herself.
+  const affirmLiked = affirmLikes.includes(affirmText);
+  const affirmLikeCount = 1000 + ((affirmText.length * 137 + affirmIdx * 53) % 900) + (affirmLiked ? 1 : 0);
+  const toggleAffirmLike = () => {
+    setAffirmLikes((prev) => {
+      const next = prev.includes(affirmText) ? prev.filter((x) => x !== affirmText) : [...prev, affirmText];
+      try { localStorage.setItem("bloom:affirm-likes", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   // Every item in Today's Plan (each meal, workout, yoga, journal) counts toward
   // the bloom ring, alongside the two standalone daily goals (mood + water), so
@@ -923,6 +937,17 @@ export default function TodayPage() {
             stagger={95}
             className="flex-1 min-w-0 font-script text-xl sm:text-2xl text-hotpink leading-snug text-balance"
           />
+          {/* Love this affirmation — a soft heart + count that fills the space */}
+          <button
+            onClick={toggleAffirmLike}
+            aria-pressed={affirmLiked}
+            aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
+            className={["shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-bold tabular-nums transition active:scale-90",
+              affirmLiked ? "border-hotpink/40 bg-hotpink/10 text-hotpink" : "border-hotpink/25 bg-white/40 text-hotpink/80 hover:bg-blush"].join(" ")}
+          >
+            <Heart className={["h-3.5 w-3.5 transition", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2.2} />
+            {affirmLikeCount.toLocaleString()}
+          </button>
           <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="shrink-0 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
             <X className="h-4 w-4" />
           </button>

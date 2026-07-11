@@ -29,7 +29,6 @@ import {
   SlidersHorizontal,
   Moon,
   Pencil,
-  Flower2,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -1236,7 +1235,14 @@ function WeekTab({
                   {d}
                   {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}
                   {yogaDaySet.has(d) && !proteinBoostDays?.has(d) && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 border border-hotpink/20 text-hotpink text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5" title="Yoga day — keep it light, hydrating & anti-inflammatory"><Flower2 className="h-2.5 w-2.5" strokeWidth={2.4} /> Recovery</span>
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 border border-hotpink/20 text-hotpink text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5" title="Yoga day — keep it light, hydrating & anti-inflammatory">
+                      <svg viewBox="0 0 24 24" className="h-2.5 w-2.5" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="5" r="2.3" />
+                        <path d="M12 8.6c-1.4 0-2.6.9-3 2.2l-1 3.2h8l-1-3.2c-.4-1.3-1.6-2.2-3-2.2z" />
+                        <path d="M5 15.2c1.9-1 4.3-1.5 7-1.5s5.1.5 7 1.5c-1.7 1.4-4.1 2.1-7 2.1s-5.3-.7-7-2.1z" />
+                      </svg>
+                      Recovery
+                    </span>
                   )}
                 </p>
                 <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
