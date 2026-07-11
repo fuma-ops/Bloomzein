@@ -493,17 +493,9 @@ export default function WorkoutPage() {
           onDone={(p) => {
             setProfile(p);
             setOnboarded(true);
-            // Guided flow: hand her a real, phase-matched starter week right after
-            // the questions so she lands on an actual plan — the movement step
-            // completes and the celebration can appear to guide her on to yoga.
-            if (isGuided()) {
-              try {
-                const ph = (readCyclePhase() ?? "any") as CyclePhase;
-                localStorage.setItem(PROGRAM_KEY, JSON.stringify(generateWeeklyPlan(p, ph, 1)));
-                localStorage.setItem(PROGRAM_PHASE_KEY, JSON.stringify(ph));
-                window.dispatchEvent(new Event("bloom:workout-updated"));
-              } catch {}
-            }
+            // After the questions she lands on her (empty) plan to CHOOSE a program
+            // or generate a week herself — we never auto-pick a plan for her. The
+            // celebration then appears only once she's committed her own choice.
           }}
         />
       </div>
@@ -571,11 +563,16 @@ export default function WorkoutPage() {
       {guidedDone && (
         <SetupCelebration
           title="Your workout is planned ✿"
-          message="Gorgeous — your strength week is set. One soft step more: let's plan your yoga flow to balance it."
+          message="Gorgeous — your strength week is set."
+          extra={
+            <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
+              Do you want to set up your <b className="text-hotpink">yoga flow</b> now to balance your training? ↓
+            </p>
+          }
           continueLabel="Set up my yoga flow →"
           onContinue={() => { window.location.href = "/app/tools/yoga?setup=1"; }}
           onStay={() => setGuidedDone(false)}
-          stayLabel="See my plan first"
+          stayLabel="Stay & tweak my plan"
         />
       )}
 
@@ -2016,7 +2013,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── Empty state — choose how to plan ────────────────────────────────── */}
       {source === "none" && (
-        <section className="rounded-3xl bg-white/85 border border-petal/60 p-4 sm:p-5 space-y-3">
+        <section className={["rounded-3xl bg-white/85 border border-petal/60 p-4 sm:p-5 space-y-3", isGuided() ? "animate-section-attention" : ""].join(" ")}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Set up your weekly plan ✿</h2>

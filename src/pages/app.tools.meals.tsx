@@ -1171,7 +1171,7 @@ function WeekTab({
 
       {/* ③  THE PLAN — right here, no longer pushed down */}
       {planEmpty ? (
-        <div id="meals-setup">
+        <div id="meals-setup" className={isGuided() ? "animate-section-attention" : ""}>
           <SetupSteps
             phase={phase} intention={intention} setIntention={setIntention}
             owned={owned} goPantry={goPantry} onPlan={handleGenerate} generating={generating}
@@ -1179,7 +1179,7 @@ function WeekTab({
           />
         </div>
       ) : (
-        <div id="meals-week-plan" ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div id="meals-week-plan" ref={planRef} className={["grid gap-3 sm:grid-cols-2 lg:grid-cols-3", isGuided() ? "animate-section-attention" : ""].join(" ")}>
           {DAYS.map((d, di) => {
             const isToday = d === todayDayName();
             return (

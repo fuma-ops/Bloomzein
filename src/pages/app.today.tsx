@@ -22,6 +22,7 @@ import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDay
 import { hasDietSetup } from "@/components/bloom/recipes/data";
 import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
 import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { BloomDayCelebration } from "@/components/bloom/BloomDayCelebration";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
@@ -47,6 +48,7 @@ const KEYS = {
   streak:         "bloom:streak-days",
   pill:           "bloom:today-pill",
   reminders:      "bloom:reminders",
+  bloomCelebrated:"bloom:today-bloom-celebrated",
 } as const;
 
 export const TODAY_WATER_KEY = KEYS.water;
@@ -300,6 +302,7 @@ export default function TodayPage() {
   const movementPlanned = useMemo(hasMovementPlan, []);
   const [finaleOpen,    setFinaleOpen]    = useState(false);
   const [finaleGlow,    setFinaleGlow]    = useState(false);
+  const [dayCelebrate,  setDayCelebrate]  = useState(false);
   // Today's Plan only appears once she's begun building her world — a brand-new
   // (or freshly reset) user sees the setup checklist instead of a placeholder plan.
   // Real plan only once she's actually planned meals or movement. If she's set
@@ -632,6 +635,18 @@ export default function TodayPage() {
     bloomPercent < 50   ? "A lovely start — keep blooming, beautiful" :
                           "More than halfway — you're glowing today ✿";
 
+  // Day fully bloomed → one joyful Barbie-pink confetti burst, once per day (so a
+  // reload after completing doesn't replay it; unticking + re-ticking won't spam).
+  useEffect(() => {
+    if (!bloomFull) return;
+    const iso = todayISO();
+    let last = "";
+    try { last = localStorage.getItem(KEYS.bloomCelebrated) || ""; } catch {}
+    if (last === iso) return;
+    try { localStorage.setItem(KEYS.bloomCelebrated, iso); } catch {}
+    setDayCelebrate(true);
+  }, [bloomFull]);
+
   // visible due reminders (not marked done this session)
   const visibleReminders = dueReminders.filter((r) => !doneReminderIds.includes(r.id));
   const hasDueItems      = !pillTaken || visibleReminders.length > 0;
@@ -812,6 +827,9 @@ export default function TodayPage() {
           onStay={() => setFinaleOpen(false)}
         />
       )}
+
+      {/* DAY COMPLETE — a joyful confetti burst the moment every petal is ticked */}
+      {dayCelebrate && <BloomDayCelebration onDone={() => setDayCelebrate(false)} />}
 
       {/* PlanDetailModal — centred on every device, opened by tapping a plan item */}
       <PlanDetailModal

@@ -1777,18 +1777,32 @@ export default function DietPage() {
         <SetupCelebration
           title="Your goal is set ✿"
           message={`Based on your goal, your body needs about ${guidedGoalKcal.toLocaleString()} kcal a day. Everything now tunes to it.`}
-          extra={hasMealPlan() ? (
-            <button
-              onClick={() => { if (!guidedSynced) { planMealsImplicit(); setGuidedSynced(true); } }}
-              className={["mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-bold transition active:scale-95",
-                guidedSynced ? "bg-emerald-100 text-emerald-700" : "bg-white text-hotpink ring-2 ring-hotpink/60 animate-selected-glow"].join(" ")}
-            >
-              {guidedSynced
-                ? <><Check className="h-4 w-4" strokeWidth={3} /> Meals synced to your goal</>
-                : <><Sparkles className="h-4 w-4" strokeWidth={2} /> Sync my meals to this goal</>}
-            </button>
-          ) : undefined}
-          continueLabel="Continue on Today"
+          extra={
+            <div className="mt-4 space-y-3">
+              {hasMealPlan() && (
+                <div>
+                  {/* Clarify exactly what this button does before she taps it */}
+                  <p className="text-[11.5px] font-semibold leading-snug text-rose/75">
+                    Do you want to sync your goal to the meals you've <b className="text-hotpink">already planned</b>?
+                  </p>
+                  <button
+                    onClick={() => { if (!guidedSynced) { planMealsImplicit(); setGuidedSynced(true); } }}
+                    className={["mt-1.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-bold transition active:scale-95",
+                      guidedSynced ? "bg-emerald-100 text-emerald-700" : "bg-white text-hotpink ring-2 ring-hotpink/60 animate-selected-glow"].join(" ")}
+                  >
+                    {guidedSynced
+                      ? <><Check className="h-4 w-4" strokeWidth={3} /> Meals synced to your goal</>
+                      : <><Sparkles className="h-4 w-4" strokeWidth={2} /> Sync my meals to this goal</>}
+                  </button>
+                </div>
+              )}
+              {/* Clarify the primary CTA below (SetupCelebration renders it next) */}
+              <p className="text-[11.5px] font-semibold leading-snug text-rose/75">
+                Or simply carry on and set up the rest of your day on Today ↓
+              </p>
+            </div>
+          }
+          continueLabel="Continue to set up Today"
           onContinue={() => { window.location.href = "/app/today"; }}
           onStay={() => setGuidedGoalKcal(null)}
           stayLabel="Stay in Diet"
