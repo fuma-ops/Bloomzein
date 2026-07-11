@@ -161,13 +161,13 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
       <div className="mt-3 grid gap-2">
         <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils}
           todo="Plan my meals for my goal"
-          doneLabel={mealsFromDiet ? "Meals planned" : "Your week is planned"}
+          doneLabel={mealsFromDiet ? "Meals planned" : "Week is planned"}
           onClick={planMeals}
           onUndo={mealsFromDiet ? onUnplanMeals : undefined}
           onSync={mealsFromDiet ? undefined : () => setConfirmSync("meals")}
           views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
         <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal"
-          doneLabel={movementFromDiet ? "Movement planned" : "Your movement is planned"}
+          doneLabel={movementFromDiet ? "Movement planned" : "Movement is planned"}
           onClick={planMovement}
           onUndo={movementFromDiet ? onUnplanMovement : undefined}
           onSync={movementFromDiet ? undefined : () => setConfirmSync("movement")}
@@ -223,19 +223,23 @@ function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, onSyn
 }) {
   if (done) {
     return (
-      <div className="w-full flex items-center gap-2 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
-        {/* Tap the tick to un-plan. When the plan is the user's own (managed in
-            the Meals Planner) it's protected — no destructive un-plan here. */}
-        <button
-          onClick={onUndo} disabled={!onUndo} title={onUndo ? "Un-plan" : "Managed in your Meals Planner — safe from here"} aria-label={onUndo ? "Un-plan" : "Managed in your Meals Planner"}
-          className="group relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600 enabled:hover:bg-rose-100 enabled:hover:text-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
-        >
-          <Check className="h-3.5 w-3.5 group-enabled:group-hover:hidden" strokeWidth={3} />
-          <X className="h-3.5 w-3.5 hidden group-enabled:group-hover:block" strokeWidth={3} />
-        </button>
-        <span className="flex-1 min-w-0 text-[12.5px] font-bold text-rose/70 truncate">{doneLabel}</span>
-        {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
-        <div className="shrink-0 flex items-center gap-1">
+      <div className="w-full rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          {/* Tap the tick to un-plan. When the plan is the user's own (managed in
+              the Meals Planner) it's protected — no destructive un-plan here. */}
+          <button
+            onClick={onUndo} disabled={!onUndo} title={onUndo ? "Un-plan" : "Managed in your Meals Planner — safe from here"} aria-label={onUndo ? "Un-plan" : "Managed in your Meals Planner"}
+            className="group relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600 enabled:hover:bg-rose-100 enabled:hover:text-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
+          >
+            <Check className="h-3.5 w-3.5 group-enabled:group-hover:hidden" strokeWidth={3} />
+            <X className="h-3.5 w-3.5 hidden group-enabled:group-hover:block" strokeWidth={3} />
+          </button>
+          <span className="flex-1 min-w-0 text-[12.5px] font-bold text-rose/70 truncate">{doneLabel}</span>
+          {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
+        </div>
+        {/* Action chips on their own line, aligned under the label — always
+            fully visible on a phone, never cropped off the right edge. */}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 pl-8">
           {onSync && (
             <button onClick={onSync} title="Sync this plan to your goal" className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition"><Sparkles className="h-3 w-3" /> Sync</button>
           )}
