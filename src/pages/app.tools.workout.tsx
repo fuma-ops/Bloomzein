@@ -1188,6 +1188,9 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
         <img src={HERO_IMAGES.program} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/80 via-hotpink/30 to-transparent" />
         <div className="relative z-10 px-4 py-4 sm:px-5 sm:py-5 max-w-[72%] min-h-[92px] sm:min-h-[110px] flex flex-col justify-center">
+          <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-white backdrop-blur-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}>
+            <Dumbbell className="h-2.5 w-2.5" strokeWidth={2.5} /> Workout
+          </p>
           <h1 className="font-script text-2xl sm:text-4xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Let's set you up ✿</h1>
           <p className="mt-1 text-[11px] sm:text-sm font-medium text-white/95 leading-snug" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>Four quick questions — editable anytime in Me.</p>
         </div>
