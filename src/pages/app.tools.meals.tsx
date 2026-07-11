@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
-import { SetupCelebration } from "@/components/bloom/SetupCelebration";
+import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import {
   ArrowLeft,
   Sparkles,
@@ -1179,7 +1179,7 @@ function WeekTab({
           />
         </div>
       ) : (
-        <div id="meals-week-plan" ref={planRef} className={["grid gap-3 sm:grid-cols-2 lg:grid-cols-3", isGuided() ? "animate-section-attention" : ""].join(" ")}>
+        <div id="meals-week-plan" ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DAYS.map((d, di) => {
             const isToday = d === todayDayName();
             return (
@@ -1318,13 +1318,14 @@ function WeekTab({
       )}
 
       {weekDone && (
-        <SetupCelebration
-          title="Your week is planned ✿"
-          message="Beautiful — your meals are set (scroll down to see them). Next, set your goal in Diet so we tune your energy."
-          scrollToId="meals-week-plan"
-          onContinue={() => { window.location.href = "/app/today"; }}
-          onStay={() => setWeekDone(false)}
-          stayLabel="See my week first"
+        <SpotlightCoach
+          targetId="meals-week-plan"
+          title="This is your week ✿"
+          message="Here's your whole week — all 7 days of meals, planned for you. Tap any day to swap a meal. Next, set your goal in Diet so we tune your energy to it."
+          primaryLabel="Continue on Today"
+          onPrimary={() => { window.location.href = "/app/today"; }}
+          secondaryLabel="See my week first"
+          onClose={() => setWeekDone(false)}
         />
       )}
     </>
