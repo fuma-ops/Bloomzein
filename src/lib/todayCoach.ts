@@ -15,7 +15,7 @@ import {
 } from "@/components/bloom/cyclePhase";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
 import { PHASE_INFO, type DietPhase } from "@/components/bloom/recipes/data";
-import { todayISO } from "@/lib/localDate";
+import { todayISO, localDateISO } from "@/lib/localDate";
 
 /* ---------- phase energy read (drives the cute meter) ---------- */
 
@@ -45,42 +45,51 @@ const NEED_LINE: Record<DietPhase, string> = {
 export interface FeelGood {
   emoji: string;
   text: string;
+  /** A photo of the proposed read/meal, to grab attention. */
+  image: string;
   ctaLabel?: string;
   ctaHref?: string;
 }
 
+// Shared imagery (all exist in /public/images) so every moment shows a photo.
+const IMG_SELFCARE = "/images/read-selfcare.webp";
+const IMG_RECIPES = "/images/read-recipes.webp";
+const IMG_MIND = "/images/read-mindset.webp";
+const IMG_MOVE = "/images/read-movement.webp";
+const IMG_MONEY = "/images/read-money.webp";
+
 const FEEL_GOOD: Record<DietPhase, FeelGood[]> = {
   menstrual: [
-    { emoji: "🍫", text: "Your body's working hard today. Let a square of dark chocolate melt on your tongue and just… be." },
-    { emoji: "🫖", text: "Brew a warm ginger-lemon tea, light a candle, and give yourself ten slow minutes." },
-    { emoji: "🎧", text: "Put on your softest song of the moment and let yourself feel it. This is your moment." },
-    { emoji: "🛁", text: "Warm bath, cozy socks, an early night. Rest is productive too." },
-    { emoji: "📖", text: "Curl up with our latest self-care read — nothing to do, just soak it in.", ctaLabel: "Read now", ctaHref: "/app/read" },
-    { emoji: "✍️", text: "Write one honest sentence in your diary. Just one.", ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
+    { emoji: "🍫", text: "Your body's working hard today. Let a square of dark chocolate melt on your tongue and just… be.", image: IMG_RECIPES },
+    { emoji: "🫖", text: "Brew a warm ginger-lemon tea, light a candle, and give yourself ten slow minutes.", image: IMG_SELFCARE },
+    { emoji: "🎧", text: "Put on your softest song of the moment and let yourself feel it. This is your moment.", image: IMG_MIND },
+    { emoji: "🛁", text: "Warm bath, cozy socks, an early night. Rest is productive too.", image: IMG_SELFCARE },
+    { emoji: "📖", text: "Curl up with our rest-day face-care ritual — nothing to do, just soak it in.", image: IMG_SELFCARE, ctaLabel: "Read now", ctaHref: "/app/read?a=m1" },
+    { emoji: "✍️", text: "Write one honest sentence in your diary. Just one.", image: IMG_MIND, ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
   ],
   follicular: [
-    { emoji: "🥜", text: "Energy's rising — try today's healthy dessert: choco-peanut bars, made for your phase. Enjoy every bite.", ctaLabel: "See in Meals", ctaHref: "/app/tools/meals" },
-    { emoji: "✨", text: "New-you energy. Fancy a fresh look? Take a moment, note what you truly want — no rush, no waste." },
-    { emoji: "🎶", text: "Make a delicious juice, press play on a new playlist, and plan something that excites you." },
-    { emoji: "💆‍♀️", text: "Glow prep: read our latest face-care routine and treat your skin tonight.", ctaLabel: "Read now", ctaHref: "/app/read" },
-    { emoji: "🌱", text: "You feel springy today — say yes to one small new thing." },
-    { emoji: "📝", text: "Dream a little: jot down one want and a tiny, mindful plan to get there.", ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
+    { emoji: "🥜", text: "Energy's rising — try today's healthy dessert: choco-peanut bars, made for your phase. Enjoy every bite.", image: IMG_RECIPES, ctaLabel: "See in Meals", ctaHref: "/app/tools/meals" },
+    { emoji: "✨", text: "New-you energy. Fancy a fresh look? Take a moment, note what you truly want — no rush, no waste.", image: IMG_MIND },
+    { emoji: "🎶", text: "Make a delicious juice, press play on a new playlist, and plan something that excites you.", image: IMG_RECIPES },
+    { emoji: "💆‍♀️", text: "Glow prep: read our fresh-start face-care routine and treat your skin tonight.", image: IMG_SELFCARE, ctaLabel: "Read now", ctaHref: "/app/read?a=f1" },
+    { emoji: "🌱", text: "You feel springy today — say yes to one small new thing.", image: IMG_MOVE },
+    { emoji: "📝", text: "Dream a little: jot down one want and a tiny, mindful plan to get there.", image: IMG_MIND, ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
   ],
   ovulatory: [
-    { emoji: "💃", text: "You're glowing this week. Get ready, feel beautiful, take the photo." },
-    { emoji: "☀️", text: "Peak-you energy — reach out to a friend and plan the fun thing." },
-    { emoji: "🥗", text: "Fresh & radiant food today — crunchy raw veg and a bright juice. Savour it.", ctaLabel: "See in Meals", ctaHref: "/app/tools/meals" },
-    { emoji: "💄", text: "Glow moment: our latest face-care routine + your favourite song. You've earned it.", ctaLabel: "Read now", ctaHref: "/app/read" },
-    { emoji: "🌸", text: "Feeling confident? Note that new look you want — take your time, spend with intention." },
-    { emoji: "📔", text: "Capture how good you feel today in a line — future-you will love reading it.", ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
+    { emoji: "💃", text: "You're glowing this week. Get ready, feel beautiful, take the photo.", image: IMG_SELFCARE },
+    { emoji: "☀️", text: "Peak-you energy — reach out to a friend and plan the fun thing.", image: IMG_MIND },
+    { emoji: "🥗", text: "Fresh & radiant food today — crunchy raw veg and a bright juice. Savour it.", image: IMG_RECIPES, ctaLabel: "See in Meals", ctaHref: "/app/tools/meals" },
+    { emoji: "💄", text: "Glow moment: our glow-week face-care edit + your favourite song. You've earned it.", image: IMG_SELFCARE, ctaLabel: "Read now", ctaHref: "/app/read?a=o1" },
+    { emoji: "🌸", text: "Feeling confident? Note that new look you want — take your time, spend with intention.", image: IMG_MIND },
+    { emoji: "📔", text: "Capture how good you feel today in a line — future-you will love reading it.", image: IMG_MIND, ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
   ],
   luteal: [
-    { emoji: "🍫", text: "Cravings are real, and that's ok. Make a healthy dessert that loves your phase — dark-chocolate walnut bites.", ctaLabel: "See in Meals", ctaHref: "/app/tools/meals" },
-    { emoji: "🛁", text: "Wind-down night: warm juice, a face-care routine, and your comfort playlist.", ctaLabel: "Read now", ctaHref: "/app/read" },
-    { emoji: "🧘‍♀️", text: "Big feelings this week. Be gentle — ten quiet minutes, just for you." },
-    { emoji: "✍️", text: "Journal it out — luteal is honest, creative energy. Let it spill onto the page.", ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
-    { emoji: "🕯️", text: "Cozy over busy. Say no to one thing, yes to your comfort." },
-    { emoji: "💭", text: "Tempted to buy something? Pause. Note it down and sleep on it — kind to you, kind to your budget." },
+    { emoji: "🍫", text: "Cravings are real, and that's ok. Make a healthy dessert that loves your phase — dark-chocolate walnut bites.", image: IMG_RECIPES, ctaLabel: "See in Meals", ctaHref: "/app/tools/meals" },
+    { emoji: "🛁", text: "Wind-down night: warm juice, our luteal face-care ritual, and your comfort playlist.", image: IMG_SELFCARE, ctaLabel: "Read now", ctaHref: "/app/read?a=l1" },
+    { emoji: "🧘‍♀️", text: "Big feelings this week. Be gentle — ten quiet minutes, just for you.", image: IMG_SELFCARE },
+    { emoji: "✍️", text: "Journal it out — luteal is honest, creative energy. Let it spill onto the page.", image: IMG_MIND, ctaLabel: "Open Diary", ctaHref: "/app/tools/diary" },
+    { emoji: "🕯️", text: "Cozy over busy. Say no to one thing, yes to your comfort.", image: IMG_SELFCARE },
+    { emoji: "💭", text: "Tempted to buy something? Pause. Note it down and sleep on it — kind to you, kind to your budget.", image: IMG_MONEY },
   ],
 };
 
@@ -95,6 +104,50 @@ function dayHash(iso: string): number {
 export function feelGoodFor(phase: DietPhase, iso = todayISO()): FeelGood {
   const bank = FEEL_GOOD[phase];
   return bank[dayHash(iso) % bank.length];
+}
+
+/* ---------- feel-good "did it" sticker + streak (the daily joy loop) ---------- */
+
+const FEELGOOD_KEY = "bloom:feelgood-log";
+
+function readFeelGoodSet(): Set<string> {
+  try {
+    const raw = localStorage.getItem(FEELGOOD_KEY);
+    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch { return new Set(); }
+}
+
+/** Has she given herself today's moment? */
+export function isFeelGoodDone(iso = todayISO()): boolean {
+  return readFeelGoodSet().has(iso);
+}
+
+/** Toggle today's feel-good as done; returns the new done state. */
+export function toggleFeelGoodDone(iso = todayISO()): boolean {
+  const set = readFeelGoodSet();
+  const now = !set.has(iso);
+  if (now) set.add(iso); else set.delete(iso);
+  try { localStorage.setItem(FEELGOOD_KEY, JSON.stringify([...set])); } catch {}
+  return now;
+}
+
+/** Consecutive days she's taken her moment, counting today or (if not yet
+ *  done today) yesterday backward — so the streak survives an unfinished today. */
+export function feelGoodStreak(): number {
+  const set = readFeelGoodSet();
+  if (!set.size) return 0;
+  const start = new Date();
+  start.setHours(12, 0, 0, 0);
+  // If today isn't done yet, anchor on yesterday so a live streak still shows.
+  if (!set.has(todayISO())) start.setDate(start.getDate() - 1);
+  let streak = 0;
+  const cur = new Date(start);
+  while (set.has(localDateISO(cur))) {
+    streak++;
+    cur.setDate(cur.getDate() - 1);
+  }
+  return streak;
 }
 
 /* ---------- "how you'll live it" (tomorrow preview + hero framing) ---------- */
