@@ -107,9 +107,9 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
     <div id="diet-energy" className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <p className="font-script text-2xl text-hotpink leading-none">Today's energy</p>
+          <p className="font-script text-2xl text-hotpink leading-none">Today's fuel</p>
           <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mt-1">
-            personalised to your {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
+            your food energy · {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
           </p>
         </div>
         {recalcFlash && (
@@ -358,7 +358,7 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
   return (
     <button onClick={go("/app/tools/diet")} className="w-full text-left rounded-2xl bg-white/80 border border-petal/60 shadow-sm p-3 active:scale-[0.99] transition animate-fade-in">
       <div className="flex items-center justify-between mb-1.5">
-        <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-hotpink"><Flame className="h-3.5 w-3.5" /> Energy today</p>
+        <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-hotpink"><Flame className="h-3.5 w-3.5" /> Today's fuel</p>
         <span className="text-[11px] font-bold text-rose/60 tabular-nums">{Math.max(0, e.remaining).toLocaleString()} kcal left</span>
       </div>
       <div className="h-2 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${eatenPct}%` }} /></div>
