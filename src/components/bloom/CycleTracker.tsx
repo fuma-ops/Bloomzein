@@ -52,7 +52,7 @@ import {
 import { CycleOnboarding } from "./CycleOnboarding";
 import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
 import { CycleInsights } from "./cycle/CycleInsights";
-import { logPeriodStart, readPeriodStarts, PERIOD_EVENT } from "@/lib/periodLog";
+import { logPeriodStart, readPeriodStarts, clearPeriodPromptSkip, PERIOD_EVENT } from "@/lib/periodLog";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
@@ -436,12 +436,20 @@ export function CycleTracker() {
 
   const nextPeriodDate = useMemo(() => {
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
-    const cyclesPassed = Math.floor(diff / settings.cycleLength) + 1;
-    return new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * MS_DAY);
+    const cyclesPassed = Math.floor(diff / settings.cycleLength);
+    // While her period is overdue-but-unconfirmed we HOLD on the current predicted
+    // start (it's simply late) instead of rolling forward to the next cycle — so we
+    // never skip her period and jump a month ahead.
+    const cycles = diff >= settings.cycleLength ? cyclesPassed : cyclesPassed + 1;
+    return new Date(settings.lastPeriodStart.getTime() + cycles * settings.cycleLength * MS_DAY);
   }, [settings]);
 
 
   const daysToPeriod   = useMemo(() => Math.ceil((nextPeriodDate.getTime() - today.getTime()) / MS_DAY), [nextPeriodDate, today]);
+  // Positive → upcoming; 0 → expected today; negative → she's late by |n| days.
+  const periodTiming   = daysToPeriod > 0 ? `in ${daysToPeriod} days`
+                       : daysToPeriod === 0 ? "expected today"
+                       : `${-daysToPeriod} ${-daysToPeriod === 1 ? "day" : "days"} late`;
   // ovulationDayOfCycle is 0-indexed (e.g. 14 for a 28-day cycle = cycle day 15)
   // Add the 0-indexed offset directly to currentCycleStart to match phaseForDay logic
   const ovulationDate  = useMemo(() => new Date(currentCycleStart.getTime() + ovulationDayOfCycle       * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
@@ -956,7 +964,7 @@ export function CycleTracker() {
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
                 <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>in {daysToPeriod} days</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: daysToPeriod < 0 ? '#DB2777' : '#9D5C7E' }}>{periodTiming}</p>
               </div>
               {/* Fertile */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
@@ -1342,15 +1350,22 @@ export function CycleTracker() {
         onClose={() => setSetupOpen(false)}
         initial={settings}
         onSave={(s) => {
+          // If, by the calc, her period is due/overdue today, we must ASK before
+          // celebrating: "did it start today?". A fresh setup must always re-ask,
+          // even if she dismissed the prompt earlier today — clear the skip FIRST,
+          // before writeCycleSettings broadcasts, so the app-wide PeriodConfirm
+          // re-checks and reappears.
+          const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / MS_DAY);
+          const overdue = diff >= s.cycleLength;
+          if (overdue) clearPeriodPromptSkip();
+
           setSettings(s); writeCycleSettings(s); setIsSetup(true);
           try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
           if (awaitDiet) { setTimeout(returnToDiet, 700); return; }
-          // If, by the calc, her period is due/overdue today, we must ASK before
-          // celebrating: "did it start today?". The app-wide PeriodConfirm shows
-          // the question; we hold the celebration until she answers, then show it
-          // with the REAL resulting phase (period if yes, luteal if not yet).
-          const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / MS_DAY);
-          if (diff >= s.cycleLength) {
+
+          if (overdue) {
+            // Hold the celebration until she answers the prompt; we then show it
+            // with the REAL resulting phase (period if yes, luteal if not yet).
             setAwaitSetupAnswer(true);
           } else {
             // One soft, gentle "you're set!" moment — her phase + a little advice —
