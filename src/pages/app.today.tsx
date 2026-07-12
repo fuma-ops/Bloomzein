@@ -1087,7 +1087,7 @@ export default function TodayPage() {
       {(cycleReady || mealPlanned) && (
         <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
           {/* Bloom+ : the real energy engine (target / eaten / burned numbers). */}
-          <PlusLock feature="diet" title="Your energy numbers" blurb="Your real daily target, what you've eaten & burned — the full picture." minH="min-h-[112px]">
+          <PlusLock feature="diet" title="Your energy numbers" blurb="Your real daily target, what you've eaten & burned — the full picture." minH="min-h-[190px]">
             <TodayEnergyStrip e={energyBalance()} />
           </PlusLock>
         </section>

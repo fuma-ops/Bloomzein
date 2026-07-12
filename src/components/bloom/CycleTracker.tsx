@@ -698,10 +698,15 @@ export function CycleTracker() {
           })}
           {/* Today circle on mood line */}
           <circle cx={todayDotX} cy={todayDotY} r="5" fill="#fff" stroke="#EC4899" strokeWidth="3" />
-          {/* Labels */}
-          <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day 1</text>
+          {/* Labels — hide an endpoint label when "today" sits on top of it so
+              they never overlap (e.g. when today is at/near the last cycle day) */}
+          {todayDotX > PX + 34 && (
+            <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day 1</text>
+          )}
           <text x={todayDotX} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>
-          <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day {cycleLen}</text>
+          {todayDotX < VW - PX - 34 && (
+            <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day {cycleLen}</text>
+          )}
         </svg>
         <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
           Both curves build as you log — solid lines are real, dashed are estimates.
