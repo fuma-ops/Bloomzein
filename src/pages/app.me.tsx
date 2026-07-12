@@ -206,7 +206,7 @@ export default function MePage() {
                 <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/70 border border-petal/60 overflow-hidden">
                   <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${stats?.pct ?? 0}%` }} />
                 </div>
-                <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70">{100 - (stats?.pct ?? 0)}% to next bloom</p>
+                <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70">{100 - (stats?.pct ?? 0)}% to next level</p>
               </div>
             </div>
           </div>

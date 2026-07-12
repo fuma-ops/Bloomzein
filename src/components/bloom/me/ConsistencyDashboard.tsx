@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint, type GoalSummary } from "@/lib/meDashboard";
+import { Eyebrow } from "./PredictionCharts";
 
 /* One consistency dashboard for the Me page. Every number comes from a real
    store (see meDashboard.ts). Visuals are single-hue pink (magnitude) with a
@@ -49,14 +50,18 @@ function BloomRing({ pct }: { pct: number }) {
   );
 }
 
-function PillarBar({ label, pct, delay }: { label: string; pct: number; delay: number }) {
+function PillarBar({ label, pct, delay, edge }: { label: string; pct: number; delay: number; edge?: boolean }) {
   return (
     <div className="animate-card-pop-in" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-center justify-between text-[11px] font-bold text-rose/80">
-        <span>{label}</span><span className="text-hotpink">{pct}%</span>
+        <span className="inline-flex items-center gap-1.5">
+          {label}
+          {edge && <span className="rounded-full px-1.5 py-[1px] text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>grow</span>}
+        </span>
+        <span className="text-hotpink">{pct}%</span>
       </div>
       <div className="mt-1 h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
-        <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${pct}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: edge ? "linear-gradient(90deg,#F9A8D4,#EC4899)" : "linear-gradient(90deg,var(--hotpink),var(--magenta))", transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
       </div>
     </div>
   );
@@ -254,74 +259,92 @@ export function ConsistencyDashboard() {
     return () => window.removeEventListener("storage", refresh);
   }, []);
 
-  const scoreLine = useMemo(() => {
-    const s = data?.bloomScore ?? 0;
-    if (s >= 80) return "You're on a beautiful streak ✿";
-    if (s >= 50) return "You're building real momentum";
-    if (s >= 20) return "Every logged day counts — keep blooming";
-    return "Your dashboard blooms as you log ✿";
-  }, [data?.bloomScore]);
+  // One honest sentence that ties the numbers together — strongest habit + the
+  // one to nudge — so the dashboard reads as coaching, not a scoreboard.
+  const narrative = useMemo(() => {
+    if (!data) return "";
+    const sorted = [...data.pillars].sort((a, b) => b.pct - a.pct);
+    const top = sorted[0], low = sorted[sorted.length - 1];
+    if (top.pct === 0) return "Your bloom fills in as you log — movement, meals, water & mood ✿";
+    if (top.pct === low.pct) return `You're glowing across the board this month${data.workoutsTotal ? ` — ${data.workoutsTotal} workouts and counting` : ""} ✿`;
+    return `You're strongest at ${top.label.toLowerCase()} (${top.pct}%)${data.workoutsTotal ? `, with ${data.workoutsTotal} workouts logged` : ""}. ${low.label} is your growth edge — a little more lifts your whole bloom ✿`;
+  }, [data]);
 
   if (!data) return null;
   const b = data.budget;
+  const lowestKey = [...data.pillars].sort((a, b) => a.pct - b.pct)[0]?.key;
+  const streakSub = (cur: number, best: number) => (best > cur ? `best: ${best} days` : cur === 1 ? "day" : "days in a row");
 
   return (
     <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <h2 className="font-script text-3xl sm:text-4xl text-hotpink">Your bloom</h2>
-        <span className="text-xs text-rose/70 shrink-0">last {data.windowDays} days</span>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Your bloom</h2>
+          <p className="mt-1 text-[12px] text-rose/70">How consistent you've been — measured, never guessed.</p>
+        </div>
+        <span className="mt-1 text-[11px] text-rose/60 shrink-0">last {data.windowDays} days</span>
       </div>
 
-      {/* Bloom score + pillars */}
-      <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+      {/* Bloom score + pillars + the one-line story */}
+      <div className="bloom-pearl-card pearl-sheen rounded-[26px] p-4 sm:p-6">
+        <Eyebrow>Your rhythm this month</Eyebrow>
+        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <BloomRing pct={data.bloomScore} />
           <div className="flex-1 w-full min-w-0">
-            <p className="font-script text-2xl text-hotpink leading-tight">{scoreLine}</p>
+            <p className="font-script text-xl sm:text-2xl text-hotpink leading-snug">{narrative}</p>
             <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2.5">
-              {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} delay={80 + i * 60} />)}
+              {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
             </div>
           </div>
         </div>
       </div>
 
       {/* Diet goal + weight progress */}
-      <div className="mt-3">
-        <GoalCard goal={data.goal} />
+      <div className="mt-3.5">
+        <Eyebrow>Your goal</Eyebrow>
+        <div className="mt-2"><GoalCard goal={data.goal} /></div>
       </div>
 
-      {/* Stat tiles — 2-up mobile, 4-up desktop */}
-      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts done" spark={data.workoutSpark} sub="all time" delay={100} />
-        <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub="all time" delay={160} />
-        <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={data.moveStreak === 1 ? "day" : "days in a row"} delay={220} />
-        <StatTile Icon={BookHeart} value={data.journalStreak} label="Journal streak" sub={data.journalStreak === 1 ? "day" : "days in a row"} delay={280} />
+      {/* Movement stats — with BEST streaks so a current 1 still reads as progress */}
+      <div className="mt-3.5">
+        <Eyebrow>Your movement</Eyebrow>
+        <div className="mt-2 grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts done" spark={data.workoutSpark} sub="all time" delay={100} />
+          <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub="all time" delay={160} />
+          <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={streakSub(data.moveStreak, data.moveBestStreak)} delay={220} />
+          <StatTile Icon={BookHeart} value={data.journalStreak} label="Journal streak" sub={streakSub(data.journalStreak, data.journalBestStreak)} delay={280} />
+        </div>
       </div>
 
       {/* Mood + consistency calendar */}
-      <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-rose/60 mb-2">Mood, day one → today</p>
-          <MoodChart mood={data.mood} />
-        </div>
-        <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-rose/60 mb-2">Consistency calendar</p>
-          <Heatmap calendar={data.calendar} />
+      <div className="mt-3.5">
+        <Eyebrow>Mood &amp; consistency</Eyebrow>
+        <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Mood, day one → today</p>
+            <MoodChart mood={data.mood} />
+          </div>
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Every ritual, every day</p>
+            <Heatmap calendar={data.calendar} />
+          </div>
         </div>
       </div>
 
-      {/* Goals respected */}
-      <div className="mt-3 bloom-pearl-card pearl-sheen rounded-2xl p-4 space-y-3">
-        <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Goals respected</p>
-        <GoalBar Icon={Droplets} label="Hydration" pct={data.hydrateRate} caption={`${data.hydrateRate}% of days`} />
-        <GoalBar Icon={Salad} label="Eating well" pct={data.nourishRate} caption={`${data.nourishRate}% of days`} />
-        {b.has && (
-          <GoalBar
-            Icon={Wallet} label="Budget" pct={b.plan > 0 ? b.pct : 100}
-            over={b.plan > 0 && b.spent > b.plan}
-            caption={b.plan > 0 ? `${b.currency}${Math.round(b.spent)} / ${b.currency}${Math.round(b.plan)}` : `${b.currency}${Math.round(b.spent)} spent`}
-          />
-        )}
+      {/* Promises kept — gently framed */}
+      <div className="mt-3.5">
+        <Eyebrow>Promises to yourself</Eyebrow>
+        <div className="mt-2 bloom-pearl-card pearl-sheen rounded-2xl p-4 space-y-3">
+          <GoalBar Icon={Droplets} label="Hydration" pct={data.hydrateRate} caption={`${data.hydrateRate}% of days`} />
+          <GoalBar Icon={Salad} label="Eating well" pct={data.nourishRate} caption={`${data.nourishRate}% of days`} />
+          {b.has && (
+            <GoalBar
+              Icon={Wallet} label="Budget" pct={b.plan > 0 ? b.pct : 100}
+              over={b.plan > 0 && b.spent > b.plan}
+              caption={b.plan > 0 ? `${b.currency}${Math.round(b.spent)} / ${b.currency}${Math.round(b.plan)}` : `${b.currency}${Math.round(b.spent)} spent`}
+            />
+          )}
+        </div>
       </div>
     </section>
   );
