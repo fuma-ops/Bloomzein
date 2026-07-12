@@ -3,6 +3,7 @@ import { BloomLogo } from "./BloomLogo";
 import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 import { PaywallHost } from "./premium/PremiumKit";
+import { PeriodConfirm } from "./cycle/PeriodConfirm";
 
 interface NavItem {
   to: string;
@@ -77,6 +78,10 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
 
       {/* App-wide Bloom+ paywall — opened from any gated action */}
       <PaywallHost />
+
+      {/* App-wide period-start confirmation — when her period is due/overdue we ask
+          "did it start today?" on ANY page, not only Today/Cycle, so she can't miss it */}
+      <PeriodConfirm />
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-3 bottom-3 z-50 flex items-center justify-around rounded-full border border-[#EC4899]/15 bg-white/95 px-2 py-2 shadow-xl shadow-rose/20 backdrop-blur md:hidden">

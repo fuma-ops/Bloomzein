@@ -72,24 +72,25 @@ export function skippedToday(): boolean {
   try { return localStorage.getItem(PERIOD_SKIP_KEY) === todayISO(); } catch { return false; }
 }
 
-/** Day-of-cycle today (0 = predicted first day of a cycle). */
-function dayInCycle(): number {
+/** Whole days since her last real/predicted period start (grows while overdue). */
+function daysSinceStart(): number {
   const s = readCycleSettings();
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const d = Math.floor((today.getTime() - s.lastPeriodStart.getTime()) / MS);
-  const len = Math.max(1, s.cycleLength);
-  return ((d % len) + len) % len;
+  return Math.floor((today.getTime() - s.lastPeriodStart.getTime()) / MS);
 }
 
 /**
- * Should we ask "did your period start today?" — she's in the ~5-day window around
- * the predicted start, hasn't already logged today, and didn't dismiss today.
+ * Should we ask "did your period start today?" — from 2 days before the predicted
+ * start and EVERY day it stays overdue, until she confirms. We use the raw day
+ * count (not a modulo day-of-cycle) on purpose: confirming advances
+ * lastPeriodStart, so the count resets and the prompt naturally stops until the
+ * next cycle — but if she keeps saying "not yet", it keeps asking the next day
+ * (she stays on luteal meanwhile) instead of silently wrapping around.
  */
 export function shouldAskToday(): boolean {
   if (!hasCycleSettings()) return false;
   if (readPeriodStarts().includes(todayISO())) return false;
   if (skippedToday()) return false;
   const s = readCycleSettings();
-  const d = dayInCycle();
-  return d <= 3 || d >= s.cycleLength - 2;
+  return daysSinceStart() >= s.cycleLength - 2;
 }

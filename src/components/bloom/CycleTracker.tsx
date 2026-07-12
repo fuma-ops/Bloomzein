@@ -52,7 +52,6 @@ import {
 import { CycleOnboarding } from "./CycleOnboarding";
 import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
 import { CycleInsights } from "./cycle/CycleInsights";
-import { PeriodConfirm } from "./cycle/PeriodConfirm";
 import { logPeriodStart, readPeriodStarts, PERIOD_EVENT } from "@/lib/periodLog";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
@@ -389,7 +388,7 @@ export function CycleTracker() {
     const ovDay = settings.cycleLength - 14;
     // Period is due but she hasn't confirmed it started — HOLD at "period expected"
     // instead of auto-rolling into a new cycle and claiming today as her period.
-    const awaiting = diff >= settings.cycleLength && diff <= settings.cycleLength + 12;
+    const awaiting = diff >= settings.cycleLength;
     if (awaiting) {
       return {
         cycleDay: diff + 1,
@@ -749,7 +748,6 @@ export function CycleTracker() {
   return (
     <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
       {showOnboarding && <CycleOnboarding onDone={finishOnboarding} />}
-      {isSetup && <div className="relative z-10"><PeriodConfirm /></div>}
 
       {/* Centre-screen confirm when she taps a day (period came early / on time) */}
       {confirmDay && createPortal(

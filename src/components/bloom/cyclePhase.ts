@@ -55,7 +55,9 @@ export function phaseForDay(date: Date, s: CycleSettings): Exclude<CyclePhase, "
 export function effectiveCurrentPhase(s: CycleSettings, now: Date = new Date()): Exclude<CyclePhase, "any"> {
   const ms = 1000 * 60 * 60 * 24;
   const diff = Math.floor((now.getTime() - s.lastPeriodStart.getTime()) / ms);
-  if (diff >= s.cycleLength && diff <= s.cycleLength + 12) return "luteal";
+  // Overdue but unconfirmed → hold at luteal for good (until she logs her real
+  // start, which resets lastPeriodStart). Never auto-roll into a fake "period".
+  if (diff >= s.cycleLength) return "luteal";
   return phaseForDay(now, s);
 }
 
