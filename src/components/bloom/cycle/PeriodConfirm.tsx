@@ -1,54 +1,59 @@
 import { useEffect, useState } from "react";
-import { Droplet, Check } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Droplet, Check, X } from "lucide-react";
 import { shouldAskToday, logPeriodStart, skipPeriodPromptToday, PERIOD_EVENT } from "@/lib/periodLog";
 import { todayISO } from "@/lib/localDate";
 
 /**
- * Around the predicted period day, gently ask her to confirm the real start.
- * "Yes" logs today as a true period start (re-tuning the cycle); "Not yet" hides
- * it until tomorrow. This is how the app learns her real rhythm over time.
+ * Around the predicted period day, a soft centred pop-up asks her to confirm the
+ * real start — so she can't miss it. "Yes" logs today as a true period start
+ * (re-tuning the cycle); "Not yet" hides it until tomorrow.
  */
 export function PeriodConfirm() {
-  const [, force] = useState(0);
+  const [open, setOpen] = useState(false);
+
   useEffect(() => {
-    const r = () => force((n) => n + 1);
-    window.addEventListener(PERIOD_EVENT, r);
-    window.addEventListener("storage", r);
-    return () => { window.removeEventListener(PERIOD_EVENT, r); window.removeEventListener("storage", r); };
+    const check = () => setOpen(shouldAskToday());
+    check();
+    window.addEventListener(PERIOD_EVENT, check);
+    window.addEventListener("storage", check);
+    return () => { window.removeEventListener(PERIOD_EVENT, check); window.removeEventListener("storage", check); };
   }, []);
 
-  if (!shouldAskToday()) return null;
+  if (!open) return null;
 
-  return (
-    <div
-      className="rounded-2xl p-3.5 mb-3 animate-fade-in"
-      style={{ background: "linear-gradient(135deg, #FDE7F1, #FBCFE8)", border: "1px solid rgba(236,72,153,0.25)", boxShadow: "0 8px 24px rgba(236,72,153,0.14)" }}
-    >
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe" style={{ background: "linear-gradient(135deg,#EC4899,#BE185D)" }}>
-          <Droplet className="h-5 w-5" />
+  const yes = () => { logPeriodStart(todayISO()); setOpen(false); };
+  const notYet = () => { skipPeriodPromptToday(); setOpen(false); };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={notYet}>
+      <div className="absolute inset-0 animate-fade-in" style={{ background: "rgba(190,24,93,0.22)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }} />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-xs rounded-[2rem] bg-white p-6 text-center animate-scale-in"
+        style={{ boxShadow: "0 24px 60px rgba(190,24,93,0.35)" }}
+      >
+        <button onClick={notYet} aria-label="Dismiss" className="absolute right-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-full text-rose/50 transition hover:bg-blush hover:text-hotpink active:scale-90">
+          <X className="h-4 w-4" />
+        </button>
+
+        <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full text-white animate-icon-breathe" style={{ background: "linear-gradient(135deg,#EC4899,#BE185D)", boxShadow: "0 10px 26px rgba(219,39,119,0.42)" }}>
+          <Droplet className="h-8 w-8" strokeWidth={1.8} />
         </span>
-        <div className="flex-1 min-w-0">
-          <p className="font-script leading-none" style={{ fontSize: "20px", color: "#BE185D" }}>Did your period start today?</p>
-          <p className="text-[11.5px] leading-snug mt-0.5" style={{ color: "#9D5C7E" }}>Confirm and I'll log the real day &amp; re-tune your cycle and predictions.</p>
-          <div className="flex gap-2 mt-2.5">
-            <button
-              onClick={() => logPeriodStart(todayISO())}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full py-2 text-[13px] font-bold text-white active:scale-95 transition"
-              style={{ background: "linear-gradient(135deg,#EC4899,#DB2777)", boxShadow: "0 4px 14px rgba(219,39,119,0.35)" }}
-            >
-              <Check className="h-4 w-4" strokeWidth={3} /> Yes, today
-            </button>
-            <button
-              onClick={() => skipPeriodPromptToday()}
-              className="flex-1 rounded-full py-2 text-[13px] font-bold active:scale-95 transition"
-              style={{ background: "rgba(255,255,255,0.75)", color: "#9D5C7E", border: "1px solid rgba(236,72,153,0.2)" }}
-            >
-              Not yet
-            </button>
-          </div>
+
+        <p className="font-script leading-tight" style={{ fontSize: "28px", color: "#BE185D" }}>Did your period<br />start today?</p>
+        <p className="mt-2 text-[12.5px] leading-snug" style={{ color: "#9D5C7E" }}>Confirm and I'll log the real day &amp; re-tune your cycle and predictions ✿</p>
+
+        <div className="mt-4 grid gap-2">
+          <button onClick={yes} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold text-white active:scale-95 transition" style={{ background: "linear-gradient(135deg,#EC4899,#DB2777)", boxShadow: "0 8px 22px rgba(219,39,119,0.4)" }}>
+            <Check className="h-4 w-4" strokeWidth={3} /> Yes, it started today
+          </button>
+          <button onClick={notYet} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: "#9D5C7E", background: "rgba(252,231,243,0.7)" }}>
+            Not yet
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
