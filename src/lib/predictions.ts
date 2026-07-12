@@ -229,3 +229,98 @@ export function computePredictions(): SmartPredictions {
 
   return { hasCycle, confidence: conf, loggedCycles, period, pms, energy, recovery, cravings, mood, fertility };
 }
+
+/* ── Dashboard shapes — the forecast strip & the cycle wheel ──────────────── */
+
+const ENERGY_SCORE: Record<EnergyLevel, number> = {
+  gentle: 2, winding: 2.6, rising: 3.6, high: 4.4, peak: 5,
+};
+
+export interface ForecastDay {
+  date: Date; label: string; phase: Phase;
+  energy: EnergyLevel; energyScore: number; mood: number;
+  isToday: boolean; isPeriod: boolean; isFertile: boolean;
+  isOvulation: boolean; isPMS: boolean; isRecovery: boolean;
+}
+
+/** The 7-day (default) "weather forecast" for her body. */
+export function computeForecast(days = 7): ForecastDay[] {
+  const s = readCycleSettings();
+  const today = startOfToday();
+  const mbp = moodByPhase(s);
+  const np = nextPeriod(s, today);
+  const out: ForecastDay[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = addDays(today, i);
+    const ph = phaseForDay(d, s) as Phase;
+    const lvl = ENERGY_BY_PHASE[ph];
+    const toPeriod = Math.ceil((np.date.getTime() - d.getTime()) / MS);
+    out.push({
+      date: d,
+      label: i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" }),
+      phase: ph,
+      energy: lvl,
+      energyScore: ENERGY_SCORE[lvl],
+      mood: mbp[ph],
+      isToday: i === 0,
+      isPeriod: ph === "period",
+      isFertile: ph === "fertile" || ph === "ovulation",
+      isOvulation: ph === "ovulation",
+      isPMS: ph === "luteal" && toPeriod >= 0 && toPeriod <= 3,
+      isRecovery: ph === "period" || (ph === "luteal" && toPeriod >= 0 && toPeriod <= 2),
+    });
+  }
+  return out;
+}
+
+export interface WheelArc { phase: Phase; startDay: number; endDay: number }
+export interface WheelData {
+  cycleLength: number; periodLength: number; todayDay: number;
+  arcs: WheelArc[];
+  ovulationDay: number; fertileStart: number; fertileEnd: number;
+  pmsStart: number; overdue: boolean;
+}
+
+/** The current cycle as a ring: phase arcs + the key marker days. */
+export function computeWheel(): WheelData {
+  const s = readCycleSettings();
+  const today = startOfToday();
+  const len = s.cycleLength;
+  const diff = Math.floor((today.getTime() - s.lastPeriodStart.getTime()) / MS);
+  const overdue = diff >= len;
+  const todayDay = Math.min(Math.max(0, diff), len); // held at the top (period marker) when overdue
+  const ovulationDay = len - 14;
+
+  // Group consecutive same-phase days into arcs.
+  const arcs: WheelArc[] = [];
+  let prev: Phase | null = null, start = 0;
+  for (let day = 0; day < len; day++) {
+    const ph = phaseForDay(addDays(s.lastPeriodStart, day), s) as Phase;
+    if (ph !== prev) {
+      if (prev !== null) arcs.push({ phase: prev, startDay: start, endDay: day });
+      prev = ph; start = day;
+    }
+  }
+  if (prev !== null) arcs.push({ phase: prev, startDay: start, endDay: len });
+
+  return {
+    cycleLength: len, periodLength: s.periodLength, todayDay, arcs,
+    ovulationDay, fertileStart: Math.max(0, ovulationDay - 4), fertileEnd: ovulationDay + 2,
+    pmsStart: Math.max(0, len - 3), overdue,
+  };
+}
+
+/** Mood log positioned by day-in-cycle (for the hormone×mood overlay scatter). */
+export function moodScatter(): { day: number; score: number }[] {
+  const s = readCycleSettings();
+  let log: Record<string, string> = {};
+  try { log = JSON.parse(localStorage.getItem("bloom:mood-log-v2") || "{}"); } catch { return []; }
+  const len = s.cycleLength;
+  return Object.entries(log)
+    .filter(([, m]) => m)
+    .map(([iso, m]) => {
+      const diff = Math.floor((new Date(iso + "T00:00:00").getTime() - s.lastPeriodStart.getTime()) / MS);
+      const day = ((diff % len) + len) % len;
+      return { day, score: moodValence(m) };
+    });
+}
