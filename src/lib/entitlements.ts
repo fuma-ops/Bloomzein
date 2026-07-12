@@ -40,7 +40,7 @@ export function usePremium(): boolean {
 }
 
 /** Which Bloom+ moment triggered the paywall — themes its headline. */
-export type PaywallFeature = "meals" | "diet" | "workout" | "yoga" | "coach" | "cycle" | "general";
+export type PaywallFeature = "meals" | "diet" | "workout" | "yoga" | "coach" | "cycle" | "budget" | "me" | "general";
 
 /** Open the app-wide paywall, themed to the feature she reached for. */
 export function openPaywall(feature: PaywallFeature = "general"): void {

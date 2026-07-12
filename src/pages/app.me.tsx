@@ -9,7 +9,7 @@ import {
 /** Only this account sees the private admin inbox link. */
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { DiscoverBloomPlus, PlanToggle } from "@/components/bloom/premium/PremiumKit";
+import { DiscoverBloomPlus, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
@@ -212,8 +212,12 @@ export default function MePage() {
         </div>
       </section>
 
-      {/* CONSISTENCY DASHBOARD */}
-      <ConsistencyDashboard />
+      {/* CONSISTENCY DASHBOARD — Bloom+ (full glow dashboard) */}
+      <div className="mt-5 sm:mt-8">
+        <PlusLock feature="me" title="Your glow dashboard" blurb="Consistency, mood over time, goal progress & weight — your whole bloom, measured." minH="min-h-[280px]">
+          <ConsistencyDashboard />
+        </PlusLock>
+      </div>
 
       {/* BLOOM+ — discover premium, and a dev switch to feel both experiences */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>

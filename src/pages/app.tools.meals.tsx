@@ -333,8 +333,17 @@ const MEALS_GUIDE_CONTENT: SparkleContent = {
 
 /* ---------- Page ---------- */
 
+/** Meals tabs reserved for Bloom+ (only "This Week" browsing is free). */
+const PREMIUM_MEALS_TABS = new Set<TabKey>(["kids", "pantry", "shop", "prep", "conserve", "favs"]);
+
 export default function MealsPage() {
   const [tab, setTab] = useState<TabKey>("week");
+  const premiumPlan = usePremium();
+  // Free users browse & plan This Week manually; the organiser tabs are Bloom+.
+  const goToTab = (key: TabKey) => {
+    if (!premiumPlan && PREMIUM_MEALS_TABS.has(key)) { openPaywall("meals"); return; }
+    setTab(key);
+  };
   // Banner shown when the week was just set up from the Diet tool.
   const [fromDiet, setFromDiet] = useState<string | null>(() => { try { return localStorage.getItem("bloom:meals-from-diet"); } catch { return null; } });
   const dismissFromDiet = () => { try { localStorage.removeItem("bloom:meals-from-diet"); } catch {} setFromDiet(null); };
@@ -619,7 +628,7 @@ export default function MealsPage() {
                   <button
                     key={t.key}
                     data-tour={`meals-tab-${t.key}`}
-                    onClick={() => setTab(t.key)}
+                    onClick={() => goToTab(t.key)}
                     className={[
                       "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold transition whitespace-nowrap",
                       active
@@ -629,6 +638,7 @@ export default function MealsPage() {
                   >
                     <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />
                     {t.label}
+                    {!premiumPlan && PREMIUM_MEALS_TABS.has(t.key) && <LockChip />}
                   </button>
                 );
               })}

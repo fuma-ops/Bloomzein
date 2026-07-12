@@ -14,6 +14,8 @@ const HEADLINES: Record<PaywallFeature, string> = {
   yoga:    "Every flow & program, gently synced to your cycle.",
   coach:   "Your deeper coach — daily guidance and a peek at tomorrow.",
   cycle:   "Your long-term trends & insights, read from your whole history.",
+  budget:  "Goals, insights and your whole money picture.",
+  me:      "Your full glow dashboard — consistency, mood & progress over time.",
   general: "Bloom your whole week ✿",
 };
 
@@ -179,6 +181,48 @@ export function PlanToggle() {
         className={["relative h-6 w-11 shrink-0 rounded-full transition-colors", premium ? "bg-hotpink" : "bg-rose/25"].join(" ")}
       >
         <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all" style={{ left: premium ? "1.375rem" : "0.125rem" }} />
+      </button>
+    </div>
+  );
+}
+
+/* ─── PlusLock — teaser-lock a whole surface for free users (Pattern B) ───
+   Premium users get the real children; free users see them blurred behind a
+   soft rose-gold lock cluster that opens the paywall. Reuses the phase
+   locked-peek aesthetic. Use for "see-but-can't-touch" premium sections. */
+export function PlusLock({
+  feature = "general", title, blurb, children, className = "", minH = "",
+}: {
+  feature?: PaywallFeature;
+  title: string;
+  blurb?: string;
+  children?: React.ReactNode;
+  className?: string;
+  /** Min height when there are no children to give the lock room (e.g. "min-h-[168px]"). */
+  minH?: string;
+}) {
+  const premium = usePremium();
+  if (premium) return <>{children}</>;
+  return (
+    <div className={["relative overflow-hidden rounded-[1.5rem]", minH, className].join(" ")}>
+      {children
+        ? <div className="pointer-events-none select-none blur-[3px] opacity-60">{children}</div>
+        : <div className={["w-full", minH || "min-h-[150px]"].join(" ")} style={{ background: "linear-gradient(160deg,#FFF1F6,#FCE7F3)" }} />}
+      <button
+        onClick={() => openPaywall(feature)}
+        className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px] transition active:scale-[0.99]"
+      >
+        <div className="text-center px-5">
+          <span className="mx-auto grid h-11 w-11 place-items-center rounded-2xl text-white shadow-md animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
+            <Lock className="h-5 w-5" strokeWidth={2} />
+          </span>
+          <div className="mt-2 flex justify-center"><PremiumBadge /></div>
+          <p className="mt-1.5 font-script text-2xl text-hotpink leading-none">{title}</p>
+          {blurb && <p className="mt-1 text-[12px] text-rose/75 leading-snug max-w-[15rem] mx-auto">{blurb}</p>}
+          <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold text-white shadow" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Unlock with Bloom+ ✿
+          </span>
+        </div>
       </button>
     </div>
   );
