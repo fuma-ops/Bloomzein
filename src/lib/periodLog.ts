@@ -72,6 +72,11 @@ export function skippedToday(): boolean {
   try { return localStorage.getItem(PERIOD_SKIP_KEY) === todayISO(); } catch { return false; }
 }
 
+/** Clear any "not today" dismissal — used on setup so a fresh save always re-asks. */
+export function clearPeriodPromptSkip(): void {
+  try { localStorage.removeItem(PERIOD_SKIP_KEY); } catch {}
+}
+
 /** Whole days since her last real/predicted period start (grows while overdue). */
 function daysSinceStart(): number {
   const s = readCycleSettings();
