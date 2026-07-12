@@ -14,6 +14,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
 import { ConsistencyDashboard } from "@/components/bloom/me/ConsistencyDashboard";
+import { SmartPredictions } from "@/components/bloom/me/SmartPredictions";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
@@ -211,6 +212,13 @@ export default function MePage() {
           </div>
         </div>
       </section>
+
+      {/* SMART PREDICTIONS — Bloom+ (Bloomzein predicts your week) */}
+      <div className="mt-5 sm:mt-8">
+        <PlusLock feature="me" title="Smart predictions" blurb="Your period, PMS, energy, cravings, mood & fertility — predicted for the week ahead." minH="min-h-[300px]">
+          <SmartPredictions />
+        </PlusLock>
+      </div>
 
       {/* CONSISTENCY DASHBOARD — Bloom+ (full glow dashboard) */}
       <div className="mt-5 sm:mt-8">
