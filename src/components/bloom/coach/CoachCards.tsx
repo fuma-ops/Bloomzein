@@ -210,8 +210,8 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
   return (
     <a href="/app/tools/diet?tab=cycle" className="group block rounded-[1.5rem] border border-hotpink/25 bg-white/90 backdrop-blur p-4 shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-black uppercase tracking-wide text-hotpink inline-flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Your coach today
+        <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
+          <Sparkles className="h-4 w-4" strokeWidth={2} /> Your coach today
         </p>
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">
           Full plan <ChevronRight className="h-3 w-3" />
@@ -237,8 +237,8 @@ export function TomorrowCard({ coach }: { coach: DayCoach }) {
   const t = coach.tomorrow;
   return (
     <div className="rounded-[1.5rem] border border-petal/60 bg-gradient-to-br from-violet-50/60 via-white to-blush/40 p-4 animate-card-pop-in">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-magenta/70 inline-flex items-center gap-1.5">
-        <Moon className="h-3.5 w-3.5 text-magenta" strokeWidth={2} /> Tomorrow with Bloomzein
+      <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
+        <Moon className="h-4 w-4 text-hotpink" strokeWidth={2} /> Tomorrow with Bloomzein
       </p>
       <div className="mt-1.5 flex items-baseline justify-between gap-2">
         <p className="font-script text-xl text-hotpink leading-tight">{t.phaseLabel} · Day {t.cycleDay}</p>
