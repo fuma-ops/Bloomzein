@@ -155,44 +155,45 @@ export function FeelGoodCard({ fg, className = "" }: { fg: FeelGood; className?:
 /* ---------- FULL coach card (Diet · Cycle Nutrition) ---------- */
 
 export function CoachTodayCard({ coach, onOpenRecipe }: { coach: DayCoach; onOpenRecipe?: (recipeId: string) => void }) {
+  const cardCls = "rounded-[1.6rem] border border-hotpink/30 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-lg shadow-hotpink/10 animate-card-pop-in";
   return (
-    <div className="rounded-[1.6rem] border border-hotpink/30 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-lg shadow-hotpink/10 animate-card-pop-in">
-      {/* header */}
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <p className="font-script text-2xl text-hotpink leading-none">{coach.phaseLabel} phase</p>
-          <p className="mt-0.5 text-[11px] font-semibold text-rose/60">Day {coach.cycleDay} of your cycle</p>
+    <div className="space-y-4">
+      {/* ── Section 1 · your phase ── */}
+      <div className={cardCls}>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="font-script text-2xl text-hotpink leading-none">{coach.phaseLabel} phase</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-rose/60">Day {coach.cycleDay} of your cycle</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">Today</span>
         </div>
-        <span className="shrink-0 rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">Today</span>
+
+        <div className="mt-3"><EnergyMeter level={coach.energy.level} label={coach.energy.label} /></div>
+
+        <p className="mt-3 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-2.5 text-[13px] leading-snug text-[#831843]">
+          {coach.need}
+        </p>
+
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <ChipRow label="Eat more" items={coach.eat.slice(0, 5)} tone="eat" />
+          <ChipRow label="Ease up on" items={coach.avoid.slice(0, 4)} tone="avoid" />
+        </div>
       </div>
 
-      <div className="mt-3"><EnergyMeter level={coach.energy.level} label={coach.energy.label} /></div>
-
-      {/* need line */}
-      <p className="mt-3 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-2.5 text-[13px] leading-snug text-[#831843]">
-        {coach.need}
-      </p>
-
-      {/* eat / ease up */}
-      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <ChipRow label="Eat more" items={coach.eat.slice(0, 5)} tone="eat" />
-        <ChipRow label="Ease up on" items={coach.avoid.slice(0, 4)} tone="avoid" />
-      </div>
-
-      {/* a treat (snack / juice / dessert), from Meals, opens in a popup */}
-      <div className="mt-4">
+      {/* ── Section 2 · for your soft self (a treat) ── */}
+      <div className={cardCls}>
         <Signal>For your soft self</Signal>
         <TreatCard treat={coach.treat} fallback={coach.snack} phaseLabel={coach.phaseLabel} onOpenRecipe={onOpenRecipe} />
       </div>
 
-      {/* feel-good */}
-      <div className="mt-4">
+      {/* ── Section 3 · make yourself comfortable (feel-good moment) ── */}
+      <div className={cardCls}>
         <Signal>Make yourself comfortable</Signal>
         <FeelGoodCard fg={coach.feelGood} />
       </div>
 
       {/* → the real Today's Plan on the Today page */}
-      <div className="mt-4 flex justify-center">
+      <div className="flex justify-center">
         <a
           href="/app/today#todays-plan"
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-hotpink to-magenta px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-hotpink/25 transition hover:brightness-105 active:scale-95"
