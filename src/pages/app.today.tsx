@@ -17,6 +17,7 @@ import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { buildDayCoach } from "@/lib/todayCoach";
 import { CoachTodayCompact, TomorrowCard } from "@/components/bloom/coach/CoachCards";
+import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
@@ -1087,17 +1088,21 @@ export default function TodayPage() {
              user never sees a default calorie target dressed up as real data. ── */}
       {(cycleReady || mealPlanned) && (
         <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
-          <TodayEnergyStrip e={energyBalance()} />
+          {/* Bloom+ : the real energy engine (target / eaten / burned numbers). */}
+          <PlusLock feature="diet" title="Your energy numbers" blurb="Your real daily target, what you've eaten & burned — the full picture." minH="min-h-[112px]">
+            <TodayEnergyStrip e={energyBalance()} />
+          </PlusLock>
         </section>
       )}
 
       {/* ── 2b. YOUR COACH TODAY + TOMORROW — the emotional daily ritual: how you
              feel, what you need, one little joy, and a soft peek at tomorrow.
-             Full version lives in Diet · Cycle Nutrition. ── */}
+             Free forever (the daily habit); the full plan lives in Diet. ── */}
       {cycleReady && (
         <section className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 animate-card-pop-in" style={{ animationDelay: "80ms" }}>
           <CoachTodayCompact coach={coach} />
           <TomorrowCard coach={coach} />
+          <DiscoverBloomPlus feature="general" />
         </section>
       )}
 

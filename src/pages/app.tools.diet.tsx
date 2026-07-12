@@ -23,6 +23,8 @@ import { EnergyTodayCard, GoalPathCard, WeekBalanceCard } from "@/components/blo
 import { buildDayCoach } from "@/lib/todayCoach";
 import { readsForPhase } from "@/lib/readsData";
 import { CoachTodayCard, TomorrowCard, PhaseReads } from "@/components/bloom/coach/CoachCards";
+import { usePremium } from "@/lib/entitlements";
+import { PlusLock } from "@/components/bloom/premium/PremiumKit";
 import {
   RECIPES, PHASE_INFO, PHASE_MICROS, passesMyRules, scaleQuantity, recipeImageSrc,
   DIET_REGIMES, dietRegimeInfo, regimeToDietType,
@@ -877,24 +879,28 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
 
   return (
     <div className="space-y-4">
-      {/* ── Daily command center — the hub. The two setup CTAs + folded coach
-             line live inside Today's energy, so there's one place, not many. ── */}
-      <EnergyTodayCard
-        e={energy}
-        mealsPlanned={mealsPlanned}
-        mealsFromDiet={mealsFromDiet}
-        movementPlanned={movementPlanned}
-        movementFromDiet={movementFromDiet}
-        onPlanMeals={onPlanMeals}
-        onPlanMovement={onPlanMovement}
-        onUnplanMeals={onUnplanMeals}
-        onUnplanMovement={onUnplanMovement}
-        onViewTodayPlan={() => goTo("today")}
-      />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
-        <WeekBalanceCard />
-      </div>
+      {/* ── Daily command center — the real energy engine (target / eaten / burned,
+             macros, goal timeline). Bloom+; free sees a teaser. ── */}
+      <PlusLock feature="diet" title="Your energy engine" blurb="Your real daily target, macros, eat-back & goal timeline." minH="min-h-[240px]">
+        <div className="space-y-4">
+          <EnergyTodayCard
+            e={energy}
+            mealsPlanned={mealsPlanned}
+            mealsFromDiet={mealsFromDiet}
+            movementPlanned={movementPlanned}
+            movementFromDiet={movementFromDiet}
+            onPlanMeals={onPlanMeals}
+            onPlanMovement={onPlanMovement}
+            onUnplanMeals={onUnplanMeals}
+            onUnplanMovement={onUnplanMovement}
+            onViewTodayPlan={() => goTo("today")}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
+            <WeekBalanceCard />
+          </div>
+        </div>
+      </PlusLock>
       {bodyEditOpen && (
         <BodyGoalEditModal
           profile={profile}
@@ -1030,18 +1036,57 @@ function CoachHeader({ title, sub }: { title: string; sub: string }) {
   );
 }
 
+/** Free phase-nutrition card — the education layer (eat / ease-up) everyone gets. */
+function FreePhaseNutrition({ coach }: { coach: ReturnType<typeof buildDayCoach> }) {
+  return (
+    <div className="rounded-[1.6rem] border border-petal/60 bg-white/90 backdrop-blur p-4 sm:p-5 animate-card-pop-in">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="font-script text-2xl text-hotpink leading-none">{coach.phaseLabel} phase</p>
+          <p className="mt-0.5 text-[11px] font-semibold text-rose/60">Day {coach.cycleDay} of your cycle</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-hotpink/10 text-hotpink text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">Today</span>
+      </div>
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-rose/55">Eat more</p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {coach.eat.slice(0, 5).map((f) => <span key={f} className="rounded-full bg-blush px-2 py-0.5 text-[11px] font-semibold text-magenta border border-petal/50">{f}</span>)}
+          </div>
+        </div>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-rose/55">Ease up on</p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {coach.avoid.slice(0, 4).map((f) => <span key={f} className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-rose/65 border border-petal/60">{f}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CycleNutritionTab({ cycleReady, onOpenRecipe }: { cycleReady: boolean; onOpenRecipe: (recipeId: string) => void }) {
   // One source of truth for the whole emotional-coach layer.
   const coach = useMemo(() => buildDayCoach(), []);
   const phaseReads = useMemo(() => readsForPhase(coach.phase), [coach.phase]);
+  const premium = usePremium();
 
   return (
     <div className="space-y-6">
-      {/* Your coach today: energy · what you need · eat/avoid · treat · your moment */}
+      {/* Your coach today: energy · what you need · eat/avoid · treat · your moment.
+          Free gets the eat/ease-up education + a locked coach teaser; Bloom+ the
+          full coach card. */}
       <div id="diet-cycle">
         <CoachHeader title="Your coach today" sub="how you feel, what you need, one little joy" />
         {cycleReady ? (
-          <CoachTodayCard coach={coach} onOpenRecipe={onOpenRecipe} />
+          premium ? (
+            <CoachTodayCard coach={coach} onOpenRecipe={onOpenRecipe} />
+          ) : (
+            <div className="space-y-3">
+              <FreePhaseNutrition coach={coach} />
+              <PlusLock feature="coach" title="Your daily coach" blurb="Your energy read, a little treat & your moment — all synced to today." minH="min-h-[190px]" />
+            </div>
+          )
         ) : (
           <a href="/app/tools/cycle" className="block rounded-[1.5rem] border border-hotpink/30 bg-white/85 p-5 text-center animate-card-pop-in">
             <p className="font-script text-2xl text-hotpink">Set up your cycle ✿</p>
@@ -1273,18 +1318,20 @@ function TodayTab({
 
   return (
     <div className="space-y-5">
-      {/* Macro rings */}
-      <Glass className="p-4 sm:p-5">
-        <h3 className="font-script text-xl text-hotpink mb-3 flex items-center gap-1.5">
-          <Activity className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Today's Macros
-        </h3>
-        <div className="grid grid-cols-4 gap-2 sm:gap-4">
-          <RingProgress value={consumed.calories} target={targets.calories} label="Calories" sub="" colorClass={ringColor} />
-          <RingProgress value={consumed.protein} target={targets.protein} label="Protein" sub="g" colorClass={ringColor} />
-          <RingProgress value={consumed.carbs} target={targets.carbs} label="Carbs" sub="g" colorClass={ringColor} />
-          <RingProgress value={consumed.fat} target={targets.fat} label="Fat" sub="g" colorClass={ringColor} />
-        </div>
-      </Glass>
+      {/* Macro rings — real targets are Bloom+; free sees a teaser. */}
+      <PlusLock feature="diet" title="Your macro targets" blurb="Calories, protein, carbs & fat — tracked against your real daily goal." minH="min-h-[190px]">
+        <Glass className="p-4 sm:p-5">
+          <h3 className="font-script text-xl text-hotpink mb-3 flex items-center gap-1.5">
+            <Activity className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Today's Macros
+          </h3>
+          <div className="grid grid-cols-4 gap-2 sm:gap-4">
+            <RingProgress value={consumed.calories} target={targets.calories} label="Calories" sub="" colorClass={ringColor} />
+            <RingProgress value={consumed.protein} target={targets.protein} label="Protein" sub="g" colorClass={ringColor} />
+            <RingProgress value={consumed.carbs} target={targets.carbs} label="Carbs" sub="g" colorClass={ringColor} />
+            <RingProgress value={consumed.fat} target={targets.fat} label="Fat" sub="g" colorClass={ringColor} />
+          </div>
+        </Glass>
+      </PlusLock>
 
       {/* Micro bars */}
       <Glass className="p-4 sm:p-5 space-y-3">

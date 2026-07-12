@@ -15,6 +15,11 @@ import { BudgetBubbles } from "./BudgetBubbles";
 import { SparkleOnboarding, type SparkleContent } from "./SparkleOnboarding";
 import { estimateWeeklyGroceryCost } from "./mealsBudget";
 import { CyclePhasePill } from "./CyclePhasePill";
+import { isPremium, usePremium, openPaywall } from "@/lib/entitlements";
+import { PremiumBadge } from "@/components/bloom/premium/PremiumKit";
+
+/** Budget tabs reserved for Bloom+ (goals & insights). */
+const PREMIUM_BUDGET_TABS = new Set(["Savings Goals", "Reports"]);
 
 /* ============================================================
    TOKENS / CONSTANTS
@@ -1005,6 +1010,17 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
 export function BudgetPlanner() {
   const [onboarded, setOnboarded] = useLocal<boolean>("bp:onboarded", false);
   const [tab, setTab] = useLocal<TabKey>("bp:tab", "Dashboard");
+  const premium = usePremium();
+  // Free users can browse basics; Goals & Reports are Bloom+ → open the paywall.
+  const goToTab = (t: TabKey) => {
+    if (!premium && PREMIUM_BUDGET_TABS.has(t)) { openPaywall("budget"); return; }
+    setTab(t);
+  };
+  // A free user landing on a premium tab (saved state) is bounced to Dashboard.
+  useEffect(() => {
+    if (!isPremium() && PREMIUM_BUDGET_TABS.has(tab)) setTab("Dashboard");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [premium]);
   const [currency, setCurrency] = useLocal<CurrencyKey>("bp:currency", "USD");
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [incomes, setIncomes] = useLocal<Income[]>("bp:incomes", []);
@@ -1329,15 +1345,16 @@ export function BudgetPlanner() {
                 <button
                   key={t}
                   data-tour={tourAttr}
-                  onClick={() => setTab(t)}
+                  onClick={() => goToTab(t)}
                   className={[
-                    "shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
+                    "shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 border-[0.5px]",
                     active
                       ? "bg-[#EC4899] text-white shadow-md shadow-pink-400/40 border-transparent scale-[1.02]"
                       : "bg-white/70 backdrop-blur text-[#9D5C7E] border-pink-300/50 hover:bg-white/90",
                   ].join(" ")}
                 >
                   {t}
+                  {!premium && PREMIUM_BUDGET_TABS.has(t) && <PremiumBadge />}
                 </button>
               );
             })}
