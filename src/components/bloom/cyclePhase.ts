@@ -46,6 +46,19 @@ export function phaseForDay(date: Date, s: CycleSettings): Exclude<CyclePhase, "
   return "luteal";
 }
 
+/**
+ * The phase to show TODAY — like phaseForDay, but when her period is overdue and
+ * she hasn't confirmed it started yet, we HOLD at luteal instead of auto-rolling
+ * into "period". A normal phase every tool already handles, so nothing breaks;
+ * it advances to "period" only once she confirms her real start.
+ */
+export function effectiveCurrentPhase(s: CycleSettings, now: Date = new Date()): Exclude<CyclePhase, "any"> {
+  const ms = 1000 * 60 * 60 * 24;
+  const diff = Math.floor((now.getTime() - s.lastPeriodStart.getTime()) / ms);
+  if (diff >= s.cycleLength && diff <= s.cycleLength + 12) return "luteal";
+  return phaseForDay(now, s);
+}
+
 /** True once the user has saved their own cycle settings at least once (vs. still on defaults). */
 export function hasCycleSettings(): boolean {
   try {
@@ -75,7 +88,7 @@ export function readCycleSettings(): CycleSettings {
 export function writeCycleSettings(settings: CycleSettings): void {
   try {
     localStorage.setItem(CYCLE_SETTINGS_KEY, JSON.stringify(settings));
-    localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(phaseForDay(new Date(), settings)));
+    localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(effectiveCurrentPhase(settings)));
     window.dispatchEvent(new Event("bloom:cycle-updated"));
   } catch {}
 }
@@ -89,7 +102,7 @@ export function writeCycleSettings(settings: CycleSettings): void {
 export function broadcastCyclePhase(): void {
   try {
     if (hasCycleSettings()) {
-      localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(phaseForDay(new Date(), readCycleSettings())));
+      localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(effectiveCurrentPhase(readCycleSettings())));
     } else {
       localStorage.removeItem(CYCLE_PHASE_KEY);
     }

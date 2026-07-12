@@ -39,6 +39,7 @@ import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, w
 import {
   type CyclePhase,
   phaseForDay,
+  effectiveCurrentPhase,
   PHASE_LABEL,
   DEFAULT_CYCLE_SETTINGS,
   readCycleSettings,
@@ -424,11 +425,6 @@ export function CycleTracker() {
     return new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * MS_DAY);
   }, [settings]);
 
-  // When her period is due but unconfirmed, show "period due" — never "luteal".
-  const phaseBadge    = awaitingPeriod ? "PERIOD DUE" : `${PHASE_LABEL[currentPhase].toUpperCase()} PHASE`;
-  const phaseSubtitle = awaitingPeriod ? "Your period is expected — confirm when it starts and I'll re-tune your cycle." : PHASE_SUBTITLE[currentPhase];
-  const phaseHeading  = awaitingPeriod ? "Your period is due ✿" : `Today, in your ${PHASE_LABEL[currentPhase].toLowerCase()} phase`;
-  const phaseInsight  = awaitingPeriod ? "You're on (or just past) your predicted day. Did it start? Confirm so your calendar & predictions stay accurate." : PHASE_INSIGHT[currentPhase];
 
   const daysToPeriod   = useMemo(() => Math.ceil((nextPeriodDate.getTime() - today.getTime()) / MS_DAY), [nextPeriodDate, today]);
   // ovulationDayOfCycle is 0-indexed (e.g. 14 for a 28-day cycle = cycle day 15)
@@ -849,7 +845,7 @@ export function CycleTracker() {
                 <path d={PHASE_ICON_PATH[currentPhase]} />
               </svg>
               <span style={{ color: 'white', fontSize: '10px', fontWeight: 800, letterSpacing: '.08em' }}>
-                {isSetup ? phaseBadge : "NOT SET UP YET"}
+                {isSetup ? `${PHASE_LABEL[currentPhase].toUpperCase()} PHASE` : "NOT SET UP YET"}
               </span>
             </div>
 
@@ -860,7 +856,7 @@ export function CycleTracker() {
 
             {/* Phase subtitle */}
             <p style={{ fontSize: '13px', fontWeight: 500, marginTop: '6px', color: 'rgba(255,255,255,.92)' }}>
-              {isSetup ? phaseSubtitle : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
+              {isSetup ? PHASE_SUBTITLE[currentPhase] : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
             </p>
 
             {/* Big obvious CTA while she hasn't set up — the whole card is tappable too */}
@@ -1000,9 +996,9 @@ export function CycleTracker() {
               <span className="grid place-items-center rounded-full" style={{ width: 24, height: 24, background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[currentPhase]} /></svg>
               </span>
-              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>{phaseHeading}</h3>
+              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>Today, in your {PHASE_LABEL[currentPhase].toLowerCase()} phase</h3>
             </div>
-            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{phaseInsight}</p>
+            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{PHASE_INSIGHT[currentPhase]}</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-2.5">
               {PHASE_TODAY_INSIGHTS[currentPhase].map((it) => (
                 <div key={it.label} className={["rounded-2xl p-2.5 flex flex-col gap-1", it.bg].join(" ")} style={{ border: '1px solid rgba(236,72,153,.08)' }}>
@@ -1337,7 +1333,7 @@ export function CycleTracker() {
           if (awaitDiet) { setTimeout(returnToDiet, 700); return; }
           // One soft, gentle "you're set!" moment — her phase + a little advice —
           // then Continue whisks her to Today to finish setting up her world.
-          setCelebrate(phaseForDay(new Date(), s));
+          setCelebrate(effectiveCurrentPhase(s));
         }}
       />
 
