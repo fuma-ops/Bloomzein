@@ -24,7 +24,6 @@ import { hasDietSetup } from "@/components/bloom/recipes/data";
 import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { BloomDayCelebration } from "@/components/bloom/BloomDayCelebration";
-import { PeriodConfirm } from "@/components/bloom/cycle/PeriodConfirm";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
@@ -693,7 +692,6 @@ export default function TodayPage() {
   return (
     <div className="relative">
       <BloomBubbles count={10} />
-      <PeriodConfirm />
 
       {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
       <section
