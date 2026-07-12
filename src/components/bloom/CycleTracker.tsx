@@ -283,6 +283,9 @@ export function CycleTracker() {
   const [showResetMenu,  setShowResetMenu]  = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [celebrate, setCelebrate] = useState<Exclude<Phase, null> | null>(null);
+  // When setup lands on a period-due day we defer the celebration until she has
+  // answered the "did it start today?" prompt, then celebrate with the real phase.
+  const [awaitSetupAnswer, setAwaitSetupAnswer] = useState(false);
   // Came here from the Diet tool's "sync your cycle first" gate → guide her back.
   const [awaitDiet] = useState(() => { try { return localStorage.getItem("bloom:diet-await-cycle") === "1"; } catch { return false; } });
   const returnToDiet = () => { try { localStorage.removeItem("bloom:diet-await-cycle"); } catch {} window.location.href = "/app/tools/diet"; };
@@ -321,6 +324,19 @@ export function CycleTracker() {
     window.addEventListener(PERIOD_EVENT, r);
     return () => window.removeEventListener(PERIOD_EVENT, r);
   }, []);
+
+  // Setup landed on a period-due day → we asked "did it start today?" first.
+  // Once she answers (yes → logs a start; not yet → skips), reveal the "you're
+  // all set" celebration with the phase that answer produced (period vs luteal).
+  useEffect(() => {
+    if (!awaitSetupAnswer) return;
+    const done = () => {
+      setAwaitSetupAnswer(false);
+      setCelebrate(effectiveCurrentPhase(readCycleSettings()));
+    };
+    window.addEventListener(PERIOD_EVENT, done);
+    return () => window.removeEventListener(PERIOD_EVENT, done);
+  }, [awaitSetupAnswer]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef     = useRef<HTMLDivElement>(null);
@@ -1329,9 +1345,18 @@ export function CycleTracker() {
           setSettings(s); writeCycleSettings(s); setIsSetup(true);
           try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
           if (awaitDiet) { setTimeout(returnToDiet, 700); return; }
-          // One soft, gentle "you're set!" moment — her phase + a little advice —
-          // then Continue whisks her to Today to finish setting up her world.
-          setCelebrate(effectiveCurrentPhase(s));
+          // If, by the calc, her period is due/overdue today, we must ASK before
+          // celebrating: "did it start today?". The app-wide PeriodConfirm shows
+          // the question; we hold the celebration until she answers, then show it
+          // with the REAL resulting phase (period if yes, luteal if not yet).
+          const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / MS_DAY);
+          if (diff >= s.cycleLength) {
+            setAwaitSetupAnswer(true);
+          } else {
+            // One soft, gentle "you're set!" moment — her phase + a little advice —
+            // then Continue whisks her to Today to finish setting up her world.
+            setCelebrate(effectiveCurrentPhase(s));
+          }
         }}
       />
 
