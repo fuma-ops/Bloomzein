@@ -49,6 +49,7 @@ import {
 } from "./cyclePhase";
 import { CycleOnboarding } from "./CycleOnboarding";
 import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
+import { CycleInsights } from "./cycle/CycleInsights";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
@@ -1132,6 +1133,13 @@ export function CycleTracker() {
             {renderWellnessGraph("mob")}
           </div>
 
+          {/* Bloom+ Cycle insights (mobile) — hormone curve, trends, export */}
+          {isSetup && (
+            <div className="lg:hidden">
+              <CycleInsights cycleLength={settings.cycleLength} periodLength={settings.periodLength} cycleDay={cycleDay} nextPeriodDate={nextPeriodDate} msDay={MS_DAY} />
+            </div>
+          )}
+
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
           <div data-tour="recommend" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="reveal-on-scroll lg:hidden">
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
@@ -1185,6 +1193,13 @@ export function CycleTracker() {
           <div className="mb-5 pb-5" style={{ borderBottom: '1px solid rgba(236,72,153,.1)' }}>
             {renderWellnessGraph("desk")}
           </div>
+
+          {/* Bloom+ Cycle insights (desktop) */}
+          {isSetup && (
+            <div className="mb-5">
+              <CycleInsights cycleLength={settings.cycleLength} periodLength={settings.periodLength} cycleDay={cycleDay} nextPeriodDate={nextPeriodDate} msDay={MS_DAY} />
+            </div>
+          )}
 
           {/* Suggestions */}
           <div data-tour="recommend" className="mb-5" style={{ scrollMarginTop: 90, scrollMarginBottom: 90 }}>
