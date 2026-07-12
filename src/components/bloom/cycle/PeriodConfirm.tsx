@@ -15,9 +15,20 @@ export function PeriodConfirm() {
   useEffect(() => {
     const check = () => setOpen(shouldAskToday());
     check();
+    // Re-check after setup (bloom:cycle-updated), a logged/skipped start, cross-tab
+    // storage changes, and whenever she returns to the app.
     window.addEventListener(PERIOD_EVENT, check);
+    window.addEventListener("bloom:cycle-updated", check);
     window.addEventListener("storage", check);
-    return () => { window.removeEventListener(PERIOD_EVENT, check); window.removeEventListener("storage", check); };
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      window.removeEventListener(PERIOD_EVENT, check);
+      window.removeEventListener("bloom:cycle-updated", check);
+      window.removeEventListener("storage", check);
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+    };
   }, []);
 
   if (!open) return null;

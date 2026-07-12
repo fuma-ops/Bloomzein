@@ -76,6 +76,7 @@ export function writeCycleSettings(settings: CycleSettings): void {
   try {
     localStorage.setItem(CYCLE_SETTINGS_KEY, JSON.stringify(settings));
     localStorage.setItem(CYCLE_PHASE_KEY, JSON.stringify(phaseForDay(new Date(), settings)));
+    window.dispatchEvent(new Event("bloom:cycle-updated"));
   } catch {}
 }
 
