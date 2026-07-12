@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Check,
+  X,
   ChevronLeft,
   ChevronRight,
   Droplet,
@@ -346,6 +347,7 @@ export function CycleTracker() {
 
   const [cursor,        setCursor]        = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected,      setSelected]      = useState<Date>(() => today);
+  const [confirmDay,    setConfirmDay]    = useState<Date | null>(null);
   const todayKey                          = dateKey(today);
   const [moodLog,             setMoodLog]           = useState<Record<string, string>>(() => readJSON(MOOD_LOG_KEY, {}));
   const [symptomsLog,         setSymptomsLog]       = useState<Record<string, string[]>>(() => readJSON(SYMPTOMS_LOG_KEY, {}));
@@ -421,6 +423,12 @@ export function CycleTracker() {
     const cyclesPassed = Math.floor(diff / settings.cycleLength) + 1;
     return new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * MS_DAY);
   }, [settings]);
+
+  // When her period is due but unconfirmed, show "period due" — never "luteal".
+  const phaseBadge    = awaitingPeriod ? "PERIOD DUE" : `${PHASE_LABEL[currentPhase].toUpperCase()} PHASE`;
+  const phaseSubtitle = awaitingPeriod ? "Your period is expected — confirm when it starts and I'll re-tune your cycle." : PHASE_SUBTITLE[currentPhase];
+  const phaseHeading  = awaitingPeriod ? "Your period is due ✿" : `Today, in your ${PHASE_LABEL[currentPhase].toLowerCase()} phase`;
+  const phaseInsight  = awaitingPeriod ? "You're on (or just past) your predicted day. Did it start? Confirm so your calendar & predictions stay accurate." : PHASE_INSIGHT[currentPhase];
 
   const daysToPeriod   = useMemo(() => Math.ceil((nextPeriodDate.getTime() - today.getTime()) / MS_DAY), [nextPeriodDate, today]);
   // ovulationDayOfCycle is 0-indexed (e.g. 14 for a 28-day cycle = cycle day 15)
@@ -746,6 +754,34 @@ export function CycleTracker() {
     <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
       {showOnboarding && <CycleOnboarding onDone={finishOnboarding} />}
       {isSetup && <div className="relative z-10"><PeriodConfirm /></div>}
+
+      {/* Centre-screen confirm when she taps a day (period came early / on time) */}
+      {confirmDay && createPortal(
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={() => setConfirmDay(null)}>
+          <div className="absolute inset-0 animate-fade-in" style={{ background: 'rgba(190,24,93,0.22)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
+          <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-xs rounded-[2rem] bg-white p-6 text-center animate-scale-in" style={{ boxShadow: '0 24px 60px rgba(190,24,93,0.35)' }}>
+            <button onClick={() => setConfirmDay(null)} aria-label="Close" className="absolute right-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-full text-rose/50 transition hover:bg-blush hover:text-hotpink active:scale-90">
+              <X className="h-4 w-4" />
+            </button>
+            <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full text-white animate-icon-breathe" style={{ background: 'linear-gradient(135deg,#EC4899,#BE185D)', boxShadow: '0 10px 26px rgba(219,39,119,0.42)' }}>
+              <Droplet className="h-8 w-8" strokeWidth={1.8} />
+            </span>
+            <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>
+              Did your period start<br />{sameDay(confirmDay, today) ? 'today' : confirmDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}?
+            </p>
+            <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>I'll log it as your real start and re-tune your cycle &amp; predictions ✿</p>
+            <div className="mt-4 grid gap-2">
+              <button onClick={() => { logPeriodStart(dateKey(confirmDay)); setConfirmDay(null); }} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}>
+                <Check className="h-4 w-4" strokeWidth={3} /> Yes, log it
+              </button>
+              <button onClick={() => setConfirmDay(null)} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: '#9D5C7E', background: 'rgba(252,231,243,0.7)' }}>
+                No, not this day
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
       {awaitDiet && (
         <button
           onClick={isSetup ? returnToDiet : () => setSetupOpen(true)}
@@ -813,7 +849,7 @@ export function CycleTracker() {
                 <path d={PHASE_ICON_PATH[currentPhase]} />
               </svg>
               <span style={{ color: 'white', fontSize: '10px', fontWeight: 800, letterSpacing: '.08em' }}>
-                {isSetup ? `${PHASE_LABEL[currentPhase].toUpperCase()} PHASE` : "NOT SET UP YET"}
+                {isSetup ? phaseBadge : "NOT SET UP YET"}
               </span>
             </div>
 
@@ -824,7 +860,7 @@ export function CycleTracker() {
 
             {/* Phase subtitle */}
             <p style={{ fontSize: '13px', fontWeight: 500, marginTop: '6px', color: 'rgba(255,255,255,.92)' }}>
-              {isSetup ? PHASE_SUBTITLE[currentPhase] : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
+              {isSetup ? phaseSubtitle : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
             </p>
 
             {/* Big obvious CTA while she hasn't set up — the whole card is tappable too */}
@@ -964,9 +1000,9 @@ export function CycleTracker() {
               <span className="grid place-items-center rounded-full" style={{ width: 24, height: 24, background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[currentPhase]} /></svg>
               </span>
-              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>Today, in your {PHASE_LABEL[currentPhase].toLowerCase()} phase</h3>
+              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>{phaseHeading}</h3>
             </div>
-            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{PHASE_INSIGHT[currentPhase]}</p>
+            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{phaseInsight}</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-2.5">
               {PHASE_TODAY_INSIGHTS[currentPhase].map((it) => (
                 <div key={it.label} className={["rounded-2xl p-2.5 flex flex-col gap-1", it.bg].join(" ")} style={{ border: '1px solid rgba(236,72,153,.08)' }}>
@@ -1101,7 +1137,13 @@ export function CycleTracker() {
                 return (
                   <button
                     key={i}
-                    onClick={() => setSelected(d)}
+                    onClick={() => {
+                      setSelected(d);
+                      // Tap a recent/today day that isn't a logged start → centre-screen
+                      // confirm so she can log a period that came early or on-time.
+                      const ago = Math.round((today.getTime() - d.getTime()) / MS_DAY);
+                      if (isSetup && ago >= 0 && ago <= 12 && !readPeriodStarts().includes(dateKey(d))) setConfirmDay(d);
+                    }}
                     title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                     className={["relative aspect-square border-none cursor-pointer rounded-xl flex flex-col items-center justify-center gap-[2px] transition-all duration-200 hover:scale-105 active:scale-90", isToday ? "animate-selected-glow" : ""].join(" ")}
                     style={{ background: cellBg, border: cellBorder }}
@@ -1155,27 +1197,6 @@ export function CycleTracker() {
                 </div>
               ))}
             </div>
-
-            {/* Tapped a day (period came early/late)? Log it as the real start. */}
-            {isSetup && (() => {
-              const selISO = dateKey(selected);
-              const daysAgo = Math.round((today.getTime() - selected.getTime()) / MS_DAY);
-              if (daysAgo < 0 || daysAgo > 12 || readPeriodStarts().includes(selISO)) return null;
-              const label = daysAgo === 0 ? "today" : selected.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-              return (
-                <div className="mt-3 pt-3 flex items-center gap-2.5" style={{ borderTop: '1px solid rgba(236,72,153,.1)' }}>
-                  <Droplet className="h-4 w-4 shrink-0" style={{ color: '#BE185D' }} />
-                  <p className="flex-1 min-w-0 text-[12px] font-semibold leading-snug" style={{ color: '#9D5C7E' }}>Did your period start <b style={{ color: '#BE185D' }}>{label}</b>?</p>
-                  <button
-                    onClick={() => logPeriodStart(selISO)}
-                    className="shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-bold text-white active:scale-95 transition"
-                    style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', boxShadow: '0 4px 12px rgba(219,39,119,.3)' }}
-                  >
-                    <Check className="h-3.5 w-3.5" strokeWidth={3} /> Yes, log it
-                  </button>
-                </div>
-              );
-            })()}
           </div>
 
           {/* ── WELLNESS GRAPH — right after calendar on mobile/tablet ── */}
