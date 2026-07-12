@@ -9,6 +9,7 @@ import {
 /** Only this account sees the private admin inbox link. */
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { DiscoverBloomPlus, PlanToggle } from "@/components/bloom/premium/PremiumKit";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
@@ -213,6 +214,15 @@ export default function MePage() {
 
       {/* CONSISTENCY DASHBOARD */}
       <ConsistencyDashboard />
+
+      {/* BLOOM+ — discover premium, and a dev switch to feel both experiences */}
+      <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
+        <SectionTitle hint="your plan">Bloom+</SectionTitle>
+        <div className="space-y-3">
+          <DiscoverBloomPlus />
+          <PlanToggle />
+        </div>
+      </section>
 
       {/* FAVORITES */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "60ms" }}>

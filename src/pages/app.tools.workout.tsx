@@ -12,6 +12,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
+import { isPremium, openPaywall } from "@/lib/entitlements";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
@@ -829,6 +830,7 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
   const replacesExisting = (!!active && active.programId !== program.id) || hasFreestyle;
 
   const commitPlan = () => {
+    if (!isPremium()) { openPaywall("workout"); return; } // Bloom+ gate: enrolling a program is premium
     // One plan at a time: enrolling a program clears any freestyle week.
     try { localStorage.removeItem(PROGRAM_KEY); localStorage.removeItem(PROGRAM_PHASE_KEY); } catch {}
     saveActiveProgram({ programId: program.id, week: 1, startedISO: todayISO() });
@@ -1878,6 +1880,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   // The seed advances each time so "Regenerate" always yields a fresh, varied
   // — but still smart — week rather than the same deterministic plan.
   const generateFreestyle = () => {
+    if (!isPremium()) { openPaywall("workout"); return; } // Bloom+ gate
     if (activeProgram) { saveActiveProgram(null); setActive(null); }
     const nextSeed = seed + 1;
     const wk = generateWeeklyPlan(profile, phase, nextSeed);
