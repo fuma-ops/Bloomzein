@@ -50,6 +50,8 @@ import {
 import { CycleOnboarding } from "./CycleOnboarding";
 import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
 import { CycleInsights } from "./cycle/CycleInsights";
+import { PeriodConfirm } from "./cycle/PeriodConfirm";
+import { logPeriodStart, readPeriodStarts, PERIOD_EVENT } from "@/lib/periodLog";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
@@ -310,6 +312,14 @@ export function CycleTracker() {
 
 
   useEffect(() => { broadcastCyclePhase(); }, []);
+
+  // A confirmed period start re-tunes the cycle settings — pull them back in so
+  // the calendar, phase and predictions all move to her real start.
+  useEffect(() => {
+    const r = () => setSettings(readCycleSettings());
+    window.addEventListener(PERIOD_EVENT, r);
+    return () => window.removeEventListener(PERIOD_EVENT, r);
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef     = useRef<HTMLDivElement>(null);
@@ -713,6 +723,7 @@ export function CycleTracker() {
   return (
     <div ref={containerRef} className="relative animate-fade-in" style={{ color: '#831843' }}>
       {showOnboarding && <CycleOnboarding onDone={finishOnboarding} />}
+      {isSetup && <div className="relative z-10"><PeriodConfirm /></div>}
       {awaitDiet && (
         <button
           onClick={isSetup ? returnToDiet : () => setSetupOpen(true)}
@@ -1122,6 +1133,27 @@ export function CycleTracker() {
                 </div>
               ))}
             </div>
+
+            {/* Tapped a day (period came early/late)? Log it as the real start. */}
+            {isSetup && (() => {
+              const selISO = dateKey(selected);
+              const daysAgo = Math.round((today.getTime() - selected.getTime()) / MS_DAY);
+              if (daysAgo < 0 || daysAgo > 12 || readPeriodStarts().includes(selISO)) return null;
+              const label = daysAgo === 0 ? "today" : selected.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              return (
+                <div className="mt-3 pt-3 flex items-center gap-2.5" style={{ borderTop: '1px solid rgba(236,72,153,.1)' }}>
+                  <Droplet className="h-4 w-4 shrink-0" style={{ color: '#BE185D' }} />
+                  <p className="flex-1 min-w-0 text-[12px] font-semibold leading-snug" style={{ color: '#9D5C7E' }}>Did your period start <b style={{ color: '#BE185D' }}>{label}</b>?</p>
+                  <button
+                    onClick={() => logPeriodStart(selISO)}
+                    className="shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-bold text-white active:scale-95 transition"
+                    style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', boxShadow: '0 4px 12px rgba(219,39,119,.3)' }}
+                  >
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} /> Yes, log it
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
           {/* ── WELLNESS GRAPH — right after calendar on mobile/tablet ── */}
