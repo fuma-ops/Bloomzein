@@ -56,7 +56,9 @@ export interface MeDashboard {
   workoutsTotal: number;
   yogaTotal: number;
   moveStreak: number;
+  moveBestStreak: number;
   journalStreak: number;
+  journalBestStreak: number;
   bloomScore: number;              // 0–100 aggregate consistency, last `windowDays`
   windowDays: number;
   pillars: Pillar[];               // movement / nourish / hydrate / reflect
@@ -93,6 +95,20 @@ function streakFrom(dates: Set<string>): number {
   return streak;
 }
 
+/** Longest consecutive-day run ever, so a current streak of 1 still reads as
+ *  progress ("best: 6 days") rather than looking broken next to a big total. */
+function bestStreakFrom(dates: Set<string>): number {
+  if (!dates.size) return 0;
+  const sorted = [...dates].sort();
+  let best = 1, cur = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const gap = Math.round((new Date(sorted[i] + "T00:00:00").getTime() - new Date(sorted[i - 1] + "T00:00:00").getTime()) / 86400000);
+    if (gap === 1) { cur++; best = Math.max(best, cur); }
+    else if (gap > 1) cur = 1;
+  }
+  return best;
+}
+
 export function computeMeDashboard(windowDays = 30): MeDashboard {
   // ── Raw stores ──
   const workoutHist = read<{ date?: string }[]>("bloom:workout-history", []);
@@ -119,7 +135,9 @@ export function computeMeDashboard(windowDays = 30): MeDashboard {
   const workoutsTotal = Array.isArray(workoutHist) ? workoutHist.length : 0;
   const yogaTotal = typeof yogaCount === "number" && yogaCount > 0 ? yogaCount : yogaDates.size;
   const moveStreak = streakFrom(moveDates);
+  const moveBestStreak = bestStreakFrom(moveDates);
   const journalStreak = streakFrom(journalDates);
+  const journalBestStreak = bestStreakFrom(journalDates);
 
   // ── Pillars (share of the window each ritual was hit) ──
   const pct = (hit: number) => Math.round((Math.min(hit, windowDays) / windowDays) * 100);
@@ -208,7 +226,7 @@ export function computeMeDashboard(windowDays = 30): MeDashboard {
       };
 
   return {
-    workoutsTotal, yogaTotal, moveStreak, journalStreak,
+    workoutsTotal, yogaTotal, moveStreak, moveBestStreak, journalStreak, journalBestStreak,
     bloomScore, windowDays, pillars, mood, calendar, workoutSpark,
     hydrateRate, nourishRate, budget, goal, weight,
   };
