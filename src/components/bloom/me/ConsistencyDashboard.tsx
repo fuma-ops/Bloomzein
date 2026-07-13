@@ -289,30 +289,53 @@ function MoodChart({ mood }: { mood: MoodPoint[] }) {
   );
 }
 
+const WEEKDAY = ["M", "T", "W", "T", "F", "S", "S"];
+const ritualsOf = (d: CalendarDay) =>
+  [d.workout && "workout", d.yoga && "yoga", d.journal && "journal", d.mood && "mood", d.hydrated && "hydration"].filter(Boolean).join(" · ");
+
 function Heatmap({ calendar }: { calendar: CalendarDay[] }) {
+  const [sel, setSel] = useState<CalendarDay | null>(null);
   // Chunk into weeks of 7 (calendar is week-aligned Mon→Sun, oldest first).
   const weeks: CalendarDay[][] = [];
   for (let i = 0; i < calendar.length; i += 7) weeks.push(calendar.slice(i, i + 7));
   return (
     <div>
-      <div className="flex gap-[3px]">
+      <p className="mb-2.5 text-[10.5px] leading-snug text-rose/60">Each square is a day — the darker it is, the more of your 5 daily rituals (move · yoga · journal · mood · water) you kept.</p>
+      <div className="mx-auto flex w-fit gap-1.5">
+        {/* weekday labels, aligned to the rows */}
+        <div className="flex flex-col gap-[3px]">
+          {WEEKDAY.map((w, i) => <span key={i} className="flex h-4 items-center text-[8px] font-bold text-rose/40 sm:h-[18px]">{w}</span>)}
+        </div>
         {weeks.map((w, wi) => (
           <div key={wi} className="flex flex-col gap-[3px]">
-            {w.map((d) => (
-              <div
-                key={d.date}
-                className="h-4 w-4 sm:h-[18px] sm:w-[18px] rounded-[4px] border border-white/60"
-                style={{ background: HEAT[d.score] }}
-                title={`${d.date} · ${d.score}/5 rituals${d.score ? ` (${[d.workout && "workout", d.yoga && "yoga", d.journal && "journal", d.mood && "mood", d.hydrated && "hydration"].filter(Boolean).join(", ")})` : ""}`}
-              />
-            ))}
+            {w.map((d) => {
+              const on = sel?.date === d.date;
+              return (
+                <button
+                  key={d.date}
+                  onClick={() => setSel(on ? null : d)}
+                  aria-label={`${fmtMD(d.date)}, ${d.score} of 5 rituals`}
+                  className="h-4 w-4 rounded-[4px] border transition active:scale-90 sm:h-[18px] sm:w-[18px]"
+                  style={{ background: HEAT[d.score], borderColor: on ? "#BE185D" : "rgba(255,255,255,0.6)", boxShadow: on ? "0 0 0 2px rgba(190,24,93,0.35)" : "none" }}
+                />
+              );
+            })}
           </div>
         ))}
       </div>
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-rose/55">
-        <span>less</span>
+      {/* tap read-out */}
+      <div className="mt-2.5 min-h-[16px] text-center text-[11px] leading-snug">
+        {sel ? (
+          <span className="font-semibold text-hotpink">{fmtMD(sel.date)} · {sel.score}/5{sel.score ? ` · ${ritualsOf(sel)}` : " · a rest day ✿"}</span>
+        ) : (
+          <span className="text-rose/45">Tap any day to see what you kept ✿</span>
+        )}
+      </div>
+      {/* legend */}
+      <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-rose/55">
+        <span>0</span>
         {HEAT.map((c, i) => <span key={i} className="h-3 w-3 rounded-[3px] border border-white/60" style={{ background: c }} />)}
-        <span>more</span>
+        <span>5 rituals / day</span>
       </div>
     </div>
   );
@@ -410,11 +433,12 @@ export function ConsistencyDashboard() {
       <div className="mt-3.5">
         <Eyebrow>Mood &amp; consistency</Eyebrow>
         <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+          {/* opaque bg so the ambient bubbles don't bleed through as a stray shape */}
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
             <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Mood, day one → today</p>
             <MoodChart mood={data.mood} />
           </div>
-          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
             <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Every ritual, every day</p>
             <Heatmap calendar={data.calendar} />
           </div>
