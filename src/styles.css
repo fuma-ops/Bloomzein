@@ -136,8 +136,8 @@
    pooling at the screen edges, plus a whisper-shift of the ambient hue. Brand
    pinks (hotpink/magenta), the card fills and text all stay put — no
    full-screen colour fill, no supersaturated canvas. */
-:root[data-phase="menstrual"] {  /* warm rose */
-  --phase-h: 14;  --phase-cm: 1.25; --phase-wash: oklch(0.80 0.16 16);
+:root[data-phase="menstrual"] {  /* rich, unmistakably pink rose — the boldest of the four */
+  --phase-h: 356; --phase-cm: 1.5;  --phase-wash: oklch(0.72 0.22 356);
 }
 :root[data-phase="follicular"] {  /* fresh pink */
   --phase-h: 344; --phase-cm: 1.2;  --phase-wash: oklch(0.84 0.14 340);
@@ -161,6 +161,8 @@
   transition: opacity 700ms ease, background 700ms ease;
 }
 :root[data-phase] .phase-wash { opacity: 0.45; }
+/* Menstrual reads a touch stronger so its bold pink stands clearly apart. */
+:root[data-phase="menstrual"] .phase-wash { opacity: 0.58; }
 
 @media (prefers-reduced-motion: reduce) {
   :root { transition: none; }
