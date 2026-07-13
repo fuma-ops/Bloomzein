@@ -131,36 +131,36 @@
 @property --phase-cm { syntax: "<number>"; inherits: true; initial-value: 1; }
 :root { transition: --phase-h 700ms ease, --phase-cm 700ms ease; }
 
-/* The 4 phase tints — now unmistakable. Each phase directly colours the app
-   canvas (background) + the soft card fills/borders (blush/petal), plus a strong
-   full-screen ambient wash. Brand pinks (hotpink/magenta) and text stay put. */
+/* The 4 phase tints — AURORA style. The app canvas stays the classic soft
+   neutral Bloom pink; the phase shows only as gentle coloured LIGHT (an aurora)
+   pooling at the screen edges, plus a whisper-shift of the ambient hue. Brand
+   pinks (hotpink/magenta), the card fills and text all stay put — no
+   full-screen colour fill, no supersaturated canvas. */
 :root[data-phase="menstrual"] {  /* warm rose */
-  --phase-h: 14; --phase-cm: 2.2; --phase-wash: oklch(0.78 0.17 16);
-  --background: oklch(0.94 0.065 16); --blush: oklch(0.92 0.08 16); --petal: oklch(0.85 0.13 16);
+  --phase-h: 14;  --phase-cm: 1.25; --phase-wash: oklch(0.80 0.16 16);
 }
 :root[data-phase="follicular"] {  /* fresh pink */
-  --phase-h: 344; --phase-cm: 1.9; --phase-wash: oklch(0.83 0.15 340);
-  --background: oklch(0.95 0.055 340); --blush: oklch(0.93 0.07 340); --petal: oklch(0.87 0.12 340);
+  --phase-h: 344; --phase-cm: 1.2;  --phase-wash: oklch(0.84 0.14 340);
 }
 :root[data-phase="ovulation"] {  /* radiant coral */
-  --phase-h: 42; --phase-cm: 2.2; --phase-wash: oklch(0.82 0.17 50);
-  --background: oklch(0.95 0.07 50); --blush: oklch(0.93 0.085 50); --petal: oklch(0.87 0.13 50);
+  --phase-h: 42;  --phase-cm: 1.3;  --phase-wash: oklch(0.84 0.16 50);
 }
 :root[data-phase="luteal"] {  /* calm mauve/lilac */
-  --phase-h: 310; --phase-cm: 2.0; --phase-wash: oklch(0.76 0.15 308);
-  --background: oklch(0.94 0.06 308); --blush: oklch(0.92 0.075 308); --petal: oklch(0.86 0.12 308);
+  --phase-h: 310; --phase-cm: 1.25; --phase-wash: oklch(0.78 0.14 308);
 }
 
-/* A strong, clearly-visible full-screen ambient wash — only when a phase is set
-   (Bloom+). Fades in and cross-fades between phases over 700ms. */
+/* The aurora: soft ribbons of the phase's colour drifting at the top corners
+   and one low pool — coloured light, not a fill. The centre (where content
+   lives) stays clean. Bloom+ only; cross-fades over 700ms between phases. */
 .phase-wash {
   opacity: 0;
   background:
-    radial-gradient(150% 120% at 50% -8%, var(--phase-wash, transparent), transparent 80%),
-    radial-gradient(140% 115% at 100% 108%, var(--phase-wash, transparent), transparent 76%);
+    radial-gradient(55% 38% at 16% 0%,  var(--phase-wash, transparent), transparent 68%),
+    radial-gradient(50% 34% at 86% 5%,  var(--phase-wash, transparent), transparent 70%),
+    radial-gradient(62% 42% at 60% 106%, var(--phase-wash, transparent), transparent 72%);
   transition: opacity 700ms ease, background 700ms ease;
 }
-:root[data-phase] .phase-wash { opacity: 0.72; }
+:root[data-phase] .phase-wash { opacity: 0.45; }
 
 @media (prefers-reduced-motion: reduce) {
   :root { transition: none; }
