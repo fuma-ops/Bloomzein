@@ -1,17 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, TrendingDown, TrendingUp, Minus, Sparkles } from "lucide-react";
 import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint, type GoalSummary } from "@/lib/meDashboard";
 import { Eyebrow } from "./PredictionCharts";
+import { phaseForDay, readCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+
+type Phase = Exclude<CyclePhase, "any">;
+/** Soft phase tints for graph bands — same language as the mood graph. */
+const PHASE_BAND: Record<Phase, string> = {
+  period: "rgba(236,72,153,0.14)", follicular: "rgba(251,113,133,0.08)",
+  fertile: "rgba(244,114,182,0.12)", ovulation: "rgba(219,39,119,0.15)", luteal: "rgba(190,24,93,0.11)",
+};
+const PHASE_DOT: Record<Phase, string> = {
+  period: "#EC4899", follicular: "#F9A8D4", fertile: "#F472B6", ovulation: "#DB2777", luteal: "#BE185D",
+};
 
 /* One consistency dashboard for the Me page. Every number comes from a real
    store (see meDashboard.ts). Visuals are single-hue pink (magnitude) with a
    couple of status accents — no categorical rainbow — so it reads as one system
    and looks lovely once the account has a few weeks of history. */
 
-const MOOD_EMOJI: Record<string, string> = {
-  happy: "😊", energetic: "⚡", calm: "😌", sensitive: "🥺",
-  sad: "😢", tired: "😴", cramps: "😣", bloated: "😮‍💨",
-};
+/** Mood valence (1 heavy … 5 bright) → a pink-palette swatch, so the chart
+ *  stays on-brand instead of using multicolour emoji. */
+const MOOD_TONE = ["#FBCFE8", "#F9A8D4", "#F472B6", "#EC4899", "#DB2777"];
+const moodTone = (score: number) => MOOD_TONE[Math.max(0, Math.min(4, Math.round(score) - 1))];
 
 // Sequential single-hue ramp for the heatmap: light petal → deep magenta.
 const HEAT = [
@@ -42,9 +53,9 @@ function BloomRing({ pct }: { pct: number }) {
           style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }}
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center">
-        <span className="font-script text-4xl sm:text-5xl leading-none text-hotpink">{pct}<span className="text-xl align-top">%</span></span>
-        <span className="mt-9 sm:mt-10 text-[9px] font-bold uppercase tracking-wider text-rose/60">bloomed</span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-script text-4xl sm:text-5xl leading-none text-hotpink">{pct}<span className="text-lg align-top">%</span></span>
+        <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-rose/55">bloomed</span>
       </div>
     </div>
   );
@@ -94,22 +105,70 @@ function StatTile({ Icon, value, label, sub, spark, delay }: {
   );
 }
 
-function WeightLine({ series }: { series: { date: string; kg: number }[] }) {
+/** Which cycle phase she makes the most progress in (or null if not enough
+ *  data / no progress) — computed from weight change between logs by phase. */
+function phaseGoalInsight(series: { date: string; kg: number }[], dir: GoalSummary["goal"]): string | null {
+  if (dir === "maintain" || series.length < 4) return null;
+  const s = readCycleSettings();
+  const acc: Partial<Record<Phase, { d: number; n: number }>> = {};
+  for (let i = 1; i < series.length; i++) {
+    const ph = phaseForDay(new Date(series[i].date + "T00:00:00"), s) as Phase;
+    const a = (acc[ph] ||= { d: 0, n: 0 });
+    a.d += series[i].kg - series[i - 1].kg; a.n += 1;
+  }
+  const rows = (Object.entries(acc) as [Phase, { d: number; n: number }][]).map(([ph, v]) => [ph, v.d / v.n] as const);
+  if (!rows.length) return null;
+  rows.sort((a, b) => (dir === "gain" ? b[1] - a[1] : a[1] - b[1]));
+  const [best, avg] = rows[0];
+  if (dir === "lose" && avg >= 0) return null;
+  if (dir === "gain" && avg <= 0) return null;
+  return `You make the most progress in your ${PHASE_LABEL[best].toLowerCase()} phase ✿`;
+}
+
+/** Weight graph with a dot at EVERY logged day, cycle-phase bands behind the
+ *  line (so she sees which phases move the needle) and a dashed target line. */
+function WeightGraph({ series, target }: { series: { date: string; kg: number }[]; target: number | null }) {
   if (series.length < 2) return null;
-  const W = 300, H = 60, padY = 8;
-  const kgs = series.map((s) => s.kg);
-  const min = Math.min(...kgs), max = Math.max(...kgs), span = max - min || 1;
-  const stepX = W / (series.length - 1);
-  const y = (kg: number) => padY + (1 - (kg - min) / span) * (H - padY * 2);
-  const pts = series.map((s, i) => [i * stepX, y(s.kg)] as const);
-  const line = pts.map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)},${yy.toFixed(1)}`).join(" ");
-  const [lx, ly] = pts[pts.length - 1];
+  const s = readCycleSettings();
+  const MS = 86400000;
+  const W = 300, H = 78, padX = 5, padY = 12;
+  const at = (iso: string) => new Date(iso + "T00:00:00").getTime();
+  const t0 = at(series[0].date), tN = at(series[series.length - 1].date);
+  const span = Math.max(1, tN - t0);
+  const xAt = (ms: number) => padX + ((ms - t0) / span) * (W - padX * 2);
+
+  // Scale to the WEIGHT range (padded) so her real variation — the luteal water
+  // bumps, the follicular drops — is visible. A far-off target would squash it
+  // flat, so we only draw the target line when it actually falls in view.
+  const kgs = series.map((p) => p.kg);
+  const lo0 = Math.min(...kgs), hi0 = Math.max(...kgs);
+  const pad = Math.max(0.3, (hi0 - lo0) * 0.35);
+  const lo = lo0 - pad, hi = hi0 + pad, range = hi - lo || 1;
+  const yAt = (kg: number) => padY + (1 - (kg - lo) / range) * (H - padY * 2);
+  const showTarget = target != null && target >= lo && target <= hi;
+
+  // Phase bands day-by-day across the logged range.
+  const bands: { ph: Phase; x1: number; x2: number }[] = [];
+  let prev: Phase | null = null, bs = t0;
+  for (let d = t0; d <= tN + MS; d += MS) {
+    const ph = d <= tN ? (phaseForDay(new Date(d), s) as Phase) : null;
+    if (ph !== prev) { if (prev !== null) bands.push({ ph: prev, x1: xAt(bs), x2: xAt(Math.min(d, tN)) }); prev = ph; bs = d; }
+  }
+
+  const pts = series.map((p) => [xAt(at(p.date)), yAt(p.kg)] as const);
+  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-14" preserveAspectRatio="none">
-      <defs><linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.24" /><stop offset="100%" stopColor="var(--hotpink)" stopOpacity="0" /></linearGradient></defs>
-      <path d={`${line} L${W},${H} L0,${H} Z`} fill="url(#wfill)" />
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[78px]" preserveAspectRatio="none">
+      {/* cycle-phase bands behind — the "where in my cycle" context */}
+      {bands.map((b, i) => <rect key={i} x={b.x1} y={0} width={Math.max(0, b.x2 - b.x1)} height={H} fill={PHASE_BAND[b.ph]} />)}
+      {showTarget && <line x1={padX} x2={W - padX} y1={yAt(target!)} y2={yAt(target!)} stroke="#DB2777" strokeWidth="1" strokeDasharray="4 3" opacity="0.55" vectorEffect="non-scaling-stroke" />}
       <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      <circle cx={lx} cy={ly} r="3" fill="var(--magenta)" vectorEffect="non-scaling-stroke" />
+      {/* a dot at every weigh-in, coloured by the phase she was in that day */}
+      {pts.map(([x, y], i) => {
+        const ph = phaseForDay(new Date(at(series[i].date)), s) as Phase;
+        return <circle key={i} cx={x} cy={y} r="3" fill="#fff" stroke={PHASE_DOT[ph]} strokeWidth="2" vectorEffect="non-scaling-stroke" />;
+      })}
     </svg>
   );
 }
@@ -145,7 +204,18 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
             {goal.target != null && <span className="mb-1 text-sm text-rose/60">→ {goal.target}kg</span>}
             <span className="mb-1 ml-auto text-xs font-semibold text-hotpink">{caption}</span>
           </div>
-          {goal.series.length >= 2 && <div className="mt-1.5"><WeightLine series={goal.series} /></div>}
+          {goal.series.length >= 2 && (
+            <div className="mt-2">
+              <WeightGraph series={goal.series} target={goal.target} />
+              <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8.5px] font-bold uppercase tracking-wide text-rose/50">
+                <span className="text-rose/45">Dot = a weigh-in ·</span>
+                {(["period", "follicular", "fertile", "ovulation", "luteal"] as Phase[]).map((p) => (
+                  <span key={p} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: PHASE_DOT[p] }} />{PHASE_LABEL[p]}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {(() => { const line = phaseGoalInsight(goal.series, goal.goal); return line ? <p className="mt-2 text-[11.5px] font-semibold text-hotpink">✦ {line}</p> : null; })()}
           {goal.goal !== "maintain" && goal.target != null && (
             <div className="mt-2 h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${goal.pct}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
@@ -159,7 +229,10 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
   );
 }
 
+const fmtMD = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
 function MoodChart({ mood }: { mood: MoodPoint[] }) {
+  const [sel, setSel] = useState(-1); // -1 → default to latest
   if (mood.length < 2) {
     return (
       <div className="grid h-28 place-items-center rounded-2xl bg-blush/50 border border-petal/40">
@@ -173,57 +246,96 @@ function MoodChart({ mood }: { mood: MoodPoint[] }) {
   const pts = mood.map((m, i) => [i * stepX, y(m.score)] as const);
   const line = pts.map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)},${yy.toFixed(1)}`).join(" ");
   const area = `${line} L${W},${H} L0,${H} Z`;
-  const last = mood[mood.length - 1];
+  const selIdx = sel < 0 ? mood.length - 1 : Math.min(sel, mood.length - 1);
+  const selPt = mood[selIdx];
+  const [selX] = pts[selIdx];
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 touch-none" preserveAspectRatio="none">
         <defs>
           <linearGradient id="moodfill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.28" />
+            <stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.24" />
             <stop offset="100%" stopColor="var(--hotpink)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={area} fill="url(#moodfill)" />
+        {/* guide line for the selected day */}
+        <line x1={selX} y1={padY - 4} x2={selX} y2={H} stroke="var(--hotpink)" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" vectorEffect="non-scaling-stroke" />
         <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-        {pts.map(([x, yy], i) => (
-          <circle key={mood[i].date} cx={x} cy={yy} r="2.6" fill="white" stroke="var(--hotpink)" strokeWidth="1.5" vectorEffect="non-scaling-stroke">
-            <title>{`${mood[i].date} · ${MOOD_EMOJI[mood[i].mood] ?? ""} ${mood[i].mood}`}</title>
-          </circle>
-        ))}
+        {pts.map(([x, yy], i) => {
+          const on = i === selIdx;
+          return (
+            <g key={mood[i].date} onClick={() => setSel(i)} style={{ cursor: "pointer" }}>
+              {/* fat transparent hit area for easy tapping */}
+              <circle cx={x} cy={yy} r="9" fill="transparent" vectorEffect="non-scaling-stroke" />
+              <circle cx={x} cy={yy} r={on ? 4 : 2.8} fill={on ? moodTone(mood[i].score) : "#fff"} stroke={moodTone(mood[i].score)} strokeWidth={on ? 2 : 1.6} vectorEffect="non-scaling-stroke">
+                <title>{`${fmtMD(mood[i].date)} · ${mood[i].mood}`}</title>
+              </circle>
+            </g>
+          );
+        })}
       </svg>
-      <div className="mt-1 flex items-center justify-between text-[10px] text-rose/55">
-        <span>{mood[0].date.slice(5)}</span>
-        <span className="font-semibold text-hotpink">latest {MOOD_EMOJI[last.mood] ?? ""} {last.mood}</span>
+      <div className="mt-1.5 flex items-center justify-between text-[10px] text-rose/55">
+        <span>{fmtMD(mood[0].date)}</span>
+        <span className="inline-flex items-center gap-1.5 font-semibold text-hotpink">
+          <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: moodTone(selPt.score) }} />
+          {selIdx === mood.length - 1 ? "Today" : fmtMD(selPt.date)} · {selPt.mood}
+        </span>
         <span>today</span>
       </div>
+      <p className="mt-1 text-center text-[9px] text-rose/40">tap a dot to see that day ✿</p>
     </div>
   );
 }
 
+const WEEKDAY = ["M", "T", "W", "T", "F", "S", "S"];
+const ritualsOf = (d: CalendarDay) =>
+  [d.workout && "workout", d.yoga && "yoga", d.journal && "journal", d.mood && "mood", d.hydrated && "hydration"].filter(Boolean).join(" · ");
+
 function Heatmap({ calendar }: { calendar: CalendarDay[] }) {
+  const [sel, setSel] = useState<CalendarDay | null>(null);
   // Chunk into weeks of 7 (calendar is week-aligned Mon→Sun, oldest first).
   const weeks: CalendarDay[][] = [];
   for (let i = 0; i < calendar.length; i += 7) weeks.push(calendar.slice(i, i + 7));
   return (
     <div>
-      <div className="flex gap-[3px]">
+      <p className="mb-2.5 text-[10.5px] leading-snug text-rose/60">Each square is a day — the darker it is, the more of your 5 daily rituals (move · yoga · journal · mood · water) you kept.</p>
+      <div className="mx-auto flex w-fit gap-1.5">
+        {/* weekday labels, aligned to the rows */}
+        <div className="flex flex-col gap-[3px]">
+          {WEEKDAY.map((w, i) => <span key={i} className="flex h-4 items-center text-[8px] font-bold text-rose/40 sm:h-[18px]">{w}</span>)}
+        </div>
         {weeks.map((w, wi) => (
           <div key={wi} className="flex flex-col gap-[3px]">
-            {w.map((d) => (
-              <div
-                key={d.date}
-                className="h-4 w-4 sm:h-[18px] sm:w-[18px] rounded-[4px] border border-white/60"
-                style={{ background: HEAT[d.score] }}
-                title={`${d.date} · ${d.score}/5 rituals${d.score ? ` (${[d.workout && "workout", d.yoga && "yoga", d.journal && "journal", d.mood && "mood", d.hydrated && "hydration"].filter(Boolean).join(", ")})` : ""}`}
-              />
-            ))}
+            {w.map((d) => {
+              const on = sel?.date === d.date;
+              return (
+                <button
+                  key={d.date}
+                  onClick={() => setSel(on ? null : d)}
+                  aria-label={`${fmtMD(d.date)}, ${d.score} of 5 rituals`}
+                  className="h-4 w-4 rounded-[4px] border transition active:scale-90 sm:h-[18px] sm:w-[18px]"
+                  style={{ background: HEAT[d.score], borderColor: on ? "#BE185D" : "rgba(255,255,255,0.6)", boxShadow: on ? "0 0 0 2px rgba(190,24,93,0.35)" : "none" }}
+                />
+              );
+            })}
           </div>
         ))}
       </div>
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-rose/55">
-        <span>less</span>
+      {/* tap read-out */}
+      <div className="mt-2.5 min-h-[16px] text-center text-[11px] leading-snug">
+        {sel ? (
+          <span className="font-semibold text-hotpink">{fmtMD(sel.date)} · {sel.score}/5{sel.score ? ` · ${ritualsOf(sel)}` : " · a rest day ✿"}</span>
+        ) : (
+          <span className="text-rose/45">Tap any day to see what you kept ✿</span>
+        )}
+      </div>
+      {/* legend */}
+      <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-rose/55">
+        <span>0</span>
         {HEAT.map((c, i) => <span key={i} className="h-3 w-3 rounded-[3px] border border-white/60" style={{ background: c }} />)}
-        <span>more</span>
+        <span>5 rituals / day</span>
       </div>
     </div>
   );
@@ -285,18 +397,19 @@ export function ConsistencyDashboard() {
         <span className="mt-1 text-[11px] text-rose/60 shrink-0">last {data.windowDays} days</span>
       </div>
 
-      {/* Bloom score + pillars + the one-line story */}
+      {/* Consistency score + pillars; the read-out sits below as a small key */}
       <div className="bloom-pearl-card pearl-sheen rounded-[26px] p-4 sm:p-6">
-        <Eyebrow>Your rhythm this month</Eyebrow>
-        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        <Eyebrow>Your consistency this month</Eyebrow>
+        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-7">
           <BloomRing pct={data.bloomScore} />
-          <div className="flex-1 w-full min-w-0">
-            <p className="font-script text-xl sm:text-2xl text-hotpink leading-snug">{narrative}</p>
-            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2.5">
-              {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
-            </div>
+          <div className="flex-1 w-full min-w-0 grid grid-cols-2 gap-x-6 gap-y-3">
+            {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
           </div>
         </div>
+        <p className="mt-4 flex items-start gap-1.5 border-t border-petal/40 pt-3 text-[11.5px] leading-snug text-rose/70">
+          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
+          <span>{narrative}</span>
+        </p>
       </div>
 
       {/* Diet goal + weight progress */}
@@ -320,11 +433,12 @@ export function ConsistencyDashboard() {
       <div className="mt-3.5">
         <Eyebrow>Mood &amp; consistency</Eyebrow>
         <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+          {/* opaque bg so the ambient bubbles don't bleed through as a stray shape */}
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
             <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Mood, day one → today</p>
             <MoodChart mood={data.mood} />
           </div>
-          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
             <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Every ritual, every day</p>
             <Heatmap calendar={data.calendar} />
           </div>
