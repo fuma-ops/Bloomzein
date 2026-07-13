@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import { Sun, CalendarDays, LayoutGrid, BookOpen, ShoppingBag, User, type LucideIcon } from "lucide-react";
 import { BloomLogo } from "./BloomLogo";
 import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 import { PaywallHost } from "./premium/PremiumKit";
 import { PeriodConfirm } from "./cycle/PeriodConfirm";
+import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
+import { PLAN_UPDATED } from "@/lib/entitlements";
 
 interface NavItem {
   to: string;
@@ -22,6 +25,23 @@ const NAV: NavItem[] = [
 
 export function AppShell({ children, currentPath }: { children: React.ReactNode; currentPath: string }) {
   const isActive = (to: string) => currentPath === to || currentPath.startsWith(to + "/");
+
+  // Living phase theme (Bloom+): tint the app to the current cycle phase.
+  // Re-applies on route change + when plan / phase / setting changes.
+  useEffect(() => {
+    applyPhaseTheme();
+    const r = () => applyPhaseTheme();
+    window.addEventListener(PLAN_UPDATED, r);
+    window.addEventListener(PHASE_THEME_UPDATED, r);
+    window.addEventListener("storage", r);
+    window.addEventListener("bloom:today-updated", r);
+    return () => {
+      window.removeEventListener(PLAN_UPDATED, r);
+      window.removeEventListener(PHASE_THEME_UPDATED, r);
+      window.removeEventListener("storage", r);
+      window.removeEventListener("bloom:today-updated", r);
+    };
+  }, [currentPath]);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
