@@ -45,6 +45,8 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden relative">
+      {/* Living phase theme (Bloom+): a soft ambient colour wash per cycle phase */}
+      <div className="phase-wash pointer-events-none fixed inset-0 z-0" aria-hidden />
       <BloomBackground />
 
       {/* Desktop / Tablet sidebar */}
