@@ -19,10 +19,10 @@ const PHASE_DOT: Record<Phase, string> = {
    couple of status accents — no categorical rainbow — so it reads as one system
    and looks lovely once the account has a few weeks of history. */
 
-const MOOD_EMOJI: Record<string, string> = {
-  happy: "😊", energetic: "⚡", calm: "😌", sensitive: "🥺",
-  sad: "😢", tired: "😴", cramps: "😣", bloated: "😮‍💨",
-};
+/** Mood valence (1 heavy … 5 bright) → a pink-palette swatch, so the chart
+ *  stays on-brand instead of using multicolour emoji. */
+const MOOD_TONE = ["#FBCFE8", "#F9A8D4", "#F472B6", "#EC4899", "#DB2777"];
+const moodTone = (score: number) => MOOD_TONE[Math.max(0, Math.min(4, Math.round(score) - 1))];
 
 // Sequential single-hue ramp for the heatmap: light petal → deep magenta.
 const HEAT = [
@@ -229,7 +229,10 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
   );
 }
 
+const fmtMD = (iso: string) => new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
 function MoodChart({ mood }: { mood: MoodPoint[] }) {
+  const [sel, setSel] = useState(-1); // -1 → default to latest
   if (mood.length < 2) {
     return (
       <div className="grid h-28 place-items-center rounded-2xl bg-blush/50 border border-petal/40">
@@ -243,29 +246,45 @@ function MoodChart({ mood }: { mood: MoodPoint[] }) {
   const pts = mood.map((m, i) => [i * stepX, y(m.score)] as const);
   const line = pts.map(([x, yy], i) => `${i ? "L" : "M"}${x.toFixed(1)},${yy.toFixed(1)}`).join(" ");
   const area = `${line} L${W},${H} L0,${H} Z`;
-  const last = mood[mood.length - 1];
+  const selIdx = sel < 0 ? mood.length - 1 : Math.min(sel, mood.length - 1);
+  const selPt = mood[selIdx];
+  const [selX] = pts[selIdx];
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24 touch-none" preserveAspectRatio="none">
         <defs>
           <linearGradient id="moodfill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.28" />
+            <stop offset="0%" stopColor="var(--hotpink)" stopOpacity="0.24" />
             <stop offset="100%" stopColor="var(--hotpink)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={area} fill="url(#moodfill)" />
+        {/* guide line for the selected day */}
+        <line x1={selX} y1={padY - 4} x2={selX} y2={H} stroke="var(--hotpink)" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" vectorEffect="non-scaling-stroke" />
         <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-        {pts.map(([x, yy], i) => (
-          <circle key={mood[i].date} cx={x} cy={yy} r="2.6" fill="white" stroke="var(--hotpink)" strokeWidth="1.5" vectorEffect="non-scaling-stroke">
-            <title>{`${mood[i].date} · ${MOOD_EMOJI[mood[i].mood] ?? ""} ${mood[i].mood}`}</title>
-          </circle>
-        ))}
+        {pts.map(([x, yy], i) => {
+          const on = i === selIdx;
+          return (
+            <g key={mood[i].date} onClick={() => setSel(i)} style={{ cursor: "pointer" }}>
+              {/* fat transparent hit area for easy tapping */}
+              <circle cx={x} cy={yy} r="9" fill="transparent" vectorEffect="non-scaling-stroke" />
+              <circle cx={x} cy={yy} r={on ? 4 : 2.8} fill={on ? moodTone(mood[i].score) : "#fff"} stroke={moodTone(mood[i].score)} strokeWidth={on ? 2 : 1.6} vectorEffect="non-scaling-stroke">
+                <title>{`${fmtMD(mood[i].date)} · ${mood[i].mood}`}</title>
+              </circle>
+            </g>
+          );
+        })}
       </svg>
-      <div className="mt-1 flex items-center justify-between text-[10px] text-rose/55">
-        <span>{mood[0].date.slice(5)}</span>
-        <span className="font-semibold text-hotpink">latest {MOOD_EMOJI[last.mood] ?? ""} {last.mood}</span>
+      <div className="mt-1.5 flex items-center justify-between text-[10px] text-rose/55">
+        <span>{fmtMD(mood[0].date)}</span>
+        <span className="inline-flex items-center gap-1.5 font-semibold text-hotpink">
+          <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: moodTone(selPt.score) }} />
+          {selIdx === mood.length - 1 ? "Today" : fmtMD(selPt.date)} · {selPt.mood}
+        </span>
         <span>today</span>
       </div>
+      <p className="mt-1 text-center text-[9px] text-rose/40">tap a dot to see that day ✿</p>
     </div>
   );
 }
