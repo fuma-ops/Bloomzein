@@ -684,28 +684,19 @@
     /* soft outer glow */
     0 16px 38px -14px oklch(0.6 0.27 350 / 0.6);
 
-  /* curved highlight sweeping across the top, fading unevenly */
+  /* curved highlight sweeping across the top (centered, broad — no corner notch) */
   &::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: radial-gradient(90% 55% at 35% -15%, oklch(1 0 0 / 0.55), transparent 62%);
-  }
-
-  /* corner sparkle / shine accent */
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: radial-gradient(35% 70% at 100% 0%, oklch(1 0 0 / 0.35), transparent 70%);
+    background: radial-gradient(120% 55% at 50% -18%, oklch(1 0 0 / 0.5), transparent 64%);
   }
 }
 
-/* Subtle glass sheen overlay — adds the same pearl shine to cards without altering their existing border/shadow */
+/* Subtle glass sheen overlay — a single BROAD top glint (centered), so it never
+   reads as a lighter "notch" in the rounded corners over a tinted background. */
 @utility pearl-sheen {
   position: relative;
   isolation: isolate;
@@ -716,16 +707,7 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: radial-gradient(85% 55% at 30% -10%, oklch(1 0 0 / 0.55), transparent 62%);
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(40% 60% at 100% 0%, oklch(1 0 0 / 0.3), transparent 70%);
+    background: radial-gradient(130% 60% at 50% -24%, oklch(1 0 0 / 0.28), transparent 70%);
   }
 }
 
