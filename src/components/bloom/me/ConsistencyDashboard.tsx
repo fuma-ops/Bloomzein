@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, TrendingDown, TrendingUp, Minus, Sparkles } from "lucide-react";
 import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint, type GoalSummary } from "@/lib/meDashboard";
 import { Eyebrow } from "./PredictionCharts";
 
@@ -42,9 +42,9 @@ function BloomRing({ pct }: { pct: number }) {
           style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }}
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center">
-        <span className="font-script text-4xl sm:text-5xl leading-none text-hotpink">{pct}<span className="text-xl align-top">%</span></span>
-        <span className="mt-9 sm:mt-10 text-[9px] font-bold uppercase tracking-wider text-rose/60">bloomed</span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-script text-4xl sm:text-5xl leading-none text-hotpink">{pct}<span className="text-lg align-top">%</span></span>
+        <span className="mt-1 text-[9px] font-bold uppercase tracking-wider text-rose/55">bloomed</span>
       </div>
     </div>
   );
@@ -285,18 +285,19 @@ export function ConsistencyDashboard() {
         <span className="mt-1 text-[11px] text-rose/60 shrink-0">last {data.windowDays} days</span>
       </div>
 
-      {/* Bloom score + pillars + the one-line story */}
+      {/* Consistency score + pillars; the read-out sits below as a small key */}
       <div className="bloom-pearl-card pearl-sheen rounded-[26px] p-4 sm:p-6">
-        <Eyebrow>Your rhythm this month</Eyebrow>
-        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        <Eyebrow>Your consistency this month</Eyebrow>
+        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-7">
           <BloomRing pct={data.bloomScore} />
-          <div className="flex-1 w-full min-w-0">
-            <p className="font-script text-xl sm:text-2xl text-hotpink leading-snug">{narrative}</p>
-            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2.5">
-              {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
-            </div>
+          <div className="flex-1 w-full min-w-0 grid grid-cols-2 gap-x-6 gap-y-3">
+            {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
           </div>
         </div>
+        <p className="mt-4 flex items-start gap-1.5 border-t border-petal/40 pt-3 text-[11.5px] leading-snug text-rose/70">
+          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
+          <span>{narrative}</span>
+        </p>
       </div>
 
       {/* Diet goal + weight progress */}
