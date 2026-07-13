@@ -77,15 +77,21 @@
 :root {
   --radius: 1.5rem;
 
-  /* Bloom palette */
-  --cream: oklch(0.985 0.012 350);
-  --blush: oklch(0.965 0.025 350);
-  --petal: oklch(0.92 0.06 350);
+  /* Living phase theme (Bloom+): the soft ambient pinks shift HUE with the
+     cycle phase, while the brand pinks (rose/hotpink/magenta) stay fixed.
+     Default = hue 350 (classic Bloom pink). Set data-phase on <html> to shift. */
+  --phase-h: 350;   /* ambient hue    */
+  --phase-cm: 1;    /* chroma multiplier */
+
+  /* Bloom palette — ambient tokens follow --phase-h; brand tokens do NOT. */
+  --cream: oklch(0.985 calc(0.012 * var(--phase-cm)) var(--phase-h));
+  --blush: oklch(0.965 calc(0.025 * var(--phase-cm)) var(--phase-h));
+  --petal: oklch(0.92 calc(0.06 * var(--phase-cm)) var(--phase-h));
   --rose: oklch(0.5 0.18 0);
   --hotpink: oklch(0.62 0.24 0);
   --magenta: oklch(0.5 0.26 0);
 
-  --background: oklch(0.98 0.015 350);
+  --background: oklch(0.98 calc(0.015 * var(--phase-cm)) var(--phase-h));
   --foreground: oklch(0.45 0.18 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.45 0.18 0);
@@ -93,30 +99,46 @@
   --popover-foreground: oklch(0.45 0.18 0);
   --primary: oklch(0.7 0.22 0);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.04 350);
+  --secondary: oklch(0.95 calc(0.04 * var(--phase-cm)) var(--phase-h));
   --secondary-foreground: oklch(0.55 0.2 0);
-  --muted: oklch(0.96 0.025 350);
+  --muted: oklch(0.96 calc(0.025 * var(--phase-cm)) var(--phase-h));
   --muted-foreground: oklch(0.65 0.12 0);
-  --accent: oklch(0.92 0.07 350);
+  --accent: oklch(0.92 calc(0.07 * var(--phase-cm)) var(--phase-h));
   --accent-foreground: oklch(0.55 0.2 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.92 0.045 350);
-  --input: oklch(0.94 0.035 350);
+  --border: oklch(0.92 calc(0.045 * var(--phase-cm)) var(--phase-h));
+  --input: oklch(0.94 calc(0.035 * var(--phase-cm)) var(--phase-h));
   --ring: oklch(0.7 0.22 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.99 0.01 350);
+  --sidebar: oklch(0.99 calc(0.01 * var(--phase-cm)) var(--phase-h));
   --sidebar-foreground: oklch(0.55 0.2 0);
   --sidebar-primary: oklch(0.7 0.22 0);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.04 350);
+  --sidebar-accent: oklch(0.95 calc(0.04 * var(--phase-cm)) var(--phase-h));
   --sidebar-accent-foreground: oklch(0.55 0.2 0);
-  --sidebar-border: oklch(0.92 0.045 350);
+  --sidebar-border: oklch(0.92 calc(0.045 * var(--phase-cm)) var(--phase-h));
   --sidebar-ring: oklch(0.7 0.22 0);
+}
+
+/* Register the phase vars so their change CROSS-FADES smoothly (700ms) instead
+   of snapping — the whole app gently "blooms" into the new phase's tint. */
+@property --phase-h  { syntax: "<number>"; inherits: true; initial-value: 350; }
+@property --phase-cm { syntax: "<number>"; inherits: true; initial-value: 1; }
+:root { transition: --phase-h 700ms ease, --phase-cm 700ms ease; }
+
+/* The 4 phase tints — pink-adjacent, subtle. Brand pinks stay put. */
+:root[data-phase="menstrual"]  { --phase-h: 10;  --phase-cm: 1.25; } /* cozy deep rose   */
+:root[data-phase="follicular"] { --phase-h: 344; --phase-cm: 1.0; }  /* fresh bright pink */
+:root[data-phase="ovulation"]  { --phase-h: 28;  --phase-cm: 1.2; }  /* radiant coral glow */
+:root[data-phase="luteal"]     { --phase-h: 318; --phase-cm: 0.95; } /* calm mauve/plum   */
+
+@media (prefers-reduced-motion: reduce) {
+  :root { transition: none; }
 }
 
 .dark {
