@@ -799,8 +799,8 @@ export default function TodayPage() {
           </div>
         </div>
 
-        {/* Streak badge — real consecutive active days, honest about a fresh start */}
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[2] rounded-2xl bg-white/60 backdrop-blur px-2.5 py-1 sm:px-3 sm:py-1.5 text-center border border-petal/40 shadow-md">
+        {/* Streak badge — bottom-right, on the symptom-icon line; honest about a fresh start */}
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-[2] rounded-2xl bg-white/60 backdrop-blur px-2.5 py-1 sm:px-3 sm:py-1.5 text-center border border-petal/40 shadow-md">
           {streak > 0 ? (
             <>
               <p className="font-script text-lg sm:text-xl text-hotpink leading-none">{streak}</p>
