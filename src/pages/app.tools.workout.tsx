@@ -564,8 +564,9 @@ export default function WorkoutPage() {
       {guidedDone && (
         <SpotlightCoach
           targetId="workout-week-plan"
+          step={4} total={5}
           title="Your workout week ✿"
-          message="Here it is — your strength week, laid out day by day. Tap any day to tweak it."
+          message="Your strength week, day by day. Tap any day to tweak it."
           extra={
             <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
               Do you want to set up your <b className="text-hotpink">yoga flow</b> now to balance your training?

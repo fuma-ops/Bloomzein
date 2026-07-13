@@ -1360,9 +1360,10 @@ function WeekTab({
       {weekDone && (
         <SpotlightCoach
           targetId="meals-week-plan"
+          step={2} total={5}
           title="This is your week ✿"
-          message="Here's your whole week — all 7 days of meals, planned for you. Tap any day to swap a meal. Next, set your goal in Diet so we tune your energy to it."
-          primaryLabel="Continue on Today"
+          message="Your whole week of meals, planned. Tap any day to swap a meal."
+          primaryLabel="Continue on Today →"
           onPrimary={() => { window.location.href = "/app/today"; }}
           secondaryLabel="See my week first"
           onClose={() => setWeekDone(false)}

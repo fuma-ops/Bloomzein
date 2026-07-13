@@ -758,8 +758,9 @@ export default function YogaPage() {
       {guidedDone && (
         <SpotlightCoach
           targetId="yoga-week-plan"
+          step={4} total={5}
           title="Your yoga week ✿"
-          message="Beautiful — your soft week is set, day by day. Tap any day to change its flow."
+          message="Your soft week, day by day. Tap any day to change its flow."
           extra={
             <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
               Ready to head back and finish setting up the rest of your day on <b className="text-hotpink">Today</b>?
