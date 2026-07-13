@@ -1030,14 +1030,15 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 35, difficulty: "medium",
     phases: ["follicular", "ovulatory"], goal: ["maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: [],
-    macros: { calories: 380, protein: 16, carbs: 46, fat: 14 },
+    macros: { calories: 410, protein: 17, carbs: 44, fat: 20 },
     micros: { fibre: 10, vitaminC: 60, vitaminB6: 0.4 },
     servings: 2,
     equipment: ["Baking dish", "Mixing bowl"],
     ingredients: [
       { name: "Bell peppers", quantity: "4" },
-      { name: "Cooked rice", quantity: "1.5 cups" },
+      { name: "Cooked quinoa", quantity: "1.5 cups" },
       { name: "Feta", quantity: "1/2 cup, crumbled" },
+      { name: "Kalamata olives", quantity: "1/3 cup, sliced" },
       { name: "Cherry tomatoes", quantity: "1 cup, halved" },
       { name: "Parsley & dill", quantity: "1/4 cup, chopped" },
       { name: "Passata", quantity: "1 cup" },
@@ -1045,7 +1046,7 @@ const RAW_RECIPES: RawRecipe[] = [
     ],
     steps: [
       "Heat oven to 190°C. Slice the tops off the **bell peppers** and scoop out the seeds.",
-      "In a bowl mix **cooked rice**, **feta**, **cherry tomatoes** and **parsley & dill** with the **olive oil** and season.",
+      "In a bowl mix **cooked quinoa**, **feta**, **kalamata olives**, **cherry tomatoes** and **parsley & dill** with the **olive oil** and season.",
       "Spoon **passata** across the base of a **baking dish**, stand the peppers in it and pack with the filling.",
       "Cover with foil and bake 25 min, then uncover for 10 min until the peppers are tender and lightly charred."
     ],
@@ -1792,11 +1793,11 @@ const RAW_RECIPES: RawRecipe[] = [
 
   // ───────── Batch 2 — Dinner (+6) ─────────
   {
-    id: "d13", name: "Vegan Mushroom Risotto", cuisine: "Mediterranean", mealType: "dinner",
+    id: "d13", name: "Creamy Mushroom Risotto", cuisine: "Mediterranean", mealType: "dinner",
     prepTime: 15, cookTime: 30, difficulty: "medium",
     phases: ["luteal", "menstrual"], goal: ["maintain", "lose"],
-    dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 420, protein: 11, carbs: 64, fat: 12 },
+    dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
+    macros: { calories: 480, protein: 18, carbs: 62, fat: 20 },
     micros: { magnesium: 50, fibre: 5, vitaminB6: 0.3 },
     servings: 2,
     equipment: ["Wide pan", "Small pot"],
@@ -1806,17 +1807,19 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Onion & garlic", quantity: "1/2 + 2 cloves" },
       { name: "White wine", quantity: "1/4 cup (optional)" },
       { name: "Vegetable broth", quantity: "3.5 cups, warm" },
-      { name: "Nutritional yeast", quantity: "2 tbsp" },
+      { name: "Parmesan", quantity: "1/2 cup, grated" },
+      { name: "Butter", quantity: "1 tbsp" },
+      { name: "Fresh thyme", quantity: "1 tsp, leaves" },
       { name: "Olive oil", quantity: "1 tbsp" }
     ],
     steps: [
-      "Sauté the **mushrooms** in **olive oil** until deeply golden, then set half aside for the top.",
+      "Sauté the **mushrooms** in **olive oil** with the **fresh thyme** until deeply golden, then set half aside for the top.",
       "Soften the **onion & garlic**, stir in the **arborio rice** and toast 1 min, then deglaze with the **white wine**.",
       "Add the warm **vegetable broth** a ladle at a time, stirring, until each is absorbed - about 18-20 min to creamy and al dente.",
-      "Beat in **nutritional yeast** off the heat, then crown with the reserved mushrooms."
+      "Beat in the **butter** and **parmesan** off the heat until glossy, then crown with the reserved mushrooms and a little extra parmesan."
     ],
     batchTip: "Risotto is best fresh; leftovers make excellent pan-fried rice cakes the next day.",
-    substitutionTip: "Skip the wine and add an extra splash of broth with a squeeze of lemon."
+    substitutionTip: "Dairy-free? Swap the parmesan + butter for 2 tbsp nutritional yeast and a drizzle of olive oil for a vegan version."
   },
   {
     id: "d14", name: "Halal Lamb Kofta with Couscous", cuisine: "Middle Eastern", mealType: "dinner",
