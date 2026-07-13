@@ -956,14 +956,16 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Dill & parsley", quantity: "2 tbsp, chopped" },
       { name: "Dijon mustard", quantity: "1 tsp" },
       { name: "Olive oil", quantity: "1 tbsp" },
-      { name: "Asparagus", quantity: "1 cup, trimmed" },
+      { name: "Mixed greens & rocket", quantity: "2 cups" },
+      { name: "Cherry tomatoes", quantity: "1/2 cup, halved" },
+      { name: "Cucumber", quantity: "1/3, sliced" },
       { name: "Lemon", quantity: "1/2" }
     ],
     steps: [
       "Heat oven to 200°C. Pat the **salmon** dry and brush the top with **dijon mustard**.",
       "Mix **breadcrumbs**, **dill & parsley** and half the **olive oil** into a moist crumb, then press firmly onto the mustard.",
-      "Toss **asparagus** with the rest of the oil on a **baking tray**, lay the salmon beside it, and bake 14-16 min until the crust is golden and the fish flakes.",
-      "Finish with a squeeze of **lemon** over everything."
+      "Set the salmon on a lined **baking tray** and bake 14-16 min until the crust is golden and the fish flakes.",
+      "Toss the **mixed greens & rocket**, **cherry tomatoes** and **cucumber** with the rest of the oil and a squeeze of **lemon**; serve the salmon on the fresh salad."
     ],
     batchTip: "Mix a double batch of the herb crumb and keep it in the fridge for up to 5 days.",
     substitutionTip: "No salmon? Trout or a thick cod loin work the same way (cod cooks a touch faster)."
@@ -973,7 +975,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 40, difficulty: "medium",
     phases: ["menstrual", "luteal"], goal: ["maintain"],
     dietTags: ["gluten-free", "halal"], allergens: [],
-    macros: { calories: 480, protein: 31, carbs: 38, fat: 20 },
+    macros: { calories: 540, protein: 34, carbs: 48, fat: 20 },
     micros: { iron: 4, magnesium: 60, vitaminC: 20 },
     servings: 2,
     equipment: ["Heavy pot or tagine", "Small pot"],
@@ -982,16 +984,19 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Onion", quantity: "1, sliced" },
       { name: "Garlic", quantity: "2 cloves" },
       { name: "Ras el hanout", quantity: "1 tbsp" },
+      { name: "Carrots", quantity: "2, in chunks" },
+      { name: "Chickpeas", quantity: "1/2 cup, drained" },
       { name: "Dried apricots", quantity: "1/3 cup" },
-      { name: "Green olives", quantity: "1/4 cup" },
+      { name: "Green & kalamata olives", quantity: "1/4 cup" },
+      { name: "Preserved lemon", quantity: "1/4, sliced" },
       { name: "Chicken broth", quantity: "1 cup" },
       { name: "Couscous", quantity: "1/2 cup dry" },
       { name: "Coriander", quantity: "to garnish" }
     ],
     steps: [
       "Brown the **chicken thighs** in a little oil in a **heavy pot**, then lift out.",
-      "Soften the **onion** and **garlic** 4 min, stir in **ras el hanout** until fragrant.",
-      "Return the chicken with **dried apricots**, **green olives** and **chicken broth**. Cover and simmer gently 30-35 min until the chicken is falling off the bone.",
+      "Soften the **onion** and **garlic** 4 min, stir in **ras el hanout** until fragrant, then add the **carrots**.",
+      "Return the chicken with the **chickpeas**, **dried apricots**, **olives**, **preserved lemon** and **chicken broth**. Cover and simmer gently 30-35 min until the chicken is falling off the bone and the carrots are tender.",
       "Meanwhile pour boiling water over the **couscous**, cover 5 min, then fluff. Serve the tagine over it, scattered with **coriander**."
     ],
     batchTip: "The tagine deepens overnight - it keeps 3 days in the fridge and reheats gently with a splash of water.",
@@ -1002,7 +1007,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 15, difficulty: "easy",
     phases: ["follicular", "ovulatory"], goal: ["lose", "gain"],
     dietTags: ["vegan"], allergens: ["soy"],
-    macros: { calories: 410, protein: 22, carbs: 40, fat: 17 },
+    macros: { calories: 600, protein: 30, carbs: 72, fat: 20 },
     micros: { iron: 3, magnesium: 55, fibre: 6 },
     servings: 1,
     equipment: ["Non-stick pan or wok", "Small bowl"],
@@ -1012,15 +1017,17 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Soy sauce", quantity: "1 tbsp" },
       { name: "Maple syrup", quantity: "1 tsp" },
       { name: "Sesame oil", quantity: "1 tsp" },
-      { name: "Broccoli & peppers", quantity: "2 cups, chopped" },
+      { name: "Broccoli, peppers & carrot", quantity: "2 cups, chopped" },
+      { name: "Red onion", quantity: "1/2, sliced" },
       { name: "Garlic & ginger", quantity: "1 tsp each, grated" },
-      { name: "Brown rice", quantity: "1/2 cup dry" }
+      { name: "Brown rice", quantity: "1/2 cup dry" },
+      { name: "Sesame seeds & spring onion", quantity: "to garnish" }
     ],
     steps: [
       "Cut the **firm tofu** into cubes and pan-fry in a hot **non-stick pan** until golden on all sides, 6-8 min.",
       "Whisk **white miso paste**, **soy sauce**, **maple syrup** and **sesame oil** into a [[miso glaze]] and toss it through the tofu off the heat.",
-      "In the same pan, stir-fry **broccoli & peppers** with **garlic & ginger** 4-5 min until crisp-tender.",
-      "Serve tofu and vegetables over cooked **brown rice**, spooning any glaze from the pan on top."
+      "In the same pan, stir-fry the **broccoli, peppers & carrot** and **red onion** with **garlic & ginger** 4-5 min until crisp-tender.",
+      "Serve tofu and vegetables over cooked **brown rice**, spoon over any glaze from the pan and finish with **sesame seeds & spring onion**."
     ],
     batchTip: "Press and cube the tofu ahead - it keeps 3 days and crisps faster when already dry.",
     substitutionTip: "No miso? Use 1 extra tbsp soy sauce plus a little tahini for the same savoury glaze."
@@ -1058,7 +1065,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 20, cookTime: 30, difficulty: "medium",
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: [],
-    macros: { calories: 460, protein: 18, carbs: 62, fat: 16 },
+    macros: { calories: 520, protein: 18, carbs: 64, fat: 22 },
     micros: { fibre: 14, magnesium: 65, iron: 3 },
     servings: 2,
     equipment: ["Baking dish", "Frying pan"],
@@ -1070,13 +1077,15 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Passata", quantity: "1 cup" },
       { name: "Chipotle or chilli powder", quantity: "1 tsp" },
       { name: "Cheddar", quantity: "1/2 cup, grated" },
+      { name: "Avocado, tomato & red onion", quantity: "1/2 / 1 / 1/4, diced, to top" },
       { name: "Coriander", quantity: "to garnish" }
     ],
     steps: [
       "Heat oven to 200°C. Toss **sweet potato** with a little oil and roast 20 min until tender.",
       "In a pan warm **black beans** with **cumin & smoked paprika** and the roasted sweet potato, mashing lightly to bind.",
       "Stir **chipotle or chilli powder** into the **passata** for a quick [[enchilada sauce]]; spread a little in a **baking dish**.",
-      "Fill each **corn tortilla**, roll seam-down in the dish, blanket with the rest of the sauce and the **cheddar**, and bake 12-15 min until bubbling. Scatter with **coriander**."
+      "Fill each **corn tortilla**, roll seam-down in the dish, blanket with the rest of the sauce and the **cheddar**, and bake 12-15 min until bubbling.",
+      "Scatter over the diced **avocado, tomato & red onion** and **coriander** just before serving."
     ],
     batchTip: "Roll and sauce the enchiladas ahead, refrigerate, then bake straight from cold adding 5 min.",
     substitutionTip: "Vegan? Use a dairy-free cheese and check the tortillas - the filling is already plant-based."
@@ -1085,8 +1094,8 @@ const RAW_RECIPES: RawRecipe[] = [
     id: "d06", name: "Lemon Garlic Shrimp Linguine", cuisine: "Mediterranean", mealType: "dinner",
     prepTime: 15, cookTime: 15, difficulty: "easy",
     phases: ["ovulatory", "follicular"], goal: ["gain"],
-    dietTags: [], allergens: ["shellfish"],
-    macros: { calories: 500, protein: 29, carbs: 56, fat: 16 },
+    dietTags: [], allergens: ["shellfish", "dairy"],
+    macros: { calories: 660, protein: 44, carbs: 66, fat: 22 },
     micros: { omega3: 0.8, vitaminC: 14 },
     servings: 1,
     equipment: ["Pot", "Frying pan"],
@@ -1097,13 +1106,14 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Lemon", quantity: "1 (zest & juice)" },
       { name: "Chilli flakes", quantity: "1 pinch" },
       { name: "Olive oil", quantity: "1.5 tbsp" },
+      { name: "Parmesan", quantity: "2 tbsp, grated" },
       { name: "Parsley", quantity: "2 tbsp, chopped" }
     ],
     steps: [
       "Cook the **linguine** in well-salted water until al dente, saving a cup of pasta water before draining.",
       "Gently warm **garlic** and **chilli flakes** in **olive oil** until just golden, then add the **shrimp** and cook 2 min a side until pink.",
       "Add the **lemon** zest and juice with a splash of pasta water, swirling into a light sauce.",
-      "Toss in the pasta and **parsley**, loosening with more pasta water until glossy."
+      "Toss in the pasta, **parsley** and **parmesan**, loosening with more pasta water until glossy."
     ],
     batchTip: "Best fresh, but leftovers reheat well in a pan with a splash of water to revive the sauce.",
     substitutionTip: "No shellfish? Sliced chicken breast or chunks of firm white fish work beautifully here."
@@ -1168,7 +1178,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 0, difficulty: "quick",
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["nuts", "dairy"],
-    macros: { calories: 410, protein: 25, carbs: 26, fat: 24 },
+    macros: { calories: 470, protein: 13, carbs: 26, fat: 34 },
     micros: { fibre: 8, vitaminC: 16, magnesium: 50 },
     servings: 1,
     equipment: ["Small bowl", "Frying pan"],
@@ -1177,6 +1187,7 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Mixed greens", quantity: "2 cups" },
       { name: "Goat cheese", quantity: "50g" },
       { name: "Walnuts", quantity: "1/4 cup" },
+      { name: "Red onion", quantity: "1/4, thinly sliced" },
       { name: "Olive oil", quantity: "1 tbsp" },
       { name: "Red wine vinegar", quantity: "1 tsp" },
       { name: "Honey & dijon", quantity: "1/2 tsp each" }
@@ -1184,7 +1195,7 @@ const RAW_RECIPES: RawRecipe[] = [
     steps: [
       "Toast the **walnuts** in a dry **frying pan** 2-3 min until fragrant, then roughly chop.",
       "Whisk **olive oil**, **red wine vinegar** and **honey & dijon** into a [[vinaigrette]].",
-      "Toss the **mixed greens** and **cooked beets** with most of the dressing and pile onto a plate.",
+      "Toss the **mixed greens**, **cooked beets** and **red onion** with most of the dressing and pile onto a plate.",
       "Crumble over the **goat cheese**, scatter the walnuts and finish with the last of the vinaigrette."
     ],
     batchTip: "Keep the vinaigrette in a jar for up to a week - shake and pour when you need it.",
@@ -1195,7 +1206,7 @@ const RAW_RECIPES: RawRecipe[] = [
     prepTime: 15, cookTime: 30, difficulty: "easy",
     phases: ["menstrual", "luteal"], goal: ["gain"],
     dietTags: ["gluten-free"], allergens: ["nuts"],
-    macros: { calories: 540, protein: 34, carbs: 38, fat: 26 },
+    macros: { calories: 560, protein: 34, carbs: 40, fat: 28 },
     micros: { iron: 4, magnesium: 70, omega3: 0.4 },
     servings: 2,
     equipment: ["Heavy pot", "Small pot"],
@@ -1203,17 +1214,19 @@ const RAW_RECIPES: RawRecipe[] = [
       { name: "Chicken thighs", quantity: "250g, diced" },
       { name: "Onion", quantity: "1, diced" },
       { name: "Ginger & garlic", quantity: "1 tbsp each, grated" },
+      { name: "Red bell pepper", quantity: "1, diced" },
       { name: "Chopped tomatoes", quantity: "1 cup" },
       { name: "Peanut butter", quantity: "3 tbsp" },
       { name: "Chicken broth", quantity: "1 cup" },
       { name: "Spinach", quantity: "2 cups" },
-      { name: "Rice", quantity: "1/2 cup dry" }
+      { name: "Rice", quantity: "1/2 cup dry" },
+      { name: "Crushed peanuts & coriander", quantity: "to garnish" }
     ],
     steps: [
       "Brown the **chicken thighs** in a **heavy pot**, then lift out.",
-      "Soften the **onion** with **ginger & garlic**, add **chopped tomatoes** and cook down 5 min.",
+      "Soften the **onion** with **ginger & garlic** and the **red bell pepper**, add **chopped tomatoes** and cook down 5 min.",
       "Whisk in **peanut butter** and **chicken broth**, return the chicken, and simmer 20 min until thick and glossy.",
-      "Wilt in the **spinach** for the last 2 min and serve over cooked **rice**."
+      "Wilt in the **spinach** for the last 2 min, serve over cooked **rice** and scatter with **crushed peanuts & coriander**."
     ],
     batchTip: "This curry deepens overnight and freezes well - store up to 2 months in single portions.",
     substitutionTip: "Peanut allergy in the house? Sunflower seed butter gives the same creamy body."
@@ -1937,21 +1950,23 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Baking tray", "Small pot"],
     phases: ["follicular", "ovulatory"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 390, protein: 13, carbs: 66, fat: 9 },
+    macros: { calories: 440, protein: 14, carbs: 68, fat: 14 },
     micros: { fibre: 14, magnesium: 70, vitaminC: 22 },
     ingredients: [
       { name: "Sweet potatoes", quantity: "2 medium" },
       { name: "Black beans", quantity: "1 cup, drained" },
       { name: "Corn", quantity: "1/2 cup" },
+      { name: "Red pepper", quantity: "1/2, diced" },
       { name: "Cumin & smoked paprika", quantity: "1/2 tsp each" },
       { name: "Lime & cilantro", quantity: "1 / a handful" },
-      { name: "Avocado", quantity: "1/2, sliced" }
+      { name: "Avocado", quantity: "1/2, sliced" },
+      { name: "Chipotle-lime drizzle", quantity: "3 tbsp (vegan yoghurt + chipotle + lime)" }
     ],
     steps: [
       "Heat oven to 200°C. Prick the **sweet potatoes**, set on a tray and bake 30-35 min until a knife slides through easily.",
-      "Warm the **black beans** and **corn** in a pot with **cumin**, **smoked paprika**, a splash of water and a squeeze of **lime** until hot.",
-      "Split the potatoes down the middle and fluff the flesh. Pile in the beans and corn, top with **avocado**, cilantro and more lime.",
-      "Finish with a spoonful of [[guacamole]] if you have a ripe avocado to spare."
+      "Warm the **black beans**, **corn** and **red pepper** in a pot with **cumin**, **smoked paprika**, a splash of water and a squeeze of **lime** until hot.",
+      "Whisk the **chipotle-lime drizzle** — vegan yoghurt loosened with lime juice and a little chipotle — until pourable.",
+      "Split the potatoes down the middle and fluff the flesh. Pile in the beans, corn and pepper, top with **avocado**, cilantro, more lime and a zig-zag of the chipotle drizzle."
     ],
     batchTip: "Bake the potatoes ahead - they keep 3 days and reheat in 10 min, or microwave to soften in a hurry.",
     substitutionTip: "Short on time? Microwave the potatoes 8-10 min instead of baking; pinto beans swap in for black."
@@ -3473,23 +3488,26 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Medium pot", "Small pot"],
     phases: ["follicular", "luteal"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["soy", "eggs"],
-    macros: { calories: 420, protein: 22, carbs: 52, fat: 14 },
+    macros: { calories: 500, protein: 30, carbs: 60, fat: 20 },
     micros: { iron: 3, magnesium: 45, fibre: 5 },
     ingredients: [
       { name: "Ramen noodles", quantity: "100g" },
       { name: "White miso paste", quantity: "2 tbsp" },
       { name: "Vegetable broth", quantity: "3 cups" },
       { name: "Eggs", quantity: "2" },
+      { name: "Firm tofu", quantity: "150g, cubed & pan-fried" },
       { name: "Shiitake mushrooms", quantity: "1 cup, sliced" },
-      { name: "Bok choy", quantity: "1 head, halved" },
+      { name: "Carrot", quantity: "1, julienned" },
+      { name: "Baby spinach", quantity: "2 cups" },
+      { name: "Sweetcorn", quantity: "1/2 cup" },
       { name: "Garlic & ginger", quantity: "1 clove / 1 tsp grated" },
-      { name: "Nori & sesame oil", quantity: "1 sheet / 1 tsp" }
+      { name: "Nori, spring onion & sesame oil", quantity: "1 sheet / 2 / 1 tsp" }
     ],
     steps: [
-      "Lower the **eggs** into boiling water for 6.5 min, then chill in cold water and peel - the yolks stay jammy.",
-      "Simmer the **vegetable broth** with **garlic**, **ginger** and the **shiitake mushrooms** 5 min. Add the **bok choy** for the last 2 min.",
+      "Lower the **eggs** into boiling water for 6.5 min, then chill in cold water and peel - the yolks stay jammy. Pan-fry the **tofu** cubes until golden.",
+      "Simmer the **vegetable broth** with **garlic**, **ginger**, the **shiitake mushrooms** and **carrot** 5 min, then wilt in the **baby spinach**.",
       "Off the heat, whisk in the **white miso paste** - never boil miso, or it turns bitter and loses its probiotics.",
-      "Cook the **ramen noodles** separately, divide into bowls, ladle over the broth and veg. Top with halved eggs, **nori** strips and a drizzle of **sesame oil**."
+      "Cook the **ramen noodles** separately, divide into bowls, ladle over the broth and veg. Top with the tofu, halved eggs, **sweetcorn**, **nori** strips, **spring onion** and a drizzle of **sesame oil**."
     ],
     batchTip: "Keep broth and noodles apart in the fridge so the noodles never go soggy; reheat broth and combine to serve.",
     substitutionTip: "Vegan? Skip the egg and add pan-fried tofu; gluten-free, use rice ramen and check your miso."
@@ -3643,23 +3661,26 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Large pot"],
     phases: ["menstrual", "luteal"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 310, protein: 17, carbs: 48, fat: 6 },
+    macros: { calories: 350, protein: 16, carbs: 56, fat: 7 },
     micros: { iron: 7, fibre: 14, vitaminB6: 0.5 },
     ingredients: [
       { name: "Green lentils", quantity: "1 cup (Puy or French)" },
+      { name: "Sweet potato", quantity: "1, diced" },
       { name: "Carrots", quantity: "1, diced" },
       { name: "Celery", quantity: "2 stalks, diced" },
       { name: "Onion", quantity: "1, diced" },
       { name: "Garlic", quantity: "2 cloves, minced" },
+      { name: "Chopped tomatoes", quantity: "1/2 cup" },
       { name: "Bay leaf & thyme", quantity: "1 / 2 sprigs" },
+      { name: "Baby spinach", quantity: "2 cups" },
       { name: "Dijon mustard", quantity: "1 tsp" },
       { name: "Vegetable broth", quantity: "4 cups" },
       { name: "Olive oil", quantity: "1 tbsp" }
     ],
     steps: [
       "Sweat the **onion**, **garlic**, **carrots** and **celery** in **olive oil** 6 min until softened but not coloured.",
-      "Add the **green lentils**, **vegetable broth**, **bay leaf** and **thyme**. Bring to a boil, then simmer 30 min until the lentils are tender but still hold their shape.",
-      "Fish out the bay and thyme stems. Stir in the **Dijon mustard**, season generously and add a splash of water if you like it looser."
+      "Add the **green lentils**, **sweet potato**, **chopped tomatoes**, **vegetable broth**, **bay leaf** and **thyme**. Bring to a boil, then simmer 30 min until the lentils are tender and the sweet potato is soft.",
+      "Fish out the bay and thyme stems. Wilt in the **baby spinach**, stir in the **Dijon mustard**, season generously and add a splash of water if you like it looser."
     ],
     batchTip: "Makes 4 bowls and keeps 5 days or freezes well - the flavour rounds out overnight.",
     substitutionTip: "Brown lentils work too but cook softer; a squeeze of lemon can replace the Dijon for brightness."
