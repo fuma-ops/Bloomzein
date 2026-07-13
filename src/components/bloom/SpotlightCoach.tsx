@@ -1,16 +1,23 @@
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 
 /**
  * A calm guided-setup step card. The page behind gently recedes under a soft
  * pink wash EXCEPT the one section she just finished, which stays visible with a
  * soft glow so her eye lands there. A small, self-contained card floats above
  * it: a progress row (Step n of N), a short title, ONE line of guidance and ONE
- * clear CTA — never a paragraph stacked on a busy page. Non-destructive: dismiss
- * to carry on. Built with the classic huge-box-shadow cutout so it needs no SVG
- * masking and follows the target's real position.
+ * clear CTA — never a paragraph stacked on a busy page.
+ *
+ * Never strands her: for an actionable step (one with a primary CTA), dismissing
+ * — tapping ✕, "look around", or outside the card — does NOT close the guide, it
+ * COLLAPSES it into a small persistent "Continue setup" pill she can tap to bring
+ * it back. So she can freely explore her plan and always has the way forward. The
+ * primary CTA still moves her on. Auto-dismissing celebrations (no CTA) just close.
+ *
+ * Built with the classic huge-box-shadow cutout so it needs no SVG masking and
+ * follows the target's real position.
  */
 export function SpotlightCoach({
   targetId,
@@ -44,6 +51,13 @@ export function SpotlightCoach({
   total?: number;
 }) {
   const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // An actionable step has a way forward; a bare celebration just auto-dismisses.
+  const isStep = !!(primaryLabel && onPrimary);
+  // Dismiss gestures never strand her mid-setup: on a step they collapse to a
+  // re-openable pill; on a celebration they close.
+  const dismiss = () => { if (isStep) setCollapsed(true); else onClose(); };
 
   useEffect(() => {
     const el = document.getElementById(targetId);
@@ -88,8 +102,24 @@ export function SpotlightCoach({
 
   const showProgress = typeof step === "number" && typeof total === "number" && total > 0;
 
+  // Collapsed: a small, always-there "Continue setup" pill so she never loses
+  // the way forward after tapping away to explore her plan.
+  if (collapsed && isStep) {
+    return createPortal(
+      <button
+        onClick={() => setCollapsed(false)}
+        className="fixed bottom-24 right-4 z-[130] inline-flex items-center gap-1.5 rounded-full bg-hotpink pl-3 pr-4 py-2.5 text-[12px] font-bold text-white shadow-xl shadow-hotpink/40 ring-2 ring-white/70 backdrop-blur animate-cta-bounce active:scale-95 md:bottom-6"
+        aria-label="Continue setup"
+      >
+        <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />
+        Continue setup{showProgress ? ` · ${step}/${total}` : ""}
+      </button>,
+      document.body,
+    );
+  }
+
   return createPortal(
-    <div className="fixed inset-0 z-[130] animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[130] animate-fade-in" onClick={dismiss}>
       {/* The cutout: her finished section stays visible under a soft pink wash,
           with a gentle glow (no hard ring) so her eye lands there — calmly. */}
       <div
@@ -114,7 +144,7 @@ export function SpotlightCoach({
           className="pointer-events-auto relative w-full max-w-[300px] rounded-[1.6rem] bg-white/96 p-3.5 shadow-2xl shadow-hotpink/25 ring-1 ring-petal/60 backdrop-blur-xl animate-scale-in"
         >
           <button
-            onClick={onClose}
+            onClick={dismiss}
             aria-label="Dismiss"
             className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full bg-blush/70 text-rose transition hover:bg-petal active:scale-90"
           >
@@ -148,7 +178,7 @@ export function SpotlightCoach({
                 {primaryLabel}
               </button>
               <button
-                onClick={onClose}
+                onClick={dismiss}
                 className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/55 transition hover:text-hotpink"
               >
                 {secondaryLabel}
