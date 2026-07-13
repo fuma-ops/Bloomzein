@@ -641,7 +641,7 @@ export function CycleTracker() {
           >
             <HeartPulse className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
-          <p className="font-script leading-none" style={{ fontSize: '22px', color: '#DB2777' }}>This cycle</p>
+          <p className="font-script leading-none" style={{ fontSize: '22px', color: '#DB2777' }}>Mood &amp; symptom insights</p>
         </div>
         {/* 2×2 legend */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px', marginBottom: '5px' }}>

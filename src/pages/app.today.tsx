@@ -702,7 +702,7 @@ export default function TodayPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
 
-        <div className="relative z-[2] flex flex-col items-start px-4 py-4 pb-11 sm:px-8 sm:py-6 sm:pb-12 w-[68%] sm:max-w-md">
+        <div className="relative z-[2] flex flex-col items-start px-4 py-3 pb-7 sm:px-8 sm:py-4 sm:pb-8 w-[68%] sm:max-w-md">
           <h1 className="animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
@@ -741,9 +741,9 @@ export default function TodayPage() {
                 aria-label="How are you feeling?"
                 aria-haspopup="dialog"
                 aria-expanded={moodPickerOpen}
-                className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
+                className="relative clay-blob animate-cta-bounce grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
               >
-                <MoodIcon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+                <MoodIcon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
                 {!mood && (
                   <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
                     <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
@@ -772,9 +772,9 @@ export default function TodayPage() {
                 aria-label="How's your body today?"
                 aria-haspopup="dialog"
                 aria-expanded={symptomPickerOpen}
-                className="relative clay-blob animate-cta-bounce grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
+                className="relative clay-blob animate-cta-bounce grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
               >
-                <Activity className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} />
+                <Activity className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
                 {symptomsToday.length === 0 && (
                   <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
                     <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
@@ -800,15 +800,15 @@ export default function TodayPage() {
         </div>
 
         {/* Streak badge — real consecutive active days, honest about a fresh start */}
-        <div className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 z-[2] rounded-2xl bg-white/55 backdrop-blur px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-center border border-petal/40 shadow-md">
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[2] rounded-2xl bg-white/60 backdrop-blur px-2.5 py-1 sm:px-3 sm:py-1.5 text-center border border-petal/40 shadow-md">
           {streak > 0 ? (
             <>
-              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">{streak}</p>
+              <p className="font-script text-lg sm:text-xl text-hotpink leading-none">{streak}</p>
               <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{streak === 1 ? "day blooming" : "days blooming"}</p>
             </>
           ) : (
             <>
-              <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">✿</p>
+              <p className="font-script text-lg sm:text-xl text-hotpink leading-none">✿</p>
               <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">fresh start</p>
             </>
           )}
@@ -928,7 +928,7 @@ export default function TodayPage() {
       {!affirmDismissed && (
         /* Soft one-/two-line quote flanked by two flowers; a small X to close
            (top-right) and a centred tiny love-count below. */
-        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-dashed border-hotpink/40 bg-transparent px-4 pt-6 pb-3 animate-fade-in">
+        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-white/60 bg-white/40 backdrop-blur-md shadow-sm shadow-hotpink/10 px-4 pt-6 pb-3 animate-fade-in">
           <p className="absolute left-3 top-2 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-hotpink/60">
             <BloomFlower className="h-2.5 w-2.5" /> Today's affirmation
           </p>
@@ -991,19 +991,23 @@ export default function TodayPage() {
       )}
 
       {hasPlanContent && (
-      <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in rounded-[2rem]" style={{ animationDelay: "50ms" }}>
-        <SectionTitle>Today's Plan ✿</SectionTitle>
-        <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
-          {cycleReady ? (
-            <>Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.</>
-          ) : (
-            <>A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.</>
-          )}
-        </p>
-        <div className="-mt-1 mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
-          <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
+      <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
+        <div className="bloom-pearl-card pearl-sheen rounded-[2rem] overflow-hidden">
+        {/* Card header — title, phase blurb & nudge, all contained (not floating) */}
+        <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-4">
+          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Today's Plan ✿</h2>
+          <p className="mt-1.5 text-[11px] sm:text-xs text-rose/65 leading-snug">
+            {cycleReady ? (
+              <>Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.</>
+            ) : (
+              <>A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.</>
+            )}
+          </p>
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
+            <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
+          </div>
         </div>
-        <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
+        <div className="divide-y divide-petal/20 border-t border-petal/30">
           {planItems.map((item, i) => {
             const done   = planDone.includes(item.id);
             const timing = planItemTiming(item.time);
@@ -1075,9 +1079,10 @@ export default function TodayPage() {
             );
           })}
         </div>
-        <a href="/app/calendar" className="mt-2.5 flex items-center justify-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">
+        <a href="/app/calendar" className="flex items-center justify-center gap-1 border-t border-petal/30 px-4 py-2.5 text-[11px] font-bold text-hotpink animate-soft-glow">
           Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
         </a>
+        </div>
       </section>
       )}
 

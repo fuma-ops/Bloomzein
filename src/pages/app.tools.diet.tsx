@@ -1790,8 +1790,9 @@ export default function DietPage() {
       {guidedGoalKcal !== null && (
         <SpotlightCoach
           targetId="diet-energy"
+          step={3} total={5}
           title="Your goal is set ✿"
-          message={`Here's your daily energy — your body needs about ${guidedGoalKcal.toLocaleString()} kcal a day, and everything now tunes to it.`}
+          message={`Your daily energy: about ${guidedGoalKcal.toLocaleString()} kcal — everything tunes to it now.`}
           extra={
             <div className="mt-3 space-y-3">
               {hasMealPlan() && (
