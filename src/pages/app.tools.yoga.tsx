@@ -234,13 +234,266 @@ export const POSES: Pose[] = [
       fr: "Depuis la planche, roule sur la main droite, empile les pieds. Lève les hanches, bras gauche au ciel. Change de côté.",
       ar: "من البلانك، استديري على اليد اليمنى وكدّسي القدمين. ارفعي الوركين، الذراع اليسرى للسماء. بدّلي.",
     }}),
+
+  // ───────── Library expansion (+39) ─────────
+  // Warm-up
+  P({ slug: "neck-shoulder-rolls", name: "Neck & Shoulder Rolls", group: "Warm-up", level: "Beginner", image: "/images/pose-neck-shoulder-rolls.webp", floorOnly: true,
+    cues: {
+      en: "Sit tall and soften the jaw. Slowly circle the shoulders back a few times, then forward. Let the head drift ear toward shoulder, and roll it slowly through centre to the other side. Move with your breath, unhurried.",
+      fr: "Assise, dos long, mâchoire détendue. Roule les épaules en arrière, puis en avant. Laisse la tête aller d'une oreille à l'épaule, puis roule lentement de l'autre côté. Suis ton souffle.",
+      ar: "اجلسي بظهر طويل وأرخي الفك. أديري الكتفين للخلف ثم للأمام. أميلي الرأس نحو الكتف، ثم أديريها ببطء إلى الجهة الأخرى. تحرّكي مع أنفاسك.",
+    }}),
+  P({ slug: "thread-the-needle", name: "Thread the Needle", group: "Warm-up", level: "Beginner", image: "/images/pose-thread-the-needle.webp", floorOnly: true,
+    cues: {
+      en: "From all fours, reach the right arm up, then thread it under the left, shoulder and cheek resting on the mat. Let the left hand stay planted or reach overhead. Breathe into the space between the shoulder blades.",
+      fr: "À quatre pattes, lève le bras droit, puis glisse-le sous le gauche, épaule et joue au sol. Respire entre les omoplates.",
+      ar: "من الأطراف الأربع، ارفعي الذراع اليمنى ثم مرّريها تحت اليسرى، الكتف والخد على البساط. تنفّسي بين لوحي الكتف.",
+    }}),
+  P({ slug: "bird-dog", name: "Bird Dog", group: "Warm-up", level: "Beginner", image: "/images/pose-bird-dog.webp", floorOnly: true,
+    cues: {
+      en: "On all fours, wrists under shoulders, knees under hips. Reach the right arm forward and the left leg back, long and level. Keep the belly drawn in and the hips steady. Hold, then lower with control.",
+      fr: "À quatre pattes, poignets sous les épaules. Tends le bras droit devant et la jambe gauche derrière, à l'horizontale. Ventre engagé, hanches stables. Tiens, puis repose.",
+      ar: "على الأطراف الأربع، الرسغان تحت الكتفين. مدّي الذراع اليمنى للأمام والساق اليسرى للخلف. اسحبي البطن وثبّتي الوركين. ثبّتي ثم انزلي بتحكّم.",
+    }}),
+  P({ slug: "standing-side-stretch", name: "Standing Side Stretch", group: "Warm-up", level: "Beginner", image: "/images/pose-standing-side-stretch.webp",
+    cues: {
+      en: "Stand tall and sweep both arms overhead. Clasp the hands, and on an exhale lean gently to the right, opening the left side of the waist. Keep both feet grounded. Breathe into the long side body.",
+      fr: "Debout, lève les bras. Joins les mains et, à l'expir, penche-toi doucement à droite, ouvrant le côté gauche. Pieds ancrés. Respire dans le flanc allongé.",
+      ar: "قفي وارفعي الذراعين. شبّكي اليدين، ومع الزفير مِيلي بلطف لليمين لتفتحي الجنب الأيسر. القدمان راسختان. تنفّسي في الجانب الممتد.",
+    }}),
+
+  // Standing
+  P({ slug: "high-lunge", name: "High Lunge", sanskrit: "Ashta Chandrasana", group: "Standing", level: "Intermediate", image: "/images/pose-high-lunge.webp",
+    cues: {
+      en: "Step the right foot forward, back heel lifted high. Bend the front knee over the ankle, back leg strong and straight. Sweep the arms overhead, lengthen the spine, and lift the chest. Steady and bright.",
+      fr: "Pied droit devant, talon arrière levé. Genou avant plié, jambe arrière tendue. Bras vers le ciel, poitrine haute. Stable et lumineuse.",
+      ar: "القدم اليمنى للأمام، الكعب الخلفي مرفوع. اثني الركبة الأمامية، الساق الخلفية قوية. ارفعي الذراعين، أطيلي العمود، ارفعي الصدر.",
+    }}),
+  P({ slug: "crescent-twist", name: "Twisted Crescent Lunge", sanskrit: "Parivrtta Anjaneyasana", group: "Standing", level: "Advanced", image: "/images/pose-crescent-twist.webp",
+    cues: {
+      en: "From a high lunge with the right foot forward, bring the hands to heart. Exhale and hook the left elbow outside the right knee, twisting from the belly. Press the palms together, open the chest, and gaze past the top shoulder.",
+      fr: "Depuis la fente haute pied droit devant, mains au cœur. À l'expir, accroche le coude gauche à l'extérieur du genou droit, torsion depuis le ventre. Paumes jointes, poitrine ouverte.",
+      ar: "من الاندفاع العالي والقدم اليمنى أماماً، اليدان أمام القلب. مع الزفير، ثبّتي المرفق الأيسر خارج الركبة اليمنى مع الالتفاف من البطن. اضغطي الكفّين وافتحي الصدر.",
+    }}),
+  P({ slug: "extended-side-angle", name: "Extended Side Angle", sanskrit: "Utthita Parsvakonasana", group: "Standing", level: "Intermediate", image: "/images/pose-extended-side-angle.webp",
+    cues: {
+      en: "From Warrior II with the right knee bent, lower the right forearm onto the thigh, or the hand to the floor. Reach the left arm over the ear, drawing one long line from the back heel to the fingertips. Open the chest to the sky.",
+      fr: "Depuis le Guerrier II genou droit plié, pose l'avant-bras droit sur la cuisse. Tends le bras gauche au-dessus de l'oreille, une longue ligne du talon aux doigts. Ouvre la poitrine.",
+      ar: "من المحارب الثاني والركبة اليمنى مثنية، أنزلي الساعد الأيمن على الفخذ. مدّي الذراع اليسرى فوق الأذن في خط طويل من الكعب للأصابع. افتحي الصدر.",
+    }}),
+  P({ slug: "pyramid", name: "Pyramid Pose", sanskrit: "Parsvottanasana", group: "Standing", level: "Intermediate", image: "/images/pose-pyramid.webp",
+    cues: {
+      en: "Step the feet a leg's length apart, both hips facing the front foot. Keep the front leg straight, hinge at the hips, and fold over the front thigh with a long spine. Let the head release toward the shin.",
+      fr: "Pieds écartés, hanches vers le pied avant. Jambe avant tendue, plie-toi depuis les hanches sur la cuisse, dos long. Laisse la tête descendre.",
+      ar: "افتحي القدمين بطول الساق، الوركان نحو القدم الأمامية. الساق الأمامية ممدودة، انحني من الوركين فوق الفخذ بعمود طويل. أرخي الرأس.",
+    }}),
+  P({ slug: "revolved-triangle", name: "Revolved Triangle", sanskrit: "Parivrtta Trikonasana", group: "Standing", level: "Advanced", image: "/images/pose-revolved-triangle.webp",
+    cues: {
+      en: "From a short stance with the right foot forward, lengthen the spine and place the left hand to the floor or a block outside the front foot. Twist open, reaching the right arm to the sky. Keep both legs strong and the hips level.",
+      fr: "Pied droit devant, dos long, main gauche au sol à l'extérieur du pied. Torsion ouverte, bras droit au ciel. Jambes fortes, hanches à niveau.",
+      ar: "القدم اليمنى للأمام، أطيلي العمود وضعي اليد اليسرى على الأرض خارج القدم. التفّي وافتحي الذراع اليمنى للسماء. الساقان قويتان والوركان مستويان.",
+    }}),
+  P({ slug: "goddess", name: "Goddess Pose", sanskrit: "Utkata Konasana", group: "Standing", level: "Beginner", image: "/images/pose-goddess.webp",
+    cues: {
+      en: "Step the feet wide, toes turned out. Bend the knees and sink the hips down toward knee height, knees tracking over the toes. Lift the chest, and either cactus the arms or rest the hands at heart. Feel strong and rooted.",
+      fr: "Pieds larges, orteils vers l'extérieur. Plie les genoux et descends les hanches, genoux vers les orteils. Poitrine haute, bras en cactus. Forte et ancrée.",
+      ar: "افتحي القدمين والأصابع للخارج. اثني الركبتين وانزلي بالوركين، الركبتان فوق الأصابع. ارفعي الصدر والذراعين. قوية وراسخة.",
+    }}),
+  P({ slug: "wide-legged-forward-fold", name: "Wide-Legged Forward Fold", sanskrit: "Prasarita Padottanasana", group: "Standing", level: "Beginner", image: "/images/pose-wide-legged-forward-fold.webp",
+    cues: {
+      en: "Step the feet wide and parallel. Hinge at the hips and fold forward, hands to the floor between the feet. Let the crown of the head release toward the mat and the neck stay soft. Breathe into the backs of the legs.",
+      fr: "Pieds larges et parallèles. Plie-toi depuis les hanches, mains au sol entre les pieds. Laisse la tête descendre, nuque souple. Respire dans l'arrière des jambes.",
+      ar: "افتحي القدمين متوازيتين. انحني من الوركين، اليدان على الأرض بين القدمين. أرخي التاج نحو البساط والرقبة لينة. تنفّسي في مؤخرة الساقين.",
+    }}),
+
+  // Balance
+  P({ slug: "warrior-3", name: "Warrior III", sanskrit: "Virabhadrasana III", group: "Balance", level: "Advanced", image: "/images/pose-warrior-3.webp",
+    cues: {
+      en: "From standing, shift your weight onto the right foot. Hinge forward and float the left leg back until the body forms one long line, parallel to the floor. Reach the arms forward or back alongside the body. Fix your gaze and breathe.",
+      fr: "Debout, poids sur le pied droit. Penche-toi et lève la jambe gauche jusqu'à une ligne parallèle au sol. Bras devant ou le long du corps. Fixe le regard.",
+      ar: "قفي وانقلي الوزن على القدم اليمنى. مِيلي للأمام وارفعي الساق اليسرى حتى يصبح الجسم خطاً موازياً للأرض. مدّي الذراعين. ثبّتي النظر وتنفّسي.",
+    }}),
+  P({ slug: "eagle", name: "Eagle Pose", sanskrit: "Garudasana", group: "Balance", level: "Intermediate", image: "/images/pose-eagle.webp",
+    cues: {
+      en: "Bend the knees softly. Cross the right thigh over the left, hooking the foot if it's available. Wrap the left arm under the right, palms reaching toward each other. Sink and lift at once, drawing everything to the midline.",
+      fr: "Genoux fléchis. Croise la cuisse droite sur la gauche, puis le bras gauche sous le droit, paumes vers l'autre. Descends et grandis vers l'axe central.",
+      ar: "اثني الركبتين. تقاطعي الفخذ الأيمن فوق الأيسر، ثم الذراع الأيسر تحت الأيمن، الكفّان نحو بعضهما. انزلي وارتفعي نحو المنتصف.",
+    }}),
+  P({ slug: "dancer", name: "Dancer's Pose", sanskrit: "Natarajasana", group: "Balance", level: "Advanced", image: "/images/pose-dancer.webp",
+    cues: {
+      en: "Standing on the right foot, bend the left knee and catch the inside of the left ankle behind you. Reach the right arm forward, then press the foot into the hand and lift the chest, blooming open. Keep the gaze soft and steady.",
+      fr: "Sur le pied droit, plie le genou gauche et attrape la cheville. Tends le bras droit devant, presse le pied dans la main et ouvre la poitrine. Regard doux.",
+      ar: "قفي على القدم اليمنى، اثني الركبة اليسرى وأمسكي الكاحل خلفك. مدّي الذراع اليمنى، ادفعي القدم في اليد وافتحي الصدر. نظرة هادئة.",
+    }}),
+  P({ slug: "standing-figure-four", name: "Standing Figure Four", group: "Balance", level: "Intermediate", image: "/images/pose-standing-figure-four.webp",
+    cues: {
+      en: "Standing on the left foot, cross the right ankle over the left thigh, flexing the foot. Sit the hips back and down as if into a chair, keeping the chest lifted. Hands come to heart. Breathe into the outer right hip.",
+      fr: "Sur le pied gauche, croise la cheville droite sur la cuisse gauche, pied flex. Assieds-toi en arrière comme sur une chaise, poitrine haute. Respire dans la hanche.",
+      ar: "قفي على القدم اليسرى، ضعي الكاحل الأيمن فوق الفخذ الأيسر. اجلسي بالوركين للخلف كأنكِ على كرسي، الصدر مرفوع. تنفّسي في الورك.",
+    }}),
+
+  // Backbends
+  P({ slug: "sphinx", name: "Sphinx Pose", sanskrit: "Salamba Bhujangasana", group: "Backbends", level: "Beginner", image: "/images/pose-sphinx.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your belly and set the forearms on the mat, elbows under the shoulders. Press down and lift the chest into a gentle backbend. Draw the shoulders away from the ears and lengthen the low back. Soft and steady.",
+      fr: "Sur le ventre, avant-bras au sol, coudes sous les épaules. Appuie et soulève la poitrine en douceur. Épaules loin des oreilles, bas du dos long.",
+      ar: "استلقي على البطن، الساعدان على البساط والمرفقان تحت الكتفين. اضغطي وارفعي الصدر بلطف. أبعدي الكتفين عن الأذنين وأطيلي أسفل الظهر.",
+    }}),
+  P({ slug: "locust", name: "Locust Pose", sanskrit: "Salabhasana", group: "Backbends", level: "Intermediate", image: "/images/pose-locust.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your belly, arms alongside the body, palms down. On an inhale, lift the chest, arms, and legs away from the floor, reaching back through the toes. Keep the neck long and the glutes soft. Breathe steadily.",
+      fr: "Sur le ventre, bras le long du corps. À l'inspir, soulève poitrine, bras et jambes. Nuque longue, fessiers relâchés. Respire régulièrement.",
+      ar: "على البطن، الذراعان بجانب الجسم. مع الشهيق ارفعي الصدر والذراعين والساقين عن الأرض. الرقبة طويلة والأرداف لينة. تنفّسي بثبات.",
+    }}),
+  P({ slug: "bow", name: "Bow Pose", sanskrit: "Dhanurasana", group: "Backbends", level: "Advanced", image: "/images/pose-bow.webp", floorOnly: true,
+    cues: {
+      en: "On your belly, bend both knees and reach back to catch the ankles. Kick the feet into the hands to lift the chest and thighs, rocking gently on the belly. Breathe into the front of the body. Release slowly.",
+      fr: "Sur le ventre, plie les genoux et attrape les chevilles. Pousse les pieds dans les mains pour soulever poitrine et cuisses. Respire dans l'avant du corps.",
+      ar: "على البطن، اثني الركبتين وأمسكي الكاحلين. ادفعي القدمين في اليدين لرفع الصدر والفخذين. تنفّسي في مقدمة الجسم، ثم انزلي ببطء.",
+    }}),
+  P({ slug: "upward-dog", name: "Upward-Facing Dog", sanskrit: "Urdhva Mukha Svanasana", group: "Backbends", level: "Intermediate", image: "/images/pose-upward-dog.webp",
+    cues: {
+      en: "From lying face down, place the hands beside the ribs and press into them, straightening the arms and lifting the chest and thighs off the mat. Roll the shoulders back and down, and lengthen the neck. Only the hands and tops of the feet touch.",
+      fr: "À plat ventre, mains près des côtes. Pousse, tends les bras et soulève poitrine et cuisses. Épaules en arrière, nuque longue. Seuls mains et dessus des pieds au sol.",
+      ar: "من الاستلقاء على الوجه، ضعي اليدين قرب الأضلاع واضغطي، مدّي الذراعين وارفعي الصدر والفخذين. أرجعي الكتفين للخلف وأطيلي الرقبة.",
+    }}),
+  P({ slug: "fish", name: "Fish Pose", sanskrit: "Matsyasana", group: "Backbends", level: "Intermediate", image: "/images/pose-fish.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back, hands tucked under the hips, palms down. Press into the forearms to lift the chest high, and let the crown of the head rest lightly on the mat. Open the throat and heart, and breathe into the chest. Come up with care.",
+      fr: "Sur le dos, mains sous les hanches. Appuie sur les avant-bras pour lever la poitrine, sommet de la tête posé. Ouvre la gorge et le cœur. Remonte avec soin.",
+      ar: "على الظهر، اليدان تحت الوركين. اضغطي على الساعدين لرفع الصدر عالياً، وضعي تاج الرأس برفق على البساط. افتحي الحلق والقلب، ثم انهضي بعناية.",
+    }}),
+
+  // Hips
+  P({ slug: "lizard", name: "Lizard Pose", sanskrit: "Utthan Pristhasana", group: "Hips", level: "Intermediate", image: "/images/pose-lizard.webp",
+    cues: {
+      en: "From a low lunge with the right foot forward, walk the foot to the outer edge of the mat and bring both hands inside the front foot. Stay on the hands, or lower to the forearms. Let the front hip open and breathe low and slow.",
+      fr: "Depuis la fente basse pied droit, amène le pied vers le bord du tapis, mains à l'intérieur. Reste sur les mains ou descends sur les avant-bras. Ouvre la hanche.",
+      ar: "من الاندفاع المنخفض والقدم اليمنى أماماً، حرّكي القدم لحافة البساط واليدين داخلها. ابقي على اليدين أو انزلي للساعدين. افتحي الورك وتنفّسي ببطء.",
+    }}),
+  P({ slug: "happy-baby", name: "Happy Baby", sanskrit: "Ananda Balasana", group: "Hips", level: "Beginner", image: "/images/pose-happy-baby.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back and draw both knees toward the armpits. Hold the outer edges of the feet, soles facing up, and gently rock side to side. Let the low back soften into the mat. Breathe and release the hips.",
+      fr: "Sur le dos, ramène les genoux vers les aisselles. Attrape l'extérieur des pieds, plantes vers le ciel, berce doucement. Bas du dos relâché.",
+      ar: "على الظهر، اسحبي الركبتين نحو الإبطين. أمسكي حواف القدمين للأعلى، وتمايلي بلطف. أرخي أسفل الظهر في البساط.",
+    }}),
+  P({ slug: "cow-face", name: "Cow Face Pose", sanskrit: "Gomukhasana", group: "Hips", level: "Intermediate", image: "/images/pose-cow-face.webp", floorOnly: true,
+    cues: {
+      en: "Sit and stack the right knee over the left, feet beside the hips. Reach the right arm up and bend it down the back; sweep the left arm behind to clasp the fingers, or use a strap. Lift the chest tall and breathe.",
+      fr: "Assise, empile le genou droit sur le gauche, pieds près des hanches. Bras droit en haut plié dans le dos, bras gauche en bas pour joindre les doigts. Poitrine haute.",
+      ar: "اجلسي وكدّسي الركبة اليمنى فوق اليسرى، القدمان بجانب الوركين. الذراع اليمنى للأعلى ثنياً خلف الظهر، واليسرى من الأسفل لتشبيك الأصابع. ارفعي الصدر.",
+    }}),
+  P({ slug: "frog", name: "Frog Pose", sanskrit: "Mandukasana", group: "Hips", level: "Advanced", image: "/images/pose-frog.webp", floorOnly: true,
+    cues: {
+      en: "From all fours, widen the knees out to the sides, inner ankles and shins on the mat, feet flexed. Lower onto the forearms and let the hips sink back gently. This is intense — go slow, breathe deep, and never force it.",
+      fr: "À quatre pattes, écarte les genoux, chevilles et tibias au sol, pieds flex. Descends sur les avant-bras, hanches en arrière. Va doucement, respire, ne force pas.",
+      ar: "من الأطراف الأربع، افتحي الركبتين للجانبين، الكاحلان والساقان على البساط. انزلي للساعدين وأرخي الوركين للخلف. ببطء وتنفّس عميق، دون إجبار.",
+    }}),
+  P({ slug: "reclined-figure-four", name: "Reclined Figure Four", group: "Hips", level: "Beginner", image: "/images/pose-reclined-figure-four.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back, knees bent. Cross the right ankle over the left thigh, flexing the foot. Thread the hands behind the left thigh and gently draw the legs toward you. Keep the head heavy and breathe into the outer hip.",
+      fr: "Sur le dos, genoux pliés. Croise la cheville droite sur la cuisse gauche, pied flex. Attrape derrière la cuisse gauche et ramène doucement. Respire dans la hanche.",
+      ar: "على الظهر، الركبتان مثنيتان. ضعي الكاحل الأيمن فوق الفخذ الأيسر. شبّكي اليدين خلف الفخذ الأيسر واسحبي بلطف نحوك. تنفّسي في الورك.",
+    }}),
+
+  // Strength / core
+  P({ slug: "forearm-plank", name: "Forearm Plank", group: "Strength", level: "Intermediate", image: "/images/pose-forearm-plank.webp", floorOnly: true,
+    cues: {
+      en: "Set the forearms on the mat, elbows under the shoulders, and step back into a straight line from heels to crown. Draw the belly in, tuck the tailbone gently, and press the floor away. Breathe steadily and hold strong.",
+      fr: "Avant-bras au sol, coudes sous les épaules, corps en ligne des talons à la tête. Ventre engagé, coccyx rentré. Respire et tiens fort.",
+      ar: "الساعدان على البساط والمرفقان تحت الكتفين، الجسم خط مستقيم من الكعبين للتاج. اسحبي البطن وثبّتي. تنفّسي بثبات واثبتي بقوة.",
+    }}),
+  P({ slug: "chaturanga", name: "Low Plank", sanskrit: "Chaturanga Dandasana", group: "Strength", level: "Advanced", image: "/images/pose-chaturanga.webp",
+    cues: {
+      en: "From a high plank, shift forward onto the toes and lower halfway down, elbows hugging the ribs at ninety degrees. Keep the body one firm line and the shoulders level with the elbows. Hold a breath, then flow on.",
+      fr: "Depuis la planche haute, avance sur les orteils et descends à mi-chemin, coudes serrés à angle droit. Corps en ligne. Tiens un souffle, puis continue.",
+      ar: "من البلانك العالي، تقدّمي على الأصابع وانزلي للنصف، المرفقان قرب الأضلاع بزاوية قائمة. الجسم خط ثابت. اثبتي نفَساً ثم تابعي.",
+    }}),
+  P({ slug: "dead-bug", name: "Dead Bug", group: "Strength", level: "Beginner", image: "/images/pose-dead-bug.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back, arms reaching to the ceiling, knees stacked over the hips at ninety degrees. Press the low back into the mat. Slowly lower the right arm and left leg, then return, and switch. Move with control and steady breath.",
+      fr: "Sur le dos, bras au plafond, genoux au-dessus des hanches. Bas du dos au sol. Descends lentement bras droit et jambe gauche, reviens, alterne. Contrôle et souffle.",
+      ar: "على الظهر، الذراعان للأعلى والركبتان فوق الوركين بزاوية قائمة. اضغطي أسفل الظهر في البساط. أنزلي ببطء الذراع اليمنى والساق اليسرى، ثم بدّلي. بتحكّم وتنفّس.",
+    }}),
+  P({ slug: "hollow-hold", name: "Hollow Body Hold", group: "Strength", level: "Intermediate", image: "/images/pose-hollow-hold.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back and press the low back firmly into the mat. Lift the head, shoulders, arms, and legs a few inches off the floor, reaching long in both directions. Keep the belly drawn in and the breath calm. Hold your strong little boat.",
+      fr: "Sur le dos, bas du dos bien au sol. Soulève tête, épaules, bras et jambes, allonge dans les deux sens. Ventre engagé, souffle calme.",
+      ar: "على الظهر، اضغطي أسفل الظهر بقوة في البساط. ارفعي الرأس والكتفين والذراعين والساقين قليلاً، ممتدة في الاتجاهين. اسحبي البطن والنفَس هادئ.",
+    }}),
+  P({ slug: "modified-side-plank", name: "Modified Side Plank", group: "Strength", level: "Beginner", image: "/images/pose-modified-side-plank.webp", floorOnly: true,
+    cues: {
+      en: "From your right forearm with the bottom knee down, stack the shoulder over the elbow and lift the hips into a gentle side line. Reach the top arm to the sky and open the chest. Steady breath — then switch sides.",
+      fr: "Sur l'avant-bras droit, genou du bas au sol, épaule au-dessus du coude, lève les hanches. Bras du haut au ciel. Souffle stable, puis change de côté.",
+      ar: "على الساعد الأيمن والركبة السفلية على الأرض، الكتف فوق المرفق وارفعي الوركين بلطف. الذراع العليا للسماء وافتحي الصدر. تنفّس ثابت، ثم بدّلي.",
+    }}),
+  P({ slug: "reverse-plank", name: "Reverse Plank", sanskrit: "Purvottanasana", group: "Strength", level: "Intermediate", image: "/images/pose-reverse-plank.webp", floorOnly: true,
+    cues: {
+      en: "Sit with the legs long and place the hands behind the hips, fingers pointing forward. Press down and lift the hips high, reaching the toes toward the floor. Open the chest and let the head drop back if it feels good. Breathe into the whole front line.",
+      fr: "Assise jambes longues, mains derrière les hanches, doigts en avant. Appuie et lève les hanches, orteils vers le sol. Ouvre la poitrine. Respire dans toute la face avant.",
+      ar: "اجلسي والساقان ممدودتان، اليدان خلف الوركين والأصابع للأمام. اضغطي وارفعي الوركين عالياً، الأصابع نحو الأرض. افتحي الصدر وتنفّسي في الجهة الأمامية.",
+    }}),
+
+  // Forward folds
+  P({ slug: "seated-wide-leg-fold", name: "Seated Wide-Leg Fold", sanskrit: "Upavistha Konasana", group: "Forward folds", level: "Intermediate", image: "/images/pose-seated-wide-leg-fold.webp", floorOnly: true,
+    cues: {
+      en: "Sit and open the legs wide, toes and knees pointing up. Sit tall through the spine, then walk the hands forward and fold from the hips, keeping the chest long. Go only as far as the breath stays smooth.",
+      fr: "Assise, jambes bien écartées, orteils vers le ciel. Grandis la colonne, avance les mains et plie-toi depuis les hanches, poitrine longue. Reste où le souffle est fluide.",
+      ar: "اجلسي وافتحي الساقين، الأصابع والركبتان للأعلى. أطيلي العمود، امشي باليدين للأمام وانحني من الوركين، الصدر ممتد. توقّفي حيث يبقى النفَس سلساً.",
+    }}),
+  P({ slug: "ragdoll", name: "Ragdoll Fold", group: "Forward folds", level: "Beginner", image: "/images/pose-ragdoll.webp",
+    cues: {
+      en: "From standing, feet hip-width, fold forward and bend the knees generously. Take hold of opposite elbows and let the head and neck hang completely heavy. Sway a little side to side, releasing the whole spine.",
+      fr: "Debout, pieds largeur des hanches, plie-toi et fléchis bien les genoux. Attrape les coudes opposés, tête lourde. Balance-toi doucement, relâche la colonne.",
+      ar: "من الوقوف والقدمان بعرض الورك، انحني واثني الركبتين جيداً. أمسكي المرفقين المتقابلين وأرخي الرأس تماماً. تمايلي قليلاً وحرّري العمود.",
+    }}),
+  P({ slug: "gate-pose", name: "Gate Pose", sanskrit: "Parighasana", group: "Forward folds", level: "Beginner", image: "/images/pose-gate-pose.webp", floorOnly: true,
+    cues: {
+      en: "Kneel, then extend the right leg out to the side, foot flat, toes forward. Rest the right hand lightly on the leg and sweep the left arm up and over, opening the left side of the body. Breathe into the long side waist. Then switch.",
+      fr: "À genoux, tends la jambe droite sur le côté, pied à plat. Main droite sur la jambe, bras gauche par-dessus, ouvre le côté gauche. Respire dans le flanc. Puis change.",
+      ar: "اركعي ثم مدّي الساق اليمنى للجانب، القدم مسطحة. اليد اليمنى على الساق، والذراع اليسرى للأعلى وفوق، لتفتحي الجنب الأيسر. تنفّسي في الخصر، ثم بدّلي.",
+    }}),
+
+  // Restorative
+  P({ slug: "supported-bridge", name: "Supported Bridge", group: "Restorative", level: "Beginner", image: "/images/pose-supported-bridge.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back, knees bent, feet flat. Lift the hips and slide a block or cushion under the sacrum, then rest your whole weight down onto it. Let the arms fall open and the breath slow. Stay and be held.",
+      fr: "Sur le dos, genoux pliés, pieds à plat. Lève les hanches, glisse un bloc ou coussin sous le sacrum, puis repose-toi dessus. Bras ouverts, souffle lent.",
+      ar: "على الظهر، الركبتان مثنيتان والقدمان مسطحتان. ارفعي الوركين وضعي وسادة تحت العجز، ثم أرخي وزنك عليها. الذراعان مفتوحتان والنفَس بطيء.",
+    }}),
+  P({ slug: "banana-pose", name: "Banana Pose", group: "Restorative", level: "Beginner", image: "/images/pose-banana-pose.webp", floorOnly: true,
+    cues: {
+      en: "Lie on your back and walk both feet and the upper body over to the right, keeping the hips grounded, so the body curves like a crescent. Clasp the hands overhead if it feels good. Breathe into the long stretched left side. Then switch.",
+      fr: "Sur le dos, déplace les pieds et le buste vers la droite, hanches ancrées, corps en croissant. Mains au-dessus de la tête. Respire dans le côté gauche étiré. Puis change.",
+      ar: "على الظهر، حرّكي القدمين والجذع نحو اليمين، الوركان ثابتان، فيتقوّس الجسم كالهلال. شبّكي اليدين فوق الرأس. تنفّسي في الجانب الأيسر الممتد، ثم بدّلي.",
+    }}),
+  P({ slug: "supported-savasana", name: "Supported Rest", group: "Restorative", level: "Beginner", image: "/images/pose-supported-savasana.webp", floorOnly: true,
+    cues: {
+      en: "Lie down and slide a bolster or rolled blanket under the knees, and a soft layer under the head. Let the feet fall open, palms face up, and the whole body grow heavy. There is nothing to do now but breathe and be.",
+      fr: "Allonge-toi, un traversin sous les genoux et un soutien sous la tête. Pieds ouverts, paumes vers le ciel, corps lourd. Rien à faire — respire et sois.",
+      ar: "استلقي وضعي وسادة تحت الركبتين وطبقة ناعمة تحت الرأس. أرخي القدمين والكفّين للأعلى، والجسم يثقل. لا شيء تفعلينه سوى التنفّس والحضور.",
+    }}),
+
+  // Breathing
+  P({ slug: "alternate-nostril", name: "Alternate Nostril Breath", sanskrit: "Nadi Shodhana", group: "Breathing", level: "Beginner", image: "/images/pose-alternate-nostril.webp", floorOnly: true,
+    cues: {
+      en: "Sit tall and rest the left hand on the knee. With the right thumb, gently close the right nostril and breathe in through the left. Close the left, release the right, and breathe out. Continue, guiding the breath slow and even through one nostril at a time.",
+      fr: "Assise, dos long, main gauche sur le genou. Pouce droit ferme la narine droite, inspire à gauche. Ferme à gauche, ouvre à droite, expire. Continue, souffle lent et régulier.",
+      ar: "اجلسي بظهر طويل واليد اليسرى على الركبة. بالإبهام الأيمن أغلقي المنخر الأيمن وشهيق من اليسار. أغلقي اليسار وافتحي اليمين وزفير. تابعي ببطء وانتظام.",
+    }}),
+  P({ slug: "box-breathing", name: "Box Breathing", sanskrit: "Sama Vritti", group: "Breathing", level: "Beginner", image: "/images/pose-box-breathing.webp", floorOnly: true,
+    cues: {
+      en: "Sit comfortably and let the eyes close. Breathe in for a count of four, hold gently for four, breathe out for four, and stay empty for four. Keep each side of the breath even and smooth, like tracing the four sides of a square.",
+      fr: "Assise confortablement, yeux fermés. Inspire sur quatre temps, retiens quatre, expire quatre, reste vide quatre. Chaque côté du souffle égal, comme les côtés d'un carré.",
+      ar: "اجلسي مرتاحة وأغمضي العينين. شهيق أربع عدّات، احبسي أربعاً، زفير أربعاً، وابقي فارغة أربعاً. اجعلي كل جانب من النفَس متساوياً كأضلاع المربّع.",
+    }}),
 ];
 
 const POSE_BY_SLUG: Record<string, Pose> = POSES.reduce((acc, p) => { acc[p.slug] = p; return acc; }, {} as Record<string, Pose>);
 
 // ===================== INTENTIONS / FLOWS =====================
 
-type Intention = "morning" | "stress" | "sleep" | "release" | "cycle" | "strength";
+type Intention = "morning" | "stress" | "sleep" | "release" | "cycle" | "strength" | "core" | "balance" | "backcare" | "fullbody";
 type Phase = "menstrual" | "follicular" | "ovulation" | "luteal";
 
 const INTENTIONS: { id: Intention; label: string; icon: typeof Sun; tagline: string }[] = [
@@ -250,21 +503,36 @@ const INTENTIONS: { id: Intention; label: string; icon: typeof Sun; tagline: str
   { id: "release", label: "Emotional release", icon: Sparkle, tagline: "open hips & heart, let it move" },
   { id: "cycle", label: "Cycle sync", icon: Flower, tagline: "match today's phase" },
   { id: "strength", label: "Strength", icon: Activity, tagline: "build steady, mindful power" },
+  { id: "fullbody", label: "Full-body flow", icon: Sun, tagline: "one flowing practice, head to toe" },
+  { id: "core", label: "Core & abs", icon: CircleDot, tagline: "steady, mindful core strength" },
+  { id: "balance", label: "Balance & focus", icon: Sparkle, tagline: "steady the body, quiet the mind" },
+  { id: "backcare", label: "Back & neck relief", icon: Heart, tagline: "unwind desk-day tension" },
 ];
 
+// Main-pose POOLS (ordered as a sensible flow). buildFlow picks a varied subset
+// each session so daily practice never repeats. Warm-up / cool-down / rest are
+// added separately from their own rotating pools.
 const PHASE_SLUGS: Record<Phase, string[]> = {
-  menstrual: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "butterfly", "supine-twist", "knees-to-chest", "legs-up-wall", "savasana"],
-  follicular: ["easy-seat", "cat-cow", "downward-dog", "low-lunge", "warrior-1", "cobra", "childs-pose", "savasana"],
-  ovulation: ["easy-seat", "cat-cow", "downward-dog", "warrior-2", "triangle", "chair", "tree", "bridge", "savasana"],
-  luteal: ["easy-seat", "cat-cow", "low-lunge", "seated-forward-fold", "head-to-knee", "wide-leg-fold", "supine-twist", "legs-up-wall", "savasana"],
+  // menstrual — gentle, grounding, restorative
+  menstrual: ["cat-cow", "childs-pose", "reclined-bound-angle", "butterfly", "happy-baby", "reclined-figure-four", "supine-twist", "knees-to-chest", "banana-pose", "legs-up-wall"],
+  // follicular — fresh energy building
+  follicular: ["downward-dog", "low-lunge", "high-lunge", "warrior-1", "warrior-2", "triangle", "cobra", "tree", "bridge", "chair"],
+  // ovulation — peak, strong & open
+  ovulation: ["downward-dog", "warrior-2", "extended-side-angle", "triangle", "half-moon", "goddess", "chair", "tree", "dancer", "boat", "camel", "bridge"],
+  // luteal — slowing down, hips & folds
+  luteal: ["cat-cow", "low-lunge", "lizard", "seated-forward-fold", "head-to-knee", "wide-leg-fold", "seated-wide-leg-fold", "gate-pose", "supine-twist", "reclined-figure-four", "legs-up-wall"],
 };
 
 const INTENTION_MAIN: Record<Exclude<Intention, "cycle">, string[]> = {
-  morning: ["mountain", "forward-fold", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "cobra"],
-  stress: ["cat-cow", "childs-pose", "low-lunge", "seated-forward-fold", "supine-twist", "legs-up-wall"],
-  sleep: ["reclined-bound-angle", "knees-to-chest", "supine-twist", "legs-up-wall"],
-  release: ["low-lunge", "pigeon", "butterfly", "cobra", "bridge", "childs-pose"],
-  strength: ["chair", "plank", "boat", "warrior-2", "bridge", "side-plank"],
+  morning: ["mountain", "standing-side-stretch", "forward-fold", "high-lunge", "warrior-1", "warrior-2", "triangle", "extended-side-angle", "downward-dog", "cobra", "upward-dog", "chair", "tree", "warrior-3"],
+  stress: ["cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "forward-fold", "seated-forward-fold", "gate-pose", "supine-twist", "reclined-figure-four", "banana-pose", "legs-up-wall"],
+  sleep: ["reclined-bound-angle", "happy-baby", "knees-to-chest", "reclined-figure-four", "supine-twist", "banana-pose", "supported-bridge", "legs-up-wall"],
+  release: ["low-lunge", "lizard", "pigeon", "butterfly", "frog", "cow-face", "gate-pose", "sphinx", "cobra", "bridge", "camel", "fish", "supine-twist"],
+  strength: ["chair", "goddess", "warrior-2", "high-lunge", "plank", "forearm-plank", "chaturanga", "side-plank", "modified-side-plank", "boat", "hollow-hold", "dead-bug", "bird-dog", "reverse-plank", "bridge", "locust"],
+  fullbody: ["mountain", "forward-fold", "high-lunge", "warrior-1", "warrior-2", "extended-side-angle", "triangle", "downward-dog", "plank", "cobra", "pigeon", "bridge", "seated-forward-fold", "supine-twist"],
+  core: ["cat-cow", "bird-dog", "dead-bug", "plank", "forearm-plank", "hollow-hold", "boat", "side-plank", "modified-side-plank", "reverse-plank", "bridge", "knees-to-chest", "supine-twist"],
+  balance: ["mountain", "tree", "standing-figure-four", "eagle", "warrior-3", "dancer", "half-moon", "chair", "goddess", "forward-fold"],
+  backcare: ["neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "sphinx", "cobra", "bird-dog", "low-lunge", "supine-twist", "reclined-figure-four", "knees-to-chest", "legs-up-wall"],
 };
 
 // ===================== FLOW SESSION PRESETS (carousels) =====================
@@ -382,6 +650,15 @@ const POSE_HOLD: Record<string, number> = {
   "head-to-knee": 75, "wide-leg-fold": 100, "reclined-bound-angle": 110, "knees-to-chest": 105,
   "supine-twist": 120, "legs-up-wall": 120, "savasana": 105, "plank": 115, "boat": 85, "side-plank": 110,
   "bridge": 85,
+  // Library expansion — estimated holds until each recording is measured.
+  "neck-shoulder-rolls": 55, "thread-the-needle": 55, "bird-dog": 55, "standing-side-stretch": 50,
+  "high-lunge": 55, "crescent-twist": 65, "extended-side-angle": 65, "pyramid": 55, "revolved-triangle": 65,
+  "goddess": 55, "wide-legged-forward-fold": 55, "warrior-3": 65, "eagle": 60, "dancer": 65,
+  "standing-figure-four": 60, "sphinx": 55, "locust": 55, "bow": 55, "upward-dog": 60, "fish": 60,
+  "lizard": 60, "happy-baby": 50, "cow-face": 60, "frog": 60, "reclined-figure-four": 55,
+  "forearm-plank": 55, "chaturanga": 55, "dead-bug": 60, "hollow-hold": 55, "modified-side-plank": 55,
+  "reverse-plank": 60, "seated-wide-leg-fold": 55, "ragdoll": 50, "gate-pose": 60, "supported-bridge": 55,
+  "banana-pose": 55, "supported-savasana": 55, "alternate-nostril": 65, "box-breathing": 60,
 };
 const poseAudioUrl = (slug: string): string | undefined =>
   POSE_HOLD[slug] != null ? `/audio/yoga/${slug}.mp3` : undefined;
@@ -392,6 +669,11 @@ const holdOf = (slug: string, fallback = 45): number => POSE_HOLD[slug] ?? fallb
 const TWO_SIDED = new Set<string>([
   "seated-twist", "low-lunge", "pigeon", "warrior-1", "warrior-2", "triangle",
   "tree", "half-moon", "head-to-knee", "supine-twist", "side-plank",
+  // expansion
+  "thread-the-needle", "bird-dog", "standing-side-stretch", "high-lunge", "crescent-twist",
+  "extended-side-angle", "pyramid", "revolved-triangle", "warrior-3", "eagle", "dancer",
+  "standing-figure-four", "lizard", "cow-face", "reclined-figure-four", "modified-side-plank",
+  "gate-pose", "banana-pose",
 ]);
 const SWITCH_AUDIO = "/audio/yoga/switch-sides.mp3";
 const SWITCH_HOLD = 20; // seconds on the second side (clip is ~15s)
@@ -420,34 +702,56 @@ const MUSIC: Record<string, string> = {
   Forest: "/audio/music/forest.mp3",
 };
 
+// Rotating warm-up / cool-down / rest pools — each session pulls a varied set so
+// daily practice never feels identical.
+const WARMUP_POOL = ["neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "bird-dog", "standing-side-stretch"];
+const COOLDOWN_POOL = ["seated-forward-fold", "supine-twist", "reclined-figure-four", "happy-baby", "gate-pose", "banana-pose"];
+const REST_POOL = ["savasana", "supported-savasana"];
+// Gentler intentions get a shorter main set.
+const GENTLE = new Set<Intention>(["sleep", "stress", "backcare"]);
+
+function shuffle<T>(a: T[]): T[] {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
+  return b;
+}
+/** Pick `keep` items from an ordered pool at random, PRESERVING order — variety
+ *  without breaking a sensible sequence. */
+function pickVaried(pool: string[], keep: number): string[] {
+  if (pool.length <= keep) return pool;
+  return shuffle(pool.map((_, i) => i)).slice(0, keep).sort((a, b) => a - b).map((i) => pool[i]);
+}
+
 function buildFlow(opts: {
   intention: Intention; level: Level; durationMin: number; phase: Phase; mode: Mode;
 }): Pose[] {
-  const { intention, level, durationMin, phase, mode } = opts;
-  const warmup = ["easy-seat", "cat-cow", "childs-pose"];
-  const cooldown = ["seated-forward-fold", "supine-twist"];
-  const rest = ["savasana"];
-
-  let main: string[];
-  if (intention === "cycle") main = PHASE_SLUGS[phase];
-  else main = INTENTION_MAIN[intention];
+  const { intention, level, phase, mode } = opts;
 
   // Beginner audio-only safety: drop non-floor poses
   const audioBeginner = mode === "audio" && level === "Beginner";
   const safe = (slugs: string[]) =>
     audioBeginner ? slugs.filter((s) => POSE_BY_SLUG[s]?.floorOnly) : slugs;
 
-  // Level filter: beginner avoids "Advanced"
+  // Level filter: beginners avoid "Advanced"; advanced practitioners pull harder.
   const byLevel = (slugs: string[]) => slugs.filter((s) => {
     const lv = POSE_BY_SLUG[s]?.level;
     if (level === "Beginner") return lv !== "Advanced";
-    if (level === "Intermediate") return lv !== "Advanced" || Math.random() > 0.6;
+    if (level === "Intermediate") return lv !== "Advanced" || Math.random() > 0.5;
     return true;
   });
 
-  // No duration trimming — each pose lasts its own narration; play the full
-  // curated flow (warm-up → the intention's poses → cool-down → rest).
-  const composed: string[] = [...safe(warmup), ...safe(byLevel(main)), ...safe(cooldown), ...rest];
+  const mainPool = intention === "cycle" ? PHASE_SLUGS[phase] : INTENTION_MAIN[intention];
+  const mainCount = GENTLE.has(intention) ? 6 : 8;
+
+  // Warm-up: always ground with a seated breath, then 2 varied warm-ups.
+  const warm = ["easy-seat", ...pickVaried(safe(WARMUP_POOL), 2)];
+  // Main: a varied subset of the intention's pool (order preserved), level-fit.
+  const main = pickVaried(safe(byLevel(mainPool)), mainCount);
+  // Cool-down: 2 varied, then a final rest.
+  const cool = pickVaried(safe(COOLDOWN_POOL), 2);
+  const rst = [safe(REST_POOL)[Math.floor(Math.random() * Math.max(1, safe(REST_POOL).length))] || "savasana"];
+
+  const composed = [...warm, ...main, ...cool, ...rst];
   // dedupe while preserving order
   const seen = new Set<string>();
   const poses = composed
@@ -1788,7 +2092,7 @@ function PoseCard({ pose, index }: { pose: Pose; index: number }) {
     >
       <button onClick={() => setOpen((v) => !v)} className="block w-full text-left">
         <div className="aspect-square bg-blush/40">
-          <img src={pose.image} alt={pose.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-contain bg-[oklch(0.96_0.04_350)]" />
+          <img src={pose.image} alt={pose.name} loading="lazy" width={1024} height={1024} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="h-full w-full object-contain bg-[oklch(0.96_0.04_350)]" />
         </div>
         <div className="p-3">
           <p className="text-sm font-bold text-rose leading-tight">{pose.name}</p>
@@ -2153,7 +2457,7 @@ function SessionPlayer({
         <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
             <>
-              <img src={pose.image} alt={pose.name} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)]" />
+              <img src={pose.image} alt={pose.name} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)]" />
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
                 <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
