@@ -368,6 +368,31 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
 ];
 
+// ── Recorded pose narration + audio-driven timing ───────────────────────────
+// Every pose plays its OWN recorded narration (no robotic text-to-speech). Its
+// on-screen hold is that audio's real length rounded UP to the next clean 5s, so
+// the voice is never cut off. Poses missing a recording fall back to a default
+// hold and stay silent. (Measured from the uploaded files.)
+const POSE_HOLD: Record<string, number> = {
+  "easy-seat": 50, "cat-cow": 50, "childs-pose": 60, "seated-twist": 105, "low-lunge": 105,
+  "butterfly": 75, "pigeon": 110, "garland": 105, "mountain": 80, "forward-fold": 65,
+  "downward-dog": 75, "warrior-1": 95, "warrior-2": 110, "triangle": 105, "chair": 65,
+  "tree": 95, "half-moon": 110, "cobra": 80, "camel": 95, "seated-forward-fold": 85,
+  "head-to-knee": 75, "wide-leg-fold": 100, "reclined-bound-angle": 110, "knees-to-chest": 105,
+  "supine-twist": 120, "legs-up-wall": 120, "savasana": 105, "plank": 115, "boat": 85, "side-plank": 110,
+};
+const poseAudioUrl = (slug: string): string | undefined =>
+  POSE_HOLD[slug] != null ? `/audio/yoga/${slug}.mp3` : undefined;
+const holdOf = (slug: string, fallback = 45): number => POSE_HOLD[slug] ?? fallback;
+
+// ── Background music (a continuous, looping bed). "Windsong" is the fullest
+// track and also powers the eyes-closed music-only experience.
+const MUSIC: Record<string, string> = {
+  Weightless: "/audio/music/weightless.mp3",
+  Renewal: "/audio/music/renewal.mp3",
+  Windsong: "/audio/music/windsong.mp3",
+};
+
 function buildFlow(opts: {
   intention: Intention; level: Level; durationMin: number; phase: Phase; mode: Mode;
 }): Pose[] {
@@ -393,24 +418,36 @@ function buildFlow(opts: {
     return true;
   });
 
-  // Duration scaling
-  let mainCount = 4;
-  if (durationMin >= 20) mainCount = 6;
-  if (durationMin >= 30) mainCount = 8;
-  if (durationMin >= 45) mainCount = 10;
-  if (durationMin >= 60) mainCount = 12;
+  // Duration budgeting — each pose now lasts its own narration length, so we add
+  // main poses until the running total (warm-up + these + cool-down + rest) is
+  // about the chosen minutes, rather than a fixed pose count.
+  const warm = safe(warmup);
+  const cool = safe(cooldown);
+  const target = durationMin * 60;
+  const fixed = [...warm, ...cool, ...rest].reduce((a, s) => a + holdOf(s), 0);
+  let budget = target - fixed;
+  const chosenMain: string[] = [];
+  for (const s of safe(byLevel(main))) {
+    if (budget <= 0) break;
+    chosenMain.push(s);
+    budget -= holdOf(s);
+  }
+  if (chosenMain.length === 0) {
+    const pool = safe(byLevel(main));
+    if (pool.length) chosenMain.push(pool[0]); // always at least one main pose
+  }
 
-  const composed: string[] = [
-    ...safe(warmup),
-    ...safe(byLevel(main)).slice(0, mainCount),
-    ...safe(cooldown),
-    ...rest,
-  ];
+  const composed: string[] = [...warm, ...chosenMain, ...cool, ...rest];
   // dedupe while preserving order
   const seen = new Set<string>();
   return composed
     .filter((s) => POSE_BY_SLUG[s] && !seen.has(s) && (seen.add(s), true))
     .map((s) => POSE_BY_SLUG[s]);
+}
+
+/** Real session length (seconds) = sum of each pose's own hold. */
+function flowTotalSeconds(flow: Pose[]): number {
+  return flow.reduce((a, p) => a + holdOf(p.slug), 0);
 }
 
 function holdSecondsFor(durationMin: number, level: Level) {
@@ -663,7 +700,7 @@ type View =
   | { kind: "library" }
   | { kind: "plan" }
   | { kind: "setup"; preset?: { intention: Intention; durationMin: number } }
-  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number }
+  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string }
   | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; moodBefore?: string; moodAfter?: string };
 
 export default function YogaPage() {
@@ -723,7 +760,7 @@ export default function YogaPage() {
       const mode: Mode = "visual";
       const lang: Lang = "en";
       const flow = buildFlow({ intention, level, durationMin, phase, mode });
-      setView({ kind: "session", flow, lang, mode, intention, hold: holdSecondsFor(durationMin, level), durationMin });
+      setView({ kind: "session", flow, lang, mode, intention, hold: holdSecondsFor(durationMin, level), durationMin, sound: DEFAULT_SOUND });
     }
     setLowWater(readTodayWaterCount() < 3);
     const refresh = () => setLowWater(readTodayWaterCount() < 3);
@@ -832,7 +869,7 @@ export default function YogaPage() {
           onBack={() => setView({ kind: "home" })}
           onStart={(cfg) => {
             const flow = buildFlow(cfg);
-            setView({ kind: "session", flow, lang: cfg.lang, mode: cfg.mode, intention: cfg.intention, hold: holdSecondsFor(cfg.durationMin, cfg.level), durationMin: cfg.durationMin });
+            setView({ kind: "session", flow, lang: cfg.lang, mode: cfg.mode, intention: cfg.intention, hold: holdSecondsFor(cfg.durationMin, cfg.level), durationMin: cfg.durationMin, sound: cfg.sound });
           }}
         />
       )}
@@ -843,6 +880,7 @@ export default function YogaPage() {
           lang={view.lang}
           mode={view.mode}
           hold={view.hold}
+          sound={view.sound}
           onExit={() => setView({ kind: "home" })}
           onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin })}
         />
@@ -1752,7 +1790,8 @@ function PoseCard({ pose, index }: { pose: Pose; index: number }) {
 
 const DURATIONS = [10, 20, 30, 45, 60];
 const LEVELS: Level[] = ["Beginner", "Intermediate", "Advanced"];
-const SOUNDS = ["Silence", "Rain", "Singing bowls", "Forest"] as const;
+const SOUNDS = ["Renewal", "Weightless", "Windsong"] as const;
+const DEFAULT_SOUND: typeof SOUNDS[number] = "Renewal"; // meditation bed, default for programs
 
 function YogaPlanSetup({ onBack, onCreate }: {
   onBack: () => void;
@@ -1797,7 +1836,7 @@ function Setup({
   const [intention, setIntention] = useState<Intention>(preset?.intention ?? "morning");
   const [level, setLevel] = useState<Level>(() => readYogaProfileLevel());
   const [lang, setLang] = useState<Lang>("en");
-  const [sound, setSound] = useState<typeof SOUNDS[number]>("Silence");
+  const [sound, setSound] = useState<typeof SOUNDS[number]>(DEFAULT_SOUND);
   const [mode, setMode] = useState<Mode>("visual");
   const [phase, setPhase] = useState<Phase>("follicular");
 
@@ -1918,22 +1957,33 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 // ===================== SESSION PLAYER =====================
 
 function SessionPlayer({
-  flow, lang, mode, hold, onExit, onDone,
+  flow, lang, mode, hold, sound, onExit, onDone,
 }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; onExit: () => void; onDone: () => void;
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; onExit: () => void; onDone: () => void;
 }) {
   const [idx, setIdx] = useState(0);
   const [running, setRunning] = useState(false);
-  const [remaining, setRemaining] = useState(hold);
-  const [muted, setMuted] = useState(true);
+  const pose = flow[idx];
+  // Each pose lasts its OWN recorded-narration length (rounded up); poses with
+  // no recording fall back to the uniform hold.
+  const poseHold = holdOf(pose?.slug ?? "", hold);
+  const [remaining, setRemaining] = useState(() => holdOf(flow[0]?.slug ?? "", hold));
+  const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
-  const { supported, speak, stop } = useSpeaker();
+  const { stop } = useSpeaker();
   const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
   const wakeLockRef = useRef<any>(null);
-  const lastSpokenIdx = useRef<number>(-1);
+  const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
+  const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
+  const lastPlayedIdx = useRef<number>(-1);
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
-  const pose = flow[idx];
   const midIdx = Math.floor(flow.length / 2);
+
+  const stopAllAudio = () => {
+    try { narrationRef.current?.pause(); } catch {}
+    try { musicRef.current?.pause(); } catch {}
+    stop();
+  };
 
   // Wake Lock so audio mode keeps screen / audio alive
   useEffect(() => {
@@ -1953,42 +2003,48 @@ function SessionPlayer({
     };
   }, []);
 
-  // Speak pose cue on idx change
+  // Play THIS pose's recorded narration (no robotic text-to-speech). A soft bell
+  // marks the transition, then the voice plays; the previous voice is stopped so
+  // two never overlap. Poses without a recording simply stay silent.
   useEffect(() => {
-    if (!pose || muted) return;
-    if (lastSpokenIdx.current === idx) return;
-    lastSpokenIdx.current = idx;
+    if (!pose) return;
+    try { narrationRef.current?.pause(); } catch {}
+    narrationRef.current = null;
+    const isNewPose = lastPlayedIdx.current !== idx;
+    lastPlayedIdx.current = idx;
+    if (muted) return;
+    if (isNewPose) playBell();
+    const url = poseAudioUrl(pose.slug);
+    if (!url) return;
+    const a = new Audio(url);
+    narrationRef.current = a;
+    const t = setTimeout(() => { a.play().catch(() => {}); }, isNewPose ? 500 : 0);
+    return () => clearTimeout(t);
+  }, [idx, muted]);
 
-    playBell();
-    const intro = `${pose.name}. `;
-    const text = intro + pose.cues[lang];
+  // Background music — ONE looping element for the whole session so it plays
+  // continuously and repeats seamlessly (never cropped between poses).
+  useEffect(() => {
+    const src = MUSIC[sound] || MUSIC[DEFAULT_SOUND];
+    const a = new Audio(src);
+    a.loop = true;
+    a.volume = 0.35; // sits softly under the voice
+    musicRef.current = a;
+    return () => { try { a.pause(); } catch {} musicRef.current = null; };
+  }, [sound]);
 
-    // Future: if pose.audioUrl exists, play it instead.
-    if (pose.audioUrl) {
-      try {
-        const a = new Audio(pose.audioUrl);
-        a.play().catch(() => speak(text, langBcp));
-      } catch { speak(text, langBcp); }
-    } else if (supported) {
-      // small delay so bell finishes
-      const t = setTimeout(() => speak(text, langBcp), 600);
-      return () => clearTimeout(t);
-    }
+  // Start/stop the music with play state + mute (position is preserved on pause).
+  useEffect(() => {
+    const a = musicRef.current;
+    if (!a) return;
+    if (running && !muted) a.play().catch(() => {});
+    else a.pause();
+  }, [running, muted, sound]);
 
-    // Mid-session encouragement
-    if (idx === midIdx && idx !== 0 && idx !== flow.length - 1) {
-      setTimeout(() => { if (!muted) speak(ENCOURAGE[lang], langBcp, { rate: 0.88 }); }, 4000);
-    }
-    // Closing affirmation on last pose
-    if (idx === flow.length - 1) {
-      setTimeout(() => { if (!muted) speak(CLOSING[lang], langBcp, { rate: 0.85 }); }, 4000);
-    }
-  }, [idx, pose, muted, lang]);
-
-  // Timer
+  // Timer — counts down THIS pose's own hold (its narration length rounded up).
   useEffect(() => {
     if (!running) return;
-    setRemaining(hold);
+    setRemaining(poseHold);
     const t = setInterval(() => {
       setRemaining((r) => {
         if (r <= 1) {
@@ -2009,10 +2065,10 @@ function SessionPlayer({
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [idx, running, hold]);
+  }, [idx, running, poseHold]);
 
   function finishSession() {
-    stop();
+    stopAllAudio();
     // streak
     try {
       const raw = localStorage.getItem(STREAK_KEY);
@@ -2027,7 +2083,7 @@ function SessionPlayer({
     } catch {}
     incrementYogaSession(); // feeds the movement level (logical, real count)
     // Log the flow's calories so yoga counts toward the daily energy balance.
-    const practiceMin = Math.max(5, Math.round((flow.length * hold) / 60));
+    const practiceMin = Math.max(5, Math.round(flowTotalSeconds(flow) / 60));
     logYogaSession(practiceMin, readDietProfile().weight);
     onDone();
   }
@@ -2042,14 +2098,14 @@ function SessionPlayer({
       style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
       {/* TOP BAR */}
       <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
-        <button onClick={() => { stop(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
+        <button onClick={() => { stopAllAudio(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
           <X className="h-3.5 w-3.5" /> End
         </button>
         <div className="flex-1 max-w-md mx-auto h-1.5 bg-petal/40 rounded-full overflow-hidden">
           <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setMuted((m) => { const n = !m; if (n) stop(); return n; })}
+          <button onClick={() => setMuted((m) => { const n = !m; if (n) stopAllAudio(); return n; })}
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>
@@ -2110,7 +2166,7 @@ function SessionPlayer({
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button onClick={() => setRunning((r) => !r)}
               className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white">
-              {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === hold ? "Start" : "Resume"}</>}
+              {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === poseHold ? "Start" : "Resume"}</>}
             </button>
             <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
               className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-rose border border-petal/60">
