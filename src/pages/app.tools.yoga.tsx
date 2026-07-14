@@ -42,6 +42,7 @@ interface Pose {
   cues: Record<Lang, string>;
   audioUrl?: string; // future custom voice — left empty; TTS reads cue
   floorOnly?: boolean; // safe for beginner audio sessions
+  switchStep?: boolean; // synthetic "other side" step for a one-sided pose
 }
 
 const P = (p: Pose) => p;
@@ -386,12 +387,37 @@ const poseAudioUrl = (slug: string): string | undefined =>
   POSE_HOLD[slug] != null ? `/audio/yoga/${slug}.mp3` : undefined;
 const holdOf = (slug: string, fallback = 45): number => POSE_HOLD[slug] ?? fallback;
 
+// ── One-sided poses — each needs a short second-side step. After side one, we
+// insert an "other side" step that plays the switch-side voice and holds 20s.
+const TWO_SIDED = new Set<string>([
+  "seated-twist", "low-lunge", "pigeon", "warrior-1", "warrior-2", "triangle",
+  "tree", "half-moon", "head-to-knee", "supine-twist", "side-plank",
+]);
+const SWITCH_AUDIO = "/audio/yoga/switch-sides.mp3";
+const SWITCH_HOLD = 20; // seconds on the second side (clip is ~15s)
+// After the narration finishes, hold the pose this many extra seconds with just
+// the music, so she can settle into the shape before moving on.
+const POSE_TAIL_SEC = 10;
+const SWITCH_CUES: Record<Lang, string> = {
+  en: "Gently release the pose. Take a slow breath in, and softly come onto your other side. Ease into the shape, lengthen your spine, and let your shoulders soften. Stay here — breathing deep, and slow.",
+  fr: "Relâche doucement la posture. Inspire lentement, et passe en douceur de l'autre côté. Installe-toi, allonge la colonne, relâche les épaules. Reste ici — respire, profondément et lentement.",
+  ar: "حرّري الوضعية بلطف. خذي شهيقاً بطيئاً، وانتقلي بهدوء إلى الجهة الأخرى. استقري في الوضعية، أطيلي العمود الفقري، وأرخي كتفيكِ. ابقي هنا — تنفّسي بعمق وببطء.",
+};
+/** A synthetic "other side" step built from a one-sided pose. */
+const makeSwitchStep = (p: Pose): Pose => ({ ...p, slug: `${p.slug}__side2`, switchStep: true, cues: SWITCH_CUES });
+/** This step's hold in seconds: narration length + a 10s music-only tail;
+ *  switch steps are a fixed 20s. */
+const poseHoldSec = (p: Pose): number => (p.switchStep ? SWITCH_HOLD : holdOf(p.slug) + POSE_TAIL_SEC);
+/** The audio a step should play. */
+const poseAudioFor = (p: Pose): string | undefined => (p.switchStep ? SWITCH_AUDIO : poseAudioUrl(p.slug));
+
 // ── Background music (a continuous, looping bed). "Windsong" is the fullest
 // track and also powers the eyes-closed music-only experience.
 const MUSIC: Record<string, string> = {
   Weightless: "/audio/music/weightless.mp3",
   Renewal: "/audio/music/renewal.mp3",
   Windsong: "/audio/music/windsong.mp3",
+  Forest: "/audio/music/forest.mp3",
 };
 
 function buildFlow(opts: {
@@ -419,36 +445,26 @@ function buildFlow(opts: {
     return true;
   });
 
-  // Duration budgeting — each pose now lasts its own narration length, so we add
-  // main poses until the running total (warm-up + these + cool-down + rest) is
-  // about the chosen minutes, rather than a fixed pose count.
-  const warm = safe(warmup);
-  const cool = safe(cooldown);
-  const target = durationMin * 60;
-  const fixed = [...warm, ...cool, ...rest].reduce((a, s) => a + holdOf(s), 0);
-  let budget = target - fixed;
-  const chosenMain: string[] = [];
-  for (const s of safe(byLevel(main))) {
-    if (budget <= 0) break;
-    chosenMain.push(s);
-    budget -= holdOf(s);
-  }
-  if (chosenMain.length === 0) {
-    const pool = safe(byLevel(main));
-    if (pool.length) chosenMain.push(pool[0]); // always at least one main pose
-  }
-
-  const composed: string[] = [...warm, ...chosenMain, ...cool, ...rest];
+  // No duration trimming — each pose lasts its own narration; play the full
+  // curated flow (warm-up → the intention's poses → cool-down → rest).
+  const composed: string[] = [...safe(warmup), ...safe(byLevel(main)), ...safe(cooldown), ...rest];
   // dedupe while preserving order
   const seen = new Set<string>();
-  return composed
+  const poses = composed
     .filter((s) => POSE_BY_SLUG[s] && !seen.has(s) && (seen.add(s), true))
     .map((s) => POSE_BY_SLUG[s]);
+  // After each one-sided pose, add a short "other side" step.
+  const withSides: Pose[] = [];
+  for (const p of poses) {
+    withSides.push(p);
+    if (TWO_SIDED.has(p.slug)) withSides.push(makeSwitchStep(p));
+  }
+  return withSides;
 }
 
 /** Real session length (seconds) = sum of each pose's own hold. */
 function flowTotalSeconds(flow: Pose[]): number {
-  return flow.reduce((a, p) => a + holdOf(p.slug), 0);
+  return flow.reduce((a, p) => a + poseHoldSec(p), 0);
 }
 
 function holdSecondsFor(durationMin: number, level: Level) {
@@ -1793,7 +1809,7 @@ function PoseCard({ pose, index }: { pose: Pose; index: number }) {
 
 const DURATIONS = [10, 20, 30, 45, 60];
 const LEVELS: Level[] = ["Beginner", "Intermediate", "Advanced"];
-const SOUNDS = ["Renewal", "Weightless", "Windsong"] as const;
+const SOUNDS = ["Renewal", "Weightless", "Windsong", "Forest"] as const;
 const DEFAULT_SOUND: typeof SOUNDS[number] = "Renewal"; // meditation bed, default for programs
 
 function YogaPlanSetup({ onBack, onCreate }: {
@@ -1897,9 +1913,14 @@ function Setup({
       </PickGroup>
 
       <PickGroup label="Language" icon={Languages}>
-        {LANGS.map((l) => (
-          <Chip key={l.id} active={lang === l.id} onClick={() => setLang(l.id)}>{l.label}</Chip>
-        ))}
+        {LANGS.map((l) => {
+          const soon = l.id !== "en"; // narration is English for now
+          return (
+            <Chip key={l.id} active={lang === l.id} disabled={soon} onClick={() => setLang(l.id)}>
+              {l.label}{soon ? " · soon" : ""}
+            </Chip>
+          );
+        })}
       </PickGroup>
 
       <PickGroup label="Background sound" icon={Music}>
@@ -1947,12 +1968,13 @@ function PickGroup({ label, icon: Icon, children }: { label: string; icon: typeo
   );
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({ active, onClick, children, disabled }: { active: boolean; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
   return (
-    <button onClick={onClick} className={[
+    <button onClick={disabled ? undefined : onClick} disabled={disabled} className={[
       "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold border transition",
-      active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30"
-             : "bg-white/90 text-rose border-petal/60 hover:bg-blush/60",
+      disabled ? "bg-white/50 text-rose/40 border-petal/40 cursor-not-allowed"
+        : active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30"
+                 : "bg-white/90 text-rose border-petal/60 hover:bg-blush/60",
     ].join(" ")}>{children}</button>
   );
 }
@@ -1969,8 +1991,11 @@ function SessionPlayer({
   const pose = flow[idx];
   // Each pose lasts its OWN recorded-narration length (rounded up); poses with
   // no recording fall back to the uniform hold.
-  const poseHold = holdOf(pose?.slug ?? "", hold);
-  const [remaining, setRemaining] = useState(() => holdOf(flow[0]?.slug ?? "", hold));
+  const poseHold = pose ? poseHoldSec(pose) : hold;
+  // Pose numbering counts real poses only (switch-side steps don't add to it).
+  const realTotal = flow.filter((p) => !p.switchStep).length;
+  const stepNum = flow.slice(0, idx + 1).filter((p) => !p.switchStep).length;
+  const [remaining, setRemaining] = useState(() => (flow[0] ? poseHoldSec(flow[0]) : hold));
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
   const { stop } = useSpeaker();
@@ -1996,7 +2021,7 @@ function SessionPlayer({
     let a = musicRef.current;
     if (!a) {
       a = new Audio(MUSIC[sound] || MUSIC[DEFAULT_SOUND]);
-      a.loop = true; a.volume = 0.35; a.preload = "auto";
+      a.loop = true; a.volume = 0.6; a.preload = "auto";
       musicRef.current = a;
     }
     return a;
@@ -2038,7 +2063,7 @@ function SessionPlayer({
     // Nothing plays until the practice is actually running (after Start).
     if (!running || muted) return;
     if (isNewPose) playBell();
-    const url = poseAudioUrl(pose.slug);
+    const url = poseAudioFor(pose);
     if (!url) return;
     const a = new Audio(url);
     narrationRef.current = a;
@@ -2156,10 +2181,10 @@ function SessionPlayer({
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div>
               <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : "text-rose/60"].join(" ")}>
-                Pose {idx + 1} of {flow.length}
+                Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
               </p>
               <h3 className={["font-script text-3xl sm:text-5xl leading-none", dim ? "text-white" : "text-hotpink"].join(" ")}>
-                {pose.name}
+                {pose.name}{pose.switchStep ? " ↺" : ""}
               </h3>
               {pose.sanskrit && <p className={["text-xs italic", dim ? "text-white/70" : "text-rose/60"].join(" ")}>{pose.sanskrit}</p>}
             </div>
@@ -2238,7 +2263,7 @@ function Summary({
         date: fmtLocalDate(now),
         mood: moodMap[after ?? ""] ?? "calm",
         title: `Yoga · ${INTENTIONS.find(i => i.id === intention)?.label ?? "Practice"}`,
-        html: `<p>🧘🏻‍♀️ ${note.trim()} (${durationMin}m)</p>`,
+        html: `<p>🧘🏻‍♀️ ${note.trim()} (${realMin}m)</p>`,
         theme: "sakura",
         font: "quicksand",
         createdAt: now.toISOString(),
@@ -2250,6 +2275,9 @@ function Summary({
   };
 
   const intentionLabel = INTENTIONS.find((i) => i.id === intention)?.label || "Practice";
+  // The exact time she just practiced (sum of every step incl. both sides).
+  const realMin = Math.max(1, Math.round(flowTotalSeconds(flow) / 60));
+  const realPoses = flow.filter((p) => !p.switchStep).length;
 
   let streakCount = 0;
   try { streakCount = (JSON.parse(localStorage.getItem(STREAK_KEY) || "{}")?.count) || 0; } catch {}
@@ -2265,11 +2293,11 @@ function Summary({
         <p className="text-xs text-rose/60 italic mt-1">Your breath, your body, your quiet hour.</p>
         <div className="mt-4 grid grid-cols-3 gap-2.5">
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
-            <p className="font-script text-2xl text-hotpink leading-none">{durationMin}</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{realMin}</p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">min</p>
           </div>
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
-            <p className="font-script text-2xl text-hotpink leading-none">{flow.length}</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{realPoses}</p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">poses</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-hotpink/15 to-petal/40 border border-petal/60 p-2.5 animate-selected-glow">
