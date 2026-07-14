@@ -3661,26 +3661,25 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Large pot"],
     phases: ["menstrual", "luteal"], goal: ["lose", "maintain"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
-    macros: { calories: 350, protein: 16, carbs: 56, fat: 7 },
+    macros: { calories: 320, protein: 16, carbs: 52, fat: 6 },
     micros: { iron: 7, fibre: 14, vitaminB6: 0.5 },
     ingredients: [
       { name: "Green lentils", quantity: "1 cup (Puy or French)" },
-      { name: "Sweet potato", quantity: "1, diced" },
-      { name: "Carrots", quantity: "1, diced" },
+      { name: "Potato", quantity: "1, diced" },
+      { name: "Carrots", quantity: "2, diced" },
       { name: "Celery", quantity: "2 stalks, diced" },
       { name: "Onion", quantity: "1, diced" },
       { name: "Garlic", quantity: "2 cloves, minced" },
-      { name: "Chopped tomatoes", quantity: "1/2 cup" },
       { name: "Bay leaf & thyme", quantity: "1 / 2 sprigs" },
-      { name: "Baby spinach", quantity: "2 cups" },
       { name: "Dijon mustard", quantity: "1 tsp" },
       { name: "Vegetable broth", quantity: "4 cups" },
-      { name: "Olive oil", quantity: "1 tbsp" }
+      { name: "Olive oil", quantity: "1 tbsp" },
+      { name: "Parsley", quantity: "to garnish" }
     ],
     steps: [
       "Sweat the **onion**, **garlic**, **carrots** and **celery** in **olive oil** 6 min until softened but not coloured.",
-      "Add the **green lentils**, **sweet potato**, **chopped tomatoes**, **vegetable broth**, **bay leaf** and **thyme**. Bring to a boil, then simmer 30 min until the lentils are tender and the sweet potato is soft.",
-      "Fish out the bay and thyme stems. Wilt in the **baby spinach**, stir in the **Dijon mustard**, season generously and add a splash of water if you like it looser."
+      "Add the **green lentils**, **potato**, **vegetable broth**, **bay leaf** and **thyme**. Bring to a boil, then simmer 30 min until the lentils are tender and the potato is soft.",
+      "Fish out the bay and thyme stems. Stir in the **Dijon mustard**, season generously, scatter with **parsley** and add a splash of water if you like it looser."
     ],
     batchTip: "Makes 4 bowls and keeps 5 days or freezes well - the flavour rounds out overnight.",
     substitutionTip: "Brown lentils work too but cook softer; a squeeze of lemon can replace the Dijon for brightness."
@@ -4117,21 +4116,23 @@ const RAW_RECIPES: RawRecipe[] = [
     equipment: ["Roasting tray"],
     phases: ["follicular", "ovulatory"], goal: ["maintain", "gain"],
     dietTags: ["gluten-free", "halal"], allergens: [],
-    macros: { calories: 460, protein: 38, carbs: 22, fat: 22 },
+    macros: { calories: 560, protein: 39, carbs: 46, fat: 22 },
     micros: { vitaminC: 40, iron: 3, fibre: 6 },
     ingredients: [
       { name: "Chicken thighs", quantity: "250g" },
-      { name: "Cherry tomatoes", quantity: "1 cup" },
+      { name: "Baby potatoes", quantity: "1.5 cups, halved" },
+      { name: "Carrots", quantity: "2, in batons" },
       { name: "Zucchini", quantity: "1, sliced" },
       { name: "Bell pepper", quantity: "1, in chunks" },
+      { name: "Red onion", quantity: "1, in wedges" },
       { name: "Garlic", quantity: "4 cloves, smashed" },
       { name: "Lemon", quantity: "1" },
       { name: "Herbs de Provence & olive oil", quantity: "1 tbsp / 2 tbsp" }
     ],
     steps: [
-      "Heat oven to 200°C. Toss **zucchini**, **bell pepper**, **cherry tomatoes** and **garlic** on a tray with **olive oil**, the juice of half the **lemon** and salt.",
+      "Heat oven to 200°C. Toss **baby potatoes**, **carrots**, **zucchini**, **bell pepper**, **red onion** and **garlic** on a tray with **olive oil**, the juice of half the **lemon** and salt.",
       "Rub the **chicken thighs** with **herbs de Provence**, nestle skin-up among the veg and lay lemon slices around.",
-      "Roast 30-35 min until the chicken is golden and cooked through (75°C) and the tomatoes are blistered.",
+      "Roast 30-35 min until the chicken is golden and cooked through (75°C) and the potatoes are tender.",
       "Rest 5 min, then spoon the pan juices over everything to serve."
     ],
     batchTip: "Roast extra veg and shred any leftover chicken into wraps or salads the next day.",
