@@ -542,7 +542,7 @@ const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function useSpeaker() {
   const [supported, setSupported] = useState(false);
   useEffect(() => { setSupported(typeof window !== "undefined" && "speechSynthesis" in window); }, []);
-  const speak = (text: string, langBcp: string, opts?: { rate?: number; pitch?: number }) => {
+  const speak = (text: string, langBcp: string, opts?: { rate?: number; pitch?: number; volume?: number }) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
@@ -550,6 +550,7 @@ function useSpeaker() {
       u.lang = langBcp;
       u.rate = opts?.rate ?? 0.92;
       u.pitch = opts?.pitch ?? 1;
+      u.volume = opts?.volume ?? 1;
       window.speechSynthesis.speak(u);
     } catch {}
   };
@@ -617,7 +618,7 @@ function playBreathTone(phase: BreathPhase) {
   } catch {}
 }
 
-function useBreathPacer(running: boolean, muted: boolean, poseIdx: number) {
+function useBreathPacer(running: boolean, muted: boolean, poseIdx: number, onPhase?: (p: BreathPhase) => void) {
   const [tick, setTick] = useState(0);
   const [phase, setPhase] = useState<BreathPhase>("inhale");
   const [phaseProgress, setPhaseProgress] = useState(0);
@@ -627,7 +628,7 @@ function useBreathPacer(running: boolean, muted: boolean, poseIdx: number) {
     setTick(0);
     setPhase("inhale");
     setPhaseProgress(0);
-    if (running && !muted) playBreathTone("inhale");
+    if (running && !muted) { playBreathTone("inhale"); onPhase?.("inhale"); }
   }, [poseIdx, running]);
 
   useEffect(() => {
@@ -641,7 +642,7 @@ function useBreathPacer(running: boolean, muted: boolean, poseIdx: number) {
             const posInPhase = next - acc;
             setPhase(step.phase);
             setPhaseProgress(posInPhase / step.dur);
-            if (posInPhase === 0 && !muted) playBreathTone(step.phase);
+            if (posInPhase === 0 && !muted) { playBreathTone(step.phase); onPhase?.(step.phase); }
             break;
           }
           acc += step.dur;
@@ -1971,19 +1972,34 @@ function SessionPlayer({
   const [remaining, setRemaining] = useState(() => holdOf(flow[0]?.slug ?? "", hold));
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
-  const { stop } = useSpeaker();
-  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
+  const { speak, stop } = useSpeaker();
+  const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
+  // Gentle spoken breath cue ("Inhale" / "Exhale") synced to the breath ring.
+  const onBreathPhase = (p: BreathPhase) => {
+    if (muted || p === "hold") return;
+    speak(BREATH_LABEL[lang][p], langBcp, { rate: 0.8, pitch: 1, volume: 0.9 });
+  };
+  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx, onBreathPhase);
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
   const lastPlayedIdx = useRef<number>(-1);
-  const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
   const midIdx = Math.floor(flow.length / 2);
 
   const stopAllAudio = () => {
     try { narrationRef.current?.pause(); } catch {}
     try { musicRef.current?.pause(); } catch {}
     stop();
+  };
+
+  // Start/stop everything with one user gesture (reliable autoplay).
+  const togglePlay = () => {
+    setRunning((r) => {
+      const next = !r;
+      if (next) { try { if (!muted) musicRef.current?.play().catch(() => {}); } catch {} }
+      else { stopAllAudio(); }
+      return next;
+    });
   };
 
   // Wake Lock so audio mode keeps screen / audio alive
@@ -2013,7 +2029,8 @@ function SessionPlayer({
     narrationRef.current = null;
     const isNewPose = lastPlayedIdx.current !== idx;
     lastPlayedIdx.current = idx;
-    if (muted) return;
+    // Nothing plays until the practice is actually running (after Start).
+    if (!running || muted) return;
     if (isNewPose) playBell();
     const url = poseAudioUrl(pose.slug);
     if (!url) return;
@@ -2021,7 +2038,7 @@ function SessionPlayer({
     narrationRef.current = a;
     const t = setTimeout(() => { a.play().catch(() => {}); }, isNewPose ? 500 : 0);
     return () => clearTimeout(t);
-  }, [idx, muted]);
+  }, [idx, muted, running]);
 
   // Background music — ONE looping element for the whole session so it plays
   // continuously and repeats seamlessly (never cropped between poses).
@@ -2030,7 +2047,10 @@ function SessionPlayer({
     const a = new Audio(src);
     a.loop = true;
     a.volume = 0.35; // sits softly under the voice
+    a.preload = "auto";
     musicRef.current = a;
+    // If the practice is already running when the track changes, keep playing.
+    if (running && !muted) a.play().catch(() => {});
     return () => { try { a.pause(); } catch {} musicRef.current = null; };
   }, [sound]);
 
@@ -2165,7 +2185,7 @@ function SessionPlayer({
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button onClick={() => setRunning((r) => !r)}
+            <button onClick={togglePlay}
               className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white">
               {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === poseHold ? "Start" : "Resume"}</>}
             </button>
