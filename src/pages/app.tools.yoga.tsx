@@ -380,6 +380,7 @@ const POSE_HOLD: Record<string, number> = {
   "tree": 95, "half-moon": 110, "cobra": 80, "camel": 95, "seated-forward-fold": 85,
   "head-to-knee": 75, "wide-leg-fold": 100, "reclined-bound-angle": 110, "knees-to-chest": 105,
   "supine-twist": 120, "legs-up-wall": 120, "savasana": 105, "plank": 115, "boat": 85, "side-plank": 110,
+  "bridge": 85,
 };
 const poseAudioUrl = (slug: string): string | undefined =>
   POSE_HOLD[slug] != null ? `/audio/yoga/${slug}.mp3` : undefined;
