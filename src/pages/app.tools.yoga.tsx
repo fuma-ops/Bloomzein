@@ -623,12 +623,13 @@ function useBreathPacer(running: boolean, muted: boolean, poseIdx: number, onPha
   const [phase, setPhase] = useState<BreathPhase>("inhale");
   const [phaseProgress, setPhaseProgress] = useState(0);
 
-  // Reset to INHALE every time a new pose starts or session resumes
+  // Reset to INHALE every time a new pose starts or session resumes.
+  // Breath guidance is VISUAL only — no tone, no voice.
   useEffect(() => {
     setTick(0);
     setPhase("inhale");
     setPhaseProgress(0);
-    if (running && !muted) { playBreathTone("inhale"); onPhase?.("inhale"); }
+    onPhase?.("inhale");
   }, [poseIdx, running]);
 
   useEffect(() => {
@@ -642,7 +643,7 @@ function useBreathPacer(running: boolean, muted: boolean, poseIdx: number, onPha
             const posInPhase = next - acc;
             setPhase(step.phase);
             setPhaseProgress(posInPhase / step.dur);
-            if (posInPhase === 0 && !muted) { playBreathTone(step.phase); onPhase?.(step.phase); }
+            if (posInPhase === 0) onPhase?.(step.phase);
             break;
           }
           acc += step.dur;
@@ -1972,14 +1973,10 @@ function SessionPlayer({
   const [remaining, setRemaining] = useState(() => holdOf(flow[0]?.slug ?? "", hold));
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
-  const { speak, stop } = useSpeaker();
+  const { stop } = useSpeaker();
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
-  // Gentle spoken breath cue ("Inhale" / "Exhale") synced to the breath ring.
-  const onBreathPhase = (p: BreathPhase) => {
-    if (muted || p === "hold") return;
-    speak(BREATH_LABEL[lang][p], langBcp, { rate: 0.8, pitch: 1, volume: 0.9 });
-  };
-  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx, onBreathPhase);
+  // Breath cue is VISUAL only (the ring + label) — no spoken voice.
+  const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
@@ -1992,14 +1989,23 @@ function SessionPlayer({
     stop();
   };
 
-  // Start/stop everything with one user gesture (reliable autoplay).
+  // Create + play the music element SYNCHRONOUSLY inside this click (not in an
+  // effect/updater, which mobile browsers treat as "not a user gesture" and
+  // block). The narration voice is handled by its own effect on `running`.
+  const ensureMusic = () => {
+    let a = musicRef.current;
+    if (!a) {
+      a = new Audio(MUSIC[sound] || MUSIC[DEFAULT_SOUND]);
+      a.loop = true; a.volume = 0.35; a.preload = "auto";
+      musicRef.current = a;
+    }
+    return a;
+  };
   const togglePlay = () => {
-    setRunning((r) => {
-      const next = !r;
-      if (next) { try { if (!muted) musicRef.current?.play().catch(() => {}); } catch {} }
-      else { stopAllAudio(); }
-      return next;
-    });
+    const next = !running;
+    if (next) { if (!muted) { try { ensureMusic().play().catch(() => {}); } catch {} } }
+    else { stopAllAudio(); }
+    setRunning(next);
   };
 
   // Wake Lock so audio mode keeps screen / audio alive
@@ -2040,27 +2046,10 @@ function SessionPlayer({
     return () => clearTimeout(t);
   }, [idx, muted, running]);
 
-  // Background music — ONE looping element for the whole session so it plays
-  // continuously and repeats seamlessly (never cropped between poses).
-  useEffect(() => {
-    const src = MUSIC[sound] || MUSIC[DEFAULT_SOUND];
-    const a = new Audio(src);
-    a.loop = true;
-    a.volume = 0.35; // sits softly under the voice
-    a.preload = "auto";
-    musicRef.current = a;
-    // If the practice is already running when the track changes, keep playing.
-    if (running && !muted) a.play().catch(() => {});
-    return () => { try { a.pause(); } catch {} musicRef.current = null; };
-  }, [sound]);
-
-  // Start/stop the music with play state + mute (position is preserved on pause).
-  useEffect(() => {
-    const a = musicRef.current;
-    if (!a) return;
-    if (running && !muted) a.play().catch(() => {});
-    else a.pause();
-  }, [running, muted, sound]);
+  // One looping music element for the whole session (created lazily in the Start
+  // gesture via ensureMusic). It plays continuously and repeats seamlessly; here
+  // we only stop it when the player unmounts.
+  useEffect(() => () => { try { musicRef.current?.pause(); } catch {} musicRef.current = null; }, []);
 
   // Timer — counts down THIS pose's own hold (its narration length rounded up).
   useEffect(() => {
@@ -2126,7 +2115,7 @@ function SessionPlayer({
           <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => setMuted((m) => { const n = !m; if (n) stopAllAudio(); return n; })}
+          <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { ensureMusic().play().catch(() => {}); } catch {} } }}
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>
