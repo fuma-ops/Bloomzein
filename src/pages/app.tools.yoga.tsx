@@ -676,7 +676,7 @@ const TWO_SIDED = new Set<string>([
   "gate-pose", "banana-pose",
 ]);
 const SWITCH_AUDIO = "/audio/yoga/switch-sides.mp3";
-const SWITCH_HOLD = 20; // seconds on the second side (clip is ~15s)
+const SWITCH_HOLD = 35; // seconds on the second side (clip is ~15s, leaving room to hold the shape)
 // After the narration finishes, hold the pose this many extra seconds with just
 // the music, so she can settle into the shape before moving on.
 const POSE_TAIL_SEC = 10;
