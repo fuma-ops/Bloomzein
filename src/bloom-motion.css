@@ -347,4 +347,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  /* Exception: the guided session's slow, gentle ambience — the water ripples,
+     the breathing backdrop and the drifting night stars — is the heart of the
+     practice and is calm by design (no fast/parallax motion). Keep it alive
+     even when the OS asks to reduce motion; only per-element delays are kept
+     (not killed above), so the stagger survives. */
+  .animate-ripple          { animation-duration: 19.2s !important; animation-iteration-count: infinite !important; }
+  .animate-ambient-breathe { animation-duration: 12s   !important; animation-iteration-count: infinite !important; }
+  .animate-twinkle         { animation-duration: 9s    !important; animation-iteration-count: infinite !important; }
 }
