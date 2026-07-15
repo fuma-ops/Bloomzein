@@ -651,14 +651,14 @@ const POSE_HOLD: Record<string, number> = {
   "supine-twist": 120, "legs-up-wall": 120, "savasana": 105, "plank": 115, "boat": 85, "side-plank": 110,
   "bridge": 85,
   // Library expansion — estimated holds until each recording is measured.
-  "neck-shoulder-rolls": 55, "thread-the-needle": 55, "bird-dog": 55, "standing-side-stretch": 50,
-  "high-lunge": 55, "crescent-twist": 65, "extended-side-angle": 65, "pyramid": 55, "revolved-triangle": 65,
-  "goddess": 55, "wide-legged-forward-fold": 55, "warrior-3": 65, "eagle": 60, "dancer": 65,
-  "standing-figure-four": 60, "sphinx": 55, "locust": 55, "bow": 55, "upward-dog": 60, "fish": 60,
-  "lizard": 60, "happy-baby": 50, "cow-face": 60, "frog": 60, "reclined-figure-four": 55,
-  "forearm-plank": 55, "chaturanga": 55, "dead-bug": 60, "hollow-hold": 55, "modified-side-plank": 55,
-  "reverse-plank": 60, "seated-wide-leg-fold": 55, "ragdoll": 50, "gate-pose": 60, "supported-bridge": 55,
-  "banana-pose": 55, "supported-savasana": 55, "alternate-nostril": 65, "box-breathing": 60,
+  "neck-shoulder-rolls": 85, "thread-the-needle": 50, "bird-dog": 95, "standing-side-stretch": 100,
+  "high-lunge": 90, "crescent-twist": 115, "extended-side-angle": 110, "pyramid": 115, "revolved-triangle": 105,
+  "goddess": 105, "wide-legged-forward-fold": 100, "warrior-3": 105, "eagle": 120, "dancer": 50,
+  "standing-figure-four": 100, "sphinx": 85, "locust": 100, "bow": 125, "upward-dog": 70, "fish": 100,
+  "lizard": 105, "happy-baby": 75, "cow-face": 100, "frog": 115, "reclined-figure-four": 120,
+  "forearm-plank": 105, "chaturanga": 90, "dead-bug": 85, "hollow-hold": 105, "modified-side-plank": 55,
+  "reverse-plank": 75, "seated-wide-leg-fold": 80, "ragdoll": 90, "gate-pose": 115, "supported-bridge": 105,
+  "banana-pose": 120, "supported-savasana": 100, "alternate-nostril": 130, "box-breathing": 90,
 };
 const poseAudioUrl = (slug: string): string | undefined =>
   POSE_HOLD[slug] != null ? `/audio/yoga/${slug}.mp3` : undefined;
@@ -676,7 +676,7 @@ const TWO_SIDED = new Set<string>([
   "gate-pose", "banana-pose",
 ]);
 const SWITCH_AUDIO = "/audio/yoga/switch-sides.mp3";
-const SWITCH_HOLD = 20; // seconds on the second side (clip is ~15s)
+const SWITCH_HOLD = 35; // seconds on the second side (clip is ~15s, leaving room to hold the shape)
 // After the narration finishes, hold the pose this many extra seconds with just
 // the music, so she can settle into the shape before moving on.
 const POSE_TAIL_SEC = 10;
