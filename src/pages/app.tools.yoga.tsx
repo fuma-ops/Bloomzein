@@ -1271,6 +1271,7 @@ export default function YogaPage() {
           mode={view.mode}
           hold={view.hold}
           sound={view.sound}
+          intention={view.intention}
           onExit={() => setView({ kind: "home" })}
           onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin })}
         />
@@ -2352,11 +2353,73 @@ function Chip({ active, onClick, children, disabled }: { active: boolean; onClic
 
 // ===================== SESSION PLAYER =====================
 
+// ── Time-of-day session skins ───────────────────────────────────────────────
+// The guided player re-tones itself by time of day (and always night for a
+// sleep flow) so an evening practice *feels* like night. Photos are re-toned
+// with brightness + a colour overlay — never hue-rotated, which muddies skin
+// tones. Auto by default, with a Day/Night manual override.
+type DayPart = "dawn" | "day" | "dusk" | "night";
+type SkinPref = "auto" | "day" | "night";
+const YOGA_SKIN_KEY = "bloom:yoga-skin";
+function clockDayPart(d = new Date()): DayPart {
+  const h = d.getHours();
+  if (h >= 5 && h < 9) return "dawn";
+  if (h >= 9 && h < 17) return "day";
+  if (h >= 17 && h < 20) return "dusk";
+  return "night";
+}
+function resolveDayPart(intention: Intention, pref: SkinPref): DayPart {
+  if (pref === "day" || pref === "night") return pref;
+  if (intention === "sleep") return "night";
+  return clockDayPart();
+}
+interface SessionSkin {
+  frame: string; card: string; stage: string; imgFilter: string;
+  overlay: string; veil: string; ripple: string; panel: string; ink: string; inkSoft: string;
+}
+const SESSION_SKINS: Record<DayPart, SessionSkin> = {
+  dawn: {
+    frame: "linear-gradient(180deg,#FFF3EE,#FFE6EE)", card: "rgba(255,251,251,0.92)",
+    stage: "rgba(255,236,231,0.45)", imgFilter: "saturate(1.05) brightness(1.03)",
+    overlay: "linear-gradient(180deg,rgba(255,201,150,0.16),transparent 45%,rgba(255,170,190,0.14))",
+    veil: "rgba(255,241,236,0.22)", ripple: "244,146,110", panel: "rgba(255,251,251,0.92)",
+    ink: "#db2777", inkSoft: "rgba(190,24,93,0.62)",
+  },
+  day: {
+    frame: "rgba(252,231,243,0.95)", card: "rgba(255,255,255,0.90)",
+    stage: "rgba(252,231,243,0.40)", imgFilter: "none", overlay: "transparent",
+    veil: "rgba(252,231,243,0.25)", ripple: "236,72,153", panel: "transparent",
+    ink: "#db2777", inkSoft: "rgba(190,24,93,0.60)",
+  },
+  dusk: {
+    frame: "linear-gradient(180deg,#3b2742,#5c2f4c)", card: "rgba(54,36,60,0.66)",
+    stage: "rgba(54,36,60,0.5)", imgFilter: "brightness(0.86) saturate(0.96)",
+    overlay: "linear-gradient(180deg,rgba(255,150,90,0.16),transparent 42%,rgba(120,60,120,0.34))",
+    veil: "rgba(66,38,66,0.28)", ripple: "255,178,138", panel: "rgba(46,29,52,0.68)",
+    ink: "#ffe6f2", inkSoft: "rgba(255,222,236,0.72)",
+  },
+  night: {
+    frame: "linear-gradient(180deg,#171030,#221846)", card: "rgba(28,22,58,0.62)",
+    stage: "rgba(18,14,40,0.5)", imgFilter: "brightness(0.64) saturate(0.85) contrast(1.03)",
+    overlay: "radial-gradient(120% 90% at 50% 18%,rgba(90,100,190,0.20),transparent 55%),linear-gradient(180deg,rgba(20,20,60,0.42),rgba(18,14,44,0.55))",
+    veil: "rgba(20,16,46,0.34)", ripple: "170,182,255", panel: "rgba(22,17,46,0.68)",
+    ink: "#ece8ff", inkSoft: "rgba(220,216,255,0.68)",
+  },
+};
+
 function SessionPlayer({
-  flow, lang, mode, hold, sound, onExit, onDone,
+  flow, lang, mode, hold, sound, intention, onExit, onDone,
 }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; onExit: () => void; onDone: () => void;
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; onExit: () => void; onDone: () => void;
 }) {
+  const [skinPref, setSkinPref] = useState<SkinPref>(() => {
+    try { return (localStorage.getItem(YOGA_SKIN_KEY) as SkinPref) || "auto"; } catch { return "auto"; }
+  });
+  const cycleSkin = () => setSkinPref((p) => {
+    const next: SkinPref = p === "auto" ? "day" : p === "day" ? "night" : "auto";
+    try { localStorage.setItem(YOGA_SKIN_KEY, next); } catch {}
+    return next;
+  });
   const [idx, setIdx] = useState(0);
   const [running, setRunning] = useState(false);
   const pose = flow[idx];
@@ -2502,10 +2565,13 @@ function SessionPlayer({
 
   const progress = ((idx + 1) / flow.length) * 100;
   const dim = mode === "audio" && !peek;
+  const dayPart = resolveDayPart(intention, skinPref);
+  const skin = SESSION_SKINS[dayPart];
+  const isDark = dayPart === "night" || dayPart === "dusk";
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col p-3 sm:p-4"
-      style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+    <div className="fixed inset-0 z-[60] backdrop-blur flex flex-col p-3 sm:p-4 transition-[background] duration-1000"
+      style={{ background: skin.frame, paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
       {/* TOP BAR */}
       <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
         <button onClick={() => { stopAllAudio(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
@@ -2515,6 +2581,12 @@ function SessionPlayer({
           <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-1.5">
+          <button onClick={cycleSkin}
+            title={`Theme: ${skinPref === "auto" ? `auto (${dayPart})` : skinPref}`}
+            className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
+            {isDark ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+            {skinPref === "auto" && <span className="text-[9px] font-bold uppercase tracking-wide opacity-70">auto</span>}
+          </button>
           <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { ensureMusic().play().catch(() => {}); } catch {} } }}
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -2522,10 +2594,12 @@ function SessionPlayer({
         </div>
       </div>
 
-      <div className={["flex-1 min-h-0 flex flex-col rounded-3xl border border-petal/60 overflow-hidden shadow-xl shadow-rose/10 transition",
-        dim ? "bg-rose/95 text-white" : "bg-white/90 backdrop-blur"].join(" ")}>
+      <div className={["flex-1 min-h-0 flex flex-col rounded-3xl border overflow-hidden shadow-xl shadow-rose/10 transition-[background,border-color] duration-1000",
+        dim ? "bg-rose/95 text-white border-petal/60" : "backdrop-blur"].join(" ")}
+        style={dim ? undefined : { background: skin.card, borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(244,194,214,0.6)" }}>
         {/* IMAGE / PACER — flexes to fill the free space */}
-        <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
+        <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : ""].join(" ")}
+          style={dim ? undefined : { background: skin.stage }}>
           {!dim ? (
             <>
               {/* Soft placeholder — visible while the photo loads, or if a slow
@@ -2550,8 +2624,9 @@ function SessionPlayer({
                     animationDelay: `${-i * 2.4}s`,
                     // A thick, soft radial band (not a thin outline) so each wave
                     // reads as a big, broad swell rather than a narrow ring.
+                    // Colour follows the time-of-day skin.
                     background:
-                      "radial-gradient(circle, transparent 46%, rgba(236,72,153,0.34) 66%, rgba(236,72,153,0.42) 74%, rgba(236,72,153,0.30) 82%, transparent 96%)",
+                      `radial-gradient(circle, transparent 46%, rgba(${skin.ripple},0.34) 66%, rgba(${skin.ripple},0.42) 74%, rgba(${skin.ripple},0.30) 82%, transparent 96%)`,
                     filter: "blur(4px)",
                   }}
                 />
@@ -2566,10 +2641,10 @@ function SessionPlayer({
                 aria-hidden
                 onLoad={() => setImgReady(true)}
                 className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-[0.72]" : "opacity-0"].join(" ")}
-                style={{ filter: "blur(34px) saturate(1.2)" }}
+                style={{ filter: `blur(34px) saturate(1.2) ${skin.imgFilter === "none" ? "" : skin.imgFilter}` }}
               />
-              {/* Light veil so the sharp pose stays the clear focus */}
-              <div aria-hidden className="absolute inset-0 bg-blush/25" />
+              {/* Light veil so the sharp pose stays the clear focus (skin-tinted) */}
+              <div aria-hidden className="absolute inset-0 transition-colors duration-1000" style={{ background: skin.veil }} />
               <img
                 key={idx}
                 src={pose.image}
@@ -2577,7 +2652,10 @@ function SessionPlayer({
                 onLoad={() => setImgReady(true)}
                 onError={() => setImgReady(false)}
                 className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
               />
+              {/* Time-of-day mood wash over the scene (transparent in day) */}
+              <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: skin.overlay }} />
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
@@ -2603,18 +2681,21 @@ function SessionPlayer({
         </div>
 
         {/* TEXT */}
-        <div className={["shrink-0 p-3 sm:p-5", dim ? "text-white" : ""].join(" ")}>
+        <div className={["shrink-0 p-3 sm:p-5 transition-colors duration-1000", dim ? "text-white" : ""].join(" ")}
+          style={dim ? undefined : { background: skin.panel }}>
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div key={idx} className="animate-pose-in">
-              <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : "text-rose/60"].join(" ")}>
+              <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : ""].join(" ")}
+                style={dim ? undefined : { color: skin.inkSoft }}>
                 Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
               </p>
-              <h3 className={["font-script text-3xl sm:text-5xl leading-none", dim ? "text-white" : "text-hotpink"].join(" ")}>
+              <h3 className={["font-script text-3xl sm:text-5xl leading-none", dim ? "text-white" : ""].join(" ")}
+                style={dim ? undefined : { color: skin.ink }}>
                 {pose.name}{pose.switchStep ? " ↺" : ""}
               </h3>
-              {pose.sanskrit && <p className={["text-xs italic", dim ? "text-white/70" : "text-rose/60"].join(" ")}>{pose.sanskrit}</p>}
+              {pose.sanskrit && <p className={["text-xs italic", dim ? "text-white/70" : ""].join(" ")} style={dim ? undefined : { color: skin.inkSoft }}>{pose.sanskrit}</p>}
             </div>
-            <div className={["text-right", dim ? "text-white/90" : "text-rose"].join(" ")}>
+            <div className={["text-right", dim ? "text-white/90" : ""].join(" ")} style={dim ? undefined : { color: skin.ink }}>
               <p className="text-xs font-bold uppercase tracking-wider opacity-75">hold</p>
               <p className="text-3xl font-bold tabular-nums">{remaining}s</p>
             </div>
