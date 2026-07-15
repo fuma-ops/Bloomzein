@@ -2541,16 +2541,18 @@ function SessionPlayer({
                 <span
                   key={i}
                   aria-hidden
-                  className="pointer-events-none absolute left-1/2 top-1/2 w-[38%] aspect-square rounded-full animate-ripple will-change-transform"
+                  className="pointer-events-none absolute left-1/2 top-1/2 w-[46%] aspect-square rounded-full animate-ripple will-change-transform"
                   style={{
                     // 8 rings evenly spread across the ~19.2s cycle (a fresh wave
                     // born every ~2.4s, all pre-seeded). Each wave still travels
                     // slowly, but a new one is ALWAYS emerging at centre — so the
                     // stream is continuous, never a wait for the next wave.
                     animationDelay: `${-i * 2.4}s`,
-                    border: "2px solid rgba(236,72,153,0.55)",
-                    boxShadow: "0 0 30px 6px rgba(236,72,153,0.28), inset 0 0 30px 6px rgba(236,72,153,0.18)",
-                    filter: "blur(2px)",
+                    // A thick, soft radial band (not a thin outline) so each wave
+                    // reads as a big, broad swell rather than a narrow ring.
+                    background:
+                      "radial-gradient(circle, transparent 46%, rgba(236,72,153,0.34) 66%, rgba(236,72,153,0.42) 74%, rgba(236,72,153,0.30) 82%, transparent 96%)",
+                    filter: "blur(4px)",
                   }}
                 />
               ))}
