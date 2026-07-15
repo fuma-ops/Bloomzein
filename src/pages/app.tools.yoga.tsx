@@ -2537,13 +2537,16 @@ function SessionPlayer({
                   at centre, rolling outward like drops in still water. They sit
                   BEHIND the blurred photo so they read as soft ambient motion
                   underneath, never a sharp overlay that could distract. */}
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <span
                   key={i}
                   aria-hidden
                   className="pointer-events-none absolute left-1/2 top-1/2 w-[38%] aspect-square rounded-full animate-ripple will-change-transform"
                   style={{
-                    animationDelay: `${-i * 1.6}s`,
+                    // 3 rings, evenly spaced across the ~19.2s cycle (one every
+                    // 6.4s) and pre-seeded, so there's always a small / mid /
+                    // large wave in flight — concentric, no gap or jump.
+                    animationDelay: `${-i * 6.4}s`,
                     border: "2px solid rgba(236,72,153,0.55)",
                     boxShadow: "0 0 30px 6px rgba(236,72,153,0.28), inset 0 0 30px 6px rgba(236,72,153,0.18)",
                     filter: "blur(2px)",
