@@ -2369,6 +2369,10 @@ function SessionPlayer({
   const [remaining, setRemaining] = useState(() => (flow[0] ? poseHoldSec(flow[0]) : hold));
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
+  // Pose photo load state — show a soft placeholder until it's ready (and if a
+  // slow/failed mobile load never arrives) so the frame is never a blank box.
+  const [imgReady, setImgReady] = useState(false);
+  useEffect(() => { setImgReady(false); }, [idx]);
   const { stop } = useSpeaker();
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
   // Breath cue is VISUAL only (the ring + label) — no spoken voice.
@@ -2524,7 +2528,21 @@ function SessionPlayer({
         <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
             <>
-              <img key={idx} src={pose.image} alt={pose.name} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)] animate-pose-in" />
+              {/* Soft placeholder — visible while the photo loads, or if a slow
+                  mobile connection never delivers it. Never a blank box. */}
+              <div aria-hidden className="absolute inset-0 grid place-items-center bg-[oklch(0.96_0.04_350)] animate-card-breathe">
+                <Flower className="h-16 w-16 text-hotpink/25" strokeWidth={1.5} />
+              </div>
+              <img
+                key={idx}
+                src={pose.image}
+                alt={pose.name}
+                onLoad={() => setImgReady(true)}
+                onError={() => setImgReady(false)}
+                className={["absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+              />
+              {/* Preload the next pose so transitions stay instant on mobile. */}
+              {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
                 <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
