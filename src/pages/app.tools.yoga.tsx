@@ -1593,7 +1593,7 @@ function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index:
     >
       <img
         src={preset.image} alt="" loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover object-top transition duration-300 group-hover:scale-105"
+        className="absolute inset-0 h-full w-full object-contain bg-[oklch(0.96_0.04_350)] transition duration-300 group-hover:scale-105"
       />
       {/* subtle vignette so text is always readable */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
@@ -1673,7 +1673,7 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="relative w-28 sm:w-36 shrink-0 overflow-hidden">
-                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-contain bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
               </div>
               <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
@@ -2550,7 +2550,7 @@ function SessionPlayer({
         {/* TEXT */}
         <div className={["shrink-0 p-3 sm:p-5", dim ? "text-white" : ""].join(" ")}>
           <div className="flex items-end justify-between gap-3 flex-wrap">
-            <div key={idx} className="animate-fade-in">
+            <div key={idx} className="animate-pose-in">
               <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : "text-rose/60"].join(" ")}>
                 Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
               </p>
