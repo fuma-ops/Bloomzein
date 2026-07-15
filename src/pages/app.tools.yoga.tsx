@@ -2373,23 +2373,10 @@ function SessionPlayer({
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
   useEffect(() => { setImgReady(false); }, [idx]);
-  // Hypnotic breath ripples — one soft wave is born at centre on each inhale
-  // and flows outward off the frame (capped so they never pile up).
-  const [ripples, setRipples] = useState<number[]>([]);
-  const rippleSeq = useRef(0);
   const { stop } = useSpeaker();
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
   // Breath cue is VISUAL only (the ring + label) — no spoken voice.
   const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
-  // Emit one ripple at the start of every inhale (kept to the last few).
-  const prevBreathRef = useRef<BreathPhase>("exhale");
-  useEffect(() => {
-    if (running && breathPhase === "inhale" && prevBreathRef.current !== "inhale") {
-      const id = ++rippleSeq.current;
-      setRipples((r) => [...r.slice(-4), id]);
-    }
-    prevBreathRef.current = breathPhase;
-  }, [breathPhase, running]);
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
@@ -2558,16 +2545,21 @@ function SessionPlayer({
                 className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
                 style={{ filter: "blur(34px) saturate(1.2)" }}
               />
-              {/* Veil to mute the backdrop so the sharp pose stays the focus */}
-              <div aria-hidden className="absolute inset-0 bg-blush/35" />
-              {/* Hypnotic breath ripples — soft waves radiating from centre */}
-              {ripples.map((id) => (
+              {/* Veil to mute the backdrop so the ripples & pose stay the focus */}
+              <div aria-hidden className="absolute inset-0 bg-blush/45" />
+              {/* Hypnotic ripples — a continuous field of concentric waves that
+                  are born at centre and roll outward, like drops in still water.
+                  Staggered negative delays keep several rings in flight at once. */}
+              {Array.from({ length: 6 }).map((_, i) => (
                 <span
-                  key={id}
+                  key={i}
                   aria-hidden
-                  onAnimationEnd={() => setRipples((r) => r.filter((x) => x !== id))}
-                  className="pointer-events-none absolute left-1/2 top-1/2 w-[44%] aspect-square rounded-full animate-ripple will-change-transform"
-                  style={{ border: "1.5px solid rgba(244,114,182,0.30)", boxShadow: "0 0 34px 6px rgba(244,114,182,0.16), inset 0 0 34px 6px rgba(244,114,182,0.10)" }}
+                  className="pointer-events-none absolute left-1/2 top-1/2 w-[38%] aspect-square rounded-full animate-ripple will-change-transform"
+                  style={{
+                    animationDelay: `${-i * 1.6}s`,
+                    border: "2px solid rgba(236,72,153,0.5)",
+                    boxShadow: "0 0 26px 4px rgba(236,72,153,0.25), inset 0 0 26px 4px rgba(236,72,153,0.16)",
+                  }}
                 />
               ))}
               <img
