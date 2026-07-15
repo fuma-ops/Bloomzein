@@ -85,6 +85,12 @@
   50%      { transform: scale(1.3) translate3d(0, -1.5%, 0); }
 }
 
+/* Night-theme stars — a soft, slow twinkle (brighten + gentle swell). */
+@keyframes bloom-twinkle {
+  0%, 100% { opacity: 0.18; transform: scale(0.8); }
+  50%      { opacity: 0.95; transform: scale(1.12); }
+}
+
 /* Guided-flow hypnotic ripple — a soft wave born at centre that expands and
    rolls outward off the frame, fading as it loses energy (like a drop in
    still water). Several run at once via staggered delays. */
@@ -214,6 +220,10 @@
      ~19s travel (half the old speed) for a calm, hypnotic pace. */
   .animate-ripple {
     animation: bloom-ripple calc(19.2s * var(--bloom-pace)) ease-out infinite;
+  }
+  /* Night-theme star twinkle (per-star duration/delay set inline for variety) */
+  .animate-twinkle {
+    animation: bloom-twinkle 4.5s ease-in-out infinite;
   }
 
   /* --- Selected / current item glow --- */

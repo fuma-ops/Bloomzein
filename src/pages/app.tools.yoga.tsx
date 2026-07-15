@@ -2656,6 +2656,23 @@ function SessionPlayer({
               />
               {/* Time-of-day mood wash over the scene (transparent in day) */}
               <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: skin.overlay }} />
+              {/* Night sky — a few soft stars that gently twinkle */}
+              {dayPart === "night" && (
+                <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                  {([[8,15,3,0,4.6],[12,78,2,1.2,5.2],[20,40,2.5,2.4,4.0],[6,55,2,0.6,5.6],[28,8,2,3.1,4.3],[16,90,3,1.8,5.0],[33,68,2,0.3,4.8],[10,33,1.5,2.0,5.4],[24,22,2,1.0,4.1],[38,85,2.5,2.7,5.3],[5,70,1.5,3.4,4.7],[30,52,1.5,0.9,5.1],[14,62,2,1.5,4.4],[42,12,2,2.2,5.5]] as const).map(([t, l, s, d, dur], i) => (
+                    <span
+                      key={i}
+                      className="absolute rounded-full animate-twinkle"
+                      style={{
+                        top: `${t}%`, left: `${l}%`, width: `${s}px`, height: `${s}px`,
+                        background: "rgba(255,255,255,0.95)",
+                        boxShadow: "0 0 6px 1.5px rgba(200,212,255,0.85)",
+                        animationDelay: `${d}s`, animationDuration: `${dur}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
