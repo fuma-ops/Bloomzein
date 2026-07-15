@@ -210,9 +210,10 @@
   .animate-ambient-breathe {
     animation: bloom-ambient-breathe calc(12s * var(--bloom-pace)) ease-in-out infinite;
   }
-  /* Guided-flow hypnotic ripple — continuous expanding waves (water-like) */
+  /* Guided-flow hypnotic ripple — slow continuous expanding waves (water-like).
+     ~19s travel (half the old speed) for a calm, hypnotic pace. */
   .animate-ripple {
-    animation: bloom-ripple calc(9.6s * var(--bloom-pace)) ease-out infinite;
+    animation: bloom-ripple calc(19.2s * var(--bloom-pace)) ease-out infinite;
   }
 
   /* --- Selected / current item glow --- */
