@@ -1589,11 +1589,11 @@ function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index:
     <button
       onClick={onClick}
       className="relative overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in hover-scale group"
-      style={{ animationDelay: `${index * 60}ms`, aspectRatio: '3/4' }}
+      style={{ animationDelay: `${index * 60}ms`, aspectRatio: '1/1' }}
     >
       <img
         src={preset.image} alt="" loading="lazy"
-        className="absolute inset-0 h-full w-full object-contain bg-[oklch(0.96_0.04_350)] transition duration-300 group-hover:scale-105"
+        className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition duration-300 group-hover:scale-105"
       />
       {/* subtle vignette so text is always readable */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
@@ -1673,7 +1673,7 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="relative w-28 sm:w-36 shrink-0 overflow-hidden">
-                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-contain bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
               </div>
               <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
@@ -2533,13 +2533,27 @@ function SessionPlayer({
               <div aria-hidden className="absolute inset-0 grid place-items-center bg-[oklch(0.96_0.04_350)] animate-card-breathe">
                 <Flower className="h-16 w-16 text-hotpink/25" strokeWidth={1.5} />
               </div>
+              {/* Calm dynamic backdrop: a soft, slowly-breathing blurred fill of
+                  the same photo, so the space around a portrait/square pose is
+                  living and serene instead of an empty band. */}
+              <img
+                key={idx + "-bg"}
+                src={pose.image}
+                alt=""
+                aria-hidden
+                onLoad={() => setImgReady(true)}
+                className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                style={{ filter: "blur(34px) saturate(1.2)" }}
+              />
+              {/* Veil to mute the backdrop so the sharp pose stays the focus */}
+              <div aria-hidden className="absolute inset-0 bg-blush/35" />
               <img
                 key={idx}
                 src={pose.image}
                 alt={pose.name}
                 onLoad={() => setImgReady(true)}
                 onError={() => setImgReady(false)}
-                className={["absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
               />
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
