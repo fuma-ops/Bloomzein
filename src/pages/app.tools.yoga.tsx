@@ -656,7 +656,7 @@ const POSE_HOLD: Record<string, number> = {
   "goddess": 105, "wide-legged-forward-fold": 100, "warrior-3": 105, "eagle": 120, "dancer": 50,
   "standing-figure-four": 100, "sphinx": 85, "locust": 100, "bow": 125, "upward-dog": 70, "fish": 100,
   "lizard": 105, "happy-baby": 75, "cow-face": 100, "frog": 115, "reclined-figure-four": 120,
-  "forearm-plank": 105, "chaturanga": 90, "dead-bug": 85, "hollow-hold": 105, "modified-side-plank": 55,
+  "forearm-plank": 105, "chaturanga": 90, "dead-bug": 85, "hollow-hold": 105, "modified-side-plank": 140,
   "reverse-plank": 75, "seated-wide-leg-fold": 80, "ragdoll": 90, "gate-pose": 115, "supported-bridge": 105,
   "banana-pose": 120, "supported-savasana": 100, "alternate-nostril": 130, "box-breathing": 90,
 };
