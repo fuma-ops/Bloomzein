@@ -71,6 +71,12 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Pose-to-pose transition in the guided flow — a calm cross-fade + settle */
+@keyframes bloom-pose-in {
+  0%   { opacity: 0; transform: scale(1.035); filter: blur(6px); }
+  100% { opacity: 1; transform: scale(1);     filter: blur(0); }
+}
+
 /* Selected day / current item — soft pulsing halo (Calendar, Cycle) */
 @keyframes bloom-selected-glow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(236,72,153,0),   0 6px 16px rgba(236,72,153,0.20); }
@@ -178,6 +184,10 @@
   }
   .animate-fade-in {
     animation: bloom-fade-in calc(0.42s * var(--bloom-pace)) var(--bloom-ease-soft) both;
+  }
+  /* Guided-flow pose change — soft cross-fade + settle as each pose appears */
+  .animate-pose-in {
+    animation: bloom-pose-in calc(0.6s * var(--bloom-pace)) var(--bloom-ease-soft) both;
   }
 
   /* --- Selected / current item glow --- */

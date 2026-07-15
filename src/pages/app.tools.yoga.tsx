@@ -572,6 +572,10 @@ const FOCUS_PREVIEW: Record<string, { image: string; duration: string }> = {
   "Sleep prep":     { image: "/images/pose-legs-up-wall.webp", duration: "10-20 min" },
   "Cycle sync":     { image: "/images/pose-reclined-bound-angle.webp", duration: "15-20 min" },
   "Strength":       { image: "/images/pose-plank.webp", duration: "20-30 min" },
+  "Core & abs":         { image: "/images/pose-boat.webp", duration: "15-25 min" },
+  "Balance & focus":    { image: "/images/pose-tree.webp", duration: "15-25 min" },
+  "Back & neck relief": { image: "/images/pose-cat-cow.webp", duration: "10-15 min" },
+  "Full-body flow":     { image: "/images/pose-downward-dog.webp", duration: "25-35 min" },
 };
 
 // Maps a scheduled focus label to a runnable flow (intention + duration + image),
@@ -583,6 +587,10 @@ const FOCUS_META: Record<string, { intention: Intention; duration: number; image
   "Cycle sync":         { intention: "cycle",    duration: 20, image: "/images/pose-reclined-bound-angle.webp",  blurb: "Matched to today's phase" },
   "Strength":           { intention: "strength", duration: 25, image: "/images/pose-plank.webp",                 blurb: "Build steady, mindful power" },
   "Emotional release":  { intention: "release",  duration: 20, image: "/images/pose-pigeon.webp",                blurb: "Open hips & heart, let it move" },
+  "Core & abs":         { intention: "core",     duration: 20, image: "/images/pose-boat.webp",                  blurb: "Steady, mindful core strength" },
+  "Balance & focus":    { intention: "balance",  duration: 20, image: "/images/pose-tree.webp",                  blurb: "Steady the body, quiet the mind" },
+  "Back & neck relief": { intention: "backcare", duration: 15, image: "/images/pose-cat-cow.webp",               blurb: "Unwind desk-day tension" },
+  "Full-body flow":     { intention: "fullbody", duration: 30, image: "/images/pose-downward-dog.webp",          blurb: "One flowing practice, head to toe" },
 };
 
 // ── Curated weekly plans (yoga "programs") ──────────────────────────────────
@@ -635,6 +643,42 @@ const YOGA_PROGRAMS: YogaProgram[] = [
     whoFor: "Tight hips, a stiff back, or a lot of sitting.",
     focus: { Mon: "Emotional release", Tue: "Stress relief", Wed: "Emotional release", Thu: null, Fri: "Cycle sync", Sat: "Emotional release", Sun: null },
   },
+  {
+    id: "strong-sculpted",
+    title: "Strong & Sculpted",
+    tagline: "Build lean strength, mindfully.",
+    image: "/images/pose-plank.webp",
+    promise: ["Sculpt core, glutes & arms", "Steady, functional strength", "Feel powerful in your body"],
+    whoFor: "You want to tone and build strength without the gym.",
+    focus: { Mon: "Strength", Tue: "Core & abs", Wed: null, Thu: "Strength", Fri: "Full-body flow", Sat: "Core & abs", Sun: null },
+  },
+  {
+    id: "core-foundations",
+    title: "Core Foundations",
+    tagline: "A strong, stable centre in one week.",
+    image: "/images/pose-boat.webp",
+    promise: ["A strong, controlled core", "Better posture & stability", "Protect your lower back"],
+    whoFor: "You want deep-core strength and a supported back.",
+    focus: { Mon: "Core & abs", Tue: "Back & neck relief", Wed: null, Thu: "Core & abs", Fri: "Balance & focus", Sat: null, Sun: "Core & abs" },
+  },
+  {
+    id: "desk-reset",
+    title: "Desk Reset",
+    tagline: "Undo the day's sitting, one flow at a time.",
+    image: "/images/pose-cat-cow.webp",
+    promise: ["Unwind neck & shoulder knots", "Free a stiff lower back", "Move easily again"],
+    whoFor: "Long hours at a desk, a tight neck, or an achy back.",
+    focus: { Mon: "Back & neck relief", Tue: "Stress relief", Wed: "Back & neck relief", Thu: null, Fri: "Back & neck relief", Sat: "Sleep prep", Sun: null },
+  },
+  {
+    id: "total-body-balance",
+    title: "Total-Body Balance",
+    tagline: "One well-rounded practice, head to toe.",
+    image: "/images/pose-warrior-3.webp",
+    promise: ["A complete full-body flow", "Steady balance & focus", "Well-rounded every week"],
+    whoFor: "You want one balanced routine that trains the whole body.",
+    focus: { Mon: "Full-body flow", Tue: "Balance & focus", Wed: null, Thu: "Full-body flow", Fri: "Morning energy", Sat: "Balance & focus", Sun: null },
+  },
 ];
 
 // ── Recorded pose narration + audio-driven timing ───────────────────────────
@@ -643,7 +687,7 @@ const YOGA_PROGRAMS: YogaProgram[] = [
 // the voice is never cut off. Poses missing a recording fall back to a default
 // hold and stay silent. (Measured from the uploaded files.)
 const POSE_HOLD: Record<string, number> = {
-  "easy-seat": 50, "cat-cow": 50, "childs-pose": 60, "seated-twist": 105, "low-lunge": 105,
+  "easy-seat": 50, "cat-cow": 120, "childs-pose": 60, "seated-twist": 105, "low-lunge": 105,
   "butterfly": 75, "pigeon": 110, "garland": 105, "mountain": 80, "forward-fold": 65,
   "downward-dog": 75, "warrior-1": 95, "warrior-2": 110, "triangle": 105, "chair": 65,
   "tree": 95, "half-moon": 110, "cobra": 80, "camel": 95, "seated-forward-fold": 85,
@@ -725,7 +769,7 @@ function pickVaried(pool: string[], keep: number): string[] {
 function buildFlow(opts: {
   intention: Intention; level: Level; durationMin: number; phase: Phase; mode: Mode;
 }): Pose[] {
-  const { intention, level, phase, mode } = opts;
+  const { intention, level, durationMin, phase, mode } = opts;
 
   // Beginner audio-only safety: drop non-floor poses
   const audioBeginner = mode === "audio" && level === "Beginner";
@@ -741,15 +785,38 @@ function buildFlow(opts: {
   });
 
   const mainPool = intention === "cycle" ? PHASE_SLUGS[phase] : INTENTION_MAIN[intention];
-  const mainCount = GENTLE.has(intention) ? 6 : 8;
 
-  // Warm-up: always ground with a seated breath, then 2 varied warm-ups.
-  const warm = ["easy-seat", ...pickVaried(safe(WARMUP_POOL), 2)];
-  // Main: a varied subset of the intention's pool (order preserved), level-fit.
-  const main = pickVaried(safe(byLevel(mainPool)), mainCount);
-  // Cool-down: 2 varied, then a final rest.
-  const cool = pickVaried(safe(COOLDOWN_POOL), 2);
+  // Real length of one step: narration + music tail, plus the second-side step
+  // for one-sided poses. Used to size the flow to the chosen duration so a
+  // "10 min" session really is ~10 min, not a fixed ~25.
+  const stepSec = (slug: string) =>
+    holdOf(slug) + POSE_TAIL_SEC + (TWO_SIDED.has(slug) ? SWITCH_HOLD : 0);
+
+  // Structure scales with the chosen length: short sessions get a lighter
+  // warm-up / cool-down so the whole arc still fits the promised minutes.
+  const framingN = durationMin <= 10 ? 1 : durationMin >= 40 ? 3 : 2;
+
+  // Warm-up: always ground with a seated breath, then varied warm-ups.
+  const warm = ["easy-seat", ...pickVaried(safe(WARMUP_POOL), framingN)];
+  // Cool-down: varied, then a final rest.
+  const cool = pickVaried(safe(COOLDOWN_POOL), framingN);
   const rst = [safe(REST_POOL)[Math.floor(Math.random() * Math.max(1, safe(REST_POOL).length))] || "savasana"];
+
+  // Main: fill the remaining time budget with a varied, level-fit subset of the
+  // intention's pool (order preserved). Gentle intentions stay more spacious.
+  const budget = durationMin * 60;
+  const framing = [...warm, ...cool, ...rst];
+  const usedFraming = new Set(framing);
+  let spent = framing.reduce((a, s) => a + stepSec(s), 0);
+  const candidates = pickVaried(safe(byLevel(mainPool)), mainPool.length).filter((s) => !usedFraming.has(s));
+  const minMain = 2, maxMain = GENTLE.has(intention) ? 9 : 14;
+  const main: string[] = [];
+  for (const s of candidates) {
+    if (main.length >= maxMain) break;
+    const cost = stepSec(s);
+    if (main.length >= minMain && spent + cost > budget) break;
+    main.push(s); spent += cost;
+  }
 
   const composed = [...warm, ...main, ...cool, ...rst];
   // dedupe while preserving order
@@ -1831,7 +1898,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   }, [schedule, reminder]);
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Emotional release"];
+  const options = [null, "Morning energy", "Stress relief", "Sleep prep", "Cycle sync", "Strength", "Core & abs", "Balance & focus", "Full-body flow", "Emotional release", "Back & neck relief"];
   const todayKey = WEEKDAY_LABELS[new Date().getDay()];
   const weekEmpty = days.every((d) => !schedule[d]);
 
@@ -2457,7 +2524,7 @@ function SessionPlayer({
         <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
             <>
-              <img src={pose.image} alt={pose.name} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)]" />
+              <img key={idx} src={pose.image} alt={pose.name} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)] animate-pose-in" />
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
                 <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
@@ -2483,7 +2550,7 @@ function SessionPlayer({
         {/* TEXT */}
         <div className={["shrink-0 p-3 sm:p-5", dim ? "text-white" : ""].join(" ")}>
           <div className="flex items-end justify-between gap-3 flex-wrap">
-            <div>
+            <div key={idx} className="animate-fade-in">
               <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : "text-rose/60"].join(" ")}>
                 Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
               </p>
@@ -2497,10 +2564,6 @@ function SessionPlayer({
               <p className="text-3xl font-bold tabular-nums">{remaining}s</p>
             </div>
           </div>
-
-          <p dir={lang === "ar" ? "rtl" : "ltr"} className={["mt-2 text-xs sm:text-base leading-snug line-clamp-2", dim ? "text-white/90" : "text-rose/90"].join(" ")}>
-            {pose.cues[lang]}
-          </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button onClick={togglePlay}
