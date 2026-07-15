@@ -85,10 +85,13 @@
   50%      { transform: scale(1.3) translate3d(0, -1.5%, 0); }
 }
 
-/* Night-theme stars — a soft, slow twinkle (brighten + gentle swell). */
+/* Night-theme stars — drift in from far away: emerge tiny & faint (distant),
+   grow and brighten as they near, then soften off, with a slow gentle drift. */
 @keyframes bloom-twinkle {
-  0%, 100% { opacity: 0.18; transform: scale(0.8); }
-  50%      { opacity: 0.95; transform: scale(1.12); }
+  0%   { opacity: 0; transform: translate3d(0, -6px, 0) scale(0.2); }
+  22%  { opacity: 0.95; }
+  62%  { opacity: 0.75; }
+  100% { opacity: 0; transform: translate3d(0, 14px, 0) scale(1.5); }
 }
 
 /* Guided-flow hypnotic ripple — a soft wave born at centre that expands and
@@ -221,9 +224,9 @@
   .animate-ripple {
     animation: bloom-ripple calc(19.2s * var(--bloom-pace)) ease-out infinite;
   }
-  /* Night-theme star twinkle (per-star duration/delay set inline for variety) */
+  /* Night-theme stars drifting in from afar (per-star duration/delay inline) */
   .animate-twinkle {
-    animation: bloom-twinkle 4.5s ease-in-out infinite;
+    animation: bloom-twinkle 9s ease-in-out infinite;
   }
 
   /* --- Selected / current item glow --- */

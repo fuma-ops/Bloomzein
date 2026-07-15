@@ -2645,24 +2645,18 @@ function SessionPlayer({
               />
               {/* Light veil so the sharp pose stays the clear focus (skin-tinted) */}
               <div aria-hidden className="absolute inset-0 transition-colors duration-1000" style={{ background: skin.veil }} />
-              <img
-                key={idx}
-                src={pose.image}
-                alt={pose.name}
-                onLoad={() => setImgReady(true)}
-                onError={() => setImgReady(false)}
-                className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
-                style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
-              />
-              {/* Time-of-day mood wash over the scene (transparent in day) */}
+              {/* Time-of-day mood wash over the sky (transparent in day). Sits
+                  BEHIND the pose so the pose stays clear. */}
               <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: skin.overlay }} />
-              {/* Night sky — a few soft stars that gently twinkle */}
+              {/* Night sky — soft stars drifting in from far away. Placed BEHIND
+                  the pose, so the photo occludes any over its body: stars only
+                  ever show in the empty sky around it. */}
               {dayPart === "night" && (
                 <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                  {([[8,15,3,0,4.6],[12,78,2,1.2,5.2],[20,40,2.5,2.4,4.0],[6,55,2,0.6,5.6],[28,8,2,3.1,4.3],[16,90,3,1.8,5.0],[33,68,2,0.3,4.8],[10,33,1.5,2.0,5.4],[24,22,2,1.0,4.1],[38,85,2.5,2.7,5.3],[5,70,1.5,3.4,4.7],[30,52,1.5,0.9,5.1],[14,62,2,1.5,4.4],[42,12,2,2.2,5.5]] as const).map(([t, l, s, d, dur], i) => (
+                  {([[6,18,2.5,0,8],[10,72,2,2.5,9.5],[14,45,2,5,8.5],[8,88,1.5,1.2,10],[20,10,2,3.8,9],[16,60,2.5,6.2,8],[24,80,1.5,0.6,10.5],[12,32,1.5,4.5,9],[26,52,2,7,8.5],[5,55,1.5,2,11],[80,20,2,1.5,9],[86,68,2.5,4,8],[78,42,1.5,6.5,10],[90,85,2,0.3,9.5],[83,12,1.5,3,10.5],[88,55,2,5.5,8.5]] as const).map(([t, l, s, d, dur], i) => (
                     <span
                       key={i}
-                      className="absolute rounded-full animate-twinkle"
+                      className="absolute rounded-full animate-twinkle will-change-transform"
                       style={{
                         top: `${t}%`, left: `${l}%`, width: `${s}px`, height: `${s}px`,
                         background: "rgba(255,255,255,0.95)",
@@ -2673,6 +2667,15 @@ function SessionPlayer({
                   ))}
                 </div>
               )}
+              <img
+                key={idx}
+                src={pose.image}
+                alt={pose.name}
+                onLoad={() => setImgReady(true)}
+                onError={() => setImgReady(false)}
+                className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+              />
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
