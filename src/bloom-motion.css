@@ -71,10 +71,11 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Pose-to-pose transition in the guided flow — a calm cross-fade + settle */
+/* Pose-to-pose transition in the guided flow — a slow, pure cross-fade.
+   No blur, no zoom, no snap: just a calm dissolve, the way a yoga app should. */
 @keyframes bloom-pose-in {
-  0%   { opacity: 0; transform: scale(1.035); filter: blur(6px); }
-  100% { opacity: 1; transform: scale(1);     filter: blur(0); }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* Selected day / current item — soft pulsing halo (Calendar, Cycle) */
@@ -185,9 +186,9 @@
   .animate-fade-in {
     animation: bloom-fade-in calc(0.42s * var(--bloom-pace)) var(--bloom-ease-soft) both;
   }
-  /* Guided-flow pose change — soft cross-fade + settle as each pose appears */
+  /* Guided-flow pose change — a slow, even dissolve (calm, no snap) */
   .animate-pose-in {
-    animation: bloom-pose-in calc(0.6s * var(--bloom-pace)) var(--bloom-ease-soft) both;
+    animation: bloom-pose-in calc(1.4s * var(--bloom-pace)) ease-in-out both;
   }
 
   /* --- Selected / current item glow --- */
