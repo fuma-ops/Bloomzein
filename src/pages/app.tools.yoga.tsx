@@ -687,7 +687,7 @@ const YOGA_PROGRAMS: YogaProgram[] = [
 // the voice is never cut off. Poses missing a recording fall back to a default
 // hold and stay silent. (Measured from the uploaded files.)
 const POSE_HOLD: Record<string, number> = {
-  "easy-seat": 50, "cat-cow": 50, "childs-pose": 60, "seated-twist": 105, "low-lunge": 105,
+  "easy-seat": 50, "cat-cow": 120, "childs-pose": 60, "seated-twist": 105, "low-lunge": 105,
   "butterfly": 75, "pigeon": 110, "garland": 105, "mountain": 80, "forward-fold": 65,
   "downward-dog": 75, "warrior-1": 95, "warrior-2": 110, "triangle": 105, "chair": 65,
   "tree": 95, "half-moon": 110, "cobra": 80, "camel": 95, "seated-forward-fold": 85,
@@ -2524,7 +2524,7 @@ function SessionPlayer({
         <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : "bg-blush/40"].join(" ")}>
           {!dim ? (
             <>
-              <img src={pose.image} alt={pose.name} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)]" />
+              <img key={idx} src={pose.image} alt={pose.name} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="absolute inset-0 w-full h-full object-contain bg-[oklch(0.96_0.04_350)] animate-pose-in" />
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
                 <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
               </div>
@@ -2550,7 +2550,7 @@ function SessionPlayer({
         {/* TEXT */}
         <div className={["shrink-0 p-3 sm:p-5", dim ? "text-white" : ""].join(" ")}>
           <div className="flex items-end justify-between gap-3 flex-wrap">
-            <div>
+            <div key={idx} className="animate-fade-in">
               <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : "text-rose/60"].join(" ")}>
                 Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
               </p>
@@ -2564,10 +2564,6 @@ function SessionPlayer({
               <p className="text-3xl font-bold tabular-nums">{remaining}s</p>
             </div>
           </div>
-
-          <p dir={lang === "ar" ? "rtl" : "ltr"} className={["mt-2 text-xs sm:text-base leading-snug line-clamp-2", dim ? "text-white/90" : "text-rose/90"].join(" ")}>
-            {pose.cues[lang]}
-          </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button onClick={togglePlay}
