@@ -2373,10 +2373,23 @@ function SessionPlayer({
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
   useEffect(() => { setImgReady(false); }, [idx]);
+  // Hypnotic breath ripples — one soft wave is born at centre on each inhale
+  // and flows outward off the frame (capped so they never pile up).
+  const [ripples, setRipples] = useState<number[]>([]);
+  const rippleSeq = useRef(0);
   const { stop } = useSpeaker();
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
   // Breath cue is VISUAL only (the ring + label) — no spoken voice.
   const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
+  // Emit one ripple at the start of every inhale (kept to the last few).
+  const prevBreathRef = useRef<BreathPhase>("exhale");
+  useEffect(() => {
+    if (running && breathPhase === "inhale" && prevBreathRef.current !== "inhale") {
+      const id = ++rippleSeq.current;
+      setRipples((r) => [...r.slice(-4), id]);
+    }
+    prevBreathRef.current = breathPhase;
+  }, [breathPhase, running]);
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
@@ -2547,6 +2560,16 @@ function SessionPlayer({
               />
               {/* Veil to mute the backdrop so the sharp pose stays the focus */}
               <div aria-hidden className="absolute inset-0 bg-blush/35" />
+              {/* Hypnotic breath ripples — soft waves radiating from centre */}
+              {ripples.map((id) => (
+                <span
+                  key={id}
+                  aria-hidden
+                  onAnimationEnd={() => setRipples((r) => r.filter((x) => x !== id))}
+                  className="pointer-events-none absolute left-1/2 top-1/2 w-[44%] aspect-square rounded-full animate-ripple will-change-transform"
+                  style={{ border: "1.5px solid rgba(244,114,182,0.30)", boxShadow: "0 0 34px 6px rgba(244,114,182,0.16), inset 0 0 34px 6px rgba(244,114,182,0.10)" }}
+                />
+              ))}
               <img
                 key={idx}
                 src={pose.image}
