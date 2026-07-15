@@ -2373,23 +2373,10 @@ function SessionPlayer({
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
   useEffect(() => { setImgReady(false); }, [idx]);
-  // Hypnotic breath ripples — one soft wave is born at centre on each inhale
-  // and flows outward off the frame (capped so they never pile up).
-  const [ripples, setRipples] = useState<number[]>([]);
-  const rippleSeq = useRef(0);
   const { stop } = useSpeaker();
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
   // Breath cue is VISUAL only (the ring + label) — no spoken voice.
   const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
-  // Emit one ripple at the start of every inhale (kept to the last few).
-  const prevBreathRef = useRef<BreathPhase>("exhale");
-  useEffect(() => {
-    if (running && breathPhase === "inhale" && prevBreathRef.current !== "inhale") {
-      const id = ++rippleSeq.current;
-      setRipples((r) => [...r.slice(-4), id]);
-    }
-    prevBreathRef.current = breathPhase;
-  }, [breathPhase, running]);
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
@@ -2543,33 +2530,40 @@ function SessionPlayer({
             <>
               {/* Soft placeholder — visible while the photo loads, or if a slow
                   mobile connection never delivers it. Never a blank box. */}
-              <div aria-hidden className="absolute inset-0 grid place-items-center bg-[oklch(0.96_0.04_350)] animate-card-breathe">
+              <div aria-hidden className={["absolute inset-0 grid place-items-center bg-[oklch(0.96_0.04_350)] animate-card-breathe transition-opacity duration-700", imgReady ? "opacity-0" : "opacity-100"].join(" ")}>
                 <Flower className="h-16 w-16 text-hotpink/25" strokeWidth={1.5} />
               </div>
+              {/* Hypnotic ripples — a continuous field of concentric waves born
+                  at centre, rolling outward like drops in still water. They sit
+                  BEHIND the blurred photo so they read as soft ambient motion
+                  underneath, never a sharp overlay that could distract. */}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <span
+                  key={i}
+                  aria-hidden
+                  className="pointer-events-none absolute left-1/2 top-1/2 w-[38%] aspect-square rounded-full animate-ripple will-change-transform"
+                  style={{
+                    animationDelay: `${-i * 1.6}s`,
+                    border: "2px solid rgba(236,72,153,0.55)",
+                    boxShadow: "0 0 30px 6px rgba(236,72,153,0.28), inset 0 0 30px 6px rgba(236,72,153,0.18)",
+                    filter: "blur(2px)",
+                  }}
+                />
+              ))}
               {/* Calm dynamic backdrop: a soft, slowly-breathing blurred fill of
-                  the same photo, so the space around a portrait/square pose is
-                  living and serene instead of an empty band. */}
+                  the same photo. Kept semi-transparent so the ripples drift
+                  softly underneath it instead of over everything. */}
               <img
                 key={idx + "-bg"}
                 src={pose.image}
                 alt=""
                 aria-hidden
                 onLoad={() => setImgReady(true)}
-                className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-[0.72]" : "opacity-0"].join(" ")}
                 style={{ filter: "blur(34px) saturate(1.2)" }}
               />
-              {/* Veil to mute the backdrop so the sharp pose stays the focus */}
-              <div aria-hidden className="absolute inset-0 bg-blush/35" />
-              {/* Hypnotic breath ripples — soft waves radiating from centre */}
-              {ripples.map((id) => (
-                <span
-                  key={id}
-                  aria-hidden
-                  onAnimationEnd={() => setRipples((r) => r.filter((x) => x !== id))}
-                  className="pointer-events-none absolute left-1/2 top-1/2 w-[44%] aspect-square rounded-full animate-ripple will-change-transform"
-                  style={{ border: "1.5px solid rgba(244,114,182,0.30)", boxShadow: "0 0 34px 6px rgba(244,114,182,0.16), inset 0 0 34px 6px rgba(244,114,182,0.10)" }}
-                />
-              ))}
+              {/* Light veil so the sharp pose stays the clear focus */}
+              <div aria-hidden className="absolute inset-0 bg-blush/25" />
               <img
                 key={idx}
                 src={pose.image}

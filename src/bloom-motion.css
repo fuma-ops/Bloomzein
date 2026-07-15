@@ -86,12 +86,12 @@
 }
 
 /* Guided-flow hypnotic ripple — a soft wave born at centre that expands and
-   flows off, fading only near the end. One is emitted on each inhale. */
+   rolls outward off the frame, fading as it loses energy (like a drop in
+   still water). Several run at once via staggered delays. */
 @keyframes bloom-ripple {
-  0%   { transform: translate(-50%, -50%) scale(0.06); opacity: 0; }
-  9%   { opacity: 0.5; }
-  70%  { opacity: 0.22; }
-  100% { transform: translate(-50%, -50%) scale(4.6); opacity: 0; }
+  0%   { transform: translate(-50%, -50%) scale(0.02); opacity: 0; }
+  6%   { opacity: 0.62; }
+  100% { transform: translate(-50%, -50%) scale(4.8); opacity: 0; }
 }
 
 /* Selected day / current item — soft pulsing halo (Calendar, Cycle) */
@@ -210,9 +210,9 @@
   .animate-ambient-breathe {
     animation: bloom-ambient-breathe calc(12s * var(--bloom-pace)) ease-in-out infinite;
   }
-  /* Guided-flow hypnotic ripple — slow expanding wave, runs once per emit */
+  /* Guided-flow hypnotic ripple — continuous expanding waves (water-like) */
   .animate-ripple {
-    animation: bloom-ripple calc(11s * var(--bloom-pace)) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    animation: bloom-ripple calc(9.6s * var(--bloom-pace)) ease-out infinite;
   }
 
   /* --- Selected / current item glow --- */
