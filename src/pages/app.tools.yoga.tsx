@@ -737,6 +737,49 @@ const poseHoldSec = (p: Pose): number => (p.switchStep ? SWITCH_HOLD : holdOf(p.
 /** The audio a step should play. */
 const poseAudioFor = (p: Pose): string | undefined => (p.switchStep ? SWITCH_AUDIO : poseAudioUrl(p.slug));
 
+// ── End-of-flow outro ───────────────────────────────────────────────────────
+// A gentle closing track that plays as a flow finishes, so a session never just
+// cuts to silence — it softly announces the end. One suitable outro per session
+// intention. Kept at module scope so it survives the player unmounting into the
+// summary screen (and so a new session can stop a lingering one).
+const END_OUTRO: Record<Intention, string> = {
+  morning: "morning-glow", cycle: "cycle-synced", release: "flex-release",
+  strength: "strong-sculpted", core: "core-foundations", backcare: "desk-reset",
+  fullbody: "total-body-balance", balance: "total-body-balance",
+  stress: "deep-relief", sleep: "deep-relief",
+};
+const endOutroUrl = (i: Intention) => `/audio/yoga/end/${END_OUTRO[i]}.mp3`;
+let endOutroEl: HTMLAudioElement | null = null;
+function stopEndOutro() { try { endOutroEl?.pause(); } catch {} endOutroEl = null; }
+/** Linearly ramp an audio element's volume to a target over `ms`. */
+function fadeAudioTo(el: HTMLAudioElement, target: number, ms: number, done?: () => void) {
+  const steps = 24;
+  const start = el.volume;
+  const dv = (target - start) / steps;
+  const dt = Math.max(16, ms / steps);
+  let n = 0;
+  const iv = setInterval(() => {
+    n++;
+    try { el.volume = Math.max(0, Math.min(1, start + dv * n)); } catch {}
+    if (n >= steps) { clearInterval(iv); done?.(); }
+  }, dt);
+}
+/** Play the outro for this intention — fades in, and gently fades itself out after
+ *  a short window so a long track never hijacks the next screen. */
+function playEndOutro(intention: Intention) {
+  stopEndOutro();
+  try {
+    const a = new Audio(endOutroUrl(intention));
+    a.volume = 0; a.preload = "auto";
+    endOutroEl = a;
+    a.play().then(() => fadeAudioTo(a, 0.85, 1400)).catch(() => {});
+    a.addEventListener("ended", () => { if (endOutroEl === a) endOutroEl = null; });
+    window.setTimeout(() => {
+      if (endOutroEl === a) fadeAudioTo(a, 0, 1600, () => { if (endOutroEl === a) stopEndOutro(); });
+    }, 15000);
+  } catch {}
+}
+
 // ── Background music (a continuous, looping bed). "Windsong" is the fullest
 // track and also powers the eyes-closed music-only experience.
 const MUSIC: Record<string, string> = {
@@ -2450,8 +2493,13 @@ function SessionPlayer({
   const stopAllAudio = () => {
     try { narrationRef.current?.pause(); } catch {}
     try { musicRef.current?.pause(); } catch {}
+    stopEndOutro();
     stop();
   };
+
+  // If a previous session's outro is still fading out when a new session opens,
+  // silence it so the two never overlap.
+  useEffect(() => { stopEndOutro(); }, []);
 
   // Create + play the music element SYNCHRONOUSLY inside this click (not in an
   // effect/updater, which mobile browsers treat as "not a user gesture" and
@@ -2467,7 +2515,16 @@ function SessionPlayer({
   };
   const togglePlay = () => {
     const next = !running;
-    if (next) { if (!muted) { try { ensureMusic().play().catch(() => {}); } catch {} } }
+    if (next) {
+      if (!muted) {
+        try {
+          // Fade the music in gently at the start of a flow (no abrupt cut-in).
+          const m = ensureMusic();
+          m.volume = 0;
+          m.play().then(() => fadeAudioTo(m, 0.72, 1600)).catch(() => {});
+        } catch {}
+      }
+    }
     else { stopAllAudio(); }
     setRunning(next);
   };
@@ -2548,7 +2605,15 @@ function SessionPlayer({
   }, [idx, running, poseHold]);
 
   function finishSession() {
-    stopAllAudio();
+    // Gentle close instead of an abrupt cut: stop the voice, fade the music down,
+    // and play a soft end-of-flow outro that continues over the summary screen so
+    // she's always told the flow has ended.
+    setRunning(false);
+    try { narrationRef.current?.pause(); } catch {}
+    stop();
+    const music = musicRef.current;
+    if (music) fadeAudioTo(music, 0, 1300, () => { try { music.pause(); } catch {} });
+    if (!muted) playEndOutro(intention);
     // streak
     try {
       const raw = localStorage.getItem(STREAK_KEY);
@@ -2565,7 +2630,9 @@ function SessionPlayer({
     // Log the flow's calories so yoga counts toward the daily energy balance.
     const practiceMin = Math.max(5, Math.round(flowTotalSeconds(flow) / 60));
     logYogaSession(practiceMin, readDietProfile().weight);
-    onDone();
+    // Hold the summary a beat so the music fade-out is audible before the player
+    // unmounts; the outro then carries over the summary screen.
+    window.setTimeout(() => onDone(), 1200);
   }
 
   if (!pose) return null;
@@ -2594,7 +2661,7 @@ function SessionPlayer({
             {isDark ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             {skinPref === "auto" && <span className="text-[9px] font-bold uppercase tracking-wide opacity-70">auto</span>}
           </button>
-          <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { ensureMusic().play().catch(() => {}); } catch {} } }}
+          <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { const m = ensureMusic(); m.volume = 0; m.play().then(() => fadeAudioTo(m, 0.72, 1200)).catch(() => {}); } catch {} } }}
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>
