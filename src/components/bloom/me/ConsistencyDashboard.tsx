@@ -3,6 +3,7 @@ import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, Tr
 import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint, type GoalSummary } from "@/lib/meDashboard";
 import { Eyebrow } from "./PredictionCharts";
 import { phaseForDay, readCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { weekSnapshot } from "@/lib/nutritionTargets";
 
 type Phase = Exclude<CyclePhase, "any">;
 /** Soft phase tints for graph bands — same language as the mood graph. */
@@ -128,18 +129,16 @@ function phaseGoalInsight(series: { date: string; kg: number }[], dir: GoalSumma
 /** Weight graph with a dot at EVERY logged day, cycle-phase bands behind the
  *  line (so she sees which phases move the needle) and a dashed target line. */
 function WeightGraph({ series, target }: { series: { date: string; kg: number }[]; target: number | null }) {
+  const [sel, setSel] = useState(-1); // -1 → default to today (last)
   if (series.length < 2) return null;
   const s = readCycleSettings();
   const MS = 86400000;
-  const W = 300, H = 78, padX = 5, padY = 12;
+  const W = 300, H = 84, padX = 6, padY = 16;
   const at = (iso: string) => new Date(iso + "T00:00:00").getTime();
   const t0 = at(series[0].date), tN = at(series[series.length - 1].date);
   const span = Math.max(1, tN - t0);
   const xAt = (ms: number) => padX + ((ms - t0) / span) * (W - padX * 2);
 
-  // Scale to the WEIGHT range (padded) so her real variation — the luteal water
-  // bumps, the follicular drops — is visible. A far-off target would squash it
-  // flat, so we only draw the target line when it actually falls in view.
   const kgs = series.map((p) => p.kg);
   const lo0 = Math.min(...kgs), hi0 = Math.max(...kgs);
   const pad = Math.max(0.3, (hi0 - lo0) * 0.35);
@@ -147,7 +146,6 @@ function WeightGraph({ series, target }: { series: { date: string; kg: number }[
   const yAt = (kg: number) => padY + (1 - (kg - lo) / range) * (H - padY * 2);
   const showTarget = target != null && target >= lo && target <= hi;
 
-  // Phase bands day-by-day across the logged range.
   const bands: { ph: Phase; x1: number; x2: number }[] = [];
   let prev: Phase | null = null, bs = t0;
   for (let d = t0; d <= tN + MS; d += MS) {
@@ -157,19 +155,42 @@ function WeightGraph({ series, target }: { series: { date: string; kg: number }[
 
   const pts = series.map((p) => [xAt(at(p.date)), yAt(p.kg)] as const);
   const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const lastIdx = series.length - 1;
+  const selIdx = sel < 0 ? lastIdx : Math.min(sel, lastIdx);
+  const selP = series[selIdx];
+  const [selX] = pts[selIdx];
+  const delta = selIdx > 0 ? +(selP.kg - series[selIdx - 1].kg).toFixed(1) : 0;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[78px]" preserveAspectRatio="none">
-      {/* cycle-phase bands behind — the "where in my cycle" context */}
-      {bands.map((b, i) => <rect key={i} x={b.x1} y={0} width={Math.max(0, b.x2 - b.x1)} height={H} fill={PHASE_BAND[b.ph]} />)}
-      {showTarget && <line x1={padX} x2={W - padX} y1={yAt(target!)} y2={yAt(target!)} stroke="#DB2777" strokeWidth="1" strokeDasharray="4 3" opacity="0.55" vectorEffect="non-scaling-stroke" />}
-      <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-      {/* a dot at every weigh-in, coloured by the phase she was in that day */}
-      {pts.map(([x, y], i) => {
-        const ph = phaseForDay(new Date(at(series[i].date)), s) as Phase;
-        return <circle key={i} cx={x} cy={y} r="3" fill="#fff" stroke={PHASE_DOT[ph]} strokeWidth="2" vectorEffect="non-scaling-stroke" />;
-      })}
-    </svg>
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[84px] touch-none" preserveAspectRatio="none">
+        {bands.map((b, i) => <rect key={i} x={b.x1} y={0} width={Math.max(0, b.x2 - b.x1)} height={H} fill={PHASE_BAND[b.ph]} />)}
+        {showTarget && <line x1={padX} x2={W - padX} y1={yAt(target!)} y2={yAt(target!)} stroke="#DB2777" strokeWidth="1" strokeDasharray="4 3" opacity="0.55" vectorEffect="non-scaling-stroke" />}
+        <line x1={selX} y1={padY - 8} x2={selX} y2={H} stroke="var(--hotpink)" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" vectorEffect="non-scaling-stroke" />
+        <path d={line} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        {pts.map(([x, y], i) => {
+          const ph = phaseForDay(new Date(at(series[i].date)), s) as Phase;
+          const isToday = i === lastIdx, on = i === selIdx;
+          return (
+            <g key={i} onClick={() => setSel(i)} style={{ cursor: "pointer" }}>
+              <circle cx={x} cy={y} r="9" fill="transparent" vectorEffect="non-scaling-stroke" />
+              <circle cx={x} cy={y} r={isToday ? 4.2 : on ? 3.6 : 2.8} fill={isToday || on ? PHASE_DOT[ph] : "#fff"} stroke={PHASE_DOT[ph]} strokeWidth={isToday ? 2.4 : 2} vectorEffect="non-scaling-stroke" />
+              {isToday && <circle cx={x} cy={y} r="7" fill="none" stroke="var(--hotpink)" strokeWidth="1" opacity="0.5" vectorEffect="non-scaling-stroke" />}
+            </g>
+          );
+        })}
+        <text x={Math.min(W - 12, pts[lastIdx][0])} y={pts[lastIdx][1] - 9} textAnchor="middle" fontSize="7.5" fontWeight="800" fill="#DB2777" style={{ letterSpacing: "0.06em" }}>NOW</text>
+      </svg>
+      <div className="mt-1.5 flex items-center justify-between text-[10.5px]">
+        <span className="text-rose/45">{fmtMD(series[0].date)}</span>
+        <span className="inline-flex items-center gap-1.5 font-bold text-hotpink">
+          {selIdx === lastIdx ? "Today" : fmtMD(selP.date)} · {selP.kg}kg
+          {delta !== 0 && <span className={delta < 0 ? "text-emerald-500" : "text-magenta"}>{delta < 0 ? "▼" : "▲"} {Math.abs(delta)}kg</span>}
+        </span>
+        <span className="text-rose/45">today</span>
+      </div>
+      <p className="mt-0.5 text-center text-[9px] text-rose/40">tap any dot to see that weigh-in ✿</p>
+    </div>
   );
 }
 
@@ -187,6 +208,17 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
     if (goal.toGo != null) return `${Math.abs(goal.toGo).toFixed(1)} kg to go${goal.etaWeeks ? ` · ~${goal.etaWeeks}w` : ""}`;
     return "set a target in Diet";
   })();
+  // A warm, honest nudge — how far, how long, how much done.
+  const motivation = (() => {
+    if (goal.goal === "maintain") return "Holding steady — beautifully done ✿";
+    if (goal.toGo != null && Math.abs(goal.toGo) < 0.1) return "You reached your goal — so proud of you ✿";
+    if (goal.toGo == null) return "Set a goal weight in Diet and I'll map your path ✿";
+    const kg = Math.abs(goal.toGo).toFixed(1);
+    const eta = goal.etaWeeks ? ` — about ${goal.etaWeeks} week${goal.etaWeeks > 1 ? "s" : ""} at this pace` : "";
+    if (goal.pct >= 75) return `Only ${kg}kg to go${eta}. You're so close — keep blooming ✿`;
+    if (goal.pct >= 40) return `${kg}kg to go${eta}. You're ${goal.pct}% there — momentum is yours ✿`;
+    return `${kg}kg to your goal${eta}. Every day counts — you've got this ✿`;
+  })();
   return (
     <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
       <div className="flex items-center justify-between">
@@ -200,8 +232,11 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
       {goal.has && goal.current != null ? (
         <>
           <div className="mt-2 flex items-end gap-2">
-            <span className="font-script text-4xl leading-none text-hotpink">{goal.current}<span className="text-lg">kg</span></span>
-            {goal.target != null && <span className="mb-1 text-sm text-rose/60">→ {goal.target}kg</span>}
+            <span className="leading-none">
+              <span className="font-script text-4xl text-hotpink">{goal.current}<span className="text-lg">kg</span></span>
+              <span className="ml-1 text-[9px] font-bold uppercase tracking-wide text-rose/45">now</span>
+            </span>
+            {goal.target != null && <span className="mb-1 text-sm text-rose/60">→ {goal.target}kg goal</span>}
             <span className="mb-1 ml-auto text-xs font-semibold text-hotpink">{caption}</span>
           </div>
           {goal.series.length >= 2 && (
@@ -217,10 +252,14 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
           )}
           {(() => { const line = phaseGoalInsight(goal.series, goal.goal); return line ? <p className="mt-2 text-[11.5px] font-semibold text-hotpink">✦ {line}</p> : null; })()}
           {goal.goal !== "maintain" && goal.target != null && (
-            <div className="mt-2 h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${goal.pct}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
+            <div className="mt-2.5">
+              <div className="h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${goal.pct}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
+              </div>
+              <p className="mt-1.5 text-center text-[11.5px] font-semibold text-hotpink">{motivation}</p>
             </div>
           )}
+          {goal.goal === "maintain" && <p className="mt-2 text-center text-[11.5px] font-semibold text-hotpink">{motivation}</p>}
         </>
       ) : (
         <p className="mt-2 text-xs text-rose/55 animate-pulse">Set your goal & log your weight in Diet to track progress ✿</p>
@@ -384,6 +423,7 @@ export function ConsistencyDashboard() {
 
   if (!data) return null;
   const b = data.budget;
+  const week = weekSnapshot();
   const lowestKey = [...data.pillars].sort((a, b) => a.pct - b.pct)[0]?.key;
   const streakSub = (cur: number, best: number) => (best > cur ? `best: ${best} days` : cur === 1 ? "day" : "days in a row");
 
@@ -418,20 +458,42 @@ export function ConsistencyDashboard() {
         <div className="mt-2"><GoalCard goal={data.goal} /></div>
       </div>
 
-      {/* Movement stats — with BEST streaks so a current 1 still reads as progress */}
+      {/* Movement — this week vs plan, then all-time; movement-only (no journal) */}
       <div className="mt-3.5">
         <Eyebrow>Your movement</Eyebrow>
-        <div className="mt-2 grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts done" spark={data.workoutSpark} sub="all time" delay={100} />
-          <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub="all time" delay={160} />
+        <div className="mt-2 bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">This week</span>
+            <span className="text-[12px] font-bold text-hotpink">
+              {week.sessionsDone}{week.plannedTraining > 0 ? ` / ${week.plannedTraining}` : ""} session{week.sessionsDone === 1 ? "" : "s"}
+              {week.plannedTraining > 0 && <span className="ml-1 text-rose/50 font-semibold">planned</span>}
+            </span>
+          </div>
+          {week.plannedTraining > 0 && (
+            <div className="mt-2 h-2 rounded-full bg-blush border border-petal/50 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${Math.min(100, Math.round((week.sessionsDone / week.plannedTraining) * 100))}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
+            </div>
+          )}
+          <div className="mt-2.5 flex gap-5 text-[12px] font-semibold text-rose/75">
+            <span className="inline-flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.9} />{week.workoutsDone} workout{week.workoutsDone === 1 ? "" : "s"}</span>
+            <span className="inline-flex items-center gap-1.5"><Flower2 className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.9} />{week.yogaDone} yoga</span>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts" spark={data.workoutSpark} sub={`${week.workoutsDone} this week`} delay={100} />
+          <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub={`${week.yogaDone} this week`} delay={160} />
           <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={streakSub(data.moveStreak, data.moveBestStreak)} delay={220} />
-          <StatTile Icon={BookHeart} value={data.journalStreak} label="Journal streak" sub={streakSub(data.journalStreak, data.journalBestStreak)} delay={280} />
         </div>
       </div>
 
-      {/* Mood + consistency calendar */}
+      {/* Mood + reflection — journal lives here (reflection), not under movement */}
       <div className="mt-3.5">
-        <Eyebrow>Mood &amp; consistency</Eyebrow>
+        <div className="flex items-center justify-between gap-2">
+          <Eyebrow>Mood &amp; reflection</Eyebrow>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-hotpink">
+            <BookHeart className="h-3.5 w-3.5" strokeWidth={1.9} /> Journal {data.journalStreak}{data.journalStreak === 1 ? " day" : " days"}{data.journalBestStreak > data.journalStreak ? ` · best ${data.journalBestStreak}` : ""}
+          </span>
+        </div>
         <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* opaque bg so the ambient bubbles don't bleed through as a stray shape */}
           <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
