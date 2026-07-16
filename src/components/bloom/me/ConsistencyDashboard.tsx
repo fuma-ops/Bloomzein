@@ -3,7 +3,7 @@ import { Dumbbell, Flower2, BookHeart, Flame, Droplets, Salad, Wallet, Scale, Tr
 import { computeMeDashboard, type MeDashboard, type CalendarDay, type MoodPoint, type GoalSummary } from "@/lib/meDashboard";
 import { Eyebrow } from "./PredictionCharts";
 import { phaseForDay, readCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { weekSnapshot } from "@/lib/nutritionTargets";
+import { weekSnapshot, weeklyEnergy, neededForPhase, type EnergyDay } from "@/lib/nutritionTargets";
 
 type Phase = Exclude<CyclePhase, "any">;
 /** Soft phase tints for graph bands — same language as the mood graph. */
@@ -191,6 +191,37 @@ function WeightGraph({ series, target }: { series: { date: string; kg: number }[
       </div>
       <p className="mt-0.5 text-center text-[9px] text-rose/40">tap any dot to see that weigh-in ✿</p>
     </div>
+  );
+}
+
+/** This week's energy: needed (dashed) vs planned-to-eat (line + phase dots) vs
+ *  planned training burn (bars). The mood-style graph she asked for. */
+function EnergyGraph({ days }: { days: EnergyDay[] }) {
+  const W = 300, cTop = 8, cBot = 74, bTop = 84, bBot = 106, H = 118, padX = 8;
+  const xAt = (i: number) => padX + (i / 6) * (W - padX * 2);
+  const planned = days.filter((d) => d.planned > 0);
+  const vals = [...days.map((d) => d.needed), ...planned.map((d) => d.planned)];
+  const lo = Math.min(...vals) * 0.96, hi = Math.max(...vals) * 1.04, range = hi - lo || 1;
+  const yCal = (v: number) => cTop + (1 - (v - lo) / range) * (cBot - cTop);
+  const bMax = Math.max(1, ...days.map((d) => d.burned));
+  const neededPath = days.map((d, i) => `${i ? "L" : "M"}${xAt(i).toFixed(1)},${yCal(d.needed).toFixed(1)}`).join(" ");
+  const plannedPts = planned.map((d) => [xAt(days.indexOf(d)), yCal(d.planned)] as const);
+  const plannedPath = plannedPts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const todayI = days.findIndex((d) => d.isToday);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[118px]" preserveAspectRatio="none">
+      {todayI >= 0 && <line x1={xAt(todayI)} y1={cTop - 4} x2={xAt(todayI)} y2={bBot} stroke="var(--hotpink)" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" vectorEffect="non-scaling-stroke" />}
+      {/* burned training bars */}
+      {days.map((d, i) => d.burned > 0 ? <rect key={i} x={xAt(i) - 5} y={bBot - (d.burned / bMax) * (bBot - bTop)} width="10" height={(d.burned / bMax) * (bBot - bTop)} rx="2" fill="#B76E79" opacity="0.8" /> : null)}
+      {/* needed (dashed) */}
+      <path d={neededPath} fill="none" stroke="#9D5C7E" strokeWidth="1.6" strokeDasharray="4 3" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      {/* planned line + phase-coloured dots */}
+      <path d={plannedPath} fill="none" stroke="var(--hotpink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      {planned.map((d) => { const [x, y] = [xAt(days.indexOf(d)), yCal(d.planned)]; return <circle key={d.label} cx={x} cy={y} r="3" fill="#fff" stroke={PHASE_DOT[d.phase]} strokeWidth="2" vectorEffect="non-scaling-stroke"><title>{`${d.label} · planned ${d.planned} kcal`}</title></circle>; })}
+      {/* weekday labels */}
+      {days.map((d, i) => <text key={i} x={xAt(i)} y={116} textAnchor="middle" fontSize="7.5" fontWeight="700" fill={d.isToday ? "#DB2777" : "#B08099"}>{d.label}</text>)}
+    </svg>
   );
 }
 
@@ -424,6 +455,9 @@ export function ConsistencyDashboard() {
   if (!data) return null;
   const b = data.budget;
   const week = weekSnapshot();
+  const energy = weeklyEnergy();
+  const hasPlan = energy.some((d) => d.planned > 0);
+  const lutealBump = neededForPhase("luteal") - neededForPhase("follicular");
   const lowestKey = [...data.pillars].sort((a, b) => a.pct - b.pct)[0]?.key;
   const streakSub = (cur: number, best: number) => (best > cur ? `best: ${best} days` : cur === 1 ? "day" : "days in a row");
 
@@ -483,6 +517,29 @@ export function ConsistencyDashboard() {
           <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts" spark={data.workoutSpark} sub={`${week.workoutsDone} this week`} delay={100} />
           <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub={`${week.yogaDone} this week`} delay={160} />
           <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={streakSub(data.moveStreak, data.moveBestStreak)} delay={220} />
+        </div>
+      </div>
+
+      {/* Your energy this week — needed vs planned vs burned, phase-coloured */}
+      <div className="mt-3.5">
+        <Eyebrow>Your energy this week</Eyebrow>
+        <div className="mt-2 bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
+          {hasPlan ? (
+            <>
+              <EnergyGraph days={energy} />
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[8.5px] font-extrabold uppercase tracking-wide">
+                <span style={{ color: "#9D5C7E" }}>▬ ▬ Needed</span>
+                <span className="text-hotpink">▬ Planned to eat</span>
+                <span style={{ color: "#B76E79" }}>▮ Training burn</span>
+                <span className="text-rose/45">· dot = cycle phase</span>
+              </div>
+              {lutealBump > 0 && <p className="mt-2 text-[11.5px] font-semibold text-hotpink">✦ Your body needs about +{lutealBump} kcal on your luteal days — let your plan rise with it ✿</p>}
+            </>
+          ) : (
+            <div className="grid h-24 place-items-center text-center">
+              <p className="text-[12px] text-rose/60 animate-pulse">Plan your meals in the Meals tool and your week's energy — needed vs planned vs burned — blooms here ✿</p>
+            </div>
+          )}
         </div>
       </div>
 

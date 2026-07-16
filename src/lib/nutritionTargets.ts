@@ -26,11 +26,12 @@ import {
   readTrainingCaloriesToday,
   readSessionsThisWeek,
   readTodayPlannedDay,
+  readPlannedDay,
   readEatenToday,
   portionFor,
   todayWeekday,
 } from "@/lib/crossToolData";
-import { readCyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, phaseForDay, readCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
 
 export interface MacroTargets {
   calories: number;
@@ -330,6 +331,64 @@ export function weekSnapshot(): WeekSnapshot {
     plannedTraining: plannedTrainingDays(),
     sessionsDone: s.workouts + s.yoga,
   };
+}
+
+/* ---------- Weekly energy (needed vs planned vs burned, by day) ---------- */
+
+/** Daily target for a given cycle phase (same maths as computeTargets, minus
+ *  today's eat-back) — so a weekly view can vary the "needed" line by phase. */
+export function neededForPhase(phase: CyclePhase | null): number {
+  const t = computeTargets(false);
+  const base = t.tdee * GOAL_DELTA[t.goal];
+  const cal = phase === "luteal" ? base * 1.05 : base;
+  return Math.max(MIN_CALORIES, Math.round(cal / 10) * 10);
+}
+
+/** Sum of a weekday's PLANNED meal calories (portion-scaled, matching the plate). */
+function plannedCaloriesForWeekday(day: string): number {
+  const planned = readPlannedDay(day);
+  return (["breakfast", "lunch", "dinner", "snack"] as const).reduce((sum, slot) => {
+    const id = planned[slot];
+    const r = id ? RECIPES.find((x) => x.id === id) : undefined;
+    return r ? sum + (r.macros.calories || 0) * portionFor(day, slot) : sum;
+  }, 0);
+}
+
+const WORKOUT_KCAL_EST = 250;   // typical strength session
+const YOGA_KCAL_EST = 140;      // typical flow
+
+export interface EnergyDay {
+  label: string;          // Mon..Sun
+  needed: number;         // target kcal (phase-adjusted)
+  planned: number;        // planned meals kcal
+  burned: number;         // planned training kcal
+  phase: Exclude<CyclePhase, "any">;
+  isToday: boolean;
+}
+
+/** This week's energy story, day by day — what her body needs, what she planned
+ *  to eat, and what her planned training burns. Planned meals & training are
+ *  weekday-keyed (real data); "needed" varies with each day's cycle phase. */
+export function weeklyEnergy(): EnergyDay[] {
+  const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const workoutDays = new Set(readWorkoutPlanDays());
+  const yogaDays = new Set(readYogaPlanDays());
+  const s = readCycleSettings();
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const dow = (now.getDay() + 6) % 7; // 0 = Monday
+  const monday = now.getTime() - dow * 86400000;
+  return WEEK.map((label, i) => {
+    const date = new Date(monday + i * 86400000);
+    const phase = phaseForDay(date, s) as Exclude<CyclePhase, "any">;
+    return {
+      label,
+      needed: neededForPhase(phase),
+      planned: Math.round(plannedCaloriesForWeekday(label)),
+      burned: (workoutDays.has(label) ? WORKOUT_KCAL_EST : 0) + (yogaDays.has(label) ? YOGA_KCAL_EST : 0),
+      phase,
+      isToday: i === dow,
+    };
+  });
 }
 
 /* ---------- Coach — the best plan to reach her goal ---------- */
