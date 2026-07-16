@@ -4,7 +4,7 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
   Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
-  Scale, TrendingUp, TrendingDown, Minus, RotateCcw,
+  Scale, TrendingUp, TrendingDown, Minus, RotateCcw, Info,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -488,13 +488,17 @@ function BodyGoalEditModal({ profile, onClose, onSave }: {
   );
 }
 
-/** Small numeric field for the setup wizard. */
-function SetupNumber({ label, unit, value, onChange, placeholder, autoFocus }: {
-  label: string; unit: string; value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean;
+/** Small numeric field for the setup wizard. `error` flags a required-but-empty
+ *  field: it turns the border rose-red and squeezes to draw the eye. */
+function SetupNumber({ label, unit, value, onChange, placeholder, autoFocus, error }: {
+  label: string; unit: string; value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean; error?: boolean;
 }) {
   return (
-    <label className="flex-1 flex items-center rounded-2xl bg-white border border-petal/60 overflow-hidden focus-within:border-hotpink transition">
-      <span className="pl-3.5 pr-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">{label}</span>
+    <label className={[
+      "flex-1 flex items-center rounded-2xl bg-white overflow-hidden border transition",
+      error ? "border-rose-400 ring-2 ring-rose-300/60 animate-attention-squeeze" : "border-petal/60 focus-within:border-hotpink",
+    ].join(" ")}>
+      <span className={["pl-3.5 pr-2 text-[11px] font-bold uppercase tracking-wide", error ? "text-rose-500" : "text-rose/50"].join(" ")}>{label}</span>
       <input
         value={value}
         autoFocus={autoFocus}
@@ -531,6 +535,10 @@ function SetupScreen({
   const [allergies, setAllergies] = useState<Allergy[]>(initial.allergies);
   const [cooking, setCooking] = useState<CookingFrequency>(initial.cookingFrequency);
   const toggleAllergy = (a: Allergy) => setAllergies((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+  // Step 1 is now obligatory: weight, height & age are all required for a precise
+  // calorie target. Tapping Continue with any missing squeezes the empty fields.
+  const [bodyErr, setBodyErr] = useState<{ weight: boolean; height: boolean; age: boolean }>({ weight: false, height: false, age: false });
+  const [squeeze, setSqueeze] = useState(0); // bump to re-trigger the squeeze animation
 
   const STEPS = [
     { key: "body", title: "About your body", hint: "This powers your exact calorie target — nothing is shared." },
@@ -540,7 +548,19 @@ function SetupScreen({
   ] as const;
   const isLast = step === STEPS.length - 1;
   const wKg = parseFloat(weight);
-  const canNext = step === 0 ? wKg > 0 : true; // body weight is the one hard requirement
+  const bodyComplete = wKg > 0 && parseFloat(height) > 0 && parseInt(age, 10) > 0;
+
+  // Continue: on step 1, all three body fields are required. Missing → squeeze the
+  // empty ones + show the notice, and don't advance.
+  const handleNext = () => {
+    if (step === 0 && !bodyComplete) {
+      setBodyErr({ weight: !(wKg > 0), height: !(parseFloat(height) > 0), age: !(parseInt(age, 10) > 0) });
+      setSqueeze((s) => s + 1);
+      return;
+    }
+    setBodyErr({ weight: false, height: false, age: false });
+    if (isLast) finish(); else setStep((s) => s + 1);
+  };
 
   const finish = () => {
     const kg = wKg > 0 ? wKg : 65;
@@ -596,12 +616,18 @@ function SetupScreen({
 
         {step === 0 && (
           <div className="space-y-2.5">
-            <SetupNumber label="Weight" unit="kg" value={weight} onChange={setWeight} placeholder="65" autoFocus />
+            <SetupNumber key={`w-${squeeze}`} label="Weight" unit="kg" value={weight} onChange={setWeight} placeholder="65" autoFocus error={bodyErr.weight && !(wKg > 0)} />
             <div className="flex gap-2.5">
-              <SetupNumber label="Height" unit="cm" value={height} onChange={setHeight} placeholder="165" />
-              <SetupNumber label="Age" unit="yr" value={age} onChange={setAge} placeholder="30" />
+              <SetupNumber key={`h-${squeeze}`} label="Height" unit="cm" value={height} onChange={setHeight} placeholder="165" error={bodyErr.height && !(parseFloat(height) > 0)} />
+              <SetupNumber key={`a-${squeeze}`} label="Age" unit="yr" value={age} onChange={setAge} placeholder="30" error={bodyErr.age && !(parseInt(age, 10) > 0)} />
             </div>
-            <p className="text-[11px] text-rose/50 leading-snug">Weight is required. Height &amp; age make your calorie target exact (we'll use gentle defaults otherwise).</p>
+            {/* Important-info notice — these details drive the precision of everything */}
+            <div className="flex items-start gap-2 rounded-2xl border border-hotpink/30 bg-blush/50 px-3 py-2.5">
+              <Info className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+              <p className="text-[11.5px] text-rose/80 leading-snug">
+                <b className="text-hotpink">Important — please fill all three.</b> Your weight, height &amp; age power the precision of your calorie target, energy balance &amp; weight projections. The more accurate, the better your plan fits you.
+              </p>
+            </div>
           </div>
         )}
 
@@ -663,9 +689,8 @@ function SetupScreen({
             </button>
           )}
           <PinkBtn
-            className="flex-1 justify-center disabled:opacity-40"
-            onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
-            disabled={!canNext}
+            className="flex-1 justify-center"
+            onClick={handleNext}
           >
             {isLast ? <>Save &amp; start blooming <Sparkles className="h-4 w-4" /></> : <>Continue <ChevronRight className="h-4 w-4" /></>}
           </PinkBtn>
