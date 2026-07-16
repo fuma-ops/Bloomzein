@@ -15,6 +15,7 @@ import {
   Sparkles,
   Heart,
   Star,
+  TrendingUp,
   Leaf,
   Smile,
   HeartPulse,
@@ -955,8 +956,34 @@ export function CycleTracker() {
             )}
           </div>
 
-          {/* On a fresh reset, only the phase hero + its "Tap to set up" CTA remain.
-              Every data section below is hidden until she's set up her cycle. */}
+          {/* On a fresh reset, only the phase hero + its "Tap to set up" CTA remain —
+              plus this tempting blurred peek at the insights she'll unlock. */}
+          {!isSetup && (
+            <div className="relative overflow-hidden rounded-[22px] mt-3.5 animate-card-pop-in" style={{ border: '1px solid rgba(255,255,255,0.55)', boxShadow: '0 8px 24px rgba(236,72,153,.12)', background: 'rgba(255,255,255,0.55)' }}>
+              {/* The real cycle graph, blurred — a genuine peek behind the frosted glass */}
+              <div aria-hidden className="pointer-events-none select-none" style={{ filter: 'blur(5px)', opacity: 0.7, padding: '12px 10px' }}>
+                {renderWellnessGraph("teaser")}
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-5" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45), rgba(252,231,243,0.82))' }}>
+                <div className="grid h-14 w-14 place-items-center rounded-full animate-selected-glow" style={{ background: '#FCE7F3' }}>
+                  <TrendingUp className="h-7 w-7" style={{ color: '#EC4899' }} strokeWidth={2} />
+                </div>
+                <p className="font-script leading-none" style={{ fontSize: '26px', color: '#DB2777' }}>Your insights await ✿</p>
+                <p style={{ fontSize: '12px', maxWidth: '250px', lineHeight: 1.45, color: '#9D5C7E' }}>
+                  Set up your cycle to unlock your hormone curve, wellness trends, fertile window &amp; daily insights.
+                </p>
+                <button
+                  onClick={() => setSetupOpen(true)}
+                  className="mt-1.5 inline-flex items-center gap-1.5 rounded-full text-white active:scale-95 transition animate-cta-bounce"
+                  style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', padding: '10px 22px', fontSize: '14px', fontWeight: 700, boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}
+                >
+                  <Sparkles className="h-4 w-4" strokeWidth={2.2} /> Set me up ✿
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Every data section below is hidden until she's set up her cycle. */}
           {isSetup && (<>
 
           {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}
@@ -1336,7 +1363,8 @@ export function CycleTracker() {
 
       </div>{/* /lg:grid */}
 
-      {/* Sticky CTA — mobile/tablet only */}
+      {/* Sticky CTA — mobile/tablet only; hidden until she's set up (no phase flow yet) */}
+      {isSetup && (
       <a
         href="/app/tools/yoga"
         className="lg:hidden fixed left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-full py-3.5 font-bold text-white"
@@ -1350,6 +1378,7 @@ export function CycleTracker() {
       >
         <Play className="h-4 w-4 fill-white" /> Start 15-Min Flow
       </a>
+      )}
 
       <PeriodSetup
         open={setupOpen}
