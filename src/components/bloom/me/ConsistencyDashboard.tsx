@@ -15,6 +15,11 @@ const PHASE_DOT: Record<Phase, string> = {
   period: "#EC4899", follicular: "#F9A8D4", fertile: "#F472B6", ovulation: "#DB2777", luteal: "#BE185D",
 };
 
+/** Clean WHITE dashboard card on the pink canvas — the pro-dashboard surface. */
+const CARD = "rounded-2xl bg-white border border-[#F6D9E7] p-4 shadow-[0_6px_18px_rgba(219,39,119,0.06)]";
+/** Light inset tile used inside a white card (stats), so it isn't card-on-card. */
+const INSET = "rounded-xl bg-[#FFF7FB] border border-[#F6D9E7] p-3";
+
 /* One consistency dashboard for the Me page. Every number comes from a real
    store (see meDashboard.ts). Visuals are single-hue pink (magnitude) with a
    couple of status accents — no categorical rainbow — so it reads as one system
@@ -85,7 +90,7 @@ function StatTile({ Icon, value, label, sub, spark, delay }: {
 }) {
   const max = spark && spark.length ? Math.max(1, ...spark.map((s) => s.value)) : 1;
   return (
-    <div className="bloom-pearl-card pearl-sheen rounded-2xl p-3 sm:p-4 animate-card-pop-in" style={{ animationDelay: `${delay}ms` }}>
+    <div className="rounded-xl bg-[#FFF7FB] border border-[#F6D9E7] p-3 animate-card-pop-in" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-center gap-2">
         <span className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink shrink-0"><Icon className="h-3.5 w-3.5" strokeWidth={1.8} /></span>
         <span className="text-[10px] font-bold uppercase tracking-wider text-rose/60 leading-tight">{label}</span>
@@ -251,7 +256,7 @@ function GoalCard({ goal }: { goal: GoalSummary }) {
     return `${kg}kg to your goal${eta}. Every day counts — you've got this ✿`;
   })();
   return (
-    <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4">
+    <div className="rounded-2xl bg-white border border-[#F6D9E7] p-4 shadow-[0_6px_18px_rgba(219,39,119,0.06)]">
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose/60">
           <Scale className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.8} /> Your goal
@@ -471,36 +476,32 @@ export function ConsistencyDashboard() {
         <span className="mt-1 text-[11px] text-rose/60 shrink-0">last {data.windowDays} days</span>
       </div>
 
-      {/* Consistency score + pillars; the read-out sits below as a small key */}
-      <div className="bloom-pearl-card pearl-sheen rounded-[26px] p-4 sm:p-6">
-        <Eyebrow>Your consistency this month</Eyebrow>
-        <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-7">
-          <BloomRing pct={data.bloomScore} />
-          <div className="flex-1 w-full min-w-0 grid grid-cols-2 gap-x-6 gap-y-3">
-            {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
+      {/* Pro dashboard: white cards on the pink canvas, 2 columns on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+        {/* Consistency score + pillars + narrative — hero, full width */}
+        <div className={CARD + " lg:col-span-2"}>
+          <Eyebrow>Your consistency this month</Eyebrow>
+          <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+            <BloomRing pct={data.bloomScore} />
+            <div className="flex-1 w-full min-w-0 grid grid-cols-2 gap-x-8 gap-y-3">
+              {data.pillars.map((p, i) => <PillarBar key={p.key} label={p.label} pct={p.pct} edge={p.key === lowestKey && p.pct < 100} delay={80 + i * 60} />)}
+            </div>
           </div>
+          <p className="mt-4 flex items-start gap-1.5 border-t border-petal/40 pt-3 text-[11.5px] leading-snug text-rose/70">
+            <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
+            <span>{narrative}</span>
+          </p>
         </div>
-        <p className="mt-4 flex items-start gap-1.5 border-t border-petal/40 pt-3 text-[11.5px] leading-snug text-rose/70">
-          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
-          <span>{narrative}</span>
-        </p>
-      </div>
 
-      {/* Diet goal + weight progress */}
-      <div className="mt-3.5">
-        <Eyebrow>Your goal</Eyebrow>
-        <div className="mt-2"><GoalCard goal={data.goal} /></div>
-      </div>
+        {/* Goal — half (GoalCard is its own white card) */}
+        <GoalCard goal={data.goal} />
 
-      {/* Movement — this week vs plan, then all-time; movement-only (no journal) */}
-      <div className="mt-3.5">
-        <Eyebrow>Your movement</Eyebrow>
-        <div className="mt-2 bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
+        {/* Movement — half */}
+        <div className={CARD}>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">This week</span>
+            <Eyebrow>Your movement</Eyebrow>
             <span className="text-[12px] font-bold text-hotpink">
-              {week.sessionsDone}{week.plannedTraining > 0 ? ` / ${week.plannedTraining}` : ""} session{week.sessionsDone === 1 ? "" : "s"}
-              {week.plannedTraining > 0 && <span className="ml-1 text-rose/50 font-semibold">planned</span>}
+              {week.sessionsDone}{week.plannedTraining > 0 ? ` / ${week.plannedTraining}` : ""} session{week.sessionsDone === 1 ? "" : "s"} this week
             </span>
           </div>
           {week.plannedTraining > 0 && (
@@ -508,24 +509,18 @@ export function ConsistencyDashboard() {
               <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta" style={{ width: `${Math.min(100, Math.round((week.sessionsDone / week.plannedTraining) * 100))}%`, transition: "width 900ms cubic-bezier(0.22,1,0.36,1)" }} />
             </div>
           )}
-          <div className="mt-2.5 flex gap-5 text-[12px] font-semibold text-rose/75">
-            <span className="inline-flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.9} />{week.workoutsDone} workout{week.workoutsDone === 1 ? "" : "s"}</span>
-            <span className="inline-flex items-center gap-1.5"><Flower2 className="h-3.5 w-3.5 text-hotpink" strokeWidth={1.9} />{week.yogaDone} yoga</span>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts" sub={`${week.workoutsDone} this week`} delay={100} />
+            <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga" sub={`${week.yogaDone} this week`} delay={160} />
+            <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={streakSub(data.moveStreak, data.moveBestStreak)} delay={220} />
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          <StatTile Icon={Dumbbell} value={data.workoutsTotal} label="Workouts" spark={data.workoutSpark} sub={`${week.workoutsDone} this week`} delay={100} />
-          <StatTile Icon={Flower2} value={data.yogaTotal} label="Yoga flows" sub={`${week.yogaDone} this week`} delay={160} />
-          <StatTile Icon={Flame} value={data.moveStreak} label="Move streak" sub={streakSub(data.moveStreak, data.moveBestStreak)} delay={220} />
-        </div>
-      </div>
 
-      {/* Your energy this week — needed vs planned vs burned, phase-coloured */}
-      <div className="mt-3.5">
-        <Eyebrow>Your energy this week</Eyebrow>
-        <div className="mt-2 bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
+        {/* Energy — full width (wide graph) */}
+        <div className={CARD + " lg:col-span-2"}>
+          <Eyebrow>Your energy this week · needed vs planned vs burned</Eyebrow>
           {hasPlan ? (
-            <>
+            <div className="mt-2">
               <EnergyGraph days={energy} />
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[8.5px] font-extrabold uppercase tracking-wide">
                 <span style={{ color: "#9D5C7E" }}>▬ ▬ Needed</span>
@@ -534,49 +529,45 @@ export function ConsistencyDashboard() {
                 <span className="text-rose/45">· dot = cycle phase</span>
               </div>
               {lutealBump > 0 && <p className="mt-2 text-[11.5px] font-semibold text-hotpink">✦ Your body needs about +{lutealBump} kcal on your luteal days — let your plan rise with it ✿</p>}
-            </>
+            </div>
           ) : (
-            <div className="grid h-24 place-items-center text-center">
+            <div className="mt-2 grid h-24 place-items-center text-center">
               <p className="text-[12px] text-rose/60 animate-pulse">Plan your meals in the Meals tool and your week's energy — needed vs planned vs burned — blooms here ✿</p>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Mood + reflection — journal lives here (reflection), not under movement */}
-      <div className="mt-3.5">
-        <div className="flex items-center justify-between gap-2">
-          <Eyebrow>Mood &amp; reflection</Eyebrow>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-hotpink">
-            <BookHeart className="h-3.5 w-3.5" strokeWidth={1.9} /> Journal {data.journalStreak}{data.journalStreak === 1 ? " day" : " days"}{data.journalBestStreak > data.journalStreak ? ` · best ${data.journalBestStreak}` : ""}
-          </span>
-        </div>
-        <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* opaque bg so the ambient bubbles don't bleed through as a stray shape */}
-          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Mood, day one → today</p>
-            <MoodChart mood={data.mood} />
+        {/* Mood — half (journal streak in the header) */}
+        <div className={CARD}>
+          <div className="flex items-center justify-between gap-2">
+            <Eyebrow>Mood, day one → today</Eyebrow>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-hotpink">
+              <BookHeart className="h-3.5 w-3.5" strokeWidth={1.9} /> Journal {data.journalStreak}{data.journalStreak === 1 ? "d" : "d"}{data.journalBestStreak > data.journalStreak ? ` · best ${data.journalBestStreak}` : ""}
+            </span>
           </div>
-          <div className="bloom-pearl-card pearl-sheen rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#FEF1F7,#FBDDEC)" }}>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/60 mb-2">Every ritual, every day</p>
-            <Heatmap calendar={data.calendar} />
-          </div>
+          <div className="mt-2"><MoodChart mood={data.mood} /></div>
         </div>
-      </div>
 
-      {/* Promises kept — gently framed */}
-      <div className="mt-3.5">
-        <Eyebrow>Promises to yourself</Eyebrow>
-        <div className="mt-2 bloom-pearl-card pearl-sheen rounded-2xl p-4 space-y-3">
-          <GoalBar Icon={Droplets} label="Hydration" pct={data.hydrateRate} caption={`${data.hydrateRate}% of days`} />
-          <GoalBar Icon={Salad} label="Eating well" pct={data.nourishRate} caption={`${data.nourishRate}% of days`} />
-          {b.has && (
-            <GoalBar
-              Icon={Wallet} label="Budget" pct={b.plan > 0 ? b.pct : 100}
-              over={b.plan > 0 && b.spent > b.plan}
-              caption={b.plan > 0 ? `${b.currency}${Math.round(b.spent)} / ${b.currency}${Math.round(b.plan)}` : `${b.currency}${Math.round(b.spent)} spent`}
-            />
-          )}
+        {/* Calendar — half */}
+        <div className={CARD}>
+          <Eyebrow>Every ritual, every day</Eyebrow>
+          <div className="mt-2"><Heatmap calendar={data.calendar} /></div>
+        </div>
+
+        {/* Promises — full width, 3-up */}
+        <div className={CARD + " lg:col-span-2"}>
+          <Eyebrow>Promises to yourself</Eyebrow>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
+            <GoalBar Icon={Droplets} label="Hydration" pct={data.hydrateRate} caption={`${data.hydrateRate}% of days`} />
+            <GoalBar Icon={Salad} label="Eating well" pct={data.nourishRate} caption={`${data.nourishRate}% of days`} />
+            {b.has && (
+              <GoalBar
+                Icon={Wallet} label="Budget" pct={b.plan > 0 ? b.pct : 100}
+                over={b.plan > 0 && b.spent > b.plan}
+                caption={b.plan > 0 ? `${b.currency}${Math.round(b.spent)} / ${b.currency}${Math.round(b.plan)}` : `${b.currency}${Math.round(b.spent)} spent`}
+              />
+            )}
+          </div>
         </div>
       </div>
     </section>

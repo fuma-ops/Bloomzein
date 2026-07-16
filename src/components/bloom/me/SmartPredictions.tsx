@@ -14,7 +14,7 @@ import { CycleWheel, ForecastStrip, HormoneMoodCurve, FertilityGauge, Confidence
    → your body's patterns → heads-up. Every instrument keeps a warm
    "Why I know this" so nothing is a black box. */
 
-const cardCls = "bloom-pearl-card pearl-sheen rounded-[26px] p-[18px] animate-card-pop-in";
+const cardCls = "rounded-2xl bg-white border border-[#F6D9E7] p-4 shadow-[0_6px_18px_rgba(219,39,119,0.06)]";
 const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 function relDay(daysAway: number, late: boolean): string {
   if (late) return `${Math.abs(daysAway)} day${Math.abs(daysAway) === 1 ? "" : "s"} late`;
@@ -47,7 +47,7 @@ function Why({ children }: { children: ReactNode }) {
 
 function MiniStat({ Icon, label, value, accent }: { Icon: typeof Moon; label: string; value: ReactNode; accent?: boolean }) {
   return (
-    <div className="rounded-2xl p-2.5" style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(236,72,153,0.12)" }}>
+    <div className="rounded-xl p-2.5" style={{ background: "#FFF7FB", border: "1px solid #F6D9E7" }}>
       <div className="flex items-center gap-1.5">
         <span className="grid h-5 w-5 place-items-center rounded-full bg-blush text-hotpink shrink-0"><Icon className="h-3 w-3" strokeWidth={2} /></span>
         <span className="text-[8.5px] font-extrabold uppercase tracking-wide text-rose/55 leading-tight">{label}</span>
@@ -118,67 +118,65 @@ export function SmartPredictions() {
         <span className="mt-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white shrink-0" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>{headerNote}</span>
       </div>
 
-      {/* 1 · WHERE YOU ARE TODAY */}
-      <div className={cardCls}>
-        <Eyebrow>Where you are today</Eyebrow>
-        <div className="mt-2"><CycleWheel dayLabel={cycle.dayLabel} phaseLabel={cycle.phaseLabel} note={cycle.note} /></div>
-      </div>
-
-      {/* 2 · YOUR WEEK AHEAD */}
-      <div className={"mt-3.5 " + cardCls}>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <Eyebrow>Your week ahead</Eyebrow>
-          <span className="text-[10px] font-bold text-hotpink">Tomorrow: {data.energy.headline.toLowerCase()}</span>
-        </div>
-        <ForecastStrip days={forecast} />
-        <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1 text-[8.5px] font-extrabold uppercase tracking-wide text-rose/55">
-          <span>🩸 Period</span><span>💗 Fertile</span><span>🌸 Ovulation</span><span>🌙 PMS</span><span>💤 Rest</span><span className="text-rose/40">bar = energy</span>
-        </div>
-        <Why>{data.energy.explain}</Why>
-      </div>
-
-      {/* 3 · YOUR NEXT PERIOD */}
-      <div className={"mt-3.5 " + cardCls}>
-        <Eyebrow>Your next period</Eyebrow>
-        <div className="mt-2 flex items-center gap-4">
-          <div className="flex-1">
-            <span className="font-script text-4xl leading-none text-hotpink">{fmt(p.date)}</span>
-            <p className={`mt-0.5 text-[12.5px] font-bold ${p.late ? "text-magenta" : "text-rose/70"}`}>
-              {relDay(p.daysAway, p.late)}{!p.late && p.windowDays ? ` · typical ±${p.windowDays} days` : ""}
-            </p>
+      {/* Pro dashboard: white cards, 2 columns on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+        {/* Hero — cycle wheel + next period, full width */}
+        <div className={cardCls + " lg:col-span-2"}>
+          <Eyebrow>Where you are today</Eyebrow>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <CycleWheel dayLabel={cycle.dayLabel} phaseLabel={cycle.phaseLabel} note={cycle.note} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/55">Next period</p>
+              <div className="mt-0.5 flex items-center gap-3">
+                <span className="font-script text-4xl leading-none text-hotpink">{fmt(p.date)}</span>
+                <ConfidenceRing pct={p.confidence} />
+              </div>
+              <p className={`mt-1 text-[12.5px] font-bold ${p.late ? "text-magenta" : "text-rose/70"}`}>
+                {relDay(p.daysAway, p.late)}{!p.late && p.windowDays ? ` · typical ±${p.windowDays} days` : ""}
+              </p>
+              <Why>{p.explain}</Why>
+            </div>
           </div>
-          <ConfidenceRing pct={p.confidence} />
         </div>
-        <Why>{p.explain}</Why>
-      </div>
 
-      {/* 4 · FERTILITY + MOOD/HORMONES */}
-      <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div className={cardCls.replace("animate-card-pop-in", "")}>
+        {/* Week ahead — full width */}
+        <div className={cardCls + " lg:col-span-2"}>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <Eyebrow>Your week ahead</Eyebrow>
+            <span className="text-[10px] font-bold text-hotpink">Tomorrow: {data.energy.headline.toLowerCase()}</span>
+          </div>
+          <ForecastStrip days={forecast} />
+          <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1 text-[8.5px] font-extrabold uppercase tracking-wide text-rose/55">
+            <span>🩸 Period</span><span>💗 Fertile</span><span>🌸 Ovulation</span><span>🌙 PMS</span><span>💤 Rest</span><span className="text-rose/40">bar = energy</span>
+          </div>
+          <Why>{data.energy.explain}</Why>
+        </div>
+
+        {/* Fertility — half */}
+        <div className={cardCls}>
           <Eyebrow>Fertility today</Eyebrow>
           <div className="mt-1"><FertilityGauge level={data.fertility.level} /></div>
           {data.fertility.peak && <p className="text-center text-[11.5px] font-semibold text-rose/75">Next peak: <span className="text-hotpink">{fmt(data.fertility.peak)}</span></p>}
           <Why>{data.fertility.explain}</Why>
         </div>
-        <div className={cardCls.replace("animate-card-pop-in", "")}>
+
+        {/* Mood & hormones — half */}
+        <div className={cardCls}>
           <Eyebrow>Mood &amp; hormones</Eyebrow>
           <div className="mt-2"><HormoneMoodCurve cycleLength={cycle.cycleLength} todayDay={cycle.todayDay} /></div>
           <Why>{data.mood.explain}</Why>
         </div>
-      </div>
 
-      {/* 5 · HEADS UP THIS WEEK */}
-      <div className={"mt-3.5 " + cardCls}>
-        <Eyebrow>Heads up this week</Eyebrow>
-        <div className="mt-2.5 grid grid-cols-2 lg:grid-cols-4 gap-2">
-          <MiniStat Icon={Moon} label="PMS window" value={<>from {fmt(data.pms.date)}</>} />
-          <MiniStat Icon={HeartPulse} label="Rest day" value={data.recovery.weekday ?? "In your stride"} />
-          <MiniStat Icon={Cookie} label="Cravings" value={data.cravings.when ? data.cravings.when : "steady"} />
-          <MiniStat Icon={Sparkles} label="Mood dip" value={data.mood.direction === "dip" ? (data.mood.weekday ?? "possible") : "steady ✿"} accent={data.mood.direction === "dip"} />
+        {/* Heads up — full width */}
+        <div className={cardCls + " lg:col-span-2"}>
+          <Eyebrow>Heads up this week</Eyebrow>
+          <div className="mt-2.5 grid grid-cols-2 lg:grid-cols-4 gap-2">
+            <MiniStat Icon={Moon} label="PMS window" value={<>from {fmt(data.pms.date)}</>} />
+            <MiniStat Icon={HeartPulse} label="Rest day" value={data.recovery.weekday ?? "In your stride"} />
+            <MiniStat Icon={Cookie} label="Cravings" value={data.cravings.when ? data.cravings.when : "steady"} />
+            <MiniStat Icon={Sparkles} label="Mood dip" value={data.mood.direction === "dip" ? (data.mood.weekday ?? "possible") : "steady ✿"} accent={data.mood.direction === "dip"} />
+          </div>
         </div>
-        <Why>
-          Your PMS window &amp; rest day come from the days just before your predicted period; cravings from your luteal serotonin dip; the mood-dip from your own logs mapped to each phase. Tap any instrument above for the full story.
-        </Why>
       </div>
     </section>
   );
