@@ -975,8 +975,12 @@ export function CycleTracker() {
             )}
           </div>
 
+          {/* On a fresh reset, only the phase hero + its "Tap to set up" CTA remain.
+              Every data section below is hidden until she's set up her cycle. */}
+          {isSetup && (<>
+
           {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}
-          <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
+          <div className="transition-all duration-700">
             <div className="grid grid-cols-4 gap-[6px] md:gap-3 mt-3.5">
               {/* Next Period */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
@@ -1285,12 +1289,14 @@ export function CycleTracker() {
               </a>
             </div>
           </div>
+          </>)}
 
         </div>{/* /lg:col-span-3 */}
 
         {/* ══════════════ RIGHT PANEL (40%) — desktop sticky ══════════════ */}
+        {isSetup && (
         <aside
-          className={["reveal-on-scroll hidden lg:block lg:col-span-2 lg:sticky lg:top-4 transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+          className="reveal-on-scroll hidden lg:block lg:col-span-2 lg:sticky lg:top-4 transition-all duration-700"
           style={{
             background: 'rgba(255,255,255,0.72)',
             backdropFilter: 'blur(20px)',
@@ -1346,6 +1352,7 @@ export function CycleTracker() {
             </div>
           </div>
         </aside>
+        )}
 
       </div>{/* /lg:grid */}
 
