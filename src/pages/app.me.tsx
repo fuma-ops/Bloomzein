@@ -215,7 +215,7 @@ export default function MePage() {
       <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div
           className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] p-4 sm:p-8"
-          style={{ background: "linear-gradient(135deg, #ffeaf5 0%, #ffd3ec 55%, #ffc0e3 100%)" }}
+          style={{ background: "linear-gradient(120deg, rgba(255,234,245,0.92) 0%, rgba(255,211,236,0.80) 48%, rgba(255,192,227,0.62) 100%), url(/images/me/me-hero-floral.webp)", backgroundSize: "cover", backgroundPosition: "center" }}
         >
           <div className="relative z-[2] flex items-center gap-3 sm:gap-6">
             <div className="relative shrink-0">
