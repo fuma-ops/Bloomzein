@@ -1991,13 +1991,17 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : tunedGoal ? "Goal-tuned week" : "Custom week"}</p>
               <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : phase !== "any" ? `${PHASE_LABEL[phase]} phase` : "Your weekly plan"}</p>
             </div>
-            <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
-            <WorkoutPhaseSyncPill />
           </div>
-          {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
-          {tunedGoal && !editing && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[10.5px] font-bold text-rose-500">
-              <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(tunedGoal)} goal
+          {/* One clean, matching row of status pills — Goal · Level · Sync */}
+          {!editing && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              {tunedGoal && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink leading-none">
+                  <Sparkles className="h-3 w-3" strokeWidth={2.4} /> {goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)} goal
+                </span>
+              )}
+              <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
+              <WorkoutPhaseSyncPill />
             </div>
           )}
           <div className="mt-2 flex items-center gap-1.5">
