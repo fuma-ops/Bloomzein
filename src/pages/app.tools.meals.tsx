@@ -1493,11 +1493,34 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
                         </button>
                       );
                     })}
+                    {/* Custom items the user typed in "I also have…" — stored in the same
+                        pantry array so they flow into meal-matching & the shopping list.
+                        Tap to remove. */}
+                    {checked
+                      .filter((item: string) => !cat.items.includes(item))
+                      .map((item: string) => (
+                        <button
+                          key={`custom-${item}`} onClick={() => togglePantry(cat.key, item)}
+                          className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs border bg-hotpink text-white border-hotpink transition"
+                        >
+                          <Check className="h-3 w-3" /> {item} <X className="h-3 w-3 opacity-70" />
+                        </button>
+                      ))}
                   </div>
                   <input
                     value={extra[cat.key] || ""}
                     onChange={(e) => setExtra({ ...extra, [cat.key]: e.target.value })}
-                    placeholder="I also have…"
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      const val = (extra[cat.key] || "").trim();
+                      if (!val) return;
+                      // Add to the real pantry (deduped, case-insensitive) so it counts.
+                      const dup = checked.some((x: string) => x.toLowerCase() === val.toLowerCase());
+                      if (!dup) togglePantry(cat.key, val);
+                      setExtra({ ...extra, [cat.key]: "" });
+                    }}
+                    placeholder="I also have… (type & press Enter)"
                     className="mt-2 w-full rounded-full bg-white/90 px-3 py-1.5 text-xs text-rose border border-petal/60 placeholder:text-rose/40 outline-none focus:ring-2 focus:ring-hotpink/30"
                   />
                 </div>
