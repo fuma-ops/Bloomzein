@@ -63,6 +63,20 @@ export function logPeriodStart(iso: string): void {
   fire();
 }
 
+/** Un-log a start she'd marked (calendar "uncheck — it didn't start this day") &
+ *  re-adapt the cycle to whatever real starts remain. */
+export function removePeriodStart(iso: string): void {
+  const list = readPeriodStarts().filter((d) => d !== iso);
+  try { localStorage.setItem(PERIOD_STARTS_KEY, JSON.stringify(list)); } catch {}
+  if (list.length) {
+    const s = readCycleSettings();
+    const latest = list[list.length - 1];
+    const avg = avgCycleLength(list);
+    writeCycleSettings({ ...s, lastPeriodStart: toDate(latest), ...(avg ? { cycleLength: avg } : {}) });
+  }
+  fire();
+}
+
 /** She said "not today" — don't ask again until tomorrow. */
 export function skipPeriodPromptToday(): void {
   try { localStorage.setItem(PERIOD_SKIP_KEY, todayISO()); } catch {}
