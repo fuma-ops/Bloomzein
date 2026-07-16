@@ -562,10 +562,25 @@ function SetupScreen({
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
-      <header className="mb-3">
-        <h1 className="font-script text-3xl sm:text-5xl text-hotpink leading-none">Let's set up your Diet</h1>
-        <p className="mt-1 text-xs sm:text-sm text-rose/80">One little step at a time — takes under a minute ✿</p>
-      </header>
+      {/* HERO banner — matches the first-page-after-reset heroes across the app */}
+      <div className="relative w-full min-h-[140px] sm:min-h-[164px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
+        <img src="/images/meals-hero-new.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/75 via-hotpink/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+        <div className="relative flex flex-col justify-center min-h-[140px] sm:min-h-[164px] p-4 sm:p-6">
+          <div className="max-w-[70%] sm:max-w-[60%]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-hotpink border border-white/60">
+              <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Diet
+            </span>
+            <h1 className="mt-1.5 animate-fade-in font-script text-3xl sm:text-5xl text-white leading-none" style={{ animationDelay: "0ms", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
+              Let's set up your Diet
+            </h1>
+            <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: "200ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
+              One little step at a time — takes under a minute ✿
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* progress dots */}
       <div className="flex items-center gap-1.5 mb-3">
