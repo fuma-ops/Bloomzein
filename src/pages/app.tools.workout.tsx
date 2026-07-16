@@ -10,12 +10,13 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { isPremium, openPaywall } from "@/lib/entitlements";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
@@ -285,7 +286,7 @@ const WORKOUT_PHASE_META: Record<Exclude<CyclePhase, "any">, { emoji: string; la
 /** Hero pill: names the cycle phase and shows whether My Plan was built for the
  *  current phase (bloom:workout-program-phase); tapping regenerates the week for
  *  the phase (or opens cycle setup if the cycle isn't tracked yet). */
-function WorkoutPhaseSyncPill() {
+function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) {
   const [, force] = useState(0);
   useEffect(() => {
     const r = () => force((t) => t + 1);
@@ -313,11 +314,24 @@ function WorkoutPhaseSyncPill() {
     } catch {}
     force((t) => t + 1);
   };
+  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`;
+  if (variant === "tile") {
+    return (
+      <button onClick={onSync} disabled={synced} title={tTitle}
+        className={["rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
+        <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
+          {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
+        </span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Sync</span>
+        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? "In sync" : "Sync now"}</span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={onSync}
       disabled={synced}
-      title={!known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`}
+      title={tTitle}
       className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
         synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
     >
@@ -1984,44 +1998,49 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       )}
 
       {source === "freestyle" && (
-        <section className="rounded-2xl bg-white/90 border border-petal/60 shadow-sm px-3.5 py-2.5">
+        <section className="rounded-2xl bg-white/90 border border-petal/60 shadow-sm px-3.5 py-3">
+          {/* Header — title + compact actions moved up to the top-right */}
           <div className="flex items-center gap-2">
             <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-4 w-4" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : tunedGoal ? "Goal-tuned week" : "Custom week"}</p>
               <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : phase !== "any" ? `${PHASE_LABEL[phase]} phase` : "Your weekly plan"}</p>
             </div>
-          </div>
-          {/* One clean, matching row of status pills — Goal · Level · Sync */}
-          {!editing && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              {tunedGoal && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink leading-none">
-                  <Sparkles className="h-3 w-3" strokeWidth={2.4} /> {goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)} goal
-                </span>
-              )}
-              <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
-              <WorkoutPhaseSyncPill />
-            </div>
-          )}
-          <div className="mt-2 flex items-center gap-1.5">
             {editing ? (
-              <>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
                 <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1 text-[11px] font-bold shadow-sm">Done</button>
-              </>
+              </div>
             ) : (
-              <>
-                <button onClick={onEditClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><Pencil className="h-3 w-3" /> Edit</button>
-                <button onClick={onGenerateClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><RotateCcw className="h-3 w-3" /> Regenerate</button>
-                <button onClick={resetWorkoutTool} title="Reset — preview the first-time experience" className="inline-flex items-center gap-1 rounded-full bg-white/70 border border-petal/50 px-3 py-1 text-[11px] font-bold text-rose/50 hover:text-hotpink transition"><Trash2 className="h-3 w-3" /> Reset</button>
-              </>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={onEditClick} title="Edit your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><Pencil className="h-3.5 w-3.5" /></button>
+                <button onClick={onGenerateClick} title="Regenerate your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><RotateCcw className="h-3.5 w-3.5" /></button>
+                <button onClick={resetWorkoutTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button onClick={toggleFuel} title={fuelInPlan ? "Recovery meals shown in plan" : "Show recovery meals in the plan"} className={["grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
+              </div>
             )}
-            <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
-              <Utensils className="h-3.5 w-3.5" />
-              <span className={["relative h-4 w-7 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "0.875rem" : "0.125rem" }} /></span>
-            </button>
           </div>
+          {/* Status — Goal · Level · Streak · Sync, as four bigger tiles */}
+          {!editing && (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
+              </div>
+              <WorkoutPhaseSyncPill variant="tile" />
+            </div>
+          )}
         </section>
       )}
 
