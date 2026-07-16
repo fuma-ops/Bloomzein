@@ -383,49 +383,29 @@ export function CycleTracker() {
     setCursor((c) => new Date(c.getFullYear(), c.getMonth() + dir, 1));
   }
 
-  const { cycleDay, ovulationDayOfCycle, currentPhase, currentCycleStart, awaitingPeriod } = useMemo(() => {
+  const { cycleDay, ovulationDayOfCycle, currentPhase, currentCycleStart } = useMemo(() => {
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
     const ovDay = settings.cycleLength - 14;
-    // Period is due but she hasn't confirmed it started — HOLD at "period expected"
-    // instead of auto-rolling into a new cycle and claiming today as her period.
-    const awaiting = diff >= settings.cycleLength;
-    if (awaiting) {
-      return {
-        cycleDay: diff + 1,
-        ovulationDayOfCycle: ovDay,
-        currentPhase: "luteal" as Exclude<CyclePhase, "any">,
-        currentCycleStart: new Date(settings.lastPeriodStart.getTime()),
-        awaitingPeriod: true,
-      };
-    }
+    // The prediction simply rolls over: once she passes her cycle length, a new
+    // predicted cycle begins (Day 1 = period). If it comes earlier or later than
+    // predicted she corrects it on the calendar (tap a day → started / didn't).
     const cyclesPassed = Math.floor(diff / settings.cycleLength);
     return {
-      cycleDay: (diff % settings.cycleLength) + 1,
+      cycleDay: (((diff % settings.cycleLength) + settings.cycleLength) % settings.cycleLength) + 1,
       ovulationDayOfCycle: ovDay,
       currentPhase: phaseForDay(today, settings),
       currentCycleStart: new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * MS_DAY),
-      awaitingPeriod: false,
     };
   }, [settings]);
 
-  // For calendar cells: don't paint the overdue-but-unconfirmed days (up to today)
-  // as period — hold them at luteal until she confirms her real start.
-  const cellPhase = (d: Date): Exclude<CyclePhase, "any"> => {
-    if (awaitingPeriod) {
-      const cd = Math.floor((d.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
-      if (cd >= settings.cycleLength && d.getTime() <= today.getTime()) return "luteal";
-    }
-    return phaseForDay(d, settings);
-  };
+  // Calendar cells follow the same rolling prediction.
+  const cellPhase = (d: Date): Exclude<CyclePhase, "any"> => phaseForDay(d, settings);
 
   const nextPeriodDate = useMemo(() => {
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
-    const cyclesPassed = Math.floor(diff / settings.cycleLength);
-    // While her period is overdue-but-unconfirmed we HOLD on the current predicted
-    // start (it's simply late) instead of rolling forward to the next cycle — so we
-    // never skip her period and jump a month ahead.
-    const cycles = diff >= settings.cycleLength ? cyclesPassed : cyclesPassed + 1;
-    return new Date(settings.lastPeriodStart.getTime() + cycles * settings.cycleLength * MS_DAY);
+    // The next predicted start strictly after today.
+    const cyclesToNext = Math.floor(diff / settings.cycleLength) + 1;
+    return new Date(settings.lastPeriodStart.getTime() + cyclesToNext * settings.cycleLength * MS_DAY);
   }, [settings]);
 
 
