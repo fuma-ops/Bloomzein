@@ -2444,6 +2444,7 @@ function SessionPlayer({
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
   const lastPlayedIdx = useRef<number>(-1);
+  const introShownRef = useRef(false); // 5s music-only intro before the first pose's voice
   const midIdx = Math.floor(flow.length / 2);
 
   const stopAllAudio = () => {
@@ -2459,7 +2460,7 @@ function SessionPlayer({
     let a = musicRef.current;
     if (!a) {
       a = new Audio(MUSIC[sound] || MUSIC[DEFAULT_SOUND]);
-      a.loop = true; a.volume = 0.6; a.preload = "auto";
+      a.loop = true; a.volume = 0.72; a.preload = "auto";
       musicRef.current = a;
     }
     return a;
@@ -2504,8 +2505,14 @@ function SessionPlayer({
     const url = poseAudioFor(pose);
     if (!url) return;
     const a = new Audio(url);
+    a.volume = 0.8; // softer voice so the background music still breathes underneath
     narrationRef.current = a;
-    const t = setTimeout(() => { a.play().catch(() => {}); }, isNewPose ? 500 : 0);
+    // First pose of the session: hold the narration ~5s so she can settle in and
+    // notice the background music before the voice begins.
+    const firstIntro = idx === 0 && !introShownRef.current;
+    if (firstIntro) introShownRef.current = true;
+    const delay = firstIntro ? 5000 : isNewPose ? 500 : 0;
+    const t = setTimeout(() => { a.play().catch(() => {}); }, delay);
     return () => clearTimeout(t);
   }, [idx, muted, running]);
 
@@ -2570,7 +2577,7 @@ function SessionPlayer({
   const isDark = dayPart === "night" || dayPart === "dusk";
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] backdrop-blur flex flex-col p-3 sm:p-4 transition-[background] duration-1000"
+    <div className="fixed inset-0 z-[60] flex flex-col p-3 sm:p-4 transition-[background] duration-1000"
       style={{ background: skin.frame, paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
       {/* TOP BAR */}
       <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
@@ -2595,7 +2602,7 @@ function SessionPlayer({
       </div>
 
       <div className={["flex-1 min-h-0 flex flex-col rounded-3xl border overflow-hidden shadow-xl shadow-rose/10 transition-[background,border-color] duration-1000",
-        dim ? "bg-rose/95 text-white border-petal/60" : "backdrop-blur"].join(" ")}
+        dim ? "bg-rose/95 text-white border-petal/60" : ""].join(" ")}
         style={dim ? undefined : { background: skin.card, borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(244,194,214,0.6)" }}>
         {/* IMAGE / PACER — flexes to fill the free space */}
         <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : ""].join(" ")}
@@ -2615,7 +2622,7 @@ function SessionPlayer({
                 <span
                   key={i}
                   aria-hidden
-                  className="pointer-events-none absolute left-1/2 top-1/2 w-[46%] aspect-square rounded-full animate-ripple will-change-transform"
+                  className="pointer-events-none absolute left-1/2 top-1/2 w-[46%] aspect-square rounded-full animate-ripple"
                   style={{
                     // 8 rings evenly spread across the ~19.2s cycle (a fresh wave
                     // born every ~2.4s, all pre-seeded). Each wave still travels
@@ -2623,11 +2630,11 @@ function SessionPlayer({
                     // stream is continuous, never a wait for the next wave.
                     animationDelay: `${-i * 2.4}s`,
                     // A thick, soft radial band (not a thin outline) so each wave
-                    // reads as a big, broad swell rather than a narrow ring.
-                    // Colour follows the time-of-day skin.
+                    // reads as a big, broad swell. Softness comes from the gradient
+                    // stops themselves — no blur() filter, which broke/janked on
+                    // mobile when combined with the large scale.
                     background:
-                      `radial-gradient(circle, transparent 46%, rgba(${skin.ripple},0.34) 66%, rgba(${skin.ripple},0.42) 74%, rgba(${skin.ripple},0.30) 82%, transparent 96%)`,
-                    filter: "blur(4px)",
+                      `radial-gradient(circle, transparent 42%, rgba(${skin.ripple},0.30) 62%, rgba(${skin.ripple},0.40) 74%, rgba(${skin.ripple},0.26) 84%, transparent 97%)`,
                   }}
                 />
               ))}
@@ -2641,7 +2648,7 @@ function SessionPlayer({
                 aria-hidden
                 onLoad={() => setImgReady(true)}
                 className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-[0.72]" : "opacity-0"].join(" ")}
-                style={{ filter: `blur(34px) saturate(1.2) ${skin.imgFilter === "none" ? "" : skin.imgFilter}` }}
+                style={{ filter: `blur(22px) saturate(1.2) ${skin.imgFilter === "none" ? "" : skin.imgFilter}` }}
               />
               {/* Light veil so the sharp pose stays the clear focus (skin-tinted) */}
               <div aria-hidden className="absolute inset-0 transition-colors duration-1000" style={{ background: skin.veil }} />
@@ -2656,7 +2663,7 @@ function SessionPlayer({
                   {([[6,18,2.5,0,8],[10,72,2,2.5,9.5],[14,45,2,5,8.5],[8,88,1.5,1.2,10],[20,10,2,3.8,9],[16,60,2.5,6.2,8],[24,80,1.5,0.6,10.5],[12,32,1.5,4.5,9],[26,52,2,7,8.5],[5,55,1.5,2,11],[80,20,2,1.5,9],[86,68,2.5,4,8],[78,42,1.5,6.5,10],[90,85,2,0.3,9.5],[83,12,1.5,3,10.5],[88,55,2,5.5,8.5]] as const).map(([t, l, s, d, dur], i) => (
                     <span
                       key={i}
-                      className="absolute rounded-full animate-twinkle will-change-transform"
+                      className="absolute rounded-full animate-twinkle"
                       style={{
                         top: `${t}%`, left: `${l}%`, width: `${s}px`, height: `${s}px`,
                         background: "rgba(255,255,255,0.95)",
