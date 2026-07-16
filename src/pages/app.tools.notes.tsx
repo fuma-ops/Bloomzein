@@ -1719,45 +1719,6 @@ export default function NotesPage() {
         {/* ── RIGHT PANEL (40%) ── */}
         <aside className="hidden lg:flex lg:col-span-2 lg:sticky lg:top-4 flex-col gap-4 mt-0">
 
-          {/* NOTES THIS WEEK */}
-          <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold text-[#831843]">Notes This Week</h3>
-              <span className="text-[10px] font-bold text-hotpink bg-pink-50 px-2 py-0.5 rounded-full border border-pink-100">
-                {notes.filter((n) => {
-                  const d = new Date(n.createdAt);
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return d >= weekAgo;
-                }).length} notes
-              </span>
-            </div>
-            <svg viewBox="0 0 160 44" className="w-full h-11 mt-2" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#EC4899" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#EC4899" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,38 C18,34 30,24 50,26 C70,28 85,12 105,10 C120,8 140,18 160,14"
-                fill="none"
-                stroke="#EC4899"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <path
-                d="M0,38 C18,34 30,24 50,26 C70,28 85,12 105,10 C120,8 140,18 160,14 L160,44 L0,44 Z"
-                fill="url(#sparkGrad)"
-              />
-            </svg>
-            <div className="flex justify-between mt-1">
-              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-                <span key={i} className="text-[9px] text-rose/40 font-bold">{d}</span>
-              ))}
-            </div>
-          </div>
-
           {/* PINNED REMINDERS */}
           <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
