@@ -43,8 +43,17 @@ export function CycleWheel({ dayLabel, phaseLabel, note }: { dayLabel: string; p
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
             <stop offset="100%" stopColor="#FCE7F3" stopOpacity="0" />
           </radialGradient>
+          <radialGradient id="wheelscrim" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.86" />
+            <stop offset="62%" stopColor="#ffffff" stopOpacity="0.62" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.15" />
+          </radialGradient>
+          <clipPath id="wheelclip"><circle cx={cx} cy={cy} r={r - sw / 2 + 1} /></clipPath>
         </defs>
         <circle cx={cx} cy={cy} r={r - sw} fill="url(#wheelglow)" />
+        {/* soft blossom photo filling the centre */}
+        <image href="/images/me/wheel-blossom.webp" x={cx - (r - sw / 2)} y={cy - (r - sw / 2)} width={(r - sw / 2) * 2} height={(r - sw / 2) * 2} clipPath="url(#wheelclip)" preserveAspectRatio="xMidYMid slice" />
+        <circle cx={cx} cy={cy} r={r - sw / 2} fill="url(#wheelscrim)" />
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FBE3EE" strokeWidth={sw} />
         {w.arcs.map((arc, i) => {
           const a0 = deg(arc.startDay) + gap, a1 = deg(arc.endDay) - gap;
