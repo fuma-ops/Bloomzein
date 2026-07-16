@@ -10,11 +10,12 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
-import { readCyclePhase, toYogaPhase, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
+import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
@@ -1141,6 +1142,11 @@ export default function YogaPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "plan" });
   const [lowWater, setLowWater] = useState(false);
+  // Guided-setup focus mode: strip the tool to a narrow hero + her week + one
+  // "Finish on Today" action; no tabs/programs to wander into.
+  const guided = useGuided();
+  const cyclePhaseNow = readCyclePhase();
+  const guidedPhaseLabel = cyclePhaseNow && cyclePhaseNow !== "any" ? PHASE_LABEL[cyclePhaseNow] : undefined;
 
   // Guided setup: any schedule commit dispatches "bloom:yoga-updated"; the first
   // time a plan exists while she's in the guided flow, celebrate and hand back.
@@ -1154,6 +1160,10 @@ export default function YogaPage() {
     window.addEventListener("bloom:yoga-updated", onUpdate);
     return () => window.removeEventListener("bloom:yoga-updated", onUpdate);
   }, []);
+  // While guided, keep her on her week — never the home/library/programs browser.
+  useEffect(() => {
+    if (guided && (view.kind === "home" || view.kind === "library")) setView({ kind: "plan" });
+  }, [guided, view.kind]);
   // Guided sparkle tour — auto on first visit, replayable via the hero Guide chip.
   const [tourDone, setTourDone] = useState(false);
   const [showTour, setShowTour] = useState(false);
@@ -1249,7 +1259,14 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
+      {guided && (view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
+        <>
+          <GuidedFocusHero label="Yoga" phaseLabel={guidedPhaseLabel} image="/images/yoga-hero.webp" />
+          <GuidedFinishBar toolLabel="Yoga" phaseLabel={guidedPhaseLabel} hint="Your soft week is set — tap any day to tweak its flow." className="mb-3" />
+        </>
+      )}
+
+      {!guided && (view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <YogaHero
           active={view.kind}
           onDiscover={() => setView({ kind: "home" })}
@@ -1699,6 +1716,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
 
 function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
   const [confirm, setConfirm] = useState<YogaProgram | null>(null);
+  const guided = useGuided();
   return (
     <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "220ms" }}>
       <div className="mb-3">
@@ -1712,7 +1730,7 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
           return (
             <button
               key={p.id}
-              onClick={() => setConfirm(p)}
+              onClick={() => { if (guided) return guidedNudge(); setConfirm(p); }}
               className="group w-full text-left flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
               style={{ animationDelay: `${i * 70}ms` }}
             >

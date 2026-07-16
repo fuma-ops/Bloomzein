@@ -12,6 +12,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
+import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { isPremium, openPaywall } from "@/lib/entitlements";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { HydrationNudge } from "@/components/bloom/HydrationNudge";
@@ -450,6 +451,10 @@ export default function WorkoutPage() {
   const [view, setView] = useState<View>({ kind: "program" });
   const [tab, setTab] = useState<WorkoutTab>("program");
   const [lowWater, setLowWater] = useState(false);
+  // Guided-setup focus mode: narrow hero + her week + one "Finish on Today" action.
+  const guided = useGuided();
+  const cyclePhaseNow = readCyclePhase();
+  const guidedPhaseLabel = cyclePhaseNow && cyclePhaseNow !== "any" ? PHASE_LABEL[cyclePhaseNow] : undefined;
   // Guided sparkle tour — auto on first visit (after profile setup), replayable.
   const [tourDone, setTourDone] = useLS<boolean>(TOUR_KEY, false);
   const [showTour, setShowTour] = useState(false);
@@ -469,6 +474,13 @@ export default function WorkoutPage() {
     window.addEventListener("bloom:workout-updated", onUpdate);
     return () => window.removeEventListener("bloom:workout-updated", onUpdate);
   }, []);
+
+  // While guided, keep her on My Plan — never the discover/programs/library browser.
+  useEffect(() => {
+    if (guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "library")) {
+      setTab("program"); setView({ kind: "program" });
+    }
+  }, [guided, view.kind]);
 
   useEffect(() => {
     setLowWater(readTodayWaterCount() < 3);
@@ -590,7 +602,14 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {(view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+      {guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+        <>
+          <GuidedFocusHero label="Movement" phaseLabel={guidedPhaseLabel} image={HERO_IMAGES.program} />
+          <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Your strength week is set — tap any day to tweak it." className="mb-3" />
+        </>
+      )}
+
+      {!guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
           tab={tab}
@@ -637,7 +656,7 @@ export default function WorkoutPage() {
           profile={profile}
           onStartSession={(session) => setView({ kind: "session-start", session })}
           onOpenProgramSession={(programId, week, sessionIndex) => setView({ kind: "program-session", programId, week, sessionIndex, returnTo: "plan" })}
-          onBrowsePrograms={() => { setTab("programs"); setView({ kind: "programs" }); }}
+          onBrowsePrograms={() => { if (guided) return guidedNudge(); setTab("programs"); setView({ kind: "programs" }); }}
         />
       )}
       {view.kind === "library" && <Library />}
@@ -736,6 +755,7 @@ function programToTimerSession(program: Program, week: number, sessionIndex: num
 function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
   const progress = loadProgramProgress();
   const activeId = loadActiveProgram()?.programId ?? null;
+  const guided = useGuided();
   return (
     <div className="animate-fade-in">
       <p className="mb-3 text-sm text-rose/80">
@@ -751,7 +771,7 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
           return (
             <button
               key={p.id}
-              onClick={() => onOpen(p.id)}
+              onClick={() => { if (guided) return guidedNudge(); onOpen(p.id); }}
               className={[
                 "group w-full text-left flex items-stretch overflow-hidden rounded-3xl border bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in",
                 isActive ? "border-hotpink/60 ring-1 ring-hotpink/30" : "border-petal/60",

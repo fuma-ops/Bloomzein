@@ -1,6 +1,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
+import { useGuided, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
 import { LockChip } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
@@ -66,7 +67,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState, writeMealPortions, setMealPortion, portionFor } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
-import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase, PHASE_LABEL } from "@/components/bloom/cyclePhase";
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { todayISO } from "@/lib/localDate";
@@ -339,6 +340,12 @@ const PREMIUM_MEALS_TABS = new Set<TabKey>(["kids", "pantry", "shop", "prep", "c
 export default function MealsPage() {
   const [tab, setTab] = useState<TabKey>("week");
   const premiumPlan = usePremium();
+  // Guided-setup focus mode: narrow hero + this week + one "Finish on Today" action.
+  const guided = useGuided();
+  const cyclePhaseNow = readCyclePhase();
+  const guidedPhaseLabel = cyclePhaseNow && cyclePhaseNow !== "any" ? PHASE_LABEL[cyclePhaseNow] : undefined;
+  // While guided, keep her on This Week — never the premium organiser tabs.
+  useEffect(() => { if (guided && tab !== "week") setTab("week"); }, [guided, tab]);
   // Free users browse & plan This Week manually; the organiser tabs are Bloom+.
   const goToTab = (key: TabKey) => {
     if (!premiumPlan && PREMIUM_MEALS_TABS.has(key)) { openPaywall("meals"); return; }
@@ -581,7 +588,15 @@ export default function MealsPage() {
   return (
     <>
     <div className="relative animate-fade-in max-w-full overflow-x-hidden">
+      {/* Guided-setup focus: narrow hero + one Finish-on-Today action, no tabs. */}
+      {guided && (
+        <>
+          <GuidedFocusHero label="Meals" phaseLabel={guidedPhaseLabel} image="/images/meals-hero-new.webp" />
+          <GuidedFinishBar toolLabel="Meals" phaseLabel={guidedPhaseLabel} hint="Your week of meals is set — the rest fills in on Today." className="mb-3" />
+        </>
+      )}
       {/* HERO — compact, matches Budget Planner height */}
+      {!guided && (
       <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-card-pop-in">
         <img src="/images/meals-hero-new.webp" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
@@ -646,6 +661,7 @@ export default function MealsPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Symptom-aware nudge — shown when user has logged cramps/bloating/nausea in Today */}
       {todaySymptoms.some((s) => ["cramps", "bloated", "nausea", "backpain"].includes(s)) && (
