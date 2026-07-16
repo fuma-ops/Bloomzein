@@ -13,14 +13,13 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
-import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -1141,7 +1140,6 @@ export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "plan" });
-  const [lowWater, setLowWater] = useState(false);
   // Guided-setup focus mode: strip the tool to a narrow hero + her week + one
   // "Finish on Today" action; no tabs/programs to wander into.
   const guided = useGuided();
@@ -1205,10 +1203,6 @@ export default function YogaPage() {
       const flow = buildFlow({ intention, level, durationMin, phase, mode });
       setView({ kind: "session", flow, lang, mode, intention, hold: holdSecondsFor(durationMin, level), durationMin, sound: DEFAULT_SOUND });
     }
-    setLowWater(readTodayWaterCount() < 3);
-    const refresh = () => setLowWater(readTodayWaterCount() < 3);
-    window.addEventListener("storage", refresh);
-    return () => window.removeEventListener("storage", refresh);
   }, []);
 
   const advanceStep = (next: 1|2|3) => {
@@ -1274,18 +1268,6 @@ export default function YogaPage() {
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
           onGuide={() => setShowTour(true)}
-        />
-      )}
-
-      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
-          logged today. Dismissible via the ✕ button or by swiping it away. */}
-      {lowWater && (
-        <HydrationNudge
-          storageKey="bloom:hydrate-nudge-yoga"
-          className="mt-3 bg-gradient-to-r from-sky-50 to-blue-50 border-blue-100/80"
-          icon={<Info className="h-4 w-4" strokeWidth={1.8} />}
-          title="Hydrate before your flow ✿"
-          body="You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective."
         />
       )}
 

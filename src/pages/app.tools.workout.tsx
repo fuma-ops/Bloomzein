@@ -10,12 +10,11 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { isPremium, openPaywall } from "@/lib/entitlements";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
-import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO, isYesterday } from "@/lib/localDate";
@@ -450,7 +449,6 @@ export default function WorkoutPage() {
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
   const [view, setView] = useState<View>({ kind: "program" });
   const [tab, setTab] = useState<WorkoutTab>("program");
-  const [lowWater, setLowWater] = useState(false);
   // Guided-setup focus mode: narrow hero + her week + one "Finish on Today" action.
   const guided = useGuided();
   const cyclePhaseNow = readCyclePhase();
@@ -483,9 +481,6 @@ export default function WorkoutPage() {
   }, [guided, view.kind]);
 
   useEffect(() => {
-    setLowWater(readTodayWaterCount() < 3);
-    const refresh = () => setLowWater(readTodayWaterCount() < 3);
-    window.addEventListener("storage", refresh);
     // Deep-link from Today / Cycle: build the prescribed session and open its
     // preview straight away.
     const launch = readLaunch<{ zone: string; intention: string }>(LAUNCH_WORKOUT_KEY);
@@ -493,7 +488,6 @@ export default function WorkoutPage() {
       const s = buildSession(launch.zone as Zone, launch.intention as WorkoutIntention, durationForLevel(profile.level), profile.level, readCyclePhase() ?? "any", profile.equipment);
       setView({ kind: "session-start", session: s });
     }
-    return () => window.removeEventListener("storage", refresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -617,18 +611,6 @@ export default function WorkoutPage() {
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
           onGuide={() => setShowTour(true)}
-        />
-      )}
-
-      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
-          logged today. Dismissible via the ✕ button or by swiping it away. */}
-      {lowWater && (
-        <HydrationNudge
-          storageKey="bloom:hydrate-nudge-workout"
-          className="mt-3 bg-gradient-to-r from-blush/60 to-petal/40 border-petal/70"
-          icon={<Sparkles className="h-4 w-4" strokeWidth={1.8} />}
-          title="Drink water before you sweat ✿"
-          body="You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery."
         />
       )}
 
