@@ -5,6 +5,7 @@ import {
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
+  BookOpen,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -175,6 +176,12 @@ const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
   period: "Low", follicular: "Rising", fertile: "High", ovulation: "High", luteal: "Mellow",
 };
 
+// A soft, phase-flavoured word for the plan title ("Your soft day"), so the
+// heading feels personal to where she is in her cycle.
+const PHASE_DAYWORD: Record<Exclude<CyclePhase, "any">, string> = {
+  period: "gentle", follicular: "fresh", fertile: "radiant", ovulation: "bright", luteal: "soft",
+};
+
 // Phase-tinted gradient for the hero
 const PHASE_GRADIENT: Record<Exclude<CyclePhase, "any">, string> = {
   period:     "from-rose-200/50 via-petal/20 to-transparent",
@@ -191,6 +198,23 @@ type PlanItem = {
   fallback?: string;
   launch?: { key: string; val: unknown };
 };
+
+// Timeline node icon per plan concept — resolves the little icon that sits on
+// the left rail for each item. Every item carries its own `Icon`, but this map
+// also RESERVES the evening-ritual concepts we'll populate later — skincare and
+// a wind-down read before sleep — so when those items are added they light up
+// the rail with the right icon automatically (matched by id prefix).
+const PLAN_NODE_ICON: Record<string, typeof Heart> = {
+  meal: Heart, breakfast: Heart, lunch: UtensilsCrossed, snack: Apple, dinner: UtensilsCrossed,
+  workout: Dumbbell, yoga: Flower2, journal: BookHeart, meditation: Flower2,
+  skincare: Sparkles, skin: Sparkles,   // reserved — evening skincare ritual (added later)
+  read: BookOpen, reads: BookOpen, bedtime: Moon, sleep: Moon, // reserved — before-sleep read (added later)
+};
+function planNodeIcon(item: PlanItem): typeof Heart {
+  const parts = item.id.split("-");            // e.g. "meal-lunch" → ["meal","lunch"]
+  const last = parts[parts.length - 1];
+  return PLAN_NODE_ICON[last] ?? PLAN_NODE_ICON[parts[0]] ?? item.Icon;
+}
 
 // Build today's plan items from the SHARED phase plan (same source the Cycle
 // Tracker uses), ordered by time. Yoga/workout carry a deep-link launch so a
@@ -347,6 +371,10 @@ export default function TodayPage() {
   // matching item in Today's Plan (this DOM id) instead of leaving for the tool.
   const [highlightId,         setHighlightId]         = useState<string | null>(null);
   const [affirmDismissed,     setAffirmDismissed]     = useState(false);
+  // The daily affirmation is loud only on her FIRST-EVER Today. From the second
+  // visit on it stays out of the way and only drifts in — gently — once she
+  // starts scrolling, tucked under the "Today's Plan" title.
+  const [affirmReveal,        setAffirmReveal]        = useState(false);
   // Which affirmations she's "loved" (persisted). Each affirmation carries a
   // playful base like-count (starts ~1k) so it feels shared & cherished.
   const [affirmLikes,         setAffirmLikes]         = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem("bloom:affirm-likes") || "[]"); } catch { return []; } });
@@ -410,6 +438,22 @@ export default function TodayPage() {
     } catch {}
 
     broadcastCyclePhase();
+  }, []);
+
+  // Affirmation reveal — count how many times she's opened Today. On the very
+  // first visit the affirmation shows straight away; from the second on it waits
+  // and only slips in softly once she starts scrolling.
+  useEffect(() => {
+    let visits = 0;
+    try { visits = Number(localStorage.getItem("bloom:today-visits")) || 0; } catch {}
+    const next = visits + 1;
+    try { localStorage.setItem("bloom:today-visits", String(next)); } catch {}
+    if (next <= 1) { setAffirmReveal(true); return; }
+    const onScroll = () => {
+      if (window.scrollY > 56) { setAffirmReveal(true); window.removeEventListener("scroll", onScroll); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Stay in sync with My Cycle: if the pill is toggled there, reflect it here.
@@ -694,6 +738,42 @@ export default function TodayPage() {
     }
   }, [cycleReady, mealPlanned, dietSetup, movementPlanned, mood]);
 
+  // Compact daily affirmation — tucked under the "Today's Plan" title. Shows
+  // immediately on the first-ever Today, then only on scroll (affirmReveal),
+  // always dismissible with the X. One soft line, self-writing, with a love tap.
+  const affirmationCard = (!affirmDismissed && !isFresh && affirmReveal) ? (
+    <div className="relative mt-2.5 rounded-2xl border border-petal/50 bg-blush/25 pl-3 pr-8 py-2 animate-fade-in">
+      <button
+        onClick={() => setAffirmDismissed(true)}
+        aria-label="Dismiss affirmation"
+        className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-white hover:text-hotpink active:scale-90"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+      <div className="flex items-center gap-2">
+        <BloomFlower className="h-4 w-4 shrink-0 text-hotpink/80 animate-icon-breathe" />
+        <AnimatedWords
+          key={affirmText}
+          text={affirmText}
+          stagger={70}
+          className="font-script text-base sm:text-lg text-hotpink leading-snug"
+        />
+      </div>
+      <div className="mt-1 flex items-center gap-2 pl-6">
+        <span className="text-[8px] font-bold uppercase tracking-widest text-hotpink/50">Today's affirmation</span>
+        <button
+          onClick={toggleAffirmLike}
+          aria-pressed={affirmLiked}
+          aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
+          className="inline-flex items-center gap-1 text-[10px] font-bold tabular-nums text-hotpink/70 transition hover:text-hotpink active:scale-90"
+        >
+          <Heart className={["h-3 w-3", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2} />
+          {affirmLikeCount.toLocaleString()}
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="relative">
       <BloomBubbles count={10} />
@@ -905,44 +985,9 @@ export default function TodayPage() {
       {/* ── MAIN COLUMN (lg:col-span-3) ─────────────────────────────────────── */}
       <div className="lg:col-span-3">
 
-      {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
-             Flanked by two logo flowers; the words softly self-write on open. ── */}
-      {!affirmDismissed && !isFresh && (
-        /* Soft one-/two-line quote flanked by two flowers; a small X to close
-           (top-right) and a centred tiny love-count below. */
-        <div className="relative mt-4 sm:mt-6 rounded-2xl border border-white/60 bg-white/40 backdrop-blur-md shadow-sm shadow-hotpink/10 px-4 pt-6 pb-3 animate-fade-in">
-          <p className="absolute left-3 top-2 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-hotpink/60">
-            <BloomFlower className="h-2.5 w-2.5" /> Today's affirmation
-          </p>
-          <button onClick={() => setAffirmDismissed(true)} aria-label="Dismiss affirmation" className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90">
-            <X className="h-3.5 w-3.5" />
-          </button>
-
-          <div className="flex items-center justify-center gap-2 sm:gap-3 px-5">
-            <BloomFlower className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-hotpink/80 animate-icon-breathe" />
-            <AnimatedWords
-              key={affirmText}
-              text={affirmText}
-              stagger={95}
-              className="font-script text-lg sm:text-2xl text-hotpink text-center leading-snug text-balance"
-            />
-            <BloomFlower className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-hotpink/80 animate-icon-breathe" />
-          </div>
-
-          {/* Centred tiny love-count */}
-          <div className="mt-2 flex justify-center">
-            <button
-              onClick={toggleAffirmLike}
-              aria-pressed={affirmLiked}
-              aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
-              className="inline-flex items-center gap-1 text-[10px] font-bold tabular-nums text-hotpink/70 transition hover:text-hotpink active:scale-90"
-            >
-              <Heart className={["h-3.5 w-3.5", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2} />
-              {affirmLikeCount.toLocaleString()}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ── AFFIRMATION — moved: it now lives tucked under the "Today's Plan"
+             title (see the compact affirmationCard below), where it appears
+             straight away on the first-ever visit and softly on scroll after. ── */}
 
       {/* ── FRESH REVEAL — the enchanting "here's the magic that blooms after setup"
              section a just-reset user sees where her plan will live. ── */}
@@ -957,6 +1002,7 @@ export default function TodayPage() {
           <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
             Nothing planned yet — set up a tool and Today fills itself. Everything syncs to your <span className="font-bold text-hotpink">goal</span> &amp; <span className="font-bold text-hotpink">phase</span> ✿
           </p>
+          {affirmationCard && <div className="mb-2.5">{affirmationCard}</div>}
           <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
             {PLAN_SETUP.map((t, i) => (
               <a key={t.href} href={t.href} className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5 transition hover:bg-blush/20 active:scale-[0.99]" style={{ animationDelay: `${i * 60}ms` }}>
@@ -979,9 +1025,13 @@ export default function TodayPage() {
       {hasPlanContent && (
       <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
         <div className="rounded-[2rem] overflow-hidden bg-white border border-petal/50 shadow-[0_10px_30px_rgba(219,39,119,0.08)]">
-        {/* Card header — title, phase blurb & nudge, all contained (not floating) */}
-        <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-4">
-          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Today's Plan ✿</h2>
+        {/* Card header — a big personal title, phase blurb, the day's affirmation
+            (tucked under the title) & a gentle nudge, all contained. */}
+        <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-hotpink/55">Today's Plan ✿</p>
+          <h2 className="mt-0.5 font-script text-[2rem] sm:text-[2.6rem] text-hotpink leading-[1.05] drop-shadow-[0_1px_4px_rgba(219,39,119,0.12)]">
+            Your {cycleReady ? PHASE_DAYWORD[phase] : "bloom"} day
+          </h2>
           <p className="mt-1.5 text-[11px] sm:text-xs text-rose/65 leading-snug">
             {cycleReady ? (
               <>Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.</>
@@ -989,6 +1039,10 @@ export default function TodayPage() {
               <>A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.</>
             )}
           </p>
+
+          {/* Daily affirmation — appears here, softly, under the title */}
+          {affirmationCard}
+
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
             <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
           </div>
@@ -997,18 +1051,35 @@ export default function TodayPage() {
           {planItems.map((item, i) => {
             const done   = planDone.includes(item.id);
             const timing = planItemTiming(item.time);
+            const NodeIcon = planNodeIcon(item);
+            const isFirst  = i === 0;
+            const isLast   = i === planItems.length - 1;
             return (
               <div
                 key={item.id}
                 id={`plan-${item.id}`}
-                className={["relative flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/15",
+                className={["relative flex items-stretch gap-2.5 sm:gap-3.5 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/15",
                   highlightId === `plan-${item.id}` ? "animate-attention-squeeze" : ""].join(" ")}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
+                {/* LEFT TIMELINE RAIL — a soft connected schedule: time + a node
+                    icon on a continuous line (like a day's itinerary). */}
+                <div className="relative flex w-9 sm:w-11 shrink-0 flex-col items-center justify-center">
+                  <span aria-hidden className={["absolute left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-petal/40 via-petal/70 to-petal/40",
+                    isFirst ? "top-[18px]" : "top-0", isLast ? "bottom-[18px]" : "bottom-0"].join(" ")} />
+                  {item.time && <span className="relative z-[1] mb-1 text-[9px] sm:text-[9.5px] font-bold tabular-nums text-rose/50">{item.time}</span>}
+                  <span className={["relative z-[1] grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full border-2 transition",
+                    done ? "border-hotpink bg-hotpink text-white"
+                    : timing === "now" ? "border-hotpink bg-white text-hotpink animate-selected-glow"
+                    : "border-petal bg-white text-hotpink/80"].join(" ")}>
+                    {done ? <Check className="h-4 w-4" strokeWidth={3} /> : <NodeIcon className="h-4 w-4" strokeWidth={2} />}
+                  </span>
+                </div>
+
                 {/* Tapping the image / text opens a centred detail popup */}
                 <button
                   onClick={() => setActivePlan(item)}
-                  className="flex flex-1 min-w-0 items-center gap-3 sm:gap-4 text-left transition active:scale-[0.99]"
+                  className="flex flex-1 min-w-0 items-center gap-3 sm:gap-3.5 text-left transition active:scale-[0.99]"
                 >
                   {/* Image — a strong-pink ring marks it done/selected (never hides it) */}
                   <div className={["relative shrink-0 h-[108px] w-[108px] sm:h-[132px] sm:w-[132px] overflow-hidden rounded-2xl transition",
@@ -1036,16 +1107,13 @@ export default function TodayPage() {
                       )}
                     </div>
                     <p className={["mt-0.5 text-[11.5px] sm:text-[12.5px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/60"].join(" ")}>{item.prompt ? `"${item.blurb}"` : item.blurb}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      {item.time && (
-                        <span className="text-[10px] font-semibold text-rose/45">{item.time}</span>
-                      )}
-                      {cycleReady && (
+                    {cycleReady && (
+                      <div className="mt-1 flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-hotpink/60">
                           ✿ {PHASE_LABEL[phase]} phase
                         </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </button>
                 {/* Soft, always-alive CTA — a rapid deep-link straight into the tool */}
