@@ -5,7 +5,7 @@ import {
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
-  BookOpen,
+  BookOpen, ChevronRight,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -20,7 +20,7 @@ import { buildDayCoach } from "@/lib/todayCoach";
 import { CoachTodayCompact, TomorrowCard } from "@/components/bloom/coach/CoachCards";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
 import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
@@ -365,6 +365,11 @@ export default function TodayPage() {
   const [waterRemindersEnabled, setWaterRemindersEnabled] = useState(false);
   const [reminderBusy,        setReminderBusy]        = useState(false);
   const [pillTaken,           setPillTaken]           = useState(false);
+  // Real completion detected from each tool — so a plan step auto-ticks the
+  // moment she finishes it elsewhere (writes her diary, completes a session,
+  // logs a meal), even without ticking it here.
+  const [eatenSlots,          setEatenSlots]          = useState<string[]>([]);
+  const [autoDone,            setAutoDone]            = useState({ workout: false, yoga: false, diary: false });
   const [moodPickerOpen,      setMoodPickerOpen]      = useState(false);
   const [activePlan,          setActivePlan]          = useState<PlanItem | null>(null);
   // When she taps an unfinished bloom-checklist step, we scroll to + squeeze the
@@ -437,7 +442,35 @@ export default function TodayPage() {
       setTodayMeals(readTodayPlannedDay());
     } catch {}
 
+    // Real completion detected from each tool (meals eaten, sessions done, diary).
+    try {
+      setEatenSlots(readEatenToday());
+      setAutoDone({ workout: didWorkoutToday(), yoga: didYogaToday(), diary: hasDiaryEntryToday() });
+    } catch {}
+
     broadcastCyclePhase();
+  }, []);
+
+  // Keep the auto-detected completion fresh when she finishes something in
+  // another tool (or returns to this tab) — so a done step ticks itself here.
+  useEffect(() => {
+    const refresh = () => {
+      try {
+        setEatenSlots(readEatenToday());
+        setAutoDone({ workout: didWorkoutToday(), yoga: didYogaToday(), diary: hasDiaryEntryToday() });
+      } catch {}
+    };
+    const onVis = () => { if (document.visibilityState === "visible") refresh(); };
+    window.addEventListener("storage", refresh);
+    window.addEventListener("bloom:diary-updated", refresh);
+    window.addEventListener("bloom:workout-updated", refresh);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("bloom:diary-updated", refresh);
+      window.removeEventListener("bloom:workout-updated", refresh);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   // Affirmation reveal — count how many times she's opened Today. On the very
@@ -662,21 +695,36 @@ export default function TodayPage() {
   const moveItems    = useMemo(() => planItems.filter((i) => i.id === "yoga" || i.id === "workout"), [planItems]);
   const journalItem  = useMemo(() => planItems.find((i) => i.id === "journal" || i.id === "meditation"), [planItems]);
 
+  // A plan item counts as done if she ticked it here OR genuinely completed it
+  // in its own tool (a logged meal, a finished session, a written diary entry).
+  const isItemDone = (item: PlanItem): boolean => {
+    if (planDone.includes(item.id)) return true;
+    if (item.id.startsWith("meal-")) return eatenSlots.includes(item.id.slice(5));
+    if (item.id === "workout") return autoDone.workout;
+    if (item.id === "yoga") return autoDone.yoga;
+    if (item.id === "journal" || item.id === "meditation") return autoDone.diary;
+    return false;
+  };
+
   const checklist = useMemo(() => {
-    const mealsDone = mealItems.filter((m) => planDone.includes(m.id)).length;
-    const moveDone  = moveItems.filter((m) => planDone.includes(m.id)).length;
-    const rows: { key: string; label: string; done: boolean; href: string; tool: string }[] = [
-      { key: "mood",  label: "Log your mood",  done: !!mood,                  href: "",           tool: "" },
-      { key: "water", label: "Hit water goal", done: waterCount >= waterGoal, href: "#hydration", tool: "" },
+    const mealsDone = mealItems.filter(isItemDone).length;
+    const moveDone  = moveItems.filter(isItemDone).length;
+    const rows: { key: string; label: string; sub: string; done: boolean; Icon: typeof Heart; href: string; tool: string }[] = [
+      { key: "mood",  label: "Log your mood",  sub: mood ? "Logged today ✓" : "Not logged yet", done: !!mood,                  Icon: Smile,   href: "",           tool: "" },
+      { key: "water", label: "Hit water goal", sub: `${waterCount} / ${waterGoal} L`,           done: waterCount >= waterGoal, Icon: Droplet, href: "#hydration", tool: "" },
     ];
     if (mealItems.length)
-      rows.push({ key: "meals", label: `Eat your meals (${mealsDone}/${mealItems.length})`, done: mealsDone === mealItems.length, href: "/app/tools/meals", tool: "/app/tools/meals" });
-    if (moveItems.length)
-      rows.push({ key: "move", label: moveItems.length > 1 ? `Move your body (${moveDone}/${moveItems.length})` : (moveItems[0].label ?? "Move"), done: moveDone === moveItems.length, href: moveItems[0].tool, tool: moveItems[0].tool });
-    if (journalItem)
-      rows.push({ key: "journal", label: "Write in diary", done: planDone.includes(journalItem.id), href: "/app/tools/diary", tool: "/app/tools/diary" });
+      rows.push({ key: "meals", label: `Eat your meals (${mealsDone}/${mealItems.length})`, sub: `${mealsDone} of ${mealItems.length} completed`, done: mealsDone === mealItems.length, Icon: UtensilsCrossed, href: "/app/tools/meals", tool: "/app/tools/meals" });
+    if (moveItems.length) {
+      const md = moveDone === moveItems.length;
+      rows.push({ key: "move", label: moveItems.length > 1 ? `Move your body (${moveDone}/${moveItems.length})` : (moveItems[0].label ?? "Move"), sub: md ? "Completed ✓" : moveItems.length > 1 ? `${moveDone} of ${moveItems.length} completed` : "Not started", done: md, Icon: moveItems[0].Icon, href: moveItems[0].tool, tool: moveItems[0].tool });
+    }
+    if (journalItem) {
+      const jd = isItemDone(journalItem);
+      rows.push({ key: "journal", label: "Write in diary", sub: jd ? "Completed ✓" : "Not started", done: jd, Icon: BookHeart, href: "/app/tools/diary", tool: "/app/tools/diary" });
+    }
     return rows;
-  }, [mood, waterCount, waterGoal, planDone, mealItems, moveItems, journalItem]);
+  }, [mood, waterCount, waterGoal, planDone, eatenSlots, autoDone, mealItems, moveItems, journalItem]);
 
   // Tapping a bloom-checklist step keeps her on Today and points at the exact
   // thing to complete: scroll the matching plan item (or the hydration card) into
@@ -684,8 +732,8 @@ export default function TodayPage() {
   const focusPlanStep = (key: string) => {
     let domId: string | null = null;
     if (key === "water") domId = "hydration";
-    else if (key === "meals") { const m = mealItems.find((x) => !planDone.includes(x.id)) ?? mealItems[0]; domId = m ? `plan-${m.id}` : null; }
-    else if (key === "move")  { const m = moveItems.find((x) => !planDone.includes(x.id)) ?? moveItems[0]; domId = m ? `plan-${m.id}` : null; }
+    else if (key === "meals") { const m = mealItems.find((x) => !isItemDone(x)) ?? mealItems[0]; domId = m ? `plan-${m.id}` : null; }
+    else if (key === "move")  { const m = moveItems.find((x) => !isItemDone(x)) ?? moveItems[0]; domId = m ? `plan-${m.id}` : null; }
     else if (key === "journal") domId = journalItem ? `plan-${journalItem.id}` : null;
     if (!domId) return;
     try {
@@ -699,7 +747,7 @@ export default function TodayPage() {
 
   // Ring progress is granular: mood + water + one unit per plan item, so ticking
   // any single meal or the workout moves the ring immediately.
-  const bloomUnits    = [!!mood, waterCount >= waterGoal, ...planItems.map((i) => planDone.includes(i.id))];
+  const bloomUnits    = [!!mood, waterCount >= waterGoal, ...planItems.map((i) => isItemDone(i))];
   const bloomPercent  = Math.round((bloomUnits.filter(Boolean).length / bloomUnits.length) * 100);
   const bloomFull     = bloomPercent === 100;
   const bloomMessage  =
@@ -1049,7 +1097,7 @@ export default function TodayPage() {
         </div>
         <div className="divide-y divide-petal/20 border-t border-petal/30">
           {planItems.map((item, i) => {
-            const done   = planDone.includes(item.id);
+            const done   = isItemDone(item);
             const timing = planItemTiming(item.time);
             const NodeIcon = planNodeIcon(item);
             const isFirst  = i === 0;
@@ -1173,88 +1221,101 @@ export default function TodayPage() {
              FreshReveal + Build-your-world checklist carry the first-run story. ── */}
       {!isFresh && (
       <section id="bloom-today" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-        <div className={[
-          "bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5",
-          bloomFull ? "bg-gradient-to-br from-hotpink/10 via-white/0 to-petal/30" : "bg-gradient-to-br from-petal/20 via-white/0 to-blush/30",
-        ].join(" ")}>
-          <div className="mb-3 flex items-center gap-2">
-            <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white"><Flower2 className="h-4 w-4" strokeWidth={1.8} /></span>
-            <div className="min-w-0">
-              <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">Your bloom today</h2>
-              <p className="text-[9.5px] font-bold uppercase tracking-wider text-rose/50 leading-none mt-0.5">Daily progress ring</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 sm:gap-6">
-            {/* Animated bloom ring */}
-            <div className="relative shrink-0">
-              <svg viewBox="0 0 36 36" className="w-[72px] h-[72px] sm:w-24 sm:h-24 -rotate-90" style={{ transition: "all 0.6s ease" }}>
-                <defs>
-                  <linearGradient id="bloom-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#F472B6" />
-                    <stop offset="100%" stopColor="#DB2777" />
-                  </linearGradient>
-                </defs>
-                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#FCE7F3" strokeWidth="2.8" />
-                <circle
-                  cx="18" cy="18" r="15.9" fill="none"
-                  stroke={bloomFull ? "url(#bloom-ring-grad)" : "url(#bloom-ring-grad)"}
-                  strokeWidth="2.8"
-                  strokeDasharray={`${CIRC}`}
-                  strokeDashoffset={CIRC * (1 - bloomPercent / 100)}
-                  strokeLinecap="round"
-                  style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)" }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                {bloomFull
-                  ? <Star className="h-5 w-5 sm:h-6 sm:w-6 text-hotpink animate-icon-breathe" strokeWidth={1.5} fill="currentColor" />
-                  : <>
-                      <p className="font-script text-lg sm:text-2xl text-hotpink leading-none">{bloomPercent}%</p>
-                      <p className="text-[7px] sm:text-[9px] font-bold uppercase tracking-wide text-rose/60">Bloomed</p>
-                    </>
-                }
+        <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-gradient-to-br from-blush/55 via-white to-petal/35 shadow-[0_14px_36px_rgba(219,39,119,0.12)]">
+          <div className="p-4 sm:p-5">
+            {/* Header */}
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30"><BloomFlower className="h-[22px] w-[22px] text-white" /></span>
+              <div className="min-w-0">
+                <h2 className="inline-flex items-center gap-1.5 font-script text-2xl sm:text-3xl text-hotpink leading-none">Your bloom today <Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
+                <p className="mt-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-hotpink/60">Daily progress</p>
               </div>
             </div>
 
-            {/* Checklist */}
-            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-              {bloomFull ? (
-                <p className="text-xs font-bold text-hotpink animate-fade-in mb-1">✿ Fully Bloomed! You're amazing today</p>
-              ) : (
-                <p key={bloomPercent} className="text-[11px] font-semibold text-rose/60 leading-snug animate-fade-in mb-0.5">{bloomMessage}</p>
-              )}
-              {checklist.map((c) => {
-                const el = c.key === "mood" ? (
+            {/* Encouraging message */}
+            <p className="mt-2.5 text-[13px] font-semibold text-[#831843] leading-snug">
+              {bloomFull ? "Fully bloomed — you're amazing today ✿" : bloomMessage} <span className="text-hotpink">🩷</span>
+            </p>
+
+            {/* Ring + tip on top; checklist full-width below (roomy labels) */}
+            <div className="mt-3.5">
+              <div className="flex items-center gap-3">
+                {/* Bloom ring — strong pink */}
+                <div className="relative shrink-0">
+                  <svg viewBox="0 0 36 36" className="w-[112px] h-[112px] -rotate-90">
+                    <defs>
+                      <linearGradient id="bloom-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F472B6" />
+                        <stop offset="100%" stopColor="#DB2777" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#FBD3E6" strokeWidth="3.4" />
+                    <circle
+                      cx="18" cy="18" r="15.9" fill="none"
+                      stroke="url(#bloom-ring-grad)" strokeWidth="3.4"
+                      strokeDasharray={`${CIRC}`} strokeDashoffset={CIRC * (1 - bloomPercent / 100)}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)" }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    {bloomFull
+                      ? <Star className="h-8 w-8 text-hotpink animate-icon-breathe" strokeWidth={1.5} fill="currentColor" />
+                      : <>
+                          <p className="font-script text-[2rem] text-hotpink leading-none">{bloomPercent}%</p>
+                          <p className="mt-0.5 text-[8.5px] font-black uppercase tracking-[0.15em] text-hotpink/70">Bloomed</p>
+                        </>
+                    }
+                  </div>
+                </div>
+                {/* Tip */}
+                <div className="w-full rounded-2xl bg-white/70 border border-petal/50 px-3 py-2 flex items-start gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink mt-0.5" strokeWidth={2} />
+                  <p className="text-[11px] font-medium text-[#831843] leading-snug">{bloomFull ? "You did it — soak it in ✨" : "Small steps today, big changes tomorrow."}</p>
+                </div>
+              </div>
+
+              {/* Checklist — full-width cards on a soft dotted rail */}
+              <div className="relative mt-3 min-w-0 space-y-2 before:absolute before:left-[7px] before:top-3 before:bottom-3 before:w-[2px] before:bg-[repeating-linear-gradient(to_bottom,rgba(236,72,153,0.35)_0_3px,transparent_3px_7px)]">
+                {checklist.map((c) => (
                   <button
                     key={c.key}
-                    onClick={() => setMoodPickerOpen((v) => !v)}
-                    ref={c.key === "mood" ? undefined : undefined}
-                    className={["flex w-full items-center gap-2 rounded-2xl px-3 py-1.5 transition text-left active:scale-95",
-                      c.done ? "bg-blush/50" : "bg-white/70 hover:bg-blush/40"].join(" ")}
+                    onClick={() => c.key === "mood" ? setMoodPickerOpen((v) => !v) : focusPlanStep(c.key)}
+                    className="group relative flex w-full items-center gap-2.5 rounded-2xl bg-white/85 border border-petal/50 pl-5 pr-2.5 py-2 text-left shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
                   >
-                    <span className={["grid h-5 w-5 shrink-0 place-items-center rounded-full transition", c.done ? "bg-hotpink" : "bg-blush/60"].join(" ")}>
-                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                    {/* rail dot */}
+                    <span className={["absolute -left-[1px] top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full ring-2 ring-white transition", c.done ? "bg-hotpink" : "bg-petal"].join(" ")} />
+                    <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-full transition", c.done ? "bg-gradient-to-br from-hotpink to-magenta text-white" : "bg-blush text-hotpink"].join(" ")}>
+                      <c.Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
                     </span>
-                    <span className={["text-xs font-semibold flex-1", c.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>{c.label}</span>
-                    {!c.done && <Sparkles className="h-3 w-3 text-hotpink/50 shrink-0" />}
-                  </button>
-                ) : (
-                  <button
-                    key={c.key}
-                    onClick={() => focusPlanStep(c.key)}
-                    className={["flex w-full items-center gap-2 rounded-2xl px-3 py-1.5 transition text-left active:scale-95",
-                      c.done ? "bg-blush/50" : "bg-white/70 hover:bg-blush/40"].join(" ")}
-                  >
-                    <span className={["grid h-5 w-5 shrink-0 place-items-center rounded-full transition", c.done ? "bg-hotpink" : "bg-blush/60"].join(" ")}>
-                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                    <span className="min-w-0 flex-1">
+                      <span className={["block text-[13px] font-bold leading-tight truncate", c.done ? "text-[#831843]" : "text-[#831843]"].join(" ")}>{c.label}</span>
+                      <span className={["block text-[10.5px] font-semibold leading-tight", c.done ? "text-hotpink" : "text-rose/55"].join(" ")}>{c.sub}</span>
                     </span>
-                    <span className={["text-xs font-semibold flex-1", c.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>{c.label}</span>
-                    {!c.done && <ArrowRight className="h-3 w-3 text-rose/30 shrink-0" />}
+                    {c.done
+                      ? <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
+                      : <ChevronRight className="h-4 w-4 shrink-0 text-hotpink/50 transition group-hover:text-hotpink" strokeWidth={2.5} />}
                   </button>
-                );
-                return el;
-              })}
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* Footer bar */}
+          <div className="flex items-center justify-between gap-3 border-t border-petal/50 bg-white/45 px-4 py-2.5 sm:px-5">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><BloomFlower className="h-4 w-4 text-hotpink" /></span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-black text-hotpink leading-tight">You're doing great!</p>
+                <p className="text-[10px] text-rose/60 leading-tight truncate">Every little action brings you closer to your best self.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { try { document.getElementById("todays-plan")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {} }}
+              className="shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-magenta px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-sm shadow-hotpink/25 transition hover:brightness-105 active:scale-95"
+            >
+              See my plan <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </section>

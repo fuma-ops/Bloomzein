@@ -403,6 +403,37 @@ export function readTrainingCaloriesToday(): number {
   return readWorkoutCaloriesToday() + readYogaCaloriesToday();
 }
 
+// ── "Did she actually do it today?" — real completion, detected across tools ──
+// These let Today auto-tick a plan step the moment she completes it in its own
+// tool (finishes a workout/yoga flow, writes a diary entry), even if she never
+// ticked it on Today itself.
+
+const DIARY_KEY = "bloom:diary";
+
+/** True if a workout was logged today (a real session finished). */
+export function didWorkoutToday(): boolean {
+  try {
+    const h = readJSON<{ date?: string }[]>(WORKOUT_LOG_KEY, []);
+    return Array.isArray(h) && h.some((x) => x?.date === todayISO());
+  } catch { return false; }
+}
+
+/** True if a yoga flow was logged today. */
+export function didYogaToday(): boolean {
+  try {
+    const h = readJSON<{ date?: string }[]>(YOGA_LOG_KEY, []);
+    return Array.isArray(h) && h.some((x) => x?.date === todayISO());
+  } catch { return false; }
+}
+
+/** True if she has written a diary entry dated today. */
+export function hasDiaryEntryToday(): boolean {
+  try {
+    const entries = readJSON<{ date?: string }[]>(DIARY_KEY, []);
+    return Array.isArray(entries) && entries.some((e) => e?.date === todayISO());
+  } catch { return false; }
+}
+
 /** Count of workout + yoga sessions completed in the last 7 days. */
 export function readSessionsThisWeek(): { workouts: number; yoga: number } {
   const cutoff = Date.now() - 7 * 864e5;
