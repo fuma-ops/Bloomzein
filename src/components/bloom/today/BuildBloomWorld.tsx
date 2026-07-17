@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Sparkles, Check, ArrowRight, Flower2, Target, UtensilsCrossed, Dumbbell,
-  Smile, TrendingDown, Activity, Sun, Moon, Coffee,
+  TrendingDown, Activity, Moon, Droplet, Smile, CalendarDays, Heart, Lock,
 } from "lucide-react";
 import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { hasMealPlan, hasMovementPlan } from "@/lib/crossToolData";
@@ -10,13 +10,10 @@ import { startGuide } from "@/lib/guidedSetup";
 
 /* ============================================================================
    Build your Bloom world — the guided setup on Today, in the full step-card
-   design: a progress stepper, then a rich card per real tool (image slot ·
-   what it does + a live mini-visual · what it unlocks + a CTA). Each step lights
-   up ✓ the moment it's set up for real.
-
-   The left slot is an IMAGE placeholder (soft gradient + the step icon) — drop a
-   per-step `image` in the STEPS array when the artwork is ready and it renders
-   in place of the placeholder, no other change needed.
+   design: a progress stepper, five rich cards (branded image · what it does + a
+   live mini-visual · what it unlocks + a CTA), then the "Magic Bloom" result —
+   the connected ecosystem where every tool talks to the others through Bloom AI.
+   Every accent stays on the pink brand palette (hotpink / magenta / rose).
 ============================================================================ */
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -33,6 +30,40 @@ function readGoalLine(): { target: number; toGo: number } | null {
   return null;
 }
 
+// A realistic, gently-descending weight-forecast curve (not random) — steady
+// loss with small plateaus, easing toward the goal line.
+function GoalGraph() {
+  const pts = "4,7 20,10 36,11 52,15 68,17 84,21 100,24 116,26";
+  const dots = [[4, 7], [36, 11], [68, 17], [100, 24], [116, 26]];
+  return (
+    <svg viewBox="0 0 120 34" className="h-9 w-full" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="bbw-goal-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#F472B6" stopOpacity="0.35" /><stop offset="1" stopColor="#F472B6" stopOpacity="0" /></linearGradient>
+        <linearGradient id="bbw-goal-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#F472B6" /><stop offset="1" stopColor="#DB2777" /></linearGradient>
+      </defs>
+      <line x1="0" y1="28" x2="120" y2="28" stroke="#DB2777" strokeWidth="0.7" strokeDasharray="3 3" opacity="0.45" />
+      <path d={`M${pts.split(" ").join(" L")} L116,34 L4,34 Z`} fill="url(#bbw-goal-fill)" />
+      <polyline points={pts} fill="none" stroke="url(#bbw-goal-line)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {dots.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={i === dots.length - 1 ? 2.6 : 1.8} fill="#DB2777" stroke="#fff" strokeWidth="0.8" />)}
+    </svg>
+  );
+}
+
+const SYNC_ICONS = [
+  { Icon: Flower2, l: "Cycle" }, { Icon: UtensilsCrossed, l: "Meals" }, { Icon: Dumbbell, l: "Movement" }, { Icon: Smile, l: "Mood" },
+  { Icon: Droplet, l: "Water" }, { Icon: Moon, l: "Sleep" }, { Icon: CalendarDays, l: "Calendar" }, { Icon: Heart, l: "Coach" },
+];
+
+// Radial hub — the tools that talk to each other around Bloom AI.
+const HUB_NODES: { Icon: typeof Flower2; l: string; x: number; y: number }[] = [
+  { Icon: Flower2, l: "Cycle", x: 50, y: 12.7 },
+  { Icon: Target, l: "Goal", x: 82.3, y: 31.3 },
+  { Icon: UtensilsCrossed, l: "Meals", x: 82.3, y: 68.7 },
+  { Icon: Dumbbell, l: "Move", x: 50, y: 87.3 },
+  { Icon: Droplet, l: "Water", x: 17.7, y: 68.7 },
+  { Icon: Heart, l: "Coach", x: 17.7, y: 31.3 },
+];
+
 export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; onLogMood: () => void }) {
   // Re-read on tab focus so ✓ states stay honest after setting a tool up.
   const [, force] = useState(0);
@@ -41,22 +72,25 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
+  void moodDone; void onLogMood; // mood lives in the hero + bloom checklist now
 
   const cycleDone = hasCycleSettings();
-  const mealsDone = hasMealPlan();
   const dietDone  = hasDietSetup();
+  const mealsDone = hasMealPlan();
   const moveDone  = hasMovementPlan();
+  const allCore   = cycleDone && dietDone && mealsDone && moveDone;
   const goalLine  = readGoalLine();
 
   type Step = {
     key: string; n: number; title: string; emoji: string; done: boolean;
-    href?: string; onClick?: () => void; blurb: string; unlocks: string[];
-    Icon: typeof Flower2; image?: string; visual: React.ReactNode;
+    href?: string; blurb: string; unlocks: string[]; Icon: typeof Flower2;
+    image: string; visual: React.ReactNode; sync?: boolean;
   };
 
   const STEPS: Step[] = [
     {
       n: 1, key: "cycle", title: "Set up your cycle", emoji: "🌸", done: cycleDone, href: "/app/tools/cycle", Icon: Flower2,
+      image: "/images/setup-cycle.webp",
       blurb: "Track your cycle and understand your body better.",
       unlocks: ["Personalized energy", "Mood predictions", "Symptom tracking", "Daily insights"],
       visual: (
@@ -71,39 +105,41 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
-      n: 2, key: "meals", title: "Plan your meals", emoji: "🍽️", done: mealsDone, href: "/app/tools/meals", Icon: UtensilsCrossed,
+      n: 2, key: "diet", title: "Set your goal", emoji: "🎯", done: dietDone, href: "/app/tools/diet", Icon: Target,
+      image: "/images/setup-goal.webp",
+      blurb: "Set your goal and let Bloomzein calculate your daily targets.",
+      unlocks: ["Weight forecast", "Daily calorie target", "Macro balance", "Progress tracking"],
+      visual: (
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 min-w-0"><GoalGraph /></div>
+          {goalLine
+            ? <p className="shrink-0 text-right text-[11px] font-black text-hotpink leading-none inline-flex items-center gap-1"><TrendingDown className="h-3 w-3" strokeWidth={2.5} />{Math.abs(goalLine.toGo)} kg to go</p>
+            : <p className="shrink-0 text-right text-[10px] font-bold text-hotpink leading-tight">Your daily<br />targets ✿</p>}
+        </div>
+      ),
+    },
+    {
+      n: 3, key: "meals", title: "Plan your meals", emoji: "🍽️", done: mealsDone, href: "/app/tools/meals", Icon: UtensilsCrossed,
+      image: "/images/setup-meals.webp",
       blurb: "Get personalized recipes, grocery lists and daily meal plans.",
       unlocks: ["Personalized recipes", "Grocery lists", "Calories & macros", "Meal reminders"],
       visual: (
         <div className="flex items-center gap-2">
-          {[{ Icon: Coffee, l: "Breakfast" }, { Icon: Sun, l: "Lunch" }, { Icon: Moon, l: "Dinner" }].map((m) => (
-            <div key={m.l} className="flex-1 rounded-lg bg-white/70 border border-petal/50 py-1.5 flex flex-col items-center gap-0.5">
-              <m.Icon className="h-4 w-4 text-hotpink" strokeWidth={2} />
-              <span className="text-[8px] font-bold uppercase tracking-wide text-rose/50">{m.l}</span>
+          {[{ img: "/images/meal-oats.webp", l: "Breakfast" }, { img: "/images/meal-buddha.webp", l: "Lunch" }, { img: "/images/meal-stew.webp", l: "Dinner" }].map((m) => (
+            <div key={m.l} className="flex-1">
+              <div className="h-11 w-full overflow-hidden rounded-lg bg-blush ring-1 ring-petal/50">
+                <img src={m.img} alt="" className="h-full w-full object-cover" loading="lazy"
+                  onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
+              </div>
+              <span className="mt-0.5 block text-center text-[8px] font-bold uppercase tracking-wide text-rose/55">{m.l}</span>
             </div>
           ))}
         </div>
       ),
     },
     {
-      n: 3, key: "diet", title: "Set your goal", emoji: "🎯", done: dietDone, href: "/app/tools/diet", Icon: Target,
-      blurb: "Set your goal and let Bloomzein calculate your daily targets.",
-      unlocks: ["Weight forecast", "Daily calorie target", "Macro balance", "Progress tracking"],
-      visual: (
-        <div className="flex items-center justify-between gap-2">
-          <svg viewBox="0 0 100 30" className="h-8 w-[60%]" preserveAspectRatio="none">
-            <polyline points="2,6 26,12 50,16 74,22 98,26" fill="none" stroke="url(#bbw-goal)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="98" cy="26" r="3" fill="#DB2777" />
-            <defs><linearGradient id="bbw-goal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#F472B6" /><stop offset="1" stopColor="#DB2777" /></linearGradient></defs>
-          </svg>
-          {goalLine
-            ? <p className="text-right text-[11px] font-black text-hotpink leading-none inline-flex items-center gap-1"><TrendingDown className="h-3 w-3" strokeWidth={2.5} />{Math.abs(goalLine.toGo)} kg to go</p>
-            : <p className="text-right text-[11px] font-bold text-hotpink leading-tight">Your daily<br />targets ✿</p>}
-        </div>
-      ),
-    },
-    {
       n: 4, key: "move", title: "Plan your movement", emoji: "🧘‍♀️", done: moveDone, href: "/app/tools/workout", Icon: Dumbbell,
+      image: "/images/setup-movement.webp",
       blurb: "Build a movement plan that matches your energy and goals.",
       unlocks: ["Workouts & yoga", "Recovery days", "Daily energy boost", "Wellness plan"],
       visual: (
@@ -120,13 +156,17 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
-      n: 5, key: "mood", title: "Log today's mood", emoji: "💗", done: moodDone, onClick: onLogMood, Icon: Smile,
-      blurb: "One gentle tap sets the tone — and teaches Bloom how you feel.",
-      unlocks: ["Daily mood log", "Cycle-mood insights", "Gentle daily nudges"],
+      n: 5, key: "ai", title: "Bloom AI Sync", emoji: "✨", done: allCore, Icon: Sparkles, sync: true,
+      image: "/images/setup-ai.webp",
+      blurb: "Everything works together to make your journey magical — powered by Bloom AI.",
+      unlocks: ["Cycle-synced plan", "Smart daily Today", "Personalized coaching", "One magical routine"],
       visual: (
-        <div className="flex items-center gap-2">
-          {["😌", "😊", "⚡", "💗", "🌙"].map((e, i) => (
-            <span key={i} className={["grid h-7 w-7 place-items-center rounded-full text-sm", i === 1 ? "bg-hotpink/15 ring-2 ring-hotpink/30" : "bg-white/70 border border-petal/50"].join(" ")}>{e}</span>
+        <div className="grid grid-cols-4 gap-1.5">
+          {SYNC_ICONS.map(({ Icon, l }) => (
+            <div key={l} className="flex flex-col items-center gap-0.5">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-white/70 border border-petal/50 text-hotpink"><Icon className="h-3 w-3" strokeWidth={2} /></span>
+              <span className="text-[7px] font-bold uppercase tracking-wide text-rose/45">{l}</span>
+            </div>
           ))}
         </div>
       ),
@@ -135,7 +175,7 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
 
   const doneCount = STEPS.filter((s) => s.done).length;
   if (doneCount === STEPS.length) return null;
-  const nextIdx = STEPS.findIndex((s) => !s.done);
+  const nextIdx = STEPS.findIndex((s) => !s.done && !s.sync);
 
   return (
     <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
@@ -165,20 +205,23 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       <div className="mt-3 space-y-3">
         {STEPS.map((s, i) => {
           const isNext = i === nextIdx;
-          const NodeIcon = s.Icon;
+          const locked = s.sync && !allCore;
           const wrap = ["block overflow-hidden rounded-[1.5rem] border bg-white shadow-[0_8px_24px_rgba(219,39,119,0.07)] transition hover:-translate-y-0.5",
-            isNext ? "border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow" : "border-petal/55"].join(" ");
-          const cta = ["mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold transition active:scale-95",
-            s.done ? "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50"
-                   : "bg-gradient-to-r from-hotpink to-magenta text-white shadow-md shadow-hotpink/25 hover:brightness-105 animate-selected-glow"].join(" ");
+            isNext ? "border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow" : s.sync && allCore ? "border-hotpink/50" : "border-petal/55"].join(" ");
+          const ctaCls = (kind: "primary" | "ghost" | "locked") =>
+            ["mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold transition active:scale-95",
+              kind === "primary" ? "bg-gradient-to-r from-hotpink to-magenta text-white shadow-md shadow-hotpink/25 hover:brightness-105 animate-selected-glow"
+              : kind === "ghost" ? "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50"
+              : "bg-petal/40 text-rose/50 cursor-not-allowed"].join(" ");
+
           const body = (
             <div className="flex flex-col lg:flex-row">
-              {/* IMAGE placeholder — swap in per-step artwork later */}
+              {/* branded image */}
               <div className="relative lg:w-[210px] shrink-0">
-                <div className="relative h-32 lg:h-full w-full overflow-hidden grid place-items-center bg-gradient-to-br from-blush via-petal/40 to-blush">
-                  {s.image
-                    ? <img src={s.image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                    : <NodeIcon className="h-10 w-10 text-hotpink/45" strokeWidth={1.4} />}
+                <div className="relative h-32 lg:h-full w-full overflow-hidden bg-blush">
+                  <img src={s.image} alt="" className="h-full w-full object-cover" loading="lazy"
+                    onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
+                  {locked && <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px]"><Lock className="h-6 w-6 text-hotpink/70" strokeWidth={2} /></div>}
                 </div>
                 <span className="absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-[13px] font-black text-white shadow-md">{s.n}</span>
                 {s.done && (
@@ -209,14 +252,68 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
                     </li>
                   ))}
                 </ul>
-                <span className={cta}>{s.done ? <>Review <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></> : <>Continue <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></>}</span>
+                {s.sync ? (
+                  allCore
+                    ? <a href="/app/today" className={ctaCls("primary")}><Sparkles className="h-4 w-4" strokeWidth={2.2} /> Activate My Bloom World</a>
+                    : <span className={ctaCls("locked")}><Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> Finish the steps above</span>
+                ) : (
+                  <span className={ctaCls(s.done ? "ghost" : "primary")}>{s.done ? "Review" : "Continue"} <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></span>
+                )}
               </div>
             </div>
           );
-          return s.href
-            ? <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrap} data-next-step={isNext ? "1" : undefined}>{body}</a>
-            : <button key={s.key} onClick={s.onClick} className={`w-full text-left ${wrap}`} data-next-step={isNext ? "1" : undefined}>{body}</button>;
+
+          if (s.sync) return <div key={s.key} className={wrap}>{body}</div>;
+          return <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrap} data-next-step={isNext ? "1" : undefined}>{body}</a>;
         })}
+      </div>
+
+      {/* ── MAGIC BLOOM — the result: how every tool talks through Bloom AI ── */}
+      <div className="mt-3 relative overflow-hidden rounded-[1.75rem] border border-hotpink/30 bg-gradient-to-br from-blush/55 via-white to-petal/40 shadow-[0_14px_36px_rgba(219,39,119,0.12)] p-4 sm:p-6">
+        <div className="text-center">
+          <h3 className="inline-flex items-center gap-1.5 font-script text-2xl sm:text-3xl text-hotpink leading-none">Magic Bloom <Sparkles className="h-5 w-5" strokeWidth={2} /></h3>
+          <p className="mt-1.5 text-[12.5px] sm:text-[13px] text-[#831843] leading-snug max-w-md mx-auto">This is the magic: your tools don't work alone — they talk to each other through <span className="font-bold text-hotpink">Bloom AI</span>, into one connected, living routine.</p>
+        </div>
+
+        {/* radial hub */}
+        <div className="relative mx-auto mt-3 h-[290px] w-[290px] max-w-full">
+          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+            {HUB_NODES.map((n, i) => (
+              <line key={i} x1="50" y1="50" x2={n.x} y2={n.y} stroke="#EC4899" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.5" />
+            ))}
+          </svg>
+          {/* nodes */}
+          {HUB_NODES.map((n) => (
+            <div key={n.l} className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5" style={{ left: `${n.x}%`, top: `${n.y}%` }}>
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-white border border-petal/60 text-hotpink shadow-sm"><n.Icon className="h-5 w-5" strokeWidth={1.9} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wide text-rose/55">{n.l}</span>
+            </div>
+          ))}
+          {/* centre — Bloom AI */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+            <span className="relative grid h-[86px] w-[86px] place-items-center rounded-full overflow-hidden shadow-lg shadow-hotpink/30 ring-2 ring-white animate-selected-glow">
+              <img src="/images/setup-ai.webp" alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <span className="absolute inset-0 bg-hotpink/25" />
+              <Sparkles className="relative h-6 w-6 text-white drop-shadow" strokeWidth={2.2} />
+            </span>
+            <span className="mt-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-hotpink shadow-sm">Bloom AI</span>
+          </div>
+        </div>
+
+        {/* how they talk */}
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          {[
+            { Icon: Flower2, t: "Your cycle leads", d: "Your phase tunes your meals, energy targets & movement." },
+            { Icon: Dumbbell, t: "Movement feeds back", d: "Workouts raise your food targets and shape recovery days." },
+            { Icon: Heart, t: "Coach ties it together", d: "Bloom AI reads it all to guide your Today, gently." },
+          ].map((c) => (
+            <div key={c.t} className="rounded-2xl bg-white/70 border border-petal/50 p-3">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><c.Icon className="h-4 w-4" strokeWidth={2} /></span>
+              <p className="mt-1.5 text-[12px] font-black text-hotpink leading-tight">{c.t}</p>
+              <p className="mt-0.5 text-[11px] text-[#831843] leading-snug">{c.d}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
