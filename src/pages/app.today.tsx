@@ -18,6 +18,7 @@ import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { buildDayCoach } from "@/lib/todayCoach";
 import { CoachTodayCompact, TomorrowCard } from "@/components/bloom/coach/CoachCards";
+import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday } from "@/lib/crossToolData";
@@ -359,6 +360,7 @@ export default function TodayPage() {
   const [waterCount,          setWaterCount]          = useState(0);
   const [waterGoal,           setWaterGoal]           = useState(8);
   const [waterModalOpen,      setWaterModalOpen]      = useState(false);
+  const [waterLastAt,         setWaterLastAt]         = useState<number | null>(null);
   const [streak,              setStreak]              = useState(0);
   const [planDone,            setPlanDone]            = useState<string[]>([]);
   const [affirmIdx,           setAffirmIdx]           = useState(0);
@@ -425,6 +427,7 @@ export default function TodayPage() {
       setPlanDone(raw.date === iso ? raw.done : []);
     } catch {}
 
+    try { const t = Number(localStorage.getItem("bloom:water-last-at")); setWaterLastAt(Number.isFinite(t) && t > 0 ? t : null); } catch {}
     try { setAffirmIdx(Number(localStorage.getItem(KEYS.affirmIdx)) || 0); } catch {}
     try { setWaterRemindersEnabled(localStorage.getItem(KEYS.waterReminders) === "true"); } catch {}
 
@@ -591,6 +594,9 @@ export default function TodayPage() {
     setWaterCount((prev) => {
       const next = idx < prev ? idx : idx + 1;
       try { localStorage.setItem(KEYS.water, JSON.stringify({ date: todayISO(), count: next })); } catch {}
+      // Stamp the moment she adds a glass (only when going up), so the dashboard
+      // can show "last glass — X ago".
+      if (next > prev) { try { localStorage.setItem("bloom:water-last-at", String(Date.now())); setWaterLastAt(Date.now()); } catch {} }
       return next;
     });
   };
@@ -1371,58 +1377,27 @@ export default function TodayPage() {
       )}
 
 
-      {/* ── 6. HYDRATION ────────────────────────────────────────────────────── */}
-      <section id="hydration" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
-        <div className={["bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5 transition", highlightId === "hydration" ? "animate-attention-squeeze" : ""].join(" ")}>
-          <div className="flex items-center justify-between mb-3">
-            <p className="font-script text-xl sm:text-2xl text-hotpink leading-none">Daily Hydration ✿</p>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={toggleWaterReminders}
-                disabled={reminderBusy}
-                aria-label={waterRemindersEnabled ? "Disable reminders" : "Enable reminders"}
-                title={waterRemindersEnabled ? "Reminders on — tap to turn off" : "Get gentle water reminders"}
-                className={["clay-blob grid h-7 w-7 place-items-center rounded-full text-white transition disabled:opacity-60",
-                  waterRemindersEnabled ? "animate-icon-breathe" : "opacity-70"].join(" ")}
-              >
-                {waterRemindersEnabled ? <Bell className="h-3.5 w-3.5" strokeWidth={2} /> : <BellOff className="h-3.5 w-3.5" strokeWidth={2} />}
-              </button>
-              <button onClick={() => setWaterModalOpen(true)} className="clay-blob grid h-7 w-7 place-items-center rounded-full text-white">
-                <Settings2 className="h-3.5 w-3.5" strokeWidth={2} />
-              </button>
-            </div>
-          </div>
-
-          {waterRemindersEnabled && (
-            <p className="mb-2 text-[10px] text-rose/60 animate-fade-in">
-              Reminders on — between {WATER_WAKE_START_HOUR}am and {WATER_WAKE_END_HOUR > 12 ? WATER_WAKE_END_HOUR - 12 : WATER_WAKE_END_HOUR}pm ✿
-            </p>
-          )}
-
-          {/* Phase-aware hydration tip */}
-          {(phase === "fertile" || phase === "ovulation") && waterCount < waterGoal && (
-            <p className="mb-2 text-[10px] sm:text-xs font-semibold text-rose/70 animate-fade-in">
-              Ovulation raises your fluid needs — try 1-2 extra glasses today.
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {Array.from({ length: waterGoal }).map((_, i) => (
-              <button key={i} onClick={() => tapWater(i)} aria-label={i < waterCount ? "Glass filled" : "Tap to drink"}>
-                <span className={["clay-blob grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full transition-transform active:scale-90",
-                  i < waterCount ? "text-white animate-icon-breathe" : "text-white/60 opacity-50"].join(" ")}>
-                  <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.5} />
-                </span>
-              </button>
-            ))}
-          </div>
-          <p className="mt-2.5 text-right font-script text-2xl sm:text-3xl text-hotpink leading-none">{waterCount}/{waterGoal}</p>
-          <p className="text-right text-[10px] text-rose/60">glasses · keep going, beautiful ✿</p>
-        </div>
-      </section>
-
       </aside>{/* /SMART RIGHT PANEL */}
       </div>{/* /2-column grid */}
+
+      {/* ── 6. DAILY HYDRATION — a full-width, phase-aware, motivational dashboard ── */}
+      {!isFresh && (
+        <HydrationDashboard
+          phase={phase}
+          cycleReady={cycleReady}
+          count={waterCount}
+          goal={waterGoal}
+          onTapGlass={tapWater}
+          onDrinkGlass={() => tapWater(waterCount)}
+          remindersEnabled={waterRemindersEnabled}
+          reminderBusy={reminderBusy}
+          onToggleReminders={toggleWaterReminders}
+          onOpenSettings={() => setWaterModalOpen(true)}
+          lastGlassAt={waterLastAt}
+          bloomPercent={bloomPercent}
+          highlight={highlightId === "hydration"}
+        />
+      )}
 
       {/* ── WATER GOAL MODAL ────────────────────────────────────────────────── */}
       {waterModalOpen && (
