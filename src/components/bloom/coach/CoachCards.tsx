@@ -220,32 +220,33 @@ const BLOOM_GUIDE: { key: string; Icon: typeof Heart; title: string; sub: string
 export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
   return (
     <section className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-gradient-to-br from-blush/55 via-white to-petal/35 shadow-[0_16px_40px_rgba(219,39,119,0.12)] animate-card-pop-in">
-      {/* ── Header ── */}
-      <div className="relative overflow-hidden">
-        {/* Lifestyle photo on the right (swap-in background). Faded into the card
-            on the left so the copy stays perfectly legible. */}
+      {/* ── Header — a dedicated hero section with the lifestyle photo as its
+             full BACKGROUND, behind a left-weighted scrim so the copy stays
+             perfectly legible while the photo shows through on the right. ── */}
+      <div className="relative m-3 sm:m-4 overflow-hidden rounded-[1.4rem] border border-petal/50 shadow-sm">
         <img
           src="/images/coach-bloom-hero.webp" alt="" loading="lazy"
-          className="pointer-events-none absolute right-0 top-0 hidden sm:block h-full w-[46%] object-cover object-top"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-top"
           onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/hero-girl.webp")) el.src = "/images/hero-girl.webp"; }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 sm:via-white/70 to-transparent" />
+        {/* readability scrim — strong on the left (text), clearing on the right (photo) */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/95 via-white/88 sm:via-white/78 to-white/30 sm:to-transparent" />
 
-        <div className="relative p-4 sm:p-5">
+        <div className="relative p-4 sm:p-5 max-w-full sm:max-w-[64%]">
           <div className="flex items-center gap-2.5">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30"><Flower2 className="h-5 w-5" strokeWidth={1.9} /></span>
-            <h2 className="inline-flex items-center gap-1.5 font-script text-[1.8rem] sm:text-4xl text-hotpink leading-none">Today's Bloom <Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
+            <h2 className="inline-flex items-center gap-1.5 font-script text-[1.8rem] sm:text-4xl text-hotpink leading-none drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)]">Today's Bloom <Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
           </div>
-          <p className="mt-2.5 text-[15px] sm:text-lg font-black text-[#831843] leading-tight">Your day, beautifully guided <span className="text-hotpink">🩷</span></p>
-          <p className="mt-1 text-[12px] sm:text-[13px] text-rose/70 leading-snug max-w-[16rem] sm:max-w-xs">Personalized ideas &amp; gentle reminders to help you feel your best today.</p>
+          <p className="mt-2.5 text-[15px] sm:text-lg font-black text-[#831843] leading-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">Your day, beautifully guided <span className="text-hotpink">🩷</span></p>
+          <p className="mt-1 text-[12px] sm:text-[13px] text-rose/75 leading-snug drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">Personalized ideas &amp; gentle reminders to help you feel your best today.</p>
 
           {/* Phase + energy — real, from her cycle */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 border border-petal/60 px-3 py-1.5 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 shadow-sm">
               <Flower2 className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
               <span className="text-[11px] font-bold text-[#831843]">You're in <span className="text-hotpink">{coach.phaseLabel}</span>{Number.isFinite(coach.cycleDay) ? <> · Day {coach.cycleDay}</> : null}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 border border-petal/60 px-3 py-1.5 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border border-petal/60 px-3 py-1.5 shadow-sm">
               <span className="text-[10px] font-bold uppercase tracking-wide text-rose/55">Energy</span>
               <span className="text-[11px] font-black text-hotpink">{coach.energy.label}</span>
               <TrendingUp className="h-3.5 w-3.5 text-hotpink" strokeWidth={2.4} />
@@ -253,7 +254,7 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
           </div>
 
           {/* Coach's one warm line for today (real content) */}
-          <p className="mt-3 text-[12.5px] leading-snug text-[#831843] max-w-md">{coach.need}</p>
+          <p className="mt-3 text-[12.5px] leading-snug text-[#831843] drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">{coach.need}</p>
 
           <a href="/app/tools/diet?tab=cycle" className="mt-3.5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-hotpink to-magenta px-5 py-2.5 text-[13px] font-bold text-white shadow-md shadow-hotpink/30 transition hover:brightness-105 active:scale-95 animate-selected-glow">
             See today's guide <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
