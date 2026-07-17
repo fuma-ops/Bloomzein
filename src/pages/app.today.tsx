@@ -994,6 +994,7 @@ export default function TodayPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-script text-lg sm:text-2xl text-hotpink leading-tight">Build your Bloom world ✿</p>
                   <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">Watch Today come alive as you set each one up.</p>
+                  <a href="/app/setup" className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">See the full guide <ArrowRight className="h-3 w-3" strokeWidth={2.5} /></a>
                 </div>
                 <span className="shrink-0 font-script text-2xl sm:text-3xl text-hotpink leading-none">{doneCount}/{steps.length}</span>
               </div>
