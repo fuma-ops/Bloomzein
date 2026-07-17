@@ -838,7 +838,6 @@ export default function TodayPage() {
         style={{ animationDelay: "0ms" }}
       >
         <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
 
         <div className="relative z-[2] flex flex-col items-start px-4 py-3 pb-7 sm:px-8 sm:py-4 sm:pb-8 w-[68%] sm:max-w-md">
