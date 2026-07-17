@@ -126,12 +126,7 @@ export function HydrationDashboard({
   return (
     <section id="hydration" className={["mt-4 sm:mt-6 animate-card-pop-in", highlight ? "animate-attention-squeeze" : ""].join(" ")} style={{ animationDelay: "180ms" }}>
       <div className="relative overflow-hidden rounded-[1.9rem] border border-petal/60 bg-gradient-to-br from-blush/50 via-white to-petal/30 shadow-[0_16px_40px_rgba(219,39,119,0.12)]">
-        {/* Bloomzein bottle photo — a soft, faded BACKGROUND for the whole card
-            (behind a pink-white scrim so every number & card stays readable). */}
-        <img src="/images/hydration-bottle.webp" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.16]" loading="lazy" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/88 via-white/82 to-petal/45" />
-
-        <div className="relative p-4 sm:p-6">
+        <div className="p-4 sm:p-6">
           {/* ── Header ── */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -153,12 +148,17 @@ export function HydrationDashboard({
 
           {/* ── Body: ring & glasses (left) · info (right) ── */}
           <div className="mt-4 grid gap-4 lg:grid-cols-2 items-start">
-            {/* LEFT — big ring + glasses */}
+            {/* LEFT — big ring in its own photo-backed panel + glasses */}
             <div>
-              <div className="mx-auto relative h-[220px] w-[220px] sm:h-[248px] sm:w-[248px]">
+              {/* Ring section — the Bloomzein bottle photo is THIS panel's
+                  background, behind a soft scrim so the ring reads clearly. */}
+              <div className="relative overflow-hidden rounded-[1.5rem] border border-petal/50 shadow-sm px-4 py-5 flex items-center justify-center">
+                <img src="/images/hydration-bottle.webp" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/72 via-white/62 to-petal/45" />
+              <div className="relative mx-auto h-[220px] w-[220px] sm:h-[248px] sm:w-[248px]">
                 {/* Clean soft-white disc inside the ring so the % stays crisp over
-                    the card's photo background — the ring itself stays bold. */}
-                <div className="absolute inset-[9%] rounded-full bg-white/70 backdrop-blur-[2px] shadow-inner ring-1 ring-inset ring-white/70" />
+                    the panel's photo background — the ring itself stays bold. */}
+                <div className="absolute inset-[9%] rounded-full bg-white/72 backdrop-blur-[2px] shadow-inner ring-1 ring-inset ring-white/70" />
                 <svg viewBox="0 0 36 36" className="relative h-full w-full -rotate-90">
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="#FBD3E6" strokeWidth="3" />
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#hyd-ring-grad)" strokeWidth="3" strokeLinecap="round"
@@ -173,6 +173,7 @@ export function HydrationDashboard({
                   <p className="text-[12px] font-bold text-rose/70"><span className="text-hotpink">{doneL} L</span> / {totalL} L</p>
                 </div>
               </div>
+              </div>{/* /ring photo panel */}
 
               {/* Glasses row */}
               <div className="mt-4">
