@@ -18,6 +18,7 @@ import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { buildDayCoach } from "@/lib/todayCoach";
 import { CoachTodayCompact } from "@/components/bloom/coach/CoachCards";
+import { BuildBloomWorld } from "@/components/bloom/today/BuildBloomWorld";
 import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
@@ -890,37 +891,37 @@ export default function TodayPage() {
         {/* ── QUICK STATS — Mood · Symptom · Energy · Water — frosted-glass bars
                nestled into the bottom of the hero, matching the streak badge. ── */}
         <div className="relative z-[2] px-3 pb-3 pt-1 sm:px-6 sm:pb-5">
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+          <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
             <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-5 w-5" strokeWidth={1.8} /></span>
-              <span className="min-w-0 w-full sm:flex-1">
+              <span className="min-w-0 w-full sm:w-auto">
                 <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
                 <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
               </span>
             </button>
 
             <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 w-full sm:flex-1">
+              <span className="min-w-0 w-full sm:w-auto">
                 <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
                 <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
               </span>
             </button>
 
-            <a href="/app/calendar" className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+            <a href="/app/calendar" className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Battery className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 w-full sm:flex-1">
+              <span className="min-w-0 w-full sm:w-auto">
                 <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Energy</span>
                 <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
               </span>
             </a>
 
             <button onClick={() => setWaterModalOpen(true)}
-              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Droplet className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 w-full sm:flex-1">
+              <span className="min-w-0 w-full sm:w-auto">
                 <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
                 <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
               </span>
@@ -971,66 +972,9 @@ export default function TodayPage() {
         onClose={() => setActivePlan(null)}
       />
 
-      {/* ── BUILD YOUR WORLD — a guided checklist that lights up as she sets up
-             each tool; disappears once everything is configured. ── */}
-      {(() => {
-        const steps = [
-          { key: "cycle", label: "Set up your cycle",   desc: "Unlocks your real phase everywhere", done: cycleReady,      href: "/app/tools/cycle",   onClick: undefined as (() => void) | undefined },
-          { key: "meals", label: "Plan your meals",     desc: "Fills Today's Plan & your energy",    done: mealPlanned,     href: "/app/tools/meals",   onClick: undefined as (() => void) | undefined },
-          { key: "diet",  label: "Set your goal in Diet", desc: "Tunes your energy & meals to you",  done: dietSetup,       href: "/app/tools/diet",    onClick: undefined as (() => void) | undefined },
-          { key: "move",  label: "Plan your movement",  desc: "Yoga & workouts matched to you",      done: movementPlanned, href: "/app/tools/workout", onClick: undefined as (() => void) | undefined },
-          { key: "mood",  label: "Log today's mood",    desc: "One tap on the flower above",         done: !!mood,          href: "",                   onClick: () => setMoodPickerOpen(true) },
-        ];
-        const doneCount = steps.filter((s) => s.done).length;
-        if (doneCount === steps.length) return null;
-        const nextIdx = steps.findIndex((s) => !s.done);
-        return (
-          <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
-            <div className="bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="clay-blob pearl-sheen animate-icon-breathe grid h-11 w-11 shrink-0 place-items-center rounded-full text-white">
-                  <Sparkles className="h-5 w-5" strokeWidth={1.8} />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-script text-lg sm:text-2xl text-hotpink leading-tight">Build your Bloom world ✿</p>
-                  <p className="text-[11px] sm:text-sm text-rose/70 leading-snug">Watch Today come alive as you set each one up.</p>
-                  <a href="/app/setup" className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">See the full guide <ArrowRight className="h-3 w-3" strokeWidth={2.5} /></a>
-                </div>
-                <span className="shrink-0 font-script text-2xl sm:text-3xl text-hotpink leading-none">{doneCount}/{steps.length}</span>
-              </div>
-              <div className="space-y-2">
-                {steps.map((s, i) => {
-                  const isNext = i === nextIdx;
-                  const inner = (
-                    <>
-                      <span className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition", s.done ? "bg-hotpink text-white" : isNext ? "bg-hotpink text-white animate-icon-breathe" : "bg-blush/60"].join(" ")}>
-                        {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <span className={["rounded-full", isNext ? "h-2 w-2 bg-white" : "h-2 w-2 bg-hotpink/40"].join(" ")} />}
-                      </span>
-                      <span className="flex-1 min-w-0 text-left">
-                        <span className={["flex items-center gap-1.5 text-sm font-bold leading-tight", s.done ? "text-rose/40 line-through" : "text-[#831843]"].join(" ")}>
-                          {s.label}
-                          {isNext && <span className="rounded-full bg-hotpink px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Start here ✿</span>}
-                        </span>
-                        {!s.done && <span className="block text-[10px] text-rose/55 leading-tight">{s.desc}</span>}
-                      </span>
-                      {!s.done && <ArrowRight className={["h-4 w-4 shrink-0", isNext ? "text-hotpink" : "text-rose/30"].join(" ")} strokeWidth={2.5} />}
-                    </>
-                  );
-                  const cls = ["flex items-center gap-3 rounded-2xl px-3 py-2 transition active:scale-[0.99]",
-                    s.done ? "bg-blush/30" : isNext ? "bg-white ring-2 ring-hotpink/70 animate-selected-glow" : "bg-white/70 hover:bg-blush/40"].join(" ");
-                  const marker = isNext ? { "data-next-step": "1" } : {};
-                  // Tapping a step marks that she's in the guided setup flow, so the
-                  // tool she lands on knows to hand her back to Today afterwards.
-                  const markGuide = () => startGuide();
-                  return s.href
-                    ? <a key={s.key} href={s.href} onClick={markGuide} className={cls} {...marker}>{inner}</a>
-                    : <button key={s.key} onClick={s.onClick} className={`w-full ${cls}`} {...marker}>{inner}</button>;
-                })}
-              </div>
-            </div>
-          </section>
-        );
-      })()}
+      {/* ── BUILD YOUR WORLD — rich guided setup cards; disappears once every
+             tool is configured. (self-hides when all steps are done) ── */}
+      <BuildBloomWorld moodDone={!!mood} onLogMood={() => setMoodPickerOpen(true)} />
 
       {/* ══ DESKTOP: 60% main content + 40% sticky smart panel (CLAUDE.md) ══ */}
       <div className="lg:grid lg:grid-cols-5 lg:gap-x-6 lg:items-start">

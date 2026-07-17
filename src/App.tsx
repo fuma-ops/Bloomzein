@@ -39,7 +39,6 @@ const MealsPage = lazyRetry(() => import("./pages/app.tools.meals"));
 const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
 const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
 const TodayPage = lazyRetry(() => import("./pages/app.today"));
-const SetupPage = lazyRetry(() => import("./pages/app.setup"));
 const ReadPage = lazyRetry(() => import("./pages/app.read"));
 const ShopPage = lazyRetry(() => import("./pages/app.shop"));
 const MePage = lazyRetry(() => import("./pages/app.me"));
@@ -155,8 +154,6 @@ function AppContent() {
 
   if (path === "/app/today") {
     content = <TodayPage />;
-  } else if (path === "/app/setup") {
-    content = <SetupPage />;
   } else if (path === "/app/calendar") {
     content = <CalendarPage />;
   } else if (path === "/app/tools" || path === "/app/tools/") {
@@ -210,7 +207,7 @@ function AppContent() {
 
   if (content) {
     // Today, Calendar, Tools and Me require an account — Shop and Read stay public for visibility/SEO
-    const isProtected = path === "/app/today" || path === "/app/setup" || path === "/app/calendar" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
+    const isProtected = path === "/app/today" || path === "/app/calendar" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
     return (
       <>
         <AppShell currentPath={path}>
