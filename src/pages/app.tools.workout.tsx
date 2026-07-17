@@ -1954,44 +1954,64 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (
-        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden flex">
-          <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden">
-            <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-          </div>
-          <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
-            <div className="flex items-start justify-between gap-2">
+        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
+          <div className="flex">
+            <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden">
+              <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+            </div>
+            <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
                 <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{activeProgram.title}</h2>
               </div>
-              <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{wMeta?.theme}</p>
-                <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{wMeta?.theme}</p>
+                  <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
+                </div>
+                <div className="h-1.5 rounded-full bg-blush overflow-hidden">
+                  <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-blush overflow-hidden">
-                <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
+              {/* Week chips */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {Array.from({ length: activeProgram.weeks }, (_, i) => i + 1).map((w) => (
+                  <button key={w} onClick={() => { const next = { ...active!, week: w }; saveActiveProgram(next); setActive(next); }}
+                    className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
+                ))}
               </div>
             </div>
-            {wMeta?.note && <p className="text-xs text-rose/75 leading-snug">{wMeta.note}</p>}
-            {/* Week chips */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {Array.from({ length: activeProgram.weeks }, (_, i) => i + 1).map((w) => (
-                <button key={w} onClick={() => { const next = { ...active!, week: w }; saveActiveProgram(next); setActive(next); }}
-                  className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
-              ))}
+          </div>
+          {/* Status — the same four elegant tiles, full width (Goal · Level · Streak · Progress) */}
+          <div className="px-3.5 pb-3.5 pt-0.5 space-y-2.5">
+            <div className="grid grid-cols-4 gap-2">
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{goalWord(readDietProfile().goal).charAt(0).toUpperCase() + goalWord(readDietProfile().goal).slice(1)}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Trophy className="h-4 w-4" strokeWidth={2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Progress</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{overallDone}/{overallTotal}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap pt-0.5">
-              <button onClick={onBrowsePrograms} className="text-[11px] font-bold text-hotpink">Change program</button>
-              <button onClick={buildMyOwn} className="text-[11px] font-bold text-hotpink">Build my own</button>
-              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave</button>
-              <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
-                <Utensils className="h-3.5 w-3.5" />
-                <span className={["relative h-4 w-7 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "0.875rem" : "0.125rem" }} /></span>
-              </button>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button onClick={onBrowsePrograms} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">Change program</button>
+              <button onClick={buildMyOwn} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">Build my own</button>
+              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="rounded-full border border-petal/50 bg-white/70 px-3 py-1.5 text-[11px] font-bold text-rose/50 transition hover:text-hotpink active:scale-95">Leave</button>
+              <button onClick={toggleFuel} title={fuelInPlan ? "Recovery meals shown in plan" : "Show recovery meals in the plan"} className={["ml-auto grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
             </div>
           </div>
         </section>
