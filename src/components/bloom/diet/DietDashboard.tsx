@@ -9,24 +9,16 @@ import { createPortal } from "react-dom";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
-  Lightbulb, Leaf, Heart, ArrowRight,
+  Lightbulb, Leaf, Heart,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
   computeTargets, movementFoodLine,
   type EnergyBalance,
 } from "@/lib/nutritionTargets";
-import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
-import { writeLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
+import { RECIPES, recipeImageSrc, type Recipe } from "@/components/bloom/recipes/data";
 
 const go = (href: string) => () => { window.location.href = href; };
-
-// Open a specific recipe in the Meals tool (same deep-link the Today plan uses),
-// so a proposed snack always leads to its real recipe.
-function openRecipe(recipeId: string) {
-  writeLaunch(LAUNCH_MEAL_KEY, recipeId);
-  window.location.href = "/app/tools/meals";
-}
 
 // Adequate snack ideas for the calories she has left — real snack recipes that
 // fit inside her remaining budget (largest-that-still-fits first, so they feel
@@ -380,6 +372,7 @@ export function CoachCard({ onSetupWorkouts, onPlanMeals }: { onSetupWorkouts?: 
 
 /* ==================== SLIM · for the Today page ==================== */
 export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
+  const [activeSnack, setActiveSnack] = useState<Recipe | null>(null);
   const remaining = Math.max(0, e.remaining);
   // How "on track" she is — the ring & meal bar fill by planned intake against
   // what she can eat today (goal + what she'll burn).
@@ -471,13 +464,13 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
                 <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} /> Smart idea</p>
                 <p className="mt-1 text-[11px] text-rose/65 leading-snug">You still have <span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()} kcal</span> available. Here are some light &amp; delicious options:</p>
               </div>
-              {/* snack cards + grab CTA */}
-              <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+              {/* snack cards — tapping one pops the recipe open, right here on Today */}
+              <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {snacks.map((s) => (
                   <button
                     key={s.id}
-                    onClick={() => openRecipe(s.id)}
-                    title={`Open ${s.name} recipe`}
+                    onClick={() => setActiveSnack(s)}
+                    title={`View ${s.name}`}
                     className="group text-left rounded-xl bg-white border border-petal/50 overflow-hidden shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
                   >
                     <div className="relative h-16 w-full overflow-hidden bg-blush">
@@ -492,15 +485,17 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
                     </div>
                   </button>
                 ))}
-                {/* Grab a snack — jumps to the top pick's recipe */}
-                <button
-                  onClick={() => openRecipe(snacks[0].id)}
-                  className="group grid place-items-center rounded-xl bg-gradient-to-br from-hotpink to-magenta text-white text-center px-2 py-3 shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-[0.98] animate-selected-glow"
-                >
-                  <span className="text-[12px] font-black leading-tight">Grab<br />a snack</span>
-                  <ArrowRight className="mt-1 h-4 w-4" strokeWidth={2.5} />
-                </button>
               </div>
+            </div>
+
+            {/* Soft, cute link to the full recipes library in Diet */}
+            <div className="mt-3 flex justify-center">
+              <button
+                onClick={go("/app/tools/diet?tab=recipes")}
+                className="inline-flex items-center gap-1.5 rounded-full bg-blush/60 border border-petal/60 px-4 py-1.5 text-[11.5px] font-semibold text-hotpink transition hover:bg-blush active:scale-95"
+              >
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Discover more snack ideas <ChevronRight className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         )}
@@ -511,6 +506,89 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
           <button onClick={go("/app/tools/diet")} className="shrink-0 inline-flex items-center gap-1 text-[12px] font-bold text-hotpink animate-soft-glow">Open Diet <ChevronRight className="h-3.5 w-3.5" /></button>
         </div>
       </div>
+
+      {/* Recipe pops open right here — she never leaves Today */}
+      {activeSnack && <SnackRecipePopup recipe={activeSnack} onClose={() => setActiveSnack(null)} />}
     </div>
+  );
+}
+
+// A soft, self-contained recipe popup — opens over Today (via a portal) so a
+// tapped snack shows its recipe without ever navigating away.
+function SnackRecipePopup({ recipe, onClose }: { recipe: Recipe; onClose: () => void }) {
+  const m = recipe.macros;
+  return createPortal(
+    <div className="fixed inset-0 z-[9000] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-fade-in" onClick={onClose}>
+      <div onClick={(ev) => ev.stopPropagation()} className="w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl">
+        <div className="relative">
+          <img
+            src={recipeImageSrc(recipe)} alt={recipe.name} className="w-full aspect-[16/10] object-cover bg-blush"
+            onError={(ev) => { const el = ev.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/read-recipes.webp")) el.src = "/images/read-recipes.webp"; }}
+          />
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-hotpink shadow-md transition hover:bg-white active:scale-90">
+            <X className="h-4 w-4" />
+          </button>
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink shadow-sm">
+            <Sparkles className="h-3 w-3" strokeWidth={2} /> Snack idea
+          </span>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          <h2 className="font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
+          <p className="text-[12px] text-rose/60">{recipe.cuisine} · {recipe.prepTime + (recipe.cookTime || 0)} min</p>
+
+          {/* macro chips */}
+          <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
+            {[
+              { k: "kcal", v: m.calories, cls: "text-hotpink" },
+              { k: "protein", v: `${m.protein}g`, cls: "text-emerald-600" },
+              { k: "carbs", v: `${m.carbs}g`, cls: "text-rose-400" },
+              { k: "fat", v: `${m.fat}g`, cls: "text-violet-500" },
+            ].map((x) => (
+              <div key={x.k} className="rounded-xl bg-blush/50 py-1.5">
+                <p className={["text-sm font-black tabular-nums leading-none", x.cls].join(" ")}>{x.v}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{x.k}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ingredients */}
+          {recipe.ingredients?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">Ingredients</p>
+              <ul className="space-y-1">
+                {recipe.ingredients.map((ing, i) => (
+                  <li key={i} className="flex items-baseline gap-2 text-[12.5px] text-[#831843]">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-hotpink" />
+                    <span className="flex-1">{ing.name}</span>
+                    <span className="text-rose/55 tabular-nums">{ing.quantity}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* steps */}
+          {recipe.steps?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">Make it</p>
+              <ol className="space-y-1.5">
+                {recipe.steps.map((step, i) => (
+                  <li key={i} className="flex gap-2 text-[12.5px] text-[#831843] leading-snug">
+                    <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-hotpink text-[9px] font-black text-white mt-0.5">{i + 1}</span>
+                    <span dangerouslySetInnerHTML={{ __html: step.replace(/\*\*(.+?)\*\*/g, '<b class="text-hotpink">$1</b>') }} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          <button onClick={go("/app/tools/diet?tab=recipes")} className="mt-5 w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-blush/60 border border-petal/60 px-4 py-2 text-[12px] font-semibold text-hotpink transition hover:bg-blush active:scale-95">
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Discover more snack ideas <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
