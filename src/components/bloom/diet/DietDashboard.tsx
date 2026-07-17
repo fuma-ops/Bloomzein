@@ -9,14 +9,40 @@ import { createPortal } from "react-dom";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
+  Lightbulb, Leaf, Heart, ArrowRight,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
   computeTargets, movementFoodLine,
   type EnergyBalance,
 } from "@/lib/nutritionTargets";
+import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
+import { writeLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 
 const go = (href: string) => () => { window.location.href = href; };
+
+// Open a specific recipe in the Meals tool (same deep-link the Today plan uses),
+// so a proposed snack always leads to its real recipe.
+function openRecipe(recipeId: string) {
+  writeLaunch(LAUNCH_MEAL_KEY, recipeId);
+  window.location.href = "/app/tools/meals";
+}
+
+// Adequate snack ideas for the calories she has left — real snack recipes that
+// fit inside her remaining budget (largest-that-still-fits first, so they feel
+// satisfying without going over), falling back to the lightest if few fit.
+function snackIdeasFor(remaining: number, n = 4) {
+  const budget = Math.max(0, remaining);
+  const snacks = RECIPES.filter((r) => r.mealType === "snack");
+  const fits = snacks
+    .filter((r) => r.macros.calories <= budget)
+    .sort((a, b) => b.macros.calories - a.macros.calories);
+  if (fits.length >= n) return fits.slice(0, n);
+  const over = snacks
+    .filter((r) => r.macros.calories > budget)
+    .sort((a, b) => a.macros.calories - b.macros.calories);
+  return [...fits, ...over].slice(0, n);
+}
 
 /* ---------- tiny progress ring ---------- */
 function Ring({ pct, size = 116, stroke = 11, children }: { pct: number; size?: number; stroke?: number; children?: React.ReactNode }) {
@@ -354,46 +380,137 @@ export function CoachCard({ onSetupWorkouts, onPlanMeals }: { onSetupWorkouts?: 
 
 /* ==================== SLIM · for the Today page ==================== */
 export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
-  const eatenPct = e.allowance > 0 ? Math.min(100, Math.round((e.eaten / e.allowance) * 100)) : 0;
-  // Detail graph — Goal (target intake) vs Burned (movement today) vs Eaten
-  // (logged so far). Bars scale to the largest of the three so the story reads
-  // honestly at a glance.
-  const bars = [
-    { key: "goal",   label: "Goal",   value: e.goal,   color: "linear-gradient(90deg,#F9A8D4,#EC4899)" },
-    { key: "burned", label: "Burned", value: e.burned, color: "linear-gradient(90deg,#FBCFE8,#DB2777)" },
-    { key: "eaten",  label: "Planned", value: e.eaten,  color: "linear-gradient(90deg,#F472B6,#BE185D)" },
+  const remaining = Math.max(0, e.remaining);
+  // How "on track" she is — the ring & meal bar fill by planned intake against
+  // what she can eat today (goal + what she'll burn).
+  const eatenPct  = e.allowance > 0 ? Math.min(100, Math.round((e.eaten / e.allowance) * 100)) : 0;
+  // The three honest numbers, each a bar scaled against her goal.
+  const scale = Math.max(1, e.goal, e.eaten, e.burned);
+  const rows = [
+    { key: "goal",     Icon: Target,   label: "Goal",            sub: "Daily calories needed",     value: e.goal,   tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
+    { key: "movement", Icon: Activity, label: "Planned movement", sub: "Calories to burn",          value: e.burned, tint: "bg-violet-100 text-violet-500", bar: "from-violet-300 to-violet-400" },
+    { key: "meals",    Icon: Leaf,     label: "Planned meals",    sub: "Calories in your meal plan", value: e.eaten,  tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
   ];
-  const scale = Math.max(1, ...bars.map((b) => b.value));
+  // A gentle verdict for the tip.
+  const tip = eatenPct >= 95 ? "Nice! You're almost perfectly on track today."
+    : eatenPct >= 70 ? "Lovely balance — a light snack still fits beautifully."
+    : remaining > 0 ? "Plenty of room left — fuel up with something nourishing."
+    : "You're right on target — beautifully done today.";
+  const snacks = remaining > 0 ? snackIdeasFor(remaining, 4) : [];
+
   return (
-    <button onClick={go("/app/tools/diet")} className="group relative w-full overflow-hidden text-left rounded-2xl border border-petal/60 shadow-sm p-3 active:scale-[0.99] transition animate-fade-in">
-      {/* Soft food-warm background — faded, with a white scrim so numbers stay crisp */}
-      <img src="/images/meal-buddha.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.14] scale-110 transition duration-700 group-hover:scale-105" loading="lazy" />
-      <div className="absolute inset-0 bg-gradient-to-br from-white/92 via-white/85 to-blush/70" />
+    <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-white shadow-[0_12px_34px_rgba(219,39,119,0.10)] animate-fade-in">
+      {/* soft blush wash */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blush/40 via-white to-petal/25" />
 
-      <div className="relative">
-        <div className="flex items-center justify-between mb-1.5">
-          <p className="flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none"><Flame className="h-4 w-4" /> Today's fuel</p>
-          <span className="text-[11px] font-bold text-rose/60 tabular-nums">{Math.max(0, e.remaining).toLocaleString()} kcal left</span>
-        </div>
-        <div className="h-2 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${eatenPct}%` }} /></div>
-
-        {/* Detail graph — Goal vs Burned vs Eaten */}
-        <div className="mt-2.5 rounded-xl bg-white/70 border border-petal/50 p-2.5 space-y-1.5">
-          {bars.map((b) => (
-            <div key={b.key} className="flex items-center gap-2">
-              <span className="w-14 shrink-0 text-[9.5px] font-bold uppercase tracking-wide text-rose/55">{b.label}</span>
-              <span className="relative h-2.5 flex-1 rounded-full bg-petal/30 overflow-hidden">
-                <span className="absolute inset-y-0 left-0 rounded-full transition-all duration-700" style={{ width: `${Math.max(4, (b.value / scale) * 100)}%`, background: b.color }} />
-              </span>
-              <span className="w-11 shrink-0 text-right text-[10.5px] font-bold text-hotpink tabular-nums">{Math.round(b.value).toLocaleString()}</span>
+      <div className="relative p-4 sm:p-5">
+        {/* ── HEADER ─────────────────────────────────────────────── */}
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-sm shadow-hotpink/30"><Flame className="h-5 w-5" strokeWidth={2} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="inline-flex items-center gap-1.5 font-script text-[1.7rem] sm:text-3xl text-hotpink leading-none">Today's Fuel <Sparkles className="h-4 w-4" strokeWidth={2} /></p>
+            <p className="mt-1 text-[12px] sm:text-[13px] text-rose/70 leading-snug max-w-md">
+              According to your goal, movement and meal plan, you still have room for a <span className="font-bold text-hotpink">little something good.</span>
+            </p>
+          </div>
+          {/* kcal-left pill */}
+          <div className="hidden sm:flex shrink-0 items-center gap-2 rounded-2xl bg-white/85 border border-petal/60 px-3.5 py-2 shadow-sm">
+            <Flame className="h-5 w-5 text-hotpink" strokeWidth={2} />
+            <div className="leading-tight">
+              <p className="font-black text-hotpink text-lg tabular-nums leading-none">{remaining.toLocaleString()} <span className="text-[12px] font-bold text-rose/70">kcal left</span></p>
+              <p className="text-[10px] font-semibold text-rose/55 inline-flex items-center gap-1">to enjoy today <Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
             </div>
-          ))}
+          </div>
         </div>
 
-        <div className="mt-1.5 flex items-center justify-end text-[10px] font-bold text-rose/50">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">Open Diet <ChevronRight className="h-3 w-3" /></span>
+        {/* ── BODY: stats (left) + ring & tip (right) ────────────── */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-5">
+          {/* stat rows */}
+          <div className="lg:col-span-3 space-y-2.5">
+            {rows.map((r) => (
+              <div key={r.key} className="flex items-center gap-3 rounded-2xl bg-white/70 border border-petal/40 px-3 py-2.5">
+                <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", r.tint].join(" ")}><r.Icon className="h-5 w-5" strokeWidth={2} /></span>
+                <div className="w-[92px] shrink-0">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-[#831843] leading-tight">{r.label}</p>
+                  <p className="text-[9.5px] font-semibold text-rose/50 leading-tight">{r.sub}</p>
+                </div>
+                <span className="relative h-2.5 flex-1 rounded-full bg-petal/25 overflow-hidden">
+                  <span className={["absolute inset-y-0 left-0 rounded-full bg-gradient-to-r transition-all duration-700", r.bar].join(" ")} style={{ width: `${Math.max(2, Math.round((r.value / scale) * 100))}%` }} />
+                </span>
+                <span className="w-14 shrink-0 text-right leading-none">
+                  <span className="block font-black text-hotpink tabular-nums text-[15px]">{Math.round(r.value).toLocaleString()}</span>
+                  <span className="block text-[9px] font-bold uppercase tracking-wide text-rose/45">kcal</span>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* ring + tip */}
+          <div className="lg:col-span-2 flex flex-col items-center gap-2.5">
+            <div className="relative">
+              <Ring pct={eatenPct} size={132} stroke={10}>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50">You have</p>
+                  <p className="font-black text-hotpink leading-none text-4xl tabular-nums">{remaining.toLocaleString()}</p>
+                  <p className="text-[10px] font-bold text-rose/60 inline-flex items-center gap-1 justify-center">kcal left <Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
+                </div>
+              </Ring>
+            </div>
+            <div className="w-full rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 flex items-start gap-2">
+              <Lightbulb className="h-4 w-4 shrink-0 text-hotpink mt-0.5" strokeWidth={2} />
+              <p className="text-[11px] leading-snug text-[#831843]"><span className="font-bold text-hotpink">Tip:</span> {tip}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── SMART IDEA — adequate snacks that lead to real recipes ── */}
+        {snacks.length > 0 && (
+          <div className="mt-4 rounded-2xl bg-white/70 border border-petal/50 p-3 sm:p-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+              <div className="sm:w-40 shrink-0">
+                <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} /> Smart idea</p>
+                <p className="mt-1 text-[11px] text-rose/65 leading-snug">You still have <span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()} kcal</span> available. Here are some light &amp; delicious options:</p>
+              </div>
+              {/* snack cards + grab CTA */}
+              <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                {snacks.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => openRecipe(s.id)}
+                    title={`Open ${s.name} recipe`}
+                    className="group text-left rounded-xl bg-white border border-petal/50 overflow-hidden shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+                  >
+                    <div className="relative h-16 w-full overflow-hidden bg-blush">
+                      <img
+                        src={recipeImageSrc(s)} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy"
+                        onError={(ev) => { const el = ev.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/read-recipes.webp")) el.src = "/images/read-recipes.webp"; }}
+                      />
+                    </div>
+                    <div className="p-1.5">
+                      <p className="text-[10.5px] font-bold text-[#831843] leading-tight line-clamp-2 min-h-[26px]">{s.name}</p>
+                      <span className="mt-1 inline-block rounded-full bg-blush px-1.5 py-0.5 text-[9px] font-bold text-hotpink tabular-nums">{s.macros.calories} kcal</span>
+                    </div>
+                  </button>
+                ))}
+                {/* Grab a snack — jumps to the top pick's recipe */}
+                <button
+                  onClick={() => openRecipe(snacks[0].id)}
+                  className="group grid place-items-center rounded-xl bg-gradient-to-br from-hotpink to-magenta text-white text-center px-2 py-3 shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-[0.98] animate-selected-glow"
+                >
+                  <span className="text-[12px] font-black leading-tight">Grab<br />a snack</span>
+                  <ArrowRight className="mt-1 h-4 w-4" strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── FOOTER ─────────────────────────────────────────────── */}
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-petal/40 pt-2.5">
+          <p className="inline-flex items-center gap-1.5 text-[11px] text-rose/60 leading-snug"><Leaf className="h-3.5 w-3.5 text-hotpink/60" strokeWidth={2} /> Every choice you make today is a step towards your best self.</p>
+          <button onClick={go("/app/tools/diet")} className="shrink-0 inline-flex items-center gap-1 text-[12px] font-bold text-hotpink animate-soft-glow">Open Diet <ChevronRight className="h-3.5 w-3.5" /></button>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
