@@ -209,7 +209,13 @@ export function CoachTodayCard({ coach, onOpenRecipe }: { coach: DayCoach; onOpe
 
 export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
   return (
-    <a href="/app/tools/diet?tab=cycle" className="group block rounded-[1.5rem] border border-hotpink/25 bg-white/90 backdrop-blur p-4 shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
+    <a href="/app/tools/diet?tab=cycle" className="group relative block overflow-hidden rounded-[1.5rem] border border-hotpink/25 bg-white/90 backdrop-blur p-4 shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-card-pop-in">
+      {/* Soft floral illustration — images speak louder than words; kept faint
+          behind a white→blush scrim so the coaching copy stays perfectly legible */}
+      <img src="/images/me/me-hero-floral.webp" alt="" className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 object-contain opacity-30 rotate-6 transition duration-700 group-hover:rotate-3 group-hover:scale-105" loading="lazy" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/94 via-white/80 to-white/30" />
+
+      <div className="relative">
       <div className="flex items-center justify-between gap-2">
         <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
           <Sparkles className="h-4 w-4" strokeWidth={2} /> Your coach today
@@ -227,6 +233,7 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
           <span className="absolute bottom-0.5 left-0.5 text-lg leading-none drop-shadow">{coach.feelGood.emoji}</span>
         </div>
         <p className="text-[12px] leading-snug text-[#831843] line-clamp-3">{coach.feelGood.text}</p>
+      </div>
       </div>
     </a>
   );

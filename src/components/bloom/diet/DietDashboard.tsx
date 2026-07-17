@@ -355,16 +355,44 @@ export function CoachCard({ onSetupWorkouts, onPlanMeals }: { onSetupWorkouts?: 
 /* ==================== SLIM · for the Today page ==================== */
 export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
   const eatenPct = e.allowance > 0 ? Math.min(100, Math.round((e.eaten / e.allowance) * 100)) : 0;
+  // Detail graph — Goal (target intake) vs Burned (movement today) vs Eaten
+  // (logged so far). Bars scale to the largest of the three so the story reads
+  // honestly at a glance.
+  const bars = [
+    { key: "goal",   label: "Goal",   value: e.goal,   color: "linear-gradient(90deg,#F9A8D4,#EC4899)" },
+    { key: "burned", label: "Burned", value: e.burned, color: "linear-gradient(90deg,#FBCFE8,#DB2777)" },
+    { key: "eaten",  label: "Planned", value: e.eaten,  color: "linear-gradient(90deg,#F472B6,#BE185D)" },
+  ];
+  const scale = Math.max(1, ...bars.map((b) => b.value));
   return (
-    <button onClick={go("/app/tools/diet")} className="w-full text-left rounded-2xl bg-white/80 border border-petal/60 shadow-sm p-3 active:scale-[0.99] transition animate-fade-in">
-      <div className="flex items-center justify-between mb-1.5">
-        <p className="flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none"><Flame className="h-4 w-4" /> Today's fuel</p>
-        <span className="text-[11px] font-bold text-rose/60 tabular-nums">{Math.max(0, e.remaining).toLocaleString()} kcal left</span>
-      </div>
-      <div className="h-2 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${eatenPct}%` }} /></div>
-      <div className="mt-1.5 flex items-center justify-between text-[10px] font-bold text-rose/50">
-        <span className="tabular-nums">Goal {e.goal.toLocaleString()} · burned +{e.burned}</span>
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">Open Diet <ChevronRight className="h-3 w-3" /></span>
+    <button onClick={go("/app/tools/diet")} className="group relative w-full overflow-hidden text-left rounded-2xl border border-petal/60 shadow-sm p-3 active:scale-[0.99] transition animate-fade-in">
+      {/* Soft food-warm background — faded, with a white scrim so numbers stay crisp */}
+      <img src="/images/meal-buddha.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.14] scale-110 transition duration-700 group-hover:scale-105" loading="lazy" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/92 via-white/85 to-blush/70" />
+
+      <div className="relative">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none"><Flame className="h-4 w-4" /> Today's fuel</p>
+          <span className="text-[11px] font-bold text-rose/60 tabular-nums">{Math.max(0, e.remaining).toLocaleString()} kcal left</span>
+        </div>
+        <div className="h-2 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${eatenPct}%` }} /></div>
+
+        {/* Detail graph — Goal vs Burned vs Eaten */}
+        <div className="mt-2.5 rounded-xl bg-white/70 border border-petal/50 p-2.5 space-y-1.5">
+          {bars.map((b) => (
+            <div key={b.key} className="flex items-center gap-2">
+              <span className="w-14 shrink-0 text-[9.5px] font-bold uppercase tracking-wide text-rose/55">{b.label}</span>
+              <span className="relative h-2.5 flex-1 rounded-full bg-petal/30 overflow-hidden">
+                <span className="absolute inset-y-0 left-0 rounded-full transition-all duration-700" style={{ width: `${Math.max(4, (b.value / scale) * 100)}%`, background: b.color }} />
+              </span>
+              <span className="w-11 shrink-0 text-right text-[10.5px] font-bold text-hotpink tabular-nums">{Math.round(b.value).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-1.5 flex items-center justify-end text-[10px] font-bold text-rose/50">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-hotpink animate-soft-glow">Open Diet <ChevronRight className="h-3 w-3" /></span>
+        </div>
       </div>
     </button>
   );

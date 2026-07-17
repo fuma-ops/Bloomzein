@@ -737,71 +737,6 @@ export default function TodayPage() {
             </>
           )}
 
-          <div className="mt-2.5 sm:mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2.5">
-            {/* Mood check-in */}
-            <div className="flex items-center gap-2.5">
-              <button
-                ref={moodTileRef}
-                onClick={() => setMoodPickerOpen((v) => !v)}
-                aria-label="How are you feeling?"
-                aria-haspopup="dialog"
-                aria-expanded={moodPickerOpen}
-                className="relative clay-blob animate-cta-bounce grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
-              >
-                <MoodIcon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
-                {!mood && (
-                  <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
-                    <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
-                  </span>
-                )}
-              </button>
-              <div className="text-left">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
-                  {mood ? "Feeling" : "How are you?"}
-                </p>
-                <p
-                  key={mood ?? `hint-${moodHintIdx}`}
-                  className={["font-script text-lg leading-tight animate-fade-in inline-flex items-center gap-1", mood ? "text-hotpink" : "italic text-rose/40"].join(" ")}
-                >
-                  {mood && <Check className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={3.5} />}
-                  {mood ? MOOD_LABEL[mood] : moodHint.label}
-                </p>
-              </div>
-            </div>
-
-            {/* Body / symptoms check-in — same tile, right beside mood */}
-            <div className="flex items-center gap-2.5">
-              <button
-                ref={symptomTileRef}
-                onClick={() => setSymptomPickerOpen((v) => !v)}
-                aria-label="How's your body today?"
-                aria-haspopup="dialog"
-                aria-expanded={symptomPickerOpen}
-                className="relative clay-blob animate-cta-bounce grid h-11 w-11 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full text-white shadow-lg shadow-hotpink/40 active:scale-90 transition-transform"
-              >
-                <Activity className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
-                {symptomsToday.length === 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-white text-hotpink shadow-sm animate-cta-bounce ring-2 ring-hotpink/30">
-                    <Sparkles className="h-2.5 w-2.5 animate-bloom-sparkle" />
-                  </span>
-                )}
-              </button>
-              <div className="text-left">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
-                  {symptomsToday.length ? "Body" : "How's your body?"}
-                </p>
-                <p
-                  key={symptomsToday.length ? `sym-${symptomsToday.length}` : "sym-none"}
-                  className={["font-script text-lg leading-tight animate-fade-in inline-flex items-center gap-1", symptomsToday.length ? "text-hotpink" : "italic text-rose/40"].join(" ")}
-                >
-                  {symptomsToday.length > 0 && <Check className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={3.5} />}
-                  {symptomsToday.length
-                    ? `${symptomsToday.length} noted`
-                    : "Tap to check in"}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Streak badge — bottom-right, on the symptom-icon line; honest about a fresh start */}
@@ -819,6 +754,48 @@ export default function TodayPage() {
           )}
         </div>
       </section>
+
+      {/* ── QUICK STATS — Mood · Symptom · Energy · Water, four elegant cards ── */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
+          className="group flex items-center gap-2.5 rounded-2xl bg-white/90 border border-petal/60 p-2.5 text-left shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 active:scale-[0.98]">
+          <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-5 w-5" strokeWidth={1.8} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/55 leading-none">Mood</span>
+            <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
+          </span>
+          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-rose/25 transition group-hover:text-hotpink" strokeWidth={2.5} />
+        </button>
+
+        <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
+          className="group flex items-center gap-2.5 rounded-2xl bg-white/90 border border-petal/60 p-2.5 text-left shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 active:scale-[0.98]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-5 w-5" strokeWidth={1.9} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/55 leading-none">Symptom</span>
+            <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
+          </span>
+          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-rose/25 transition group-hover:text-hotpink" strokeWidth={2.5} />
+        </button>
+
+        <a href="/app/calendar" className="group flex items-center gap-2.5 rounded-2xl bg-white/90 border border-petal/60 p-2.5 text-left shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 active:scale-[0.98]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Battery className="h-5 w-5" strokeWidth={1.9} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/55 leading-none">Energy</span>
+            <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
+          </span>
+          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-rose/25 transition group-hover:text-hotpink" strokeWidth={2.5} />
+        </a>
+
+        <button onClick={() => setWaterModalOpen(true)}
+          className="group flex items-center gap-2.5 rounded-2xl bg-white/90 border border-petal/60 p-2.5 text-left shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 active:scale-[0.98]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Droplet className="h-5 w-5" strokeWidth={1.9} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/55 leading-none">Water</span>
+            <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
+          </span>
+          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-rose/25 transition group-hover:text-hotpink" strokeWidth={2.5} />
+        </button>
+      </div>
 
       {/* MoodPopover — portaled, triggered from hero circular button */}
       <MoodPopover
@@ -1034,7 +1011,7 @@ export default function TodayPage() {
                   className="flex flex-1 min-w-0 items-center gap-3 sm:gap-4 text-left transition active:scale-[0.99]"
                 >
                   {/* Image — a strong-pink ring marks it done/selected (never hides it) */}
-                  <div className={["relative shrink-0 h-[68px] w-[68px] sm:h-[80px] sm:w-[80px] overflow-hidden rounded-2xl transition",
+                  <div className={["relative shrink-0 h-[86px] w-[86px] sm:h-[104px] sm:w-[104px] overflow-hidden rounded-2xl transition",
                     done ? "ring-2 ring-hotpink shadow-md shadow-hotpink/30" : ""].join(" ")}>
                     <img
                       src={item.image} alt="" className="h-full w-full object-cover" loading="lazy"
@@ -1132,6 +1109,13 @@ export default function TodayPage() {
           "bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5",
           bloomFull ? "bg-gradient-to-br from-hotpink/10 via-white/0 to-petal/30" : "bg-gradient-to-br from-petal/20 via-white/0 to-blush/30",
         ].join(" ")}>
+          <div className="mb-3 flex items-center gap-2">
+            <span className="clay-blob grid h-7 w-7 shrink-0 place-items-center rounded-full text-white"><Flower2 className="h-4 w-4" strokeWidth={1.8} /></span>
+            <div className="min-w-0">
+              <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">Your bloom today</h2>
+              <p className="text-[9.5px] font-bold uppercase tracking-wider text-rose/50 leading-none mt-0.5">Daily progress ring</p>
+            </div>
+          </div>
           <div className="flex items-center gap-4 sm:gap-6">
             {/* Animated bloom ring */}
             <div className="relative shrink-0">
