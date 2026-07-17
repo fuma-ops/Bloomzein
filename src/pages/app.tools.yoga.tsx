@@ -13,12 +13,12 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { todayISO, isYesterday } from "@/lib/localDate";
-import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
@@ -1362,7 +1362,7 @@ const YOGA_PHASE_META: Record<Phase, { emoji: string; label: string }> = {
  *  phase-recommended plan; tapping syncs the week to the phase (or opens cycle
  *  setup if the cycle isn't tracked yet). Self-contained — reads/writes the same
  *  bloom:yoga-schedule the My Plan tab uses. */
-function YogaPhaseSyncPill() {
+function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) {
   const [, force] = useState(0);
   useEffect(() => {
     const r = () => force((t) => t + 1);
@@ -1389,11 +1389,24 @@ function YogaPhaseSyncPill() {
     } catch {}
     force((t) => t + 1);
   };
+  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`;
+  if (variant === "tile") {
+    return (
+      <button onClick={onSync} disabled={synced} title={tTitle}
+        className={["rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
+        <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
+          {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
+        </span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Sync</span>
+        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? "In sync" : "Sync now"}</span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={onSync}
       disabled={synced}
-      title={!known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`}
+      title={tTitle}
       className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
         synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
     >
@@ -1956,34 +1969,44 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     <div className="space-y-4">
       {/* ── The week, day by day — starts right under the hero ──────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        {/* Header — title + setting CTAs (reminder · Edit · Reset), moved up */}
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
-              <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
-            </div>
-            <LevelStreak variant="chip" streak={readYogaStreak().count} />
-            <YogaPhaseSyncPill />
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
+            <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <label className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/60 pl-2 pr-1.5 py-1 text-[11px] font-semibold text-rose">
               <BellRing className="h-3.5 w-3.5" />
               <input type="time" value={reminder} onChange={(e) => updateReminder(e.target.value)}
-                className="rounded-full bg-blush/60 border border-petal/60 px-2.5 py-1 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+                className="w-[52px] bg-transparent text-[11px] font-semibold text-rose outline-none" />
             </label>
-            <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1 text-[11px] font-bold border transition", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60"].join(" ")}>
+            <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
               {editing ? "Done" : "Edit"}
             </button>
-            <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold border border-petal/50 bg-white/70 text-rose/50 hover:text-hotpink transition">
-              <Trash2 className="h-3 w-3" /> Reset
-            </button>
+            <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         </div>
 
-        {/* Soft badge — this week is tuned to her diet goal (from Diet), until she edits it */}
-        {tunedGoal && !editing && (
-          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[10.5px] font-bold text-rose-500">
-            <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(tunedGoal)} goal
+        {/* Status — Goal · Level · Streak · Sync, four bigger tiles (persist under the plan/program card) */}
+        {!editing && (
+          <div className="mb-3 grid grid-cols-4 gap-2">
+            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
+            </div>
+            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+            </div>
+            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readYogaStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{readYogaStreak().count}{readYogaStreak().count === 1 ? " day" : " days"}</span>
+            </div>
+            <YogaPhaseSyncPill variant="tile" />
           </div>
         )}
 
