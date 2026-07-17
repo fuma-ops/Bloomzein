@@ -1011,7 +1011,7 @@ export default function TodayPage() {
                   className="flex flex-1 min-w-0 items-center gap-3 sm:gap-4 text-left transition active:scale-[0.99]"
                 >
                   {/* Image — a strong-pink ring marks it done/selected (never hides it) */}
-                  <div className={["relative shrink-0 h-[86px] w-[86px] sm:h-[104px] sm:w-[104px] overflow-hidden rounded-2xl transition",
+                  <div className={["relative shrink-0 h-[108px] w-[108px] sm:h-[132px] sm:w-[132px] overflow-hidden rounded-2xl transition",
                     done ? "ring-2 ring-hotpink shadow-md shadow-hotpink/30" : ""].join(" ")}>
                     <img
                       src={item.image} alt="" className="h-full w-full object-cover" loading="lazy"
