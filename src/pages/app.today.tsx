@@ -890,39 +890,39 @@ export default function TodayPage() {
         {/* ── QUICK STATS — Mood · Symptom · Energy · Water — frosted-glass bars
                nestled into the bottom of the hero, matching the streak badge. ── */}
         <div className="relative z-[2] px-3 pb-3 pt-1 sm:px-6 sm:pb-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
             <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-              className="group flex items-center gap-2.5 rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-left shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-5 w-5" strokeWidth={1.8} /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
-                <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
+              <span className="min-w-0 w-full sm:flex-1">
+                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
+                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
               </span>
             </button>
 
             <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-              className="group flex items-center gap-2.5 rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-left shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
-                <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
+              <span className="min-w-0 w-full sm:flex-1">
+                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
+                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
               </span>
             </button>
 
-            <a href="/app/calendar" className="group flex items-center gap-2.5 rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-left shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+            <a href="/app/calendar" className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Battery className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Energy</span>
-                <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
+              <span className="min-w-0 w-full sm:flex-1">
+                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Energy</span>
+                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
               </span>
             </a>
 
             <button onClick={() => setWaterModalOpen(true)}
-              className="group flex items-center gap-2.5 rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-2.5 py-1.5 sm:px-3 sm:py-2 text-left shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
+              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3 sm:py-2 shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
               <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Droplet className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
-                <span className="mt-0.5 block font-script text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
+              <span className="min-w-0 w-full sm:flex-1">
+                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
+                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
               </span>
             </button>
           </div>
