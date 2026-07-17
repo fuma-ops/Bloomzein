@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Sparkles, Check, ArrowRight, Flower2, Target, UtensilsCrossed, Dumbbell,
-  Smile, TrendingDown, Activity, Sun, Moon, Coffee,
+  TrendingDown, Activity, Sun, Moon, Coffee, Droplet, Smile, CalendarDays, Heart, Lock,
 } from "lucide-react";
 import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { hasMealPlan, hasMovementPlan } from "@/lib/crossToolData";
@@ -10,13 +10,10 @@ import { startGuide } from "@/lib/guidedSetup";
 
 /* ============================================================================
    Build your Bloom world — the guided setup on Today, in the full step-card
-   design: a progress stepper, then a rich card per real tool (image slot ·
+   design: a progress stepper, then a rich card per real tool (branded image ·
    what it does + a live mini-visual · what it unlocks + a CTA). Each step lights
-   up ✓ the moment it's set up for real.
-
-   The left slot is an IMAGE placeholder (soft gradient + the step icon) — drop a
-   per-step `image` in the STEPS array when the artwork is ready and it renders
-   in place of the placeholder, no other change needed.
+   up ✓ the moment it's set up for real; the last card — Bloom AI Sync — ties
+   everything together and only activates once the four tools are configured.
 ============================================================================ */
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -33,6 +30,11 @@ function readGoalLine(): { target: number; toGo: number } | null {
   return null;
 }
 
+const SYNC_ICONS = [
+  { Icon: Flower2, l: "Cycle" }, { Icon: UtensilsCrossed, l: "Meals" }, { Icon: Dumbbell, l: "Movement" }, { Icon: Smile, l: "Mood" },
+  { Icon: Droplet, l: "Water" }, { Icon: Moon, l: "Sleep" }, { Icon: CalendarDays, l: "Calendar" }, { Icon: Heart, l: "Coach" },
+];
+
 export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; onLogMood: () => void }) {
   // Re-read on tab focus so ✓ states stay honest after setting a tool up.
   const [, force] = useState(0);
@@ -41,22 +43,25 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
+  void moodDone; void onLogMood; // mood lives in the hero + bloom checklist now, not a setup step
 
   const cycleDone = hasCycleSettings();
-  const mealsDone = hasMealPlan();
   const dietDone  = hasDietSetup();
+  const mealsDone = hasMealPlan();
   const moveDone  = hasMovementPlan();
+  const allCore   = cycleDone && dietDone && mealsDone && moveDone;
   const goalLine  = readGoalLine();
 
   type Step = {
     key: string; n: number; title: string; emoji: string; done: boolean;
-    href?: string; onClick?: () => void; blurb: string; unlocks: string[];
-    Icon: typeof Flower2; image?: string; visual: React.ReactNode;
+    href?: string; blurb: string; unlocks: string[]; Icon: typeof Flower2;
+    image: string; visual: React.ReactNode; sync?: boolean;
   };
 
   const STEPS: Step[] = [
     {
       n: 1, key: "cycle", title: "Set up your cycle", emoji: "🌸", done: cycleDone, href: "/app/tools/cycle", Icon: Flower2,
+      image: "/images/setup-cycle.webp",
       blurb: "Track your cycle and understand your body better.",
       unlocks: ["Personalized energy", "Mood predictions", "Symptom tracking", "Daily insights"],
       visual: (
@@ -71,22 +76,8 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
-      n: 2, key: "meals", title: "Plan your meals", emoji: "🍽️", done: mealsDone, href: "/app/tools/meals", Icon: UtensilsCrossed,
-      blurb: "Get personalized recipes, grocery lists and daily meal plans.",
-      unlocks: ["Personalized recipes", "Grocery lists", "Calories & macros", "Meal reminders"],
-      visual: (
-        <div className="flex items-center gap-2">
-          {[{ Icon: Coffee, l: "Breakfast" }, { Icon: Sun, l: "Lunch" }, { Icon: Moon, l: "Dinner" }].map((m) => (
-            <div key={m.l} className="flex-1 rounded-lg bg-white/70 border border-petal/50 py-1.5 flex flex-col items-center gap-0.5">
-              <m.Icon className="h-4 w-4 text-hotpink" strokeWidth={2} />
-              <span className="text-[8px] font-bold uppercase tracking-wide text-rose/50">{m.l}</span>
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      n: 3, key: "diet", title: "Set your goal", emoji: "🎯", done: dietDone, href: "/app/tools/diet", Icon: Target,
+      n: 2, key: "diet", title: "Set your goal", emoji: "🎯", done: dietDone, href: "/app/tools/diet", Icon: Target,
+      image: "/images/setup-goal.webp",
       blurb: "Set your goal and let Bloomzein calculate your daily targets.",
       unlocks: ["Weight forecast", "Daily calorie target", "Macro balance", "Progress tracking"],
       visual: (
@@ -103,7 +94,24 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
+      n: 3, key: "meals", title: "Plan your meals", emoji: "🍽️", done: mealsDone, href: "/app/tools/meals", Icon: UtensilsCrossed,
+      image: "/images/setup-meals.webp",
+      blurb: "Get personalized recipes, grocery lists and daily meal plans.",
+      unlocks: ["Personalized recipes", "Grocery lists", "Calories & macros", "Meal reminders"],
+      visual: (
+        <div className="flex items-center gap-2">
+          {[{ Icon: Coffee, l: "Breakfast" }, { Icon: Sun, l: "Lunch" }, { Icon: Moon, l: "Dinner" }].map((m) => (
+            <div key={m.l} className="flex-1 rounded-lg bg-white/70 border border-petal/50 py-1.5 flex flex-col items-center gap-0.5">
+              <m.Icon className="h-4 w-4 text-hotpink" strokeWidth={2} />
+              <span className="text-[8px] font-bold uppercase tracking-wide text-rose/50">{m.l}</span>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
       n: 4, key: "move", title: "Plan your movement", emoji: "🧘‍♀️", done: moveDone, href: "/app/tools/workout", Icon: Dumbbell,
+      image: "/images/setup-movement.webp",
       blurb: "Build a movement plan that matches your energy and goals.",
       unlocks: ["Workouts & yoga", "Recovery days", "Daily energy boost", "Wellness plan"],
       visual: (
@@ -120,13 +128,17 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
-      n: 5, key: "mood", title: "Log today's mood", emoji: "💗", done: moodDone, onClick: onLogMood, Icon: Smile,
-      blurb: "One gentle tap sets the tone — and teaches Bloom how you feel.",
-      unlocks: ["Daily mood log", "Cycle-mood insights", "Gentle daily nudges"],
+      n: 5, key: "ai", title: "Bloom AI Sync", emoji: "✨", done: allCore, Icon: Sparkles, sync: true,
+      image: "/images/setup-ai.webp",
+      blurb: "Everything works together to make your journey magical — powered by Bloom AI.",
+      unlocks: ["Cycle-synced plan", "Smart daily Today", "Personalized coaching", "One magical routine"],
       visual: (
-        <div className="flex items-center gap-2">
-          {["😌", "😊", "⚡", "💗", "🌙"].map((e, i) => (
-            <span key={i} className={["grid h-7 w-7 place-items-center rounded-full text-sm", i === 1 ? "bg-hotpink/15 ring-2 ring-hotpink/30" : "bg-white/70 border border-petal/50"].join(" ")}>{e}</span>
+        <div className="grid grid-cols-4 gap-1.5">
+          {SYNC_ICONS.map(({ Icon, l }) => (
+            <div key={l} className="flex flex-col items-center gap-0.5">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-white/70 border border-petal/50 text-hotpink"><Icon className="h-3 w-3" strokeWidth={2} /></span>
+              <span className="text-[7px] font-bold uppercase tracking-wide text-rose/45">{l}</span>
+            </div>
           ))}
         </div>
       ),
@@ -135,7 +147,7 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
 
   const doneCount = STEPS.filter((s) => s.done).length;
   if (doneCount === STEPS.length) return null;
-  const nextIdx = STEPS.findIndex((s) => !s.done);
+  const nextIdx = STEPS.findIndex((s) => !s.done && !s.sync);
 
   return (
     <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
@@ -165,20 +177,23 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       <div className="mt-3 space-y-3">
         {STEPS.map((s, i) => {
           const isNext = i === nextIdx;
-          const NodeIcon = s.Icon;
+          const locked = s.sync && !allCore;
           const wrap = ["block overflow-hidden rounded-[1.5rem] border bg-white shadow-[0_8px_24px_rgba(219,39,119,0.07)] transition hover:-translate-y-0.5",
-            isNext ? "border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow" : "border-petal/55"].join(" ");
-          const cta = ["mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold transition active:scale-95",
-            s.done ? "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50"
-                   : "bg-gradient-to-r from-hotpink to-magenta text-white shadow-md shadow-hotpink/25 hover:brightness-105 animate-selected-glow"].join(" ");
+            isNext ? "border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow" : s.sync && allCore ? "border-hotpink/50" : "border-petal/55"].join(" ");
+          const ctaCls = (kind: "primary" | "ghost" | "locked") =>
+            ["mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold transition active:scale-95",
+              kind === "primary" ? "bg-gradient-to-r from-hotpink to-magenta text-white shadow-md shadow-hotpink/25 hover:brightness-105 animate-selected-glow"
+              : kind === "ghost" ? "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50"
+              : "bg-petal/40 text-rose/50 cursor-not-allowed"].join(" ");
+
           const body = (
             <div className="flex flex-col lg:flex-row">
-              {/* IMAGE placeholder — swap in per-step artwork later */}
+              {/* branded image */}
               <div className="relative lg:w-[210px] shrink-0">
-                <div className="relative h-32 lg:h-full w-full overflow-hidden grid place-items-center bg-gradient-to-br from-blush via-petal/40 to-blush">
-                  {s.image
-                    ? <img src={s.image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                    : <NodeIcon className="h-10 w-10 text-hotpink/45" strokeWidth={1.4} />}
+                <div className="relative h-32 lg:h-full w-full overflow-hidden bg-blush">
+                  <img src={s.image} alt="" className="h-full w-full object-cover" loading="lazy"
+                    onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
+                  {locked && <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px]"><Lock className="h-6 w-6 text-hotpink/70" strokeWidth={2} /></div>}
                 </div>
                 <span className="absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-[13px] font-black text-white shadow-md">{s.n}</span>
                 {s.done && (
@@ -209,13 +224,21 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
                     </li>
                   ))}
                 </ul>
-                <span className={cta}>{s.done ? <>Review <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></> : <>Continue <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></>}</span>
+                {s.sync ? (
+                  allCore
+                    ? <a href="/app/today" className={ctaCls("primary")}><Sparkles className="h-4 w-4" strokeWidth={2.2} /> Activate My Bloom World</a>
+                    : <span className={ctaCls("locked")}><Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> Finish the steps above</span>
+                ) : (
+                  <span className={ctaCls(s.done ? "ghost" : "primary")}>{s.done ? "Review" : "Continue"} <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></span>
+                )}
               </div>
             </div>
           );
-          return s.href
-            ? <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrap} data-next-step={isNext ? "1" : undefined}>{body}</a>
-            : <button key={s.key} onClick={s.onClick} className={`w-full text-left ${wrap}`} data-next-step={isNext ? "1" : undefined}>{body}</button>;
+
+          // The AI-Sync card is not a whole-card link (its CTA is the action);
+          // the tool cards deep-link into their tool and mark the guided flow.
+          if (s.sync) return <div key={s.key} className={wrap}>{body}</div>;
+          return <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrap} data-next-step={isNext ? "1" : undefined}>{body}</a>;
         })}
       </div>
     </section>
