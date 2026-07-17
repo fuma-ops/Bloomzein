@@ -978,7 +978,7 @@ export default function TodayPage() {
 
       {hasPlanContent && (
       <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
-        <div className="bloom-pearl-card pearl-sheen rounded-[2rem] overflow-hidden">
+        <div className="rounded-[2rem] overflow-hidden bg-white border border-petal/50 shadow-[0_10px_30px_rgba(219,39,119,0.08)]">
         {/* Card header — title, phase blurb & nudge, all contained (not floating) */}
         <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-4">
           <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Today's Plan ✿</h2>
@@ -1001,7 +1001,7 @@ export default function TodayPage() {
               <div
                 key={item.id}
                 id={`plan-${item.id}`}
-                className={["relative flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/20",
+                className={["relative flex items-center gap-3 sm:gap-4 px-3 py-3 sm:px-4 sm:py-4 transition hover:bg-blush/15",
                   highlightId === `plan-${item.id}` ? "animate-attention-squeeze" : ""].join(" ")}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
@@ -1026,7 +1026,7 @@ export default function TodayPage() {
                           <Check className="h-2.5 w-2.5" strokeWidth={3.5} />
                         </span>
                       )}
-                      <p className="text-sm font-bold leading-snug text-[#831843]">
+                      <p className="text-[15px] sm:text-base font-bold leading-snug text-[#831843]">
                         {item.label}
                       </p>
                       {timing === "now" && (
@@ -1035,13 +1035,13 @@ export default function TodayPage() {
                         </span>
                       )}
                     </div>
-                    <p className={["mt-0.5 text-[10px] sm:text-[11px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/55"].join(" ")}>{item.prompt ? `"${item.blurb}"` : item.blurb}</p>
+                    <p className={["mt-0.5 text-[11.5px] sm:text-[12.5px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/60"].join(" ")}>{item.prompt ? `"${item.blurb}"` : item.blurb}</p>
                     <div className="mt-1 flex items-center gap-2">
                       {item.time && (
-                        <span className="text-[9px] font-semibold text-rose/40">{item.time}</span>
+                        <span className="text-[10px] font-semibold text-rose/45">{item.time}</span>
                       )}
                       {cycleReady && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-hotpink/60">
                           ✿ {PHASE_LABEL[phase]} phase
                         </span>
                       )}
