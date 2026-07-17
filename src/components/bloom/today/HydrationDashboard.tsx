@@ -153,12 +153,14 @@ export function HydrationDashboard({
               {/* Ring section — the Bloomzein bottle photo is THIS panel's
                   background, behind a soft scrim so the ring reads clearly. */}
               <div className="relative overflow-hidden rounded-[1.5rem] border border-petal/50 shadow-sm px-4 py-5 flex items-center justify-center">
-                <img src="/images/hydration-bottle.webp" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/72 via-white/62 to-petal/45" />
+                {/* object-position tuned so we see the woman (face + bottle), not a
+                    torso crop; lighter scrim so the photo really shows through. */}
+                <img src="/images/hydration-bottle.webp" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[60%_18%]" loading="lazy" />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/50 via-white/30 to-petal/25" />
               <div className="relative mx-auto h-[220px] w-[220px] sm:h-[248px] sm:w-[248px]">
-                {/* Clean soft-white disc inside the ring so the % stays crisp over
-                    the panel's photo background — the ring itself stays bold. */}
-                <div className="absolute inset-[9%] rounded-full bg-white/72 backdrop-blur-[2px] shadow-inner ring-1 ring-inset ring-white/70" />
+                {/* Faint disc inside the ring — just enough to lift the % off the
+                    photo (kept light so the image still shows through the centre). */}
+                <div className="absolute inset-[9%] rounded-full bg-white/28 backdrop-blur-[1px] ring-1 ring-inset ring-white/40" />
                 <svg viewBox="0 0 36 36" className="relative h-full w-full -rotate-90">
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="#FBD3E6" strokeWidth="3" />
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#hyd-ring-grad)" strokeWidth="3" strokeLinecap="round"
@@ -166,11 +168,11 @@ export function HydrationDashboard({
                     style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)", filter: "drop-shadow(0 2px 6px rgba(219,39,119,0.4))" }} />
                   <defs><linearGradient id="hyd-ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F472B6" /><stop offset="1" stopColor="#DB2777" /></linearGradient></defs>
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <Droplet className="h-8 w-8 text-hotpink/80 mb-0.5" strokeWidth={1.5} fill="rgba(244,114,182,0.25)" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center [text-shadow:0_1px_6px_rgba(255,255,255,0.95),0_1px_2px_rgba(255,255,255,0.9)]">
+                  <Droplet className="h-8 w-8 text-hotpink mb-0.5 drop-shadow-[0_1px_3px_rgba(255,255,255,0.95)]" strokeWidth={1.6} fill="rgba(244,114,182,0.3)" />
                   <p className="font-script text-5xl sm:text-6xl text-hotpink leading-none">{pct}%</p>
                   <p className="mt-1 text-[13px] font-bold text-[#831843]">{count} of {goal} glasses</p>
-                  <p className="text-[12px] font-bold text-rose/70"><span className="text-hotpink">{doneL} L</span> / {totalL} L</p>
+                  <p className="text-[12px] font-bold text-rose/80"><span className="text-hotpink">{doneL} L</span> / {totalL} L</p>
                 </div>
               </div>
               </div>{/* /ring photo panel */}
