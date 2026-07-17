@@ -126,7 +126,12 @@ export function HydrationDashboard({
   return (
     <section id="hydration" className={["mt-4 sm:mt-6 animate-card-pop-in", highlight ? "animate-attention-squeeze" : ""].join(" ")} style={{ animationDelay: "180ms" }}>
       <div className="relative overflow-hidden rounded-[1.9rem] border border-petal/60 bg-gradient-to-br from-blush/50 via-white to-petal/30 shadow-[0_16px_40px_rgba(219,39,119,0.12)]">
-        <div className="p-4 sm:p-6">
+        {/* Bloomzein bottle photo — a soft, faded BACKGROUND for the whole card
+            (behind a pink-white scrim so every number & card stays readable). */}
+        <img src="/images/hydration-bottle.webp" alt="" aria-hidden className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.16]" loading="lazy" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/88 via-white/82 to-petal/45" />
+
+        <div className="relative p-4 sm:p-6">
           {/* ── Header ── */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -150,15 +155,11 @@ export function HydrationDashboard({
           <div className="mt-4 grid gap-4 lg:grid-cols-2 items-start">
             {/* LEFT — big ring + glasses */}
             <div>
-              <div className="mx-auto w-fit relative">
-                {/* Bloomzein bottle photo — filling the disc inside the ring, behind
-                    a soft pink scrim so the arc and the numbers stay crisp. */}
-                <div className="absolute inset-[9%] rounded-full overflow-hidden shadow-inner">
-                  <img src="/images/hydration-bottle.webp" alt="" className="h-full w-full object-cover" loading="lazy" />
-                  <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 50% 46%, rgba(255,255,255,0.86) 0%, rgba(255,247,251,0.78) 42%, rgba(255,209,231,0.45) 78%, rgba(219,39,119,0.12) 100%)" }} />
-                  <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/60" />
-                </div>
-                <svg viewBox="0 0 36 36" className="relative w-[220px] h-[220px] sm:w-[248px] sm:h-[248px] -rotate-90">
+              <div className="mx-auto relative h-[220px] w-[220px] sm:h-[248px] sm:w-[248px]">
+                {/* Clean soft-white disc inside the ring so the % stays crisp over
+                    the card's photo background — the ring itself stays bold. */}
+                <div className="absolute inset-[9%] rounded-full bg-white/70 backdrop-blur-[2px] shadow-inner ring-1 ring-inset ring-white/70" />
+                <svg viewBox="0 0 36 36" className="relative h-full w-full -rotate-90">
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="#FBD3E6" strokeWidth="3" />
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#hyd-ring-grad)" strokeWidth="3" strokeLinecap="round"
                     strokeDasharray={`${C}`} strokeDashoffset={C * (1 - pct / 100)}
@@ -166,10 +167,10 @@ export function HydrationDashboard({
                   <defs><linearGradient id="hyd-ring-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F472B6" /><stop offset="1" stopColor="#DB2777" /></linearGradient></defs>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <Droplet className="h-8 w-8 text-hotpink mb-0.5 drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)]" strokeWidth={1.5} fill="rgba(244,114,182,0.3)" />
-                  <p className="font-script text-5xl sm:text-6xl text-hotpink leading-none drop-shadow-[0_2px_5px_rgba(255,255,255,0.95)]">{pct}%</p>
-                  <p className="mt-1 text-[13px] font-bold text-[#831843] drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">{count} of {goal} glasses</p>
-                  <p className="text-[12px] font-bold text-rose/70 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]"><span className="text-hotpink">{doneL} L</span> / {totalL} L</p>
+                  <Droplet className="h-8 w-8 text-hotpink/80 mb-0.5" strokeWidth={1.5} fill="rgba(244,114,182,0.25)" />
+                  <p className="font-script text-5xl sm:text-6xl text-hotpink leading-none">{pct}%</p>
+                  <p className="mt-1 text-[13px] font-bold text-[#831843]">{count} of {goal} glasses</p>
+                  <p className="text-[12px] font-bold text-rose/70"><span className="text-hotpink">{doneL} L</span> / {totalL} L</p>
                 </div>
               </div>
 
