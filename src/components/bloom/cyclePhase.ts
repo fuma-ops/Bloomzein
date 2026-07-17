@@ -47,17 +47,13 @@ export function phaseForDay(date: Date, s: CycleSettings): Exclude<CyclePhase, "
 }
 
 /**
- * The phase to show TODAY — like phaseForDay, but when her period is overdue and
- * she hasn't confirmed it started yet, we HOLD at luteal instead of auto-rolling
- * into "period". A normal phase every tool already handles, so nothing breaks;
- * it advances to "period" only once she confirms her real start.
+ * The phase to show TODAY. The prediction rolls over: once she passes her cycle
+ * length a new predicted cycle begins (Day 1 = period), so she's never frozen in
+ * luteal past her due date. If her period comes earlier or later than predicted
+ * she corrects it on the calendar (tap a day → started / didn't), which resets
+ * lastPeriodStart and re-tunes everything.
  */
 export function effectiveCurrentPhase(s: CycleSettings, now: Date = new Date()): Exclude<CyclePhase, "any"> {
-  const ms = 1000 * 60 * 60 * 24;
-  const diff = Math.floor((now.getTime() - s.lastPeriodStart.getTime()) / ms);
-  // Overdue but unconfirmed → hold at luteal for good (until she logs her real
-  // start, which resets lastPeriodStart). Never auto-roll into a fake "period".
-  if (diff >= s.cycleLength) return "luteal";
   return phaseForDay(now, s);
 }
 

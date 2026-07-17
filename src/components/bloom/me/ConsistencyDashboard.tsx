@@ -479,7 +479,8 @@ export function ConsistencyDashboard() {
       {/* Pro dashboard: white cards on the pink canvas, 2 columns on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
         {/* Consistency score + pillars + narrative — hero, full width */}
-        <div className={CARD + " lg:col-span-2"}>
+        <div className={CARD + " lg:col-span-2 relative overflow-hidden"}>
+          <img src="/images/me/consistency-bloom.webp" alt="" aria-hidden className="pointer-events-none absolute -bottom-4 -right-3 w-40 opacity-80 select-none" />
           <Eyebrow>Your consistency this month</Eyebrow>
           <div className="mt-3 flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
             <BloomRing pct={data.bloomScore} />
@@ -517,7 +518,8 @@ export function ConsistencyDashboard() {
         </div>
 
         {/* Energy — full width (wide graph) */}
-        <div className={CARD + " lg:col-span-2"}>
+        <div className={CARD + " lg:col-span-2 relative overflow-hidden"}>
+          <img src="/images/me/energy-botanical.webp" alt="" aria-hidden className="pointer-events-none absolute -top-2 right-1 h-28 opacity-70 select-none" />
           <Eyebrow>Your energy this week · needed vs planned vs burned</Eyebrow>
           {hasPlan ? (
             <div className="mt-2">

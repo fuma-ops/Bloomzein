@@ -15,6 +15,15 @@ import { CycleWheel, ForecastStrip, HormoneMoodCurve, FertilityGauge, Confidence
    "Why I know this" so nothing is a black box. */
 
 const cardCls = "rounded-2xl bg-white border border-[#F6D9E7] p-4 shadow-[0_6px_18px_rgba(219,39,119,0.06)]";
+
+/** A warm, phase-adaptive line for the floral hero card. */
+const PHASE_MESSAGE: Record<string, { title: string; sub: string }> = {
+  period:     { title: "Your body is resting & renewing.", sub: "Be extra gentle with yourself today." },
+  follicular: { title: "Your body is building energy beautifully.", sub: "Keep nourishing yourself." },
+  fertile:    { title: "You're glowing and magnetic.", sub: "Let your confidence lead today." },
+  ovulation:  { title: "You're at your radiant peak.", sub: "Channel it into something bold." },
+  luteal:     { title: "Your body is winding down softly.", sub: "Prioritise warmth, rest & kindness." },
+};
 const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 function relDay(daysAway: number, late: boolean): string {
   if (late) return `${Math.abs(daysAway)} day${Math.abs(daysAway) === 1 ? "" : "s"} late`;
@@ -120,10 +129,10 @@ export function SmartPredictions() {
 
       {/* Pro dashboard: white cards, 2 columns on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
-        {/* Hero — cycle wheel + next period, full width */}
+        {/* Hero — cycle wheel + next period + a phase-adaptive floral card */}
         <div className={cardCls + " lg:col-span-2"}>
           <Eyebrow>Where you are today</Eyebrow>
-          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <CycleWheel dayLabel={cycle.dayLabel} phaseLabel={cycle.phaseLabel} note={cycle.note} />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-rose/55">Next period</p>
@@ -136,6 +145,12 @@ export function SmartPredictions() {
               </p>
               <Why>{p.explain}</Why>
             </div>
+            {(() => { const m = PHASE_MESSAGE[cycle.phaseLabel.toLowerCase()] ?? PHASE_MESSAGE.follicular; return (
+              <div className="relative overflow-hidden rounded-2xl p-4 min-h-[132px] flex flex-col justify-center" style={{ backgroundImage: "linear-gradient(90deg,rgba(255,255,255,0.55),rgba(255,255,255,0.05)),url(/images/me/pred-hero-floral.webp)", backgroundSize: "cover", backgroundPosition: "center" }}>
+                <p className="font-script text-[22px] leading-tight text-[#BE185D]">{m.title}</p>
+                <p className="mt-1 text-[12px] font-semibold text-[#9D174D]/80">{m.sub}</p>
+              </div>
+            ); })()}
           </div>
         </div>
 
@@ -152,8 +167,9 @@ export function SmartPredictions() {
           <Why>{data.energy.explain}</Why>
         </div>
 
-        {/* Fertility — half */}
-        <div className={cardCls}>
+        {/* Fertility — half, with a soft blossom sprig */}
+        <div className={cardCls + " relative overflow-hidden"}>
+          <img src="/images/me/fertility-sprig.webp" alt="" aria-hidden className="pointer-events-none absolute -bottom-3 -right-3 w-28 opacity-90 select-none" />
           <Eyebrow>Fertility today</Eyebrow>
           <div className="mt-1"><FertilityGauge level={data.fertility.level} /></div>
           {data.fertility.peak && <p className="text-center text-[11.5px] font-semibold text-rose/75">Next peak: <span className="text-hotpink">{fmt(data.fertility.peak)}</span></p>}

@@ -10,16 +10,16 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
-import { readCyclePhase, toYogaPhase, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
+import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { todayISO, isYesterday } from "@/lib/localDate";
-import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { flushCloudSync } from "@/lib/cloudSync";
-import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { readDietProfile } from "@/components/bloom/recipes/data";
 import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trainingFuel";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -737,6 +737,49 @@ const poseHoldSec = (p: Pose): number => (p.switchStep ? SWITCH_HOLD : holdOf(p.
 /** The audio a step should play. */
 const poseAudioFor = (p: Pose): string | undefined => (p.switchStep ? SWITCH_AUDIO : poseAudioUrl(p.slug));
 
+// ── End-of-flow outro ───────────────────────────────────────────────────────
+// A gentle closing track that plays as a flow finishes, so a session never just
+// cuts to silence — it softly announces the end. One suitable outro per session
+// intention. Kept at module scope so it survives the player unmounting into the
+// summary screen (and so a new session can stop a lingering one).
+const END_OUTRO: Record<Intention, string> = {
+  morning: "morning-glow", cycle: "cycle-synced", release: "flex-release",
+  strength: "strong-sculpted", core: "core-foundations", backcare: "desk-reset",
+  fullbody: "total-body-balance", balance: "total-body-balance",
+  stress: "deep-relief", sleep: "deep-relief",
+};
+const endOutroUrl = (i: Intention) => `/audio/yoga/end/${END_OUTRO[i]}.mp3`;
+let endOutroEl: HTMLAudioElement | null = null;
+function stopEndOutro() { try { endOutroEl?.pause(); } catch {} endOutroEl = null; }
+/** Linearly ramp an audio element's volume to a target over `ms`. */
+function fadeAudioTo(el: HTMLAudioElement, target: number, ms: number, done?: () => void) {
+  const steps = 24;
+  const start = el.volume;
+  const dv = (target - start) / steps;
+  const dt = Math.max(16, ms / steps);
+  let n = 0;
+  const iv = setInterval(() => {
+    n++;
+    try { el.volume = Math.max(0, Math.min(1, start + dv * n)); } catch {}
+    if (n >= steps) { clearInterval(iv); done?.(); }
+  }, dt);
+}
+/** Play the outro for this intention — fades in, and gently fades itself out after
+ *  a short window so a long track never hijacks the next screen. */
+function playEndOutro(intention: Intention) {
+  stopEndOutro();
+  try {
+    const a = new Audio(endOutroUrl(intention));
+    a.volume = 0; a.preload = "auto";
+    endOutroEl = a;
+    a.play().then(() => fadeAudioTo(a, 0.85, 1400)).catch(() => {});
+    a.addEventListener("ended", () => { if (endOutroEl === a) endOutroEl = null; });
+    window.setTimeout(() => {
+      if (endOutroEl === a) fadeAudioTo(a, 0, 1600, () => { if (endOutroEl === a) stopEndOutro(); });
+    }, 15000);
+  } catch {}
+}
+
 // ── Background music (a continuous, looping bed). "Windsong" is the fullest
 // track and also powers the eyes-closed music-only experience.
 const MUSIC: Record<string, string> = {
@@ -1097,7 +1140,11 @@ export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [view, setView] = useState<View>({ kind: "plan" });
-  const [lowWater, setLowWater] = useState(false);
+  // Guided-setup focus mode: strip the tool to a narrow hero + her week + one
+  // "Finish on Today" action; no tabs/programs to wander into.
+  const guided = useGuided();
+  const cyclePhaseNow = readCyclePhase();
+  const guidedPhaseLabel = cyclePhaseNow && cyclePhaseNow !== "any" ? PHASE_LABEL[cyclePhaseNow] : undefined;
 
   // Guided setup: any schedule commit dispatches "bloom:yoga-updated"; the first
   // time a plan exists while she's in the guided flow, celebrate and hand back.
@@ -1111,6 +1158,10 @@ export default function YogaPage() {
     window.addEventListener("bloom:yoga-updated", onUpdate);
     return () => window.removeEventListener("bloom:yoga-updated", onUpdate);
   }, []);
+  // While guided, keep her on her week — never the home/library/programs browser.
+  useEffect(() => {
+    if (guided && (view.kind === "home" || view.kind === "library")) setView({ kind: "plan" });
+  }, [guided, view.kind]);
   // Guided sparkle tour — auto on first visit, replayable via the hero Guide chip.
   const [tourDone, setTourDone] = useState(false);
   const [showTour, setShowTour] = useState(false);
@@ -1152,10 +1203,6 @@ export default function YogaPage() {
       const flow = buildFlow({ intention, level, durationMin, phase, mode });
       setView({ kind: "session", flow, lang, mode, intention, hold: holdSecondsFor(durationMin, level), durationMin, sound: DEFAULT_SOUND });
     }
-    setLowWater(readTodayWaterCount() < 3);
-    const refresh = () => setLowWater(readTodayWaterCount() < 3);
-    window.addEventListener("storage", refresh);
-    return () => window.removeEventListener("storage", refresh);
   }, []);
 
   const advanceStep = (next: 1|2|3) => {
@@ -1206,7 +1253,14 @@ export default function YogaPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {(view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
+      {guided && (view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
+        <>
+          <GuidedFocusHero label="Yoga" phaseLabel={guidedPhaseLabel} image="/images/yoga-hero.webp" />
+          <GuidedFinishBar toolLabel="Yoga" phaseLabel={guidedPhaseLabel} hint="Your soft week is set — tap any day to tweak its flow." className="mb-3" />
+        </>
+      )}
+
+      {!guided && (view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <YogaHero
           active={view.kind}
           onDiscover={() => setView({ kind: "home" })}
@@ -1214,18 +1268,6 @@ export default function YogaPage() {
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
           onGuide={() => setShowTour(true)}
-        />
-      )}
-
-      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
-          logged today. Dismissible via the ✕ button or by swiping it away. */}
-      {lowWater && (
-        <HydrationNudge
-          storageKey="bloom:hydrate-nudge-yoga"
-          className="mt-3 bg-gradient-to-r from-sky-50 to-blue-50 border-blue-100/80"
-          icon={<Info className="h-4 w-4" strokeWidth={1.8} />}
-          title="Hydrate before your flow ✿"
-          body="You've logged fewer than 3 glasses today. Staying hydrated makes yoga more comfortable and effective."
         />
       )}
 
@@ -1320,7 +1362,7 @@ const YOGA_PHASE_META: Record<Phase, { emoji: string; label: string }> = {
  *  phase-recommended plan; tapping syncs the week to the phase (or opens cycle
  *  setup if the cycle isn't tracked yet). Self-contained — reads/writes the same
  *  bloom:yoga-schedule the My Plan tab uses. */
-function YogaPhaseSyncPill() {
+function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) {
   const [, force] = useState(0);
   useEffect(() => {
     const r = () => force((t) => t + 1);
@@ -1347,11 +1389,24 @@ function YogaPhaseSyncPill() {
     } catch {}
     force((t) => t + 1);
   };
+  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`;
+  if (variant === "tile") {
+    return (
+      <button onClick={onSync} disabled={synced} title={tTitle}
+        className={["rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
+        <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
+          {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
+        </span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Sync</span>
+        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? "In sync" : "Sync now"}</span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={onSync}
       disabled={synced}
-      title={!known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`}
+      title={tTitle}
       className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
         synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
     >
@@ -1656,6 +1711,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
 
 function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
   const [confirm, setConfirm] = useState<YogaProgram | null>(null);
+  const guided = useGuided();
   return (
     <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "220ms" }}>
       <div className="mb-3">
@@ -1669,7 +1725,7 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
           return (
             <button
               key={p.id}
-              onClick={() => setConfirm(p)}
+              onClick={() => { if (guided) return guidedNudge(); setConfirm(p); }}
               className="group w-full text-left flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
               style={{ animationDelay: `${i * 70}ms` }}
             >
@@ -1913,34 +1969,44 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     <div className="space-y-4">
       {/* ── The week, day by day — starts right under the hero ──────────────── */}
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+        {/* Header — title + setting CTAs (reminder · Edit · Reset), moved up */}
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
-              <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
-            </div>
-            <LevelStreak variant="chip" streak={readYogaStreak().count} />
-            <YogaPhaseSyncPill />
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
+            <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <label className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/60 pl-2 pr-1.5 py-1 text-[11px] font-semibold text-rose">
               <BellRing className="h-3.5 w-3.5" />
               <input type="time" value={reminder} onChange={(e) => updateReminder(e.target.value)}
-                className="rounded-full bg-blush/60 border border-petal/60 px-2.5 py-1 text-[11px] font-semibold text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
+                className="w-[52px] bg-transparent text-[11px] font-semibold text-rose outline-none" />
             </label>
-            <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1 text-[11px] font-bold border transition", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60"].join(" ")}>
+            <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
               {editing ? "Done" : "Edit"}
             </button>
-            <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold border border-petal/50 bg-white/70 text-rose/50 hover:text-hotpink transition">
-              <Trash2 className="h-3 w-3" /> Reset
-            </button>
+            <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         </div>
 
-        {/* Soft badge — this week is tuned to her diet goal (from Diet), until she edits it */}
-        {tunedGoal && !editing && (
-          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[10.5px] font-bold text-rose-500">
-            <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(tunedGoal)} goal
+        {/* Status — Goal · Level · Streak · Sync, four bigger tiles (persist under the plan/program card) */}
+        {!editing && (
+          <div className="mb-3 grid grid-cols-4 gap-2">
+            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
+            </div>
+            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+            </div>
+            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readYogaStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{readYogaStreak().count}{readYogaStreak().count === 1 ? " day" : " days"}</span>
+            </div>
+            <YogaPhaseSyncPill variant="tile" />
           </div>
         )}
 
@@ -2450,8 +2516,13 @@ function SessionPlayer({
   const stopAllAudio = () => {
     try { narrationRef.current?.pause(); } catch {}
     try { musicRef.current?.pause(); } catch {}
+    stopEndOutro();
     stop();
   };
+
+  // If a previous session's outro is still fading out when a new session opens,
+  // silence it so the two never overlap.
+  useEffect(() => { stopEndOutro(); }, []);
 
   // Create + play the music element SYNCHRONOUSLY inside this click (not in an
   // effect/updater, which mobile browsers treat as "not a user gesture" and
@@ -2467,7 +2538,16 @@ function SessionPlayer({
   };
   const togglePlay = () => {
     const next = !running;
-    if (next) { if (!muted) { try { ensureMusic().play().catch(() => {}); } catch {} } }
+    if (next) {
+      if (!muted) {
+        try {
+          // Fade the music in gently at the start of a flow (no abrupt cut-in).
+          const m = ensureMusic();
+          m.volume = 0;
+          m.play().then(() => fadeAudioTo(m, 0.72, 1600)).catch(() => {});
+        } catch {}
+      }
+    }
     else { stopAllAudio(); }
     setRunning(next);
   };
@@ -2548,7 +2628,15 @@ function SessionPlayer({
   }, [idx, running, poseHold]);
 
   function finishSession() {
-    stopAllAudio();
+    // Gentle close instead of an abrupt cut: stop the voice, fade the music down,
+    // and play a soft end-of-flow outro that continues over the summary screen so
+    // she's always told the flow has ended.
+    setRunning(false);
+    try { narrationRef.current?.pause(); } catch {}
+    stop();
+    const music = musicRef.current;
+    if (music) fadeAudioTo(music, 0, 1300, () => { try { music.pause(); } catch {} });
+    if (!muted) playEndOutro(intention);
     // streak
     try {
       const raw = localStorage.getItem(STREAK_KEY);
@@ -2565,7 +2653,9 @@ function SessionPlayer({
     // Log the flow's calories so yoga counts toward the daily energy balance.
     const practiceMin = Math.max(5, Math.round(flowTotalSeconds(flow) / 60));
     logYogaSession(practiceMin, readDietProfile().weight);
-    onDone();
+    // Hold the summary a beat so the music fade-out is audible before the player
+    // unmounts; the outro then carries over the summary screen.
+    window.setTimeout(() => onDone(), 1200);
   }
 
   if (!pose) return null;
@@ -2594,7 +2684,7 @@ function SessionPlayer({
             {isDark ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
             {skinPref === "auto" && <span className="text-[9px] font-bold uppercase tracking-wide opacity-70">auto</span>}
           </button>
-          <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { ensureMusic().play().catch(() => {}); } catch {} } }}
+          <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { const m = ensureMusic(); m.volume = 0; m.play().then(() => fadeAudioTo(m, 0.72, 1200)).catch(() => {}); } catch {} } }}
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>

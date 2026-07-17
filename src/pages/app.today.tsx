@@ -25,6 +25,7 @@ import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { BloomDayCelebration } from "@/components/bloom/BloomDayCelebration";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
+import { ARTICLES } from "@/lib/readsData";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
   getCurrentUserId,
@@ -319,6 +320,10 @@ export default function TodayPage() {
   // setup menu instead of empty placeholders. A brand-new user (no cycle) sees
   // neither — the "Build your Bloom world" checklist guides her first.
   const hasPlanContent  = mealPlanned || movementPlanned;
+  // A truly fresh / just-reset user — nothing built yet. In this state Today sheds
+  // every data-driven card (affirmation, bloom ring, due-today) and shows a single
+  // enchanting "here's the magic that blooms after setup" reveal instead.
+  const isFresh         = !cycleReady && !mealPlanned && !dietSetup && !movementPlanned;
   const cycleSettings   = useMemo(readCycleSettings, []);
   const pillLabel       = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
   const displayName     = profile?.name?.split(" ")[0] || "Beautiful";
@@ -925,7 +930,7 @@ export default function TodayPage() {
 
       {/* ── AFFIRMATION — a soft handwritten quote for the day, dismissible.
              Flanked by two logo flowers; the words softly self-write on open. ── */}
-      {!affirmDismissed && (
+      {!affirmDismissed && !isFresh && (
         /* Soft one-/two-line quote flanked by two flowers; a small X to close
            (top-right) and a centred tiny love-count below. */
         <div className="relative mt-4 sm:mt-6 rounded-2xl border border-white/60 bg-white/40 backdrop-blur-md shadow-sm shadow-hotpink/10 px-4 pt-6 pb-3 animate-fade-in">
@@ -961,6 +966,10 @@ export default function TodayPage() {
           </div>
         </div>
       )}
+
+      {/* ── FRESH REVEAL — the enchanting "here's the magic that blooms after setup"
+             section a just-reset user sees where her plan will live. ── */}
+      {isFresh && <FreshReveal phase={phase} />}
 
       {/* ── 2. TODAY'S BLOOM PLAN — the real plan once she's planned meals/movement;
              a "how it all syncs" setup menu once her cycle's set but nothing's
@@ -1115,7 +1124,9 @@ export default function TodayPage() {
       {/* ── SMART RIGHT PANEL (lg:col-span-2, sticky) ───────────────────────── */}
       <aside className="lg:col-span-2 lg:sticky lg:top-4 self-start">
 
-      {/* ── 3. YOUR BLOOM TODAY (ring + checklist) ─────────────────────────────────────────────── */}
+      {/* ── 3. YOUR BLOOM TODAY (ring + checklist) — hidden on a fresh reset; the
+             FreshReveal + Build-your-world checklist carry the first-run story. ── */}
+      {!isFresh && (
       <section id="bloom-today" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
         <div className={[
           "bloom-pearl-card pearl-sheen rounded-3xl p-4 sm:p-5",
@@ -1195,9 +1206,10 @@ export default function TodayPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ── 3. DUE TODAY ─────────────────────────────────────────────────────── */}
-      {hasDueItems && (
+      {hasDueItems && !isFresh && (
         <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "90ms" }}>
           <SectionTitle hint="don't forget">Due Today</SectionTitle>
           <div className="bloom-pearl-card pearl-sheen rounded-3xl p-3 sm:p-4 flex flex-col gap-2">
@@ -1328,6 +1340,128 @@ export default function TodayPage() {
 }
 
 // ── Shared atoms ─────────────────────────────────────────────────────────────
+/* ── FreshReveal — the first-run / just-reset centrepiece. Where a set-up user's
+      plan lives, a fresh user sees one enchanting reveal: what magic unlocks after
+      setup, plus real phase-tuned tasters (a yoga flow she can start now, a snack,
+      phase reads with square covers, and a lead into her cycle-nutrition coach). ── */
+function FreshReveal({ phase }: { phase: CyclePhase }) {
+  const p = (phase === "any" ? "follicular" : phase) as Exclude<CyclePhase, "any">;
+  const plan = SHARED_PHASE_PLAN[p];
+  const dphase = useMemo(() => toDietPhase(phase), [phase]);
+  const snack = useMemo(() => {
+    const tuned = RECIPES.filter((r) => r.mealType === "snack" && r.phases.includes(dphase));
+    const any   = RECIPES.filter((r) => r.mealType === "snack");
+    return tuned[0] || any[0];
+  }, [dphase]);
+  const reads = useMemo(() => {
+    const tuned = ARTICLES.filter((a) => a.phase === dphase);
+    const base  = ARTICLES.filter((a) => !a.phase);
+    return [...tuned, ...base].slice(0, 3);
+  }, [dphase]);
+
+  const launchYoga = () => {
+    try { writeLaunch(LAUNCH_YOGA_KEY, plan.yoga.launch); } catch {}
+    window.location.href = "/app/tools/yoga";
+  };
+
+  return (
+    <section className="mt-4 sm:mt-6 space-y-4">
+      {/* Attention hero — what magic unlocks after setup */}
+      <div
+        className="relative overflow-hidden rounded-3xl p-5 sm:p-6 animate-card-pop-in"
+        style={{ background: "linear-gradient(135deg,#FDF2F8,#FCE7F3 55%,#FBCFE8)", animationDelay: "40ms" }}
+      >
+        <BloomFlower className="pointer-events-none absolute -right-7 -top-7 h-32 w-32 text-hotpink/10 animate-icon-breathe" />
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-hotpink border border-petal/60">
+          <Sparkles className="h-3 w-3" strokeWidth={2.2} /> A peek at your bloom
+        </p>
+        <h2 className="mt-2 font-script text-2xl sm:text-3xl text-hotpink leading-tight">
+          Set up your world &amp; watch Today bloom ✿
+        </h2>
+        <p className="mt-1.5 text-[12.5px] sm:text-sm text-rose/75 leading-snug max-w-md">
+          Every tool you set up pours into this space — a whole day made just for you,
+          matched to your phase, your energy &amp; your goals. Here's a little taste ↓
+        </p>
+      </div>
+
+      {/* Phase yoga flow — a real flow she can start right now */}
+      <button
+        onClick={launchYoga}
+        className="group relative block w-full overflow-hidden rounded-3xl text-left animate-card-pop-in hover-scale active:scale-[0.99] transition"
+        style={{ animationDelay: "90ms" }}
+      >
+        <img src={plan.yoga.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent" />
+        <div className="relative z-[1] flex items-center gap-3 p-4 sm:p-5 min-h-[132px]">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/90 text-hotpink shadow-lg animate-icon-breathe">
+            <Play className="h-5 w-5 fill-hotpink" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Yoga · {PHASE_LABEL[phase]} phase</p>
+            <p className="font-script text-2xl text-white leading-tight drop-shadow">{plan.yoga.title}</p>
+            <p className="text-[12px] text-white/85 leading-snug max-w-xs">{plan.yoga.blurb}</p>
+          </div>
+        </div>
+      </button>
+
+      {/* Phase snack — beautifully plated */}
+      {snack && (
+        <a
+          href="/app/tools/meals"
+          className="group flex items-stretch overflow-hidden rounded-3xl bloom-pearl-card pearl-sheen animate-card-pop-in hover-scale active:scale-[0.99] transition"
+          style={{ animationDelay: "140ms" }}
+        >
+          <div className="relative w-32 sm:w-40 shrink-0 overflow-hidden">
+            <img src={recipeImageSrc(snack)} alt={snack.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+          </div>
+          <div className="flex-1 min-w-0 p-4">
+            <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-hotpink/70"><Apple className="h-3 w-3" /> Snack · {PHASE_LABEL[phase]} phase</p>
+            <p className="mt-1 font-script text-xl text-hotpink leading-tight">{snack.name}</p>
+            <p className="text-[12px] text-rose/70 leading-snug">{snack.macros.calories} kcal · {snack.macros.protein}g protein · {snack.cuisine}</p>
+            <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink">See it in Meals <ArrowRight className="h-3 w-3" /></span>
+          </div>
+        </a>
+      )}
+
+      {/* Read — phase-tuned blogs with SQUARE covers */}
+      <div className="animate-card-pop-in" style={{ animationDelay: "190ms" }}>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="font-script text-2xl text-hotpink">Read for your phase ✿</p>
+          <a href="/app/read" className="text-[11px] font-bold text-hotpink inline-flex items-center gap-1">All reads <ArrowRight className="h-3 w-3" /></a>
+        </div>
+        <div className="grid grid-cols-3 gap-2.5">
+          {reads.map((a, i) => (
+            <a key={a.id} href="/app/read" className="group block animate-card-pop-in" style={{ animationDelay: `${220 + i * 60}ms` }}>
+              <div className="relative aspect-square overflow-hidden rounded-2xl bloom-pearl-card">
+                <img src={a.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-2">
+                  <p className="text-[11px] font-bold text-white leading-tight line-clamp-2">{a.title}</p>
+                </div>
+              </div>
+              <p className="mt-1 text-[10px] text-rose/60 font-semibold">{a.minutes} min read</p>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Coach — a beautiful lead into cycle nutrition */}
+      <a
+        href="/app/tools/diet"
+        className="group relative block overflow-hidden rounded-3xl p-5 text-white animate-card-pop-in hover-scale active:scale-[0.99] transition"
+        style={{ background: "linear-gradient(125deg,#EC4899,#DB2777 60%,#9D174D)", animationDelay: "300ms" }}
+      >
+        <BloomFlower className="pointer-events-none absolute -right-4 -bottom-7 h-28 w-28 text-white/10 animate-icon-breathe" />
+        <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/80"><Heart className="h-3 w-3 fill-white/80" /> Your coach today</p>
+        <p className="mt-1 font-script text-2xl leading-tight">Cycle nutrition, made personal</p>
+        <p className="mt-1 text-[12.5px] text-white/85 leading-snug max-w-sm">
+          Set your goal and I'll coach your meals, energy &amp; cravings through every phase — gently, and just for you.
+        </p>
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[12px] font-bold">Meet your coach <ArrowRight className="h-3.5 w-3.5" /></span>
+      </a>
+    </section>
+  );
+}
+
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <div className="mb-2.5 flex items-end justify-between gap-3">

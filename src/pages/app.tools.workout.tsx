@@ -10,12 +10,13 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
-import { readTodayWaterCount, readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
+import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { isPremium, openPaywall } from "@/lib/entitlements";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
-import { HydrationNudge } from "@/components/bloom/HydrationNudge";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
+import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
@@ -285,7 +286,7 @@ const WORKOUT_PHASE_META: Record<Exclude<CyclePhase, "any">, { emoji: string; la
 /** Hero pill: names the cycle phase and shows whether My Plan was built for the
  *  current phase (bloom:workout-program-phase); tapping regenerates the week for
  *  the phase (or opens cycle setup if the cycle isn't tracked yet). */
-function WorkoutPhaseSyncPill() {
+function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) {
   const [, force] = useState(0);
   useEffect(() => {
     const r = () => force((t) => t + 1);
@@ -313,11 +314,24 @@ function WorkoutPhaseSyncPill() {
     } catch {}
     force((t) => t + 1);
   };
+  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`;
+  if (variant === "tile") {
+    return (
+      <button onClick={onSync} disabled={synced} title={tTitle}
+        className={["rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
+        <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
+          {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
+        </span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Sync</span>
+        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? "In sync" : "Sync now"}</span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={onSync}
       disabled={synced}
-      title={!known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`}
+      title={tTitle}
       className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
         synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
     >
@@ -449,7 +463,10 @@ export default function WorkoutPage() {
   const [profile, setProfile] = useLS<WorkoutProfile>(PROFILE_KEY, DEFAULT_PROFILE);
   const [view, setView] = useState<View>({ kind: "program" });
   const [tab, setTab] = useState<WorkoutTab>("program");
-  const [lowWater, setLowWater] = useState(false);
+  // Guided-setup focus mode: narrow hero + her week + one "Finish on Today" action.
+  const guided = useGuided();
+  const cyclePhaseNow = readCyclePhase();
+  const guidedPhaseLabel = cyclePhaseNow && cyclePhaseNow !== "any" ? PHASE_LABEL[cyclePhaseNow] : undefined;
   // Guided sparkle tour — auto on first visit (after profile setup), replayable.
   const [tourDone, setTourDone] = useLS<boolean>(TOUR_KEY, false);
   const [showTour, setShowTour] = useState(false);
@@ -470,10 +487,14 @@ export default function WorkoutPage() {
     return () => window.removeEventListener("bloom:workout-updated", onUpdate);
   }, []);
 
+  // While guided, keep her on My Plan — never the discover/programs/library browser.
   useEffect(() => {
-    setLowWater(readTodayWaterCount() < 3);
-    const refresh = () => setLowWater(readTodayWaterCount() < 3);
-    window.addEventListener("storage", refresh);
+    if (guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "library")) {
+      setTab("program"); setView({ kind: "program" });
+    }
+  }, [guided, view.kind]);
+
+  useEffect(() => {
     // Deep-link from Today / Cycle: build the prescribed session and open its
     // preview straight away.
     const launch = readLaunch<{ zone: string; intention: string }>(LAUNCH_WORKOUT_KEY);
@@ -481,7 +502,6 @@ export default function WorkoutPage() {
       const s = buildSession(launch.zone as Zone, launch.intention as WorkoutIntention, durationForLevel(profile.level), profile.level, readCyclePhase() ?? "any", profile.equipment);
       setView({ kind: "session-start", session: s });
     }
-    return () => window.removeEventListener("storage", refresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -590,7 +610,14 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {(view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+      {guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+        <>
+          <GuidedFocusHero label="Movement" phaseLabel={guidedPhaseLabel} image={HERO_IMAGES.program} />
+          <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Your strength week is set — tap any day to tweak it." className="mb-3" />
+        </>
+      )}
+
+      {!guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
           tab={tab}
@@ -598,18 +625,6 @@ export default function WorkoutPage() {
           sectionTitle={SECTION_META[view.kind].title}
           sectionSubtitle={SECTION_META[view.kind].subtitle}
           onGuide={() => setShowTour(true)}
-        />
-      )}
-
-      {/* Hydration nudge — under the hero; shown when fewer than 3 glasses
-          logged today. Dismissible via the ✕ button or by swiping it away. */}
-      {lowWater && (
-        <HydrationNudge
-          storageKey="bloom:hydrate-nudge-workout"
-          className="mt-3 bg-gradient-to-r from-blush/60 to-petal/40 border-petal/70"
-          icon={<Sparkles className="h-4 w-4" strokeWidth={1.8} />}
-          title="Drink water before you sweat ✿"
-          body="You've logged fewer than 3 glasses today. Hydrating before your workout helps performance and recovery."
         />
       )}
 
@@ -637,7 +652,7 @@ export default function WorkoutPage() {
           profile={profile}
           onStartSession={(session) => setView({ kind: "session-start", session })}
           onOpenProgramSession={(programId, week, sessionIndex) => setView({ kind: "program-session", programId, week, sessionIndex, returnTo: "plan" })}
-          onBrowsePrograms={() => { setTab("programs"); setView({ kind: "programs" }); }}
+          onBrowsePrograms={() => { if (guided) return guidedNudge(); setTab("programs"); setView({ kind: "programs" }); }}
         />
       )}
       {view.kind === "library" && <Library />}
@@ -736,6 +751,7 @@ function programToTimerSession(program: Program, week: number, sessionIndex: num
 function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
   const progress = loadProgramProgress();
   const activeId = loadActiveProgram()?.programId ?? null;
+  const guided = useGuided();
   return (
     <div className="animate-fade-in">
       <p className="mb-3 text-sm text-rose/80">
@@ -751,7 +767,7 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
           return (
             <button
               key={p.id}
-              onClick={() => onOpen(p.id)}
+              onClick={() => { if (guided) return guidedNudge(); onOpen(p.id); }}
               className={[
                 "group w-full text-left flex items-stretch overflow-hidden rounded-3xl border bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in",
                 isActive ? "border-hotpink/60 ring-1 ring-hotpink/30" : "border-petal/60",
@@ -1938,84 +1954,113 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (
-        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden flex">
-          <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden">
-            <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-          </div>
-          <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
-            <div className="flex items-start justify-between gap-2">
+        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
+          <div className="flex">
+            <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden">
+              <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+            </div>
+            <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
                 <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{activeProgram.title}</h2>
               </div>
-              <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{wMeta?.theme}</p>
-                <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{wMeta?.theme}</p>
+                  <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
+                </div>
+                <div className="h-1.5 rounded-full bg-blush overflow-hidden">
+                  <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
+                </div>
               </div>
-              <div className="h-1.5 rounded-full bg-blush overflow-hidden">
-                <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
+              {/* Week chips */}
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {Array.from({ length: activeProgram.weeks }, (_, i) => i + 1).map((w) => (
+                  <button key={w} onClick={() => { const next = { ...active!, week: w }; saveActiveProgram(next); setActive(next); }}
+                    className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
+                ))}
               </div>
             </div>
-            {wMeta?.note && <p className="text-xs text-rose/75 leading-snug">{wMeta.note}</p>}
-            {/* Week chips */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {Array.from({ length: activeProgram.weeks }, (_, i) => i + 1).map((w) => (
-                <button key={w} onClick={() => { const next = { ...active!, week: w }; saveActiveProgram(next); setActive(next); }}
-                  className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
-              ))}
+          </div>
+          {/* Status — the same four elegant tiles, full width (Goal · Level · Streak · Progress) */}
+          <div className="px-3.5 pb-3.5 pt-0.5 space-y-2.5">
+            <div className="grid grid-cols-4 gap-2">
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{goalWord(readDietProfile().goal).charAt(0).toUpperCase() + goalWord(readDietProfile().goal).slice(1)}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Trophy className="h-4 w-4" strokeWidth={2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Progress</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{overallDone}/{overallTotal}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap pt-0.5">
-              <button onClick={onBrowsePrograms} className="text-[11px] font-bold text-hotpink">Change program</button>
-              <button onClick={buildMyOwn} className="text-[11px] font-bold text-hotpink">Build my own</button>
-              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="text-[11px] font-semibold text-rose/50 hover:text-hotpink">Leave</button>
-              <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
-                <Utensils className="h-3.5 w-3.5" />
-                <span className={["relative h-4 w-7 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "0.875rem" : "0.125rem" }} /></span>
-              </button>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button onClick={onBrowsePrograms} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">Change program</button>
+              <button onClick={buildMyOwn} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">Build my own</button>
+              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="rounded-full border border-petal/50 bg-white/70 px-3 py-1.5 text-[11px] font-bold text-rose/50 transition hover:text-hotpink active:scale-95">Leave</button>
+              <button onClick={toggleFuel} title={fuelInPlan ? "Recovery meals shown in plan" : "Show recovery meals in the plan"} className={["ml-auto grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
             </div>
           </div>
         </section>
       )}
 
       {source === "freestyle" && (
-        <section className="rounded-2xl bg-white/90 border border-petal/60 shadow-sm px-3.5 py-2.5">
+        <section className="rounded-2xl bg-white/90 border border-petal/60 shadow-sm px-3.5 py-3">
+          {/* Header — title + compact actions moved up to the top-right */}
           <div className="flex items-center gap-2">
             <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-4 w-4" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : tunedGoal ? "Goal-tuned week" : "Custom week"}</p>
               <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : phase !== "any" ? `${PHASE_LABEL[phase]} phase` : "Your weekly plan"}</p>
             </div>
-            <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
-            <WorkoutPhaseSyncPill />
-          </div>
-          {/* Soft badge — this week is tuned to her diet goal (until she edits it) */}
-          {tunedGoal && !editing && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200/80 px-2.5 py-1 text-[10.5px] font-bold text-rose-500">
-              <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Tuned to your {goalWord(tunedGoal)} goal
-            </div>
-          )}
-          <div className="mt-2 flex items-center gap-1.5">
             {editing ? (
-              <>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
                 <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1 text-[11px] font-bold shadow-sm">Done</button>
-              </>
+              </div>
             ) : (
-              <>
-                <button onClick={onEditClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><Pencil className="h-3 w-3" /> Edit</button>
-                <button onClick={onGenerateClick} className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-hotpink"><RotateCcw className="h-3 w-3" /> Regenerate</button>
-                <button onClick={resetWorkoutTool} title="Reset — preview the first-time experience" className="inline-flex items-center gap-1 rounded-full bg-white/70 border border-petal/50 px-3 py-1 text-[11px] font-bold text-rose/50 hover:text-hotpink transition"><Trash2 className="h-3 w-3" /> Reset</button>
-              </>
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={onEditClick} title="Edit your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><Pencil className="h-3.5 w-3.5" /></button>
+                <button onClick={onGenerateClick} title="Regenerate your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><RotateCcw className="h-3.5 w-3.5" /></button>
+                <button onClick={resetWorkoutTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button onClick={toggleFuel} title={fuelInPlan ? "Recovery meals shown in plan" : "Show recovery meals in the plan"} className={["grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
+              </div>
             )}
-            <button onClick={toggleFuel} title="Show recovery meals in the plan" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 px-2.5 py-1 text-[11px] font-bold text-hotpink">
-              <Utensils className="h-3.5 w-3.5" />
-              <span className={["relative h-4 w-7 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "0.875rem" : "0.125rem" }} /></span>
-            </button>
           </div>
+          {/* Status — Goal · Level · Streak · Sync, as four bigger tiles */}
+          {!editing && (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+              </div>
+              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
+              </div>
+              <WorkoutPhaseSyncPill variant="tile" />
+            </div>
+          )}
         </section>
       )}
 

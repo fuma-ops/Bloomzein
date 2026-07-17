@@ -15,6 +15,7 @@ import {
   Sparkles,
   Heart,
   Star,
+  TrendingUp,
   Leaf,
   Smile,
   HeartPulse,
@@ -52,7 +53,7 @@ import {
 import { CycleOnboarding } from "./CycleOnboarding";
 import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
 import { CycleInsights } from "./cycle/CycleInsights";
-import { logPeriodStart, readPeriodStarts, clearPeriodPromptSkip, PERIOD_EVENT } from "@/lib/periodLog";
+import { logPeriodStart, removePeriodStart, skipPeriodPromptToday, readPeriodStarts, PERIOD_EVENT } from "@/lib/periodLog";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
@@ -283,9 +284,6 @@ export function CycleTracker() {
   const [showResetMenu,  setShowResetMenu]  = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [celebrate, setCelebrate] = useState<Exclude<Phase, null> | null>(null);
-  // When setup lands on a period-due day we defer the celebration until she has
-  // answered the "did it start today?" prompt, then celebrate with the real phase.
-  const [awaitSetupAnswer, setAwaitSetupAnswer] = useState(false);
   // Came here from the Diet tool's "sync your cycle first" gate → guide her back.
   const [awaitDiet] = useState(() => { try { return localStorage.getItem("bloom:diet-await-cycle") === "1"; } catch { return false; } });
   const returnToDiet = () => { try { localStorage.removeItem("bloom:diet-await-cycle"); } catch {} window.location.href = "/app/tools/diet"; };
@@ -324,19 +322,6 @@ export function CycleTracker() {
     window.addEventListener(PERIOD_EVENT, r);
     return () => window.removeEventListener(PERIOD_EVENT, r);
   }, []);
-
-  // Setup landed on a period-due day → we asked "did it start today?" first.
-  // Once she answers (yes → logs a start; not yet → skips), reveal the "you're
-  // all set" celebration with the phase that answer produced (period vs luteal).
-  useEffect(() => {
-    if (!awaitSetupAnswer) return;
-    const done = () => {
-      setAwaitSetupAnswer(false);
-      setCelebrate(effectiveCurrentPhase(readCycleSettings()));
-    };
-    window.addEventListener(PERIOD_EVENT, done);
-    return () => window.removeEventListener(PERIOD_EVENT, done);
-  }, [awaitSetupAnswer]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef     = useRef<HTMLDivElement>(null);
@@ -399,49 +384,29 @@ export function CycleTracker() {
     setCursor((c) => new Date(c.getFullYear(), c.getMonth() + dir, 1));
   }
 
-  const { cycleDay, ovulationDayOfCycle, currentPhase, currentCycleStart, awaitingPeriod } = useMemo(() => {
+  const { cycleDay, ovulationDayOfCycle, currentPhase, currentCycleStart } = useMemo(() => {
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
     const ovDay = settings.cycleLength - 14;
-    // Period is due but she hasn't confirmed it started — HOLD at "period expected"
-    // instead of auto-rolling into a new cycle and claiming today as her period.
-    const awaiting = diff >= settings.cycleLength;
-    if (awaiting) {
-      return {
-        cycleDay: diff + 1,
-        ovulationDayOfCycle: ovDay,
-        currentPhase: "luteal" as Exclude<CyclePhase, "any">,
-        currentCycleStart: new Date(settings.lastPeriodStart.getTime()),
-        awaitingPeriod: true,
-      };
-    }
+    // The prediction simply rolls over: once she passes her cycle length, a new
+    // predicted cycle begins (Day 1 = period). If it comes earlier or later than
+    // predicted she corrects it on the calendar (tap a day → started / didn't).
     const cyclesPassed = Math.floor(diff / settings.cycleLength);
     return {
-      cycleDay: (diff % settings.cycleLength) + 1,
+      cycleDay: (((diff % settings.cycleLength) + settings.cycleLength) % settings.cycleLength) + 1,
       ovulationDayOfCycle: ovDay,
       currentPhase: phaseForDay(today, settings),
       currentCycleStart: new Date(settings.lastPeriodStart.getTime() + cyclesPassed * settings.cycleLength * MS_DAY),
-      awaitingPeriod: false,
     };
   }, [settings]);
 
-  // For calendar cells: don't paint the overdue-but-unconfirmed days (up to today)
-  // as period — hold them at luteal until she confirms her real start.
-  const cellPhase = (d: Date): Exclude<CyclePhase, "any"> => {
-    if (awaitingPeriod) {
-      const cd = Math.floor((d.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
-      if (cd >= settings.cycleLength && d.getTime() <= today.getTime()) return "luteal";
-    }
-    return phaseForDay(d, settings);
-  };
+  // Calendar cells follow the same rolling prediction.
+  const cellPhase = (d: Date): Exclude<CyclePhase, "any"> => phaseForDay(d, settings);
 
   const nextPeriodDate = useMemo(() => {
     const diff = Math.floor((today.getTime() - settings.lastPeriodStart.getTime()) / MS_DAY);
-    const cyclesPassed = Math.floor(diff / settings.cycleLength);
-    // While her period is overdue-but-unconfirmed we HOLD on the current predicted
-    // start (it's simply late) instead of rolling forward to the next cycle — so we
-    // never skip her period and jump a month ahead.
-    const cycles = diff >= settings.cycleLength ? cyclesPassed : cyclesPassed + 1;
-    return new Date(settings.lastPeriodStart.getTime() + cycles * settings.cycleLength * MS_DAY);
+    // The next predicted start strictly after today.
+    const cyclesToNext = Math.floor(diff / settings.cycleLength) + 1;
+    return new Date(settings.lastPeriodStart.getTime() + cyclesToNext * settings.cycleLength * MS_DAY);
   }, [settings]);
 
 
@@ -789,18 +754,47 @@ export function CycleTracker() {
             <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full text-white animate-icon-breathe" style={{ background: 'linear-gradient(135deg,#EC4899,#BE185D)', boxShadow: '0 10px 26px rgba(219,39,119,0.42)' }}>
               <Droplet className="h-8 w-8" strokeWidth={1.8} />
             </span>
-            <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>
-              Did your period start<br />{sameDay(confirmDay, today) ? 'today' : confirmDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}?
-            </p>
-            <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>I'll log it as your real start and re-tune your cycle &amp; predictions ✿</p>
-            <div className="mt-4 grid gap-2">
-              <button onClick={() => { logPeriodStart(dateKey(confirmDay)); setConfirmDay(null); }} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}>
-                <Check className="h-4 w-4" strokeWidth={3} /> Yes, log it
-              </button>
-              <button onClick={() => setConfirmDay(null)} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: '#9D5C7E', background: 'rgba(252,231,243,0.7)' }}>
-                No, not this day
-              </button>
-            </div>
+            {(() => {
+              const dayLabel = sameDay(confirmDay, today) ? 'today' : confirmDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+              const isLogged = readPeriodStarts().includes(dateKey(confirmDay));
+              const isTodayOrOverdue = sameDay(confirmDay, today);
+              if (isLogged) {
+                // Already checked → let her un-check it right on the calendar.
+                return (
+                  <>
+                    <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>
+                      Period logged<br />{dayLabel === 'today' ? 'for today' : `on ${dayLabel}`}
+                    </p>
+                    <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>Wasn't this the day? Un-check it and I'll re-tune your cycle &amp; predictions ✿</p>
+                    <div className="mt-4 grid gap-2">
+                      <button onClick={() => { removePeriodStart(dateKey(confirmDay)); setConfirmDay(null); }} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold active:scale-95 transition" style={{ color: '#BE185D', background: 'rgba(252,231,243,0.9)', boxShadow: '0 6px 18px rgba(219,39,119,0.18)' }}>
+                        <X className="h-4 w-4" strokeWidth={3} /> My period didn't start this day
+                      </button>
+                      <button onClick={() => setConfirmDay(null)} className="rounded-full py-2.5 text-[13px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
+                        Keep it ✓
+                      </button>
+                    </div>
+                  </>
+                );
+              }
+              // Not logged → check it as the real start, or say it hasn't come yet.
+              return (
+                <>
+                  <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>
+                    Did your period start<br />{dayLabel}?
+                  </p>
+                  <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>I'll log it as your real start and re-tune your cycle &amp; predictions ✿</p>
+                  <div className="mt-4 grid gap-2">
+                    <button onClick={() => { logPeriodStart(dateKey(confirmDay)); setConfirmDay(null); }} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}>
+                      <Check className="h-4 w-4" strokeWidth={3} /> Yes, my period started this day
+                    </button>
+                    <button onClick={() => { if (isTodayOrOverdue) skipPeriodPromptToday(); setConfirmDay(null); }} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: '#9D5C7E', background: 'rgba(252,231,243,0.7)' }}>
+                      {isTodayOrOverdue ? "Not yet — it hasn't started" : 'No, not this day'}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>,
         document.body,
@@ -962,8 +956,38 @@ export function CycleTracker() {
             )}
           </div>
 
+          {/* On a fresh reset, only the phase hero + its "Tap to set up" CTA remain —
+              plus this tempting blurred peek at the insights she'll unlock. */}
+          {!isSetup && (
+            <div className="relative overflow-hidden rounded-[22px] mt-3.5 animate-card-pop-in" style={{ border: '1px solid rgba(255,255,255,0.55)', boxShadow: '0 8px 24px rgba(236,72,153,.12)', background: 'rgba(255,255,255,0.55)' }}>
+              {/* The real cycle graph, blurred — a genuine peek behind the frosted glass */}
+              <div aria-hidden className="pointer-events-none select-none" style={{ filter: 'blur(5px)', opacity: 0.7, padding: '12px 10px' }}>
+                {renderWellnessGraph("teaser")}
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center px-5" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45), rgba(252,231,243,0.82))' }}>
+                <div className="grid h-14 w-14 place-items-center rounded-full animate-selected-glow" style={{ background: '#FCE7F3' }}>
+                  <TrendingUp className="h-7 w-7" style={{ color: '#EC4899' }} strokeWidth={2} />
+                </div>
+                <p className="font-script leading-none" style={{ fontSize: '26px', color: '#DB2777' }}>Your insights await ✿</p>
+                <p style={{ fontSize: '12px', maxWidth: '250px', lineHeight: 1.45, color: '#9D5C7E' }}>
+                  Set up your cycle to unlock your hormone curve, wellness trends, fertile window &amp; daily insights.
+                </p>
+                <button
+                  onClick={() => setSetupOpen(true)}
+                  className="mt-1.5 inline-flex items-center gap-1.5 rounded-full text-white active:scale-95 transition animate-cta-bounce"
+                  style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', padding: '10px 22px', fontSize: '14px', fontWeight: 700, boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}
+                >
+                  <Sparkles className="h-4 w-4" strokeWidth={2.2} /> Set me up ✿
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Every data section below is hidden until she's set up her cycle. */}
+          {isSetup && (<>
+
           {/* ── STAT CARDS (2×2 on phone, 4-up on tablet+) ── */}
-          <div className={["transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}>
+          <div className="transition-all duration-700">
             <div className="grid grid-cols-4 gap-[6px] md:gap-3 mt-3.5">
               {/* Next Period */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
@@ -1162,10 +1186,11 @@ export function CycleTracker() {
                     key={i}
                     onClick={() => {
                       setSelected(d);
-                      // Tap a recent/today day that isn't a logged start → centre-screen
-                      // confirm so she can log a period that came early or on-time.
+                      // Tap a recent/today day → centre-screen confirm so she can
+                      // check ("it started this day") or un-check ("it didn't") a
+                      // period start right on the calendar.
                       const ago = Math.round((today.getTime() - d.getTime()) / MS_DAY);
-                      if (isSetup && ago >= 0 && ago <= 12 && !readPeriodStarts().includes(dateKey(d))) setConfirmDay(d);
+                      if (isSetup && ago >= 0 && ago <= 12) setConfirmDay(d);
                     }}
                     title={`${d.getDate()} · ${PHASE_LABEL[phase]}`}
                     className={["relative aspect-square border-none cursor-pointer rounded-xl flex flex-col items-center justify-center gap-[2px] transition-all duration-200 hover:scale-105 active:scale-90", isToday ? "animate-selected-glow" : ""].join(" ")}
@@ -1271,12 +1296,14 @@ export function CycleTracker() {
               </a>
             </div>
           </div>
+          </>)}
 
         </div>{/* /lg:col-span-3 */}
 
         {/* ══════════════ RIGHT PANEL (40%) — desktop sticky ══════════════ */}
+        {isSetup && (
         <aside
-          className={["reveal-on-scroll hidden lg:block lg:col-span-2 lg:sticky lg:top-4 transition-all duration-700", !isSetup ? "grayscale opacity-40 pointer-events-none select-none" : ""].join(" ")}
+          className="reveal-on-scroll hidden lg:block lg:col-span-2 lg:sticky lg:top-4 transition-all duration-700"
           style={{
             background: 'rgba(255,255,255,0.72)',
             backdropFilter: 'blur(20px)',
@@ -1332,10 +1359,12 @@ export function CycleTracker() {
             </div>
           </div>
         </aside>
+        )}
 
       </div>{/* /lg:grid */}
 
-      {/* Sticky CTA — mobile/tablet only */}
+      {/* Sticky CTA — mobile/tablet only; hidden until she's set up (no phase flow yet) */}
+      {isSetup && (
       <a
         href="/app/tools/yoga"
         className="lg:hidden fixed left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-full py-3.5 font-bold text-white"
@@ -1349,34 +1378,21 @@ export function CycleTracker() {
       >
         <Play className="h-4 w-4 fill-white" /> Start 15-Min Flow
       </a>
+      )}
 
       <PeriodSetup
         open={setupOpen}
         onClose={() => setSetupOpen(false)}
         initial={settings}
         onSave={(s) => {
-          // If, by the calc, her period is due/overdue today, we must ASK before
-          // celebrating: "did it start today?". A fresh setup must always re-ask,
-          // even if she dismissed the prompt earlier today — clear the skip FIRST,
-          // before writeCycleSettings broadcasts, so the app-wide PeriodConfirm
-          // re-checks and reappears.
-          const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / MS_DAY);
-          const overdue = diff >= s.cycleLength;
-          if (overdue) clearPeriodPromptSkip();
-
           setSettings(s); writeCycleSettings(s); setIsSetup(true);
           try { localStorage.setItem(CYCLE_ONBOARDED_KEY, "1"); } catch {}
           if (awaitDiet) { setTimeout(returnToDiet, 700); return; }
-
-          if (overdue) {
-            // Hold the celebration until she answers the prompt; we then show it
-            // with the REAL resulting phase (period if yes, luteal if not yet).
-            setAwaitSetupAnswer(true);
-          } else {
-            // One soft, gentle "you're set!" moment — her phase + a little advice —
-            // then Continue whisks her to Today to finish setting up her world.
-            setCelebrate(effectiveCurrentPhase(s));
-          }
+          // No "did it start today?" prompt any more — we simply apply her input
+          // (calc + calendar theme) and celebrate the resulting phase. If her period
+          // comes earlier or later than predicted, she adjusts it on the calendar:
+          // tap the day → "it started this day" / "it didn't".
+          setCelebrate(effectiveCurrentPhase(s));
         }}
       />
 

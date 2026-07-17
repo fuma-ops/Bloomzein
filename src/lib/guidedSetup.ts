@@ -21,9 +21,11 @@ export function isGuided(): boolean {
 /** Mark that she's in the guided flow — called when she taps a Today checklist step. */
 export function startGuide(): void {
   try { sessionStorage.setItem(GUIDE_KEY, "1"); } catch {}
+  try { window.dispatchEvent(new Event("bloom:guide-updated")); } catch {}
 }
 
 /** Clear the guided flow — called once her world is fully built. */
 export function endGuide(): void {
   try { sessionStorage.removeItem(GUIDE_KEY); } catch {}
+  try { window.dispatchEvent(new Event("bloom:guide-updated")); } catch {}
 }
