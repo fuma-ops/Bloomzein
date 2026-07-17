@@ -19,6 +19,7 @@ import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { buildDayCoach } from "@/lib/todayCoach";
 import { CoachTodayCompact } from "@/components/bloom/coach/CoachCards";
 import { BuildBloomWorld } from "@/components/bloom/today/BuildBloomWorld";
+import { PersonalizedBloomPreview } from "@/components/bloom/today/PersonalizedBloomPreview";
 import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
@@ -350,6 +351,7 @@ export default function TodayPage() {
   // every data-driven card (affirmation, bloom ring, due-today) and shows a single
   // enchanting "here's the magic that blooms after setup" reveal instead.
   const isFresh         = !cycleReady && !mealPlanned && !dietSetup && !movementPlanned;
+  const allSetup        = cycleReady && mealPlanned && dietSetup && movementPlanned;
   const cycleSettings   = useMemo(readCycleSettings, []);
   const pillLabel       = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
   const displayName     = profile?.name?.split(" ")[0] || "Beautiful";
@@ -982,6 +984,10 @@ export default function TodayPage() {
              tool is configured. (self-hides when all steps are done) ── */}
       <BuildBloomWorld moodDone={!!mood} onLogMood={() => setMoodPickerOpen(true)} />
 
+      {/* Until her world is fully set up, show a blurred, locked peek of the real
+          Today she'll unlock (instead of half-empty coach/reads sections). */}
+      {!allSetup && <PersonalizedBloomPreview />}
+
       {/* ══ DESKTOP: 60% main content + 40% sticky smart panel (CLAUDE.md) ══ */}
       <div className="lg:grid lg:grid-cols-5 lg:gap-x-6 lg:items-start">
 
@@ -992,9 +998,9 @@ export default function TodayPage() {
              title (see the compact affirmationCard below), where it appears
              straight away on the first-ever visit and softly on scroll after. ── */}
 
-      {/* ── FRESH REVEAL — the enchanting "here's the magic that blooms after setup"
-             section a just-reset user sees where her plan will live. ── */}
-      {isFresh && <FreshReveal phase={phase} />}
+      {/* ── FRESH REVEAL retired — the blurred "personalized Bloom world" preview
+             (rendered above, for any not-yet-set-up user) now stands in for the
+             brand-new-user plan/reads/coach peek. ── */}
 
       {/* ── 2. TODAY'S BLOOM PLAN — the real plan once she's planned meals/movement;
              a "how it all syncs" setup menu once her cycle's set but nothing's
@@ -1157,8 +1163,9 @@ export default function TodayPage() {
 
       {/* ── 2b. YOUR COACH TODAY + TOMORROW — the emotional daily ritual: how you
              feel, what you need, one little joy, and a soft peek at tomorrow.
-             Free forever (the daily habit); the full plan lives in Diet. ── */}
-      {cycleReady && (
+             Only once her world is set up (before that, the locked preview
+             above stands in for it). ── */}
+      {cycleReady && allSetup && (
         <section className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 animate-card-pop-in" style={{ animationDelay: "80ms" }}>
           <CoachTodayCompact coach={coach} />
           <DiscoverBloomPlus feature="general" />
