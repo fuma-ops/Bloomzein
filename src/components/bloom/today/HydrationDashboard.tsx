@@ -130,7 +130,10 @@ export function HydrationDashboard({
           {/* ── Header ── */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="inline-flex items-center gap-2 font-script text-[1.9rem] sm:text-4xl text-hotpink leading-none">Daily Hydration <span className="text-2xl">🌸</span></h2>
+              <div className="flex items-center gap-2.5">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30"><Droplet className="h-5 w-5" strokeWidth={1.9} fill="currentColor" /></span>
+                <h2 className="font-script text-[1.9rem] sm:text-4xl text-hotpink leading-none">Daily Hydration</h2>
+              </div>
               <p className="mt-1.5 text-[12px] sm:text-sm text-rose/70 leading-snug max-w-sm">
                 Water is self-care. Every sip helps you feel your best, <span className="font-bold text-hotpink">inside</span> and <span className="font-bold text-hotpink">out</span>.
               </p>
