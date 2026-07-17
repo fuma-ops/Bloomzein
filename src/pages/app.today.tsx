@@ -17,7 +17,7 @@ import { todayISO } from "@/lib/localDate";
 import { stampWater } from "@/lib/dailyLog";
 import { TodayEnergyStrip } from "@/components/bloom/diet/DietDashboard";
 import { buildDayCoach } from "@/lib/todayCoach";
-import { CoachTodayCompact, TomorrowCard } from "@/components/bloom/coach/CoachCards";
+import { CoachTodayCompact } from "@/components/bloom/coach/CoachCards";
 import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
@@ -1212,7 +1212,6 @@ export default function TodayPage() {
       {cycleReady && (
         <section className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 animate-card-pop-in" style={{ animationDelay: "80ms" }}>
           <CoachTodayCompact coach={coach} />
-          <TomorrowCard coach={coach} />
           <DiscoverBloomPlus feature="general" />
         </section>
       )}
@@ -1327,6 +1326,26 @@ export default function TodayPage() {
       </section>
       )}
 
+      {/* ── DAILY HYDRATION — sits right under "Your bloom today" in the right
+             panel on laptop (and in the single-column flow on mobile). ── */}
+      {!isFresh && (
+        <HydrationDashboard
+          phase={phase}
+          cycleReady={cycleReady}
+          count={waterCount}
+          goal={waterGoal}
+          onTapGlass={tapWater}
+          onDrinkGlass={() => tapWater(waterCount)}
+          remindersEnabled={waterRemindersEnabled}
+          reminderBusy={reminderBusy}
+          onToggleReminders={toggleWaterReminders}
+          onOpenSettings={() => setWaterModalOpen(true)}
+          lastGlassAt={waterLastAt}
+          bloomPercent={bloomPercent}
+          highlight={highlightId === "hydration"}
+        />
+      )}
+
       {/* ── 3. DUE TODAY ─────────────────────────────────────────────────────── */}
       {hasDueItems && !isFresh && (
         <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "90ms" }}>
@@ -1379,25 +1398,6 @@ export default function TodayPage() {
 
       </aside>{/* /SMART RIGHT PANEL */}
       </div>{/* /2-column grid */}
-
-      {/* ── 6. DAILY HYDRATION — a full-width, phase-aware, motivational dashboard ── */}
-      {!isFresh && (
-        <HydrationDashboard
-          phase={phase}
-          cycleReady={cycleReady}
-          count={waterCount}
-          goal={waterGoal}
-          onTapGlass={tapWater}
-          onDrinkGlass={() => tapWater(waterCount)}
-          remindersEnabled={waterRemindersEnabled}
-          reminderBusy={reminderBusy}
-          onToggleReminders={toggleWaterReminders}
-          onOpenSettings={() => setWaterModalOpen(true)}
-          lastGlassAt={waterLastAt}
-          bloomPercent={bloomPercent}
-          highlight={highlightId === "hydration"}
-        />
-      )}
 
       {/* ── WATER GOAL MODAL ────────────────────────────────────────────────── */}
       {waterModalOpen && (

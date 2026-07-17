@@ -147,7 +147,7 @@ export function HydrationDashboard({
           </div>
 
           {/* ── Body: ring & glasses (left) · info (right) ── */}
-          <div className="mt-4 grid gap-4 lg:grid-cols-2 items-start">
+          <div className="mt-4 grid gap-4 items-start">
             {/* LEFT — big ring in its own photo-backed panel + glasses */}
             <div>
               {/* Ring section — the Bloomzein bottle photo is THIS panel's
@@ -222,7 +222,7 @@ export function HydrationDashboard({
               {/* Benefits */}
               <div>
                 <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843] mb-1.5"><Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} /> Today's hydration benefits</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <BenefitBar Icon={Sparkles} label="Skin glow"       pct={benefits.skin} />
                   <BenefitBar Icon={Brain}    label="Better focus"    pct={benefits.focus} />
                   <BenefitBar Icon={Dumbbell} label="Muscle recovery" pct={benefits.muscle} />
@@ -245,7 +245,7 @@ export function HydrationDashboard({
           </div>
 
           {/* ── Footer: did-you-know · bloom level ── */}
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3">
             <div className="flex items-start gap-3 rounded-2xl bg-white/70 border border-petal/50 p-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Lightbulb className="h-4 w-4" strokeWidth={2} /></span>
               <div className="min-w-0">
