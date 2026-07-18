@@ -1500,8 +1500,7 @@ const RAW_RECIPES: RawRecipe[] = [
     substitutionTip: "Swap sweet potato for butternut squash."
   },
   {
-    id: "kid-bento", name: "Strawberry Bento Lunchbox", cuisine: "Global", mealType: "lunchbox",
-    image: "/images/meal-lunchbox.webp",
+    id: "kid-bento", name: "Strawberry Bento Lunchbox", cuisine: "Global", mealType: "lunchbox", image: "/images/recipes/snack-global-cottage-cheese-pineapple.webp",
     prepTime: 10, cookTime: 0, difficulty: "easy",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],
@@ -2085,7 +2084,7 @@ const RAW_RECIPES: RawRecipe[] = [
 
   // ───────── Batch 2 — Lunchbox (+3) ─────────
   {
-    id: "lb01", name: "Veggie Wrap Pinwheels", cuisine: "Mediterranean", mealType: "lunchbox",
+    id: "lb01", name: "Veggie Wrap Pinwheels", cuisine: "Mediterranean", mealType: "lunchbox", image: "/images/recipes/lunch-latin-turkey-avocado-power-wrap.webp",
     prepTime: 10, cookTime: 0, difficulty: "easy",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],
@@ -2111,7 +2110,7 @@ const RAW_RECIPES: RawRecipe[] = [
     substitutionTip: "Use dairy-free cream cheese or [[hummus]] as the spread for a vegan box.",
   },
   {
-    id: "lb02", name: "Turkey & Cheese Roll-ups", cuisine: "Global", mealType: "lunchbox",
+    id: "lb02", name: "Turkey & Cheese Roll-ups", cuisine: "Global", mealType: "lunchbox", image: "/images/recipes/lunch-latin-turkey-avocado-power-wrap.webp",
     prepTime: 8, cookTime: 0, difficulty: "quick",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain", "gain"],
     dietTags: ["gluten-free"], allergens: ["dairy"],
@@ -2136,7 +2135,7 @@ const RAW_RECIPES: RawRecipe[] = [
     substitutionTip: "Swap turkey for sliced chicken or ham; use a plant-based slice for dairy-free.",
   },
   {
-    id: "lb03", name: "Fruit & Yogurt Parfait Cup", cuisine: "Global", mealType: "lunchbox",
+    id: "lb03", name: "Fruit & Yogurt Parfait Cup", cuisine: "Global", mealType: "lunchbox", image: "/images/recipes/breakfast-mediterranean-greek-yogurt-power-bowl.webp",
     prepTime: 5, cookTime: 0, difficulty: "quick",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["dairy"],
@@ -2760,7 +2759,7 @@ const RAW_RECIPES: RawRecipe[] = [
 
   // ───────── Batch 3 — Lunchbox (+4) ─────────
   {
-    id: "lb04", name: "Hummus & Veggie Sticks Box", cuisine: "Mediterranean", mealType: "lunchbox",
+    id: "lb04", name: "Hummus & Veggie Sticks Box", cuisine: "Mediterranean", mealType: "lunchbox", image: "/images/recipes/snack-middle-eastern-carrot-sticks-hummus-seeds.webp",
     prepTime: 8, cookTime: 0, difficulty: "quick",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain", "lose"],
     dietTags: ["vegan", "gluten-free"], allergens: [],
@@ -2786,7 +2785,7 @@ const RAW_RECIPES: RawRecipe[] = [
     substitutionTip: "Swap hummus for guacamole, or use gluten-free crackers to keep it coeliac-friendly.",
   },
   {
-    id: "lb05", name: "Cheese & Crackers Lunchbox", cuisine: "Global", mealType: "lunchbox",
+    id: "lb05", name: "Cheese & Crackers Lunchbox", cuisine: "Global", mealType: "lunchbox", image: "/images/recipes/snack-global-cheese-whole-grain-crackers.webp",
     prepTime: 5, cookTime: 0, difficulty: "quick",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["dairy"],
@@ -2811,7 +2810,7 @@ const RAW_RECIPES: RawRecipe[] = [
     substitutionTip: "Use a plant-based cheese and add a few almonds for a dairy-free, protein-rich box.",
   },
   {
-    id: "lb06", name: "Chicken & Rice Lunchbox", cuisine: "Asian", mealType: "lunchbox",
+    id: "lb06", name: "Chicken & Rice Lunchbox", cuisine: "Asian", mealType: "lunchbox", image: "/images/recipes/lunch-asian-shrimp-avocado-rice-bowl.webp",
     prepTime: 10, cookTime: 0, difficulty: "easy",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["gain", "maintain"],
     dietTags: ["halal", "gluten-free"], allergens: ["soy"],
@@ -2837,7 +2836,7 @@ const RAW_RECIPES: RawRecipe[] = [
     substitutionTip: "Use tamari for gluten-free, or swap chicken for tofu to make it vegan.",
   },
   {
-    id: "lb07", name: "Mini Quiche & Fruit Box", cuisine: "Mediterranean", mealType: "lunchbox",
+    id: "lb07", name: "Mini Quiche & Fruit Box", cuisine: "Mediterranean", mealType: "lunchbox", image: "/images/recipes/snack-global-avocado-deviled-eggs.webp",
     prepTime: 10, cookTime: 0, difficulty: "easy",
     phases: ["menstrual", "follicular", "ovulatory", "luteal"], goal: ["maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["eggs", "dairy"],
