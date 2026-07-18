@@ -833,25 +833,30 @@ export default function TodayPage() {
   ) : null;
 
   return (
-    <div className="relative">
-      {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface;
-          the hero photo dissolves into it via a bottom fade (no floating card). */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-6 -z-10 h-[560px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+    <div className="relative isolate">
+      {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+
+      {/* Hero photo as ONE blended page BACKGROUND — she flows down the right,
+          behind the greeting AND behind the top of "Build your Bloom world",
+          feathered on the left & bottom (right/top bleed off-screen) so there's
+          no crop line or box: the photo simply *is* the background. `isolate` on
+          the root keeps this -z layer from vanishing behind the app shell. */}
+      <div aria-hidden className="pointer-events-none absolute right-0 -top-8 -z-10 -mr-3 sm:-mr-6 md:-mr-8 h-[640px] w-[92%] sm:w-[68%] lg:w-[58%] overflow-hidden">
+        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_15%]" referrerPolicy="no-referrer" />
+        {/* left fade (into the greeting) + bottom fade (into Build-your-world) */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE1EF] via-[#FFE1EF]/20 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-60 bg-gradient-to-b from-transparent via-[#FFE4F1]/75 to-[#FFE4F1]" />
+      </div>
+
       <BloomBubbles count={10} />
 
-      {/* ── 1. HERO — full-bleed photo, taller so more of her shows, melting into
-             the page wash below (no hard crop line). ── */}
+      {/* ── 1. HERO — transparent; the photo lives in the page background above. ── */}
       <section
-        className="relative overflow-hidden -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[300px] sm:min-h-[360px] rounded-b-[1.75rem] sm:rounded-b-[2.75rem] animate-card-pop-in"
+        className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[320px] sm:min-h-[380px] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
-        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-[72%_16%]" referrerPolicy="no-referrer" />
-        <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
-        {/* left fade so the greeting side blends, bottom fade so she melts down */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#FFE1EF]/70 via-[#FFE1EF]/10 to-transparent" />
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-[#FFE4F1]/70 to-[#FFE4F1]" />
-
-        <div className="relative z-[2] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[68%] sm:max-w-md">
+        <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[68%] sm:max-w-md">
           <h1 className="animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
