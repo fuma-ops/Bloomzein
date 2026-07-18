@@ -5,7 +5,7 @@ import {
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
-  BookOpen, ChevronRight, Zap, Target, Lightbulb,
+  BookOpen, ChevronRight, Zap, Target, Lightbulb, Flame, Wheat, Leaf, Headphones, Repeat,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -1546,12 +1546,14 @@ function PlanDetailModal({
   onToggleDone: () => void;
   onClose: () => void;
 }) {
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
     if (!item) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [item, onClose]);
+  useEffect(() => { if (item) { try { setSaved(JSON.parse(localStorage.getItem("bloom:saved-items") || "[]").includes(item.id)); } catch {} } }, [item]);
 
   if (!item) return null;
   const timing = planItemTiming(item.time);
@@ -1561,11 +1563,34 @@ function PlanDetailModal({
     workout: { planned: readWorkoutPlanDays().includes(dow), title: SHARED_PHASE_PLAN[phase].workout.title },
   });
   const CARD_ICON = { cycle: Droplet, movement: Activity, energy: Zap, goal: Target } as const;
+  const phaseLabel = PHASE_LABEL[phase];
   const whyNoun = reason.type === "meal" ? "meal" : reason.type === "journal" ? "reflection" : reason.typeLabel.toLowerCase();
   const primaryLabel = reason.type === "meal" ? "View recipe" : reason.type === "journal" ? "Open journal" : "Start session";
   const doneLabel = reason.type === "meal" ? (done ? "Eaten ✓" : "I ate this")
     : reason.type === "journal" ? (done ? "Journaled ✓" : "I journaled")
     : (done ? "Done ✓" : "I did this");
+  const openTool = () => {
+    if (item.launch) writeLaunch(item.launch.key, item.launch.val);
+    if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
+  };
+  const toggleSaved = () => setSaved((s) => {
+    const n = !s;
+    try { const cur = JSON.parse(localStorage.getItem("bloom:saved-items") || "[]"); const next = n ? [...new Set([...cur, item.id])] : cur.filter((x: string) => x !== item.id); localStorage.setItem("bloom:saved-items", JSON.stringify(next)); } catch {}
+    return n;
+  });
+  // Highlight the phase phrase inside the narrative (e.g. "period phase").
+  const phaseRe = new RegExp(`(${phaseLabel}[- ]phase)`, "i");
+  const hl = (text: string) => text.split(new RegExp(`(${phaseLabel}[- ]phase)`, "i")).map((p, i) =>
+    p && phaseRe.test(p) ? <b key={i} className="font-semibold text-hotpink">{p}</b> : <span key={i}>{p}</span>);
+  const cardPrefix = (k: string) => k === "cycle" ? "Supports today's" : k === "goal" ? "Supports your goal:" : k === "movement" && reason.type === "meal" ? "Pairs with" : "";
+  const NUT = reason.nutrition ? [
+    { l: "kcal", v: `${reason.nutrition.calories}`, Icon: Flame, color: "#EC4899" },
+    { l: "Protein", v: `${reason.nutrition.protein}g`, Icon: Dumbbell, color: "#A855F7" },
+    { l: "Carbs", v: `${reason.nutrition.carbs}g`, Icon: Wheat, color: "#F59E0B" },
+    { l: "Fats", v: `${reason.nutrition.fat}g`, Icon: Droplet, color: "#EAB308" },
+    { l: "Fiber", v: reason.nutrition.fibre > 0 ? `${reason.nutrition.fibre}g` : "—", Icon: Leaf, color: "#22C55E" },
+  ] : [];
+  const cardCols = reason.cards.length >= 4 ? "grid-cols-4" : "grid-cols-3";
 
   return createPortal(
     <div
@@ -1573,106 +1598,101 @@ function PlanDetailModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-hotpink/30 animate-scale-in"
+        className="relative w-full max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-[2rem] bg-[#FFF5F9] shadow-2xl shadow-hotpink/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Hero image */}
-        <div className="relative h-40 w-full shrink-0 overflow-hidden">
-          <img
-            src={item.image} alt="" className="h-full w-full object-cover"
-            onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/85 text-rose hover:bg-white transition active:scale-90"
-          >
-            <X className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-          <div className="absolute bottom-3 left-4 right-4">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink">{reason.typeLabel}</span>
-              {reason.kcal != null && (
-                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink">{reason.kcal} kcal</span>
-              )}
-              {timing === "now" && (
-                <span className="rounded-full bg-hotpink px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Now</span>
-              )}
+        <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-rose shadow-md hover:bg-blush transition active:scale-90">
+          <X className="h-4 w-4" strokeWidth={2.5} />
+        </button>
+
+        {/* HEADER — image left, title + tags + AI badge right */}
+        <div className="shrink-0 flex gap-3 p-4 pb-2">
+          <div className="relative w-28 shrink-0 self-start">
+            <img
+              src={item.image} alt="" className="aspect-square w-full rounded-2xl object-cover"
+              onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
+            />
+            <button onClick={toggleSaved} aria-label="Save" className="absolute left-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-hotpink shadow active:scale-90">
+              <Heart className={["h-3.5 w-3.5", saved ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} />
+            </button>
+          </div>
+          <div className="min-w-0 flex-1 pr-6">
+            <h3 className="font-serif text-[19px] font-bold text-[#9D174D] leading-tight">
+              {item.label} <BloomFlower className="inline h-3.5 w-3.5 text-hotpink" />
+            </h3>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="rounded-md bg-blush px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-hotpink">{reason.typeLabel}</span>
+              {reason.kcal != null && <span className="text-[11px] font-bold text-hotpink">{reason.kcal} kcal</span>}
             </div>
-            <h3 className="mt-1 font-script text-2xl text-white leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">{item.label}</h3>
-            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-              {reason.tags.map((t) => (
-                <span key={t} className="text-[10px] font-semibold text-white/90 drop-shadow">{t}</span>
-              ))}
+            {reason.tags.length > 0 && <p className="mt-1 text-[10.5px] text-rose/70">{reason.tags.join("  ·  ")}</p>}
+            <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-blush/60 px-2.5 py-1.5">
+              <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-hotpink leading-tight">AI selected for you today</p>
+                <p className="text-[9px] text-rose/60 leading-tight">Based on your cycle, movement and goals.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* AI badge */}
-        <div className="shrink-0 px-4 pt-3">
-          <div className="flex items-center gap-2 rounded-2xl bg-blush/60 border border-hotpink/20 px-3 py-2">
-            <Sparkles className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={2} />
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-hotpink leading-tight">Bloomzein selected this for you today</p>
-              <p className="text-[10px] text-rose/60 leading-tight">Based on your cycle, movement &amp; goals.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Scrollable reasoning body */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-          {/* Why */}
-          <div>
-            <p className="flex items-center gap-1.5 font-script text-lg text-hotpink leading-tight">
-              <BloomFlower className="h-3.5 w-3.5" /> Why Bloomzein chose this {whyNoun} for you today
+        {/* SCROLL BODY */}
+        <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2.5">
+          {/* Why + 4 cards (one white card) */}
+          <div className="rounded-2xl bg-white p-3">
+            <p className="flex items-start gap-1.5 text-[13px] font-bold text-[#9D174D] leading-tight">
+              <BloomFlower className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" /> Why Bloomzein chose this {whyNoun} for you today
             </p>
-            <p className="mt-1 text-[12.5px] text-rose/80 leading-relaxed">{reason.narrative}</p>
+            <p className="mt-1 text-[11.5px] text-rose/80 leading-relaxed">{hl(reason.narrative)}</p>
+
+            <div className={["mt-2.5 grid gap-1.5", cardCols].join(" ")}>
+              {reason.cards.map((c) => {
+                const Ic = CARD_ICON[c.key];
+                const prefix = cardPrefix(c.key);
+                return (
+                  <div key={c.key} className="flex flex-col items-center rounded-xl bg-blush/40 p-1.5 text-center">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink"><Ic className="h-3 w-3" strokeWidth={2} /></span>
+                    <p className="mt-1 text-[9.5px] font-bold text-hotpink leading-none">{c.title}</p>
+                    <p className="mt-0.5 text-[7.5px] leading-tight">
+                      {prefix ? <><span className="text-rose/50">{prefix} </span><b className="text-rose/80">{c.supports}</b></> : <span className="text-rose/60">{c.supports}</span>}
+                    </p>
+                    <ul className="mt-1 w-full space-y-0.5 text-left">
+                      {c.bullets.map((b, i) => (
+                        <li key={i} className="flex items-start gap-0.5 text-[7.5px] text-rose/70 leading-tight">
+                          <Check className="mt-[1px] h-2 w-2 shrink-0 text-hotpink" strokeWidth={3} />{b}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="mt-1.5 grid h-4 w-4 place-items-center rounded-full bg-hotpink text-white shadow-sm shadow-hotpink/40"><Check className="h-2.5 w-2.5" strokeWidth={3} /></span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* 4 reason cards */}
-          <div className="grid grid-cols-2 gap-2">
-            {reason.cards.map((c) => {
-              const Ic = CARD_ICON[c.key];
-              return (
-                <div key={c.key} className="rounded-2xl bg-blush/40 border border-petal/50 p-2.5">
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow-sm">
-                    <Ic className="h-3.5 w-3.5" strokeWidth={2} />
-                  </span>
-                  <p className="mt-1.5 text-[11px] font-bold text-hotpink leading-tight">{c.title}</p>
-                  <p className="text-[9.5px] text-rose/55 leading-tight">{c.supports}</p>
-                  <ul className="mt-1 space-y-0.5">
-                    {c.bullets.map((b, i) => (
-                      <li key={i} className="flex items-start gap-1 text-[10px] text-rose/70 leading-snug">
-                        <Check className="h-2.5 w-2.5 mt-0.5 shrink-0 text-hotpink" strokeWidth={3} /> {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Nutrition breakdown (meals only) */}
+          {/* Nutrition breakdown (meals) */}
           {reason.nutrition && (
-            <div className="rounded-2xl bg-white border border-petal/50 p-3">
-              <p className="text-[11px] font-bold text-hotpink mb-2 flex items-center gap-1"><BloomFlower className="h-3 w-3" /> Nutrition breakdown</p>
+            <div className="rounded-2xl bg-white p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="flex items-center gap-1 text-[12px] font-bold text-[#9D174D]"><BloomFlower className="h-3 w-3 text-hotpink" /> Nutrition breakdown</p>
+                <a href="/app/tools/diet" className="inline-flex items-center gap-0.5 text-[10px] font-bold text-hotpink">More details <ChevronRight className="h-3 w-3" /></a>
+              </div>
               <div className="grid grid-cols-5 gap-1.5 text-center">
-                {[["kcal", `${reason.nutrition.calories}`], ["Protein", `${reason.nutrition.protein}g`], ["Carbs", `${reason.nutrition.carbs}g`], ["Fats", `${reason.nutrition.fat}g`], ["Fiber", reason.nutrition.fibre > 0 ? `${reason.nutrition.fibre}g` : "—"]].map(([l, v]) => (
-                  <div key={l} className="rounded-xl bg-blush/40 py-1.5">
-                    <p className="text-[12px] font-bold text-hotpink leading-none">{v}</p>
-                    <p className="text-[8px] text-rose/50 mt-0.5">{l}</p>
+                {NUT.map((n) => (
+                  <div key={n.l} className="flex flex-col items-center rounded-xl bg-blush/40 py-1.5">
+                    <n.Icon className="h-3.5 w-3.5" style={{ color: n.color }} strokeWidth={2} />
+                    <p className="mt-0.5 text-[11px] font-bold text-[#9D174D] leading-none">{n.v}</p>
+                    <p className="text-[7.5px] text-rose/50">{n.l}</p>
                   </div>
                 ))}
               </div>
               {reason.micros && reason.micros.length > 0 && (
-                <div className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1">
+                <div className="mt-2.5 grid grid-cols-4 gap-1 text-center">
                   {reason.micros.map((m) => (
-                    <div key={m.label} className="flex items-center justify-between">
-                      <span className="text-[10px] text-rose/70">{m.label}</span>
-                      <span className="flex">
+                    <div key={m.label}>
+                      <p className="mb-0.5 text-[8.5px] text-rose/70">{m.label}</p>
+                      <span className="flex justify-center">
                         {[0, 1, 2, 3, 4].map((i) => (
-                          <Star key={i} className={["h-2.5 w-2.5", i < Math.round(m.stars) ? "fill-hotpink text-hotpink" : "text-petal"].join(" ")} strokeWidth={1.5} />
+                          <Star key={i} className={["h-2 w-2", i < Math.round(m.stars) ? "fill-hotpink text-hotpink" : "text-petal"].join(" ")} strokeWidth={1.5} />
                         ))}
                       </span>
                     </div>
@@ -1682,44 +1702,49 @@ function PlanDetailModal({
             </div>
           )}
 
-          {/* Did you know */}
-          <div className="flex items-start gap-2 rounded-2xl bg-blush/40 px-3 py-2.5">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-hotpink"><Lightbulb className="h-3.5 w-3.5" strokeWidth={2} /></span>
-            <div><p className="text-[11px] font-bold text-hotpink leading-tight">Did you know?</p><p className="text-[10.5px] text-rose/70 leading-snug mt-0.5">{reason.didYouKnow}</p></div>
+          {/* Did you know — decorative right */}
+          <div className="relative overflow-hidden rounded-2xl bg-blush/50 p-3 pr-14">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-hotpink"><span className="grid h-5 w-5 place-items-center rounded-full bg-white"><Lightbulb className="h-3 w-3" strokeWidth={2} /></span> Did you know?</p>
+            <p className="mt-1 text-[10.5px] text-rose/70 leading-snug">{reason.didYouKnow}</p>
+            <span aria-hidden className="pointer-events-none absolute -bottom-1 right-1 text-4xl opacity-80">🌸</span>
           </div>
 
-          {/* Bloom tip */}
-          <div className="flex items-start gap-2 rounded-2xl bg-blush/40 px-3 py-2.5">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-hotpink"><Sparkles className="h-3.5 w-3.5" strokeWidth={2} /></span>
-            <div><p className="text-[11px] font-bold text-hotpink leading-tight">Bloom tip for today</p><p className="text-[10.5px] text-rose/70 leading-snug mt-0.5">{reason.bloomTip}</p></div>
+          {/* Bloom tip — decorative right */}
+          <div className="relative overflow-hidden rounded-2xl bg-blush/50 p-3 pr-14">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-hotpink"><span className="grid h-5 w-5 place-items-center rounded-full bg-white"><Sparkles className="h-3 w-3" strokeWidth={2} /></span> Bloom tip for today</p>
+            <p className="mt-1 text-[10.5px] text-rose/70 leading-snug">{reason.bloomTip}</p>
+            <span aria-hidden className="pointer-events-none absolute -bottom-1 right-1 text-4xl opacity-80">{reason.type === "meal" ? "🍵" : "🌙"}</span>
           </div>
 
-          {/* Why Bloom didn't choose */}
+          {/* Why Bloom didn't choose — decorative right */}
           {reason.avoided && (
-            <div className="flex items-start gap-2 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blush/70 text-rose/70"><X className="h-3.5 w-3.5" strokeWidth={2.5} /></span>
-              <div><p className="text-[11px] font-bold text-rose/70 leading-tight">Why Bloom didn't choose…</p><p className="text-[10.5px] text-rose/60 leading-snug mt-0.5">{reason.avoided}</p></div>
+            <div className="relative overflow-hidden rounded-2xl bg-white p-3 pr-14">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold text-rose/70"><span className="grid h-5 w-5 place-items-center rounded-full bg-blush/70"><X className="h-3 w-3" strokeWidth={2.5} /></span> Why Bloom didn't choose…</p>
+              <p className="mt-1 text-[10.5px] text-rose/60 leading-snug">{reason.avoided}</p>
+              <span aria-hidden className="pointer-events-none absolute -bottom-1 right-1 text-4xl opacity-70">🧁</span>
             </div>
           )}
 
           {/* Explore more */}
           <div>
-            <p className="text-[11px] font-bold text-hotpink mb-1.5 flex items-center gap-1"><BloomFlower className="h-3 w-3" /> Explore more</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="mb-1.5 flex items-center gap-1 text-[11px] font-bold text-hotpink"><BloomFlower className="h-3 w-3" /> Explore more</p>
+            <div className="grid grid-cols-3 gap-1.5">
               {reason.explore.map((e) => {
-                const EIc = e.kind === "read" ? BookOpen : e.kind === "meditation" ? Moon : Flower2;
+                const EIc = e.kind === "read" ? BookOpen : e.kind === "meditation" ? Headphones : Flower2;
                 return (
-                  <a key={e.label} href={e.href} className="group overflow-hidden rounded-2xl bg-white border border-petal/50 text-left hover-scale transition">
-                    <div className="relative h-14 w-full overflow-hidden">
-                      {e.image
-                        ? <img src={e.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
-                        : <div className="absolute inset-0 bg-blush/60" />}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                      <span className="absolute left-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm"><EIc className="h-3 w-3" strokeWidth={2} /></span>
-                    </div>
-                    <div className="p-1.5">
-                      <p className="text-[10px] font-bold text-hotpink leading-tight">{e.label}</p>
-                      <p className="text-[8.5px] text-rose/55 leading-tight line-clamp-2">{e.sub}</p>
+                  <a key={e.label} href={e.href} className="group flex flex-col overflow-hidden rounded-xl bg-white transition hover-scale">
+                    {e.image && (
+                      <div className="relative h-12 w-full overflow-hidden">
+                        <img src={e.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+                      </div>
+                    )}
+                    <div className="p-2">
+                      <div className="flex items-center justify-between">
+                        <span className="grid h-5 w-5 place-items-center rounded-lg bg-blush/60 text-hotpink"><EIc className="h-3 w-3" strokeWidth={2} /></span>
+                        <ArrowRight className="h-3 w-3 text-hotpink/50" />
+                      </div>
+                      <p className="mt-1 text-[10px] font-bold text-hotpink leading-tight">{e.label}</p>
+                      <p className="text-[8px] text-rose/55 leading-tight line-clamp-2">{e.sub}</p>
                     </div>
                   </a>
                 );
@@ -1728,25 +1753,27 @@ function PlanDetailModal({
           </div>
         </div>
 
-        {/* Footer — type-aware actions */}
-        <div className="shrink-0 flex items-center gap-2 border-t border-petal/40 bg-white p-3">
-          <a
-            href={item.tool}
-            onClick={() => {
-              if (item.launch) writeLaunch(item.launch.key, item.launch.val);
-              if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
-            }}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white px-4 py-2.5 text-[13px] font-bold text-hotpink active:scale-95 transition"
-          >
-            {primaryLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </a>
-          <button
-            onClick={onToggleDone}
-            aria-pressed={done}
-            className={["flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold active:scale-95 transition", done ? "bg-emerald-500 text-white" : "bloom-luxury-btn text-white animate-selected-glow"].join(" ")}
-          >
-            {done && <Check className="h-4 w-4" strokeWidth={3} />}{doneLabel}
-          </button>
+        {/* FOOTER */}
+        <div className="shrink-0 flex items-center gap-1.5 border-t border-petal/40 bg-white px-2.5 py-2.5">
+          {reason.type === "meal" ? (
+            <>
+              <a href={item.tool} onClick={openTool} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><Repeat className="h-4 w-4" strokeWidth={2} /><span className="text-[8px] font-bold">Swap</span></a>
+              <a href={item.tool} onClick={openTool} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><BookOpen className="h-4 w-4" strokeWidth={2} /><span className="text-[8px] font-bold">Recipe</span></a>
+              <button onClick={onToggleDone} aria-pressed={done} className={["flex-1 inline-flex items-center justify-center gap-1 rounded-full px-3 py-2.5 text-[12px] font-bold active:scale-95 transition", done ? "bg-emerald-500 text-white" : "bloom-luxury-btn text-white animate-selected-glow"].join(" ")}>
+                {done && <Check className="h-3.5 w-3.5" strokeWidth={3} />}{doneLabel}
+              </button>
+              <button onClick={toggleSaved} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><Heart className={["h-4 w-4", saved ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} /><span className="text-[8px] font-bold">Save</span></button>
+            </>
+          ) : (
+            <>
+              <a href={item.tool} onClick={openTool} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white px-4 py-2.5 text-[13px] font-bold text-hotpink active:scale-95 transition">
+                {primaryLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </a>
+              <button onClick={onToggleDone} aria-pressed={done} className={["flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold active:scale-95 transition", done ? "bg-emerald-500 text-white" : "bloom-luxury-btn text-white animate-selected-glow"].join(" ")}>
+                {done && <Check className="h-4 w-4" strokeWidth={3} />}{doneLabel}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,
