@@ -1705,14 +1705,22 @@ function PlanDetailModal({
           {/* Explore more */}
           <div>
             <p className="text-[11px] font-bold text-hotpink mb-1.5 flex items-center gap-1"><BloomFlower className="h-3 w-3" /> Explore more</p>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {reason.explore.map((e) => {
                 const EIc = e.kind === "read" ? BookOpen : e.kind === "meditation" ? Moon : Flower2;
                 return (
-                  <a key={e.label} href={e.href} className="rounded-2xl bg-blush/40 border border-petal/50 p-2 text-left hover-scale transition">
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink"><EIc className="h-3 w-3" strokeWidth={2} /></span>
-                    <p className="mt-1 text-[10px] font-bold text-hotpink leading-tight">{e.label}</p>
-                    <p className="text-[8.5px] text-rose/55 leading-tight line-clamp-2">{e.sub}</p>
+                  <a key={e.label} href={e.href} className="group overflow-hidden rounded-2xl bg-white border border-petal/50 text-left hover-scale transition">
+                    <div className="relative h-14 w-full overflow-hidden">
+                      {e.image
+                        ? <img src={e.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+                        : <div className="absolute inset-0 bg-blush/60" />}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <span className="absolute left-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-hotpink shadow-sm"><EIc className="h-3 w-3" strokeWidth={2} /></span>
+                    </div>
+                    <div className="p-1.5">
+                      <p className="text-[10px] font-bold text-hotpink leading-tight">{e.label}</p>
+                      <p className="text-[8.5px] text-rose/55 leading-tight line-clamp-2">{e.sub}</p>
+                    </div>
                   </a>
                 );
               })}
