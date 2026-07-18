@@ -819,7 +819,7 @@ function WeightChart({ history, target, projection }: {
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement }: {
+function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   mealsVersion: number;
@@ -835,6 +835,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   onPlanMovement: () => void;
   onUnplanMeals: () => void;
   onUnplanMovement: () => void;
+  onSyncCycle: () => void;
 }) {
   const regime = dietRegimeInfo(profile.regime ?? "balanced");
   const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
@@ -916,6 +917,10 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   // marker still present) can be un-planned from here; a plan the user built in
   // the Workout/Yoga tool is protected.
   const movementFromDiet = movementPlanned && (() => { try { return !!(localStorage.getItem("bloom:yoga-plan-goal") || localStorage.getItem("bloom:workout-plan-goal")); } catch { return false; } })();
+  // Step 2 state — has she synced the goal plan to her cycle phase?
+  const mealsSynced = useMemo(() => { try { return localStorage.getItem("bloom:meals-phase-synced") === "1"; } catch { return false; } }, [mealsVersion]);
+  const movementSynced = useMemo(() => { try { return localStorage.getItem("bloom:movement-phase-synced") === "1"; } catch { return false; } }, [mealsVersion]);
+  const phaseLabel = ({ menstrual: "period", follicular: "follicular", ovulatory: "ovulation", luteal: "luteal" } as Record<DietPhase, string>)[phase];
 
   return (
     <div className="space-y-4">
@@ -929,10 +934,15 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
             mealsFromDiet={mealsFromDiet}
             movementPlanned={movementPlanned}
             movementFromDiet={movementFromDiet}
+            mealsSynced={mealsSynced}
+            movementSynced={movementSynced}
+            phaseLabel={phaseLabel}
+            cycleReady={cycleReady}
             onPlanMeals={onPlanMeals}
             onPlanMovement={onPlanMovement}
             onUnplanMeals={onUnplanMeals}
             onUnplanMovement={onUnplanMovement}
+            onSyncCycle={onSyncCycle}
             onViewTodayPlan={() => goTo("today")}
           />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -1758,6 +1768,7 @@ export default function DietPage() {
     try {
       localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label);
       localStorage.setItem("bloom:meals-plan-goal", profile.goal); // goal-tuned marker
+      localStorage.removeItem("bloom:meals-phase-synced"); // a fresh goal plan isn't phase-synced yet
     } catch {}
     refreshMeals();
   };
@@ -1784,6 +1795,8 @@ export default function DietPage() {
       // Workout: arm autoplan so that WHEN she opens the Workout tool (via its
       // own CTA) it auto-generates a goal-fit week from her chosen setup.
       localStorage.setItem("bloom:workout-autoplan", "1");
+      localStorage.removeItem("bloom:movement-phase-synced"); // fresh goal plan; step 2 re-syncs
+
       window.dispatchEvent(new Event("storage"));
     } catch {}
     // Stay on My Diet — planning is implicit (the CTA flips to "Movement
@@ -1791,10 +1804,38 @@ export default function DietPage() {
     // tapping the Workout or Yoga CTA, never an automatic redirect.
   };
 
+  // Step 2 of the setup magic: re-tune the already-planned week to her PHASE —
+  // prefer phase-appropriate recipes (keeping the goal's calorie-awareness) and
+  // re-run the phase-matched movement. Sets the "synced" markers step 2 reads.
+  const syncWeekToPhase = () => {
+    const cyclePhase = mapCyclePhase(readCyclePhase());
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const slots = ["breakfast", "lunch", "dinner", "snack"] as const;
+    const target = computeTargets(true).calories;
+    days.forEach((d, di) => slots.forEach((slot, si) => {
+      const phaseCands = RECIPES.filter((r) => r.mealType === slot && r.phases.includes(cyclePhase) && passesMyRules(r, profile));
+      const cands = phaseCands.length ? phaseCands : RECIPES.filter((r) => r.mealType === slot && passesMyRules(r, profile));
+      if (!cands.length) return;
+      const budget = slotBudget(target, slot);
+      const byFit = [...cands].sort((a, b) => Math.abs(a.macros.calories - budget) - Math.abs(b.macros.calories - budget));
+      const pick = byFit[(di + si) % Math.min(byFit.length, 4)] ?? byFit[0];
+      addRecipeToMealPlan(pick.id, d, slot);
+      setMealPortion(d, slot as PlanSlot, portionForRecipe(pick.macros.calories || 0, slot, target));
+    }));
+    planMovementImplicit();
+    try {
+      localStorage.setItem("bloom:meals-from-diet", dietRegimeInfo(profile.regime ?? "balanced").label);
+      localStorage.setItem("bloom:meals-plan-goal", profile.goal);
+      localStorage.setItem("bloom:meals-phase-synced", "1");
+      localStorage.setItem("bloom:movement-phase-synced", "1");
+    } catch {}
+    refreshMeals();
+  };
+
   // Toggle the setup CTAs back OFF — un-plan meals / movement so the user can
-  // start fresh without opening a tool.
-  const unplanMealsImplicit = () => { clearMealPlan(); refreshMeals(); };
-  const unplanMovementImplicit = () => { clearMovementPlan(); };
+  // start fresh without opening a tool. Un-planning also clears the phase-sync.
+  const unplanMealsImplicit = () => { clearMealPlan(); try { localStorage.removeItem("bloom:meals-phase-synced"); } catch {} refreshMeals(); };
+  const unplanMovementImplicit = () => { clearMovementPlan(); try { localStorage.removeItem("bloom:movement-phase-synced"); } catch {} };
 
   // Reset the DIET tool only. Diet must never wipe plans the user built in the
   // Meals / Workout / Yoga tools — those are theirs. So we clear Diet's own keys
@@ -1933,6 +1974,7 @@ export default function DietPage() {
             onSyncedPlan={onSyncedPlan} onDietToday={onDietToday} onDietWeek={onDietWeek}
             onPlanMeals={planMealsImplicit} onPlanMovement={planMovementImplicit}
             onUnplanMeals={unplanMealsImplicit} onUnplanMovement={unplanMovementImplicit}
+            onSyncCycle={syncWeekToPhase}
           />
         )}
         {tab === "cycle" && (
