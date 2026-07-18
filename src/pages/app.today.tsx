@@ -5,7 +5,7 @@ import {
   CloudRain, Battery, Droplet, X, Settings2, Play, RefreshCw, Dumbbell,
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
-  BookOpen, ChevronRight,
+  BookOpen, ChevronRight, Zap, Target, Lightbulb,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -30,6 +30,7 @@ import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { BloomDayCelebration } from "@/components/bloom/BloomDayCelebration";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { ARTICLES } from "@/lib/readsData";
+import { reasonForItem } from "@/lib/planReasoning";
 import { AFFIRMATIONS } from "@/components/bloom/affirmations";
 import {
   getCurrentUserId,
@@ -1554,23 +1555,34 @@ function PlanDetailModal({
 
   if (!item) return null;
   const timing = planItemTiming(item.time);
+  const dow = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][(new Date().getDay() + 6) % 7];
+  const reason = reasonForItem(item, phase, {
+    yoga: { planned: readYogaPlanDays().includes(dow), title: SHARED_PHASE_PLAN[phase].yoga.title },
+    workout: { planned: readWorkoutPlanDays().includes(dow), title: SHARED_PHASE_PLAN[phase].workout.title },
+  });
+  const CARD_ICON = { cycle: Droplet, movement: Activity, energy: Zap, goal: Target } as const;
+  const whyNoun = reason.type === "meal" ? "meal" : reason.type === "journal" ? "reflection" : reason.typeLabel.toLowerCase();
+  const primaryLabel = reason.type === "meal" ? "View recipe" : reason.type === "journal" ? "Open journal" : "Start session";
+  const doneLabel = reason.type === "meal" ? (done ? "Eaten ✓" : "I ate this")
+    : reason.type === "journal" ? (done ? "Journaled ✓" : "I journaled")
+    : (done ? "Done ✓" : "I did this");
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-rose/30 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-rose/30 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-white/95 backdrop-blur-xl shadow-2xl shadow-hotpink/30 animate-scale-in"
+        className="relative w-full max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-hotpink/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Hero image */}
-        <div className="relative h-44 w-full overflow-hidden">
+        <div className="relative h-40 w-full shrink-0 overflow-hidden">
           <img
             src={item.image} alt="" className="h-full w-full object-cover"
             onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
           <button
             onClick={onClose}
             aria-label="Close"
@@ -1580,51 +1592,153 @@ function PlanDetailModal({
           </button>
           <div className="absolute bottom-3 left-4 right-4">
             <div className="flex items-center gap-1.5 flex-wrap">
-              {item.time && (
-                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink">{item.time}</span>
+              <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink">{reason.typeLabel}</span>
+              {reason.kcal != null && (
+                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink">{reason.kcal} kcal</span>
               )}
               {timing === "now" && (
                 <span className="rounded-full bg-hotpink px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white animate-cta-bounce">Now</span>
               )}
-              {cycleReady && (
-                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-hotpink/80">✿ {PHASE_LABEL[phase]}</span>
-              )}
             </div>
-            <h3 className="mt-1.5 font-script text-2xl text-white leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">{item.label}</h3>
+            <h3 className="mt-1 font-script text-2xl text-white leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">{item.label}</h3>
+            <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+              {reason.tags.map((t) => (
+                <span key={t} className="text-[10px] font-semibold text-white/90 drop-shadow">{t}</span>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-5">
-          <p className={["text-sm leading-relaxed", item.prompt ? "italic text-hotpink/80" : "text-rose/70"].join(" ")}>
-            {item.prompt ? `“${item.blurb}”` : item.blurb}
-          </p>
-
-          <div className="mt-5 flex items-center gap-2.5">
-            {/* Primary CTA — open the tool (carries the deep-link launch) */}
-            <a
-              href={item.tool}
-              onClick={() => {
-                if (item.launch) writeLaunch(item.launch.key, item.launch.val);
-                if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
-              }}
-              className="bloom-luxury-btn flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-white animate-selected-glow"
-            >
-              Open <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
-            </a>
-            {/* Gentle mark-done toggle */}
-            <button
-              onClick={onToggleDone}
-              aria-pressed={done}
-              aria-label={done ? "Mark as not done" : "Mark as done"}
-              className={[
-                "shrink-0 grid h-12 w-12 place-items-center rounded-2xl border-2 transition active:scale-90",
-                done ? "bg-hotpink border-hotpink text-white" : "border-petal text-hotpink/40 hover:border-hotpink/60",
-              ].join(" ")}
-            >
-              <Check className="h-5 w-5" strokeWidth={3} />
-            </button>
+        {/* AI badge */}
+        <div className="shrink-0 px-4 pt-3">
+          <div className="flex items-center gap-2 rounded-2xl bg-blush/60 border border-hotpink/20 px-3 py-2">
+            <Sparkles className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={2} />
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold text-hotpink leading-tight">Bloomzein selected this for you today</p>
+              <p className="text-[10px] text-rose/60 leading-tight">Based on your cycle, movement &amp; goals.</p>
+            </div>
           </div>
+        </div>
+
+        {/* Scrollable reasoning body */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          {/* Why */}
+          <div>
+            <p className="flex items-center gap-1.5 font-script text-lg text-hotpink leading-tight">
+              <BloomFlower className="h-3.5 w-3.5" /> Why Bloomzein chose this {whyNoun} for you today
+            </p>
+            <p className="mt-1 text-[12.5px] text-rose/80 leading-relaxed">{reason.narrative}</p>
+          </div>
+
+          {/* 4 reason cards */}
+          <div className="grid grid-cols-2 gap-2">
+            {reason.cards.map((c) => {
+              const Ic = CARD_ICON[c.key];
+              return (
+                <div key={c.key} className="rounded-2xl bg-blush/40 border border-petal/50 p-2.5">
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow-sm">
+                    <Ic className="h-3.5 w-3.5" strokeWidth={2} />
+                  </span>
+                  <p className="mt-1.5 text-[11px] font-bold text-hotpink leading-tight">{c.title}</p>
+                  <p className="text-[9.5px] text-rose/55 leading-tight">{c.supports}</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {c.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-1 text-[10px] text-rose/70 leading-snug">
+                        <Check className="h-2.5 w-2.5 mt-0.5 shrink-0 text-hotpink" strokeWidth={3} /> {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Nutrition breakdown (meals only) */}
+          {reason.nutrition && (
+            <div className="rounded-2xl bg-white border border-petal/50 p-3">
+              <p className="text-[11px] font-bold text-hotpink mb-2 flex items-center gap-1"><BloomFlower className="h-3 w-3" /> Nutrition breakdown</p>
+              <div className="grid grid-cols-5 gap-1.5 text-center">
+                {[["kcal", `${reason.nutrition.calories}`], ["Protein", `${reason.nutrition.protein}g`], ["Carbs", `${reason.nutrition.carbs}g`], ["Fats", `${reason.nutrition.fat}g`], ["Fiber", reason.nutrition.fibre > 0 ? `${reason.nutrition.fibre}g` : "—"]].map(([l, v]) => (
+                  <div key={l} className="rounded-xl bg-blush/40 py-1.5">
+                    <p className="text-[12px] font-bold text-hotpink leading-none">{v}</p>
+                    <p className="text-[8px] text-rose/50 mt-0.5">{l}</p>
+                  </div>
+                ))}
+              </div>
+              {reason.micros && reason.micros.length > 0 && (
+                <div className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1">
+                  {reason.micros.map((m) => (
+                    <div key={m.label} className="flex items-center justify-between">
+                      <span className="text-[10px] text-rose/70">{m.label}</span>
+                      <span className="flex">
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <Star key={i} className={["h-2.5 w-2.5", i < Math.round(m.stars) ? "fill-hotpink text-hotpink" : "text-petal"].join(" ")} strokeWidth={1.5} />
+                        ))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Did you know */}
+          <div className="flex items-start gap-2 rounded-2xl bg-blush/40 px-3 py-2.5">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-hotpink"><Lightbulb className="h-3.5 w-3.5" strokeWidth={2} /></span>
+            <div><p className="text-[11px] font-bold text-hotpink leading-tight">Did you know?</p><p className="text-[10.5px] text-rose/70 leading-snug mt-0.5">{reason.didYouKnow}</p></div>
+          </div>
+
+          {/* Bloom tip */}
+          <div className="flex items-start gap-2 rounded-2xl bg-blush/40 px-3 py-2.5">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white text-hotpink"><Sparkles className="h-3.5 w-3.5" strokeWidth={2} /></span>
+            <div><p className="text-[11px] font-bold text-hotpink leading-tight">Bloom tip for today</p><p className="text-[10.5px] text-rose/70 leading-snug mt-0.5">{reason.bloomTip}</p></div>
+          </div>
+
+          {/* Why Bloom didn't choose */}
+          {reason.avoided && (
+            <div className="flex items-start gap-2 rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blush/70 text-rose/70"><X className="h-3.5 w-3.5" strokeWidth={2.5} /></span>
+              <div><p className="text-[11px] font-bold text-rose/70 leading-tight">Why Bloom didn't choose…</p><p className="text-[10.5px] text-rose/60 leading-snug mt-0.5">{reason.avoided}</p></div>
+            </div>
+          )}
+
+          {/* Explore more */}
+          <div>
+            <p className="text-[11px] font-bold text-hotpink mb-1.5 flex items-center gap-1"><BloomFlower className="h-3 w-3" /> Explore more</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {reason.explore.map((e) => {
+                const EIc = e.kind === "read" ? BookOpen : e.kind === "meditation" ? Moon : Flower2;
+                return (
+                  <a key={e.label} href={e.href} className="rounded-2xl bg-blush/40 border border-petal/50 p-2 text-left hover-scale transition">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink"><EIc className="h-3 w-3" strokeWidth={2} /></span>
+                    <p className="mt-1 text-[10px] font-bold text-hotpink leading-tight">{e.label}</p>
+                    <p className="text-[8.5px] text-rose/55 leading-tight line-clamp-2">{e.sub}</p>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer — type-aware actions */}
+        <div className="shrink-0 flex items-center gap-2 border-t border-petal/40 bg-white p-3">
+          <a
+            href={item.tool}
+            onClick={() => {
+              if (item.launch) writeLaunch(item.launch.key, item.launch.val);
+              if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
+            }}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white px-4 py-2.5 text-[13px] font-bold text-hotpink active:scale-95 transition"
+          >
+            {primaryLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </a>
+          <button
+            onClick={onToggleDone}
+            aria-pressed={done}
+            className={["flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold active:scale-95 transition", done ? "bg-emerald-500 text-white" : "bloom-luxury-btn text-white animate-selected-glow"].join(" ")}
+          >
+            {done && <Check className="h-4 w-4" strokeWidth={3} />}{doneLabel}
+          </button>
         </div>
       </div>
     </div>,
