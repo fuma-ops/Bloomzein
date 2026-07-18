@@ -1500,16 +1500,22 @@ export function BudgetPlanner() {
         );
       })()}
 
-      {/* ✦ GLOBAL CTA FAB — only on current month */}
-      {viewMode === "present" && <button
+      {/* ✦ GLOBAL CTA FAB — only on the current month, and only once she's set up
+          her budget (hidden on a fresh/reset budget). Soft, gentle styling. */}
+      {viewMode === "present" && hasSetup && <button
         data-tour="spend-fab"
         onClick={() => setShowExtraSpend(true)}
-        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-[#EC4899] text-white shadow-xl shadow-pink-400/40 hover:bg-[#DB2777] transition active:scale-95 px-5 h-14"
-        style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}
+        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full px-4 h-12 text-white active:scale-95 transition"
+        style={{
+          background: 'linear-gradient(135deg,#F9A8D4,#F472B6)',
+          boxShadow: '0 8px 22px rgba(244,114,182,0.32)',
+          border: '1px solid rgba(255,255,255,0.55)',
+          animation: 'ctaBreathe 3.6s ease-in-out infinite',
+        }}
         aria-label="Add spend"
       >
-        <Plus className="h-5 w-5" strokeWidth={2.5} />
-        <span className="text-sm font-bold">Spend</span>
+        <Plus className="h-4 w-4" strokeWidth={2.2} />
+        <span className="text-sm font-semibold">Spend</span>
       </button>}
 
       <ExtraSpendModal
