@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
-  Lightbulb, Leaf, Heart,
+  Lightbulb, Leaf, Heart, Droplet,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
@@ -67,16 +67,21 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onViewTodayPlan }: {
+export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, mealsSynced, movementSynced, phaseLabel, cycleReady, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle, onViewTodayPlan }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
   mealsFromDiet?: boolean;
   movementPlanned: boolean;
   movementFromDiet?: boolean;
+  mealsSynced?: boolean;
+  movementSynced?: boolean;
+  phaseLabel?: string;
+  cycleReady?: boolean;
   onPlanMeals: () => void;
   onPlanMovement: () => void;
   onUnplanMeals?: () => void;
   onUnplanMovement?: () => void;
+  onSyncCycle?: () => void;
   onViewTodayPlan: () => void;
 }) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
@@ -99,6 +104,11 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   };
   const planMeals = () => { onPlanMeals(); setFlash("meals"); };
   const planMovement = () => { onPlanMovement(); setFlash("movement"); };
+  // Step 1 done = both planned; Step 2 = synced to phase.
+  const bothPlanned = mealsPlanned && movementPlanned;
+  const synced = !!mealsSynced && !!movementSynced;
+  const [syncFlash, setSyncFlash] = useState(false);
+  useEffect(() => { if (!syncFlash) return; const t = setTimeout(() => setSyncFlash(false), 2600); return () => clearTimeout(t); }, [syncFlash]);
 
   // "Recalculated ✓" flash — the calorie target changed since she last saw it
   // (she edited a workout/yoga plan, so the activity factor shifted).
@@ -175,21 +185,58 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           <Dumbbell className="h-3 w-3 shrink-0" /> {moveLine}
         </p>
       )}
-      {/* Two guided setup steps — soft app rows; check off once each plan exists */}
-      <div className="mt-3 grid gap-2">
-        <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils}
-          todo="Plan my meals for my goal"
-          doneLabel={mealsFromDiet ? "Meals planned" : "Week is planned"}
-          onClick={planMeals}
-          onUndo={mealsFromDiet ? onUnplanMeals : undefined}
-          onSync={mealsFromDiet ? undefined : () => setConfirmSync("meals")}
-          views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
-        <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal"
-          doneLabel={movementFromDiet ? "Movement planned" : "Movement is planned"}
-          onClick={planMovement}
-          onUndo={movementFromDiet ? onUnplanMovement : undefined}
-          onSync={movementFromDiet ? undefined : () => setConfirmSync("movement")}
-          views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
+      {/* ── How your plan comes together — two guided steps, explained, so the
+             plan-by-goal → sync-to-cycle magic is felt, not hidden. ── */}
+      <div className="mt-3 rounded-2xl bg-gradient-to-br from-blush/45 to-petal/25 border border-petal/50 p-3">
+        <p className="flex items-center gap-1.5 text-[12.5px] font-bold text-[#9D174D]"><Sparkles className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} /> How your plan comes together</p>
+        <p className="text-[10.5px] text-rose/60 leading-snug">Two gentle steps — first Bloomzein plans for your <b className="text-hotpink">goal</b>, then it syncs to your <b className="text-hotpink">cycle</b>.</p>
+
+        {/* Step 1 — plan by goal */}
+        <div className="mt-3 flex gap-2.5">
+          <StepDot n={1} state={bothPlanned ? "done" : "active"} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11.5px] font-bold text-hotpink leading-tight">Plan for your <span className="text-[#831843]">{goalWord === "lean" ? "weight-loss" : goalWord === "build" ? "muscle" : "maintenance"}</span> goal</p>
+            <p className="text-[9.5px] text-rose/55 leading-tight mb-2">Meals, workouts &amp; yoga built to your goal &amp; calorie target.</p>
+            <div className="grid gap-2">
+              <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils}
+                todo="Plan my meals for my goal"
+                doneLabel={mealsFromDiet ? "Meals planned" : "Week is planned"}
+                onClick={planMeals}
+                onUndo={mealsFromDiet ? onUnplanMeals : undefined}
+                onSync={mealsFromDiet ? undefined : () => setConfirmSync("meals")}
+                views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
+              <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal"
+                doneLabel={movementFromDiet ? "Movement planned" : "Movement is planned"}
+                onClick={planMovement}
+                onUndo={movementFromDiet ? onUnplanMovement : undefined}
+                onSync={movementFromDiet ? undefined : () => setConfirmSync("movement")}
+                views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
+            </div>
+          </div>
+        </div>
+
+        {/* connector */}
+        <div className="ml-[14px] h-3 w-px bg-petal/70" />
+
+        {/* Step 2 — sync to cycle */}
+        <div className="flex gap-2.5">
+          <StepDot n={2} state={synced ? "done" : bothPlanned ? "active" : "todo"} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11.5px] font-bold text-hotpink leading-tight">Sync it to your {cycleReady && phaseLabel ? <span className="text-[#831843]">{phaseLabel}</span> : "cycle"} phase</p>
+            <p className="text-[9.5px] text-rose/55 leading-tight mb-2">Re-tunes your meals &amp; movement to how your body feels this week.</p>
+            {!bothPlanned ? (
+              <p className="text-[10px] italic text-rose/40">Finish step 1 first, then sync ✿</p>
+            ) : synced ? (
+              <div className={["inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 text-[11px] font-bold", syncFlash ? "animate-fade-in" : ""].join(" ")}>
+                <Check className="h-3.5 w-3.5" strokeWidth={3} /> Synced to your {cycleReady && phaseLabel ? phaseLabel : "cycle"} phase ✿
+              </div>
+            ) : (
+              <button onClick={() => { onSyncCycle?.(); setSyncFlash(true); }} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2 text-[12px] font-bold shadow-lg shadow-hotpink/30 active:scale-95 transition animate-selected-glow">
+                <Droplet className="h-3.5 w-3.5" strokeWidth={2} /> Sync my week to my cycle ✿
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       {/* Once she's eating, the daily verdict */}
       {e.logged && (
@@ -279,6 +326,20 @@ function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, onSyn
       <span className="flex-1 text-left text-[12.5px] font-bold text-hotpink">{todo}</span>
       <ChevronRight className="h-4 w-4 shrink-0 text-hotpink/60" />
     </button>
+  );
+}
+
+/** A numbered step marker for the guided plan flow. */
+function StepDot({ n, state }: { n: number; state: "done" | "active" | "todo" }) {
+  return (
+    <span className={[
+      "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-black transition",
+      state === "done" ? "bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow-sm shadow-hotpink/30"
+        : state === "active" ? "bg-white text-hotpink ring-2 ring-hotpink/60 animate-selected-glow"
+        : "bg-blush/60 text-rose/40",
+    ].join(" ")}>
+      {state === "done" ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : n}
+    </span>
   );
 }
 
