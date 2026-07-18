@@ -833,23 +833,24 @@ export default function TodayPage() {
 
   return (
     <div className="relative">
-      {/* Seamless pink→fuchsia wash: the hero melts into it and it fades down
-          into the content, so the top of Today reads as one immersive surface
-          (kept for both first-run and after-setup). */}
+      {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface;
+          the hero photo dissolves into it via a bottom fade (no floating card). */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-6 -z-10 h-[560px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
       <BloomBubbles count={10} />
 
-      {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
+      {/* ── 1. HERO — full-bleed photo, taller so more of her shows, melting into
+             the page wash below (no hard crop line). ── */}
       <section
-        className="relative overflow-hidden -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 rounded-b-[1.75rem] sm:rounded-b-[2.75rem] animate-card-pop-in"
+        className="relative overflow-hidden -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[300px] sm:min-h-[360px] rounded-b-[1.75rem] sm:rounded-b-[2.75rem] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
-        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
+        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe absolute inset-0 h-full w-full object-cover object-[72%_16%]" referrerPolicy="no-referrer" />
         <div className={`absolute inset-0 bg-gradient-to-r ${PHASE_GRADIENT[phase]}`} />
-        {/* bottom fade — the hero dissolves into the page wash below */}
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent via-[#FFE4F1]/60 to-[#FFE4F1]" />
+        {/* left fade so the greeting side blends, bottom fade so she melts down */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#FFE1EF]/70 via-[#FFE1EF]/10 to-transparent" />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-[#FFE4F1]/70 to-[#FFE4F1]" />
 
-        <div className="relative z-[2] flex flex-col items-start px-4 pt-3 pb-2 sm:px-8 sm:pt-4 sm:pb-2 w-[68%] sm:max-w-md">
+        <div className="relative z-[2] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[68%] sm:max-w-md">
           <h1 className="animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>

@@ -177,8 +177,9 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
           </div>
         </div>
 
-        {/* ── Steps — elegant rows separated by soft dividers ── */}
-        <div className="divide-y divide-petal/35 bg-white">
+        {/* ── Steps — each a distinct bordered card so on phone they clearly
+               read as separate setup steps (not one long paragraph). ── */}
+        <div className="space-y-3 bg-white/50 p-3 sm:p-4">
           {STEPS.map((s, i) => {
             const isNext = i === nextIdx;
             const locked = s.sync && !allCore;
@@ -189,36 +190,54 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
                 : kind === "ghost" ? "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50"
                 : "bg-petal/40 text-rose/50 cursor-not-allowed"].join(" ");
 
+            const wrapCls = ["group block overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5",
+              isNext ? "border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow" : "border-petal/70"].join(" ");
+            const visualBox = <div className="rounded-xl bg-blush/35 border border-petal/40 px-3 py-2">{s.visual}</div>;
+            const syncChips = (
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {["Cycle", "Meals", "Movement", "Coach"].map((l) => (
+                  <span key={l} className="inline-flex items-center gap-1 text-[10.5px] font-bold text-hotpink"><span className="h-1.5 w-1.5 rounded-full bg-hotpink" /> {l}</span>
+                ))}
+              </div>
+            );
+            const cta = s.sync
+              ? (allCore
+                  ? <span className={ctaCls("primary")}><Sparkles className="h-4 w-4" strokeWidth={2.2} /> Activate</span>
+                  : <span className={ctaCls("locked")}><Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> Locked</span>)
+              : <span className={ctaCls(s.done ? "ghost" : "primary")}>{s.done ? "Review" : "Continue"} <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></span>;
+
             const body = (
-              <div className={["group flex flex-col gap-4 px-5 sm:px-8 py-5 transition lg:flex-row lg:items-center", isNext ? "bg-blush/25" : "hover:bg-blush/12"].join(" ")}>
-                {/* image */}
-                <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-2xl bg-blush lg:h-[92px] lg:w-[92px]">
-                  <img src={s.image} alt="" className="h-full w-full object-cover" loading="lazy"
-                    onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
-                  {locked && <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px]"><Lock className="h-6 w-6 text-hotpink/70" strokeWidth={2} /></div>}
-                  <span className="absolute left-2.5 top-2.5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-[12px] font-black text-white shadow-md">{s.n}</span>
-                </div>
-
-                {/* content */}
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="inline-flex items-center gap-1.5 font-script text-xl sm:text-2xl text-hotpink leading-none">{s.title} <span className="text-base">{s.emoji}</span></h3>
-                    {isNext && <span className="rounded-full bg-hotpink px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-white animate-cta-bounce">Start here ✿</span>}
-                    {s.done && <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink"><Check className="h-2.5 w-2.5" strokeWidth={3.5} /> Done</span>}
+              <div className={["p-3.5 sm:p-4 lg:flex lg:items-center lg:gap-5", isNext ? "bg-blush/20" : ""].join(" ")}>
+                {/* Header: square image (left) + title/text (right). On lg the
+                    wrapper dissolves so image & title become the row's columns. */}
+                <div className="flex items-start gap-3.5 lg:contents">
+                  {/* square image */}
+                  <div className="relative h-20 w-20 sm:h-24 sm:w-24 lg:h-[92px] lg:w-[92px] shrink-0 overflow-hidden rounded-2xl bg-blush">
+                    <img src={s.image} alt="" className="h-full w-full object-cover" loading="lazy"
+                      onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
+                    {locked && <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px]"><Lock className="h-6 w-6 text-hotpink/70" strokeWidth={2} /></div>}
+                    <span className="absolute left-2 top-2 grid h-6 w-6 sm:h-7 sm:w-7 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-[11px] sm:text-[12px] font-black text-white shadow-md">{s.n}</span>
                   </div>
-                  <p className="mt-1 text-[12px] sm:text-[12.5px] text-[#831843] leading-snug">{s.blurb}</p>
-                  {s.visual && <div className="mt-2.5 rounded-xl bg-blush/35 border border-petal/40 px-3 py-2 max-w-md">{s.visual}</div>}
-                  {s.sync && (
-                    <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
-                      {["Cycle", "Meals", "Movement", "Coach"].map((l) => (
-                        <span key={l} className="inline-flex items-center gap-1 text-[10.5px] font-bold text-hotpink"><span className="h-1.5 w-1.5 rounded-full bg-hotpink" /> {l}</span>
-                      ))}
+                  {/* title + blurb (+ visual on desktop only) */}
+                  <div className="min-w-0 flex-1 text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="inline-flex items-center gap-1.5 font-script text-xl sm:text-2xl text-hotpink leading-none">{s.title} <span className="text-base">{s.emoji}</span></h3>
+                      {isNext && <span className="rounded-full bg-hotpink px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-white animate-cta-bounce">Start here ✿</span>}
+                      {s.done && <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink"><Check className="h-2.5 w-2.5" strokeWidth={3.5} /> Done</span>}
                     </div>
-                  )}
+                    <p className="mt-1 text-[12px] sm:text-[12.5px] text-[#831843] leading-snug">{s.blurb}</p>
+                    {s.visual && <div className="mt-2.5 hidden max-w-md lg:block">{visualBox}</div>}
+                    {s.sync && <div className="mt-2.5 hidden lg:block">{syncChips}</div>}
+                  </div>
                 </div>
 
-                {/* unlocks */}
-                <div className="lg:w-[190px] shrink-0">
+                {/* Visual bar — mobile, full width under the header */}
+                {s.visual && <div className="mt-3 lg:hidden">{visualBox}</div>}
+                {s.sync && <div className="mt-2.5 lg:hidden">{syncChips}</div>}
+
+                {/* What you'll unlock */}
+                <div className="mt-3 lg:mt-0 lg:w-[190px] shrink-0">
+                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-wider text-hotpink/60 lg:hidden">What you'll unlock</p>
                   <ul className="grid grid-cols-2 gap-x-2 gap-y-1 lg:grid-cols-1">
                     {s.unlocks.map((u) => (
                       <li key={u} className="flex items-center gap-1.5 text-[11px] font-semibold text-[#831843]">
@@ -230,25 +249,17 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
                 </div>
 
                 {/* CTA */}
-                <div className="lg:w-[172px] shrink-0">
-                  {s.sync ? (
-                    allCore
-                      ? <span className={ctaCls("primary")}><Sparkles className="h-4 w-4" strokeWidth={2.2} /> Activate</span>
-                      : <span className={ctaCls("locked")}><Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> Locked</span>
-                  ) : (
-                    <span className={ctaCls(s.done ? "ghost" : "primary")}>{s.done ? "Review" : "Continue"} <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></span>
-                  )}
-                </div>
+                <div className="mt-3.5 lg:mt-0 lg:w-[172px] shrink-0">{cta}</div>
                 {!s.sync && <NodeIcon className="hidden" />}
               </div>
             );
 
             if (s.sync) {
               return allCore
-                ? <a key={s.key} href="/app/today" className="block">{body}</a>
-                : <div key={s.key}>{body}</div>;
+                ? <a key={s.key} href="/app/today" className={wrapCls}>{body}</a>
+                : <div key={s.key} className={wrapCls}>{body}</div>;
             }
-            return <a key={s.key} href={s.href} onClick={() => startGuide()} className="block" data-next-step={isNext ? "1" : undefined}>{body}</a>;
+            return <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrapCls} data-next-step={isNext ? "1" : undefined}>{body}</a>;
           })}
         </div>
       </div>
