@@ -241,28 +241,32 @@ function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, onSyn
 }) {
   if (done) {
     return (
-      <div className="w-full rounded-2xl bg-white border border-petal/50 px-3 py-2.5">
-        <div className="flex items-center gap-2">
-          {/* Tap the tick to un-plan. When the plan is the user's own (managed in
-              the Meals Planner) it's protected — no destructive un-plan here. */}
+      <div className="w-full overflow-hidden rounded-2xl bg-white border border-petal/50 shadow-sm shadow-hotpink/5">
+        <div className="flex items-center gap-2.5 px-3 pt-2.5">
+          {/* Tool icon in a soft-pink circle; hover it to un-plan (X). When the plan
+              is the user's own (managed in the Meals Planner) it's protected. */}
           <button
             onClick={onUndo} disabled={!onUndo} title={onUndo ? "Un-plan" : "Managed in your Meals Planner — safe from here"} aria-label={onUndo ? "Un-plan" : "Managed in your Meals Planner"}
-            className="group relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600 enabled:hover:bg-rose-100 enabled:hover:text-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
+            className="group relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow-sm shadow-hotpink/30 enabled:hover:from-rose-400 enabled:hover:to-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
           >
-            <Check className="h-3.5 w-3.5 group-enabled:group-hover:hidden" strokeWidth={3} />
-            <X className="h-3.5 w-3.5 hidden group-enabled:group-hover:block" strokeWidth={3} />
+            <Icon className="h-4 w-4 group-enabled:group-hover:hidden" strokeWidth={2} />
+            <X className="h-4 w-4 hidden group-enabled:group-hover:block" strokeWidth={3} />
           </button>
-          <span className="flex-1 min-w-0 text-[12.5px] font-bold text-rose/70 truncate">{doneLabel}</span>
-          {flashed && <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[10px] font-black animate-fade-in">🎉 Planned!</span>}
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-bold text-[#831843] leading-tight truncate">{doneLabel}</p>
+            <p className="text-[9.5px] text-rose/50 leading-tight">Tuned to your goal ✿</p>
+          </div>
+          <span className={["shrink-0 inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide", flashed ? "bg-emerald-500 text-white border-emerald-500 animate-fade-in" : "bg-emerald-50 text-emerald-600 border-emerald-200"].join(" ")}>
+            {flashed ? "🎉 Planned" : <><Check className="h-2.5 w-2.5" strokeWidth={3} /> Generated</>}
+          </span>
         </div>
-        {/* Action chips on their own line, aligned under the label — always
-            fully visible on a phone, never cropped off the right edge. */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 pl-8">
+        {/* Action chips — a soft footer strip, aligned under the label */}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 bg-blush/30 px-3 py-2 pl-[42px]">
           {onSync && (
-            <button onClick={onSync} title="Sync this plan to your goal" className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition"><Sparkles className="h-3 w-3" /> Sync</button>
+            <button onClick={onSync} title="Sync this plan to your goal" className="inline-flex items-center gap-0.5 rounded-full bg-white text-hotpink border border-hotpink/40 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition animate-soft-glow"><Sparkles className="h-3 w-3" /> Sync to goal</button>
           )}
           {views.map((v) => (
-            <button key={v.label} onClick={v.onClick} className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 text-hotpink px-2.5 py-1 text-[11px] font-bold active:scale-95 transition">{v.label} <ChevronRight className="h-3 w-3" /></button>
+            <button key={v.label} onClick={v.onClick} className="inline-flex items-center gap-0.5 rounded-full bg-white text-hotpink border border-petal/60 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition hover:border-hotpink/50">{v.label} <ChevronRight className="h-3 w-3" /></button>
           ))}
         </div>
       </div>
