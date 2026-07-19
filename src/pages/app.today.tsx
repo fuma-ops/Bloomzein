@@ -854,7 +854,7 @@ export default function TodayPage() {
 
       {/* ── 1. HERO — transparent; the photo lives in the page background above. ── */}
       <section
-        className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[320px] sm:min-h-[380px] animate-card-pop-in"
+        className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[200px] sm:min-h-[250px] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
         <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[68%] sm:max-w-md">
@@ -951,7 +951,7 @@ export default function TodayPage() {
 
       {/* ── QUICK STATS — Mood · Symptom · Energy · Water — frosted-glass bars,
              sitting just above "Build your Bloom world" (clear of the hero photo). ── */}
-      <div className="relative z-[1] mt-3 sm:mt-4">
+      <div className="relative z-[1] mt-2 sm:mt-3">
         <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
             className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
