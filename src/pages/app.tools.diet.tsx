@@ -4,7 +4,7 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
   Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
-  Scale, TrendingUp, TrendingDown, Minus, RotateCcw, Info,
+  Scale, TrendingUp, TrendingDown, Minus, RotateCcw, Info, BarChart3,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -946,7 +946,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
             onViewTodayPlan={() => goTo("today")}
           />
           <div className="grid gap-3 sm:grid-cols-2">
-            <GoalPathCard onEdit={() => setBodyEditOpen(true)} />
+            <div id="diet-goalpath"><GoalPathCard onEdit={() => setBodyEditOpen(true)} /></div>
             <WeekBalanceCard />
           </div>
         </div>
@@ -982,22 +982,25 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
       {/* Weight & progress — the detail behind your goal path */}
       <div id="diet-weight">
         <Glass className="p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Scale className="h-5 w-5" /></span>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><BookOpen className="h-5 w-5" /></span>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Weight &amp; progress</p>
-                <p className="font-script text-2xl text-hotpink leading-none">{latest} kg</p>
+                <p className="font-script text-2xl text-hotpink leading-none">Weight &amp; Progress</p>
+                <p className="text-[11.5px] text-rose/65 leading-snug mt-1">Track your journey, see your progress</p>
               </div>
             </div>
-            {history.length > 1 && (
-              <span className={["inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shrink-0", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
-                {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                {delta > 0 ? "+" : ""}{delta} kg
-              </span>
-            )}
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              <button onClick={() => document.getElementById("diet-goalpath")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="inline-flex items-center gap-1 rounded-full bg-white border border-hotpink/30 text-hotpink px-3 py-1.5 text-[11px] font-bold active:scale-95 transition"><BarChart3 className="h-3.5 w-3.5" /> View Insights</button>
+              {history.length > 1 && (
+                <span className={["inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-bold", delta < 0 ? "bg-emerald-50 text-emerald-600" : delta > 0 ? "bg-rose-50 text-rose-600" : "bg-blush text-rose/70"].join(" ")}>
+                  {delta < 0 ? <TrendingDown className="h-3 w-3" /> : delta > 0 ? <TrendingUp className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                  {delta > 0 ? "+" : ""}{delta} kg
+                </span>
+              )}
+            </div>
           </div>
-          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the dashed line projects the pace your calorie plan actually produces. Set your goal weight from the <b className="text-hotpink">✎ on your goal path</b> above.</p>
+          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the dashed line projects the pace your calorie plan actually produces. Set your goal weight from <b className="text-hotpink">your goal path</b> above.</p>
           <WeightChart history={history} target={target} projection={weightProjection} />
           <div className="mt-3 flex items-center gap-2">
             <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
@@ -1007,6 +1010,17 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
               <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
             </div>
             <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log today</PinkBtn>
+          </div>
+          {/* Motivational footer — matches the reference design */}
+          <div className="relative mt-3 overflow-hidden rounded-2xl border border-petal/50 bg-gradient-to-r from-blush/60 to-petal/30 p-3 pr-14">
+            <div className="flex items-start gap-2">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Sparkles className="h-3.5 w-3.5" strokeWidth={2} /></span>
+              <div>
+                <p className="text-[12.5px] font-bold text-hotpink leading-tight">Stay consistent and trust the process.</p>
+                <p className="text-[11px] text-rose/70 leading-tight">Small steps = Big change <span className="text-hotpink">♥</span></p>
+              </div>
+            </div>
+            <img src="/images/landing-orb-flower.webp" alt="" aria-hidden className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90" />
           </div>
         </Glass>
       </div>
