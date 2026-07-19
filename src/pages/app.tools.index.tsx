@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { Sparkles, Search, Pin, ChevronRight } from "lucide-react";
+import { Sparkles, Pin, ChevronRight } from "lucide-react";
 import { TOOLS, type Tool } from "@/components/bloom/tools";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -20,7 +20,6 @@ function linkPropsFor(t: Tool) {
 
 export default function ToolsIndex() {
   const [pins, setPins] = useState<string[]>([]);
-  const [query, setQuery] = useState("");
   const [affirmation, setAffirmation] = useState("");
 
   // Echo the exact affirmation the Today page is showing (shared source).
@@ -46,17 +45,13 @@ export default function ToolsIndex() {
   };
 
   const ordered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = q
-      ? TOOLS.filter((t) => t.label.toLowerCase().includes(q) || t.blurb.toLowerCase().includes(q))
-      : TOOLS;
-    const pinned = filtered.filter((t) => pins.includes(t.slug));
-    const rest = filtered.filter((t) => !pins.includes(t.slug));
+    const pinned = TOOLS.filter((t) => pins.includes(t.slug));
+    const rest = TOOLS.filter((t) => !pins.includes(t.slug));
     // Surface tools the user hasn't explored yet, to nudge them toward what's left to discover
     const unexplored = rest.filter((t) => !isToolVisited(t.slug));
     const explored = rest.filter((t) => isToolVisited(t.slug));
     return [...pinned, ...unexplored, ...explored];
-  }, [pins, query]);
+  }, [pins]);
 
   return (
     <div className="relative isolate animate-fade-in">
@@ -87,48 +82,20 @@ export default function ToolsIndex() {
         </div>
       </section>
 
-      {/* SEARCH BAR — below hero */}
-      <div className="mt-4 relative max-w-md">
-        <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={1.8} />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="What would help you bloom today?"
-          className="w-full rounded-full bg-white/90 backdrop-blur pl-11 pr-11 py-2 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/60 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
-        />
-        <Sparkles className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink/70" strokeWidth={1.8} />
-      </div>
-
-      {/* TOOLS GRID */}
-      <section className="mt-2">
-        <div className="mb-3">
-          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Your Bloom Tools</h2>
+      {/* TOOLS GRID — no search bar / heading; the grid sits just under the hero */}
+      <section className="mt-3 sm:mt-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {ordered.map((t, i) => (
+            <ToolCard
+              key={t.slug}
+              tool={t}
+              index={i}
+              pinned={pins.includes(t.slug)}
+              onGo={() => remember(t.slug)}
+              onTogglePin={() => togglePin(t.slug)}
+            />
+          ))}
         </div>
-
-        {ordered.length === 0 ? (
-          <div className="bloom-pearl-card rounded-3xl p-8 text-center">
-            <p className="text-sm text-rose">No tools match "{query}".</p>
-            <button
-              onClick={() => setQuery("")}
-              className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
-            >
-              Clear search
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {ordered.map((t, i) => (
-              <ToolCard
-                key={t.slug}
-                tool={t}
-                index={i}
-                pinned={pins.includes(t.slug)}
-                onGo={() => remember(t.slug)}
-                onTogglePin={() => togglePin(t.slug)}
-              />
-            ))}
-          </div>
-        )}
       </section>
 
       {/* DAILY AFFIRMATION — same soft flower-flanked, self-writing line as Today */}
