@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
-  Lightbulb, Leaf, Heart, Droplet, Flower2,
+  Lightbulb, Leaf, Heart, Droplet,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
@@ -211,8 +211,8 @@ function GoalBloomBg() {
   return (
     <img
       src="/images/goal-path-bloom.webp" alt="" aria-hidden loading="lazy"
-      className="pointer-events-none absolute right-0 top-0 h-full w-[56%] object-cover object-left select-none"
-      style={{ maskImage: "linear-gradient(to right, transparent, #000 42%)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 42%)" }}
+      className="pointer-events-none absolute right-0 top-0 h-full w-[52%] object-cover select-none"
+      style={{ objectPosition: "right center", maskImage: "linear-gradient(to right, transparent, #000 34%)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 34%)" }}
     />
   );
 }
@@ -273,9 +273,9 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
 
         {/* progress */}
         <div className="mt-3 h-2 rounded-full bg-white/60 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
-        <p className="mt-2 flex items-start gap-1.5 max-w-[80%] text-[11px] leading-snug text-rose/75">
+        <p className="mt-2 flex items-start gap-1.5 max-w-[58%] text-[11px] leading-snug text-rose/80">
           <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-          <span><b className="text-hotpink">{p.pct}% there!</b>{p.etaWeeks != null && p.etaWeeks > 0 ? ` At ~${Math.abs(p.weeklyRateKg)}kg/week you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight weekly to track the trend."}</span>
+          <span><b className="text-hotpink">{p.pct}% there!</b>{p.etaWeeks != null && p.etaWeeks > 0 ? ` At ~${Math.abs(p.weeklyRateKg)}kg/week you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight daily to track the trend."}</span>
         </p>
       </div>
     </div>
@@ -283,6 +283,18 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
 }
 
 /* ============================ 3 · THIS WEEK ============================ */
+/** A soft lotus flower — the yoga mark (lucide has no lotus). */
+function LotusIcon({ className = "" }: { className?: string; strokeWidth?: number }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="currentColor" aria-hidden>
+      <path d="M 50,86 C 20,86 10,54 10,54 C 10,54 32,46 50,74 C 68,46 90,54 90,54 C 90,54 80,86 50,86 Z" opacity="0.5" />
+      <path d="M 32,56 C 24,68 34,82 50,84 C 36,80 34,68 32,56 Z" opacity="0.8" />
+      <path d="M 68,56 C 76,68 66,82 50,84 C 64,80 66,68 68,56 Z" opacity="0.8" />
+      <path d="M 50,34 C 40,50 44,80 50,84 C 56,80 60,50 50,34 Z" />
+    </svg>
+  );
+}
+
 export function WeekBalanceCard() {
   const w = weekSnapshot();
   const done = w.sessionsDone;
@@ -293,7 +305,7 @@ export function WeekBalanceCard() {
       : <>{w.plannedTraining ? <><b className="text-hotpink">{Math.max(0, w.plannedTraining - done)} more</b> to hit your weekly plan.</> : "Keep it going ✿"}</>;
   const stats = [
     { Icon: Dumbbell, value: w.workoutsDone, label: "Workouts" },
-    { Icon: Flower2,  value: w.yogaDone,     label: "Yoga flows" },
+    { Icon: LotusIcon, value: w.yogaDone,    label: "Yoga flows" },
   ];
   return (
     <div className="rounded-3xl bg-gradient-to-br from-blush/50 via-white to-petal/25 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">

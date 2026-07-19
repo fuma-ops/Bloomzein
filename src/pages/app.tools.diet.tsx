@@ -767,6 +767,12 @@ function WeightChart({ history, target, projection }: {
   return (
     <div>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: 152 }}>
+        <defs>
+          <linearGradient id="weight-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#F472B6" stopOpacity="0.32" />
+            <stop offset="1" stopColor="#FCE7F3" stopOpacity="0.04" />
+          </linearGradient>
+        </defs>
         {/* Y grid + kg labels */}
         {yTicks.map((kg, i) => (
           <g key={`y${i}`}>
@@ -787,25 +793,33 @@ function WeightChart({ history, target, projection }: {
         {/* kg unit tag */}
         <text x={padL - 5} y={padT - 3} fontSize="8" fill="#C4849F" textAnchor="end" fontWeight="700">kg</text>
 
-        {/* Soft band showing the journey from where she is now → her goal */}
-        {target != null && (
-          <rect
-            x={padL} y={Math.min(Y(lastReal.kg), Y(target))}
-            width={w - padR - padL} height={Math.abs(Y(target) - Y(lastReal.kg))}
-            fill={loseDir ? "#ECFDF5" : "#FFF1F2"} opacity={0.7}
-          />
-        )}
+        {/* Soft pink area under the weight line (real → projection) */}
+        {(() => {
+          const baseY = h - padB;
+          const endX = hasProj ? X(lastDay + projDays) : X(lastDay);
+          const endY = hasProj ? Y(projEndKg) : Y(lastReal.kg);
+          const area = `M ${X(dayOf(history[0].date)).toFixed(1)} ${baseY} ` +
+            history.map((r) => `L ${X(dayOf(r.date)).toFixed(1)} ${Y(r.kg).toFixed(1)}`).join(" ") +
+            (hasProj ? ` L ${endX.toFixed(1)} ${endY.toFixed(1)}` : "") +
+            ` L ${endX.toFixed(1)} ${baseY} Z`;
+          return <path d={area} fill="url(#weight-area)" stroke="none" />;
+        })()}
+        {/* Goal line — soft pink dotted */}
         {target != null && (
           <>
-            <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#DB2777" strokeWidth="1.4" strokeDasharray="4 3" />
+            <line x1={padL} y1={Y(target)} x2={w - padR} y2={Y(target)} stroke="#F472B6" strokeWidth="1.4" strokeDasharray="4 3" opacity={0.9} />
             <text x={w - padR} y={Y(target) + (Y(target) > Y(lastReal.kg) ? 12 : -5)} fontSize="9" fontWeight="800" fill="#DB2777" textAnchor="end">🎯 goal {target}kg</text>
           </>
         )}
+        {/* Projected pace — dashed pink line to a hollow endpoint */}
         {hasProj && (
-          <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(lastDay + projDays)} ${Y(projEndKg)}`} fill="none" stroke="#DB2777" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" opacity={0.7} />
+          <path d={`M ${X(lastDay)} ${Y(lastReal.kg)} L ${X(lastDay + projDays)} ${Y(projEndKg)}`} fill="none" stroke="#EC4899" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" opacity={0.85} />
         )}
         <path d={realD} fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {history.map((r, i) => <circle key={i} cx={X(dayOf(r.date))} cy={Y(r.kg)} r="2.6" fill="#EC4899" />)}
+        {hasProj && (
+          <circle cx={X(lastDay + projDays)} cy={Y(projEndKg)} r="4" fill="#fff" stroke="#DB2777" strokeWidth="1.6" strokeDasharray="2 2" />
+        )}
         {/* "You are here" — the latest weight, labelled so it's never confused with the goal */}
         <circle cx={X(lastDay)} cy={Y(lastReal.kg)} r="4.5" fill="#EC4899" stroke="#fff" strokeWidth="1.5" />
         <text x={X(lastDay) + 7} y={Y(lastReal.kg) + (Y(lastReal.kg) < Y(target) ? -5 : 12)} fontSize="9.5" fontWeight="800" fill="#EC4899" textAnchor="start">{lastReal.kg}kg now</text>
@@ -1000,7 +1014,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
               )}
             </div>
           </div>
-          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it weekly — the dashed line projects the pace your calorie plan actually produces. Set your goal weight from <b className="text-hotpink">your goal path</b> above.</p>
+          <p className="mb-2 text-[11px] text-rose/55 leading-snug">Log it daily — the dashed line projects the pace your calorie plan actually produces. Set your goal weight from <b className="text-hotpink">your goal path</b> above.</p>
           <WeightChart history={history} target={target} projection={weightProjection} />
           <div className="mt-3 flex items-center gap-2">
             <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
