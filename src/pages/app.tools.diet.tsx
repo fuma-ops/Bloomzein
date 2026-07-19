@@ -1975,12 +1975,8 @@ export default function DietPage() {
 
       <BloomBubbles count={10} />
 
-      <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
-
       {/* HERO — compact fixed height (stays small on desktop, like the Budget hero) */}
-      <div className="relative w-full min-h-[150px] sm:min-h-[166px] lg:min-h-[178px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
+      <div className="relative w-full min-h-[150px] sm:min-h-[166px] lg:min-h-[178px] -mt-3 sm:-mt-5 lg:-mt-6 rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
         <img src="/images/meal-oats.webp" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
