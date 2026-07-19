@@ -1177,7 +1177,6 @@ export default function TodayPage() {
              above stands in for it). ── */}
       {cycleReady && allSetup && (
         <section className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 animate-card-pop-in" style={{ animationDelay: "80ms" }}>
-          <CoachTodayCompact coach={coach} />
           <DiscoverBloomPlus feature="general" />
         </section>
       )}
@@ -1364,6 +1363,25 @@ export default function TodayPage() {
 
       </aside>{/* /SMART RIGHT PANEL */}
       </div>{/* /2-column grid */}
+
+      {/* ── BLOOM INSPIRATION — the "Today's Bloom" guide isn't launched yet, so it
+             lives here at the very end as a blurred "coming soon" teaser. ── */}
+      {!isFresh && (
+        <section id="bloom-inspiration" className="relative mt-4 sm:mt-6 overflow-hidden rounded-[1.75rem] animate-card-pop-in">
+          <span className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
+            <Sparkles className="h-3 w-3" strokeWidth={2.5} /> Coming soon
+          </span>
+          <div className="pointer-events-none select-none blur-[3px] opacity-80" aria-hidden>
+            <CoachTodayCompact coach={coach} />
+          </div>
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 px-6 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/85 text-hotpink shadow-lg shadow-hotpink/20"><Sparkles className="h-6 w-6" strokeWidth={2} /></span>
+            <p className="font-script text-2xl text-hotpink leading-none">Bloom Inspiration</p>
+            <p className="text-[12.5px] font-bold text-[#831843]">Coming soon ✿</p>
+            <p className="max-w-[260px] text-[11px] text-rose/60 leading-snug">Daily inspiration &amp; gentle guidance to keep you blooming — we're putting the finishing touches on it.</p>
+          </div>
+        </section>
+      )}
 
       {/* ── WATER GOAL MODAL ────────────────────────────────────────────────── */}
       {waterModalOpen && (

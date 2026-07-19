@@ -186,12 +186,6 @@ export function CoachTodayCard({ coach, onOpenRecipe }: { coach: DayCoach; onOpe
         <TreatCard treat={coach.treat} fallback={coach.snack} phaseLabel={coach.phaseLabel} onOpenRecipe={onOpenRecipe} />
       </div>
 
-      {/* ── Section 3 · make yourself comfortable (feel-good moment) ── */}
-      <div className={cardCls}>
-        <Signal>Make yourself comfortable</Signal>
-        <FeelGoodCard fg={coach.feelGood} />
-      </div>
-
       {/* → the real Today's Plan on the Today page */}
       <div className="flex justify-center">
         <a
@@ -235,7 +229,7 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
         <div className="relative p-4 sm:p-5 max-w-full sm:max-w-[64%]">
           <div className="flex items-center gap-2.5">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30"><Flower2 className="h-5 w-5" strokeWidth={1.9} /></span>
-            <h2 className="inline-flex items-center gap-1.5 font-script text-[1.8rem] sm:text-4xl text-hotpink leading-none drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)]">Today's Bloom <Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
+            <h2 className="inline-flex items-center gap-1.5 font-script text-[1.8rem] sm:text-4xl text-hotpink leading-none drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)]">Bloom Inspiration <Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
           </div>
           <p className="mt-2.5 text-[15px] sm:text-lg font-black text-[#831843] leading-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">Your day, beautifully guided <span className="text-hotpink">🩷</span></p>
           <p className="mt-1 text-[12px] sm:text-[13px] text-rose/75 leading-snug drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">Personalized ideas &amp; gentle reminders to help you feel your best today.</p>
