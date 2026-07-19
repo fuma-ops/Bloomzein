@@ -901,6 +901,9 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   };
   const first = history[0]?.kg ?? profile.weight;
   const latest = history.length ? history[history.length - 1].kg : profile.weight;
+  // Has she already logged TODAY? Drives the button's resting state — a soft
+  // "Weight logged" once done, flipping back to the "Log today" CTA tomorrow.
+  const todayLogged = history.some((e) => e.date === todayISO());
   const delta = +(latest - first).toFixed(1);
 
   const target = profile.targetWeight;
@@ -1027,25 +1030,40 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
               <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
               <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
             </div>
-            {/* Button flips to a green "Saved ✓" state on log, so she clearly sees it worked. */}
+            {/* Three states: a fresh "Saved!" flash, a soft resting "Weight
+                logged" once today is done (tap to update), or the active "Log
+                today" CTA when today isn't logged yet (returns tomorrow). */}
             <button
               onClick={logWeight}
+              title={todayLogged ? "Update today's weight" : "Log today's weight"}
               className={[
-                "inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-full transition active:scale-95",
-                logged != null ? "bg-emerald-500 shadow-lg shadow-emerald-500/30 animate-selected-glow" : "bloom-luxury-btn",
+                "inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full transition active:scale-95",
+                logged != null
+                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-selected-glow"
+                  : todayLogged
+                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                    : "bloom-luxury-btn text-white",
               ].join(" ")}
             >
-              {logged != null
-                ? <><span className="grid h-4 w-4 place-items-center rounded-full bg-white/25"><Check className="h-3 w-3" strokeWidth={3.5} /></span> Saved!</>
-                : <><Check className="h-4 w-4" /> Log today</>}
+              {logged != null ? (
+                <><span className="grid h-4 w-4 place-items-center rounded-full bg-white/25"><Check className="h-3 w-3" strokeWidth={3.5} /></span> Saved!</>
+              ) : todayLogged ? (
+                <><span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-3 w-3" strokeWidth={3.5} /></span> Weight logged</>
+              ) : (
+                <><Check className="h-4 w-4" /> Log today</>
+              )}
             </button>
           </div>
-          {/* Clear confirmation line that fades in right after logging */}
-          {logged != null && (
+          {/* Confirmation line — a fresh "Saved" flash, or a calm "already logged" note */}
+          {logged != null ? (
             <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-bold text-emerald-600 animate-fade-in">
               <Sparkles className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Saved <b className="tabular-nums">{logged} kg</b> for today — your graph &amp; trend just updated ✿
             </p>
-          )}
+          ) : todayLogged ? (
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-rose/55 leading-snug">
+              <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" strokeWidth={3} /> Today's weight is logged. Change the number above to update it.
+            </p>
+          ) : null}
           {/* Motivational footer — matches the reference design */}
           <div className="relative mt-3 overflow-hidden rounded-2xl border border-petal/50 bg-gradient-to-r from-blush/60 to-petal/30 p-3 pr-14">
             <div className="flex items-start gap-2">
