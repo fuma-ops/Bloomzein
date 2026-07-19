@@ -403,39 +403,50 @@ export default function CalendarPage() {
   }, [view, cursor, weekDays]);
 
   return (
-    <div className="relative animate-fade-in">
-      {/* HERO — pink calendar image background, white title, a phase pill under
-          the subtitle. Left gradient keeps the text crisp over the photo. */}
-      <div className="relative w-full rounded-[1.75rem] sm:rounded-[2.5rem] overflow-hidden border border-pink-200/60 mb-3 animate-card-pop-in"
-        style={{ animationDelay: "0ms", boxShadow: "0 16px 38px -14px oklch(0.6 0.27 350 / 0.6)" }}>
-        <img src="/images/calendar-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-r from-magenta/70 via-hotpink/25 to-transparent" />
-        <div className="relative z-[2] flex flex-col justify-between gap-2 px-4 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8 min-h-[120px] sm:min-h-[156px]">
+    <div className="relative isolate animate-fade-in">
+      {/* Base pink wash — the top reads as one soft surface behind the hero. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 -mx-3 sm:-mx-6 md:-mx-8 h-[360px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+
+      {/* Hero photo as ONE blended page BACKGROUND — same technique as the Today
+          page: a full-width image that fades on the left (so the title stays
+          readable) and the bottom (melting into the calendar below), so there's
+          no card seam. `isolate` on the root keeps this -z layer in place. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 md:-mx-8 h-[300px] overflow-hidden">
+        <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%]" referrerPolicy="no-referrer" />
+        {/* left fade → readable light pink behind the title */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        {/* bottom fade → melts into the calendar below */}
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
+      </div>
+
+      {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
+      <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[140px] sm:min-h-[180px] mb-3 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+        <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4">
           {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none whitespace-nowrap" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
+            <div className="min-w-0 w-[64%] sm:max-w-md">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none whitespace-nowrap drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
                 Bloom Calendar
               </h1>
-              <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-medium text-white/95 leading-snug whitespace-nowrap" style={{ animationDelay: "150ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
+              <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-semibold text-rose/80 leading-snug whitespace-nowrap" style={{ animationDelay: "150ms" }}>
                 Your life, beautifully planned.
               </p>
-              <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
+              <CyclePhasePill className="mt-1.5" />
             </div>
             <div className="animate-fade-in shrink-0 flex items-center gap-1" style={{ animationDelay: "220ms" }}>
-              <button onClick={goToday} className="rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-2.5 py-1 text-[11px] font-bold text-white transition hover:bg-white/35 active:scale-95">
+              <button onClick={goToday} className="rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1 text-[11px] font-bold text-hotpink shadow-sm transition hover:bg-white active:scale-95">
                 Today
               </button>
-              <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
+              <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
-              <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 place-items-center rounded-full bg-white/25 backdrop-blur-md border border-white/50 text-white transition hover:bg-white/35 active:scale-95">
+              <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="flex items-center justify-between mb-3 px-1">
         <p className="text-sm font-bold text-hotpink inline-flex items-center gap-1">
