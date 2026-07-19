@@ -837,16 +837,17 @@ export default function TodayPage() {
       {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
-      {/* Hero photo as ONE blended page BACKGROUND — she flows down the right,
-          behind the greeting AND behind the top of "Build your Bloom world",
-          feathered on the left & bottom (right/top bleed off-screen) so there's
-          no crop line or box: the photo simply *is* the background. `isolate` on
-          the root keeps this -z layer from vanishing behind the app shell. */}
-      <div aria-hidden className="pointer-events-none absolute right-0 -top-8 -z-10 -mr-3 sm:-mr-6 md:-mr-8 h-[640px] w-[92%] sm:w-[68%] lg:w-[58%] overflow-hidden">
-        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_15%]" referrerPolicy="no-referrer" />
-        {/* left fade (into the greeting) + bottom fade (into Build-your-world) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE1EF] via-[#FFE1EF]/20 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-60 bg-gradient-to-b from-transparent via-[#FFE4F1]/75 to-[#FFE4F1]" />
+      {/* Hero photo as ONE blended page BACKGROUND — a single FULL-WIDTH image so
+          there's no left/right panel seam: she sits on the right, and the same
+          pink (#FFE4F1) fades the left (behind the greeting) and the bottom (into
+          "Build your Bloom world"). One continuous surface, no edges. `isolate`
+          on the root keeps this -z layer from vanishing behind the app shell. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 md:-mx-8 h-[640px] overflow-hidden">
+        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
+        {/* left fade → readable pink behind the greeting (same tone as the wash) */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        {/* bottom fade → melts into the content below */}
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
       </div>
 
       <BloomBubbles count={10} />
@@ -903,46 +904,7 @@ export default function TodayPage() {
           )}
         </div>
 
-        {/* ── QUICK STATS — Mood · Symptom · Energy · Water — frosted-glass bars
-               nestled into the bottom of the hero, matching the streak badge. ── */}
-        <div className="relative z-[2] px-3 pb-3 pt-1 sm:px-6 sm:pb-5">
-          <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
-            <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
-              <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-5 w-5" strokeWidth={1.8} /></span>
-              <span className="min-w-0 w-full sm:w-auto">
-                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
-                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
-              </span>
-            </button>
-
-            <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
-              <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 w-full sm:w-auto">
-                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
-                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
-              </span>
-            </button>
-
-            <a href="/app/calendar" className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
-              <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Battery className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 w-full sm:w-auto">
-                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Energy</span>
-                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
-              </span>
-            </a>
-
-            <button onClick={() => setWaterModalOpen(true)}
-              className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/55 backdrop-blur-md border border-white/50 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/70 active:scale-[0.98]">
-              <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Droplet className="h-5 w-5" strokeWidth={1.9} /></span>
-              <span className="min-w-0 w-full sm:w-auto">
-                <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
-                <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
-              </span>
-            </button>
-          </div>
-        </div>
+        {/* QUICK STATS moved below — now sits just above "Build your Bloom world". */}
       </section>
 
       {/* MoodPopover — portaled, triggered from hero circular button */}
@@ -986,6 +948,47 @@ export default function TodayPage() {
         onToggleDone={() => { if (activePlan) togglePlanItem(activePlan.id); }}
         onClose={() => setActivePlan(null)}
       />
+
+      {/* ── QUICK STATS — Mood · Symptom · Energy · Water — frosted-glass bars,
+             sitting just above "Build your Bloom world" (clear of the hero photo). ── */}
+      <div className="relative z-[1] mt-3 sm:mt-4">
+        <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
+          <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
+            className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-5 w-5" strokeWidth={1.8} /></span>
+            <span className="min-w-0 w-full sm:w-auto">
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
+              <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
+            </span>
+          </button>
+
+          <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
+            className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-5 w-5" strokeWidth={1.9} /></span>
+            <span className="min-w-0 w-full sm:w-auto">
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
+              <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
+            </span>
+          </button>
+
+          <a href="/app/calendar" className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Battery className="h-5 w-5" strokeWidth={1.9} /></span>
+            <span className="min-w-0 w-full sm:w-auto">
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Energy</span>
+              <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
+            </span>
+          </a>
+
+          <button onClick={() => setWaterModalOpen(true)}
+            className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Droplet className="h-5 w-5" strokeWidth={1.9} /></span>
+            <span className="min-w-0 w-full sm:w-auto">
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
+              <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
+            </span>
+          </button>
+        </div>
+      </div>
 
       {/* ── BUILD YOUR WORLD — rich guided setup cards; disappears once every
              tool is configured. (self-hides when all steps are done) ── */}
