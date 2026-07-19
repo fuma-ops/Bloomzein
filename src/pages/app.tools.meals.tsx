@@ -17,11 +17,9 @@ import {
   RefreshCw,
   Shuffle,
   Clock,
-  Snowflake,
   ShoppingBag,
   Calendar,
   Apple,
-  Baby,
   X,
   Plus,
   ChevronDown,
@@ -45,8 +43,6 @@ import {
   INTENTIONS,
   PHASE_INFO,
   DAYS,
-  KID_DAYS,
-  STORAGE_TABLE,
   SEASONAL,
   passesMyRules,
   readDietProfile,
@@ -93,11 +89,9 @@ const LS = {
   extra: "bloom:meals-pantry-extra",   // {category: string}
   intention: "bloom:meals-intention",
   plan: "bloom:meals-plan",            // {day: {breakfast,lunch,dinner,snack}}
-  kidPlan: "bloom:meals-kidplan",      // {day: recipeId}
   favorites: "bloom:meals-favorites",  // string[]
   ratings: "bloom:meals-ratings",      // {id: "love"|"ok"|"never"}
   shopChecked: "bloom:meals-shop-checked",
-  freezer: "bloom:meals-freezer",      // [{name,date,days}]
   step: "bloom:meals-step",            // onboarding step
   phase: "bloom:cycle-phase",          // shared
 };
@@ -246,21 +240,6 @@ function todayDayName(): string {
   return DAYS[(new Date().getDay() + 6) % 7];
 }
 
-function buildKidWeek(recipes: Recipe[], owned: Set<string>) {
-  const used = new Set<string>();
-  const plan: Record<string, string | null> = {};
-  const pool = recipes.filter((r) => r.mealType === "lunchbox" && r.packable);
-  KID_DAYS.forEach((d) => {
-    const ranked = [...pool].sort(
-      (a, b) => scoreRecipe(b, owned) + (used.has(b.id) ? -0.6 : 0) -
-                (scoreRecipe(a, owned) + (used.has(a.id) ? -0.6 : 0)),
-    );
-    plan[d] = ranked[0]?.id ?? null;
-    if (ranked[0]) used.add(ranked[0].id);
-  });
-  return plan;
-}
-
 /* ---------- UI atoms ---------- */
 
 function Glass({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
@@ -305,24 +284,18 @@ function EmptyState({
 
 /* ---------- Tabs ---------- */
 
-type TabKey = "week" | "kids" | "pantry" | "shop" | "prep" | "conserve" | "favs";
+type TabKey = "week" | "pantry" | "shop" | "favs";
 const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: "week", label: "This Week", icon: Calendar },
-  { key: "kids", label: "Kids Lunch Box", icon: Baby },
   { key: "pantry", label: "My Pantry", icon: Apple },
   { key: "shop", label: "Shopping List", icon: ShoppingBag },
-  { key: "prep", label: "Sunday Prep", icon: Sparkles },
-  { key: "conserve", label: "Conservation", icon: Snowflake },
   { key: "favs", label: "Favorites", icon: Heart },
 ];
 
 const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
   week:     { title: "Meal Planner",    subtitle: "cook with love, glow all week ✿" },
-  kids:     { title: "Kids Lunch Box",  subtitle: "pack joy in every bite 🐣" },
   pantry:   { title: "My Pantry",       subtitle: "know what you have, waste less 🌿" },
   shop:     { title: "Shopping List",   subtitle: "grab only what you need ✓" },
-  prep:     { title: "Sunday Prep",     subtitle: "cook once, eat all week 🍳" },
-  conserve: { title: "Conservation",    subtitle: "keep it fresh, nothing wasted ❄️" },
   favs:     { title: "My Favourites",   subtitle: "your most-loved recipes ♥" },
 };
 
@@ -339,7 +312,7 @@ const MEALS_GUIDE_CONTENT: SparkleContent = {
 /* ---------- Page ---------- */
 
 /** Meals tabs reserved for Bloom+ (only "This Week" browsing is free). */
-const PREMIUM_MEALS_TABS = new Set<TabKey>(["kids", "pantry", "shop", "prep", "conserve", "favs"]);
+const PREMIUM_MEALS_TABS = new Set<TabKey>(["pantry", "shop", "favs"]);
 
 export default function MealsPage() {
   const [tab, setTab] = useState<TabKey>("week");
@@ -391,11 +364,9 @@ export default function MealsPage() {
     window.addEventListener("focus", refresh);
     return () => { window.removeEventListener("storage", refresh); window.removeEventListener("focus", refresh); };
   }, []);
-  const [kidPlan, setKidPlan] = useLS<Record<string, string | null>>(LS.kidPlan, {});
   const [favorites, setFavorites] = useLS<string[]>(LS.favorites, []);
   const [ratings, setRatings] = useLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
   const [shopChecked, setShopChecked] = useLS<string[]>(LS.shopChecked, []);
-  const [freezer, setFreezer] = useLS<{ name: string; date: string }[]>(LS.freezer, []);
   const [step, setStep] = useLS<number>(LS.step, 0); // 0=welcome,1=pantry,2=vibe,3=ready
   // "Continue without pantry" — user opted to plan from the whole library.
   const [pantrySkip, setPantrySkip] = useLS<boolean>("bloom:meals-pantry-skip", false);
@@ -498,7 +469,6 @@ export default function MealsPage() {
     setStep(3);
     setTab("week");
   };
-  const generateKids = () => setKidPlan(buildKidWeek(myRulesPool, owned));
 
   // Auto-heal plans saved before the variety fix. We read localStorage DIRECTLY
   // here because useLS hydrates its state asynchronously — at mount the `plan`
@@ -708,13 +678,6 @@ export default function MealsPage() {
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
             favorites={favorites} toggleFav={toggleFav}
             goPantry={() => { setStep(1); setTab("pantry"); }}
-            goPrep={() => setTab("prep")}
-          />
-        )}
-
-        {tab === "kids" && (
-          <KidsTab
-            kidPlan={kidPlan} onGenerate={generateKids} onOpen={openRecipeAt}
           />
         )}
 
@@ -734,12 +697,6 @@ export default function MealsPage() {
             planEmpty={planEmpty}
             goWeek={() => setTab("week")}
           />
-        )}
-
-        {tab === "prep" && <SundayPrepTab plan={plan} planEmpty={planEmpty} goWeek={() => setTab("week")} />}
-
-        {tab === "conserve" && (
-          <ConservationTab freezer={freezer} setFreezer={setFreezer} />
         )}
 
         {tab === "favs" && (
@@ -1008,7 +965,7 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
 
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
-  onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup,
+  onOpen, onSwap, onRegen, owned, goPantry, proteinBoostDays, mealsTuned, dietSetup,
   pantrySkip, onSkipPantry, fromDiet, onDismissFromDiet, favorites, toggleFav,
 }: any) {
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
@@ -1282,29 +1239,6 @@ function WeekTab({
         </section>
       )}
 
-      {/* Sunday Prep CTA — only when a plan exists */}
-      {!planEmpty && (
-        <button
-          onClick={goPrep}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl active:scale-[.98] transition-transform"
-          style={{
-            background: 'linear-gradient(135deg,rgba(251,207,232,.9) 0%,rgba(244,114,182,.35) 100%)',
-            border: '1px solid rgba(236,72,153,.30)',
-            boxShadow: '0 4px 20px rgba(236,72,153,.28)',
-            animation: 'ctaBreathe 2.8s ease-in-out infinite',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🍳</span>
-            <div className="text-left">
-              <p className="font-bold text-hotpink text-sm leading-tight">Batch-cook your week</p>
-              <p className="text-xs text-rose/70 mt-0.5">Sunday Prep · ready in ~2 hours</p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-hotpink flex-shrink-0" />
-        </button>
-      )}
-
       {weekDone && (
         <SpotlightCoach
           targetId="meals-week-plan"
@@ -1523,66 +1457,6 @@ function PhasePill({ phase, setPhase }: any) {
   );
 }
 
-/* ---------- Kids ---------- */
-
-function KidsTab({ kidPlan, onGenerate, onOpen }: any) {
-  const empty = Object.keys(kidPlan).length === 0;
-  if (empty) {
-    return (
-      <EmptyState
-        icon={Baby}
-        title="Pack the cutest lunchbox"
-        blurb="A balanced, packable Mon–Fri plan — no microwave needed, built from your pantry."
-        cta="Build the week" onCta={onGenerate}
-      />
-    );
-  }
-  return (
-    <Glass className="p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-3">
-        <p className="font-script text-2xl text-hotpink">Kids — this week</p>
-        <PinkBtn variant="ghost" onClick={onGenerate}><RefreshCw className="h-4 w-4" /> Refresh</PinkBtn>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-        {KID_DAYS.map((d, di) => {
-          const id = kidPlan[d];
-          const r = id ? RECIPES.find((x) => x.id === id) : null;
-          const photo = MEAL_PHOTO_FALLBACK['lunchbox'] ?? '/images/meal-lunchbox.webp';
-          return (
-            <div
-              key={d}
-              className="relative rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-transform animate-scale-in"
-              style={{ aspectRatio: '3/4', animationDelay: `${di * 60}ms` }}
-              onClick={() => r && requestAnimationFrame(() => onOpen(r.id))}
-            >
-              {/* Photo */}
-              <img src={photo} alt={r?.name ?? d} className="absolute inset-0 w-full h-full object-cover" />
-              {/* Subtle top gradient for badge readability */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
-              {/* Day badge */}
-              <div className="absolute top-1.5 left-1.5">
-                <span className="text-[9px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">{d}</span>
-              </div>
-              {/* Swap */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onGenerate(); }}
-                title="Swap"
-                className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
-              >
-                <Shuffle className="h-2.5 w-2.5" />
-              </button>
-              {/* Name over a slim bottom fade — food stays visible */}
-              <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
-                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r?.name ?? '—'}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </Glass>
-  );
-}
-
 /* ---------- Pantry ---------- */
 
 function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: any) {
@@ -1777,140 +1651,6 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
         ))}
       </div>
     </Glass>
-  );
-}
-
-/* ---------- Sunday Prep ---------- */
-
-function SundayPrepTab({ plan, planEmpty, goWeek }: any) {
-  if (planEmpty) {
-    return <EmptyState icon={Sparkles} title="Cook once, eat all week"
-      blurb="Sunday Prep gives you a step-by-step order to batch-cook your entire week in ~2 hours. Plan your week first and I'll build your prep guide automatically."
-      cta="Plan my week" onCta={goWeek} />;
-  }
-  const recipes = Object.values(plan as Record<string, Record<MealType, string | null>>)
-    .flatMap((d) => Object.values(d).filter(Boolean) as string[])
-    .map((id) => RECIPES.find((r) => r.id === id)!)
-    .filter(Boolean);
-  const oven = recipes.filter((r) => r.cookMin >= 15);
-  const stove = recipes.filter((r) => r.cookMin > 0 && r.cookMin < 15);
-  const cold = recipes.filter((r) => r.cookMin === 0);
-  return (
-    <div className="space-y-3">
-      {/* Explainer */}
-      <Glass className="p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="text-3xl" aria-hidden>🍳</span>
-          <div>
-            <p className="font-script text-2xl text-hotpink leading-tight">Cook once, eat all week</p>
-            <p className="mt-1 text-sm text-rose/80 leading-snug">
-              Sunday Prep is your batch-cooking guide. Instead of cooking every day, you spend ~2 hours on Sunday
-              preparing everything at once — then your fridge is stocked for the whole week.
-            </p>
-            <p className="mt-2 text-xs text-rose/60">
-              The recipes from your week plan are sorted in the most efficient order:
-              start the oven first (slowest), then use the stovetop while it heats, finish with quick cold prep.
-            </p>
-          </div>
-        </div>
-      </Glass>
-
-      {/* Steps */}
-      <Glass className="p-4 sm:p-5">
-        <p className="font-script text-xl text-hotpink mb-3">Your prep order this week</p>
-        <ol className="space-y-3">
-          <PrepStep n={1} title="Start the oven — longest cook" items={oven.map((r) => r.name)} />
-          <PrepStep n={2} title="Stovetop while oven runs" items={stove.map((r) => r.name)} />
-          <PrepStep n={3} title="Cold prep & assembly" items={cold.map((r) => r.name)} />
-          <PrepStep n={4} title="Pack & label" items={["Portion into containers", "Label with day + meal", "Fridge (≤3 days) or freezer the rest"]} />
-        </ol>
-      </Glass>
-    </div>
-  );
-}
-function PrepStep({ n, title, items }: { n: number; title: string; items: string[] }) {
-  return (
-    <li className="rounded-2xl bg-blush/60 p-3">
-      <div className="flex items-center gap-2">
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-hotpink text-white text-xs font-bold">{n}</span>
-        <p className="font-semibold text-rose">{title}</p>
-      </div>
-      <ul className="mt-1.5 ml-9 space-y-1 text-sm text-rose/90 list-disc">
-        {items.length ? items.map((i, idx) => <li key={idx}>{i}</li>) : <li className="list-none text-rose/50 -ml-4">nothing in this slot</li>}
-      </ul>
-    </li>
-  );
-}
-
-/* ---------- Conservation ---------- */
-
-function ConservationTab({ freezer, setFreezer }: any) {
-  const [name, setName] = useState("");
-  const [date, setDate] = useState("");
-  const [fname, setFname] = useState("");
-  const [fdate, setFdate] = useState("");
-  const today = new Date();
-
-  const check = (n: string, d: string) => {
-    const days = (today.getTime() - new Date(d).getTime()) / 86400000;
-    const t = STORAGE_TABLE.find((s) => n.toLowerCase().includes(s.keyword)) || { fridgeDays: 3 };
-    return { days: Math.floor(days), safe: days <= t.fridgeDays, limit: t.fridgeDays };
-  };
-
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <Glass className="p-4">
-        <p className="font-script text-2xl text-hotpink">Still good?</p>
-        <p className="text-xs text-rose/70 mt-0.5">Enter a dish + when you cooked it.</p>
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. lentil stew"
-            className="w-full min-w-0 flex-1 rounded-full bg-white/90 px-3 py-2 text-sm text-rose border border-petal/60 outline-none focus:ring-2 focus:ring-hotpink/30 placeholder:text-rose/40" />
-          <div className="w-full sm:w-40 shrink-0">
-            <CuteDatePicker value={date} onChange={setDate} placeholder="When cooked" />
-          </div>
-        </div>
-        {name && date && (() => {
-          const r = check(name, date);
-          return (
-            <div className={`mt-3 rounded-2xl p-3 ${r.safe ? "bg-blush" : "bg-hotpink/15"}`}>
-              <p className={`font-semibold ${r.safe ? "text-hotpink" : "text-magenta"}`}>
-                {r.safe ? "Safe to eat ✿" : "Better to toss it"}
-              </p>
-              <p className="text-xs text-rose/80 mt-0.5">
-                {r.days} day(s) old · limit ~{r.limit} day(s). When in doubt, throw it out.
-              </p>
-            </div>
-          );
-        })()}
-      </Glass>
-
-      <Glass className="p-4">
-        <p className="font-script text-2xl text-hotpink">Freezer vault</p>
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-          <input value={fname} onChange={(e) => setFname(e.target.value)} placeholder="dish name"
-            className="w-full min-w-0 flex-1 rounded-full bg-white/90 px-3 py-2 text-sm text-rose border border-petal/60 outline-none focus:ring-2 focus:ring-hotpink/30 placeholder:text-rose/40" />
-          <div className="flex gap-2 sm:shrink-0">
-            <div className="flex-1 sm:w-36">
-              <CuteDatePicker value={fdate} onChange={setFdate} placeholder="Frozen on" />
-            </div>
-            <PinkBtn onClick={() => { if (fname && fdate) { setFreezer([...freezer, { name: fname, date: fdate }]); setFname(""); setFdate(""); } }}>
-              <Plus className="h-4 w-4" />
-            </PinkBtn>
-          </div>
-        </div>
-        <ul className="mt-3 space-y-1.5">
-          {freezer.length === 0 && <li className="text-xs text-rose/60">No frozen dishes yet.</li>}
-          {freezer.map((f: any, i: number) => (
-            <li key={i} className="flex items-center justify-between gap-2 rounded-xl bg-blush/60 px-3 py-1.5 text-sm text-rose min-w-0">
-              <span className="truncate min-w-0">❄ {f.name} <span className="text-xs text-rose/60">— {f.date}</span></span>
-              <button onClick={() => setFreezer(freezer.filter((_: any, j: number) => j !== i))} className="text-rose/60 hover:text-hotpink shrink-0">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Glass>
-    </div>
   );
 }
 
