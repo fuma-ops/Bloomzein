@@ -488,6 +488,59 @@ function BodyGoalEditModal({ profile, onClose, onSave }: {
   );
 }
 
+/** Quick eating-plan editor — diet, allergies & cooking time. Opened from the
+ *  "Edit plan" button on Today's fuel. Every change re-filters the recipe pool. */
+function EatingPlanEditModal({ profile, setProfile, onClose }: {
+  profile: DietProfile & { weight: number };
+  setProfile: (v: (DietProfile & { weight: number }) | ((p: DietProfile & { weight: number }) => DietProfile & { weight: number })) => void;
+  onClose: () => void;
+}) {
+  const regime = dietRegimeInfo(profile.regime ?? "balanced");
+  const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
+  return createPortal(
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
+      <div className="relative w-full sm:max-w-md max-h-[88vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-white shadow-2xl shadow-rose/20 p-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-script text-2xl text-hotpink">Your eating plan</h3>
+          <button onClick={onClose} aria-label="Close" className="rounded-full bg-blush/70 p-1.5 text-rose active:scale-90 transition"><X className="h-4 w-4" /></button>
+        </div>
+        <p className="text-[11px] text-rose/60 leading-snug mb-4">Your diet, allergies &amp; cooking time — every recipe re-filters to match. <b className="text-hotpink">{matchCount} recipes</b> fit right now.</p>
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Diet</p>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
+              {DIET_REGIMES.map((r) => (
+                <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[11.5px] text-rose/70 leading-snug">{regime.blurb}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Allergies</p>
+            <div className="flex flex-wrap gap-1.5">
+              {ALLERGY_OPTIONS.map((o) => (
+                <SelectPill key={o.key} active={profile.allergies.includes(o.key)} onClick={() => setProfile((p) => ({ ...p, allergies: p.allergies.includes(o.key) ? p.allergies.filter((x) => x !== o.key) : [...p.allergies, o.key] }))}>{o.label}</SelectPill>
+              ))}
+              <SelectPill active={profile.allergies.length === 0} onClick={() => setProfile((p) => ({ ...p, allergies: [] }))}>None</SelectPill>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Cooking time</p>
+            <div className="flex flex-wrap gap-1.5">
+              {COOKING_OPTIONS.map((o) => (
+                <SelectPill key={o.key} active={profile.cookingFrequency === o.key} onClick={() => setProfile((p) => ({ ...p, cookingFrequency: o.key }))}>{o.label}</SelectPill>
+              ))}
+            </div>
+          </div>
+        </div>
+        <PinkBtn className="mt-5 w-full justify-center" onClick={onClose}>Done <Check className="h-4 w-4" /></PinkBtn>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 /** Small numeric field for the setup wizard. `error` flags a required-but-empty
  *  field: it turns the border rose-red and squeezes to draw the eye. */
 function SetupNumber({ label, unit, value, onChange, placeholder, autoFocus, error }: {
@@ -851,9 +904,6 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   onUnplanMovement: () => void;
   onSyncCycle: () => void;
 }) {
-  const regime = dietRegimeInfo(profile.regime ?? "balanced");
-  const matchCount = useMemo(() => RECIPES.filter((r) => passesMyRules(r, profile)).length, [profile]);
-
   // Refresh when a workout/yoga is logged so burned calories flow in live.
   const [trainTick, setTrainTick] = useState(0);
   useEffect(() => {
@@ -883,7 +933,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   const [weightInput, setWeightInput] = useState(String(profile.weight ?? 65));
   // App-style edit popup (opened from the Goal-path card) for body & goal.
   const [bodyEditOpen, setBodyEditOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState(false);
+  // Eating-plan quick-edit popup, opened from the "Edit plan" button on Today's fuel.
+  const [eatPlanOpen, setEatPlanOpen] = useState(false);
   // Confirmation feedback after logging — so she clearly sees it saved.
   const [logged, setLogged] = useState<number | null>(null);
   useEffect(() => { if (logged == null) return; const t = setTimeout(() => setLogged(null), 2800); return () => clearTimeout(t); }, [logged]);
@@ -965,6 +1016,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
             onUnplanMovement={onUnplanMovement}
             onSyncCycle={onSyncCycle}
             onViewTodayPlan={() => goTo("today")}
+            onEditPlan={() => setEatPlanOpen(true)}
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <div id="diet-goalpath"><GoalPathCard onEdit={() => setBodyEditOpen(true)} /></div>
@@ -1078,61 +1130,9 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
         </Glass>
       </div>
 
-      {/* Your eating plan — already set (from setup); shows as done + Edit */}
-      <div id="diet-plan">
-        <Glass className="p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-4 w-4" strokeWidth={3} /></span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">Your eating plan · set</p>
-                <p className="font-script text-xl text-hotpink leading-none truncate">{regime.label} <span className="text-rose/40 text-sm font-sans">· {matchCount} recipes</span></p>
-              </div>
-            </div>
-            <button onClick={() => setEditingPlan((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-hotpink active:scale-95 transition">
-              <Pencil className="h-3 w-3" /> {editingPlan ? "Done" : "Edit"}
-            </button>
-          </div>
-          {!editingPlan && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {profile.allergies.length === 0
-                ? <span className="rounded-full bg-blush/60 px-2 py-0.5 text-[10px] font-bold text-rose/60">No allergies</span>
-                : profile.allergies.map((a) => <span key={a} className="rounded-full bg-blush/60 px-2 py-0.5 text-[10px] font-bold text-rose/60 capitalize">{a}-free</span>)}
-              <span className="rounded-full bg-blush/60 px-2 py-0.5 text-[10px] font-bold text-rose/60">{COOKING_OPTIONS.find((c) => c.key === profile.cookingFrequency)?.label}</span>
-            </div>
-          )}
-          {editingPlan && (
-            <div className="mt-3 space-y-3 animate-fade-in">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Diet</p>
-                <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
-                  {DIET_REGIMES.map((r) => (
-                    <SelectPill key={r.key} active={(profile.regime ?? "balanced") === r.key} onClick={() => setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))}>{r.label}</SelectPill>
-                  ))}
-                </div>
-                <p className="mt-1.5 text-[11.5px] text-rose/70 leading-snug">{regime.blurb}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Allergies</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {ALLERGY_OPTIONS.map((o) => (
-                    <SelectPill key={o.key} active={profile.allergies.includes(o.key)} onClick={() => setProfile((p) => ({ ...p, allergies: p.allergies.includes(o.key) ? p.allergies.filter((x) => x !== o.key) : [...p.allergies, o.key] }))}>{o.label}</SelectPill>
-                  ))}
-                  <SelectPill active={profile.allergies.length === 0} onClick={() => setProfile((p) => ({ ...p, allergies: [] }))}>None</SelectPill>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">Cooking time</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {COOKING_OPTIONS.map((o) => (
-                    <SelectPill key={o.key} active={profile.cookingFrequency === o.key} onClick={() => setProfile((p) => ({ ...p, cookingFrequency: o.key }))}>{o.label}</SelectPill>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </Glass>
-      </div>
+      {eatPlanOpen && (
+        <EatingPlanEditModal profile={profile} setProfile={setProfile} onClose={() => setEatPlanOpen(false)} />
+      )}
 
       <div className="flex items-center justify-center gap-4 pt-1">
         <button onClick={onEdit} className="text-xs font-semibold text-rose/60 hover:text-hotpink">Edit my diet setup ✿</button>
