@@ -32,6 +32,10 @@ import {
   SlidersHorizontal,
   Moon,
   Pencil,
+  Target,
+  Leaf,
+  Sunrise,
+  Sun,
 } from "lucide-react";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { PickerField } from "@/components/bloom/PickerField";
@@ -71,7 +75,7 @@ import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDie
 import { readLaunch, LAUNCH_MEAL_KEY } from "@/components/bloom/phasePlan";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { todayISO } from "@/lib/localDate";
-import { computeTargets, targetRationale, movementFoodLine, sumMacros, calorieVerdict, slotBudget, portionForRecipe, type TargetBreakdown } from "@/lib/nutritionTargets";
+import { computeTargets, movementFoodLine, sumMacros, calorieVerdict, slotBudget, portionForRecipe, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
@@ -702,6 +706,7 @@ export default function MealsPage() {
             mealsTuned={mealsTuned} dietSetup={dietSetup}
             pantrySkip={pantrySkip} onSkipPantry={() => setPantrySkip(true)}
             fromDiet={fromDiet} onDismissFromDiet={dismissFromDiet}
+            favorites={favorites} toggleFav={toggleFav}
             goPantry={() => { setStep(1); setTab("pantry"); }}
             goPrep={() => setTab("prep")}
           />
@@ -814,9 +819,8 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
   const [expanded, setExpanded] = useState(false);
   const [closed, setClosed] = useState(() => { try { return localStorage.getItem("bloom:meals-target-card-closed") === "1"; } catch { return false; } });
   if (closed) return null;
-  const hasDetail = !!movementFoodLine(t) || t.eatBack > 0;
   return (
-    <Glass className="relative p-4 sm:p-5 animate-fade-in" data-tour="meals-target">
+    <Glass className="relative p-3 sm:p-3.5 animate-fade-in" data-tour="meals-target">
       {/* Close the whole card */}
       <button
         onClick={() => { try { localStorage.setItem("bloom:meals-target-card-closed", "1"); } catch {} setClosed(true); }}
@@ -826,35 +830,23 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
         <X className="h-4 w-4" />
       </button>
 
-      {/* Summary — always shown; tap anywhere here to expand/collapse the detail */}
+      {/* Summary — compact single row: target kcal + macros inline. Tap to expand. */}
       <div onClick={() => setExpanded((v) => !v)} className="cursor-pointer">
-        <div className="flex items-center justify-between mb-2.5 pr-8">
-          <p className="font-script text-2xl text-hotpink">Your daily target</p>
-          <span className="rounded-full bg-hotpink/10 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20">{goalLabel} goal</span>
-        </div>
-        <div className="flex items-end gap-4">
+        <div className="flex items-center gap-3 pr-8">
           <div className="shrink-0">
-            <p className="text-4xl sm:text-5xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50 mt-1">kcal / day</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50 leading-none mb-0.5">Daily target · {goalLabel}</p>
+            <p className="text-2xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}<span className="text-[11px] font-bold text-rose/50"> kcal</span></p>
           </div>
           <div className="flex-1 grid grid-cols-3 gap-1.5">
             {macros.map((m) => (
-              <div key={m.k} className={`rounded-xl ${m.bg} border ${m.br} py-2 text-center`}>
-                <p className={`text-lg font-black leading-none ${m.cls} tabular-nums`}>{m.v}<span className="text-[10px] font-bold">g</span></p>
-                <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{m.k}</p>
+              <div key={m.k} className={`rounded-lg ${m.bg} border ${m.br} py-1 text-center`}>
+                <p className={`text-[13px] font-black leading-none ${m.cls} tabular-nums`}>{m.v}<span className="text-[9px] font-bold">g</span></p>
+                <p className="text-[7.5px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{m.k}</p>
               </div>
             ))}
           </div>
+          <ChevronDown className={["h-4 w-4 shrink-0 text-hotpink/60 transition-transform", expanded ? "rotate-180" : ""].join(" ")} />
         </div>
-        <p className="mt-2.5 flex items-start gap-1.5 text-[11px] leading-snug text-rose/70">
-          <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-          <span>Tuned from your body &amp; {targetRationale(t)}.</span>
-        </p>
-        {/* Soft "more / less" affordance so she knows it opens */}
-        <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-hotpink/70">
-          {expanded ? "Show less" : (hasDetail ? "Your movement, burn & how to use" : "How to use")}
-          <ChevronDown className={["h-3.5 w-3.5 transition-transform", expanded ? "rotate-180" : ""].join(" ")} />
-        </span>
       </div>
 
       {/* Detail — revealed on tap */}
@@ -880,44 +872,6 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
         </div>
       )}
     </Glass>
-  );
-}
-
-/** A day's actual calories/protein vs the daily target — the closed loop.
- *  Scales each meal by its planned portion so the day lands on the goal. */
-function DayTotals({ plan, day, target }: { plan: any; day: string; target: TargetBreakdown }) {
-  const dayPlan = plan?.[day];
-  const recipes = dayPlan
-    ? (["breakfast", "lunch", "dinner", "snack"] as MealType[])
-        .map((s) => {
-          const r = dayPlan[s] ? RECIPES.find((x) => x.id === dayPlan[s]) : null;
-          if (!r) return null;
-          const f = portionFor(day, s as any);
-          return { macros: { calories: r.macros.calories * f, protein: r.macros.protein * f, carbs: r.macros.carbs * f, fat: r.macros.fat * f } };
-        })
-        .filter(Boolean) as { macros: { calories: number; protein: number; carbs: number; fat: number } }[]
-    : [];
-  if (!recipes.length) return null;
-  const totals = sumMacros(recipes);
-  totals.calories = Math.round(totals.calories);
-  totals.protein = Math.round(totals.protein);
-  const verdict = calorieVerdict(totals.calories, target.calories);
-  const pct = Math.min(100, Math.round((totals.calories / Math.max(1, target.calories)) * 100));
-  // The bar always stays on-palette (pink); the verdict lives in the coloured
-  // label only — green = on target, purple = under, red = over.
-  const barCls = "bg-gradient-to-r from-hotpink to-[#DB2777]";
-  const label = verdict === "on" ? "on target" : verdict === "under" ? "under" : "over";
-  const labelCls = verdict === "on" ? "text-emerald-600" : verdict === "under" ? "text-violet-600" : "text-red-600";
-  return (
-    <div className="mt-2.5 pt-2.5 border-t border-petal/50">
-      <div className="flex items-center justify-between text-[10px] font-bold mb-1">
-        <span className="text-rose/60 tabular-nums">≈{totals.calories.toLocaleString()} <span className="text-rose/35">/ {target.calories.toLocaleString()} kcal</span></span>
-        <span className={`uppercase tracking-wide ${labelCls}`}>{label} · {totals.protein}g P</span>
-      </div>
-      <div className="h-1.5 rounded-full bg-petal/40 overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
   );
 }
 
@@ -1055,9 +1009,18 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
 function WeekTab({
   intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
   onOpen, onSwap, onRegen, owned, goPantry, goPrep, proteinBoostDays, mealsTuned, dietSetup,
-  pantrySkip, onSkipPantry, fromDiet, onDismissFromDiet,
+  pantrySkip, onSkipPantry, fromDiet, onDismissFromDiet, favorites, toggleFav,
 }: any) {
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
+  // Which single day is open in the detailed view (photo-rich, one day at a time).
+  const [selDay, setSelDay] = useState<string>(() => todayDayName());
+  // Calendar date numbers for this week (Mon-first), so the day chips read like a real week.
+  const weekDates = useMemo(() => {
+    const now = new Date();
+    const dow = (now.getDay() + 6) % 7; // 0 = Mon
+    const monday = new Date(now); monday.setDate(now.getDate() - dow);
+    return DAYS.map((_: string, i: number) => { const dt = new Date(monday); dt.setDate(monday.getDate() + i); return dt.getDate(); });
+  }, []);
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
   const [editingVibe, setEditingVibe] = useState(false);
@@ -1137,6 +1100,11 @@ function WeekTab({
   };
 
   const intentionLabel = INTENTIONS.find((i) => i.key === intention)?.label ?? "";
+  // Which eating plan she's on (e.g. "Balanced") — shown as an awareness label.
+  const dietRegime = useMemo(() => {
+    const rg = (readDietProfile() as { regime?: string }).regime;
+    return rg ? rg.charAt(0).toUpperCase() + rg.slice(1) : "";
+  }, [plan]);
 
   return (
     <>
@@ -1170,28 +1138,52 @@ function WeekTab({
         </div>
       ) : (
         <section className="rounded-3xl bg-white/85 border border-petal/60 shadow-sm p-3.5 sm:p-4 space-y-3">
-          <p className="font-script text-2xl text-hotpink leading-none px-0.5">Your meal week plan ✿</p>
-
-          {/* Tuned-plan notice — notif style, with Edit + Regenerate + editor */}
-          <div className="rounded-2xl border border-dashed border-hotpink/40 bg-white/70 p-3.5">
-            <div className="flex items-center gap-2.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-5 w-5" /></span>
-              <p className="flex-1 min-w-0 text-[12px] text-rose/80 leading-snug">
-                {dietSetup && mealsTuned
-                  ? <>Plan tuned to your <b className="text-hotpink">{goalWord(mealsTuned)}</b> goal</>
-                  : <>Plan tuned to your <b className="text-hotpink capitalize">{intentionLabel}</b> vibe</>}
-                {phase !== "any" && <span className="text-rose/50"> · <span className="capitalize">{phase}</span> phase</span>}
-              </p>
-              <button onClick={() => setEditingVibe((v) => !v)} className="shrink-0 inline-flex items-center gap-1 rounded-full border border-petal/60 bg-white/80 px-2.5 py-1.5 text-[11px] font-bold text-hotpink hover:bg-blush transition active:scale-95">
-                <Pencil className="h-3 w-3" /> Edit
+          {/* Compact header — title + the awareness labels (goal · diet · phase)
+              so she always knows what's set up, and the Edit + Regenerate controls
+              tucked to the right so they barely take any space. */}
+          <div className="flex items-start justify-between gap-2 px-0.5">
+            <div className="min-w-0">
+              <p className="font-script text-2xl text-hotpink leading-none">Your meal week plan ✿</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                {/* Goal label */}
+                {dietSetup && mealsTuned && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-hotpink">
+                    <Target className="h-2.5 w-2.5" strokeWidth={2.5} /> {goalWord(mealsTuned)} goal
+                  </span>
+                )}
+                {/* Which meal plan / diet regime */}
+                {dietSetup && dietRegime && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-rose/70">
+                    <Leaf className="h-2.5 w-2.5" strokeWidth={2.5} /> {dietRegime} diet
+                  </span>
+                )}
+                {/* Vibe (when not diet-tuned) */}
+                {!(dietSetup && mealsTuned) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-hotpink">
+                    <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} /> {intentionLabel} vibe
+                  </span>
+                )}
+                {/* Phase-synced label */}
+                {phase !== "any" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-600">
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} /> Synced · {phase} phase
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button onClick={() => setEditingVibe((v) => !v)} title="Edit plan" aria-label="Edit plan" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink hover:bg-blush transition active:scale-95">
+                <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="shrink-0 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
+              <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
                 <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
               </button>
             </div>
+          </div>
 
-            {/* Phase-nutrition guidance — integrated right here (no separate title;
-                the line above already names her phase). Dismissible with an X. */}
+          {/* Phase-nutrition guidance + editor — revealed inline, not a permanent block */}
+          <div className="empty:hidden space-y-2">
+            {/* Phase-nutrition guidance — dismissible with an X. */}
             {phaseSynced && whyOpen && (() => {
               const comment = trainingAwarenessComment({
                 workoutDays: readWorkoutPlanDays().length,
@@ -1203,8 +1195,8 @@ function WeekTab({
               const info = dp ? PHASE_INFO[dp] : null;
               if (!comment && !info) return null;
               return (
-                <div className="relative mt-3 pt-3 border-t border-petal/50 pr-7 space-y-2 animate-fade-in">
-                  <button onClick={() => setWhyOpen(false)} aria-label="Dismiss" className="absolute right-0 top-2 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
+                <div className="relative rounded-2xl border border-petal/50 bg-blush/30 p-3 pr-8 space-y-2 animate-fade-in">
+                  <button onClick={() => setWhyOpen(false)} aria-label="Dismiss" className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
                   {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
                   {info && (
                     <>
@@ -1220,7 +1212,7 @@ function WeekTab({
 
             {/* Expanded editor — vibe + phase override; cooking time & allergies live in Diet */}
             {editingVibe && (
-              <div className="mt-3 pt-3 border-t border-petal/50 space-y-2.5 animate-fade-in">
+              <div className="rounded-2xl border border-petal/50 bg-blush/30 p-3 space-y-2.5 animate-fade-in">
                 <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
                   <PickerField
                     value={intention} title="This week's vibe"
@@ -1255,98 +1247,38 @@ function WeekTab({
             </div>
           )}
 
-          {/* The 7 days */}
-          <div id="meals-week-plan" ref={planRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {DAYS.map((d, di) => {
-            const isToday = d === todayDayName();
-            return (
-            <Glass key={d} className={["p-3 animate-scale-in", isToday ? "ring-2 ring-hotpink/50" : ""].join(" ")} style={{ animationDelay: `${di * 60}ms` }}>
-              <div className="flex items-center justify-between mb-2.5">
-                <p className="font-script text-xl text-hotpink flex items-center gap-1.5">
-                  {d}
-                  {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}
-                  {yogaDaySet.has(d) && !proteinBoostDays?.has(d) && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-hotpink/10 border border-hotpink/20 text-hotpink text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5" title="Yoga day — keep it light, hydrating & anti-inflammatory">
-                      <svg viewBox="0 0 24 24" className="h-2.5 w-2.5" fill="currentColor" aria-hidden="true">
-                        <circle cx="12" cy="5" r="2.3" />
-                        <path d="M12 8.6c-1.4 0-2.6.9-3 2.2l-1 3.2h8l-1-3.2c-.4-1.3-1.6-2.2-3-2.2z" />
-                        <path d="M5 15.2c1.9-1 4.3-1.5 7-1.5s5.1.5 7 1.5c-1.7 1.4-4.1 2.1-7 2.1s-5.3-.7-7-2.1z" />
-                      </svg>
-                      Recovery
-                    </span>
-                  )}
-                </p>
-                <button onClick={() => onRegen(d)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
-                  <RefreshCw className="h-3 w-3" /> redo day
+          {/* Day selector — the whole week as tappable date chips (photo 2) */}
+          <div id="meals-week-plan" ref={planRef} className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-0.5 px-0.5 pb-0.5">
+            {DAYS.map((d: string, di: number) => {
+              const isToday = d === todayDayName();
+              const isSel = d === selDay;
+              return (
+                <button
+                  key={d} onClick={() => setSelDay(d)}
+                  className={[
+                    "flex-1 min-w-[42px] shrink-0 rounded-2xl px-1 py-2 text-center border transition active:scale-95",
+                    isSel
+                      ? "bg-gradient-to-b from-hotpink to-[#DB2777] text-white border-hotpink shadow-md shadow-hotpink/30"
+                      : "bg-white/70 text-rose/70 border-petal/50 hover:bg-blush",
+                  ].join(" ")}
+                >
+                  <span className={["block text-[10px] font-bold uppercase tracking-wide", isSel ? "text-white/90" : "text-rose/50"].join(" ")}>{d}</span>
+                  <span className="block text-lg font-black leading-none tabular-nums">{weekDates[di]}</span>
+                  <span className={["mx-auto mt-1 block h-1 w-1 rounded-full", isToday ? (isSel ? "bg-white" : "bg-hotpink") : "bg-transparent"].join(" ")} />
                 </button>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {(["breakfast","lunch","dinner","snack"] as MealType[]).map((slot) => {
-                  const id = plan[d]?.[slot];
-                  const r = id ? RECIPES.find((x) => x.id === id) : null;
-                  const portion = portionFor(d, slot as any);
-                  const proteinBoosted = !!proteinBoostDays?.has(d) && slot === "dinner";
-                  const fallback = MEAL_PHOTO_FALLBACK[slot] ?? '/images/meal-buddha.webp';
-                  const photoSrc = r ? recipeImageSrc(r) : fallback;
-                  return (
-                    <div
-                      key={slot}
-                      className="relative rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
-                      style={{ aspectRatio: '3/4' }}
-                      onClick={() => r && requestAnimationFrame(() => onOpen(r.id, portion))}
-                    >
-                      {/* Photo */}
-                      <img
-                        src={photoSrc}
-                        alt={r?.name ?? slot}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
-                      />
-                      {/* Subtle top-only gradient so badges stay readable */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
-
-                      {/* Meal type badge */}
-                      <div className="absolute top-1.5 left-1.5">
-                        <span className="text-[8px] font-bold uppercase tracking-wide text-white/90 bg-black/35 rounded-full px-1.5 py-0.5">
-                          {slot === 'breakfast' ? 'morn' : slot === 'dinner' ? 'eve' : slot}
-                        </span>
-                      </div>
-
-                      {/* Protein badge */}
-                      {proteinBoosted && (
-                        <div className="absolute top-1.5 right-1.5">
-                          <span className="text-[7px] font-bold uppercase text-white bg-hotpink rounded-full px-1 py-0.5">✿ PRO</span>
-                        </div>
-                      )}
-
-                      {/* Name over a slim bottom fade — the whole dish stays
-                          visible; no big pink block hiding the food. */}
-                      <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
-                        {r ? (
-                          <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r.name}</p>
-                        ) : (
-                          <p className="text-[9px] text-white/70 italic">—</p>
-                        )}
-                      </div>
-
-                      {/* Swap button — stops propagation so tap doesn't also open recipe */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onSwap(d, slot); }}
-                        title="Swap meal"
-                        className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
-                        style={{ display: proteinBoosted ? 'none' : undefined }}
-                      >
-                        <Shuffle className="h-2.5 w-2.5" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              <DayTotals plan={plan} day={d} target={targets} />
-            </Glass>
-            );
-          })}
+              );
+            })}
           </div>
+
+          {/* The selected day — one photo-rich card per meal, plus a compact
+              nutrition summary. */}
+          <DayPlanDetail
+            day={selDay} plan={plan} targets={targets} phase={phase}
+            proteinBoostDays={proteinBoostDays} yogaDaySet={yogaDaySet}
+            favorites={favorites} toggleFav={toggleFav}
+            onOpen={onOpen} onSwap={onSwap} onRegen={onRegen}
+            isToday={selDay === todayDayName()}
+          />
         </section>
       )}
 
@@ -1386,6 +1318,196 @@ function WeekTab({
         />
       )}
     </>
+  );
+}
+
+/* ---------- One selected day, rendered as photo-rich meal cards ---------- */
+
+const SLOT_ORDER: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
+const SLOT_META: Record<string, { label: string; time: string; Icon: typeof Sunrise; tint: string }> = {
+  breakfast: { label: "Morning", time: "08:00", Icon: Sunrise,  tint: "text-amber-500" },
+  lunch:     { label: "Lunch",   time: "13:00", Icon: Sun,      tint: "text-orange-500" },
+  snack:     { label: "Snack",   time: "16:30", Icon: Sparkles, tint: "text-hotpink" },
+  dinner:    { label: "Dinner",  time: "19:00", Icon: Moon,     tint: "text-violet-500" },
+};
+const SLOT_TIP: Record<string, string> = {
+  breakfast: "Start your day with water and a nourishing breakfast.",
+  lunch:     "Sip a glass of water 15 minutes before eating.",
+  snack:     "A little something to keep your energy steady this afternoon.",
+  dinner:    "Your body recovers tonight — this meal supports repair & keeps you satisfied.",
+};
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+/** Small coloured tag chip. */
+function MealTag({ label, tone }: { label: string; tone: "protein" | "energy" | "phase" | "diet" | "recovery" }) {
+  const cls = {
+    protein:  "bg-violet-50 text-violet-600 border-violet-200/70",
+    energy:   "bg-amber-50 text-amber-600 border-amber-200/70",
+    phase:    "bg-hotpink/10 text-hotpink border-hotpink/20",
+    diet:     "bg-blush/70 text-rose/70 border-petal/60",
+    recovery: "bg-emerald-50 text-emerald-600 border-emerald-200/70",
+  }[tone];
+  return <span className={["rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none", cls].join(" ")}>{label}</span>;
+}
+
+function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet, favorites, toggleFav, onOpen, onSwap, onRegen, isToday }: {
+  day: string; plan: any; targets: TargetBreakdown; phase: CyclePhase;
+  proteinBoostDays?: Set<string>; yogaDaySet: Set<string>;
+  favorites: string[]; toggleFav: (id: string) => void;
+  onOpen: (id: string, portion?: number) => void; onSwap: (day: string, slot: MealType) => void; onRegen: (day: string) => void;
+  isToday: boolean;
+}) {
+  const isRecoveryDay = yogaDaySet.has(day) && !proteinBoostDays?.has(day);
+  // The synced cycle phase, in the recipes' 4-phase vocabulary (null when "any").
+  const curPhase = toDietPhase(phase);
+  // Day totals for the compact summary.
+  const dayRecipes = SLOT_ORDER
+    .map((s) => {
+      const id = plan[day]?.[s];
+      const r = id ? RECIPES.find((x) => x.id === id) : null;
+      if (!r) return null;
+      const f = portionFor(day, s as any);
+      return { macros: { calories: r.macros.calories * f, protein: r.macros.protein * f, carbs: r.macros.carbs * f, fat: r.macros.fat * f } };
+    })
+    .filter(Boolean) as { macros: { calories: number; protein: number; carbs: number; fat: number } }[];
+  const totals = sumMacros(dayRecipes);
+  const kcal = Math.round(totals.calories);
+  const protein = Math.round(totals.protein);
+  const proteinTarget = targets.protein;
+  const kcalPct = Math.min(100, Math.round((kcal / Math.max(1, targets.calories)) * 100));
+  const protPct = Math.min(100, Math.round((protein / Math.max(1, proteinTarget)) * 100));
+  const verdict = calorieVerdict(kcal, targets.calories);
+  const verdictLabel = verdict === "on" ? "Right on target!" : verdict === "under" ? "A little room left" : "A touch over";
+  const verdictCls = verdict === "on" ? "text-emerald-600" : verdict === "under" ? "text-violet-600" : "text-red-500";
+
+  return (
+    <div className="space-y-2 animate-fade-in">
+      {/* Day header row — label + recovery/today markers + redo day */}
+      <div className="flex items-center justify-between px-0.5">
+        <p className="font-script text-xl text-hotpink flex items-center gap-1.5">
+          {day}
+          {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}
+          {isRecoveryDay && <span className="rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-600 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Recovery</span>}
+        </p>
+        <button onClick={() => onRegen(day)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
+          <RefreshCw className="h-3 w-3" /> redo day
+        </button>
+      </div>
+
+      {SLOT_ORDER.map((slot) => {
+        const meta = SLOT_META[slot];
+        const id = plan[day]?.[slot];
+        const r = id ? RECIPES.find((x) => x.id === id) : null;
+        const portion = portionFor(day, slot as any);
+        const proteinBoosted = !!proteinBoostDays?.has(day) && slot === "dinner";
+        const fallback = MEAL_PHOTO_FALLBACK[slot] ?? "/images/meal-buddha.webp";
+
+        // Empty slot — a soft tappable to fill it.
+        if (!r) {
+          return (
+            <button key={slot} onClick={() => onSwap(day, slot)} className="w-full flex items-center gap-2.5 rounded-2xl border border-dashed border-petal/60 bg-white/60 p-2.5 text-left active:scale-[0.99] transition hover:bg-blush/40">
+              <span className="w-11 shrink-0 flex flex-col items-center">
+                <meta.Icon className={["h-4 w-4", meta.tint].join(" ")} strokeWidth={2} />
+                <span className="mt-0.5 text-[8.5px] font-bold uppercase tracking-wide text-rose/50">{meta.label}</span>
+              </span>
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-blush/50 text-hotpink"><Plus className="h-5 w-5" /></span>
+              <span className="flex-1 text-[12px] font-bold text-hotpink">Add a {meta.label.toLowerCase()} meal</span>
+              <ChevronRight className="h-4 w-4 text-hotpink/60" />
+            </button>
+          );
+        }
+
+        const kc = Math.round(r.macros.calories * portion);
+        const pr = Math.round(r.macros.protein * portion);
+        const isFav = favorites.includes(r.id);
+        // Up to two tags: a quality descriptor + the recipe's phase.
+        const tags: { label: string; tone: "protein" | "energy" | "phase" | "diet" | "recovery" }[] = [];
+        if (proteinBoosted || pr >= 30) tags.push({ label: "Rich in protein", tone: "protein" });
+        else if (kc >= 480) tags.push({ label: "High energy", tone: "energy" });
+        else if (r.dietTags?.[0]) tags.push({ label: cap(r.dietTags[0]), tone: "diet" });
+        if (isRecoveryDay && slot === "dinner") tags.push({ label: "Recovery", tone: "recovery" });
+        else {
+          const phases: string[] = r.phases || [];
+          // Prefer the synced phase when this recipe supports it, so the tag never
+          // contradicts the "synced · <phase>" label up top.
+          const ph = (curPhase && phases.includes(curPhase)) ? curPhase : phases.find((p) => p && p !== "any");
+          if (ph) tags.push({ label: `${cap(ph)} phase`, tone: "phase" });
+        }
+
+        return (
+          <div key={slot} className="overflow-hidden rounded-2xl bg-white border border-petal/50 shadow-sm animate-scale-in">
+            <div className="flex items-stretch gap-2.5 p-2.5">
+              {/* icon / label / time rail */}
+              <div className="w-11 shrink-0 flex flex-col items-center pt-0.5">
+                <meta.Icon className={["h-4 w-4", meta.tint].join(" ")} strokeWidth={2} />
+                <span className="mt-0.5 text-[8.5px] font-bold uppercase tracking-wide text-rose/60 text-center leading-tight">{meta.label}</span>
+                <span className="text-[8.5px] font-semibold text-rose/40 tabular-nums">{meta.time}</span>
+              </div>
+
+              {/* photo (with swap) */}
+              <button onClick={() => onOpen(r.id, portion)} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl active:scale-95 transition">
+                <img src={recipeImageSrc(r)} alt={r.name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }} />
+                <span onClick={(e) => { e.stopPropagation(); onSwap(day, slot); }} title="Swap meal" role="button" className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 transition"><Shuffle className="h-2.5 w-2.5" /></span>
+              </button>
+
+              {/* details */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-[#831843] leading-tight line-clamp-2">{r.name}</p>
+                <div className="mt-1 flex items-center gap-3 text-[11px] font-semibold">
+                  <span className="inline-flex items-center gap-1 text-hotpink"><Flame className="h-3 w-3" /> {kc} kcal</span>
+                  <span className="inline-flex items-center gap-1 text-emerald-600"><Leaf className="h-3 w-3" /> {pr}g protein</span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {tags.map((t) => <MealTag key={t.label} label={t.label} tone={t.tone} />)}
+                </div>
+              </div>
+
+              {/* favourite + open */}
+              <div className="flex flex-col items-center justify-between py-0.5">
+                <button onClick={() => toggleFav(r.id)} aria-label={isFav ? "Unfavourite" : "Favourite"} className="grid h-8 w-8 place-items-center rounded-full bg-blush/50 text-hotpink active:scale-90 transition hover:bg-blush">
+                  <Heart className={["h-4 w-4", isFav ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} />
+                </button>
+                <button onClick={() => onOpen(r.id, portion)} aria-label="Open recipe" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 active:scale-90 transition">
+                  <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+
+            {/* tip strip */}
+            <div className="flex items-center gap-1.5 border-t border-petal/40 bg-blush/25 px-3 py-1.5">
+              <span className={["shrink-0", meta.tint].join(" ")}><meta.Icon className="h-3 w-3" strokeWidth={2} /></span>
+              <p className="text-[10.5px] leading-snug text-rose/70"><b className="text-rose/85">{meta.label} tip:</b> {SLOT_TIP[slot]}</p>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Compact day nutrition summary */}
+      <div className="rounded-2xl bg-gradient-to-br from-blush/50 to-petal/25 border border-petal/50 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="flex items-center gap-1.5 font-script text-lg text-hotpink leading-none"><Target className="h-4 w-4" /> {day}'s nutrition</p>
+          <span className={["inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[10.5px] font-black", verdictCls].join(" ")}>
+            <Heart className={["h-3 w-3", verdict === "on" ? "fill-emerald-500 text-emerald-500" : ""].join(" ")} /> {verdictLabel}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <div className="flex items-baseline justify-between text-[11px] font-bold mb-1">
+              <span className="inline-flex items-center gap-1 text-hotpink"><Flame className="h-3 w-3" /> Calories</span>
+              <span className="tabular-nums text-rose/70">{kcal.toLocaleString()}<span className="text-rose/40">/{targets.calories.toLocaleString()}</span></span>
+            </div>
+            <div className="h-2 rounded-full bg-white/70 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${kcalPct}%` }} /></div>
+          </div>
+          <div>
+            <div className="flex items-baseline justify-between text-[11px] font-bold mb-1">
+              <span className="inline-flex items-center gap-1 text-emerald-600"><Leaf className="h-3 w-3" /> Protein</span>
+              <span className="tabular-nums text-rose/70">{protein}<span className="text-rose/40">/{proteinTarget}g</span></span>
+            </div>
+            <div className="h-2 rounded-full bg-white/70 overflow-hidden"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${protPct}%` }} /></div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
