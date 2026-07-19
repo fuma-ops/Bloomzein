@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import type { DietGoal } from "@/components/bloom/recipes/data";
 
-const MEAL_PHOTO = "/images/recipes/lunch-asian-rainbow-salmon-buddha-bowl.webp";
+const MEAL_PHOTO = "/images/setup-meals.webp";
 const MOVE_PHOTO = "/images/setup-movement.webp";
-const CYCLE_PHOTO = "/images/landing-orb-flower.webp";
+const CYCLE_PHOTO = "/images/setup-cycle.webp";
 
 export interface BloomPlanSetupProps {
   goal: DietGoal;
@@ -80,7 +80,7 @@ export function BloomPlanSetup(p: BloomPlanSetupProps) {
             lines={[`${p.strength} Str · ${p.yoga} Yoga`, "Recovery days"]} cta="View plan" ctaCls="bg-gradient-to-r from-purple-400 to-fuchsia-500" onCta={p.onViewMovement} />
           <Plus />
           <ReadyCard photo={CYCLE_PHOTO} Icon={Droplet} tint="from-amber-400 to-orange-500" title="Cycle Synced" status="Active"
-            lines={[`Adjusted to your`, `${phase} phase`]} cta="Adjustments" ctaCls="bg-gradient-to-r from-amber-400 to-orange-500" onCta={p.onViewMeals} imgContain />
+            lines={[`Adjusted to your`, `${phase} phase`]} cta="Adjustments" ctaCls="bg-gradient-to-r from-amber-400 to-orange-500" onCta={p.onViewMeals} />
         </div>
 
         {/* Bloom adjusts for you */}
