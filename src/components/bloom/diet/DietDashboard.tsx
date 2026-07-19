@@ -68,7 +68,7 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, mealsSynced, movementSynced, phaseLabel, cycleReady, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle, onViewTodayPlan }: {
+export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, mealsSynced, movementSynced, phaseLabel, cycleReady, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle, onViewTodayPlan, onEditPlan }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
   mealsFromDiet?: boolean;
@@ -84,6 +84,7 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   onUnplanMovement?: () => void;
   onSyncCycle?: () => void;
   onViewTodayPlan: () => void;
+  onEditPlan?: () => void;
 }) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
@@ -124,11 +125,18 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
             your food energy · {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
           </p>
         </div>
-        {recalcFlash && (
-          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[10px] font-black animate-fade-in">
-            <Check className="h-3 w-3" strokeWidth={3} /> Recalculated
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {recalcFlash && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[10px] font-black animate-fade-in">
+              <Check className="h-3 w-3" strokeWidth={3} /> Recalculated
+            </span>
+          )}
+          {onEditPlan && (
+            <button onClick={onEditPlan} title="Edit my eating plan" aria-label="Edit my eating plan" className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2.5 py-1 text-[10.5px] font-bold text-hotpink active:scale-95 transition hover:bg-blush">
+              <Pencil className="h-3 w-3" /> Edit plan
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <Ring pct={eatenPct}>
@@ -271,8 +279,8 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
           </div>
         </div>
 
-        {/* progress */}
-        <div className="mt-3 h-2 rounded-full bg-white/60 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
+        {/* progress — kept on the readable left area with a clearly-visible track */}
+        <div className="mt-3 h-2.5 max-w-[56%] rounded-full bg-petal/80 ring-1 ring-inset ring-hotpink/25 overflow-hidden shadow-inner"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
         <p className="mt-2 flex items-start gap-1.5 max-w-[58%] text-[11px] leading-snug text-rose/80">
           <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
           <span><b className="text-hotpink">{p.pct}% there!</b>{p.etaWeeks != null && p.etaWeeks > 0 ? ` At ~${Math.abs(p.weeklyRateKg)}kg/week you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight daily to track the trend."}</span>
