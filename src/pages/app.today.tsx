@@ -871,7 +871,7 @@ export default function TodayPage() {
                 ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
               </div>
 
-              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-xs">
+              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-[190px] sm:max-w-[240px]">
                 {PHASE_QUOTES[phase]}
               </p>
             </>
@@ -881,7 +881,7 @@ export default function TodayPage() {
                 <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Set up your cycle
               </a>
 
-              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-xs">
+              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-[190px] sm:max-w-[240px]">
                 Welcome to your Bloom ✿ Let's set up your world — start below.
               </p>
             </>
