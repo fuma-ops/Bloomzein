@@ -17,6 +17,7 @@ import {
   type EnergyBalance,
 } from "@/lib/nutritionTargets";
 import { RECIPES, recipeImageSrc, type Recipe } from "@/components/bloom/recipes/data";
+import { BloomPlanSetup } from "@/components/bloom/diet/BloomPlanSetup";
 
 const go = (href: string) => () => { window.location.href = href; };
 
@@ -87,38 +88,11 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
   const coach = coachRecommendation();
-  const goalWord = coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain";
   const proj = goalProjection();
   const hasEta = !!proj && proj.etaWeeks != null; // only tease the timeline if a goal weight is set
 
-  // Transient "✓ Planned!" flash after an implicit plan is built (same line).
-  const [flash, setFlash] = useState<null | "meals" | "movement">(null);
-  useEffect(() => { if (!flash) return; const t = setTimeout(() => setFlash(null), 2600); return () => clearTimeout(t); }, [flash]);
-  // Confirm before syncing/overwriting a plan the user already has (meals or
-  // movement). Null = closed.
-  const [confirmSync, setConfirmSync] = useState<null | "meals" | "movement">(null);
-  const doSync = () => {
-    if (confirmSync === "meals") { onPlanMeals(); setFlash("meals"); }
-    else if (confirmSync === "movement") { onPlanMovement(); setFlash("movement"); }
-    setConfirmSync(null);
-  };
-  const planMeals = () => { onPlanMeals(); setFlash("meals"); };
-  const planMovement = () => { onPlanMovement(); setFlash("movement"); };
-  // Step 1 done = both planned; Step 2 = synced to phase.
-  const bothPlanned = mealsPlanned && movementPlanned;
-  const synced = !!mealsSynced && !!movementSynced;
-  const [syncFlash, setSyncFlash] = useState(false);
-  useEffect(() => { if (!syncFlash) return; const t = setTimeout(() => setSyncFlash(false), 2600); return () => clearTimeout(t); }, [syncFlash]);
-  // Explanation numbers — what planning each part actually does.
+  // Training days feed the movement plan's "3 Strength · 4 Yoga" summary.
   const tt = computeTargets(true);
-  const plannedKcal = Math.max(0, Math.round(e.eaten));
-  const roomKcal = Math.round(e.remaining);
-  const trainKcal = tt.trainingKcal;
-  const trainBits = [tt.workoutDays ? `${tt.workoutDays} workout${tt.workoutDays > 1 ? "s" : ""}` : "", tt.yogaDays ? `${tt.yogaDays} yoga` : ""].filter(Boolean).join(" + ");
-  const goalGoalLabel = goalWord === "lean" ? "weight-loss" : goalWord === "build" ? "muscle" : "maintenance";
-  // Once fully set up + synced, the guided steps collapse to a compact summary.
-  const [expanded, setExpanded] = useState(false);
-  const fullyOptimized = bothPlanned && synced;
 
   // "Recalculated ✓" flash — the calorie target changed since she last saw it
   // (she edited a workout/yoga plan, so the activity factor shifted).
@@ -195,202 +169,39 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           <Dumbbell className="h-3 w-3 shrink-0" /> {moveLine}
         </p>
       )}
-      {/* ── How your plan comes together — guided steps with explanations while she
-             sets up; collapses to a compact "all set" summary once done. ── */}
-      {fullyOptimized && !expanded ? (
-        <div className="mt-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/70 p-3 animate-fade-in">
-          <div className="flex items-center gap-2">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-500 text-white shadow-sm"><Check className="h-4 w-4" strokeWidth={3} /></span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[12.5px] font-bold text-emerald-700 leading-tight">Your plan is all set ✿</p>
-              <p className="text-[10px] text-emerald-600/80 leading-tight">Tuned to your {goalGoalLabel} goal &amp; synced to your {cycleReady && phaseLabel ? phaseLabel : "cycle"} phase · ~{plannedKcal} kcal planned today</p>
-            </div>
-            <button onClick={() => setExpanded(true)} className="shrink-0 text-[10px] font-bold text-hotpink underline decoration-hotpink/40">Adjust</button>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {[{ label: "Meals", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }, { label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }].map((v) => (
-              <button key={v.label} onClick={v.onClick} className="inline-flex items-center gap-0.5 rounded-full bg-white text-hotpink border border-petal/60 px-2.5 py-1 text-[10.5px] font-bold active:scale-95 transition">{v.label} <ChevronRight className="h-3 w-3" /></button>
-            ))}
-          </div>
-        </div>
-      ) : (
-      <div className="mt-3 rounded-2xl bg-gradient-to-br from-blush/45 to-petal/25 border border-petal/50 p-3">
-        <p className="flex items-center gap-1.5 text-[12.5px] font-bold text-[#9D174D]"><Sparkles className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} /> How your plan comes together</p>
-        <p className="text-[10.5px] text-rose/60 leading-snug">Two gentle steps — first Bloomzein plans for your <b className="text-hotpink">goal</b>, then it syncs to your <b className="text-hotpink">cycle</b>.</p>
-
-        {/* Step 1 — plan by goal */}
-        <div className="mt-3 flex gap-2.5">
-          <StepDot n={1} state={bothPlanned ? "done" : "active"} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11.5px] font-bold text-hotpink leading-tight">Plan for your <span className="text-[#831843]">{goalGoalLabel}</span> goal</p>
-            <p className="text-[9.5px] text-rose/55 leading-tight mb-2">Meals, workouts &amp; yoga built to your goal &amp; calorie target.</p>
-            <div className="grid gap-2.5">
-              <div>
-                <SetupCta done={mealsPlanned} flashed={flash === "meals"} Icon={Utensils}
-                  todo="Plan my meals for my goal"
-                  doneLabel={mealsFromDiet ? "Meals planned" : "Week is planned"}
-                  onClick={planMeals}
-                  onUndo={mealsFromDiet ? onUnplanMeals : undefined}
-                  onSync={mealsFromDiet ? undefined : () => setConfirmSync("meals")}
-                  views={[{ label: "Week", onClick: go("/app/tools/meals") }, { label: "Today", onClick: onViewTodayPlan }]} />
-                {mealsPlanned ? (
-                  <p className="mt-1 flex items-start gap-1 pl-1 text-[9.5px] font-semibold text-emerald-600 leading-tight"><Sparkles className="h-2.5 w-2.5 mt-[1px] shrink-0" strokeWidth={2} /> ~{plannedKcal} kcal planned today — {roomKcal > 5 ? `still room for ~${roomKcal} kcal ✿` : roomKcal >= -5 ? "right on your target ✿" : `~${-roomKcal} kcal over, tap Week to trim`}</p>
-                ) : (
-                  <p className="mt-1 pl-1 text-[9.5px] italic text-rose/45 leading-tight">Check to fill your whole week with meals for your goal ✿</p>
-                )}
-              </div>
-              <div>
-                <SetupCta done={movementPlanned} flashed={flash === "movement"} Icon={Dumbbell} todo="Plan my movement for my goal"
-                  doneLabel={movementFromDiet ? "Movement planned" : "Movement is planned"}
-                  onClick={planMovement}
-                  onUndo={movementFromDiet ? onUnplanMovement : undefined}
-                  onSync={movementFromDiet ? undefined : () => setConfirmSync("movement")}
-                  views={[{ label: "Workout", onClick: go("/app/tools/workout") }, { label: "Yoga", onClick: go("/app/tools/yoga") }]} />
-                {movementPlanned ? (
-                  <p className="mt-1 flex items-start gap-1 pl-1 text-[9.5px] font-semibold text-emerald-600 leading-tight"><Sparkles className="h-2.5 w-2.5 mt-[1px] shrink-0" strokeWidth={2} /> {trainKcal > 0 ? `${trainBits} → burns ~${trainKcal} kcal/day, added back to eat ✿` : "Your training raises your daily fuel to eat back ✿"}</p>
-                ) : (
-                  <p className="mt-1 pl-1 text-[9.5px] italic text-rose/45 leading-tight">Check to plan workouts &amp; yoga for your goal ✿</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* connector */}
-        <div className="ml-[14px] h-3 w-px bg-petal/70" />
-
-        {/* Step 2 — sync to cycle */}
-        <div className="flex gap-2.5">
-          <StepDot n={2} state={synced ? "done" : bothPlanned ? "active" : "todo"} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11.5px] font-bold text-hotpink leading-tight">Sync it to your {cycleReady && phaseLabel ? <span className="text-[#831843]">{phaseLabel}</span> : "cycle"} phase</p>
-            <p className="text-[9.5px] text-rose/55 leading-tight mb-2">Re-tunes your meals &amp; movement to how your body feels this week.</p>
-            {!bothPlanned ? (
-              <p className="text-[10px] italic text-rose/40">Finish step 1 first, then sync ✿</p>
-            ) : synced ? (
-              <div>
-                <div className={["inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 text-[11px] font-bold", syncFlash ? "animate-fade-in" : ""].join(" ")}>
-                  <Check className="h-3.5 w-3.5" strokeWidth={3} /> Synced to your {cycleReady && phaseLabel ? phaseLabel : "cycle"} phase ✿
-                </div>
-                <p className="mt-1 flex items-start gap-1 text-[9.5px] font-semibold text-emerald-600 leading-tight"><Sparkles className="h-2.5 w-2.5 mt-[1px] shrink-0" strokeWidth={2} /> Your week now favours {cycleReady && phaseLabel ? phaseLabel : "cycle"}-friendly meals &amp; phase-matched movement ✿</p>
-              </div>
-            ) : (
-              <>
-                <button onClick={() => { onSyncCycle?.(); setSyncFlash(true); }} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2 text-[12px] font-bold shadow-lg shadow-hotpink/30 active:scale-95 transition animate-selected-glow">
-                  <Droplet className="h-3.5 w-3.5" strokeWidth={2} /> Sync my week to my cycle ✿
-                </button>
-                <p className="mt-1 text-[9.5px] italic text-rose/45 leading-tight">Check to swap in {cycleReady && phaseLabel ? phaseLabel : "phase"}-friendly meals &amp; matched flows ✿</p>
-              </>
-            )}
-            {fullyOptimized && expanded && (
-              <button onClick={() => setExpanded(false)} className="mt-2 block text-[10px] font-bold text-hotpink underline decoration-hotpink/40">Done — collapse ✕</button>
-            )}
-          </div>
-        </div>
+      {/* ── Create your personalized plans — the photo-rich Bloom Plan setup.
+             BEFORE: two step cards + sync row. AFTER (both planned + synced):
+             three Ready/Active cards + adjusts strip + regenerate. ── */}
+      <div className="mt-3">
+        <BloomPlanSetup
+          goal={coach.goal}
+          phaseLabel={phaseLabel}
+          cycleReady={cycleReady}
+          mealsPlanned={mealsPlanned}
+          movementPlanned={movementPlanned}
+          mealsSynced={mealsSynced}
+          movementSynced={movementSynced}
+          kcal={Math.round(e.goal)}
+          protein={e.protein.target}
+          strength={tt.workoutDays}
+          yoga={tt.yogaDays}
+          onPlanMeals={onPlanMeals}
+          onPlanMovement={onPlanMovement}
+          onSyncCycle={() => onSyncCycle?.()}
+          onUnplanMeals={mealsFromDiet ? onUnplanMeals : undefined}
+          onUnplanMovement={movementFromDiet ? onUnplanMovement : undefined}
+          onRegenerate={() => onSyncCycle?.()}
+          onViewMeals={go("/app/tools/meals")}
+          onViewMovement={go("/app/tools/workout")}
+        />
       </div>
-      )}
       {/* Once she's eating, the daily verdict */}
       {e.logged && (
         <p className={`mt-2.5 flex items-center gap-1.5 text-[11.5px] font-semibold ${verdictCls}`}>
           <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
         </p>
       )}
-
-      {/* Confirm before syncing — the user already has their own plan (Meals
-          Planner week, or Workout/Yoga plans they built), so Diet NEVER adjusts
-          it silently. Portaled so a transformed ancestor can't trap the fixed
-          overlay. */}
-      {confirmSync && createPortal(
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4" onClick={() => setConfirmSync(null)}>
-          <div className="absolute inset-0 bg-rose/25 backdrop-blur-sm animate-fade-in" />
-          <div className="relative w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl animate-scale-in" onClick={(ev) => ev.stopPropagation()}>
-            <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Sparkles className="h-6 w-6" /></span>
-            <p className="text-center font-script text-2xl text-hotpink">{confirmSync === "movement" ? "Adjust your movement?" : "Sync your week?"}</p>
-            <p className="mt-1.5 text-center text-[12.5px] text-rose/70 leading-snug">
-              {confirmSync === "movement" ? (
-                <>You already have <b className="text-hotpink">workout &amp; yoga</b> plans. Adjust them to your <b className="text-hotpink">{goalWord}</b> goal? If you'd rather keep them as they are, they'll stay yours — just not goal-synced.</>
-              ) : (
-                <>You already have a week planned in your <b className="text-hotpink">Meals Planner</b>. Rebuild it tuned to your <b className="text-hotpink">{goalWord}</b> goal? This replaces your current week.</>
-              )}
-            </p>
-            <div className="mt-4 grid gap-2">
-              <button onClick={doSync} className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-2.5 text-sm font-bold shadow-lg shadow-hotpink/30 active:scale-95 transition">
-                <Sparkles className="h-4 w-4" /> {confirmSync === "movement" ? "Adjust to my goal" : "Sync to my goal"}
-              </button>
-              <button onClick={() => setConfirmSync(null)} className="w-full rounded-2xl border border-petal/60 bg-white px-4 py-2.5 text-sm font-bold text-rose/70 hover:bg-blush active:scale-95 transition">
-                Keep my plan
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
     </div>
-  );
-}
-
-/** A guided setup step, app-style. Not done → soft to-do row you can tap to
- *  build the plan. Done → soft green check + a small 'View' CTA to the plan. */
-function SetupCta({ done, flashed, Icon, todo, doneLabel, onClick, onUndo, onSync, views }: {
-  done: boolean; flashed?: boolean; Icon: typeof Utensils; todo: string; doneLabel: string; onClick: () => void;
-  onUndo?: () => void;
-  onSync?: () => void;
-  views: { label: string; onClick: () => void }[];
-}) {
-  if (done) {
-    return (
-      <div className="w-full overflow-hidden rounded-2xl bg-white border border-petal/50 shadow-sm shadow-hotpink/5">
-        <div className="flex items-center gap-2.5 px-3 pt-2.5">
-          {/* Tool icon in a soft-pink circle; hover it to un-plan (X). When the plan
-              is the user's own (managed in the Meals Planner) it's protected. */}
-          <button
-            onClick={onUndo} disabled={!onUndo} title={onUndo ? "Un-plan" : "Managed in your Meals Planner — safe from here"} aria-label={onUndo ? "Un-plan" : "Managed in your Meals Planner"}
-            className="group relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow-sm shadow-hotpink/30 enabled:hover:from-rose-400 enabled:hover:to-rose-500 transition enabled:active:scale-90 disabled:cursor-default"
-          >
-            <Icon className="h-4 w-4 group-enabled:group-hover:hidden" strokeWidth={2} />
-            <X className="h-4 w-4 hidden group-enabled:group-hover:block" strokeWidth={3} />
-          </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-[#831843] leading-tight truncate">{doneLabel}</p>
-            <p className="text-[9.5px] text-rose/50 leading-tight">Tuned to your goal ✿</p>
-          </div>
-          <span className={["shrink-0 inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide", flashed ? "bg-emerald-500 text-white border-emerald-500 animate-fade-in" : "bg-emerald-50 text-emerald-600 border-emerald-200"].join(" ")}>
-            {flashed ? "🎉 Planned" : <><Check className="h-2.5 w-2.5" strokeWidth={3} /> Generated</>}
-          </span>
-        </div>
-        {/* Action chips — a soft footer strip, aligned under the label */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 bg-blush/30 px-3 py-2 pl-[42px]">
-          {onSync && (
-            <button onClick={onSync} title="Sync this plan to your goal" className="inline-flex items-center gap-0.5 rounded-full bg-white text-hotpink border border-hotpink/40 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition animate-soft-glow"><Sparkles className="h-3 w-3" /> Sync to goal</button>
-          )}
-          {views.map((v) => (
-            <button key={v.label} onClick={v.onClick} className="inline-flex items-center gap-0.5 rounded-full bg-white text-hotpink border border-petal/60 px-2.5 py-1 text-[11px] font-bold active:scale-95 transition hover:border-hotpink/50">{v.label} <ChevronRight className="h-3 w-3" /></button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  return (
-    <button onClick={onClick} className="w-full inline-flex items-center gap-2.5 rounded-2xl bg-blush/50 border border-petal/60 px-3 py-2.5 active:scale-[0.99] transition hover:bg-blush">
-      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-hotpink/30" />
-      <Icon className="h-4 w-4 shrink-0 text-hotpink" />
-      <span className="flex-1 text-left text-[12.5px] font-bold text-hotpink">{todo}</span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-hotpink/60" />
-    </button>
-  );
-}
-
-/** A numbered step marker for the guided plan flow. */
-function StepDot({ n, state }: { n: number; state: "done" | "active" | "todo" }) {
-  return (
-    <span className={[
-      "grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-black transition",
-      state === "done" ? "bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow-sm shadow-hotpink/30"
-        : state === "active" ? "bg-white text-hotpink ring-2 ring-hotpink/60 animate-selected-glow"
-        : "bg-blush/60 text-rose/40",
-    ].join(" ")}>
-      {state === "done" ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : n}
-    </span>
   );
 }
 
