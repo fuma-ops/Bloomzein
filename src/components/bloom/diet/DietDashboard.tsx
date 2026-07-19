@@ -206,70 +206,135 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
 }
 
 /* ============================ 2 · GOAL PATH ============================ */
+/** Soft cherry-blossom + target illustration anchored to the card's right. */
+function GoalBloomBg() {
+  return (
+    <img
+      src="/images/goal-path-bloom.webp" alt="" aria-hidden loading="lazy"
+      className="pointer-events-none absolute right-0 top-0 h-full w-[52%] object-cover select-none"
+      style={{ objectPosition: "right center", maskImage: "linear-gradient(to right, transparent, #000 34%)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 34%)" }}
+    />
+  );
+}
+
 export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
   const p = goalProjection();
   if (!p) {
     return (
-      <button onClick={onEdit ?? go("/app/tools/diet#diet-weight")} className="w-full text-left rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 animate-fade-in active:scale-[0.99] transition">
-        <p className="flex items-center gap-1.5 font-script text-xl text-hotpink"><Target className="h-4 w-4" /> Your goal path</p>
-        <p className="mt-1 text-[12px] text-rose/70">Set a <b className="text-hotpink">goal weight</b> to see your timeline and how your plan gets you there.</p>
+      <button onClick={onEdit ?? go("/app/tools/diet#diet-weight")} className="relative w-full overflow-hidden text-left rounded-3xl border border-petal/60 shadow-sm animate-fade-in active:scale-[0.99] transition bg-gradient-to-br from-blush/70 via-white to-petal/30">
+        <GoalBloomBg />
+        <div className="relative p-4 sm:p-5">
+          <p className="flex items-center gap-2 font-script text-2xl text-hotpink leading-none">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Target className="h-4 w-4" strokeWidth={2.2} /></span>
+            Your goal path
+          </p>
+          <p className="mt-2 max-w-[62%] text-[12.5px] text-rose/75 leading-snug">Set a <b className="text-hotpink">goal weight</b> to see your timeline and how your plan gets you there.</p>
+          <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-3.5 py-1.5 text-[11px] font-bold shadow-md shadow-hotpink/30">Set my goal <ChevronRight className="h-3.5 w-3.5" /></span>
+        </div>
       </button>
     );
   }
   const losing = p.direction === "lose";
   return (
-    <div className="relative rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
-      {onEdit && (
-        <button onClick={onEdit} title="Edit weight & height" className="absolute top-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full bg-blush/70 text-hotpink border border-petal/50 active:scale-90 transition"><Pencil className="h-3.5 w-3.5" /></button>
-      )}
-      <div className="flex items-center justify-between mb-2 pr-8">
-        <p className="flex items-center gap-1.5 font-script text-2xl text-hotpink"><Target className="h-5 w-5" /> Your goal path</p>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide border ${losing ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-rose-50 text-rose-500 border-rose-200"}`}>
-          {losing ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />} {Math.abs(p.toGo)}kg to {losing ? "lose" : "gain"}
-        </span>
+    <div className="relative overflow-hidden rounded-3xl border border-petal/60 shadow-sm animate-fade-in bg-gradient-to-br from-blush/70 via-white to-petal/30">
+      <GoalBloomBg />
+      <div className="relative p-4 sm:p-5">
+        {/* header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 font-script text-2xl text-hotpink leading-none">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Target className="h-4 w-4" strokeWidth={2.2} /></span>
+              Your goal path
+            </p>
+            <p className="mt-1 pl-10 text-[11.5px] text-rose/70 leading-snug">You've got this, we'll guide you ✿</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide border ${losing ? "bg-white/85 text-hotpink border-hotpink/30" : "bg-white/85 text-rose-500 border-rose-200"}`}>
+              {losing ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />} {Math.abs(p.toGo)} kg to {losing ? "lose" : "gain"}
+            </span>
+            {onEdit && (
+              <button onClick={onEdit} title="Edit weight & height" aria-label="Edit weight & goal" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/85 text-hotpink border border-petal/50 active:scale-90 transition"><Pencil className="h-3.5 w-3.5" /></button>
+            )}
+          </div>
+        </div>
+
+        {/* now → goal */}
+        <div className="mt-3 flex items-center gap-3">
+          <div>
+            <p className="text-4xl font-black text-hotpink leading-none tabular-nums">{p.current}<span className="text-lg font-bold text-hotpink/70"> kg</span></p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-rose/45 mt-1">now</p>
+          </div>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><ChevronRight className="h-4 w-4" strokeWidth={2.5} /></span>
+          <div>
+            <p className="text-3xl font-black text-[#DB2777] leading-none tabular-nums">{p.target}<span className="text-base font-bold text-[#DB2777]/70"> kg</span></p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-rose/45 mt-1">goal</p>
+          </div>
+        </div>
+
+        {/* progress */}
+        <div className="mt-3 h-2 rounded-full bg-white/60 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
+        <p className="mt-2 flex items-start gap-1.5 max-w-[58%] text-[11px] leading-snug text-rose/80">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+          <span><b className="text-hotpink">{p.pct}% there!</b>{p.etaWeeks != null && p.etaWeeks > 0 ? ` At ~${Math.abs(p.weeklyRateKg)}kg/week you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight daily to track the trend."}</span>
+        </p>
       </div>
-      <div className="flex items-end gap-3 mb-2">
-        <div><p className="text-3xl font-black text-hotpink leading-none tabular-nums">{p.current}<span className="text-base"> kg</span></p><p className="text-[9px] font-bold uppercase tracking-widest text-rose/45 mt-1">now</p></div>
-        <ChevronRight className="h-5 w-5 text-rose/30 mb-1.5" />
-        <div><p className="text-2xl font-black text-rose/70 leading-none tabular-nums">{p.target}<span className="text-sm"> kg</span></p><p className="text-[9px] font-bold uppercase tracking-widest text-rose/45 mt-1">goal</p></div>
-        <div className="flex-1" />
-        {p.etaWeeks != null && p.etaWeeks > 0 && (
-          <div className="text-right"><p className="text-2xl font-black text-hotpink leading-none tabular-nums">~{p.etaWeeks}</p><p className="text-[9px] font-bold uppercase tracking-widest text-rose/45 mt-1">week{p.etaWeeks > 1 ? "s" : ""}</p></div>
-        )}
-      </div>
-      <div className="h-2 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
-      <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-snug text-rose/70">
-        <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-        <span>{p.pct}% there.{p.etaWeeks != null && p.etaWeeks > 0 ? ` At your current plan (~${Math.abs(p.weeklyRateKg)}kg/week) you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight weekly to track the trend."}</span>
-      </p>
     </div>
   );
 }
 
 /* ============================ 3 · THIS WEEK ============================ */
+/** A soft lotus flower — the yoga mark (lucide has no lotus). */
+function LotusIcon({ className = "" }: { className?: string; strokeWidth?: number }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="currentColor" aria-hidden>
+      <path d="M 50,86 C 20,86 10,54 10,54 C 10,54 32,46 50,74 C 68,46 90,54 90,54 C 90,54 80,86 50,86 Z" opacity="0.5" />
+      <path d="M 32,56 C 24,68 34,82 50,84 C 36,80 34,68 32,56 Z" opacity="0.8" />
+      <path d="M 68,56 C 76,68 66,82 50,84 C 64,80 66,68 68,56 Z" opacity="0.8" />
+      <path d="M 50,34 C 40,50 44,80 50,84 C 56,80 60,50 50,34 Z" />
+    </svg>
+  );
+}
+
 export function WeekBalanceCard() {
   const w = weekSnapshot();
   const done = w.sessionsDone;
-  const planned = Math.max(w.plannedTraining, 1);
-  const pct = Math.min(100, Math.round((done / planned) * 100));
+  const tip = done === 0
+    ? <>No sessions logged yet this week — <b className="text-hotpink">start one</b> to build momentum! ✿</>
+    : done >= w.plannedTraining && w.plannedTraining > 0
+      ? <>You've hit your movement goal this week — <b className="text-hotpink">beautiful work</b> ✿</>
+      : <>{w.plannedTraining ? <><b className="text-hotpink">{Math.max(0, w.plannedTraining - done)} more</b> to hit your weekly plan.</> : "Keep it going ✿"}</>;
+  const stats = [
+    { Icon: Dumbbell, value: w.workoutsDone, label: "Workouts" },
+    { Icon: LotusIcon, value: w.yogaDone,    label: "Yoga flows" },
+  ];
   return (
-    <div className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 animate-fade-in">
-      <div className="flex items-center justify-between mb-2">
-        <p className="flex items-center gap-1.5 font-script text-2xl text-hotpink"><Activity className="h-5 w-5" /> This week</p>
-        <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20"><Trophy className="h-3 w-3" /> {done}/{w.plannedTraining || done} done</span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        <div className="flex items-center gap-2 rounded-xl bg-blush/50 border border-petal/50 px-3 py-2">
-          <Dumbbell className="h-4 w-4 text-hotpink shrink-0" />
-          <div><p className="text-lg font-black text-rose leading-none tabular-nums">{w.workoutsDone}</p><p className="text-[9px] font-bold uppercase tracking-wide text-rose/45">workouts</p></div>
+    <div className="rounded-3xl bg-gradient-to-br from-blush/50 via-white to-petal/25 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div>
+          <p className="flex items-center gap-2 font-script text-2xl text-hotpink leading-none">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Activity className="h-4 w-4" strokeWidth={2.2} /></span>
+            This week
+          </p>
+          <p className="mt-1 pl-10 text-[11.5px] text-rose/70 leading-snug">Little steps, big changes</p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl bg-blush/50 border border-petal/50 px-3 py-2">
-          <Sparkles className="h-4 w-4 text-hotpink shrink-0" />
-          <div><p className="text-lg font-black text-rose leading-none tabular-nums">{w.yogaDone}</p><p className="text-[9px] font-bold uppercase tracking-wide text-rose/45">yoga flows</p></div>
-        </div>
+        <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/85 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20"><Trophy className="h-3 w-3" /> {done}/{w.plannedTraining || done} done</span>
       </div>
-      <div className="h-1.5 rounded-full bg-petal/40 overflow-hidden"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${pct}%` }} /></div>
-      <p className="mt-2 text-[11px] leading-snug text-rose/70">{done === 0 ? "No sessions logged yet this week — start one to build momentum ✿" : done >= w.plannedTraining && w.plannedTraining > 0 ? "You've hit your movement goal this week — beautiful work ✿" : `${w.plannedTraining ? `${Math.max(0, w.plannedTraining - done)} more to hit your weekly plan.` : "Keep it going ✿"}`}</p>
+      <div className="grid grid-cols-2 gap-2.5">
+        {stats.map((s) => (
+          <div key={s.label} className="flex items-center gap-3 rounded-2xl bg-white/70 border border-petal/50 px-3.5 py-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-blush to-petal/60 text-hotpink shadow-inner"><s.Icon className="h-5 w-5" strokeWidth={2} /></span>
+            <div className="min-w-0">
+              <p className="text-2xl font-black text-[#831843] leading-none tabular-nums">{s.value}</p>
+              <p className="text-[10px] font-black uppercase tracking-wide text-rose/55 mt-0.5">{s.label}</p>
+              <p className="text-[9.5px] text-rose/45 leading-tight">{s.value} session{s.value === 1 ? "" : "s"} logged</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex items-start gap-2 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2.5">
+        <Lightbulb className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
+        <p className="text-[11.5px] leading-snug text-rose/75">{tip}</p>
+      </div>
     </div>
   );
 }
