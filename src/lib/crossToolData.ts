@@ -200,9 +200,58 @@ export function todayWeekday(): string {
 export type PlannedDay = Record<PlanSlot, string | null>;
 const EMPTY_PLANNED_DAY: PlannedDay = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
 
-/** The whole weekly plan (weekday → slot → recipeId). */
+// ── The MONTH — 4 distinct weeks that rotate with the calendar, then repeat ──
+// The plan is no longer a single repeating week: it's four weeks (a month),
+// indexed 0..3 by absolute cycle position. As real weeks pass, the current
+// calendar week advances through the four, so the whole month cycles and then
+// repeats. Every "current week" read still resolves to ONE week here, so Today,
+// Diet & nutrition keep agreeing — they just always see the right week for now.
+export const MEALS_MONTH_KEY = "bloom:meals-month";
+export const MEAL_WEEKS = 4;
+export type WeekPlan = Record<string, PlannedDay>;
+export type WeekPortions = Record<string, Partial<Record<PlanSlot, number>>>;
+export interface MonthPlan { plans: WeekPlan[]; portions: WeekPortions[] }
+
+function emptyMonth(): MonthPlan {
+  return { plans: [{}, {}, {}, {}], portions: [{}, {}, {}, {}] };
+}
+
+/** Which of the 4 cycle-weeks the CURRENT calendar week is — from a fixed Monday
+ *  anchor, in LOCAL time, so it flips exactly when the week does. */
+export function currentMealWeekIndex(): number {
+  const now = new Date();
+  const diffToMon = (now.getDay() + 6) % 7; // 0 = Mon
+  const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMon);
+  const anchorMonday = new Date(2024, 0, 1); // Mon 1 Jan 2024
+  const weeks = Math.floor((thisMonday.getTime() - anchorMonday.getTime()) / (7 * 86400000));
+  return ((weeks % MEAL_WEEKS) + MEAL_WEEKS) % MEAL_WEEKS;
+}
+
+/** Read the whole 4-week month, migrating a pre-month single-week plan forward
+ *  (duplicated into all four weeks) so nothing looks empty after the upgrade. */
+export function readMonthPlan(): MonthPlan {
+  const raw = readJSON<Partial<MonthPlan> | null>(MEALS_MONTH_KEY, null);
+  if (raw && Array.isArray(raw.plans) && raw.plans.length === MEAL_WEEKS) {
+    const portions = Array.isArray(raw.portions) && raw.portions.length === MEAL_WEEKS
+      ? (raw.portions as WeekPortions[]) : [{}, {}, {}, {}];
+    return { plans: raw.plans as WeekPlan[], portions };
+  }
+  const legacyPlan = readJSON<WeekPlan>(MEALS_PLAN_KEY, {});
+  const legacyPortions = readJSON<WeekPortions>(MEALS_PORTIONS_KEY, {});
+  const m = emptyMonth();
+  if (Object.keys(legacyPlan).length) {
+    for (let i = 0; i < MEAL_WEEKS; i++) { m.plans[i] = legacyPlan; m.portions[i] = legacyPortions; }
+  }
+  return m;
+}
+
+export function writeMonthPlan(m: MonthPlan): void {
+  try { localStorage.setItem(MEALS_MONTH_KEY, JSON.stringify(m)); window.dispatchEvent(new Event("storage")); } catch {}
+}
+
+/** The whole weekly plan (weekday → slot → recipeId) for the CURRENT week. */
 export function readMealPlan(): Record<string, PlannedDay> {
-  return readJSON<Record<string, PlannedDay>>(MEALS_PLAN_KEY, {});
+  return readMonthPlan().plans[currentMealWeekIndex()] ?? {};
 }
 /** The planned recipes for one weekday (Mon..Sun) — slot → recipeId. */
 export function readPlannedDay(day: string): PlannedDay {
@@ -223,30 +272,33 @@ export function addRecipeToMealPlan(recipeId: string, day: string, slot: PlanSlo
 // actually hit the target (a build day needs bigger portions than a lean day).
 // Keyed day → slot → factor (1 = one serving). Read THROUGH here everywhere a
 // day's calories are summed, so Meals, Today & Diet agree. Default 1.
-export const MEALS_PORTIONS_KEY = "bloom:meals-portions";
-export function readMealPortions(): Record<string, Partial<Record<PlanSlot, number>>> {
-  return readJSON<Record<string, Partial<Record<PlanSlot, number>>>>(MEALS_PORTIONS_KEY, {});
+export const MEALS_PORTIONS_KEY = "bloom:meals-portions"; // legacy, kept for migration
+export function readMealPortions(week = currentMealWeekIndex()): Record<string, Partial<Record<PlanSlot, number>>> {
+  return readMonthPlan().portions[week] ?? {};
 }
-export function portionFor(day: string, slot: PlanSlot): number {
-  const f = readMealPortions()[day]?.[slot];
+export function portionFor(day: string, slot: PlanSlot, week = currentMealWeekIndex()): number {
+  const f = readMonthPlan().portions[week]?.[day]?.[slot];
   return f && f > 0 ? f : 1;
 }
-export function setMealPortion(day: string, slot: PlanSlot, factor: number): void {
-  const all = readMealPortions();
-  const d = { ...(all[day] ?? {}) };
+export function setMealPortion(day: string, slot: PlanSlot, factor: number, week = currentMealWeekIndex()): void {
+  const m = readMonthPlan();
+  const wk = { ...(m.portions[week] ?? {}) };
+  const d = { ...(wk[day] ?? {}) };
   if (!factor || factor === 1) delete d[slot]; else d[slot] = factor;
-  all[day] = d;
-  try { localStorage.setItem(MEALS_PORTIONS_KEY, JSON.stringify(all)); window.dispatchEvent(new Event("storage")); } catch {}
+  wk[day] = d; m.portions[week] = wk;
+  writeMonthPlan(m);
 }
-/** Replace the whole portions map (used when a fresh week is generated). */
-export function writeMealPortions(portions: Record<string, Partial<Record<PlanSlot, number>>>): void {
-  try { localStorage.setItem(MEALS_PORTIONS_KEY, JSON.stringify(portions)); window.dispatchEvent(new Event("storage")); } catch {}
+/** Replace the whole portions map for a week (used when it's freshly generated). */
+export function writeMealPortions(portions: Record<string, Partial<Record<PlanSlot, number>>>, week = currentMealWeekIndex()): void {
+  const m = readMonthPlan();
+  m.portions[week] = portions;
+  writeMonthPlan(m);
 }
 
-/** Un-plan the whole weekly meal plan — powers the Diet "Meals planned" toggle. */
+/** Un-plan the WHOLE month — powers the Diet "Meals planned" toggle & resets. */
 export function clearMealPlan(): void {
   try {
-    ["bloom:meals-from-diet", "bloom:meals-plan-goal", MEALS_PORTIONS_KEY, MEALS_PLAN_KEY].forEach((k) => localStorage.removeItem(k));
+    ["bloom:meals-from-diet", "bloom:meals-plan-goal", MEALS_PORTIONS_KEY, MEALS_PLAN_KEY, MEALS_MONTH_KEY].forEach((k) => localStorage.removeItem(k));
     window.dispatchEvent(new Event("storage"));
   } catch {}
 }
@@ -273,16 +325,24 @@ export function clearMovementPlan(): void {
   } catch {}
 }
 
-/** Set (or clear, with null) one slot of the weekly plan — the single writer. */
-export function setMealPlanSlot(day: string, slot: PlanSlot, recipeId: string | null): void {
-  try {
-    const plan = readJSON<Record<string, Record<string, string | null>>>(MEALS_PLAN_KEY, {});
-    const dayPlan = plan[day] ?? { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
-    dayPlan[slot] = recipeId;
-    plan[day] = dayPlan;
-    localStorage.setItem(MEALS_PLAN_KEY, JSON.stringify(plan));
-    window.dispatchEvent(new Event("storage"));
-  } catch {}
+/** Set (or clear, with null) one slot of a week's plan — the single writer.
+ *  Defaults to the current calendar week (what Diet/Fuel always target). */
+export function setMealPlanSlot(day: string, slot: PlanSlot, recipeId: string | null, week = currentMealWeekIndex()): void {
+  const m = readMonthPlan();
+  const wk = { ...(m.plans[week] ?? {}) };
+  const dayPlan = { ...(wk[day] ?? EMPTY_PLANNED_DAY) };
+  dayPlan[slot] = recipeId;
+  wk[day] = dayPlan; m.plans[week] = wk;
+  writeMonthPlan(m);
+}
+
+/** Overwrite one whole week (plan + portions) at a cycle index — the Meals
+ *  Planner's writer when it generates or re-rolls a specific week. */
+export function writeWeekPlan(week: number, plan: WeekPlan, portions: WeekPortions): void {
+  const m = readMonthPlan();
+  m.plans[week] = plan;
+  m.portions[week] = portions;
+  writeMonthPlan(m);
 }
 
 // ── Meal "eaten" markers — what she actually ate, per date + slot ────────────

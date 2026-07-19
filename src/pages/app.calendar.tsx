@@ -27,7 +27,7 @@ import {
 } from "./app.tools.workout";
 import { MEALS_PLAN_KEY } from "./app.tools.meals";
 import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
-import { readWorkoutPlanDays } from "@/lib/crossToolData";
+import { readWorkoutPlanDays, readMealPlan } from "@/lib/crossToolData";
 import { TODAY_WATER_KEY } from "./app.today";
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
@@ -312,7 +312,7 @@ export default function CalendarPage() {
     setDiaryEntries(loadJSON<DiaryEntry[]>(STORAGE.diary, []));
     setHistory(loadJSON<HistoryEntry[]>(STORAGE.workout, []));
     setWorkoutPlanDays(readWorkoutPlanDays());
-    setMealsPlan(loadJSON<Record<string, Record<string, string | null>>>(STORAGE.mealsPlan, {}));
+    setMealsPlan(readMealPlan()); // current week of the 4-week month
     setWater(loadJSON<{ date: string; count: number }>(STORAGE.water, { date: "", count: 0 }));
   }, []);
 

@@ -1,6 +1,5 @@
 import { RECIPES } from "./recipes/data";
-
-const MEALS_PLAN_KEY = "bloom:meals-plan";
+import { readMealPlan } from "@/lib/crossToolData";
 
 // Rough per-meal grocery cost by the recipe's "$"/"$$"/"$$$" cost tier,
 // in the user's chosen currency unit — a ballpark, not an FX conversion.
@@ -17,9 +16,8 @@ export interface MealPlanEstimate {
 // a Food budget amount.
 export function estimateWeeklyGroceryCost(): MealPlanEstimate | null {
   try {
-    const raw = localStorage.getItem(MEALS_PLAN_KEY);
-    if (!raw) return null;
-    const plan: Record<string, Record<string, string | null>> = JSON.parse(raw);
+    const plan = readMealPlan(); // this week's slice of the 4-week month
+    if (!plan || Object.keys(plan).length === 0) return null;
     let weekly = 0;
     let mealCount = 0;
     Object.values(plan).forEach((day) => {

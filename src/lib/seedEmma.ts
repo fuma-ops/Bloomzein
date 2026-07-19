@@ -33,7 +33,7 @@ const EMMA_KEYS = [
   "bloom:cycle-settings", "bloom:diet-profile", "bloom:diet-setup-complete",
   "bloom:mood-log-v2", "bloom:today-mood", "bloom:symptoms-log-v2",
   "bloom:today-water", "bloom:today-water-goal", "bloom:daily-log", "bloom:diet-eaten",
-  "bloom:meals-plan", "bloom:meals-plan-goal", "bloom:workout-history", "bloom:workout-streak",
+  "bloom:meals-plan", "bloom:meals-month", "bloom:meals-plan-goal", "bloom:workout-history", "bloom:workout-streak",
   "bloom:workout-autoplan", "bloom:workout-program-phase", "bloom:workout-profile",
   "bloom:yoga-history", "bloom:yoga-sessions", "bloom:yoga-streak", "bloom:yoga-schedule",
   "bloom:diary", "bloom:streak-days",

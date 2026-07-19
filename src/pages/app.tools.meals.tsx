@@ -64,7 +64,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState, writeMealPortions, setMealPortion, portionFor } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState, readMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase, PHASE_LABEL } from "@/components/bloom/cyclePhase";
@@ -334,7 +334,22 @@ export default function MealsPage() {
   const [pantry, setPantry] = useLS<Record<string, string[]>>(LS.pantry, {});
   const [extra, setExtra] = useLS<Record<string, string>>(LS.extra, {});
   const [intention, setIntention] = useLS<Intention>(LS.intention, "light");
-  const [plan, setPlan] = useLS<Record<string, Record<MealType, string | null>>>(LS.plan, {});
+  // ── The 4-week month. `selOffset` (0..3) is how many weeks ahead she's
+  //    looking; the stored cycle-week index rotates with the real calendar so a
+  //    month of distinct weeks repeats. `plan` = the week she's viewing. ──
+  const initialMonth = useMemo(() => readMonthPlan(), []);
+  const [month, setMonth] = useLS<MonthPlan>(MEALS_MONTH_KEY, initialMonth);
+  const [selOffset, setSelOffset] = useState(0);
+  const curWeekIdx = currentMealWeekIndex();
+  const selWeek = (curWeekIdx + selOffset) % MEAL_WEEKS;
+  const plan = month.plans[selWeek] ?? {};
+  const weekPortions = month.portions[selWeek] ?? {};
+  // Writers — always target the week she's viewing, updating plan &/or portions
+  // together so the one month store never forks.
+  const setPlan = (v: Record<string, Record<MealType, string | null>>) =>
+    setMonth((m) => { const plans = m.plans.slice(); plans[selWeek] = v; return { ...m, plans }; });
+  const setWeekPortions = (portions: Record<string, Partial<Record<MealType, number>>>) =>
+    setMonth((m) => { const p = m.portions.slice(); p[selWeek] = portions as any; return { ...m, portions: p }; });
   // "Goal-tuned" marker — set when the week is auto-generated to her diet goal,
   // cleared the moment she swaps/redoes a meal (then it's her own plan).
   const [mealsTuned, setMealsTuned] = useState<string | null>(() => { try { return localStorage.getItem("bloom:meals-plan-goal"); } catch { return null; } });
@@ -406,7 +421,8 @@ export default function MealsPage() {
   }, []);
 
   const owned = useMemo(() => pantrySet(pantry), [pantry]);
-  const planEmpty = Object.keys(plan).length === 0;
+  // "Empty" = the whole month has no meals yet (drives setup vs. plan view).
+  const planEmpty = month.plans.every((w) => Object.keys(w).length === 0);
   const hasSetup = owned.size > 0 || !planEmpty;
 
   // The inline "Let's set up your week" step guide (shown on the empty Week
@@ -443,62 +459,62 @@ export default function MealsPage() {
     return days;
   }, []);
 
-  const generateWeek = () => {
+  // Build a whole MONTH — 4 distinct weeks. Each week avoids the recipes used by
+  // the previous weeks (falling back to the full pool if variety runs low) so a
+  // month genuinely feels different week to week, then repeats.
+  const buildMonth = (useIntention: Intention, usePhase: CyclePhase): MonthPlan => {
     const target = computeTargets(true).calories;
-    const { plan: p, portions } = buildWeek(myRulesPool, intention, phase, owned, ratings, proteinBoostDays, target);
-    setPlan(p);
-    writeMealPortions(portions);
+    const plans: MonthPlan["plans"] = [];
+    const portions: MonthPlan["portions"] = [];
+    const usedSoFar = new Set<string>();
+    for (let i = 0; i < MEAL_WEEKS; i++) {
+      const fresh = myRulesPool.filter((r) => !usedSoFar.has(r.id));
+      const pool = fresh.length >= 28 ? fresh : myRulesPool; // don't starve a slot
+      const { plan: p, portions: pt } = buildWeek(pool, useIntention, usePhase, owned, ratings, proteinBoostDays, target);
+      plans.push(p);
+      portions.push(pt);
+      Object.values(p).forEach((d) => Object.values(d).forEach((id) => { if (id) usedSoFar.add(id as string); }));
+    }
+    return { plans, portions };
+  };
+
+  const generateWeek = () => {
+    setMonth(buildMonth(intention, phase));
+    setSelOffset(0);
     markMealsTuned();
-    ownThisPlan(); // built here → the user's own week (Diet won't overwrite it)
+    ownThisPlan(); // built here → the user's own month (Diet won't overwrite it)
     setStep(3);
     setTab("week");
   };
   // One-tap "make it match my phase": switch the vibe to Cycle-sync, lock the
-  // real phase and build — passing values explicitly to avoid stale state.
+  // real phase and build the whole month — passing values explicitly.
   const generatePhasePlan = () => {
     const real = readCyclePhase();
     const ph = (real && real !== "any" ? real : phase) as CyclePhase;
     setIntention("cycle");
     setPhase(ph);
-    const target = computeTargets(true).calories;
-    const { plan: p, portions } = buildWeek(myRulesPool, "cycle", ph, owned, ratings, proteinBoostDays, target);
-    setPlan(p);
-    writeMealPortions(portions);
+    setMonth(buildMonth("cycle", ph));
+    setSelOffset(0);
     markMealsTuned();
     ownThisPlan();
     setStep(3);
     setTab("week");
   };
 
-  // Auto-heal plans saved before the variety fix. We read localStorage DIRECTLY
-  // here because useLS hydrates its state asynchronously — at mount the `plan`
-  // state is still empty, so checking it would always skip the heal.
-  useEffect(() => {
-    const readLS = <T,>(k: string, fb: T): T => {
-      try { const r = localStorage.getItem(k); return r ? (JSON.parse(r) as T) : fb; } catch { return fb; }
-    };
-    const saved = readLS<Record<string, Record<MealType, string | null>>>(LS.plan, {});
-    const days = Object.keys(saved);
-    if (days.length < 3) return;
-    const repetitive = (["breakfast", "lunch", "dinner", "snack"] as MealType[]).some((slot) => {
-      const counts: Record<string, number> = {};
-      days.forEach((d) => { const id = saved[d]?.[slot]; if (id) counts[id] = (counts[id] || 0) + 1; });
-      return Object.values(counts).some((c) => c >= 3);
-    });
-    // Also heal plans that simply have no snack yet (saved before snacks existed).
-    const missingSnack = days.some((d) => !saved[d]?.snack);
-    if (repetitive || missingSnack) {
-      const savedIntention = readLS<Intention>(LS.intention, "light");
-      const savedPhase = readLS<CyclePhase>(LS.phase, "any");
-      const savedOwned = pantrySet(readLS<Record<string, string[]>>(LS.pantry, {}));
-      const savedRatings = readLS<Record<string, "love" | "ok" | "never">>(LS.ratings, {});
-      const target = computeTargets(true).calories;
-      const { plan: healed, portions } = buildWeek(myRulesPool, savedIntention, savedPhase, savedOwned, savedRatings, proteinBoostDays, target);
-      setPlan(healed);
-      writeMealPortions(portions);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Re-roll ONLY the week she's viewing, avoiding recipes used in the other
+  // three weeks so the month stays varied.
+  const regenerateWeek = () => {
+    const target = computeTargets(true).calories;
+    const usedElsewhere = new Set<string>();
+    month.plans.forEach((wk, i) => { if (i !== selWeek) Object.values(wk).forEach((d) => Object.values(d).forEach((id) => { if (id) usedElsewhere.add(id as string); })); });
+    const fresh = myRulesPool.filter((r) => !usedElsewhere.has(r.id));
+    const pool = fresh.length >= 28 ? fresh : myRulesPool;
+    const { plan: p, portions } = buildWeek(pool, intention, phase, owned, ratings, proteinBoostDays, target);
+    setPlan(p);
+    setWeekPortions(portions);
+    markMealsTuned();
+    ownThisPlan();
+  };
 
   const togglePantry = (cat: PantryCategoryKey, item: string) => {
     setPantry((p) => {
@@ -520,7 +536,12 @@ export default function MealsPage() {
     const r = pickForSlot(myRulesPool, type, slotIntention, phase, owned, used, ratings, slotBudget(target, type));
     if (r) {
       setPlan({ ...plan, [day]: { ...plan[day], [type]: r.id } });
-      setMealPortion(day, type as any, portionForRecipe(r.macros.calories || 0, type, target));
+      const f = portionForRecipe(r.macros.calories || 0, type, target);
+      const wk = { ...weekPortions };
+      const d = { ...(wk[day] ?? {}) };
+      if (!f || f === 1) delete (d as any)[type]; else (d as any)[type] = f;
+      wk[day] = d;
+      setWeekPortions(wk);
     }
     clearMealsTuned(); // a manual swap makes it her own plan
     ownThisPlan();
@@ -549,8 +570,8 @@ export default function MealsPage() {
       }
     });
     setPlan({ ...plan, [day]: dayPlan });
-    // Replace this day's portions (set the whole day at once).
-    slots.forEach((type) => setMealPortion(day, type as any, dayPortions[type] ?? 1));
+    // Replace this day's portions in the viewed week (whole day at once).
+    setWeekPortions({ ...weekPortions, [day]: dayPortions });
     clearMealsTuned();
     ownThisPlan();
   };
@@ -666,7 +687,10 @@ export default function MealsPage() {
             intention={intention} setIntention={setIntention}
             phase={phase} setPhase={setPhase}
             plan={plan} planEmpty={planEmpty}
+            weekPortions={weekPortions}
+            selOffset={selOffset} setSelOffset={setSelOffset}
             onGenerate={generateWeek}
+            onRegenWeek={regenerateWeek}
             onGeneratePhase={generatePhasePlan}
             onOpen={openRecipeAt}
             onSwap={swapMeal}
@@ -964,20 +988,23 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
 }
 
 function WeekTab({
-  intention, setIntention, phase, setPhase, plan, planEmpty, onGenerate, onGeneratePhase,
+  intention, setIntention, phase, setPhase, plan, planEmpty, weekPortions, selOffset, setSelOffset, onGenerate, onRegenWeek, onGeneratePhase,
   onOpen, onSwap, onRegen, owned, goPantry, proteinBoostDays, mealsTuned, dietSetup,
   pantrySkip, onSkipPantry, fromDiet, onDismissFromDiet, favorites, toggleFav,
 }: any) {
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
+  const isCurrentWeek = selOffset === 0;
   // Which single day is open in the detailed view (photo-rich, one day at a time).
   const [selDay, setSelDay] = useState<string>(() => todayDayName());
-  // Calendar date numbers for this week (Mon-first), so the day chips read like a real week.
+  // Calendar date numbers for the VIEWED week (this Monday + 7·offset), so the
+  // chips read like a real week — this week, next week, and so on.
   const weekDates = useMemo(() => {
     const now = new Date();
     const dow = (now.getDay() + 6) % 7; // 0 = Mon
-    const monday = new Date(now); monday.setDate(now.getDate() - dow);
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow + 7 * selOffset);
     return DAYS.map((_: string, i: number) => { const dt = new Date(monday); dt.setDate(monday.getDate() + i); return dt.getDate(); });
-  }, []);
+  }, [selOffset]);
+  const WEEK_LABELS = ["This week", "Next week", "In 2 weeks", "In 3 weeks"];
   const hasPantry = owned.size > 0;
   const [generating, setGenerating] = useState(false);
   const [editingVibe, setEditingVibe] = useState(false);
@@ -1054,6 +1081,13 @@ function WeekTab({
       setGenerating(false);
       planRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 400);
+  };
+  // Header ♻ — re-roll just the week she's viewing (keeps the rest of the month).
+  const handleRegenWeek = () => {
+    if (!isPremium()) { openPaywall("meals"); return; }
+    setGenerating(true);
+    onRegenWeek();
+    setTimeout(() => setGenerating(false), 400);
   };
 
   const intentionLabel = INTENTIONS.find((i) => i.key === intention)?.label ?? "";
@@ -1132,7 +1166,7 @@ function WeekTab({
               <button onClick={() => setEditingVibe((v) => !v)} title="Edit plan" aria-label="Edit plan" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink hover:bg-blush transition active:scale-95">
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button onClick={handleGenerate} disabled={generating} title="Regenerate the week" aria-label="Regenerate" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
+              <button onClick={handleRegenWeek} disabled={generating} title={`Regenerate ${WEEK_LABELS[selOffset].toLowerCase()}`} aria-label="Regenerate this week" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
                 <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
               </button>
             </div>
@@ -1204,10 +1238,25 @@ function WeekTab({
             </div>
           )}
 
-          {/* Day selector — the whole week as tappable date chips (photo 2) */}
+          {/* Week switcher — this week, next week, and up to 3 weeks ahead (a
+              4-week month that then repeats). Prev/next arrows + a label. */}
+          <div className="flex items-center justify-between gap-2">
+            <button onClick={() => setSelOffset((o: number) => Math.max(0, o - 1))} disabled={selOffset === 0} aria-label="Previous week" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink disabled:opacity-30 active:scale-90 transition"><ChevronRight className="h-4 w-4 rotate-180" /></button>
+            <div className="flex-1 text-center">
+              <p className="font-script text-lg text-hotpink leading-none">{WEEK_LABELS[selOffset]}</p>
+              <div className="mt-1 flex items-center justify-center gap-1">
+                {WEEK_LABELS.map((_: string, i: number) => (
+                  <span key={i} className={["h-1.5 rounded-full transition-all", i === selOffset ? "w-4 bg-hotpink" : "w-1.5 bg-petal/60"].join(" ")} />
+                ))}
+              </div>
+            </div>
+            <button onClick={() => setSelOffset((o: number) => Math.min(MEAL_WEEKS - 1, o + 1))} disabled={selOffset >= MEAL_WEEKS - 1} aria-label="Next week" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink disabled:opacity-30 active:scale-90 transition"><ChevronRight className="h-4 w-4" /></button>
+          </div>
+
+          {/* Day selector — the viewed week as tappable date chips (photo 2) */}
           <div id="meals-week-plan" ref={planRef} className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-0.5 px-0.5 pb-0.5">
             {DAYS.map((d: string, di: number) => {
-              const isToday = d === todayDayName();
+              const isToday = isCurrentWeek && d === todayDayName();
               const isSel = d === selDay;
               return (
                 <button
@@ -1230,11 +1279,11 @@ function WeekTab({
           {/* The selected day — one photo-rich card per meal, plus a compact
               nutrition summary. */}
           <DayPlanDetail
-            day={selDay} plan={plan} targets={targets} phase={phase}
+            day={selDay} plan={plan} portions={weekPortions} targets={targets} phase={phase}
             proteinBoostDays={proteinBoostDays} yogaDaySet={yogaDaySet}
             favorites={favorites} toggleFav={toggleFav}
             onOpen={onOpen} onSwap={onSwap} onRegen={onRegen}
-            isToday={selDay === todayDayName()}
+            isToday={isCurrentWeek && selDay === todayDayName()}
           />
         </section>
       )}
@@ -1284,8 +1333,8 @@ function MealTag({ label, tone }: { label: string; tone: "protein" | "energy" | 
   return <span className={["rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none", cls].join(" ")}>{label}</span>;
 }
 
-function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet, favorites, toggleFav, onOpen, onSwap, onRegen, isToday }: {
-  day: string; plan: any; targets: TargetBreakdown; phase: CyclePhase;
+function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, yogaDaySet, favorites, toggleFav, onOpen, onSwap, onRegen, isToday }: {
+  day: string; plan: any; portions: Record<string, Partial<Record<MealType, number>>>; targets: TargetBreakdown; phase: CyclePhase;
   proteinBoostDays?: Set<string>; yogaDaySet: Set<string>;
   favorites: string[]; toggleFav: (id: string) => void;
   onOpen: (id: string, portion?: number) => void; onSwap: (day: string, slot: MealType) => void; onRegen: (day: string) => void;
@@ -1294,13 +1343,15 @@ function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet
   const isRecoveryDay = yogaDaySet.has(day) && !proteinBoostDays?.has(day);
   // The synced cycle phase, in the recipes' 4-phase vocabulary (null when "any").
   const curPhase = toDietPhase(phase);
+  // Portion factor for a slot, from the VIEWED week's portions map (default 1).
+  const portionOf = (d: string, s: MealType): number => { const f = portions?.[d]?.[s]; return f && f > 0 ? f : 1; };
   // Day totals for the compact summary.
   const dayRecipes = SLOT_ORDER
     .map((s) => {
       const id = plan[day]?.[s];
       const r = id ? RECIPES.find((x) => x.id === id) : null;
       if (!r) return null;
-      const f = portionFor(day, s as any);
+      const f = portionOf(day, s);
       return { macros: { calories: r.macros.calories * f, protein: r.macros.protein * f, carbs: r.macros.carbs * f, fat: r.macros.fat * f } };
     })
     .filter(Boolean) as { macros: { calories: number; protein: number; carbs: number; fat: number } }[];
@@ -1332,7 +1383,7 @@ function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet
         const meta = SLOT_META[slot];
         const id = plan[day]?.[slot];
         const r = id ? RECIPES.find((x) => x.id === id) : null;
-        const portion = portionFor(day, slot as any);
+        const portion = portionOf(day, slot);
         const proteinBoosted = !!proteinBoostDays?.has(day) && slot === "dinner";
         const fallback = MEAL_PHOTO_FALLBACK[slot] ?? "/images/meal-buddha.webp";
 
