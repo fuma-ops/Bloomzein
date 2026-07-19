@@ -279,8 +279,8 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
           </div>
         </div>
 
-        {/* progress — kept on the readable left area with a clearly-visible track */}
-        <div className="mt-3 h-2.5 max-w-[56%] rounded-full bg-petal/80 ring-1 ring-inset ring-hotpink/25 overflow-hidden shadow-inner"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
+        {/* progress — full-width soft track, gently outlined so it stays visible */}
+        <div className="mt-3 h-2 rounded-full bg-white/70 border border-hotpink/20 shadow-sm shadow-hotpink/15 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
         <p className="mt-2 flex items-start gap-1.5 max-w-[58%] text-[11px] leading-snug text-rose/80">
           <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
           <span><b className="text-hotpink">{p.pct}% there!</b>{p.etaWeeks != null && p.etaWeeks > 0 ? ` At ~${Math.abs(p.weeklyRateKg)}kg/week you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight daily to track the trend."}</span>
