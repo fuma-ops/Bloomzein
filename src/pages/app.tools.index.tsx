@@ -59,34 +59,31 @@ export default function ToolsIndex() {
   }, [pins, query]);
 
   return (
-    <div className="relative animate-fade-in">
+    <div className="relative isolate animate-fade-in">
+      {/* Base pink wash — the top reads as one soft surface behind the hero. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 -mx-3 sm:-mx-6 md:-mx-8 h-[400px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
-      {/* HERO — pink tools photo background, white title; same glow + entry
-          animation as the Calendar hero. */}
-      <section>
-        <div className="relative w-full overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem] border border-pink-200/60 animate-card-pop-in"
-          style={{ animationDelay: "0ms", boxShadow: "0 16px 38px -14px oklch(0.6 0.27 350 / 0.6)" }}>
-          <img src="/images/tools-hero-bg.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-bottom" referrerPolicy="no-referrer" />
-          <div className="absolute inset-0 bg-gradient-to-r from-magenta/55 via-hotpink/15 to-transparent" />
-          {/* Floating sparkles */}
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-10 sm:top-8 sm:right-16 h-4 w-4 sm:h-5 sm:w-5 text-white/70 z-[3]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-20 sm:bottom-10 sm:right-32 h-2.5 w-2.5 sm:h-4 sm:w-4 text-white/55 z-[3]" strokeWidth={1.8} style={{ animationDelay: "1.8s" }} />
-          {/* Title + subtitle stacked on the left */}
-          <div className="relative z-[4] px-5 py-5 sm:px-7 sm:py-6 flex flex-col items-start justify-center gap-1 sm:gap-1.5 max-w-[85%] sm:max-w-[65%] min-h-[120px] sm:min-h-[156px]">
-            <h1
-              className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none flex items-center gap-2"
-              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.28)' }}
-            >
-              Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
-            </h1>
-            <p
-              className="text-xs sm:text-sm font-medium text-white/95"
-              style={{ textShadow: '0 1px 6px rgba(0,0,0,0.35)' }}
-            >
-              ✦ pick your bloom for today
-            </p>
-            <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
-          </div>
+      {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
+          Calendar: a full-width image fading on the left (readable title) and the
+          bottom (melting into the tools below), so there's no card seam/border. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 md:-mx-8 h-[268px] sm:h-[300px] overflow-hidden">
+        <img src="/images/tools-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_58%]" referrerPolicy="no-referrer" />
+        {/* left fade → readable light pink behind the title */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/50 to-transparent" />
+        {/* bottom fade → melts cleanly into the search + tools grid below */}
+        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent via-[#FFE4F1]/85 to-[#FFE4F1]" />
+      </div>
+
+      {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
+      <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[140px] sm:min-h-[180px] animate-card-pop-in">
+        <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[70%] sm:max-w-md">
+          <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
+            Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
+          </h1>
+          <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-semibold text-rose/80" style={{ animationDelay: "150ms" }}>
+            ✦ pick your bloom for today
+          </p>
+          <CyclePhasePill className="mt-1.5" />
         </div>
       </section>
 
