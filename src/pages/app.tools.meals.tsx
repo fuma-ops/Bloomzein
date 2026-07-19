@@ -1339,12 +1339,12 @@ function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet
         // Empty slot — a soft tappable to fill it.
         if (!r) {
           return (
-            <button key={slot} onClick={() => onSwap(day, slot)} className="w-full flex items-center gap-2.5 rounded-2xl border border-dashed border-petal/60 bg-white/60 p-2.5 text-left active:scale-[0.99] transition hover:bg-blush/40">
-              <span className="w-11 shrink-0 flex flex-col items-center">
-                <meta.Icon className={["h-4 w-4", meta.tint].join(" ")} strokeWidth={2} />
-                <span className="mt-0.5 text-[8.5px] font-bold uppercase tracking-wide text-rose/50">{meta.label}</span>
+            <button key={slot} onClick={() => onSwap(day, slot)} className="w-full flex items-center gap-2 rounded-2xl border border-dashed border-petal/60 bg-white/60 p-2 text-left active:scale-[0.99] transition hover:bg-blush/40">
+              <span className="w-7 shrink-0 flex flex-col items-center">
+                <meta.Icon className={["h-3.5 w-3.5", meta.tint].join(" ")} strokeWidth={2} />
+                <span className="mt-0.5 text-[8px] font-bold uppercase tracking-tight text-rose/50 leading-none text-center">{meta.label}</span>
               </span>
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-blush/50 text-hotpink"><Plus className="h-5 w-5" /></span>
+              <span className="grid h-24 w-28 shrink-0 place-items-center rounded-xl bg-blush/50 text-hotpink"><Plus className="h-5 w-5" /></span>
               <span className="flex-1 text-[12px] font-bold text-hotpink">Add a {meta.label.toLowerCase()} meal</span>
               <ChevronRight className="h-4 w-4 text-hotpink/60" />
             </button>
@@ -1370,16 +1370,16 @@ function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet
 
         return (
           <div key={slot} className="overflow-hidden rounded-2xl bg-white border border-petal/50 shadow-sm animate-scale-in">
-            <div className="flex items-stretch gap-2.5 p-2.5">
-              {/* icon / label / time rail */}
-              <div className="w-11 shrink-0 flex flex-col items-center pt-0.5">
-                <meta.Icon className={["h-4 w-4", meta.tint].join(" ")} strokeWidth={2} />
-                <span className="mt-0.5 text-[8.5px] font-bold uppercase tracking-wide text-rose/60 text-center leading-tight">{meta.label}</span>
-                <span className="text-[8.5px] font-semibold text-rose/40 tabular-nums">{meta.time}</span>
+            <div className="flex items-stretch gap-2 p-2">
+              {/* icon / label / time rail — kept narrow so the photo gets the room */}
+              <div className="w-7 shrink-0 flex flex-col items-center pt-0.5">
+                <meta.Icon className={["h-3.5 w-3.5", meta.tint].join(" ")} strokeWidth={2} />
+                <span className="mt-0.5 text-[8px] font-bold uppercase tracking-tight text-rose/60 text-center leading-none">{meta.label}</span>
+                <span className="mt-0.5 text-[8px] font-semibold text-rose/40 tabular-nums leading-none">{meta.time}</span>
               </div>
 
-              {/* photo (with swap) */}
-              <button onClick={() => onOpen(r.id, portion)} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl active:scale-95 transition">
+              {/* photo (with swap) — larger, given more of the card width */}
+              <button onClick={() => onOpen(r.id, portion)} className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl active:scale-95 transition">
                 <img src={recipeImageSrc(r)} alt={r.name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }} />
                 <span onClick={(e) => { e.stopPropagation(); onSwap(day, slot); }} title="Swap meal" role="button" className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 transition"><Shuffle className="h-2.5 w-2.5" /></span>
               </button>
@@ -1387,9 +1387,9 @@ function DayPlanDetail({ day, plan, targets, phase, proteinBoostDays, yogaDaySet
               {/* details */}
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-bold text-[#831843] leading-tight line-clamp-2">{r.name}</p>
-                <div className="mt-1 flex items-center gap-3 text-[11px] font-semibold">
-                  <span className="inline-flex items-center gap-1 text-hotpink"><Flame className="h-3 w-3" /> {kc} kcal</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-600"><Leaf className="h-3 w-3" /> {pr}g protein</span>
+                <div className="mt-1 flex items-center gap-2.5 text-[10.5px] font-semibold">
+                  <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-hotpink"><Flame className="h-3 w-3 shrink-0" /> {kc} kcal</span>
+                  <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-emerald-600"><Leaf className="h-3 w-3 shrink-0" /> {pr}g protein</span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {tags.map((t) => <MealTag key={t.label} label={t.label} tone={t.tone} />)}
