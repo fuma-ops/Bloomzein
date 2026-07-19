@@ -884,6 +884,9 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   // App-style edit popup (opened from the Goal-path card) for body & goal.
   const [bodyEditOpen, setBodyEditOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(false);
+  // Confirmation feedback after logging — so she clearly sees it saved.
+  const [logged, setLogged] = useState<number | null>(null);
+  useEffect(() => { if (logged == null) return; const t = setTimeout(() => setLogged(null), 2800); return () => clearTimeout(t); }, [logged]);
   const logWeight = () => {
     const kg = parseFloat(weightInput);
     if (!kg || kg <= 0) return;
@@ -894,6 +897,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
       h.sort((a, b) => (a.date < b.date ? -1 : 1));
       return { ...p, weight: kg, weightHistory: h };
     });
+    setLogged(kg); // trigger the "✓ Saved" confirmation
   };
   const first = history[0]?.kg ?? profile.weight;
   const latest = history.length ? history[history.length - 1].kg : profile.weight;
@@ -1023,8 +1027,25 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
               <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
               <button onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))} className="px-3.5 py-2 text-hotpink font-bold">+</button>
             </div>
-            <PinkBtn onClick={logWeight}><Check className="h-4 w-4" /> Log today</PinkBtn>
+            {/* Button flips to a green "Saved ✓" state on log, so she clearly sees it worked. */}
+            <button
+              onClick={logWeight}
+              className={[
+                "inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-full transition active:scale-95",
+                logged != null ? "bg-emerald-500 shadow-lg shadow-emerald-500/30 animate-selected-glow" : "bloom-luxury-btn",
+              ].join(" ")}
+            >
+              {logged != null
+                ? <><span className="grid h-4 w-4 place-items-center rounded-full bg-white/25"><Check className="h-3 w-3" strokeWidth={3.5} /></span> Saved!</>
+                : <><Check className="h-4 w-4" /> Log today</>}
+            </button>
           </div>
+          {/* Clear confirmation line that fades in right after logging */}
+          {logged != null && (
+            <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-bold text-emerald-600 animate-fade-in">
+              <Sparkles className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Saved <b className="tabular-nums">{logged} kg</b> for today — your graph &amp; trend just updated ✿
+            </p>
+          )}
           {/* Motivational footer — matches the reference design */}
           <div className="relative mt-3 overflow-hidden rounded-2xl border border-petal/50 bg-gradient-to-r from-blush/60 to-petal/30 p-3 pr-14">
             <div className="flex items-start gap-2">
