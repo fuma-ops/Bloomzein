@@ -199,15 +199,19 @@ function ReadyCard({ photo, Icon, tint, title, status, lines, cta, ctaCls, onCta
   cta: string; ctaCls: string; onCta: () => void; imgContain?: boolean;
 }) {
   return (
-    <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-white border border-petal/50 p-1.5 flex flex-col items-center text-center">
-      <span className="absolute right-1 top-1 z-10 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-2.5 w-2.5" strokeWidth={3.5} /></span>
+    <div className="relative flex-1 min-w-0 rounded-2xl bg-white border border-petal/50 p-1.5 flex flex-col items-center text-center">
+      {/* pink "done" badge — ringed so the rounded corner never clips it */}
+      <span className="absolute -right-1 -top-1 z-10 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#DB2777] text-white ring-2 ring-white shadow-sm"><Check className="h-2.5 w-2.5" strokeWidth={3.5} /></span>
       <span className={["grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br text-white shadow-md", tint].join(" ")}><Icon className="h-3.5 w-3.5" strokeWidth={2} /></span>
       <p className="mt-1 text-[10.5px] font-bold text-[#831843] leading-none">{title}</p>
       <p className="text-[8px] font-bold text-emerald-600">{status}</p>
       <div className="my-1 h-11 w-full overflow-hidden rounded-xl bg-blush/40">
         <img src={photo} alt="" className={["h-full w-full", imgContain ? "object-contain" : "object-cover"].join(" ")} loading="lazy" referrerPolicy="no-referrer" />
       </div>
-      {lines.map((l, i) => <p key={i} className={["leading-tight", i === 0 ? "text-[9px] font-bold text-hotpink" : "text-[8px] text-rose/60"].join(" ")}>{l}</p>)}
+      {/* lines fill the remaining height so every card's CTA lands on one line */}
+      <div className="w-full flex-1 flex flex-col justify-start">
+        {lines.map((l, i) => <p key={i} className={["leading-tight", i === 0 ? "text-[9px] font-bold text-hotpink" : "text-[8px] text-rose/60"].join(" ")}>{l}</p>)}
+      </div>
       <button onClick={onCta} className={["mt-1.5 w-full inline-flex items-center justify-center rounded-full text-white px-1 py-1.5 text-[9px] font-bold active:scale-95 transition", ctaCls].join(" ")}>{cta}</button>
     </div>
   );
