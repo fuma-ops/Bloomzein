@@ -79,8 +79,8 @@ export function BloomPlanSetup(p: BloomPlanSetupProps) {
           <ReadyCard photo={MOVE_PHOTO} Icon={Dumbbell} tint="from-purple-400 to-fuchsia-500" title="Movement" status="Ready"
             lines={[`${p.strength} Str · ${p.yoga} Yoga`, "Recovery days"]} cta="View plan" ctaCls="bg-gradient-to-r from-purple-400 to-fuchsia-500" onCta={p.onViewMovement} />
           <Plus />
-          <ReadyCard photo={CYCLE_PHOTO} Icon={Droplet} tint="from-amber-400 to-orange-500" title="Cycle Synced" status="Active"
-            lines={[`Adjusted to your`, `${phase} phase`]} cta="Adjustments" ctaCls="bg-gradient-to-r from-amber-400 to-orange-500" onCta={p.onViewMeals} />
+          <ReadyCard photo={CYCLE_PHOTO} Icon={Droplet} tint="from-pink-300 to-pink-500" title="Cycle Synced" status="Active"
+            lines={[`Adjusted to your`, `${phase} phase`]} cta="Adjustments" ctaCls="bg-gradient-to-r from-pink-300 to-pink-500" onCta={p.onViewMeals} />
         </div>
 
         {/* Bloom adjusts for you */}

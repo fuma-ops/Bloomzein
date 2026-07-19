@@ -114,7 +114,7 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
     e.verdict === "over" ? "Your plan runs a little over target — swap a lighter dinner"
     : e.verdict === "close" ? "Your plan hits your target beautifully ✿"
     : "Your plan is on target ✿";
-  const verdictCls = e.verdict === "over" ? "text-rose-500" : "text-emerald-600";
+  const verdictCls = e.verdict === "over" ? "bg-rose-50 border-rose-200/70 text-rose-500" : "bg-blush/50 border-petal/60 text-hotpink";
 
   return (
     <div id="diet-energy" className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
@@ -203,9 +203,9 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           onViewMovement={go("/app/tools/workout")}
         />
       </div>
-      {/* Once she's eating, the daily verdict */}
+      {/* Once she's eating, the daily verdict — a soft on-brand pill */}
       {e.logged && (
-        <p className={`mt-2.5 flex items-center gap-1.5 text-[11.5px] font-semibold ${verdictCls}`}>
+        <p className={["mt-2.5 flex items-center gap-1.5 rounded-2xl border px-3 py-2 text-[11.5px] font-semibold leading-snug", verdictCls].join(" ")}>
           <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
         </p>
       )}
