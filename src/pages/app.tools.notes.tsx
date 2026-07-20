@@ -992,7 +992,7 @@ export default function NotesPage() {
         </div>
 
         {/* content */}
-        <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
+        <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
           <div className="animate-scale-in">
             <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Notes &amp; Reminders</h1>
             <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 max-w-[12rem] sm:max-w-sm leading-tight">Scribble thoughts, let dreams nudge ✿</p>

@@ -117,7 +117,7 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   const verdictCls = e.verdict === "over" ? "bg-rose-50 border-rose-200/70 text-rose-500" : "bg-blush/50 border-petal/60 text-hotpink";
 
   return (
-    <div id="diet-energy" className="rounded-3xl bg-white/80 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
+    <div id="diet-energy" className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-4 sm:p-5 animate-fade-in">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <p className="font-script text-2xl text-hotpink leading-none">Today's fuel</p>

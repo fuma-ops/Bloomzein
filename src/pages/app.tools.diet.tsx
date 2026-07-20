@@ -1999,7 +1999,7 @@ export default function DietPage() {
         </button>
 
         {/* content */}
-        <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
+        <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
           <div>
             <div className="max-w-[68%] sm:max-w-[58%] lg:max-w-[52%]">
               <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]" style={{ animationDelay: "0ms" }}>
