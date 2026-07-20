@@ -1430,23 +1430,32 @@ function YogaHero({
   const tabClass = (isActive: boolean) =>
     [
       "rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold transition",
-      isActive ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
+      isActive ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink",
     ].join(" ");
 
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative w-full rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-card-pop-in">
-      <img src="/images/yoga-hero.webp" alt="Yoga Flows" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/15 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+    <div className="relative isolate min-h-[128px] sm:min-h-[168px] mb-2 animate-card-pop-in">
+      {/* base pink wash */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      {/* photo — dissolves toward the bottom into the page */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[440px] overflow-hidden"
+        style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+      >
+        <img src="/images/yoga-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_22%]" referrerPolicy="no-referrer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+      </div>
+
+      <div className="absolute top-1 right-0 z-[2] flex items-center gap-1.5">
         {onReset && (
           <button
             onClick={onReset}
             aria-label="Reset tool"
             title="Reset — preview the first-time experience"
-            className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+            className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
             <RotateCcw className="h-3 w-3" /> Reset
           </button>
@@ -1454,25 +1463,25 @@ function YogaHero({
         {onGuide && (
           <button
             onClick={onGuide}
-            className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+            className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
             <Sparkles className="h-3 w-3" /> Guide
           </button>
         )}
       </div>
-      <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
+      <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
         <div key={active} className="animate-scale-in">
-          <div className="max-w-[72%]">
-            <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-white backdrop-blur-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}>
+          <div className="max-w-[66%]">
+            <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/75 backdrop-blur border border-petal/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-hotpink">
               <Flower className="h-2.5 w-2.5" strokeWidth={2.5} /> Yoga
             </p>
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{title}</h1>
-            <p className="mt-0.5 text-xs sm:text-sm font-medium leading-snug text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{subtitle}</p>
+            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{title}</h1>
+            <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{subtitle}</p>
           </div>
-          <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
+          <CyclePhasePill className="mt-1.5" />
         </div>
-        <div className="flex justify-center">
-          <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
+        <div className="flex">
+          <div className="inline-flex rounded-full bg-white/70 backdrop-blur border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
             <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
             <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
             <button data-tour="yg-tab-library" onClick={onLibrary} className={tabClass(active === "library")}>Library</button>

@@ -977,29 +977,39 @@ export default function NotesPage() {
         )}
       </div>
 
-      {/* HERO — sized to match the Read hero (compact banner) */}
-      <div className="relative w-full min-h-[152px] sm:min-h-[224px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-card-pop-in">
-        <img src="/images/notes-hero.webp" alt="Notes & Reminders" className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
+      {/* HERO — full-bleed blended photo background, same technique as Today/Tools */}
+      <div className="relative isolate min-h-[150px] sm:min-h-[196px] mb-3 animate-card-pop-in">
+        {/* base pink wash */}
+        <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[520px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+        {/* photo — dissolves toward the bottom into the page */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[440px] overflow-hidden"
+          style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+        >
+          <img src="/images/notes-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_32%]" referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        </div>
+
+        {/* content */}
+        <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
           <div className="animate-scale-in">
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Notes & Reminders</h1>
-            <p className="mt-0.5 text-xs sm:text-sm font-medium text-white/95 max-w-[10rem] sm:max-w-xs lg:max-w-sm leading-snug" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>Scribble thoughts, let dreams nudge ✿</p>
-            <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
+            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Notes &amp; Reminders</h1>
+            <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 max-w-[12rem] sm:max-w-sm leading-tight">Scribble thoughts, let dreams nudge ✿</p>
+            <CyclePhasePill className="mt-1.5" />
           </div>
-          {/* Tab toggle — bottom of hero, yoga-style */}
-          <div className="flex justify-center">
-            <div className="inline-flex rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
+          {/* Tab toggle — light glass over the soft hero */}
+          <div className="flex">
+            <div className="inline-flex rounded-full bg-white/70 backdrop-blur-md border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
               <button
                 onClick={() => setTab("notes")}
-                className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "notes" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
+                className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "notes" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink"].join(" ")}
               >
                 <NotebookPen className="h-3.5 w-3.5" strokeWidth={2} /> Notes
               </button>
               <button
                 onClick={() => setTab("reminders")}
-                className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white"].join(" ")}
+                className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink"].join(" ")}
               >
                 <Bell className="h-3.5 w-3.5" strokeWidth={2} /> Reminders
               </button>
