@@ -582,7 +582,7 @@ export default function MealsPage() {
 
   return (
     <>
-    <div className="relative animate-fade-in max-w-full overflow-x-hidden">
+    <div className="relative animate-fade-in">
       {/* Guided-setup focus: narrow hero + one Finish-on-Today action, no tabs. */}
       {guided && (
         <>
