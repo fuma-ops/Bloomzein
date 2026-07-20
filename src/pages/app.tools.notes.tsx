@@ -984,10 +984,10 @@ export default function NotesPage() {
         {/* photo — dissolves toward the bottom into the page */}
         <div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[440px] overflow-hidden"
-          style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden"
+          style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 82%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 82%)" }}
         >
-          <img src="/images/notes-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_32%]" referrerPolicy="no-referrer" />
+          <img src="/images/notes-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_34%]" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
         </div>
 
