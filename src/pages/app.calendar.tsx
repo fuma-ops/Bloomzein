@@ -405,13 +405,13 @@ export default function CalendarPage() {
   return (
     <div className="relative isolate animate-fade-in">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 -mx-3 sm:-mx-6 md:-mx-8 h-[360px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[360px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
       {/* Hero photo as ONE blended page BACKGROUND — same technique as the Today
           page: a full-width image that fades on the left (so the title stays
           readable) and the bottom (melting into the calendar below), so there's
           no card seam. `isolate` on the root keeps this -z layer in place. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 md:-mx-8 h-[300px] overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden">
         <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%]" referrerPolicy="no-referrer" />
         {/* left fade → readable light pink behind the title */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />

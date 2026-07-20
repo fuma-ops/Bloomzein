@@ -6,6 +6,7 @@ import {
   BookHeart, Check, Plus, Minus, Bell, BellOff, Pill, CalendarDays,
   ChevronDown, AlarmClock, Star, Activity, UtensilsCrossed, Apple,
   BookOpen, ChevronRight, Zap, Target, Lightbulb, Flame, Wheat, Leaf, Headphones, Repeat,
+  TrendingUp, type LucideIcon,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
@@ -178,6 +179,11 @@ const PHASE_QUOTES: Record<Exclude<CyclePhase, "any">, string> = {
 
 const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
   period: "Low", follicular: "Rising", fertile: "High", ovulation: "High", luteal: "Mellow",
+};
+
+// A fitting icon for each energy level, so the standalone Energy label reads at a glance.
+const ENERGY_ICON: Record<string, LucideIcon> = {
+  Low: Battery, Rising: TrendingUp, High: Zap, Mellow: Leaf,
 };
 
 // A soft, phase-flavoured word for the plan title ("Your soft day"), so the
@@ -834,18 +840,26 @@ export default function TodayPage() {
 
   return (
     <div className="relative isolate">
-      {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface.
+          FULL-BLEED to the whole main area (w-screen, centred) so on a wide
+          laptop the wash fills edge-to-edge instead of stopping at the centred
+          max-w-6xl container and leaving a hard vertical seam. */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
       {/* Hero photo as ONE blended page BACKGROUND — a single FULL-WIDTH image so
           there's no left/right panel seam: she sits on the right, and the same
           pink (#FFE4F1) fades the left (behind the greeting) and the bottom (into
           "Build your Bloom world"). One continuous surface, no edges. `isolate`
-          on the root keeps this -z layer from vanishing behind the app shell. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 md:-mx-8 h-[640px] overflow-hidden">
+          on the root keeps this -z layer from vanishing behind the app shell.
+          w-screen (centred) makes it span the full main area so there's no hard
+          edge at the container border on desktop; overflow is clipped by the
+          shell's overflow-x-hidden. */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden">
         <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
         {/* left fade → readable pink behind the greeting (same tone as the wash) */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        {/* right fade → soft melt into the page edge so there's no hard border */}
+        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
         {/* bottom fade → melts into the content below */}
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
       </div>
@@ -868,12 +882,23 @@ export default function TodayPage() {
           {cycleReady ? (
             <>
               <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
-                ✿ Day {cycleDay} · {PHASE_LABEL[phase]} · Energy {PHASE_ENERGY[phase]}
+                ✿ Day {cycleDay} · {PHASE_LABEL[phase]}
               </div>
 
               <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-[150px] sm:max-w-[240px]">
                 {PHASE_QUOTES[phase]}
               </p>
+
+              {/* ENERGY — its own label under the subtitle, same pill design as the
+                  phase badge, with a fitting icon for the current energy level. */}
+              {(() => {
+                const EnergyIcon = ENERGY_ICON[PHASE_ENERGY[phase]] ?? Zap;
+                return (
+                  <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
+                    <EnergyIcon className="h-3 w-3" strokeWidth={2.4} /> Energy {PHASE_ENERGY[phase]}
+                  </div>
+                );
+              })()}
             </>
           ) : (
             <>
