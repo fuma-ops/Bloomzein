@@ -134,12 +134,19 @@ export default function ReadPage() {
           Tools, but with LIGHTER fades so the photo stays clearly visible: a soft
           left wash keeps the title readable, a soft bottom wash melts into the
           search + filters below — no card seam/border. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] sm:h-[340px] overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] sm:h-[340px] overflow-hidden"
+        style={{
+          // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
+          // so it melts into the real page background with no hard seam.
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+        }}
+      >
         <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[55%_32%]" referrerPolicy="no-referrer" />
         {/* left fade → keep it gentle so the photo reads through behind the title */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
-        {/* bottom fade → melts cleanly into the search + filters below */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
       </div>
 
       <BloomBubbles count={10} />

@@ -61,12 +61,19 @@ export default function ToolsIndex() {
       {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
           Calendar: a full-width image fading on the left (readable title) and the
           bottom (melting into the tools below), so there's no card seam/border. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[268px] sm:h-[300px] overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[268px] sm:h-[300px] overflow-hidden"
+        style={{
+          // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
+          // so it melts into the real page background with no hard seam.
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)",
+        }}
+      >
         <img src="/images/tools-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_58%]" referrerPolicy="no-referrer" />
         {/* left fade → readable light pink behind the title */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/50 to-transparent" />
-        {/* bottom fade → melts cleanly into the search + tools grid below */}
-        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent via-[#FFE4F1]/85 to-[#FFE4F1]" />
       </div>
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}

@@ -854,14 +854,22 @@ export default function TodayPage() {
           w-screen (centred) makes it span the full main area so there's no hard
           edge at the container border on desktop; overflow is clipped by the
           shell's overflow-x-hidden. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
+        style={{
+          // Dissolve the whole hero block to true transparency toward the bottom
+          // (a soft alpha mask, NOT an opaque colour band) so the photo melts into
+          // whatever page background is behind it — no hard image/background seam.
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+        }}
+      >
         <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
         {/* left fade → readable pink behind the greeting (same tone as the wash) */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
         {/* right fade → soft melt into the page edge so there's no hard border */}
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
-        {/* bottom fade → melts into the content below */}
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
       </div>
 
       <BloomBubbles count={10} />
