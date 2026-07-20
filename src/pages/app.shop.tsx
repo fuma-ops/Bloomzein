@@ -109,7 +109,7 @@ export default function ShopPage() {
   return (
     <div className="relative isolate animate-fade-in">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[440px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
       {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
           Tools, with LIGHTER fades so the photo stays clearly visible: a soft
@@ -117,19 +117,18 @@ export default function ShopPage() {
           search below — no card seam/border. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[320px] sm:h-[380px] overflow-hidden"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
         style={{
-          // Alpha-dissolve only the LOWER part of the band (products live in the
-          // upper ~68%, so they stay fully visible) so it melts into the real page
-          // background with no opaque colour band / hard seam.
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%)",
+          // Same tall, soft blend as the Today page. This flat-lay has its products
+          // toward the bottom, so anchor the crop high enough that the bottles read
+          // in the crisp upper band and only the empty lower area dissolves away.
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        {/* object-bottom: this flat-lay has all its products along the BOTTOM
-            (bottles bottom-right, candle + mask bottom-left) with an empty pale
-            centre — anchor to the bottom so the products are what we actually see. */}
-        <img src="/images/shop-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[50%_88%]" referrerPolicy="no-referrer" />
+        {/* object-[50%_82%]: anchor near the bottom so the products (bottles right,
+            candle + mask left) are what we actually see rather than the empty centre. */}
+        <img src="/images/shop-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[50%_82%]" referrerPolicy="no-referrer" />
         {/* left fade → gentle, only far-left, so the title stays readable but the
             products on the right read clearly (no heavy wash over them) */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/85 via-[#FFE4F1]/12 to-transparent" />

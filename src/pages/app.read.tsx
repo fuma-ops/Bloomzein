@@ -128,7 +128,7 @@ export default function ReadPage() {
   return (
     <div className="relative isolate animate-fade-in">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[440px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
       {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
           Tools, but with LIGHTER fades so the photo stays clearly visible: a soft
@@ -136,10 +136,11 @@ export default function ReadPage() {
           search + filters below — no card seam/border. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] sm:h-[340px] overflow-hidden"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
         style={{
           // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
-          // so it melts into the real page background with no hard seam.
+          // so it melts into the real page background with no hard seam — same tall,
+          // soft blend as the Today page.
           WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
