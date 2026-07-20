@@ -107,45 +107,52 @@ export default function ShopPage() {
   const toggleSave = (id: string) => setSaved((s) => ({ ...s, [id]: !s[id] }));
 
   return (
-    <div className="relative animate-fade-in">
+    <div className="relative isolate animate-fade-in">
+      {/* Base pink wash — the top reads as one soft surface behind the hero. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 -mx-3 sm:-mx-6 lg:-mx-8 h-[440px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+
+      {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
+          Tools, with LIGHTER fades so the photo stays clearly visible: a soft
+          left wash keeps the title readable, a soft bottom wash melts into the
+          search below — no card seam/border. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 lg:-mx-8 h-[300px] sm:h-[340px] overflow-hidden">
+        <img src="/images/shop-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[50%_35%]" referrerPolicy="no-referrer" />
+        {/* left fade → keep it gentle so the photo reads through behind the title */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
+        {/* bottom fade → melts cleanly into the search below */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
+      </div>
+
       <BloomBubbles count={10} />
 
       <div>
-        {/* HERO */}
-        <section className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-          <div className="animate-card-breathe pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-            <img src="/images/shop-hero-bg.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-r from-white/55 via-white/15 to-transparent" />
-            <div className="relative z-[2] px-4 py-5 sm:px-10 sm:py-11 max-w-md">
-              <h1 className="font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2" style={{ textShadow: "0 1px 6px rgba(255,255,255,0.9)" }}>
-                Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
-              </h1>
-              <p className="mt-1.5 sm:mt-3 text-xs sm:text-base font-medium text-rose/90" style={{ textShadow: "0 1px 5px rgba(255,255,255,0.85)" }}>Curated treasures for your softest era ✿</p>
-              <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
-                Beauty • Wellness • Self-care • Cycle Care
-              </p>
-            </div>
-
-            <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-16 sm:top-8 sm:right-24 h-4 w-4 sm:h-5 sm:w-5 text-hotpink/60 z-[1]" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
-            <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-1/2 right-28 sm:right-40 h-3 w-3 sm:h-4 sm:w-4 text-hotpink/50 z-[1]" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
-            <Sparkles className="animate-sparkle-drift pointer-events-none absolute bottom-6 right-10 sm:bottom-10 sm:right-16 h-2.5 w-2.5 sm:h-3 sm:w-3 text-hotpink/40 z-[1]" strokeWidth={1.8} style={{ animationDelay: "2.4s" }} />
-
-            <button
-              onClick={() => setOpen(true)}
-              aria-label="Open cart"
-              className={[
-                "absolute top-3 right-3 sm:top-5 sm:right-5 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
-                bumped ? "animate-bloom-bounce" : "",
-              ].join(" ")}
-            >
-              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
-              {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold border-2 border-white">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+        {/* HERO — transparent; the photo lives in the blended background above. */}
+        <section className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[150px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+          <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[74%] sm:max-w-md">
+            <h1 className="animate-fade-in font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
+              Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
+            </h1>
+            <p className="animate-fade-in mt-1 sm:mt-2 text-xs sm:text-base font-semibold text-rose/80" style={{ animationDelay: "150ms" }}>Curated treasures for your softest era ✿</p>
+            <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
+              Beauty • Wellness • Self-care • Cycle Care
+            </p>
           </div>
+
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Open cart"
+            className={[
+              "absolute top-2 right-2 sm:top-3 sm:right-4 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
+              bumped ? "animate-bloom-bounce" : "",
+            ].join(" ")}
+          >
+            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold border-2 border-white">
+                {cartCount}
+              </span>
+            )}
+          </button>
         </section>
 
         {/* SEARCH */}
