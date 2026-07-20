@@ -126,24 +126,30 @@ export default function ReadPage() {
   }
 
   return (
-    <div className="relative animate-fade-in">
+    <div className="relative isolate animate-fade-in">
+      {/* Base pink wash — the top reads as one soft surface behind the hero. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 -mx-3 sm:-mx-6 lg:-mx-8 h-[440px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+
+      {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
+          Tools, but with LIGHTER fades so the photo stays clearly visible: a soft
+          left wash keeps the title readable, a soft bottom wash melts into the
+          search + filters below — no card seam/border. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 lg:-mx-8 h-[300px] sm:h-[340px] overflow-hidden">
+        <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[55%_32%]" referrerPolicy="no-referrer" />
+        {/* left fade → keep it gentle so the photo reads through behind the title */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
+        {/* bottom fade → melts cleanly into the search + filters below */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
+      </div>
+
       <BloomBubbles count={10} />
 
-      {/* HERO — title + subtitle + filters, sized to match the Me page hero */}
-      <section ref={heroRef} className="relative animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-        <div className="pearl-frame relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.5rem]">
-          <img src={IMG.featured} alt="" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
-          <div className="absolute inset-0 bg-gradient-to-b from-magenta/55 via-hotpink/15 to-magenta/85" />
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-4 right-5 sm:top-6 sm:right-9 h-4 w-4 sm:h-5 sm:w-5 text-white/80" strokeWidth={1.8} style={{ animationDelay: "0s" }} />
-          <Sparkles className="animate-sparkle-drift pointer-events-none absolute top-8 right-14 sm:top-12 sm:right-24 h-3 w-3 sm:h-4 sm:w-4 text-white/70" strokeWidth={1.8} style={{ animationDelay: "1.2s" }} />
-
-          <div className="relative z-[2] flex flex-col justify-start px-4 pt-6 pb-6 sm:px-10 sm:pt-8 sm:pb-8 min-h-[180px] sm:min-h-[298px]">
-            <div className="text-left">
-              <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Read</h1>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>soft reads for your softest era ✿</p>
-              <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
-            </div>
-          </div>
+      {/* HERO — transparent; the photo lives in the blended background above. */}
+      <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[150px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+        <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
+          <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
+          <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-semibold text-rose/80" style={{ animationDelay: "150ms" }}>soft reads for your softest era ✿</p>
+          <CyclePhasePill className="mt-1.5" />
         </div>
       </section>
 
