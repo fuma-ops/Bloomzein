@@ -56,12 +56,12 @@ export default function ToolsIndex() {
   return (
     <div className="relative isolate animate-fade-in">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-20 -mx-3 sm:-mx-6 md:-mx-8 h-[400px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[400px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
       {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
           Calendar: a full-width image fading on the left (readable title) and the
           bottom (melting into the tools below), so there's no card seam/border. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-8 -z-10 -mx-3 sm:-mx-6 md:-mx-8 h-[268px] sm:h-[300px] overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[268px] sm:h-[300px] overflow-hidden">
         <img src="/images/tools-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_58%]" referrerPolicy="no-referrer" />
         {/* left fade → readable light pink behind the title */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/50 to-transparent" />
