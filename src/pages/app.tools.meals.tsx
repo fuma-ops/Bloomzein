@@ -606,7 +606,7 @@ export default function MealsPage() {
         </div>
 
         {/* content */}
-        <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
+        <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
           {/* Title block — left-anchored */}
           <div className="flex items-start justify-between gap-2">
             <div className="max-w-[62%]">
@@ -1138,7 +1138,7 @@ function WeekTab({
           />
         </div>
       ) : (
-        <section className="rounded-3xl bg-white/85 border border-petal/60 shadow-sm p-3.5 sm:p-4 space-y-3">
+        <section className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-3.5 sm:p-4 space-y-3">
           {/* Compact header — title + the awareness labels (goal · diet · phase)
               so she always knows what's set up, and the Edit + Regenerate controls
               tucked to the right so they barely take any space. */}
