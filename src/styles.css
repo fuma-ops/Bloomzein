@@ -790,6 +790,18 @@
   animation: hero-breathe 14s ease-in-out infinite;
 }
 
+/* Soft, slow drift for the calendar's floral background — a gentle Ken-Burns
+   breathe so the blooms feel alive without distracting from the grid. */
+@keyframes cal-bloom-drift {
+  0%, 100% { transform: scale(1.04) translate3d(0, 0, 0); }
+  50%      { transform: scale(1.08) translate3d(0, -8px, 0); }
+}
+
+@utility animate-cal-bloom {
+  animation: cal-bloom-drift 26s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:
