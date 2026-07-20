@@ -115,12 +115,16 @@ export default function ShopPage() {
           Tools, with LIGHTER fades so the photo stays clearly visible: a soft
           left wash keeps the title readable, a soft bottom wash melts into the
           search below — no card seam/border. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] sm:h-[340px] overflow-hidden">
-        <img src="/images/shop-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[50%_35%]" referrerPolicy="no-referrer" />
-        {/* left fade → keep it gentle so the photo reads through behind the title */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
-        {/* bottom fade → melts cleanly into the search below */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-[#FFE4F1]/80 to-[#FFE4F1]" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[320px] sm:h-[380px] overflow-hidden">
+        {/* object-bottom: this flat-lay has all its products along the BOTTOM
+            (bottles bottom-right, candle + mask bottom-left) with an empty pale
+            centre — anchor to the bottom so the products are what we actually see. */}
+        <img src="/images/shop-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[50%_88%]" referrerPolicy="no-referrer" />
+        {/* left fade → gentle, only far-left, so the title stays readable but the
+            products on the right read clearly (no heavy wash over them) */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/85 via-[#FFE4F1]/12 to-transparent" />
+        {/* bottom fade → soft + short so it melts into the search without hiding the products */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-b from-transparent to-[#FFE4F1]" />
       </div>
 
       <BloomBubbles count={10} />
