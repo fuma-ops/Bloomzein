@@ -592,19 +592,29 @@ export default function MealsPage() {
       )}
       {/* HERO — compact, matches Budget Planner height */}
       {!guided && (
-      <div className="relative w-full rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-3 animate-card-pop-in">
-        <img src="/images/meals-hero-new.webp" alt="Meal Planner" className="absolute inset-0 h-full w-full object-cover object-[50%_20%]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-4 min-h-[128px] sm:min-h-[150px] lg:min-h-[188px]">
+      <div className="relative isolate min-h-[128px] sm:min-h-[168px] mb-3 animate-card-pop-in">
+        {/* base pink wash */}
+        <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+        {/* photo — dissolves toward the bottom into the page */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[440px] overflow-hidden"
+          style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+        >
+          <img src="/images/meals-hero-new.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[60%_26%]" referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        </div>
+
+        {/* content */}
+        <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
           {/* Title block — left-anchored */}
           <div className="flex items-start justify-between gap-2">
-            <div className="max-w-[68%]">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ animationDelay: '0ms', textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{TAB_HERO[tab].title}</h1>
-              <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: '200ms', textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{TAB_HERO[tab].subtitle}</p>
-              <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
+            <div className="max-w-[62%]">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
+              <p className="animate-fade-in mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
+              <CyclePhasePill className="mt-1.5" />
             </div>
-            {/* Reset + Guide chips */}
+            {/* Reset + Guide chips — light glass */}
             <div className="animate-fade-in shrink-0 flex items-center gap-1.5" style={{ animationDelay: '260ms' }}>
               <button
                 onClick={async () => {
@@ -616,13 +626,13 @@ export default function MealsPage() {
                 }}
                 aria-label="Reset tool"
                 title="Reset — preview the first-time experience"
-                className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+                className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
               >
                 <RotateCcw className="h-3 w-3" /> Reset
               </button>
               <button
                 onClick={() => setShowGuide(true)}
-                className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+                className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
               >
                 <Sparkles className="h-3 w-3" />
                 Guide
@@ -643,7 +653,7 @@ export default function MealsPage() {
                       "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold transition whitespace-nowrap",
                       active
                         ? "bg-hotpink text-white shadow shadow-hotpink/40"
-                        : "bg-white/20 backdrop-blur-md border border-white/40 text-white hover:bg-white/30",
+                        : "bg-white/70 backdrop-blur border border-petal/60 text-rose hover:bg-white",
                     ].join(" ")}
                   >
                     <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />

@@ -1975,34 +1975,43 @@ export default function DietPage() {
 
       <BloomBubbles count={10} />
 
-      {/* HERO — compact fixed height (stays small on desktop, like the Budget hero) */}
-      <div className="relative w-full min-h-[150px] sm:min-h-[166px] lg:min-h-[178px] -mt-3 sm:-mt-5 lg:-mt-6 rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
-        <img src="/images/meal-oats.webp" alt="Diet Tool" className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+      {/* HERO — full-bleed blended photo background, same technique as Today/Tools */}
+      <div className="relative isolate min-h-[150px] sm:min-h-[176px] -mt-3 sm:-mt-5 lg:-mt-6 mb-4 animate-card-pop-in">
+        {/* base pink wash */}
+        <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[540px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+        {/* photo — dissolves toward the bottom into the page */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[440px] overflow-hidden"
+          style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+        >
+          <img src="/images/meal-oats.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[72%_38%]" referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        </div>
+
         {/* Reset — preview the brand-new-user experience */}
         <button
           onClick={onReset}
           title="Reset (preview first-time setup)"
-          className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-hotpink border border-white/60 shadow-sm active:scale-95 transition"
+          className="absolute top-1 right-1 z-[2] inline-flex items-center gap-1 rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-hotpink border border-petal/60 shadow-sm active:scale-95 transition"
         >
           <RotateCcw className="h-3 w-3" /> Reset
         </button>
-        <div className="relative flex flex-col justify-between gap-2 p-3 sm:p-5 lg:p-7 min-h-[150px] sm:min-h-[176px] lg:min-h-[210px]">
-          {/* Title block — title + subtitle stay narrow to clear the food photo,
-              but the phase pill sits full-width below so it reads on one line. */}
-          <div className="flex-1 flex flex-col justify-center items-start">
-            <div className="max-w-[70%] sm:max-w-[58%] lg:max-w-[52%]">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ animationDelay: "0ms", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>
+
+        {/* content */}
+        <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
+          <div>
+            <div className="max-w-[68%] sm:max-w-[58%] lg:max-w-[52%]">
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]" style={{ animationDelay: "0ms" }}>
                 {TAB_HERO[tab].title}
               </h1>
-              <p className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ animationDelay: "200ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
+              <p className="animate-fade-in mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "200ms" }}>
                 {TAB_HERO[tab].subtitle}
               </p>
             </div>
-            <CyclePhasePill className="mt-1.5 ring-1 ring-white/50" />
+            <CyclePhasePill className="mt-1.5" />
           </div>
-          {/* Tab pills at bottom of hero */}
+          {/* Tab pills — light glass over the soft hero */}
           <div id="diet-tabs" ref={tabsRef} className="animate-fade-in overflow-x-auto no-scrollbar" style={{ animationDelay: "320ms" }}>
             <div className="flex gap-1.5 w-max">
               {TABS.map((t) => {
@@ -2015,7 +2024,7 @@ export default function DietPage() {
                       "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold transition whitespace-nowrap",
                       active
                         ? "bg-hotpink text-white shadow shadow-hotpink/40"
-                        : "bg-white/20 backdrop-blur-md border border-white/40 text-white hover:bg-white/30",
+                        : "bg-white/70 backdrop-blur border border-petal/60 text-rose hover:bg-white",
                     ].join(" ")}
                   >
                     <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />

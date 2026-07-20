@@ -360,22 +360,32 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative w-full aspect-[8/3] lg:aspect-[32/9] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 mb-2 animate-card-pop-in">
-      {broken ? (
-        <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
-          <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
-        </div>
-      ) : (
-        <img src={src} alt={sectionTitle} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5">
+    <div className="relative isolate min-h-[128px] sm:min-h-[168px] mb-2 animate-card-pop-in">
+      {/* base pink wash */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      {/* photo — dissolves toward the bottom into the page */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[440px] overflow-hidden"
+        style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)" }}
+      >
+        {broken ? (
+          <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
+            <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
+          </div>
+        ) : (
+          <img src={src} alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_18%]" onError={() => setBroken(true)} />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+      </div>
+
+      <div className="absolute top-1 right-0 z-[2] flex items-center gap-1.5">
         {onReset && (
           <button
             onClick={onReset}
             aria-label="Reset tool"
             title="Reset — preview the first-time experience"
-            className="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-2.5 py-1.5 text-[11px] sm:text-xs text-white/90 font-semibold transition hover:bg-white/30 active:scale-95"
+            className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
             <RotateCcw className="h-3 w-3" /> Reset
           </button>
@@ -383,20 +393,20 @@ function HeroHeader({
         {onGuide && (
           <button
             onClick={onGuide}
-            className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-[11px] sm:text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95"
+            className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
             <Sparkles className="h-3 w-3" /> Guide
           </button>
         )}
       </div>
-      <div className="relative h-full flex flex-col justify-between p-2 sm:p-4">
+      <div className="relative z-[1] flex flex-col gap-2 pt-1 pb-1">
         <div>
-          <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{sectionTitle}</h2>
-          <p className="mt-0.5 text-xs sm:text-sm font-medium leading-snug text-white/95" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{sectionSubtitle}</p>
-          <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
+          <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{sectionTitle}</h2>
+          <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{sectionSubtitle}</p>
+          <CyclePhasePill className="mt-1.5" />
         </div>
-        <div className="flex justify-center">
-          <div className="inline-flex flex-wrap justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 p-0.5 sm:p-1">
+        <div className="flex">
+          <div className="inline-flex flex-wrap rounded-full bg-white/70 backdrop-blur border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
             {(["program", "discover", "programs", "library"] as const).map((t) => (
               <button
                 key={t}
@@ -404,7 +414,7 @@ function HeroHeader({
                 onClick={() => onPickTab(t)}
                 className={[
                   "rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold transition",
-                  tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-white",
+                  tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink",
                 ].join(" ")}
               >
                 {t === "program" ? "My Plan" : t === "discover" ? "Discover" : t === "programs" ? "Programs" : "Library"}
