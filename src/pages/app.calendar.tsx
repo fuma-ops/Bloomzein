@@ -405,7 +405,7 @@ export default function CalendarPage() {
   return (
     <div className="relative isolate animate-fade-in">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[360px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
       {/* Hero photo as ONE blended page BACKGROUND — same technique as the Today
           page: a full-width image that fades on the left (so the title stays
@@ -413,12 +413,13 @@ export default function CalendarPage() {
           no card seam. `isolate` on the root keeps this -z layer in place. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
         style={{
           // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
-          // so it melts into the real page background with no hard seam.
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)",
+          // so it melts into the real page background with no hard seam — same tall,
+          // soft blend as the Today page.
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
         <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%]" referrerPolicy="no-referrer" />
