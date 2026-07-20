@@ -670,6 +670,12 @@ function MonthGrid({
   const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
     <section className="relative overflow-hidden rounded-3xl backdrop-blur border border-petal/60 p-3 sm:p-6" style={{ background: "linear-gradient(135deg, #F9A8D4 0%, #F472B6 50%, #EC4899 100%)" }}>
+      {/* Soft floral pattern behind the whole calendar — a balanced bloom print
+          that shows through the header, frame and grid gaps. */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "url(/images/calendar-pattern.webp)", backgroundSize: "cover", backgroundPosition: "center" }} />
+      {/* Gentle pink veil over the florals so the white weekday labels + pink frame
+          keep their contrast (the florals stay visible, just softened). */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(249,168,212,0.32) 0%, rgba(244,114,182,0.30) 50%, rgba(236,72,153,0.30) 100%)" }} />
       <AuroraGlow />
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
         {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-white" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>{d}</p>)}

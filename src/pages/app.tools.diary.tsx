@@ -800,7 +800,6 @@ export default function DiaryPage() {
   const cycleDay = ((new Date().getDate() - 1) % 28) + 1;
   const phase = cycleDay <= 5 ? "Menstrual" : cycleDay <= 13 ? "Follicular" : cycleDay <= 15 ? "Ovulatory" : "Luteal";
   const streak = useMemo(() => computeStreak(entries), [entries]);
-  const moodTint = MOOD_DATA.find((m) => m.name === mood)?.tint ?? "#FBCFE8";
 
   useEffect(() => { saveEntries(entries); }, [entries]);
 
@@ -954,8 +953,25 @@ export default function DiaryPage() {
   }, [entries, search, calPickerDate]);
 
   return (
-    <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843" }}>
+    <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843", position: "relative", isolation: "isolate" }}>
       <style>{DIARY_CSS}</style>
+
+      {/* ── Blended hero BACKGROUND — same technique as Today: a full-width photo
+             washed on the left (readable title) and dissolved toward the bottom,
+             so it reads as one soft page background, not a cropped card. ── */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
+        style={{
+          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+        }}
+      >
+        <img src="/images/diary-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[62%_38%]" referrerPolicy="no-referrer" />
+        {/* left fade → readable pink behind the title */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+      </div>
 
       {/* Calendar date picker — root level */}
       {filterOpen && (
@@ -1001,14 +1017,13 @@ export default function DiaryPage() {
       {/* Mood is set on Today only — no in-diary picker; the hero circle mirrors
           Today's mood and taps through to Today to change it. */}
 
-      {/* ── Hero section (title + Today's Bloom unified) ── */}
-      <div style={{ position: "relative", borderRadius: 28, overflow: "hidden", marginBottom: 24, padding: "28px 26px 22px", background: "linear-gradient(150deg,rgba(255,255,255,.92),rgba(252,228,241,.78))", border: "1px solid rgba(236,72,153,.16)", boxShadow: "0 22px 54px rgba(236,72,153,.18)", backdropFilter: "blur(12px)" }}>
-        {/* Mood ambient glow */}
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `radial-gradient(ellipse 80% 65% at 85% 50%,${moodTint}66,transparent 70%)`, transition: "background 1.2s ease" }} />
+      {/* ── Hero section (title + Today's Bloom unified) — now transparent so the
+             blended photo background above shows through, like the Today page. ── */}
+      <div style={{ position: "relative", zIndex: 1, marginBottom: 24, marginTop: -12, padding: "10px 4px 18px" }}>
 
         {/* Title + CTA row */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
-          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", animation: "dd-shimmer 5s ease-in-out infinite" }}>
+          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", textShadow: "0 2px 8px rgba(255,255,255,.6)", animation: "dd-shimmer 5s ease-in-out infinite" }}>
             Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(16px,2.5vw,24px)" }}>✿</span>
           </h1>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
