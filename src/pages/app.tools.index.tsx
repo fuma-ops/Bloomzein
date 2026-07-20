@@ -83,7 +83,7 @@ export default function ToolsIndex() {
           <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
             Tools <Sparkles className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.8} />
           </h1>
-          <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-semibold text-rose/80" style={{ animationDelay: "150ms" }}>
+          <p className="animate-fade-in mt-0 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
             ✦ pick your bloom for today
           </p>
           <CyclePhasePill className="mt-1.5" />

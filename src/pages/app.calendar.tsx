@@ -436,7 +436,7 @@ export default function CalendarPage() {
               <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none whitespace-nowrap drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
                 Bloom Calendar
               </h1>
-              <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-semibold text-rose/80 leading-snug whitespace-nowrap" style={{ animationDelay: "150ms" }}>
+              <p className="animate-fade-in mt-0 font-script text-lg sm:text-2xl text-rose/90 leading-tight whitespace-nowrap" style={{ animationDelay: "150ms" }}>
                 Your life, beautifully planned.
               </p>
               <CyclePhasePill className="mt-1.5" />
