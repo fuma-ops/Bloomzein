@@ -897,12 +897,13 @@ export default function TodayPage() {
                 {PHASE_QUOTES[phase]}
               </p>
 
-              {/* ENERGY — its own label under the subtitle, same pill design as the
-                  phase badge, with a fitting icon for the current energy level. */}
+              {/* ENERGY — its own label under the subtitle. Same pill family as the
+                  phase badge but a softer, pale-pink tint (not a heavy solid fill),
+                  with a fitting icon for the current energy level. */}
               {(() => {
                 const EnergyIcon = ENERGY_ICON[PHASE_ENERGY[phase]] ?? Zap;
                 return (
-                  <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
+                  <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-petal/80 backdrop-blur text-hotpink border border-hotpink/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
                     <EnergyIcon className="h-3 w-3" strokeWidth={2.4} /> Energy {PHASE_ENERGY[phase]}
                   </div>
                 );
