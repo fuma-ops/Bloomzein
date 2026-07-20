@@ -893,7 +893,7 @@ export default function TodayPage() {
                 ✿ Day {cycleDay} · {PHASE_LABEL[phase]}
               </div>
 
-              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-[150px] sm:max-w-[240px]">
+              <p className="mt-1 sm:mt-1.5 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
                 {PHASE_QUOTES[phase]}
               </p>
 
@@ -904,7 +904,7 @@ export default function TodayPage() {
                 const EnergyIcon = ENERGY_ICON[PHASE_ENERGY[phase]] ?? Zap;
                 return (
                   <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-petal/80 backdrop-blur text-hotpink border border-hotpink/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
-                    <EnergyIcon className="h-3 w-3" strokeWidth={2.4} /> Energy {PHASE_ENERGY[phase]}
+                    <EnergyIcon className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> Energy {PHASE_ENERGY[phase]}
                   </div>
                 );
               })()}
@@ -915,7 +915,7 @@ export default function TodayPage() {
                 <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Set up your cycle
               </a>
 
-              <p className="mt-1.5 sm:mt-2.5 text-[11px] sm:text-sm text-rose/90 leading-snug max-w-[150px] sm:max-w-[240px]">
+              <p className="mt-1 sm:mt-1.5 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
                 Welcome to your Bloom ✿ Let's set up your world — start below.
               </p>
             </>

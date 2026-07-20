@@ -143,7 +143,7 @@ export default function ShopPage() {
             <h1 className="animate-fade-in font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
               Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
             </h1>
-            <p className="animate-fade-in mt-1 sm:mt-2 text-xs sm:text-base font-semibold text-rose/80" style={{ animationDelay: "150ms" }}>Curated treasures for your softest era ✿</p>
+            <p className="animate-fade-in mt-0.5 sm:mt-1 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>Curated treasures for your softest era ✿</p>
             <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
               Beauty • Wellness • Self-care • Cycle Care
             </p>

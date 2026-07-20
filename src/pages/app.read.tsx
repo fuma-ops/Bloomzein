@@ -156,7 +156,7 @@ export default function ReadPage() {
       <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[150px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
           <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
-          <p className="animate-fade-in mt-0.5 text-xs sm:text-sm font-semibold text-rose/80" style={{ animationDelay: "150ms" }}>soft reads for your softest era ✿</p>
+          <p className="animate-fade-in mt-0 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for your softest era ✿</p>
           <CyclePhasePill className="mt-1.5" />
         </div>
       </section>
