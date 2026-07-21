@@ -802,6 +802,28 @@
   will-change: transform;
 }
 
+/* Muscle "glow" for the active workout photo — a soft energy pulse. Because the
+   worked muscle is already the most saturated pink area of the photo, cycling
+   saturation/brightness makes that area come alive without needing to know its
+   exact position. Paired with animate-muscle-sheen (a pink overlay-blend layer)
+   that intensifies the pink wherever it is. */
+@keyframes muscle-glow {
+  0%, 100% { filter: saturate(1) brightness(1); }
+  50%      { filter: saturate(1.5) brightness(1.07) drop-shadow(0 0 12px oklch(0.7 0.26 350 / 0.32)); }
+}
+@utility animate-muscle-glow {
+  animation: muscle-glow 2.3s ease-in-out infinite;
+  will-change: filter;
+}
+
+@keyframes muscle-sheen {
+  0%, 100% { opacity: 0.06; }
+  50%      { opacity: 0.24; }
+}
+@utility animate-muscle-sheen {
+  animation: muscle-sheen 2.3s ease-in-out infinite;
+}
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:

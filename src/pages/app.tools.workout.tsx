@@ -59,7 +59,6 @@ export const WORKOUT_PLAN_GOAL_KEY = "bloom:workout-plan-goal";
 const PROGRAM_BANNER_KEY = "bloom:workout-program-banner-seen";
 const CHALLENGE_KEY = "bloom:workout-challenge";
 const SOUND_KEY = "bloom:workout-sound";
-const VOICE_KEY = "bloom:workout-voice";
 export const WORKOUT_LOG_KEY = "bloom:workout-history";
 
 export const DEFAULT_WORKOUT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
@@ -128,14 +127,32 @@ function playRestChime() {
   } catch {}
 }
 
-function speakNext(text: string) {
+// Background music — drop 1-3 royalty-free loops here; missing files fail
+// silently (the glow + voice still work).
+const WORKOUT_MUSIC = [
+  "/audio/workout-music-1.mp3",
+  "/audio/workout-music-2.mp3",
+  "/audio/workout-music-3.mp3",
+];
+const MUSIC_VOL = 0.32;
+// Short motivational lines spoken by the browser at each move.
+const MOVE_CHEERS = [
+  "Let's go!", "You've got this!", "Stay strong!", "Push it, gorgeous!",
+  "Beautiful — keep going!", "Feel the burn!", "You're blooming!", "Own it!",
+];
+
+// Speak a short line via the browser, ducking the music while it talks.
+function speakLine(text: string, audioEl: HTMLAudioElement | null) {
   try {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
+    if (audioEl) audioEl.volume = 0.08;
+    const restore = () => { if (audioEl) audioEl.volume = MUSIC_VOL; };
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US"; u.rate = 0.95;
+    u.lang = "en-US"; u.rate = 1.0; u.pitch = 1.08;
+    u.onend = restore; u.onerror = restore;
     window.speechSynthesis.speak(u);
-  } catch {}
+  } catch { if (audioEl) audioEl.volume = MUSIC_VOL; }
 }
 
 // ===================== HELPERS =====================
@@ -2483,13 +2500,32 @@ function SessionActive({ session, onExit, onDone }: {
   const [remaining, setRemaining] = useState(steps[0]?.workSec ?? session.workSec);
   const [paused, setPaused] = useState(false);
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);
-  const [voice] = useLS<boolean>(VOICE_KEY, false);
   const elapsedRef = useRef(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  // One random loop per session so it doesn't feel repetitive across workouts.
+  const musicSrc = useMemo(() => WORKOUT_MUSIC[Math.floor(Math.random() * WORKOUT_MUSIC.length)], []);
 
   const step = steps[index];
   const nextStepObj = steps[index + 1];
   const exercise = step.exercise;
   const next = nextStepObj?.exercise;
+
+  // Background music — plays while a move is running and sound is on; pauses on
+  // pause/mute. play() is allowed because the session started from a tap.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.volume = MUSIC_VOL;
+    if (sound && !paused) a.play().catch(() => {});
+    else a.pause();
+  }, [sound, paused]);
+
+  // Motivational voice cue at the start of each exercise.
+  useEffect(() => {
+    if (phase !== "exercise" || !sound) return;
+    speakLine(`${exercise.name}. ${MOVE_CHEERS[index % MOVE_CHEERS.length]}`, audioRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, phase]);
 
   // Keep the screen awake for the duration of the workout.
   useEffect(() => {
@@ -2528,7 +2564,7 @@ function SessionActive({ session, onExit, onDone }: {
             }
             setPhase("rest");
             if (sound) playRestChime();
-            if (voice && next) speakNext(`Next up: ${next.name}`);
+            if (sound && next) speakLine(`Next up: ${next.name}`, audioRef.current);
             return step.restSec;
           } else {
             setPhase("exercise");
@@ -2540,14 +2576,14 @@ function SessionActive({ session, onExit, onDone }: {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [paused, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
+  }, [paused, phase, index, sound, session, next, step, nextStepObj, steps.length]);
 
   const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
     if (phase === "exercise") {
       if (index === steps.length - 1) { onDone(elapsedRef.current); return; }
       setPhase("rest"); setRemaining(step.restSec);
-      if (voice && next) speakNext(`Next up: ${next.name}`);
+      if (sound && next) speakLine(`Next up: ${next.name}`, audioRef.current);
     } else {
       setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec);
     }
@@ -2558,6 +2594,8 @@ function SessionActive({ session, onExit, onDone }: {
 
   return createPortal(
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {/* Background music loop (controlled by the sound toggle) */}
+      <audio ref={audioRef} src={musicSrc} loop preload="auto" />
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60 shrink-0">
         <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
@@ -2596,7 +2634,10 @@ function SessionActive({ session, onExit, onDone }: {
                   overlaid on it (as yoga overlays its breath pacer) so the
                   photo keeps the whole section instead of sharing it. */}
               <div className="relative flex-1 min-h-0 w-full rounded-3xl overflow-hidden border border-petal/60 shadow-md bg-[oklch(0.96_0.04_350)]">
-                <ExercisePhoto exercise={exercise} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
+                <ExercisePhoto exercise={exercise} zone={session.zone} className={`absolute inset-0 w-full h-full object-contain ${paused ? "" : "animate-muscle-glow"}`} />
+                {/* Muscle glow — a pink overlay-blend that pulses the already-pink
+                    worked muscle to life (freezes when paused). */}
+                <div aria-hidden className={`pointer-events-none absolute inset-0 bg-hotpink mix-blend-overlay ${paused ? "opacity-0" : "animate-muscle-sheen"}`} />
                 <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 rounded-full bg-white/85 backdrop-blur p-1.5 shadow-lg">
                   <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} />
                 </div>
