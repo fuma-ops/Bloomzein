@@ -802,27 +802,32 @@
   will-change: transform;
 }
 
-/* Muscle "glow" for the active workout photo — a soft energy pulse. Because the
-   worked muscle is already the most saturated pink area of the photo, cycling
-   saturation/brightness makes that area come alive without needing to know its
-   exact position. Paired with animate-muscle-sheen (a pink overlay-blend layer)
-   that intensifies the pink wherever it is. */
-@keyframes muscle-glow {
-  0%, 100% { filter: saturate(1) brightness(1); }
-  50%      { filter: saturate(1.5) brightness(1.07) drop-shadow(0 0 12px oklch(0.7 0.26 350 / 0.32)); }
+/* Localised muscle pulse for the active workout photo — a soft halo that
+   breathes ONLY over the worked muscle (its position is found by scanning the
+   photo for the baked-in magenta glow), so the rest of the image stays still. */
+@keyframes muscle-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.9);  opacity: 0.35; }
+  50%      { transform: translate(-50%, -50%) scale(1.15); opacity: 0.8; }
 }
-@utility animate-muscle-glow {
-  animation: muscle-glow 2.3s ease-in-out infinite;
-  will-change: filter;
+@utility animate-muscle-pulse {
+  animation: muscle-pulse 1.9s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-@keyframes muscle-sheen {
-  0%, 100% { opacity: 0.06; }
-  50%      { opacity: 0.24; }
+/* Gentle "energy" arrows at the sides of the photo — a small marching glide so
+   the still photo feels alive/in motion. */
+@keyframes arrow-flow-l {
+  0%   { opacity: 0;   transform: translateX(6px); }
+  35%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: translateX(-8px); }
 }
-@utility animate-muscle-sheen {
-  animation: muscle-sheen 2.3s ease-in-out infinite;
+@keyframes arrow-flow-r {
+  0%   { opacity: 0;   transform: translateX(-6px); }
+  35%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: translateX(8px); }
 }
+@utility animate-arrow-l { animation: arrow-flow-l 2s ease-in-out infinite; }
+@utility animate-arrow-r { animation: arrow-flow-r 2s ease-in-out infinite; }
 
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {

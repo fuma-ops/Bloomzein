@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
-  Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, Check, Wand2,
+  Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
   CircleCheck, Circle,
 } from "lucide-react";
@@ -2510,6 +2510,44 @@ function SessionActive({ session, onExit, onDone }: {
   const exercise = step.exercise;
   const next = nextStepObj?.exercise;
 
+  // Scan the current photo for its baked-in magenta muscle-glow, so we can pulse
+  // ONLY that spot (and size the overlay box to the image, since it's contained).
+  const [glow, setGlow] = useState<{ cx: number; cy: number; r: number; aspect: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setGlow(null);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const W = 140, H = Math.max(1, Math.round(140 * img.naturalHeight / img.naturalWidth));
+        const c = document.createElement("canvas"); c.width = W; c.height = H;
+        const g = c.getContext("2d", { willReadFrequently: true }); if (!g) return;
+        g.drawImage(img, 0, 0, W, H);
+        const px = g.getImageData(0, 0, W, H).data;
+        let sx = 0, sy = 0, sw = 0; const pts: [number, number, number][] = [];
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const i = (y * W + x) * 4, R = px[i], Gr = px[i + 1], B = px[i + 2];
+          const magenta = R - Gr, bright = (R + B) / 2;
+          // Only a BRIGHT, vivid magenta core (the baked glow spot) qualifies —
+          // pastel outfits/mats are excluded, so we glow the muscle or nothing.
+          if (magenta > 105 && R > 210 && B > 120 && bright > 200) {
+            const w = (magenta - 105) * (bright / 255);
+            sx += x * w; sy += y * w; sw += w; pts.push([x, y, w]);
+          }
+        }
+        if (cancelled) return;
+        if (sw < 20 || pts.length < 12) { setGlow(null); return; }
+        const cx = sx / sw, cy = sy / sw;
+        let vr = 0, vw = 0; for (const [x, y, w] of pts) { vr += w * ((x - cx) ** 2 + (y - cy) ** 2); vw += w; }
+        const r = Math.min(0.26, Math.max(0.13, Math.sqrt(vr / vw) / W));
+        setGlow({ cx: cx / W, cy: cy / H, r, aspect: img.naturalWidth / img.naturalHeight });
+      } catch { if (!cancelled) setGlow(null); }
+    };
+    img.onerror = () => { if (!cancelled) setGlow(null); };
+    img.src = exercise.image;
+    return () => { cancelled = true; };
+  }, [exercise.image]);
+
   // Background music — plays while a move is running and sound is on; pauses on
   // pause/mute. play() is allowed because the session started from a tap.
   useEffect(() => {
@@ -2634,10 +2672,43 @@ function SessionActive({ session, onExit, onDone }: {
                   overlaid on it (as yoga overlays its breath pacer) so the
                   photo keeps the whole section instead of sharing it. */}
               <div className="relative flex-1 min-h-0 w-full rounded-3xl overflow-hidden border border-petal/60 shadow-md bg-[oklch(0.96_0.04_350)]">
-                <ExercisePhoto exercise={exercise} zone={session.zone} className={`absolute inset-0 w-full h-full object-contain ${paused ? "" : "animate-muscle-glow"}`} />
-                {/* Muscle glow — a pink overlay-blend that pulses the already-pink
-                    worked muscle to life (freezes when paused). */}
-                <div aria-hidden className={`pointer-events-none absolute inset-0 bg-hotpink mix-blend-overlay ${paused ? "opacity-0" : "animate-muscle-sheen"}`} />
+                {/* Inner box sized to the CONTAINED image, so the muscle glow +
+                    arrows line up with the photo (no letterbox offset). */}
+                <div
+                  className="absolute inset-0 m-auto"
+                  style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}
+                >
+                  <ExercisePhoto exercise={exercise} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
+
+                  {/* Muscle glow — a soft halo that pulses ONLY over the worked
+                      muscle (scanned from the photo's baked magenta highlight). */}
+                  {glow && !paused && (
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute animate-muscle-pulse rounded-full"
+                      style={{
+                        left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`,
+                        width: `${glow.r * 220}%`, aspectRatio: "1",
+                        background: "radial-gradient(circle, oklch(0.72 0.28 350 / 0.9) 0%, oklch(0.72 0.28 350 / 0.35) 35%, transparent 70%)",
+                        mixBlendMode: "screen",
+                      }}
+                    />
+                  )}
+
+                  {/* Energy arrows — gentle marching glide at the sides so the
+                      still photo feels alive/in motion. */}
+                  {!paused && (
+                    <>
+                      <div aria-hidden className="pointer-events-none absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
+                        {[0, 1, 2].map((i) => <ChevronRight key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-r" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
+                      </div>
+                      <div aria-hidden className="pointer-events-none absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
+                        {[0, 1, 2].map((i) => <ChevronLeft key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-l" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 rounded-full bg-white/85 backdrop-blur p-1.5 shadow-lg">
                   <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} />
                 </div>
