@@ -133,6 +133,7 @@ const WORKOUT_MUSIC = [
   "/audio/workout-music-1.mp3",
   "/audio/workout-music-2.mp3",
   "/audio/workout-music-3.mp3",
+  "/audio/workout-music-4.mp3",
 ];
 const MUSIC_VOL = 0.32;
 // Short motivational lines spoken by the browser at each move.
