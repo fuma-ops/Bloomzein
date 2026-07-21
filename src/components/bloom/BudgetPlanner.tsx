@@ -1288,40 +1288,50 @@ export function BudgetPlanner() {
         const hc = HERO_CONFIG[tab] ?? HERO_CONFIG.Dashboard;
         const isDash = tab === "Dashboard";
         return (
-          <div className="relative overflow-hidden rounded-[1.75rem] border border-pink-200/60 shadow-xl animate-card-pop-in">
-            <img src="/images/budget-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(236,72,153,0.90) 0%, rgba(236,72,153,0.68) 50%, rgba(236,72,153,0.20) 80%, transparent 100%)" }} />
-            <div className={["relative z-10 flex items-center justify-between gap-3 p-4 sm:p-5 lg:p-5", isDash ? "min-h-[120px] sm:min-h-[140px]" : "min-h-[88px] sm:min-h-[100px]"].join(" ")}>
+          <div className="relative isolate min-h-[120px] sm:min-h-[150px] -mt-3 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
+            {/* base pink wash */}
+            <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+            {/* photo — dissolves toward the bottom into the page, like the Today hero */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden"
+              style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 80%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 80%)" }}
+            >
+              <img src="/images/budget-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[72%_36%]" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+            </div>
+
+            <div className="relative z-[1] pt-1 pb-1">
               <div className="max-w-[72%]">
-                <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-white leading-none" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.28)' }}>
+                <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
                   {hc.title}
                 </h2>
-                <p className="mt-0.5 text-xs sm:text-sm font-medium text-white/95 leading-snug" style={{ textShadow: '0 1px 6px rgba(0,0,0,0.35)' }}>{hc.sub}</p>
-                <CyclePhasePill className="mt-1 ring-1 ring-white/50" />
-                <div className="mt-2 flex items-center gap-2">
+                <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight">{hc.sub}</p>
+                <CyclePhasePill className="mt-1.5" />
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
                   {isDash && (
                     <button onClick={() => setShowMonthPicker(true)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
                       <Calendar className="h-3 w-3" />
                       {viewMode === "present"
                         ? "Ce mois"
                         : new Date(month.y, month.m, 1).toLocaleString("default", { month: "short", year: "numeric" })}
-                      {viewMode === "future" && <span className="text-[9px] font-bold text-white/80">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
+                      {viewMode === "future" && <span className="text-[9px] font-bold text-hotpink/70">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
                       <ChevronDown className="h-3 w-3 opacity-70" />
                     </button>
                   )}
                   <button onClick={() => setShowCurrencyPicker(true)}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                    className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
                     <Coins className="h-3 w-3" />
                     {CURRENCIES[currency].symbol}
                   </button>
                   <button onClick={() => setShowGuide(true)}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/25 backdrop-blur-md border border-white/50 px-3 py-1.5 text-xs text-white font-semibold transition hover:bg-white/35 active:scale-95">
+                    className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
                     <Sparkles className="h-3 w-3" />
                     Guide
                   </button>
                   <button onClick={seedDemoData}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur-md border border-white/30 px-3 py-1.5 text-xs text-white/80 font-semibold transition hover:bg-white/25 hover:text-white active:scale-95">
+                    className="inline-flex items-center gap-1 rounded-full bg-white/55 backdrop-blur border border-petal/50 px-3 py-1.5 text-xs text-rose/70 font-semibold transition hover:bg-white hover:text-hotpink active:scale-95">
                     ✦ Demo
                   </button>
                 </div>
