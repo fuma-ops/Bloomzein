@@ -814,6 +814,17 @@
   will-change: transform, opacity;
 }
 
+/* Steady breathing ring over the muscle — a solid outline that stays visible
+   even on top of the already-bright pink highlight (never fades out). */
+@keyframes muscle-ring {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.94); opacity: 0.8; }
+  50%      { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+@utility animate-muscle-ring {
+  animation: muscle-ring 1.9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
 /* Gentle "energy" arrows at the sides of the photo — a small marching glide so
    the still photo feels alive/in motion. */
 @keyframes arrow-flow-l {
