@@ -6,7 +6,6 @@ import {
   Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
   Scale, TrendingUp, TrendingDown, Minus, RotateCcw, Info, BarChart3,
 } from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
 import { readCyclePhase, readCycleSettings, hasCycleSettings, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
@@ -630,8 +629,7 @@ function SetupScreen({
   };
 
   return (
-    <div className="relative animate-fade-in max-w-full overflow-x-hidden">
-      <BloomBubbles count={8} />
+    <div className="relative animate-fade-in">
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
@@ -1926,7 +1924,7 @@ export default function DietPage() {
   const showTour = tab === "profile" && (!onboarded || replayTour);
 
   return (
-    <div className="relative animate-fade-in max-w-full overflow-x-hidden">
+    <div className="relative animate-fade-in">
       {showTour && !isGuided() && (
         <SparkleOnboarding
           steps={DIET_TOUR_STEPS}
@@ -1972,8 +1970,6 @@ export default function DietPage() {
           onClose={() => setGuidedGoalKcal(null)}
         />
       )}
-
-      <BloomBubbles count={10} />
 
       {/* HERO — full-bleed blended photo background, same technique as Today/Tools */}
       <div className="relative isolate min-h-[150px] sm:min-h-[176px] -mt-3 sm:-mt-5 lg:-mt-6 mb-4 animate-card-pop-in">
