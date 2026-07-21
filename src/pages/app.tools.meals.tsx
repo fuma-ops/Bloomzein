@@ -92,6 +92,7 @@ const LS = {
   favorites: "bloom:meals-favorites",  // string[]
   ratings: "bloom:meals-ratings",      // {id: "love"|"ok"|"never"}
   shopChecked: "bloom:meals-shop-checked",
+  shopCustom: "bloom:meals-shop-custom", // string[] — user's own added products
   step: "bloom:meals-step",            // onboarding step
   phase: "bloom:cycle-phase",          // shared
 };
@@ -1614,6 +1615,23 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
 function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
   // Ingredients pushed here from the cross-tool Recovery Fuel cards.
   const extras = useMemo(() => readShoppingExtras(), []);
+  // The user's own added products (persisted, distinct from the auto-built list).
+  const [custom, setCustom] = useLS<string[]>(LS.shopCustom, []);
+  const [query, setQuery] = useState("");
+
+  // Every ingredient across the planned meals (used for "select all my meals"
+  // and to detect duplicates when adding a custom product).
+  const mealItems = useMemo(() => {
+    const s = new Set<string>();
+    Object.values(plan as Record<string, Record<MealType, string | null>>).forEach((day) => {
+      Object.values(day).forEach((id) => {
+        if (!id) return;
+        RECIPES.find((x) => x.id === id)?.ingredients.forEach((ing) => s.add(ing.item));
+      });
+    });
+    return s;
+  }, [plan]);
+
   const items = useMemo(() => {
     const map = new Map<string, { item: string; qty: string; section: string; missing: boolean }>();
     Object.values(plan as Record<string, Record<MealType, string | null>>).forEach((day) => {
@@ -1644,8 +1662,12 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
         }
       });
     });
+    // The user's own additions — always shown in their own section.
+    custom.forEach((it) => {
+      if (!map.has(it)) map.set(it, { item: it, qty: "", section: "My additions", missing: false });
+    });
     return Array.from(map.values());
-  }, [plan, owned, extras]);
+  }, [plan, owned, extras, custom]);
 
   const grouped = useMemo(() => {
     const g: Record<string, typeof items> = {};
@@ -1655,6 +1677,50 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
 
   const toggle = (item: string) => {
     setChecked((c: string[]) => (c.includes(item) ? c.filter((x) => x !== item) : [...c, item]));
+  };
+
+  // ── Smart select ──────────────────────────────────────────────────────────
+  // Check every ingredient that comes from the planned meals in one tap.
+  const mealNames = useMemo(() => items.filter((i) => mealItems.has(i.item)).map((i) => i.item), [items, mealItems]);
+  const allMealSelected = mealNames.length > 0 && mealNames.every((n) => checked.includes(n));
+  const selectAllMeals = () => {
+    setChecked((c: string[]) => allMealSelected ? c.filter((x) => !mealNames.includes(x)) : Array.from(new Set([...c, ...mealNames])));
+  };
+  const allSelected = items.length > 0 && items.every((i) => checked.includes(i.item));
+  const toggleSelectAll = () => {
+    setChecked((c: string[]) => allSelected ? c.filter((x) => !items.some((i) => i.item === x)) : Array.from(new Set([...c, ...items.map((i) => i.item)])));
+  };
+
+  // ── Add a custom product (with duplicate-aware suggestions) ────────────────
+  const q = query.trim().toLowerCase();
+  const suggestions = useMemo(() => {
+    if (!q) return [] as typeof items;
+    const seen = new Set<string>();
+    const out: typeof items = [];
+    for (const i of items) {
+      const key = i.item.toLowerCase();
+      if (key.includes(q) && !seen.has(key)) { seen.add(key); out.push(i); }
+      if (out.length >= 6) break;
+    }
+    return out;
+  }, [q, items]);
+  const exactExists = q ? items.some((i) => i.item.toLowerCase() === q) : false;
+  const pickSuggestion = (name: string) => {
+    if (!checked.includes(name)) toggle(name); // select the existing item — never duplicate it
+    setQuery("");
+  };
+  const addCustom = () => {
+    const name = query.trim();
+    if (!name) return;
+    const existing = items.find((i) => i.item.toLowerCase() === name.toLowerCase());
+    if (existing) { pickSuggestion(existing.item); return; } // already on the list → just select it
+    setCustom((c) => (c.some((x) => x.toLowerCase() === name.toLowerCase()) ? c : [...c, name]));
+    setChecked((c: string[]) => (c.includes(name) ? c : [...c, name])); // added items start selected
+    setQuery("");
+  };
+  const removeCustom = (name: string) => {
+    setCustom((c) => c.filter((x) => x !== name));
+    setChecked((c: string[]) => c.filter((x) => x !== name));
   };
 
   const shareText = useMemo(() => {
@@ -1692,6 +1758,68 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
           <PinkBtn onClick={onShare}><Share2 className="h-4 w-4" /> Share</PinkBtn>
         </div>
       </div>
+
+      {/* SMART SELECT — tick everything from her meals (or everything) in one tap */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+        <button
+          onClick={selectAllMeals}
+          className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${allMealSelected ? "bg-hotpink text-white shadow-sm shadow-hotpink/30" : "bg-white/80 border border-petal/60 text-hotpink hover:bg-white"}`}
+        >
+          <Check className="h-3.5 w-3.5" strokeWidth={2.6} /> {allMealSelected ? "Meal items selected" : "Select all my meal items"}
+        </button>
+        <button
+          onClick={toggleSelectAll}
+          className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold bg-white/70 border border-petal/60 text-rose hover:bg-white transition active:scale-95"
+        >
+          {allSelected ? "Clear all" : "Select all"}
+        </button>
+      </div>
+
+      {/* ADD A PRODUCT — type your own; existing matches show as suggestions so
+          the same product is never added twice (tap one to select it instead). */}
+      <div className="relative mb-3">
+        <div className="flex items-center gap-1.5 rounded-full bg-white/80 border border-petal/60 pl-3 pr-1.5 py-1 focus-within:ring-2 focus-within:ring-hotpink/25 transition">
+          <Plus className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.4} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
+            placeholder="Add a product…"
+            className="flex-1 min-w-0 bg-transparent text-sm text-rose placeholder:text-rose/45 outline-none py-1"
+          />
+          {query.trim() && (
+            <button onClick={addCustom} className="shrink-0 rounded-full bg-hotpink text-white text-xs font-bold px-3 py-1.5 shadow-sm shadow-hotpink/30 active:scale-95 transition">
+              {exactExists ? "Select" : "Add"}
+            </button>
+          )}
+        </div>
+        {query.trim() && (
+          <div className="absolute z-20 mt-1 w-full rounded-2xl bg-white border border-petal/60 shadow-lg shadow-hotpink/15 overflow-hidden">
+            {suggestions.length > 0 && (
+              <div className="max-h-52 overflow-y-auto">
+                <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-rose/45">Already on your list — tap to select</p>
+                {suggestions.map((s) => {
+                  const on = checked.includes(s.item);
+                  return (
+                    <button key={s.item + s.section} onClick={() => pickSuggestion(s.item)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose text-left hover:bg-blush/50 transition">
+                      <span className={`grid h-4 w-4 place-items-center rounded-[5px] border ${on ? "bg-hotpink border-hotpink text-white" : "border-petal"}`}>{on && <Check className="h-3 w-3" strokeWidth={3} />}</span>
+                      <span className="flex-1 min-w-0 truncate">{s.item}</span>
+                      <span className="text-[9px] uppercase font-bold text-rose/40">{s.section}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {!exactExists && (
+              <button onClick={addCustom} className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-hotpink text-left hover:bg-blush/50 border-t border-petal/40 transition">
+                <Plus className="h-4 w-4" strokeWidth={2.6} /> Add “{query.trim()}” to my list
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="space-y-3">
         {Object.entries(grouped).map(([section, list]) => (
           <div key={section}>
@@ -1699,11 +1827,18 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
               {list.map((i) => {
                 const on = checked.includes(i.item);
+                const isCustom = section === "My additions";
                 return (
-                  <label key={i.item + i.section} className={`flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm cursor-pointer ${on ? "bg-blush line-through text-rose/50" : "hover:bg-blush/50 text-rose"}`}>
+                  <label key={i.item + i.section} className={`group flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm cursor-pointer ${on ? "bg-blush line-through text-rose/50" : "hover:bg-blush/50 text-rose"}`}>
                     <input type="checkbox" checked={on} onChange={() => toggle(i.item)} className="accent-hotpink h-4 w-4" />
                     <span className="flex-1">{i.item} {i.qty && <span className="text-xs text-rose/60">({i.qty})</span>}</span>
                     {i.missing && <span className="text-[10px] uppercase font-bold text-hotpink">recipe</span>}
+                    {isCustom && (
+                      <button onClick={(e) => { e.preventDefault(); removeCustom(i.item); }} aria-label={`Remove ${i.item}`}
+                        className="shrink-0 text-rose/35 hover:text-hotpink opacity-0 group-hover:opacity-100 transition no-underline">
+                        <X className="h-3.5 w-3.5" strokeWidth={2.4} />
+                      </button>
+                    )}
                   </label>
                 );
               })}
