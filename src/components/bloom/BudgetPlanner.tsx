@@ -1294,10 +1294,13 @@ export function BudgetPlanner() {
             {/* photo — dissolves toward the bottom into the page, like the Today hero */}
             <div
               aria-hidden
-              className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden"
-              style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 80%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 80%)" }}
+              className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[360px] sm:h-[420px] overflow-hidden"
+              style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 46%, transparent 96%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 46%, transparent 96%)" }}
             >
-              <img src="/images/budget-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[72%_36%]" referrerPolicy="no-referrer" />
+              {/* This scene (piggy bank + blossoms + money) sits centre-right, so
+                  keep a taller band and centre on it — a wide short crop would slice
+                  the piggy out and lose the whole visual. */}
+              <img src="/images/budget-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[66%_46%]" referrerPolicy="no-referrer" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
             </div>
 
