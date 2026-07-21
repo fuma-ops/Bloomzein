@@ -317,7 +317,7 @@ function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" 
   if (variant === "tile") {
     return (
       <button onClick={onSync} disabled={synced} title={tTitle}
-        className={["rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
+        className={["rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
         <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
           {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
         </span>
@@ -359,7 +359,7 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative isolate min-h-[128px] sm:min-h-[168px] mb-2 animate-card-pop-in">
+    <div className="relative isolate min-h-[128px] sm:min-h-[168px] -mt-3 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
       {/* base pink wash */}
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
       {/* photo — dissolves toward the bottom into the page */}
@@ -1959,7 +1959,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── Plan header — compact, image LEFT · content RIGHT (no full-width banner) ── */}
       {source === "program" && activeProgram && (
-        <section className="rounded-3xl bg-white/90 border border-petal/60 shadow-sm overflow-hidden">
+        <section className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm overflow-hidden">
           <div className="flex">
             <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden">
               <img src={activeProgram.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -1991,22 +1991,22 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           {/* Status — the same four elegant tiles, full width (Goal · Level · Streak · Progress) */}
           <div className="px-3.5 pb-3.5 pt-0.5 space-y-2.5">
             <div className="grid grid-cols-4 gap-2">
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">{goalWord(readDietProfile().goal).charAt(0).toUpperCase() + goalWord(readDietProfile().goal).slice(1)}</span>
               </div>
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
               </div>
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
               </div>
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Trophy className="h-4 w-4" strokeWidth={2} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Progress</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">{overallDone}/{overallTotal}</span>
@@ -2023,7 +2023,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       )}
 
       {source === "freestyle" && (
-        <section className="rounded-2xl bg-white/90 border border-petal/60 shadow-sm px-3.5 py-3">
+        <section className="rounded-2xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm px-3.5 py-3">
           {/* Header — title + compact actions moved up to the top-right */}
           <div className="flex items-center gap-2">
             <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-4 w-4" strokeWidth={1.8} /></span>
@@ -2048,17 +2048,17 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           {/* Status — Goal · Level · Streak · Sync, as four bigger tiles */}
           {!editing && (
             <div className="mt-3 grid grid-cols-4 gap-2">
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
               </div>
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
               </div>
-              <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+              <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>

@@ -1393,7 +1393,7 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
   if (variant === "tile") {
     return (
       <button onClick={onSync} disabled={synced} title={tTitle}
-        className={["rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
+        className={["rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1 transition", synced ? "" : "hover:border-hotpink/40 active:scale-95"].join(" ")}>
         <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
           {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
         </span>
@@ -1436,7 +1436,7 @@ function YogaHero({
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative isolate min-h-[128px] sm:min-h-[168px] mb-2 animate-card-pop-in">
+    <div className="relative isolate min-h-[128px] sm:min-h-[168px] -mt-3 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
       {/* base pink wash */}
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
       {/* photo — dissolves toward the bottom into the page */}
@@ -1977,7 +1977,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   return (
     <div className="space-y-4">
       {/* ── The week, day by day — starts right under the hero ──────────────── */}
-      <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
+      <section className="animate-scale-in rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-4 sm:p-5">
         {/* Header — title + setting CTAs (reminder · Edit · Reset), moved up */}
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
           <div className="min-w-0">
@@ -2000,17 +2000,17 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         {/* Status — Goal · Level · Streak · Sync, four bigger tiles (persist under the plan/program card) */}
         {!editing && (
           <div className="mb-3 grid grid-cols-4 gap-2">
-            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+            <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
               <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
               <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
             </div>
-            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+            <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
               <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
               <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
             </div>
-            <div className="rounded-2xl border border-petal/60 bg-white/85 p-2.5 flex flex-col items-center justify-center text-center gap-1">
+            <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readYogaStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
               <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
               <span className="text-[12.5px] font-black text-hotpink leading-tight">{readYogaStreak().count}{readYogaStreak().count === 1 ? " day" : " days"}</span>
