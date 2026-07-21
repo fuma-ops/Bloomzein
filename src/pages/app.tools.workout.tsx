@@ -2525,23 +2525,28 @@ function SessionActive({ session, onExit, onDone }: {
         const g = c.getContext("2d", { willReadFrequently: true }); if (!g) return;
         g.drawImage(img, 0, 0, W, H);
         const px = g.getImageData(0, 0, W, H).data;
-        let sx = 0, sy = 0, sw = 0; const pts: [number, number, number][] = [];
-        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-          const i = (y * W + x) * 4, R = px[i], Gr = px[i + 1], B = px[i + 2];
-          const magenta = R - Gr, bright = (R + B) / 2;
-          // Vivid magenta highlight; weighted by brightness SQUARED so the
-          // brightest muscle-glow wins over the flatter pink mat/outfit.
-          if (magenta > 92 && R > 205 && B > 120 && bright > 190) {
-            const w = (magenta - 92) * (bright / 255) * (bright / 255);
-            sx += x * w; sy += y * w; sw += w; pts.push([x, y, w]);
+        // Weighted centroid of the magenta muscle-highlight. Brightness SQUARED
+        // so the brightest glow wins over the flatter pink mat/outfit. Try a
+        // strict pass first, then a softer one so subtler photos still light up.
+        const find = (magT: number, rT: number, brT: number) => {
+          let sx = 0, sy = 0, sw = 0; const pts: [number, number, number][] = [];
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            const i = (y * W + x) * 4, R = px[i], Gr = px[i + 1], B = px[i + 2];
+            const magenta = R - Gr, bright = (R + B) / 2;
+            if (magenta > magT && R > rT && B > 120 && bright > brT) {
+              const w = (magenta - magT) * (bright / 255) * (bright / 255);
+              sx += x * w; sy += y * w; sw += w; pts.push([x, y, w]);
+            }
           }
-        }
+          if (sw < 12 || pts.length < 8) return null;
+          const cx = sx / sw, cy = sy / sw;
+          let vr = 0, vw = 0; for (const [x, y, w] of pts) { vr += w * ((x - cx) ** 2 + (y - cy) ** 2); vw += w; }
+          return { cx: cx / W, cy: cy / H, r: Math.min(0.26, Math.max(0.14, Math.sqrt(vr / vw) / W)) };
+        };
         if (cancelled) return;
-        if (sw < 20 || pts.length < 12) { setGlow(null); return; }
-        const cx = sx / sw, cy = sy / sw;
-        let vr = 0, vw = 0; for (const [x, y, w] of pts) { vr += w * ((x - cx) ** 2 + (y - cy) ** 2); vw += w; }
-        const r = Math.min(0.26, Math.max(0.13, Math.sqrt(vr / vw) / W));
-        setGlow({ cx: cx / W, cy: cy / H, r, aspect: img.naturalWidth / img.naturalHeight });
+        const hit = find(92, 205, 190) ?? find(62, 190, 168);
+        if (!hit) { setGlow(null); return; }
+        setGlow({ ...hit, aspect: img.naturalWidth / img.naturalHeight });
       } catch { if (!cancelled) setGlow(null); }
     };
     img.onerror = () => { if (!cancelled) setGlow(null); };
@@ -2684,16 +2689,30 @@ function SessionActive({ session, onExit, onDone }: {
                   {/* Muscle glow — a soft halo that pulses ONLY over the worked
                       muscle (scanned from the photo's baked magenta highlight). */}
                   {glow && !paused && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute animate-muscle-pulse rounded-full"
-                      style={{
-                        left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`,
-                        width: `${glow.r * 220}%`, aspectRatio: "1",
-                        background: "radial-gradient(circle, oklch(0.72 0.28 350 / 0.9) 0%, oklch(0.72 0.28 350 / 0.35) 35%, transparent 70%)",
-                        mixBlendMode: "screen",
-                      }}
-                    />
+                    <>
+                      {/* soft glow fill (screen-blend halo) */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute animate-muscle-pulse rounded-full"
+                        style={{
+                          left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`,
+                          width: `${glow.r * 240}%`, aspectRatio: "1",
+                          background: "radial-gradient(circle, oklch(0.72 0.3 350 / 0.95) 0%, oklch(0.72 0.3 350 / 0.4) 35%, transparent 70%)",
+                          mixBlendMode: "screen",
+                        }}
+                      />
+                      {/* breathing ring — solid outline, stays visible on any photo */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute animate-muscle-ring rounded-full"
+                        style={{
+                          left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`,
+                          width: `${glow.r * 240}%`, aspectRatio: "1",
+                          border: "3px solid oklch(0.75 0.32 350 / 0.95)",
+                          boxShadow: "0 0 18px oklch(0.72 0.3 350 / 0.7), inset 0 0 12px oklch(0.72 0.3 350 / 0.5)",
+                        }}
+                      />
+                    </>
                   )}
 
                   {/* Energy arrows — gentle marching glide at the sides so the
