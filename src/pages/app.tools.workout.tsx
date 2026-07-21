@@ -6,7 +6,6 @@ import {
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
   CircleCheck, Circle,
 } from "lucide-react";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
@@ -366,8 +365,8 @@ function HeroHeader({
       {/* photo — dissolves toward the bottom into the page */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[320px] overflow-hidden"
-        style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 30%, transparent 84%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 30%, transparent 84%)" }}
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden"
+        style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 80%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 80%)" }}
       >
         {broken ? (
           <div className="absolute inset-0 bg-gradient-to-br from-blush/80 to-petal/60 grid place-items-center">
@@ -518,7 +517,6 @@ export default function WorkoutPage() {
   if (!onboarded) {
     return (
       <div className="relative animate-fade-in">
-        <BloomBubbles count={10} />
         <SetupProfile
           initial={profile}
           onDone={(p) => {
@@ -589,7 +587,6 @@ export default function WorkoutPage() {
 
   return (
     <div className="relative animate-fade-in">
-      <BloomBubbles count={10} />
 
       {guidedDone && (
         <SpotlightCoach
@@ -875,7 +872,6 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
 
   return (
     <div className="relative animate-fade-in">
-      <BloomBubbles count={8} />
       <button onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> Programs
       </button>
@@ -1086,7 +1082,6 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
 
   return (
     <div className="relative animate-fade-in">
-      <BloomBubbles count={8} />
       <button onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> {program.title}
       </button>
@@ -2076,7 +2071,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── Empty state — choose how to plan ────────────────────────────────── */}
       {source === "none" && (
-        <section className={["rounded-3xl bg-white/85 border border-petal/60 p-4 sm:p-5 space-y-3", isGuided() ? "animate-section-attention" : ""].join(" ")}>
+        <section className={["rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-4 sm:p-5 space-y-3", isGuided() ? "animate-section-attention" : ""].join(" ")}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Set up your weekly plan ✿</h2>
@@ -2113,7 +2108,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
       {/* ── The week, day by day — image LEFT · info RIGHT (vignette, not banner) ── */}
       {source !== "none" && (
-        <section id="workout-week-plan" className="rounded-3xl bg-white/85 border border-petal/60 p-3 sm:p-4">
+        <section id="workout-week-plan" className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-3 sm:p-4">
           {/* Edit-mode instruction — helps first-timers build their own week */}
           {editing && source === "freestyle" && (
             <div className="mb-2.5 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
@@ -2754,7 +2749,6 @@ function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: Work
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-4 overflow-y-auto" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
-      <BloomBubbles count={16} />
       <div className="relative w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in">
         {/* Celebration ring */}
         <div className="mx-auto mb-3 relative grid place-items-center">
