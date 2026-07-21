@@ -2529,10 +2529,10 @@ function SessionActive({ session, onExit, onDone }: {
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
           const i = (y * W + x) * 4, R = px[i], Gr = px[i + 1], B = px[i + 2];
           const magenta = R - Gr, bright = (R + B) / 2;
-          // Only a BRIGHT, vivid magenta core (the baked glow spot) qualifies —
-          // pastel outfits/mats are excluded, so we glow the muscle or nothing.
-          if (magenta > 105 && R > 210 && B > 120 && bright > 200) {
-            const w = (magenta - 105) * (bright / 255);
+          // Vivid magenta highlight; weighted by brightness SQUARED so the
+          // brightest muscle-glow wins over the flatter pink mat/outfit.
+          if (magenta > 92 && R > 205 && B > 120 && bright > 190) {
+            const w = (magenta - 92) * (bright / 255) * (bright / 255);
             sx += x * w; sy += y * w; sw += w; pts.push([x, y, w]);
           }
         }
