@@ -239,8 +239,8 @@ function PhasePillTag({ phase }: { phase: DietPhase }) {
 
 function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} className="text-left">
-      <Glass className="overflow-hidden p-2.5 transition hover:shadow-xl hover:shadow-hotpink/15 active:scale-[0.98]">
+    <button onClick={onOpen} className="h-full w-full text-left">
+      <Glass className="flex h-full flex-col overflow-hidden p-2.5 transition hover:shadow-xl hover:shadow-hotpink/15 active:scale-[0.98]">
         <img
           src={recipeImageSrc(recipe)}
           alt={recipe.name}
@@ -252,7 +252,7 @@ function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) 
             if (!el.src.endsWith(fb)) el.src = fb;
           }}
         />
-        <div className="mt-2">
+        <div className="mt-2 flex flex-1 flex-col">
           <p className="text-sm font-bold text-magenta leading-snug">{recipe.name}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
             <PhasePillTag phase={recipe.phases[0]} />
@@ -262,7 +262,8 @@ function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) 
               </span>
             )}
           </div>
-          <div className="mt-1.5 flex items-center gap-1 text-[11px] text-rose/70">
+          {/* push the time + macros to the bottom so every card's footer lines up */}
+          <div className="mt-auto pt-1.5 flex items-center gap-1 text-[11px] text-rose/70">
             <Clock className="h-3 w-3" /> {recipe.prepTime + recipe.cookTime} min
           </div>
           <p className="mt-0.5 text-[11px] font-semibold text-rose/80">
