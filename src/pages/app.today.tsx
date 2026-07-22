@@ -983,10 +983,12 @@ export default function TodayPage() {
         onClose={() => setActivePlan(null)}
       />
 
-      {/* ── QUICK STATS — Mood · Symptom · Energy · Water — frosted-glass bars,
-             sitting just above "Build your Bloom world" (clear of the hero photo). ── */}
+      {/* ── QUICK STATS — Mood · Symptom · Water — frosted-glass bars, sitting
+             just above "Build your Bloom world" (clear of the hero photo).
+             Energy is intentionally NOT here — it already reads on the phase
+             hero's Energy pill, so a tile would just duplicate it. ── */}
       <div className="relative z-[1] mt-2 sm:mt-3">
-        <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
             className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="clay-blob animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-5 w-5" strokeWidth={1.8} /></span>
@@ -1004,14 +1006,6 @@ export default function TodayPage() {
               <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
             </span>
           </button>
-
-          <a href="/app/calendar" className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
-            <span className="animate-icon-breathe grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Battery className="h-5 w-5" strokeWidth={1.9} /></span>
-            <span className="min-w-0 w-full sm:w-auto">
-              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Energy</span>
-              <span className="mt-0.5 block font-script text-[14px] sm:text-lg leading-none text-hotpink truncate">{cycleReady ? PHASE_ENERGY[phase].charAt(0).toUpperCase() + PHASE_ENERGY[phase].slice(1) : "Set cycle"}</span>
-            </span>
-          </a>
 
           <button onClick={() => setWaterModalOpen(true)}
             className="group flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-2 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
