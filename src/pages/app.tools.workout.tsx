@@ -27,7 +27,7 @@ import {
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
   type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
   type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
-  type SessionStep, WORKOUT_REST_AUDIO, WORKOUT_SWITCH_AUDIO,
+  type SessionStep, WORKOUT_REST_AUDIO,
 } from "@/components/bloom/workout/data";
 import {
   PROGRAMS, getProgram, computeWeekSession, weekMeta, sessionVolume,
@@ -132,11 +132,13 @@ function playTick(level: Tick) {
 // plays for the WHOLE session (never swapped or restarted), at a CONSTANT
 // volume that is never ducked, so the music stays coherent and always heard.
 const WORKOUT_MUSIC = [
-  "/audio/workout-music-1.mp3",
-  "/audio/workout-music-2.mp3",
-  "/audio/workout-music-3.mp3",
-  "/audio/workout-music-4.mp3",
+  "/audio/workout-music-1.mp3", // Power Session Warm-Up
+  "/audio/workout-music-2.mp3", // Aetherium Pulse
+  "/audio/workout-music-3.mp3", // Sands of Time
+  "/audio/workout-music-4.mp3", // Sleek Alignment
 ];
+// Which track backs a session — change this index to swap the workout music.
+const WORKOUT_MUSIC_TRACK = 1; // Aetherium Pulse (a driving pulse for reps)
 const MUSIC_VOL = 0.5;   // steady bed, always audible
 const CUE_VOL = 0.42;    // spoken cue sits UNDER the music, never overrides it
 
@@ -454,12 +456,18 @@ function HeroHeader({
 
 // ===================== CIRCULAR TIMER =====================
 
-function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number; remainingSec: number; size?: number }) {
+function CircularTimer({ totalSec, remainingSec, size = 96, rep, repTotal }: {
+  totalSec: number; remainingSec: number; size?: number;
+  /** When set, the circle shows the live REP count (big) over `repTotal`, with
+   *  the ring tracking time — so the rep counter lives inside the circle. */
+  rep?: number; repTotal?: number;
+}) {
   const strokeWidth = Math.max(6, Math.round(size / 14));
   const r = size / 2 - strokeWidth;
   const c = 2 * Math.PI * r;
   const progress = totalSec > 0 ? remainingSec / totalSec : 0;
   const offset = c * (1 - progress);
+  const showReps = rep != null && repTotal != null && repTotal > 0;
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -470,8 +478,15 @@ function CircularTimer({ totalSec, remainingSec, size = 96 }: { totalSec: number
           style={{ transition: "stroke-dashoffset 1s linear" }}
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center">
-        <span className="font-bold text-hotpink" style={{ fontSize: size * 0.32 }}>{remainingSec}</span>
+      <div className="absolute inset-0 grid place-items-center leading-none">
+        {showReps ? (
+          <div className="text-center">
+            <span className="block font-black text-hotpink tabular-nums" style={{ fontSize: size * 0.34 }}>{rep}</span>
+            <span className="block font-bold text-rose/55 tabular-nums" style={{ fontSize: size * 0.13, marginTop: size * 0.01 }}>of {repTotal} reps</span>
+          </div>
+        ) : (
+          <span className="font-bold text-hotpink" style={{ fontSize: size * 0.32 }}>{remainingSec}</span>
+        )}
       </div>
     </div>
   );
@@ -2520,7 +2535,8 @@ function SessionActive({ session, onExit, onDone }: {
   const audioRef = useRef<HTMLAudioElement>(null);
   const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest / switch cues
   // One random loop per session so it doesn't feel repetitive across workouts.
-  const musicSrc = useMemo(() => WORKOUT_MUSIC[Math.floor(Math.random() * WORKOUT_MUSIC.length)], []);
+  // Fixed track (not random) so every session gets the same coherent bed.
+  const musicSrc = WORKOUT_MUSIC[WORKOUT_MUSIC_TRACK];
 
   const step = steps[index];
   const nextStepObj = steps[index + 1];
@@ -2580,12 +2596,11 @@ function SessionActive({ session, onExit, onDone }: {
     else a.pause();
   }, [sound, paused]);
 
-  // Spoken cue at the start of each step: the move's own recording, or the
-  // "switch to the other side" cue on a switch step. (Rest cue fires below.)
+  // Spoken cue at the start of each MOVE. On a switch step we stay silent —
+  // only the music keeps playing while you switch sides. (Rest cue fires below.)
   useEffect(() => {
     if (!sound || phase !== "exercise") return;
-    if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current);
-    else playCue(exercise.audio, cueRef.current);
+    if (step.kind !== "switch") playCue(exercise.audio, cueRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
@@ -2626,8 +2641,8 @@ function SessionActive({ session, onExit, onDone }: {
             const repNow = Math.min(reps, Math.floor((step.workSec - nr) / repSec) + 1);
             const repPrev = Math.min(reps, Math.floor((step.workSec - r) / repSec) + 1);
             if (repNow > repPrev) playTick(repNow > reps - 3 ? "count" : "soft");
-          } else if (nr <= 3) {
-            playTick("count");
+          } else if (nr <= 3 && step.kind !== "switch") {
+            playTick("count"); // final-3 countdown on holds/rest — but NOT on switch (music only)
           }
         }
         if (nr <= 0) {
@@ -2785,7 +2800,7 @@ function SessionActive({ session, onExit, onDone }: {
                 </div>
 
                 <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 rounded-full bg-white/85 backdrop-blur p-1.5 shadow-lg">
-                  <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} />
+                  <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} rep={currentRep} repTotal={stepReps} />
                 </div>
               </div>
               {/* INFO — compact block below the photo */}
@@ -2807,15 +2822,11 @@ function SessionActive({ session, onExit, onDone }: {
                     <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
                   </p>
                 )}
-                {/* Live rep pacer — follow "1…2…3…" to the target, per side. */}
-                {step.kind !== "switch" && (stepReps > 0 ? (
-                  <div className="mt-1.5 inline-flex items-center gap-2 rounded-full bg-hotpink text-white px-4 py-1 shadow-md shadow-hotpink/30">
-                    <span className="font-script text-2xl sm:text-3xl leading-none tabular-nums">{currentRep}</span>
-                    <span className="text-xs sm:text-sm font-bold opacity-90">/ {stepReps} reps</span>
-                  </div>
-                ) : step.repTarget ? (
+                {/* Rep-based moves show the live count inside the timer circle;
+                    holds / warm-up / cool-down show their guidance label here. */}
+                {step.kind !== "switch" && stepReps === 0 && step.repTarget && (
                   <span className="mt-1.5 inline-block rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">{step.repTarget}</span>
-                ) : null)}
+                )}
               </div>
             </>
           ) : (

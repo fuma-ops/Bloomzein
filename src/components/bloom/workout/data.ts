@@ -327,9 +327,9 @@ const AUDIO_SEC: Record<string, number> = {
 };
 const moveAudioSec = (slug: string) => AUDIO_SEC[slug] ?? 0;
 
-/** The "switch sides" cue clip is 11.3s → a 15s step so it plays in full and
- *  leaves a real moment to reposition (audio-safe, multiple of 5). */
-export const SWITCH_SEC = ceil5(11.3 + AUDIO_TAIL);
+/** A short reposition window between the two sides — no spoken cue here, just
+ *  the music keeps playing while you switch. */
+export const SWITCH_SEC = 10;
 
 // Rep-driven work: reps × a controlled tempo, so a "15-rep" move really lasts
 // long enough to do 15 controlled reps — the timer follows the reps, not a
