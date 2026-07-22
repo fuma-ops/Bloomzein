@@ -13,7 +13,7 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, yogaSessionKcal, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
@@ -835,33 +835,51 @@ function buildFlow(opts: {
   const stepSec = (slug: string) =>
     holdOf(slug) + POSE_TAIL_SEC + (TWO_SIDED.has(slug) ? SWITCH_HOLD : 0);
 
-  // Structure scales with the chosen length: short sessions get a lighter
-  // warm-up / cool-down so the whole arc still fits the promised minutes.
-  const framingN = durationMin <= 10 ? 1 : durationMin >= 40 ? 3 : 2;
-
-  // Warm-up: always ground with a seated breath, then varied warm-ups.
-  const warm = ["easy-seat", ...pickVaried(safe(WARMUP_POOL), framingN)];
-  // Cool-down: varied, then a final rest.
-  const cool = pickVaried(safe(COOLDOWN_POOL), framingN);
-  const rst = [safe(REST_POOL)[Math.floor(Math.random() * Math.max(1, safe(REST_POOL).length))] || "savasana"];
-
-  // Main: fill the remaining time budget with a varied, level-fit subset of the
-  // intention's pool (order preserved). Gentle intentions stay more spacious.
+  // Honour the chosen minutes. Every step's hold is locked to its narration
+  // length (so audio is never cropped), so we can't shrink poses — instead we
+  // fit the RIGHT NUMBER of them into the time budget, and on short sessions we
+  // prefer shorter-audio poses so a "10 min" flow holds 3–4 varied poses rather
+  // than 1–2 long ones that overshoot.
   const budget = durationMin * 60;
-  const framing = [...warm, ...cool, ...rst];
-  const usedFraming = new Set(framing);
-  let spent = framing.reduce((a, s) => a + stepSec(s), 0);
-  const candidates = pickVaried(safe(byLevel(mainPool)), mainPool.length).filter((s) => !usedFraming.has(s));
-  const minMain = 2, maxMain = GENTLE.has(intention) ? 9 : 14;
-  const main: string[] = [];
-  for (const s of candidates) {
-    if (main.length >= maxMain) break;
-    const cost = stepSec(s);
-    if (main.length >= minMain && spent + cost > budget) break;
-    main.push(s); spent += cost;
-  }
+  const stepCap = durationMin <= 12 ? 110 : durationMin <= 20 ? 150 : Infinity;
+  const affordable = (slugs: string[]) => {
+    const fit = slugs.filter((s) => stepSec(s) <= stepCap);
+    return fit.length ? fit : slugs; // never empty out a pool
+  };
 
-  const composed = [...warm, ...main, ...cool, ...rst];
+  // Structure scales with length: short sessions get a lighter warm-up / cool-down.
+  const framingN = durationMin <= 12 ? 1 : durationMin >= 40 ? 3 : 2;
+
+  // Endpoints we always keep: a grounding seated breath to open, a rest to close.
+  const ground = "easy-seat";
+  const restCand = safe(REST_POOL).length ? safe(REST_POOL) : ["savasana"];
+  const rest = [...restCand].sort((a, b) => stepSec(a) - stepSec(b))[0]; // shortest rest
+
+  const used = new Set<string>([ground, rest]);
+  let spent = stepSec(ground) + stepSec(rest);
+  // Greedily take up to `max` poses from an ordered candidate list, always
+  // keeping the first `min` (so `main` is never empty) and otherwise only
+  // adding a pose while it still fits the remaining time budget.
+  const take = (cands: string[], min: number, max: number): string[] => {
+    const out: string[] = [];
+    for (const s of cands) {
+      if (out.length >= max) break;
+      if (used.has(s)) continue;
+      const cost = stepSec(s);
+      if (out.length >= min && spent + cost > budget) continue;
+      out.push(s); used.add(s); spent += cost;
+    }
+    return out;
+  };
+
+  // Reserve one warm-up so even a short flow opens gently, fill the middle with
+  // the main pool (at least one pose), then cool down with whatever time is left.
+  const mainMax = GENTLE.has(intention) ? 9 : 14;
+  const warm = take(pickVaried(affordable(safe(WARMUP_POOL)), framingN), 0, framingN);
+  const main = take(pickVaried(affordable(safe(byLevel(mainPool))), mainPool.length), 1, mainMax);
+  const cool = take(pickVaried(affordable(safe(COOLDOWN_POOL)), framingN), 0, framingN);
+
+  const composed = [ground, ...warm, ...main, ...cool, rest];
   // dedupe while preserving order
   const seen = new Set<string>();
   const poses = composed
@@ -925,6 +943,19 @@ const STREAK_KEY = "bloom:yoga-streak";
 export const SCHEDULE_KEY = "bloom:yoga-schedule";
 export const REMINDER_KEY = "bloom:yoga-reminder";
 export const YOGA_DURATIONS_KEY = "bloom:yoga-durations";
+
+// Reminder time options for the on-brand picker (05:00–22:00, every 15 min).
+const REMINDER_TIME_OPTIONS = (() => {
+  const out: { value: string; label: string }[] = [];
+  for (let h = 5; h <= 22; h++) for (const m of [0, 15, 30, 45]) {
+    const value = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    const ampm = h < 12 ? "AM" : "PM";
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    out.push({ value, label: `${h12}:${String(m).padStart(2, "0")} ${ampm}` });
+  }
+  return out;
+})();
+const fmtReminder = (v: string) => REMINDER_TIME_OPTIONS.find((o) => o.value === v)?.label ?? v;
 export const YOGA_PROFILE_KEY = "bloom:yoga-profile";
 interface Streak { count: number; lastISO: string | null; }
 
@@ -1844,6 +1875,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   // Cross-tool fuel: her body goal + real cycle phase decide the meals we
   // suggest after each planned flow (falls back to the yoga phase suggestion).
   const goal = readDietProfile().goal;
+  const weight = readDietProfile().weight; // for each planned flow's expected burn
   const realPhase = readCyclePhase();
   const fuelPhase = normalizePhase(
     realPhase && realPhase !== "any" ? realPhase : phase === "menstrual" ? "period" : phase,
@@ -1953,7 +1985,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           dedupeKey: `session:${dateStr}`,
           fireAt: fireAt.toISOString(),
           title: "Yoga time ✿",
-          body: `Your ${focus.toLowerCase()} flow is waiting — ${reminder} 🧘`,
+          body: `Your ${focus.toLowerCase()} flow is waiting — ${fmtReminder(reminder)} 🧘`,
           data: { url: "/app/tools/yoga", kind: "yoga" },
         });
       }
@@ -1985,11 +2017,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <label className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/60 pl-2 pr-1.5 py-1 text-[11px] font-semibold text-rose">
-              <BellRing className="h-3.5 w-3.5" />
-              <input type="time" value={reminder} onChange={(e) => updateReminder(e.target.value)}
-                className="w-[52px] bg-transparent text-[11px] font-semibold text-rose outline-none" />
-            </label>
+            <PickerField
+              variant="pill"
+              icon={BellRing}
+              title="Reminder time"
+              value={reminder}
+              options={REMINDER_TIME_OPTIONS}
+              onChange={updateReminder}
+            />
             <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
               {editing ? "Done" : "Edit"}
             </button>
@@ -2141,7 +2176,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     <div className="flex-1 min-w-0">
                       <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}{isToday ? " · Today" : ""}</p>
                       <p className="text-sm sm:text-base font-bold leading-tight text-hotpink truncate">{focus}</p>
-                      <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {durations[d] ?? meta.duration} min</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {durations[d] ?? meta.duration} min · <span className="font-semibold text-hotpink/80">~{yogaSessionKcal(durations[d] ?? meta.duration, weight)} kcal</span></p>
                     </div>
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
                   </button>
@@ -2159,7 +2194,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                       <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-md p-2.5 sm:p-3">
                         <div className="mb-1.5">
                           <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{focus}</p>
-                          <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {durations[d] ?? meta.duration} min</p>
+                          <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {durations[d] ?? meta.duration} min · <span className="font-semibold text-hotpink">~{yogaSessionKcal(durations[d] ?? meta.duration, weight)} kcal</span></p>
                         </div>
                         <FuelCard
                           ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
