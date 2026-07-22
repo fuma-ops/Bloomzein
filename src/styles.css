@@ -75,6 +75,10 @@
 }
 
 :root {
+  /* Bloomzein is a light-only design. This opts the whole app out of mobile
+     browsers' automatic dark/force-dark mode, which was hue-inverting our soft
+     pink card borders into cyan on some phones. */
+  color-scheme: light;
   --radius: 1.5rem;
 
   /* Living phase theme (Bloom+): the soft ambient pinks shift HUE with the
@@ -235,7 +239,7 @@
 }
 
 @utility text-bloom-gradient {
-  background-image: linear-gradient(135deg, oklch(0.65 0.27 350), oklch(0.55 0.3 0), oklch(0.7 0.25 20));
+  background-image: linear-gradient(135deg, #EC4899, oklch(0.55 0.3 0), oklch(0.7 0.25 20));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -291,8 +295,8 @@
 }
 
 @keyframes bloom-peak-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.7 0.27 350 / 0.55), 0 0 12px 2px oklch(0.75 0.25 350 / 0.4); transform: scale(1); }
-  50% { box-shadow: 0 0 0 8px oklch(0.7 0.27 350 / 0), 0 0 22px 6px oklch(0.75 0.27 350 / 0.7); transform: scale(1.06); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.55), 0 0 12px 2px rgba(236, 72, 153, 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 0 8px rgba(236, 72, 153, 0), 0 0 22px 6px rgba(236, 72, 153, 0.7); transform: scale(1.06); }
 }
 
 /* Bottom sheet spring entrance — soft elastic overshoot, settles cleanly */
@@ -426,16 +430,16 @@
 @keyframes bloom-button-glow {
   0%, 100% {
     box-shadow:
-      0 0 0 0 oklch(0.7 0.27 350 / 0.55),
-      0 6px 22px oklch(0.62 0.27 350 / 0.55),
-      0 0 18px oklch(0.75 0.25 350 / 0.6);
+      0 0 0 0 rgba(236, 72, 153, 0.55),
+      0 6px 22px rgba(236, 72, 153, 0.55),
+      0 0 18px rgba(236, 72, 153, 0.6);
     transform: scale(1);
   }
   50% {
     box-shadow:
-      0 0 0 10px oklch(0.7 0.27 350 / 0),
+      0 0 0 10px rgba(236, 72, 153, 0),
       0 8px 30px oklch(0.62 0.3 350 / 0.75),
-      0 0 36px oklch(0.78 0.27 350 / 0.85);
+      0 0 36px rgba(236, 72, 153, 0.85);
     transform: scale(1.04);
   }
 }
@@ -443,7 +447,7 @@
   animation: bloom-button-glow 2.2s ease-in-out infinite;
 }
 @utility bloom-button-gradient {
-  background: linear-gradient(120deg, oklch(0.72 0.27 350), oklch(0.6 0.3 10) 45%, oklch(0.75 0.25 330));
+  background: linear-gradient(120deg, #EC4899, oklch(0.6 0.3 10) 45%, #EC4899);
   background-size: 200% 200%;
   animation: bloom-gradient-shift 4s ease-in-out infinite, bloom-button-glow 2.2s ease-in-out infinite;
 }
@@ -658,7 +662,7 @@
   isolation: isolate;
   background: linear-gradient(180deg, oklch(0.96 0.045 350 / 0.94) 0%, oklch(0.93 0.07 350 / 0.92) 100%);
   box-shadow:
-    0 16px 32px -22px oklch(0.62 0.26 345 / 0.38),
+    0 16px 32px -22px rgba(236, 72, 153, 0.38),
     0 2px 6px -3px oklch(0.4 0.06 340 / 0.12),
     inset 0 0 0 1px oklch(1 0 0 / 0.5),
     inset 0 1px 0 oklch(1 0 0 / 0.7),
@@ -684,7 +688,7 @@
     /* soft dark base recess for roundness */
     inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18),
     /* soft outer glow */
-    0 16px 38px -14px oklch(0.6 0.27 350 / 0.6);
+    0 16px 38px -14px rgba(236, 72, 153, 0.6);
 
   /* curved highlight sweeping across the top (centered, broad — no corner notch) */
   &::before {
@@ -715,8 +719,8 @@
 
 @keyframes chevron-glow {
   0%, 100% {
-    color: oklch(0.75 0.27 350 / 0.7);
-    filter: drop-shadow(0 0 2px oklch(0.75 0.27 350 / 0.4));
+    color: rgba(236, 72, 153, 0.7);
+    filter: drop-shadow(0 0 2px rgba(236, 72, 153, 0.4));
     transform: translateX(0);
   }
   50% {
@@ -843,7 +847,7 @@
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:
-    radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%);
+    radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), #EC4899 45%, oklch(0.58 0.28 0) 90%);
   box-shadow:
     inset 4px 6px 12px oklch(1 0 0 / 0.45),
     inset -6px -8px 14px oklch(0.45 0.26 0 / 0.5),
@@ -864,11 +868,11 @@
 @keyframes hero-border-signal {
   0%, 100% {
     border-color: oklch(1 0 0 / 0.6);
-    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
   }
   35% {
-    border-color: oklch(0.65 0.27 350);
-    box-shadow: 0 0 0 6px oklch(0.65 0.27 350 / 0.25);
+    border-color: #EC4899;
+    box-shadow: 0 0 0 6px rgba(236, 72, 153,0.25);
   }
 }
 
@@ -894,11 +898,11 @@
 @keyframes hint-glow {
   0%, 100% {
     border-color: oklch(0.85 0.1 350 / 0.5);
-    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
   }
   50% {
-    border-color: oklch(0.65 0.27 350 / 0.8);
-    box-shadow: 0 0 12px 2px oklch(0.65 0.27 350 / 0.4);
+    border-color: rgba(236, 72, 153,0.8);
+    box-shadow: 0 0 12px 2px rgba(236, 72, 153,0.4);
   }
 }
 
@@ -910,11 +914,11 @@
 @keyframes soft-hint-glow {
   0%, 100% {
     border-color: oklch(0.85 0.1 350 / 0.3);
-    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
   }
   50% {
     border-color: oklch(0.75 0.15 350 / 0.5);
-    box-shadow: 0 0 6px 1px oklch(0.65 0.27 350 / 0.2);
+    box-shadow: 0 0 6px 1px rgba(236, 72, 153,0.2);
   }
 }
 
@@ -931,10 +935,10 @@
 /* One-time glow hint ring for the "Discover" tab pill (step 1 of guided tour) */
 @keyframes tab-glow-hint {
   0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
   }
   50% {
-    box-shadow: 0 0 0 5px oklch(0.65 0.27 350 / 0.45), 0 0 16px 4px oklch(0.65 0.27 350 / 0.5);
+    box-shadow: 0 0 0 5px rgba(236, 72, 153,0.45), 0 0 16px 4px rgba(236, 72, 153,0.5);
   }
 }
 
@@ -946,8 +950,8 @@
 
 /* Persistent soft glow for a selected choice (energy / intention) */
 @keyframes selected-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0.35); }
-  50% { box-shadow: 0 0 14px 3px oklch(0.65 0.27 350 / 0.55); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153,0.35); }
+  50% { box-shadow: 0 0 14px 3px rgba(236, 72, 153,0.55); }
 }
 
 @utility animate-selected-glow {
@@ -956,8 +960,8 @@
 
 /* Today's calendar cell — zoom in/out + pink glow so user finds it immediately */
 @keyframes today-breathe {
-  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0.4); }
-  50%       { transform: scale(1.09); box-shadow: 0 0 10px 3px oklch(0.65 0.27 350 / 0.6); }
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(236, 72, 153,0.4); }
+  50%       { transform: scale(1.09); box-shadow: 0 0 10px 3px rgba(236, 72, 153,0.6); }
 }
 @utility animate-today-breathe {
   animation: today-breathe 2s ease-in-out infinite;
@@ -965,8 +969,8 @@
 
 /* Gentler version of selected-glow — subtle shadow pulse for tighter spaces */
 @keyframes soft-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.27 350 / 0.15); }
-  50% { box-shadow: 0 0 8px 1px oklch(0.65 0.27 350 / 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153,0.15); }
+  50% { box-shadow: 0 0 8px 1px rgba(236, 72, 153,0.25); }
 }
 
 @utility animate-soft-glow {
@@ -1030,8 +1034,8 @@
 
 /* Soft glow pulse for primary CTAs */
 @keyframes cta-glow-pulse {
-  0%, 100% { box-shadow: 0 8px 22px -10px oklch(0.65 0.27 350 / 0.55); }
-  50%      { box-shadow: 0 8px 26px -6px oklch(0.65 0.27 350 / 0.9), 0 0 0 6px oklch(0.75 0.27 350 / 0.16); }
+  0%, 100% { box-shadow: 0 8px 22px -10px rgba(236, 72, 153,0.55); }
+  50%      { box-shadow: 0 8px 26px -6px rgba(236, 72, 153,0.9), 0 0 0 6px rgba(236, 72, 153, 0.16); }
 }
 
 @utility animate-cta-glow {
@@ -1040,8 +1044,8 @@
 
 /* Lively breathing pulse for onboarding CTAs — scales gently up and back, with a brighter glow at the peak */
 @keyframes cta-pulse {
-  0%, 100% { transform: translateY(-2px) scale(1); box-shadow: 0 8px 22px -10px oklch(0.65 0.27 350 / 0.55); }
-  50%      { transform: translateY(-2px) scale(1.045); box-shadow: 0 10px 28px -6px oklch(0.65 0.27 350 / 0.9), 0 0 0 7px oklch(0.75 0.27 350 / 0.18); }
+  0%, 100% { transform: translateY(-2px) scale(1); box-shadow: 0 8px 22px -10px rgba(236, 72, 153,0.55); }
+  50%      { transform: translateY(-2px) scale(1.045); box-shadow: 0 10px 28px -6px rgba(236, 72, 153,0.9), 0 0 0 7px rgba(236, 72, 153, 0.18); }
 }
 
 @utility animate-cta-pulse {
@@ -1061,9 +1065,9 @@
 
 /* A soft pink ring that flashes a couple of times to point at the next step in a guided flow */
 @keyframes step-highlight {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.27 350 / 0); }
-  15%, 55% { box-shadow: 0 0 0 5px oklch(0.75 0.27 350 / 0.22); }
-  35%, 75% { box-shadow: 0 0 0 2px oklch(0.75 0.27 350 / 0.12); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
+  15%, 55% { box-shadow: 0 0 0 5px rgba(236, 72, 153, 0.22); }
+  35%, 75% { box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.12); }
 }
 
 @utility animate-step-highlight {
@@ -1122,8 +1126,8 @@
 
 /* Soft pink glow pulse for the title flower icon */
 @keyframes flower-glow {
-  0%, 100% { filter: drop-shadow(0 0 3px oklch(0.75 0.27 350 / 0.35)); }
-  50% { filter: drop-shadow(0 0 10px oklch(0.75 0.27 350 / 0.8)); }
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(236, 72, 153, 0.35)); }
+  50% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.8)); }
 }
 @utility animate-flower-glow {
   animation: flower-glow 3s ease-in-out infinite;
@@ -1131,8 +1135,8 @@
 
 /* Soft glowing text pulse — marks copy as important/live data */
 @keyframes text-glow-pulse {
-  0%, 100% { text-shadow: 0 0 4px oklch(0.75 0.27 350 / 0.3), 0 0 1px oklch(0.65 0.27 350 / 0.2); }
-  50% { text-shadow: 0 0 16px oklch(0.75 0.27 350 / 0.75), 0 0 6px oklch(0.65 0.27 350 / 0.55); }
+  0%, 100% { text-shadow: 0 0 4px rgba(236, 72, 153, 0.3), 0 0 1px rgba(236, 72, 153,0.2); }
+  50% { text-shadow: 0 0 16px rgba(236, 72, 153, 0.75), 0 0 6px rgba(236, 72, 153,0.55); }
 }
 @utility animate-text-glow {
   animation: text-glow-pulse 2.4s ease-in-out infinite;
@@ -1184,8 +1188,8 @@
 
 /* Soft continuous glow for the cycle anchor card */
 @keyframes anchor-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.27 350 / 0.25); }
-  50%      { box-shadow: 0 0 0 10px oklch(0.75 0.27 350 / 0.12); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.25); }
+  50%      { box-shadow: 0 0 0 10px rgba(236, 72, 153, 0.12); }
 }
 @utility animate-anchor-glow {
   animation: anchor-glow 3s ease-in-out infinite;
@@ -1201,8 +1205,8 @@
 
 /* Gentle, soft glow inviting the user to pick today's date — stops once a date is chosen */
 @keyframes pick-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.27 350 / 0.22); transform: scale(1); }
-  50%      { box-shadow: 0 0 0 5px oklch(0.75 0.27 350 / 0.16); transform: scale(1.06); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.22); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 5px rgba(236, 72, 153, 0.16); transform: scale(1.06); }
 }
 @utility animate-pick-glow {
   animation: pick-glow 2.2s ease-in-out infinite;
@@ -1210,8 +1214,8 @@
 
 /* Soft "tap me" hint for selectable cards before a choice is made */
 @keyframes tap-hint {
-  0%, 100% { box-shadow: 0 4px 14px -8px oklch(0.65 0.27 350 / 0.22); transform: scale(1) translateY(0); }
-  50%      { box-shadow: 0 7px 18px -6px oklch(0.65 0.27 350 / 0.38); transform: scale(1.012) translateY(-1px); }
+  0%, 100% { box-shadow: 0 4px 14px -8px rgba(236, 72, 153,0.22); transform: scale(1) translateY(0); }
+  50%      { box-shadow: 0 7px 18px -6px rgba(236, 72, 153,0.38); transform: scale(1.012) translateY(-1px); }
 }
 @utility animate-tap-hint {
   animation: tap-hint 3.2s ease-in-out infinite;

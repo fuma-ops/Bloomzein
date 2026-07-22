@@ -1091,7 +1091,7 @@ export default function TodayPage() {
 
       {hasPlanContent && (
       <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
-        <div className="rounded-[2rem] overflow-hidden bg-white border border-petal/50 shadow-[0_10px_30px_rgba(219,39,119,0.08)]">
+        <div className="rounded-[2rem] overflow-hidden bg-white/80 backdrop-blur-md border border-petal/50 shadow-[0_10px_30px_rgba(219,39,119,0.08)]">
         {/* Card header — a big personal title, phase blurb, the day's affirmation
             (tucked under the title) & a gentle nudge, all contained. */}
         <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
