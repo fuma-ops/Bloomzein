@@ -893,13 +893,9 @@ export default function TodayPage() {
                 ✿ Day {cycleDay} · {PHASE_LABEL[phase]}
               </div>
 
-              <p className="mt-1 sm:mt-1.5 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
-                {PHASE_QUOTES[phase]}
-              </p>
-
-              {/* ENERGY — its own label under the subtitle. Same pill family as the
-                  phase badge but a softer, pale-pink tint (not a heavy solid fill),
-                  with a fitting icon for the current energy level. */}
+              {/* ENERGY — its own label, sitting ABOVE the subtitle. Same pill
+                  family as the phase badge but a softer, pale-pink tint (not a
+                  heavy solid fill), with a fitting icon for the energy level. */}
               {(() => {
                 const EnergyIcon = ENERGY_ICON[PHASE_ENERGY[phase]] ?? Zap;
                 return (
@@ -908,6 +904,10 @@ export default function TodayPage() {
                   </div>
                 );
               })()}
+
+              <p className="mt-1.5 sm:mt-2 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
+                {PHASE_QUOTES[phase]}
+              </p>
             </>
           ) : (
             <>
@@ -983,25 +983,24 @@ export default function TodayPage() {
         onClose={() => setActivePlan(null)}
       />
 
-      {/* ── QUICK STATS — Mood · Symptom · Water — frosted-glass bars, sitting
-             just above "Build your Bloom world" (clear of the hero photo).
-             Energy is intentionally NOT here — it already reads on the phase
-             hero's Energy pill, so a tile would just duplicate it. ── */}
+      {/* ── QUICK STATS — Mood · Symptom · Water — slim frosted chips (icon +
+             text on one line) so they stay out of the way and let the hero
+             photo show. Energy is NOT here — it reads on the phase hero. ── */}
       <div className="relative z-[1] mt-2 sm:mt-3">
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-            className="group flex flex-col items-center gap-0.5 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="clay-blob animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.8} /></span>
-            <span className="min-w-0 w-full sm:w-auto">
+            <span className="min-w-0 flex-1 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
               <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
             </span>
           </button>
 
           <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-            className="group flex flex-col items-center gap-0.5 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} /></span>
-            <span className="min-w-0 w-full sm:w-auto">
+            <span className="min-w-0 flex-1 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
               <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
             </span>
@@ -1012,9 +1011,9 @@ export default function TodayPage() {
             const C = 2 * Math.PI * 15; // ring circumference (r=15 in a 36-box)
             return (
               <button onClick={() => setWaterModalOpen(true)}
-                className="relative group flex flex-col items-center gap-0.5 text-center sm:flex-row sm:gap-2.5 sm:text-left rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
-                {/* corner water drop — signals this tile is your water insight */}
-                <Droplet aria-hidden className="absolute right-1.5 top-1.5 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
+                className="relative group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+                {/* corner water drop — signals this chip is your water insight */}
+                <Droplet aria-hidden className="absolute right-1 top-1 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
                 {/* progress ring — fills with the % of your water goal reached */}
                 <span className="relative grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center">
                   <svg viewBox="0 0 36 36" className="absolute inset-0 h-full w-full -rotate-90">
@@ -1022,9 +1021,9 @@ export default function TodayPage() {
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#EC4899" strokeWidth="4" strokeLinecap="round"
                       strokeDasharray={C} strokeDashoffset={C * (1 - wp / 100)} style={{ transition: "stroke-dashoffset .5s ease" }} />
                   </svg>
-                  <span className="text-[8px] sm:text-[10px] font-black leading-none text-hotpink tabular-nums">{wp}%</span>
+                  <span className="text-[7px] sm:text-[10px] font-black leading-none text-hotpink tabular-nums">{wp}%</span>
                 </span>
-                <span className="min-w-0 w-full sm:w-auto">
+                <span className="min-w-0 flex-1 sm:flex-none">
                   <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
                   <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
                 </span>
