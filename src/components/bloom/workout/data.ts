@@ -27,7 +27,18 @@ export interface Exercise {
   /** Placeholder path — image to be supplied later by FZ and attached by filename. */
   image: string;
   muscles: string;
+  /** Spoken coaching clip for this move ("/audio/workout-{slug}.mp3"). Optional
+   *  — the player just stays silent if a move has no recording yet. */
+  audio?: string;
+  /** True for one-sided moves (a leg/arm/side at a time). The session then
+   *  trains BOTH sides: side 1 → "switch sides" cue → side 2, so no session
+   *  ever leaves one side untrained. */
+  unilateral?: boolean;
 }
+
+/** Session-level cues (not tied to one exercise). */
+export const WORKOUT_REST_AUDIO = "/audio/workout-rest.mp3";
+export const WORKOUT_SWITCH_AUDIO = "/audio/workout-switch.mp3";
 
 /* ==================== ZONES ====================
    Zone image naming convention: /images/zone-{key}.webp (square, 800x800) */
@@ -65,33 +76,36 @@ export const WORKOUT_INTENTIONS: { key: WorkoutIntention; label: string; desc: s
    Image naming convention: /images/workout-{slug}.webp
    Real photography, clean & bright, works cropped to 16:9 and square. */
 
-const E = (slug: string, name: string, muscles: string): Exercise => ({
+const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
+  ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
+  ...(opts?.uni ? { unilateral: true } : {}),
 });
 
 export const EXERCISES: Record<string, Exercise> = {
-  // Glutes
-  "sumo-squat": E("sumo-squat", "Sumo Squat", "Glutes, inner thighs, quads"),
-  "hip-thrust": E("hip-thrust", "Hip Thrust", "Glutes, hamstrings"),
-  "donkey-kicks": E("donkey-kicks", "Donkey Kicks", "Glutes"),
-  "glute-bridge": E("glute-bridge", "Glute Bridge", "Glutes, hamstrings, core"),
-  "clamshells": E("clamshells", "Clamshells", "Glutes, hip stabilizers"),
-  "fire-hydrants": E("fire-hydrants", "Fire Hydrants", "Glutes, hip abductors"),
-  "side-lying-leg-raises": E("side-lying-leg-raises", "Side-Lying Leg Raises", "Outer glutes, hips"),
-  "bulgarian-split-squat": E("bulgarian-split-squat", "Bulgarian Split Squat", "Glutes, quads, balance"),
-  "romanian-deadlift": E("romanian-deadlift", "Romanian Deadlift", "Glutes, hamstrings, back"),
-  "weighted-hip-thrust": E("weighted-hip-thrust", "Weighted Hip Thrust", "Glutes, hamstrings"),
-  "step-ups": E("step-ups", "Step-Ups", "Glutes, quads"),
-  "squat-jump": E("squat-jump", "Squat Jump", "Glutes, quads, power"),
-  "kettlebell-swing": E("kettlebell-swing", "Kettlebell Swing", "Glutes, hamstrings, core"),
-  "pigeon-pose": E("pigeon-pose", "Pigeon Pose", "Glutes, outer hips"),
-  "figure-four-stretch": E("figure-four-stretch", "Figure-Four Stretch", "Glutes, outer hips"),
-  "low-lunge-hip-flexor": E("low-lunge-hip-flexor", "Low Lunge Hip Flexor Stretch", "Hip flexors, glutes"),
-  "butterfly-seated": E("butterfly-seated", "Seated Butterfly Stretch", "Inner thighs, hips"),
-  "supine-twist": E("supine-twist", "Supine Twist", "Glutes, lower back, spine"),
-  "hip-circles": E("hip-circles", "Gentle Hip Circles", "Hips, glutes (mobility)"),
-  "reclined-butterfly": E("reclined-butterfly", "Reclined Butterfly", "Inner thighs, hips (rest)"),
-  "foam-roll-glutes": E("foam-roll-glutes", "Foam Roll: Glutes", "Glutes (release)"),
+  // Glutes — every move has a spoken audio cue; one-sided moves are marked
+  // unilateral so the session trains both sides with a switch cue between.
+  "sumo-squat": E("sumo-squat", "Sumo Squat", "Glutes, inner thighs, quads", { audio: true }),
+  "hip-thrust": E("hip-thrust", "Hip Thrust", "Glutes, hamstrings", { audio: true }),
+  "donkey-kicks": E("donkey-kicks", "Donkey Kicks", "Glutes", { audio: true, uni: true }),
+  "glute-bridge": E("glute-bridge", "Glute Bridge", "Glutes, hamstrings, core", { audio: true }),
+  "clamshells": E("clamshells", "Clamshells", "Glutes, hip stabilizers", { audio: true, uni: true }),
+  "fire-hydrants": E("fire-hydrants", "Fire Hydrants", "Glutes, hip abductors", { audio: true, uni: true }),
+  "side-lying-leg-raises": E("side-lying-leg-raises", "Side-Lying Leg Raises", "Outer glutes, hips", { audio: true, uni: true }),
+  "bulgarian-split-squat": E("bulgarian-split-squat", "Bulgarian Split Squat", "Glutes, quads, balance", { audio: true, uni: true }),
+  "romanian-deadlift": E("romanian-deadlift", "Romanian Deadlift", "Glutes, hamstrings, back", { audio: true }),
+  "weighted-hip-thrust": E("weighted-hip-thrust", "Weighted Hip Thrust", "Glutes, hamstrings", { audio: true }),
+  "step-ups": E("step-ups", "Step-Ups", "Glutes, quads", { audio: true, uni: true }),
+  "squat-jump": E("squat-jump", "Squat Jump", "Glutes, quads, power", { audio: true }),
+  "kettlebell-swing": E("kettlebell-swing", "Kettlebell Swing", "Glutes, hamstrings, core", { audio: true }),
+  "pigeon-pose": E("pigeon-pose", "Pigeon Pose", "Glutes, outer hips", { audio: true, uni: true }),
+  "figure-four-stretch": E("figure-four-stretch", "Figure-Four Stretch", "Glutes, outer hips", { audio: true, uni: true }),
+  "low-lunge-hip-flexor": E("low-lunge-hip-flexor", "Low Lunge Hip Flexor Stretch", "Hip flexors, glutes", { audio: true, uni: true }),
+  "butterfly-seated": E("butterfly-seated", "Seated Butterfly Stretch", "Inner thighs, hips", { audio: true }),
+  "supine-twist": E("supine-twist", "Supine Twist", "Glutes, lower back, spine", { audio: true, uni: true }),
+  "hip-circles": E("hip-circles", "Gentle Hip Circles", "Hips, glutes (mobility)", { audio: true }),
+  "reclined-butterfly": E("reclined-butterfly", "Reclined Butterfly", "Inner thighs, hips (rest)", { audio: true }),
+  "foam-roll-glutes": E("foam-roll-glutes", "Foam Roll: Glutes", "Glutes (release)", { audio: true, uni: true }),
 
   // Core
   "dead-bug": E("dead-bug", "Dead Bug", "Deep core, coordination"),
@@ -187,6 +201,22 @@ export const EXERCISES: Record<string, Exercise> = {
   "full-body-foam-roll": E("full-body-foam-roll", "Full-Body Foam Roll", "Full body (release)"),
 };
 
+// One-sided moves in the OTHER zones (glutes are flagged inline above). Marking
+// them here means the "train both sides" switch logic covers every program, so
+// no session ever leaves one side untrained. Audio for these comes later.
+const UNILATERAL_SLUGS = [
+  // core
+  "side-plank", "supine-spinal-twist", "seated-side-bend",
+  // arms
+  "cross-body-shoulder-stretch", "overhead-tricep-stretch",
+  // back
+  "thread-the-needle", "thoracic-rotation",
+  // legs
+  "curtsy-lunge", "side-lunge", "standing-leg-circles", "standing-quad-stretch",
+  "lizard-lunge", "it-band-stretch", "single-leg-deadlift", "reclined-hamstring-stretch",
+];
+for (const slug of UNILATERAL_SLUGS) { if (EXERCISES[slug]) EXERCISES[slug].unilateral = true; }
+
 /* ==================== ZONE × INTENTION → EXERCISES ==================== */
 
 export const ZONE_INTENTION_EXERCISES: Record<string, string[]> = {
@@ -262,7 +292,7 @@ export const PHASE_OPTIMAL: Record<WorkoutIntention, CyclePhase[]> = {
 
 /* ==================== SESSION BUILDER ==================== */
 
-export type StepKind = "warmup" | "work" | "cooldown";
+export type StepKind = "warmup" | "work" | "cooldown" | "switch";
 
 /** One timed step in a session — its own work/rest, label and optional rep target. */
 export interface SessionStep {
@@ -270,9 +300,14 @@ export interface SessionStep {
   kind: StepKind;
   workSec: number;
   restSec: number;
-  label: string;       // "Warm-up", "Round 2 · Move 1/4", "Cool-down"
+  label: string;       // "Warm-up", "Round 2 · Move 1/4", "Cool-down", "Switch sides"
   repTarget?: string;  // coaching target shown to the user ("10–12 reps", "Hold")
+  /** For one-sided moves: which side this step trains (a "switch" step sits between). */
+  side?: "first" | "second";
 }
+
+/** A short cue between the two sides of a one-sided move. */
+export const SWITCH_SEC = 6;
 
 export interface WorkoutSession {
   id: string;
@@ -380,28 +415,38 @@ export function buildSession(
   const distinct = pool.slice(0, perRound);
 
   // Fit rounds to the remaining time budget after warm-up/cool-down.
-  const warmCost = warmSlugs.length * (30 + 10);
-  const coolCost = coolSlugs.length * (30 + 5);
+  // One-sided moves cost ~2× (both sides + a short switch), so account for that
+  // when fitting rounds — otherwise a unilateral-heavy circuit runs way over time.
+  const stepCost = (s: string, w: number, r: number) =>
+    EXERCISES[s]?.unilateral ? 2 * w + SWITCH_SEC + r : w + r;
+  const warmCost = warmSlugs.reduce((a, s) => a + stepCost(s, 30, 10), 0);
+  const coolCost = coolSlugs.reduce((a, s) => a + stepCost(s, 30, 5), 0);
   const mainBudget = durationMin * 60 - warmCost - coolCost;
-  const perRoundCost = distinct.length * (workSec + restSec);
+  const perRoundCost = distinct.reduce((a, s) => a + stepCost(s, workSec, restSec), 0);
   const fitRounds = Math.max(1, Math.round(mainBudget / Math.max(1, perRoundCost)));
   const rounds = Math.min(Math.max(lv.rounds, 1), Math.max(1, fitRounds) + 1, 5);
 
-  // 5. Assemble ordered steps.
+  // 5. Assemble ordered steps. One-sided moves become: side 1 → "switch sides"
+  //    cue → side 2, so the session never trains only one side.
   const steps: SessionStep[] = [];
-  warmSlugs.forEach((s) => steps.push({
-    exercise: EXERCISES[s], kind: "warmup", workSec: 30, restSec: 10, label: "Warm-up", repTarget: "loosen up",
-  }));
+  const pushStep = (ex: Exercise, kind: StepKind, w: number, r: number, label: string, repTarget?: string) => {
+    if (ex.unilateral) {
+      steps.push({ exercise: ex, kind, workSec: w, restSec: 0, label: `${label} · 1st side`, repTarget, side: "first" });
+      steps.push({ exercise: ex, kind: "switch", workSec: SWITCH_SEC, restSec: 0, label: "Switch sides", repTarget: "other side", side: "second" });
+      steps.push({ exercise: ex, kind, workSec: w, restSec: r, label: `${label} · 2nd side`, repTarget, side: "second" });
+    } else {
+      steps.push({ exercise: ex, kind, workSec: w, restSec: r, label, repTarget });
+    }
+  };
+  warmSlugs.forEach((s) => pushStep(EXERCISES[s], "warmup", 30, 10, "Warm-up", "loosen up"));
   for (let r = 0; r < rounds; r++) {
-    distinct.forEach((s, i) => steps.push({
-      exercise: EXERCISES[s], kind: "work", workSec, restSec,
-      label: rounds > 1 ? `Round ${r + 1} · Move ${i + 1}/${distinct.length}` : `Move ${i + 1}/${distinct.length}`,
+    distinct.forEach((s, i) => pushStep(
+      EXERCISES[s], "work", workSec, restSec,
+      rounds > 1 ? `Round ${r + 1} · Move ${i + 1}/${distinct.length}` : `Move ${i + 1}/${distinct.length}`,
       repTarget,
-    }));
+    ));
   }
-  coolSlugs.forEach((s) => steps.push({
-    exercise: EXERCISES[s], kind: "cooldown", workSec: 30, restSec: 5, label: "Cool-down", repTarget: "breathe & release",
-  }));
+  coolSlugs.forEach((s) => pushStep(EXERCISES[s], "cooldown", 30, 5, "Cool-down", "breathe & release"));
 
   const structureNote = [
     warmSlugs.length ? `${warmSlugs.length}-move warm-up` : null,
