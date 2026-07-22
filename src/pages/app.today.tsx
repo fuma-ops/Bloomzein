@@ -169,12 +169,15 @@ function computeBloomStreak(): number {
 }
 
 // ── Phase content ────────────────────────────────────────────────────────────
-const PHASE_QUOTES: Record<Exclude<CyclePhase, "any">, string> = {
-  period:     "Curl up and go slow, lovely — your body's doing something beautiful.",
-  follicular: "Something fresh is blooming in you. Follow the little spark.",
-  fertile:    "You're glowing today — soft, open and oh-so magnetic.",
-  ovulation:  "Peak sparkle, gorgeous. Let yourself shine bright.",
-  luteal:     "Be extra gentle with yourself today, sweet thing.",
+// Each quote is stored as short lines (~3 words). On PHONE these stack into a
+// narrow left column so the text stays off the hero face; on sm+ the same lines
+// flow back into one sentence (see the render — block on mobile, inline on sm+).
+const PHASE_QUOTES: Record<Exclude<CyclePhase, "any">, string[]> = {
+  period:     ["Curl up and", "go slow, lovely —", "your body's doing", "something beautiful."],
+  follicular: ["Something fresh is", "blooming in you.", "Follow the little spark."],
+  fertile:    ["You're glowing today", "— soft, open and", "oh-so magnetic."],
+  ovulation:  ["Peak sparkle, gorgeous.", "Let yourself", "shine bright."],
+  luteal:     ["Be extra gentle", "with yourself today,", "sweet thing."],
 };
 
 const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
@@ -906,7 +909,9 @@ export default function TodayPage() {
               })()}
 
               <p className="mt-1.5 sm:mt-2 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
-                {PHASE_QUOTES[phase]}
+                {PHASE_QUOTES[phase].map((line, i, arr) => (
+                  <span key={i} className="block sm:inline">{line}{i < arr.length - 1 ? " " : ""}</span>
+                ))}
               </p>
             </>
           ) : (
