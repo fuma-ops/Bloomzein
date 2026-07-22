@@ -128,29 +128,28 @@ function playTick(level: Tick) {
   else if (level === "restEnd") [523.25, 659.25, 783.99].forEach((f, i) => setTimeout(() => tone(f, 0.16, 0.8), i * 80));
 }
 
-// Background music — royalty-free loops; missing files fail silently.
+// Background music — royalty-free loops; missing files fail silently. One loop
+// plays for the WHOLE session (never swapped or restarted), at a CONSTANT
+// volume that is never ducked, so the music stays coherent and always heard.
 const WORKOUT_MUSIC = [
   "/audio/workout-music-1.mp3",
   "/audio/workout-music-2.mp3",
   "/audio/workout-music-3.mp3",
   "/audio/workout-music-4.mp3",
 ];
-const MUSIC_VOL = 0.32;
+const MUSIC_VOL = 0.5;   // steady bed, always audible
+const CUE_VOL = 0.42;    // spoken cue sits UNDER the music, never overrides it
 
-// Play a spoken cue mp3 (per-move / rest / switch), ducking the music while it
-// talks. Missing files fail silently, so un-recorded moves just stay quiet.
-function playCue(src: string | undefined, cueEl: HTMLAudioElement | null, musicEl: HTMLAudioElement | null) {
+// Play a spoken cue mp3 (per-move / rest / switch) UNDER the music. The music is
+// NOT ducked — it keeps its steady volume — so it stays coherent all session.
+function playCue(src: string | undefined, cueEl: HTMLAudioElement | null) {
   if (!cueEl || !src) return;
   try {
-    if (musicEl) musicEl.volume = 0.08;
-    const restore = () => { if (musicEl) musicEl.volume = MUSIC_VOL; };
     cueEl.src = src;
     cueEl.currentTime = 0;
-    cueEl.volume = 1;
-    cueEl.onended = restore;
-    cueEl.onerror = restore;
-    cueEl.play().catch(restore);
-  } catch { if (musicEl) musicEl.volume = MUSIC_VOL; }
+    cueEl.volume = CUE_VOL;
+    cueEl.play().catch(() => {});
+  } catch {}
 }
 
 // ===================== HELPERS =====================
@@ -2585,8 +2584,8 @@ function SessionActive({ session, onExit, onDone }: {
   // "switch to the other side" cue on a switch step. (Rest cue fires below.)
   useEffect(() => {
     if (!sound || phase !== "exercise") return;
-    if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current, audioRef.current);
-    else playCue(exercise.audio, cueRef.current, audioRef.current);
+    if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current);
+    else playCue(exercise.audio, cueRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
@@ -2617,16 +2616,27 @@ function SessionActive({ session, onExit, onDone }: {
       elapsedRef.current += 1;
       setRemaining((r) => {
         const nr = r - 1;
-        // Timer rhythm — always audible; the final 3s ramp up louder & higher so
-        // the finish is felt, not just seen.
-        if (sound && nr > 0) playTick(nr <= 3 ? "count" : "soft");
+        // Rhythm. On a rep-based work step, beat once PER REP (so you can follow
+        // "1…2…3…" to the target); the last 3 reps ring louder. On holds / switch
+        // / rest, tick down the final 3 seconds so the finish is felt.
+        if (sound && nr > 0) {
+          const reps = phase === "exercise" ? (step.reps ?? 0) : 0;
+          if (reps > 0) {
+            const repSec = step.workSec / reps;
+            const repNow = Math.min(reps, Math.floor((step.workSec - nr) / repSec) + 1);
+            const repPrev = Math.min(reps, Math.floor((step.workSec - r) / repSec) + 1);
+            if (repNow > repPrev) playTick(repNow > reps - 3 ? "count" : "soft");
+          } else if (nr <= 3) {
+            playTick("count");
+          }
+        }
         if (nr <= 0) {
           if (phase === "exercise") {
             if (sound) playTick("end");
             if (index === steps.length - 1) { onDone(elapsedRef.current); return 0; }
             if (step.restSec > 0) {
               setPhase("rest");
-              if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current, audioRef.current);
+              if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current);
               return step.restSec;
             }
             // No rest here (side 1 → switch cue, or switch → side 2): flow straight on.
@@ -2650,7 +2660,7 @@ function SessionActive({ session, onExit, onDone }: {
       if (index === steps.length - 1) { onDone(elapsedRef.current); return; }
       if (step.restSec > 0) {
         setPhase("rest"); setRemaining(step.restSec);
-        if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current, audioRef.current);
+        if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current);
       } else {
         setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec);
       }
@@ -2661,6 +2671,11 @@ function SessionActive({ session, onExit, onDone }: {
   const skipRest = () => { setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec); };
 
   const totalSec = phase === "exercise" ? step.workSec : step.restSec;
+  // Live rep count for a rep-based work step (paces "1…2…3…" to the target).
+  const stepReps = step.reps ?? 0;
+  const currentRep = phase === "exercise" && stepReps > 0
+    ? Math.min(stepReps, Math.max(1, Math.floor((step.workSec - remaining) / (step.workSec / stepReps)) + 1))
+    : 0;
 
   return createPortal(
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
@@ -2792,11 +2807,15 @@ function SessionActive({ session, onExit, onDone }: {
                     <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
                   </p>
                 )}
-                {step.repTarget && step.kind !== "switch" && (
-                  <span className="mt-1.5 inline-block rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
-                    {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
-                  </span>
-                )}
+                {/* Live rep pacer — follow "1…2…3…" to the target, per side. */}
+                {step.kind !== "switch" && (stepReps > 0 ? (
+                  <div className="mt-1.5 inline-flex items-center gap-2 rounded-full bg-hotpink text-white px-4 py-1 shadow-md shadow-hotpink/30">
+                    <span className="font-script text-2xl sm:text-3xl leading-none tabular-nums">{currentRep}</span>
+                    <span className="text-xs sm:text-sm font-bold opacity-90">/ {stepReps} reps</span>
+                  </div>
+                ) : step.repTarget ? (
+                  <span className="mt-1.5 inline-block rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">{step.repTarget}</span>
+                ) : null)}
               </div>
             </>
           ) : (
