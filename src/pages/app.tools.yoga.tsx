@@ -1436,7 +1436,7 @@ function YogaHero({
   const { title, subtitle } = HERO_CONTENT[active];
 
   return (
-    <div className="relative isolate min-h-[128px] sm:min-h-[168px] -mt-3 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
+    <div className="relative isolate min-h-[118px] sm:min-h-[168px] -mt-6 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
       {/* base pink wash */}
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
       {/* photo — dissolves toward the bottom into the page */}
