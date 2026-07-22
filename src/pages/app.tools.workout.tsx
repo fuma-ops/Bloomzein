@@ -58,7 +58,10 @@ export const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
 export const WORKOUT_PLAN_GOAL_KEY = "bloom:workout-plan-goal";
 const PROGRAM_BANNER_KEY = "bloom:workout-program-banner-seen";
 const CHALLENGE_KEY = "bloom:workout-challenge";
-const SOUND_KEY = "bloom:workout-sound";
+const SOUND_KEY = "bloom:workout-sound";  // master: all sound on/off
+const VOICE_KEY = "bloom:workout-voice";  // spoken move cues on/off
+const MUSIC_KEY = "bloom:workout-music";  // background track index (into WORKOUT_MUSIC)
+const MUSIC_LABELS = ["Power Session", "Aetherium Pulse", "Sands of Time", "Sleek Alignment"];
 export const WORKOUT_LOG_KEY = "bloom:workout-history";
 
 export const DEFAULT_WORKOUT_PROFILE: WorkoutProfile = { level: "Beginner", goal: "energy", equipment: "none", daysPerWeek: 3 };
@@ -137,8 +140,6 @@ const WORKOUT_MUSIC = [
   "/audio/workout-music-3.mp3", // Sands of Time
   "/audio/workout-music-4.mp3", // Sleek Alignment
 ];
-// Which track backs a session — change this index to swap the workout music.
-const WORKOUT_MUSIC_TRACK = 1; // Aetherium Pulse (a driving pulse for reps)
 const MUSIC_VOL = 0.5;   // steady bed, always audible
 const CUE_VOL = 0.42;    // spoken cue sits UNDER the music, never overrides it
 
@@ -2446,6 +2447,8 @@ function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zo
 
 function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; onStart: () => void; onExit: () => void }) {
   const [phase, setPhase] = useState<CyclePhase>("any");
+  const [voice, setVoice] = useLS<boolean>(VOICE_KEY, true);
+  const [musicTrack, setMusicTrack] = useLS<number>(MUSIC_KEY, 0);
   useEffect(() => { setPhase(readCyclePhase() ?? "any"); }, []);
   const zone = ZONES.find((z) => z.key === session.zone);
   const intention = WORKOUT_INTENTIONS.find((i) => i.key === session.intention);
@@ -2509,6 +2512,30 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
             </div>
           </div>
 
+          {/* Sound — choose the background music and turn voice coaching on/off */}
+          <div className="rounded-2xl bg-white border border-petal/50 p-3 text-left space-y-2.5">
+            <button onClick={() => setVoice((v) => !v)} className="w-full flex items-center justify-between gap-3 active:scale-[0.99] transition">
+              <span className="flex items-center gap-2 text-xs font-bold text-rose">
+                {voice ? <Volume2 className="h-4 w-4 text-hotpink" /> : <VolumeX className="h-4 w-4 text-rose/40" />} Voice coaching cues
+              </span>
+              <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", voice ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
+                <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: voice ? "1.125rem" : "0.125rem" }} />
+              </span>
+            </button>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-rose/45 mb-1.5">Background music</p>
+              <div className="flex flex-wrap gap-1.5">
+                {MUSIC_LABELS.map((label, i) => (
+                  <button key={i} onClick={() => setMusicTrack(i)}
+                    className={["rounded-full px-2.5 py-1 text-[11px] font-bold border transition active:scale-95",
+                      i === musicTrack ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30" : "bg-white text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <button onClick={onStart} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3.5 text-base font-bold text-white">
             <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start session
           </button>
@@ -2530,13 +2557,14 @@ function SessionActive({ session, onExit, onDone }: {
   const [phase, setPhase] = useState<ExercisePhase>("exercise");
   const [remaining, setRemaining] = useState(steps[0]?.workSec ?? session.workSec);
   const [paused, setPaused] = useState(false);
-  const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);
+  const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);   // master mute
+  const [voice] = useLS<boolean>(VOICE_KEY, true);             // spoken cues on/off
+  const [musicTrack] = useLS<number>(MUSIC_KEY, 0);           // chosen background track
   const elapsedRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest / switch cues
-  // One random loop per session so it doesn't feel repetitive across workouts.
-  // Fixed track (not random) so every session gets the same coherent bed.
-  const musicSrc = WORKOUT_MUSIC[WORKOUT_MUSIC_TRACK];
+  const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest cues
+  // The user's chosen background track — one coherent bed for the whole session.
+  const musicSrc = WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0];
 
   const step = steps[index];
   const nextStepObj = steps[index + 1];
@@ -2596,11 +2624,12 @@ function SessionActive({ session, onExit, onDone }: {
     else a.pause();
   }, [sound, paused]);
 
-  // Spoken cue at the start of each MOVE. On a switch step we stay silent —
-  // only the music keeps playing while you switch sides. (Rest cue fires below.)
+  // Spoken cue when a move STARTS — but NOT again when we flip to its other
+  // side (side 2) and NOT on the switch step: the move's audio plays once, then
+  // only the music carries through the switch and the second side.
   useEffect(() => {
-    if (!sound || phase !== "exercise") return;
-    if (step.kind !== "switch") playCue(exercise.audio, cueRef.current);
+    if (!sound || !voice || phase !== "exercise") return;
+    if (step.kind !== "switch" && step.side !== "second") playCue(exercise.audio, cueRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
@@ -2651,7 +2680,7 @@ function SessionActive({ session, onExit, onDone }: {
             if (index === steps.length - 1) { onDone(elapsedRef.current); return 0; }
             if (step.restSec > 0) {
               setPhase("rest");
-              if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current);
+              if (sound && voice) playCue(WORKOUT_REST_AUDIO, cueRef.current);
               return step.restSec;
             }
             // No rest here (side 1 → switch cue, or switch → side 2): flow straight on.
@@ -2667,7 +2696,7 @@ function SessionActive({ session, onExit, onDone }: {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [paused, phase, index, sound, session, next, step, nextStepObj, steps.length]);
+  }, [paused, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
 
   const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
@@ -2675,7 +2704,7 @@ function SessionActive({ session, onExit, onDone }: {
       if (index === steps.length - 1) { onDone(elapsedRef.current); return; }
       if (step.restSec > 0) {
         setPhase("rest"); setRemaining(step.restSec);
-        if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current);
+        if (sound && voice) playCue(WORKOUT_REST_AUDIO, cueRef.current);
       } else {
         setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec);
       }
