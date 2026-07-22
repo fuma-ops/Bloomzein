@@ -45,8 +45,10 @@ export function CyclePhasePill({ className = "" }: { className?: string }) {
   const day = cycleDayNumber();
   const energy = PHASE_ENERGY[phase];
   const EnergyIcon = ENERGY_ICON[energy] ?? Zap;
+  // Stack the energy read-out UNDER the phase pill (its own line), mirroring the
+  // Today page where Energy sits on its own row rather than beside the phase.
   return (
-    <div className={["inline-flex flex-wrap items-center gap-1.5", className].join(" ")}>
+    <div className={["flex flex-col items-start gap-1.5", className].join(" ")}>
       <span className={base}>✿ Day {day} · {PHASE_LABEL[phase]}</span>
       <span className={soft}>
         <EnergyIcon className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> Energy {energy}
