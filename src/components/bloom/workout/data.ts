@@ -302,12 +302,47 @@ export interface SessionStep {
   restSec: number;
   label: string;       // "Warm-up", "Round 2 · Move 1/4", "Cool-down", "Switch sides"
   repTarget?: string;  // coaching target shown to the user ("10–12 reps", "Hold")
+  /** Rep count to pace: the player counts 1→reps over `workSec` (a beat each rep).
+   *  0/undefined = a timed hold (stretch / warm-up / cool-down / switch). */
+  reps?: number;
   /** For one-sided moves: which side this step trains (a "switch" step sits between). */
   side?: "first" | "second";
 }
 
-/** A short cue between the two sides of a one-sided move. */
-export const SWITCH_SEC = 6;
+// Round UP to a clean multiple of 5s (min 5) — every timer is a 5s number.
+const ceil5 = (n: number) => Math.max(5, Math.ceil(n / 5) * 5);
+// A small gap after a spoken clip so it's NEVER cut off (the yoga rule).
+const AUDIO_TAIL = 1.6;
+
+// Measured length (seconds) of each move's spoken clip — a step's timer is
+// never shorter than its clip + tail, so audio is never cropped.
+const AUDIO_SEC: Record<string, number> = {
+  "foam-roll-glutes": 13.6, "hip-thrust": 13.1, "romanian-deadlift": 12.5,
+  "bulgarian-split-squat": 12.0, "hip-circles": 11.9, "sumo-squat": 11.8,
+  "reclined-butterfly": 11.7, "supine-twist": 11.5, "pigeon-pose": 11.3,
+  "butterfly-seated": 11.2, "kettlebell-swing": 11.2, "low-lunge-hip-flexor": 11.2,
+  "fire-hydrants": 11.1, "clamshells": 10.6, "figure-four-stretch": 10.6,
+  "squat-jump": 10.6, "side-lying-leg-raises": 10.4, "childs-pose": 10.2,
+  "glute-bridge": 10.2, "step-ups": 10.2, "donkey-kicks": 10.1, "weighted-hip-thrust": 10.0,
+};
+const moveAudioSec = (slug: string) => AUDIO_SEC[slug] ?? 0;
+
+/** The "switch sides" cue clip is 11.3s → a 15s step so it plays in full and
+ *  leaves a real moment to reposition (audio-safe, multiple of 5). */
+export const SWITCH_SEC = ceil5(11.3 + AUDIO_TAIL);
+
+// Rep-driven work: reps × a controlled tempo, so a "15-rep" move really lasts
+// long enough to do 15 controlled reps — the timer follows the reps, not a
+// blank countdown. Rep counts are chosen so reps × tempo is a clean 5s number,
+// giving an exact whole-second beat per rep.
+const REP_TEMPO: Record<WorkoutIntention, number> = { tonify: 3, strengthen: 5, stretch: 0, recover: 0 };
+const REP_COUNT: Record<Level, Record<WorkoutIntention, number>> = {
+  Beginner:     { tonify: 10, strengthen: 8,  stretch: 0, recover: 0 },
+  Intermediate: { tonify: 15, strengthen: 10, stretch: 0, recover: 0 },
+  Advanced:     { tonify: 20, strengthen: 12, stretch: 0, recover: 0 },
+};
+// Stretch / recover moves are timed HOLDS, not reps.
+const HOLD_SEC: Record<Level, number> = { Beginner: 30, Intermediate: 35, Advanced: 40 };
 
 export interface WorkoutSession {
   id: string;
@@ -395,13 +430,22 @@ export function buildSession(
   const filtered = allSlugs.filter((s) => equipmentAllows(equipment, s));
   const pool = filtered.length >= 3 ? filtered : allSlugs;
 
-  // 2. Timing — intention × phase × level, rounded to clean 5s steps.
+  // 2. Timing — REP-DRIVEN so the timer follows the reps. A work step lasts
+  //    reps × tempo (a clean 5s number), but never less than its spoken clip +
+  //    tail, so audio is never cropped. Rest is 5s-aligned and never shorter
+  //    than the rest clip. (Phase tweaks the REST, not the rep count, so the
+  //    target stays a clean, followable number.)
   const base = TIMING[intention];
   const ph = PHASE_INTENSITY[phase];
   const lv = LEVEL_TUNING[level];
-  const workSec = Math.max(15, Math.round((base.workSec * ph.workMult * lv.workMult) / 5) * 5);
-  const restSec = Math.max(10, Math.round((base.restSec * ph.restMult * lv.restMult) / 5) * 5);
-  const repTarget = lv.repLabel[intention];
+  const reps = REP_COUNT[level][intention];               // 0 → timed hold
+  const tempo = REP_TEMPO[intention];
+  const repWork = reps > 0 ? reps * tempo : HOLD_SEC[level];
+  const workFor = (slug: string) => ceil5(Math.max(repWork, moveAudioSec(slug) + AUDIO_TAIL));
+  const holdWork = (slug: string) => ceil5(Math.max(30, moveAudioSec(slug) + AUDIO_TAIL));
+  const restSec = ceil5(Math.max(base.restSec * ph.restMult * lv.restMult, 6.6 + AUDIO_TAIL));
+  const workSec = repWork; // representative (used by previews)
+  const repTargetStr = reps > 0 ? `${reps} reps` : "Hold & breathe";
 
   // 3. Warm-up & cool-down (skip warm-up for pure recover/stretch — they're gentle already).
   const isUpper = UPPER_ZONES.includes(zone);
@@ -415,38 +459,37 @@ export function buildSession(
   const distinct = pool.slice(0, perRound);
 
   // Fit rounds to the remaining time budget after warm-up/cool-down.
-  // One-sided moves cost ~2× (both sides + a short switch), so account for that
-  // when fitting rounds — otherwise a unilateral-heavy circuit runs way over time.
-  const stepCost = (s: string, w: number, r: number) =>
-    EXERCISES[s]?.unilateral ? 2 * w + SWITCH_SEC + r : w + r;
-  const warmCost = warmSlugs.reduce((a, s) => a + stepCost(s, 30, 10), 0);
-  const coolCost = coolSlugs.reduce((a, s) => a + stepCost(s, 30, 5), 0);
+  // One-sided moves cost ~2× (both sides + the switch cue), so account for that.
+  const costOf = (w: number, r: number, uni: boolean) => (uni ? 2 * w + SWITCH_SEC + r : w + r);
+  const warmCost = warmSlugs.reduce((a, s) => a + costOf(holdWork(s), 10, !!EXERCISES[s]?.unilateral), 0);
+  const coolCost = coolSlugs.reduce((a, s) => a + costOf(holdWork(s), 5, !!EXERCISES[s]?.unilateral), 0);
   const mainBudget = durationMin * 60 - warmCost - coolCost;
-  const perRoundCost = distinct.reduce((a, s) => a + stepCost(s, workSec, restSec), 0);
+  const perRoundCost = distinct.reduce((a, s) => a + costOf(workFor(s), restSec, !!EXERCISES[s]?.unilateral), 0);
   const fitRounds = Math.max(1, Math.round(mainBudget / Math.max(1, perRoundCost)));
   const rounds = Math.min(Math.max(lv.rounds, 1), Math.max(1, fitRounds) + 1, 5);
 
   // 5. Assemble ordered steps. One-sided moves become: side 1 → "switch sides"
-  //    cue → side 2, so the session never trains only one side.
+  //    cue → side 2, so the session never trains only one side, and each side
+  //    gets its own full paced window.
   const steps: SessionStep[] = [];
-  const pushStep = (ex: Exercise, kind: StepKind, w: number, r: number, label: string, repTarget?: string) => {
+  const pushStep = (ex: Exercise, kind: StepKind, w: number, r: number, label: string, repTarget?: string, stepReps = 0) => {
     if (ex.unilateral) {
-      steps.push({ exercise: ex, kind, workSec: w, restSec: 0, label: `${label} · 1st side`, repTarget, side: "first" });
+      steps.push({ exercise: ex, kind, workSec: w, restSec: 0, label: `${label} · 1st side`, repTarget, reps: stepReps, side: "first" });
       steps.push({ exercise: ex, kind: "switch", workSec: SWITCH_SEC, restSec: 0, label: "Switch sides", repTarget: "other side", side: "second" });
-      steps.push({ exercise: ex, kind, workSec: w, restSec: r, label: `${label} · 2nd side`, repTarget, side: "second" });
+      steps.push({ exercise: ex, kind, workSec: w, restSec: r, label: `${label} · 2nd side`, repTarget, reps: stepReps, side: "second" });
     } else {
-      steps.push({ exercise: ex, kind, workSec: w, restSec: r, label, repTarget });
+      steps.push({ exercise: ex, kind, workSec: w, restSec: r, label, repTarget, reps: stepReps });
     }
   };
-  warmSlugs.forEach((s) => pushStep(EXERCISES[s], "warmup", 30, 10, "Warm-up", "loosen up"));
+  warmSlugs.forEach((s) => pushStep(EXERCISES[s], "warmup", holdWork(s), 10, "Warm-up", "loosen up"));
   for (let r = 0; r < rounds; r++) {
     distinct.forEach((s, i) => pushStep(
-      EXERCISES[s], "work", workSec, restSec,
+      EXERCISES[s], "work", workFor(s), restSec,
       rounds > 1 ? `Round ${r + 1} · Move ${i + 1}/${distinct.length}` : `Move ${i + 1}/${distinct.length}`,
-      repTarget,
+      repTargetStr, reps,
     ));
   }
-  coolSlugs.forEach((s) => pushStep(EXERCISES[s], "cooldown", 30, 5, "Cool-down", "breathe & release"));
+  coolSlugs.forEach((s) => pushStep(EXERCISES[s], "cooldown", holdWork(s), 5, "Cool-down", "breathe & release"));
 
   const structureNote = [
     warmSlugs.length ? `${warmSlugs.length}-move warm-up` : null,
