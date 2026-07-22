@@ -389,7 +389,7 @@ function HeroHeader({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="relative isolate min-h-[118px] sm:min-h-[168px] -mt-6 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
+    <div className="relative isolate min-h-[118px] sm:min-h-[168px] -mt-1 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
       {/* base pink wash */}
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
       {/* photo — dissolves toward the bottom into the page */}
@@ -643,7 +643,9 @@ export default function WorkoutPage() {
         />
       )}
 
-      <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
+      {/* Redundant on phones (the bottom nav has "Tools"), and it left an empty
+          band above the hero — show it only from tablet up. */}
+      <a href="/app/tools" className="mb-3 hidden md:inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
