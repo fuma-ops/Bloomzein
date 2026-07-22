@@ -435,11 +435,17 @@ export function incrementYogaSession(): void {
 
 export const YOGA_LOG_KEY = "bloom:yoga-history";
 
-/** Log a finished yoga flow's calories. MET ~2.8 (gentle hatha/vinyasa),
- *  kcal = MET × 3.5 × weight(kg) / 200 × minutes — scaled by real bodyweight. */
+/** Calories a yoga flow of `durationMin` burns for a body of `weightKg`.
+ *  MET ~2.8 (gentle hatha/vinyasa): kcal = MET × 3.5 × weight(kg) / 200 × minutes.
+ *  ONE formula — the plan's "expected burn" and the logged burn both call this. */
+export function yogaSessionKcal(durationMin: number, weightKg = 65): number {
+  return Math.round(((2.8 * 3.5 * (weightKg > 0 ? weightKg : 65)) / 200) * durationMin);
+}
+
+/** Log a finished yoga flow's calories, scaled by real bodyweight. */
 export function logYogaSession(durationMin: number, weightKg = 65): void {
   try {
-    const kcal = Math.round(((2.8 * 3.5 * (weightKg > 0 ? weightKg : 65)) / 200) * durationMin);
+    const kcal = yogaSessionKcal(durationMin, weightKg);
     const log = readJSON<{ date: string; calories: number; durationMin: number }[]>(YOGA_LOG_KEY, []);
     log.push({ date: todayISO(), calories: kcal, durationMin });
     localStorage.setItem(YOGA_LOG_KEY, JSON.stringify(log));

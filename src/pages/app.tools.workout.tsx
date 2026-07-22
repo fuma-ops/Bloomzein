@@ -174,6 +174,18 @@ function sessionCalories(intention: WorkoutIntention, elapsedSec: number): numbe
   return Math.round((elapsedSec / 60) * kcalPerMin);
 }
 
+/** Expected kcal for a PLANNED session of `durationMin` — same MET engine as the
+ *  live burn, so the plan estimate and the logged burn stay consistent. */
+function plannedCalories(intention: WorkoutIntention, durationMin: number): number {
+  return sessionCalories(intention, durationMin * 60);
+}
+
+/** A planned program session only carries a title/focus → intensity; map that to
+ *  the nearest MET intention so we can still estimate its burn. */
+const MET_INTENTION_FOR_INTENSITY: Record<Intensity, WorkoutIntention> = {
+  strong: "strengthen", moderate: "tonify", gentle: "stretch",
+};
+
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const ACTIVE_DAY_PATTERNS: Record<2 | 3 | 4 | 5, string[]> = {
@@ -1000,7 +1012,8 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
                 <p className="text-[11px] text-rose/65 leading-snug">{s.focus}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
                   <Tag icon={<Clock className="h-3 w-3" />}>{s.estMinutes} min</Tag>
-                  <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(s)} sets</Tag>
+                  <Tag icon={<Flame className="h-3 w-3" />}>~{plannedCalories(MET_INTENTION_FOR_INTENSITY[workoutIntensity(s.title, s.focus)], s.estMinutes)} kcal</Tag>
+                  <Tag icon={<Dumbbell className="h-3 w-3" />}>{sessionVolume(s)} sets</Tag>
                   {tip && <span className="text-[9px] font-bold uppercase tracking-wide text-hotpink">✿ {PHASE_LABEL[phase]} tip</span>}
                 </div>
               </div>
@@ -1111,6 +1124,7 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
         <p className="text-xs text-rose/75 mt-1">{session.focus}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Tag icon={<Clock className="h-3 w-3" />}>{session.estMinutes} min</Tag>
+          <Tag icon={<Flame className="h-3 w-3" />}>~{plannedCalories(MET_INTENTION_FOR_INTENSITY[workoutIntensity(session.title, session.focus)], session.estMinutes)} kcal</Tag>
           <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(session)} working sets</Tag>
         </div>
       </div>
@@ -2189,12 +2203,14 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               let title = "", sub = "", mins = 0, done = false, onTap: (() => void) | null = null;
               let intensity: Intensity = "moderate";
               let image: string = HERO_IMAGES.session;
+              let burnIntention: WorkoutIntention = "tonify";
               if (source === "program" && activeProgram && sIdx !== null && sIdx !== undefined) {
                 const s = computeWeekSession(activeProgram, sIdx, week);
                 title = s.title; sub = s.focus; mins = s.estMinutes;
                 done = progDoneSet.has(sessionTag(week, sIdx));
                 onTap = () => onOpenProgramSession(activeProgram.id, week, sIdx);
                 intensity = workoutIntensity(s.title, s.focus);
+                burnIntention = MET_INTENTION_FOR_INTENSITY[intensity];
                 image = activeProgram.image;
               } else if (freeplan) {
                 title = ZONES.find((z) => z.key === freeplan.zone)?.label ?? freeplan.zone;
@@ -2202,6 +2218,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                 mins = freeplan.durationMin;
                 onTap = () => onStartSession(buildSession(freeplan.zone, freeplan.intention, freeplan.durationMin, profile.level, phase, profile.equipment));
                 intensity = workoutIntensity(freeplan.intention, title);
+                burnIntention = freeplan.intention;
                 image = ZONES.find((z) => z.key === freeplan.zone)?.image ?? HERO_IMAGES.session;
               }
 
@@ -2238,7 +2255,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                   <div className="flex-1 min-w-0 bg-white/70">
                     <button onClick={onTap ?? undefined} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
                       <p className={["text-sm font-bold leading-tight text-rose truncate", done ? "line-through text-rose/45" : ""].join(" ")}>{title}</p>
-                      <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}{mins ? <> · <span className="font-semibold text-hotpink/80">~{plannedCalories(burnIntention, mins)} kcal</span></> : ""}</p>
                     </button>
                     {showFuel && (
                       <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
