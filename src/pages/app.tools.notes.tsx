@@ -929,27 +929,10 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* BANNERS */}
-      <div className="flex flex-col gap-3 mb-4">
-        {promptPwa && (
-          <div className="relative overflow-hidden rounded-[1.25rem] border border-petal/60 bg-white/90 backdrop-blur p-4 shadow-[0_10px_20px_-10px_rgba(236,72,153,0.15)] animate-fade-in">
-            <div className="flex items-start gap-3.5">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FFF0F6] text-[#EC4899] border border-pink-200">
-                <Smartphone className="h-4 w-4" />
-              </span>
-              <div className="flex-1 text-left">
-                <h4 className="text-xs font-bold text-[#831843]">Remind you on your lockscreen?</h4>
-                <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
-                  Add Bloomzein to your phone's home screen as an app to receive self-care nudges even when closed.
-                </p>
-              </div>
-              <button onClick={handleDismissPwaPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-        {promptNotif && (
+      {/* BANNERS — the desktop-nudge prompt. (The lockscreen/PWA prompt lives
+          lower, just above the "Welcome back" card.) */}
+      {promptNotif && (
+        <div className="flex flex-col gap-3 mb-4">
           <div className="relative overflow-hidden rounded-[1.25rem] border border-pink-200/50 bg-[#FCE7F3] p-4 shadow-[0_10px_20px_-10px_rgba(236,72,153,0.15)] animate-fade-in">
             <div className="flex items-start gap-3.5">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#EC4899] shadow-sm">
@@ -974,8 +957,8 @@ export default function NotesPage() {
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* HERO — full-bleed blended photo background, same technique as Today/Tools */}
       <div className="relative isolate min-h-[150px] sm:min-h-[196px] mb-3 animate-card-pop-in">
@@ -1064,6 +1047,26 @@ export default function NotesPage() {
               </span>
             )}
           </div>
+
+          {/* LOCKSCREEN / PWA PROMPT — sits right above the welcome card */}
+          {promptPwa && (
+            <div className="relative overflow-hidden rounded-[1.25rem] border border-petal/60 bg-white/90 backdrop-blur p-4 shadow-[0_10px_20px_-10px_rgba(236,72,153,0.15)] animate-fade-in">
+              <div className="flex items-start gap-3.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FFF0F6] text-[#EC4899] border border-pink-200">
+                  <Smartphone className="h-4 w-4" />
+                </span>
+                <div className="flex-1 text-left">
+                  <h4 className="text-xs font-bold text-[#831843]">Remind you on your lockscreen?</h4>
+                  <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
+                    Add Bloomzein to your phone's home screen as an app to receive self-care nudges even when closed.
+                  </p>
+                </div>
+                <button onClick={handleDismissPwaPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* WELCOME BANNER — dismissable, below search bar */}
           {!welcomed && (
