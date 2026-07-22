@@ -27,7 +27,7 @@ import {
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
   type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
   type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
-  type SessionStep,
+  type SessionStep, WORKOUT_REST_AUDIO, WORKOUT_SWITCH_AUDIO,
 } from "@/components/bloom/workout/data";
 import {
   PROGRAMS, getProgram, computeWeekSession, weekMeta, sessionVolume,
@@ -93,42 +93,42 @@ function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] 
 
 
 // ===================== SOUND LAYER =====================
-// Soft bip at 3s, clear bip at 0, gentle chime at rest end. No external audio files needed.
+// A single shared AudioContext drives the timer's rhythm (a soft tick every
+// second, a louder countdown in the final 3s, a clear tone when a move ends).
+// Real spoken cues come from the per-move mp3s (no browser speech synthesis).
 
-function playTimerBip(loud: boolean) {
+let _actx: AudioContext | null = null;
+function audioCtx(): AudioContext | null {
   try {
-    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
-    const ctx = new Ctx();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine"; o.frequency.value = loud ? 880 : 660;
-    g.gain.setValueAtTime(0.0001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(loud ? 0.25 : 0.12, ctx.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (loud ? 0.5 : 0.3));
+    if (!_actx) { const Ctx = (window.AudioContext || (window as any).webkitAudioContext); _actx = new Ctx(); }
+    if (_actx.state === "suspended") _actx.resume().catch(() => {});
+    return _actx;
+  } catch { return null; }
+}
+function tone(freq: number, peak: number, dur: number, type: OscillatorType = "sine") {
+  const ctx = audioCtx(); if (!ctx) return;
+  try {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g); g.connect(ctx.destination);
-    o.start(); o.stop(ctx.currentTime + (loud ? 0.6 : 0.4));
+    o.start(t); o.stop(t + dur + 0.05);
   } catch {}
 }
-
-function playRestChime() {
-  try {
-    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
-    const ctx = new Ctx();
-    [523.25, 659.25, 783.99].forEach((f, i) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine"; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.08);
-      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + i * 0.08 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.08 + 1.0);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(ctx.currentTime + i * 0.08); o.stop(ctx.currentTime + i * 0.08 + 1.1);
-    });
-  } catch {}
+// Timer rhythm — the tone grows louder & higher as a move nears its end, so the
+// user feels the rhythm and knows the finish is coming.
+type Tick = "soft" | "count" | "end" | "restEnd";
+function playTick(level: Tick) {
+  if (level === "soft") tone(440, 0.05, 0.06);
+  else if (level === "count") tone(760, 0.22, 0.15);
+  else if (level === "end") tone(940, 0.32, 0.45);
+  else if (level === "restEnd") [523.25, 659.25, 783.99].forEach((f, i) => setTimeout(() => tone(f, 0.16, 0.8), i * 80));
 }
 
-// Background music — drop 1-3 royalty-free loops here; missing files fail
-// silently (the glow + voice still work).
+// Background music — royalty-free loops; missing files fail silently.
 const WORKOUT_MUSIC = [
   "/audio/workout-music-1.mp3",
   "/audio/workout-music-2.mp3",
@@ -136,24 +136,21 @@ const WORKOUT_MUSIC = [
   "/audio/workout-music-4.mp3",
 ];
 const MUSIC_VOL = 0.32;
-// Short motivational lines spoken by the browser at each move.
-const MOVE_CHEERS = [
-  "Let's go!", "You've got this!", "Stay strong!", "Push it, gorgeous!",
-  "Beautiful — keep going!", "Feel the burn!", "You're blooming!", "Own it!",
-];
 
-// Speak a short line via the browser, ducking the music while it talks.
-function speakLine(text: string, audioEl: HTMLAudioElement | null) {
+// Play a spoken cue mp3 (per-move / rest / switch), ducking the music while it
+// talks. Missing files fail silently, so un-recorded moves just stay quiet.
+function playCue(src: string | undefined, cueEl: HTMLAudioElement | null, musicEl: HTMLAudioElement | null) {
+  if (!cueEl || !src) return;
   try {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    if (audioEl) audioEl.volume = 0.08;
-    const restore = () => { if (audioEl) audioEl.volume = MUSIC_VOL; };
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US"; u.rate = 1.0; u.pitch = 1.08;
-    u.onend = restore; u.onerror = restore;
-    window.speechSynthesis.speak(u);
-  } catch { if (audioEl) audioEl.volume = MUSIC_VOL; }
+    if (musicEl) musicEl.volume = 0.08;
+    const restore = () => { if (musicEl) musicEl.volume = MUSIC_VOL; };
+    cueEl.src = src;
+    cueEl.currentTime = 0;
+    cueEl.volume = 1;
+    cueEl.onended = restore;
+    cueEl.onerror = restore;
+    cueEl.play().catch(restore);
+  } catch { if (musicEl) musicEl.volume = MUSIC_VOL; }
 }
 
 // ===================== HELPERS =====================
@@ -2522,6 +2519,7 @@ function SessionActive({ session, onExit, onDone }: {
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);
   const elapsedRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest / switch cues
   // One random loop per session so it doesn't feel repetitive across workouts.
   const musicSrc = useMemo(() => WORKOUT_MUSIC[Math.floor(Math.random() * WORKOUT_MUSIC.length)], []);
 
@@ -2583,12 +2581,14 @@ function SessionActive({ session, onExit, onDone }: {
     else a.pause();
   }, [sound, paused]);
 
-  // Motivational voice cue at the start of each exercise.
+  // Spoken cue at the start of each step: the move's own recording, or the
+  // "switch to the other side" cue on a switch step. (Rest cue fires below.)
   useEffect(() => {
-    if (phase !== "exercise" || !sound) return;
-    speakLine(`${exercise.name}. ${MOVE_CHEERS[index % MOVE_CHEERS.length]}`, audioRef.current);
+    if (!sound || phase !== "exercise") return;
+    if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current, audioRef.current);
+    else playCue(exercise.audio, cueRef.current, audioRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, phase]);
+  }, [index]);
 
   // Keep the screen awake for the duration of the workout.
   useEffect(() => {
@@ -2617,23 +2617,26 @@ function SessionActive({ session, onExit, onDone }: {
       elapsedRef.current += 1;
       setRemaining((r) => {
         const nr = r - 1;
-        if (nr === 5 && phase === "exercise" && sound) playTimerBip(false);
+        // Timer rhythm — always audible; the final 3s ramp up louder & higher so
+        // the finish is felt, not just seen.
+        if (sound && nr > 0) playTick(nr <= 3 ? "count" : "soft");
         if (nr <= 0) {
           if (phase === "exercise") {
-            if (sound) playTimerBip(true);
-            if (index === steps.length - 1) {
-              onDone(elapsedRef.current);
-              return 0;
+            if (sound) playTick("end");
+            if (index === steps.length - 1) { onDone(elapsedRef.current); return 0; }
+            if (step.restSec > 0) {
+              setPhase("rest");
+              if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current, audioRef.current);
+              return step.restSec;
             }
-            setPhase("rest");
-            if (sound) playRestChime();
-            if (sound && next) speakLine(`Next up: ${next.name}`, audioRef.current);
-            return step.restSec;
-          } else {
-            setPhase("exercise");
-            setIndex((i) => i + 1);
+            // No rest here (side 1 → switch cue, or switch → side 2): flow straight on.
+            setPhase("exercise"); setIndex((i) => i + 1);
             return nextStepObj?.workSec ?? step.workSec;
           }
+          // Rest finished → next move.
+          if (sound) playTick("restEnd");
+          setPhase("exercise"); setIndex((i) => i + 1);
+          return nextStepObj?.workSec ?? step.workSec;
         }
         return nr;
       });
@@ -2645,8 +2648,12 @@ function SessionActive({ session, onExit, onDone }: {
   const skip = () => {
     if (phase === "exercise") {
       if (index === steps.length - 1) { onDone(elapsedRef.current); return; }
-      setPhase("rest"); setRemaining(step.restSec);
-      if (sound && next) speakLine(`Next up: ${next.name}`, audioRef.current);
+      if (step.restSec > 0) {
+        setPhase("rest"); setRemaining(step.restSec);
+        if (sound) playCue(WORKOUT_REST_AUDIO, cueRef.current, audioRef.current);
+      } else {
+        setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec);
+      }
     } else {
       setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec);
     }
@@ -2659,6 +2666,8 @@ function SessionActive({ session, onExit, onDone }: {
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Background music loop (controlled by the sound toggle) */}
       <audio ref={audioRef} src={musicSrc} loop preload="auto" />
+      {/* Spoken cue channel — per-move / rest / switch recordings */}
+      <audio ref={cueRef} preload="none" />
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60 shrink-0">
         <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
@@ -2679,7 +2688,7 @@ function SessionActive({ session, onExit, onDone }: {
       </div>
 
       <div className="relative flex-1 min-h-0 overflow-hidden">
-        {phase === "exercise" && next && remaining > 0 && remaining <= 5 && (
+        {phase === "exercise" && step.kind !== "switch" && next && nextStepObj?.kind !== "switch" && remaining > 0 && remaining <= 5 && (
           <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-2.5 sm:p-4 pr-3 sm:pr-6 animate-fade-in">
             <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-28 sm:w-28 object-cover rounded-xl border border-petal/60" />
             <div className="text-left">
@@ -2703,11 +2712,23 @@ function SessionActive({ session, onExit, onDone }: {
                   className="absolute inset-0 m-auto"
                   style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}
                 >
-                  <ExercisePhoto exercise={exercise} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
+                  <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain", step.kind === "switch" ? "scale-x-[-1]" : ""].join(" ")} />
+
+                  {/* Switch-sides overlay — a clear cue to train the other side so
+                      no move is ever done on one side only. */}
+                  {step.kind === "switch" && (
+                    <div className="absolute inset-0 z-20 grid place-items-center bg-hotpink/45 backdrop-blur-[2px]">
+                      <div className="text-center px-4 animate-scale-in">
+                        <RotateCcw className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-white animate-spin drop-shadow" strokeWidth={2.6} style={{ animationDuration: "1.4s" }} />
+                        <p className="mt-2 font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">Switch sides!</p>
+                        <p className="mt-1 text-sm sm:text-lg font-bold text-white/95 drop-shadow">Now the other side ✿</p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Muscle glow — a soft halo that pulses ONLY over the worked
                       muscle (scanned from the photo's baked magenta highlight). */}
-                  {glow && !paused && (
+                  {glow && !paused && step.kind !== "switch" && (
                     <>
                       {/* soft glow fill (screen-blend halo) */}
                       <div
@@ -2736,7 +2757,7 @@ function SessionActive({ session, onExit, onDone }: {
 
                   {/* Energy arrows — gentle marching glide at the sides so the
                       still photo feels alive/in motion. */}
-                  {!paused && (
+                  {!paused && step.kind !== "switch" && (
                     <>
                       <div aria-hidden className="pointer-events-none absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
                         {[0, 1, 2].map((i) => <ChevronRight key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-r" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
@@ -2754,14 +2775,24 @@ function SessionActive({ session, onExit, onDone }: {
               </div>
               {/* INFO — compact block below the photo */}
               <div className="shrink-0 w-full text-center">
-                <h2 className="font-script text-2xl sm:text-4xl text-hotpink leading-none">{exercise.name}</h2>
-                <p className="mt-0.5 text-xs sm:text-base text-rose/70 line-clamp-1">{exercise.muscles}</p>
-                {getCoaching(exercise.slug)?.cues[0] && (
+                <h2 className="font-script text-2xl sm:text-4xl text-hotpink leading-none">
+                  {step.kind === "switch" ? "Switch to the other side" : exercise.name}
+                </h2>
+                <p className="mt-0.5 text-xs sm:text-base text-rose/70 line-clamp-1">
+                  {step.kind === "switch" ? `${exercise.name} · other side` : exercise.muscles}
+                </p>
+                {/* Side badge for one-sided moves so it's clear which side you're on. */}
+                {step.side && step.kind !== "switch" && (
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
+                    <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
+                  </span>
+                )}
+                {step.kind !== "switch" && getCoaching(exercise.slug)?.cues[0] && (
                   <p className="mt-1 max-w-md mx-auto text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2 line-clamp-1">
                     <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
                   </p>
                 )}
-                {step.repTarget && (
+                {step.repTarget && step.kind !== "switch" && (
                   <span className="mt-1.5 inline-block rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">
                     {step.kind === "work" ? `Aim: ${step.repTarget}` : step.repTarget}
                   </span>
