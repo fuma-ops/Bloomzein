@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import {
   Flame, Utensils, TrendingDown, TrendingUp, Target, Dumbbell,
   Sparkles, ChevronRight, Activity, Trophy, Pencil, Check, X,
-  Lightbulb, Leaf, Heart, Droplet,
+  Lightbulb, Leaf, Heart, Droplet, Minus, RotateCcw,
 } from "lucide-react";
 import {
   energyBalance, goalProjection, weekSnapshot, coachRecommendation,
@@ -68,7 +68,7 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
 }
 
 /* ============================ 1 · TODAY'S ENERGY ============================ */
-export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, mealsSynced, movementSynced, phaseLabel, cycleReady, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle, onViewTodayPlan, onEditPlan }: {
+export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanned, movementFromDiet, mealsSynced, movementSynced, phaseLabel, cycleReady, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle, onViewTodayPlan, onEditPlan, regimeLabel, onReset }: {
   e: EnergyBalance;
   mealsPlanned: boolean;
   mealsFromDiet?: boolean;
@@ -85,6 +85,10 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   onSyncCycle?: () => void;
   onViewTodayPlan: () => void;
   onEditPlan?: () => void;
+  /** The user's eating regime label (e.g. "Mediterranean") — always shown as a pill. */
+  regimeLabel?: string;
+  /** Reset the whole Diet tool — lives here, next to "Edit plan". */
+  onReset?: () => void;
 }) {
   const eatenPct = e.allowance > 0 ? (e.eaten / e.allowance) * 100 : 0;
   const moveLine = movementFoodLine(computeTargets(true));
@@ -119,11 +123,20 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
   return (
     <div id="diet-energy" className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-4 sm:p-5 animate-fade-in">
       <div className="mb-3 flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="font-script text-2xl text-hotpink leading-none">Today's fuel</p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mt-1">
-            your food energy · {coach.goal === "lose" ? "lean" : coach.goal === "gain" ? "build" : "maintain"} goal
-          </p>
+          {/* Your plan, always remembered — eating regime + body goal as soft pills. */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {regimeLabel && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2 py-0.5 text-[10px] font-bold text-hotpink">
+                <Leaf className="h-3 w-3" strokeWidth={2.2} /> {regimeLabel}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/25 px-2 py-0.5 text-[10px] font-bold text-hotpink">
+              {coach.goal === "lose" ? <TrendingDown className="h-3 w-3" strokeWidth={2.4} /> : coach.goal === "gain" ? <TrendingUp className="h-3 w-3" strokeWidth={2.4} /> : <Minus className="h-3 w-3" strokeWidth={2.4} />}
+              {coach.goal === "lose" ? "Lose" : coach.goal === "gain" ? "Gain & tone" : "Maintain"}
+            </span>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {recalcFlash && (
@@ -134,6 +147,11 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
           {onEditPlan && (
             <button onClick={onEditPlan} title="Edit my eating plan" aria-label="Edit my eating plan" className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2.5 py-1 text-[10.5px] font-bold text-hotpink active:scale-95 transition hover:bg-blush">
               <Pencil className="h-3 w-3" /> Edit plan
+            </button>
+          )}
+          {onReset && (
+            <button onClick={onReset} title="Reset (preview first-time setup)" aria-label="Reset the Diet tool" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/85 border border-petal/60 text-rose/50 active:scale-90 transition hover:text-hotpink">
+              <RotateCcw className="h-3.5 w-3.5" />
             </button>
           )}
         </div>

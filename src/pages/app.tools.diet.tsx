@@ -4,7 +4,7 @@ import {
   ArrowLeft, Search, X, Plus, Clock, Flame, Dumbbell, Sparkles,
   ChevronRight, Pencil, Check, Moon, UtensilsCrossed, BookOpen,
   Leaf, Activity, Sunrise, Sun, Apple, SlidersHorizontal,
-  Scale, TrendingUp, TrendingDown, Minus, RotateCcw, Info, BarChart3,
+  Scale, TrendingUp, TrendingDown, Minus, Info, BarChart3,
 } from "lucide-react";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
@@ -634,11 +634,11 @@ function SetupScreen({
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
       {/* HERO banner — matches the first-page-after-reset heroes across the app */}
-      <div className="relative w-full min-h-[140px] sm:min-h-[164px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
+      <div className="relative w-full min-h-[140px] sm:min-h-[210px] lg:min-h-[250px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
         <img src="/images/meals-hero-new.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/75 via-hotpink/25 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-        <div className="relative flex flex-col justify-center min-h-[140px] sm:min-h-[164px] p-4 sm:p-6">
+        <div className="relative flex flex-col justify-center min-h-[140px] sm:min-h-[210px] lg:min-h-[250px] p-4 sm:p-6">
           <div className="max-w-[70%] sm:max-w-[60%]">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-hotpink border border-white/60">
               <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Diet
@@ -884,7 +884,7 @@ function WeightChart({ history, target, projection }: {
   );
 }
 
-function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle }: {
+function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit, goTo, onReplayTour, cycleReady, onSyncedPlan, onDietToday, onDietWeek, onPlanMeals, onPlanMovement, onUnplanMeals, onUnplanMovement, onSyncCycle, onReset }: {
   phase: DietPhase; cycleDay: number;
   profile: DietProfile & { weight: number };
   mealsVersion: number;
@@ -901,6 +901,7 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
   onUnplanMeals: () => void;
   onUnplanMovement: () => void;
   onSyncCycle: () => void;
+  onReset: () => void;
 }) {
   // Refresh when a workout/yoga is logged so burned calories flow in live.
   const [trainTick, setTrainTick] = useState(0);
@@ -1015,6 +1016,8 @@ function ProfileTab({ phase, cycleDay, profile, mealsVersion, setProfile, onEdit
             onSyncCycle={onSyncCycle}
             onViewTodayPlan={() => goTo("today")}
             onEditPlan={() => setEatPlanOpen(true)}
+            regimeLabel={dietRegimeInfo(profile.regime ?? "balanced").label}
+            onReset={onReset}
           />
           <div className="grid gap-3 sm:grid-cols-2">
             <div id="diet-goalpath"><GoalPathCard onEdit={() => setBodyEditOpen(true)} /></div>
@@ -1535,6 +1538,18 @@ const GOAL_FILTERS = [
   { key: "lowcarb", label: "Low carb" },
 ];
 
+/** A small removable pill for an applied recipe filter. */
+function ActiveFilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[10.5px] font-bold">
+      {label}
+      <button onClick={onRemove} aria-label={`Remove ${label}`} className="grid h-3.5 w-3.5 place-items-center rounded-full bg-white/25 hover:bg-white/40 transition active:scale-90">
+        <X className="h-2.5 w-2.5" strokeWidth={3} />
+      </button>
+    </span>
+  );
+}
+
 function RecipesTab({
   phase, profile, onOpenRecipe,
 }: { phase: DietPhase; profile: DietProfile; onOpenRecipe: (r: Recipe, portion?: number) => void }) {
@@ -1543,6 +1558,12 @@ function RecipesTab({
   const [mealFilters, setMealFilters] = useState<MealType[]>([]);
   const [timeFilter, setTimeFilter] = useState<string | null>(null);
   const [goalFilters, setGoalFilters] = useState<string[]>([]);
+  // Filters live behind a toggle (a filter icon on the search bar) so they don't
+  // eat the screen; the panel folds away again the moment a filter is picked.
+  const [showFilters, setShowFilters] = useState(false);
+  const activeCount = phaseFilters.length + mealFilters.length + (timeFilter ? 1 : 0) + goalFilters.length;
+  const pick = (fn: () => void) => { fn(); setShowFilters(false); };
+  const clearAll = () => { setPhaseFilters([]); setMealFilters([]); setTimeFilter(null); setGoalFilters([]); };
 
   const toggle = <T,>(arr: T[], v: T, set: (a: T[]) => void) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
@@ -1595,46 +1616,74 @@ function RecipesTab({
 
   return (
     <div className="space-y-4">
-      {/* Active plan header — makes the filtering explicit */}
-      <div className="flex items-center gap-2.5 rounded-2xl bg-hotpink/10 border border-petal/60 px-3.5 py-2.5">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-4 w-4" /></span>
-        <p className="text-[12px] text-rose/80 leading-snug">
-          <b className="text-hotpink">{regime.label}</b> plan · <b className="text-hotpink">{myRulesRecipes.length}</b> recipes matched to you{profile.allergies.length ? " (allergy-safe)" : ""}.
+      {/* Search + collapsible filters — compact plan line, then a search bar with
+          a filter toggle on the right. The filter panel folds away after a pick. */}
+      <Glass className="p-3.5 space-y-2.5">
+        <p className="flex items-center gap-1.5 text-[11px] text-rose/70 leading-snug">
+          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Leaf className="h-3 w-3" /></span>
+          <b className="text-hotpink">{regime.label}</b> plan · <b className="text-hotpink">{myRulesRecipes.length}</b> recipes matched{profile.allergies.length ? " · allergy-safe" : ""}
         </p>
-      </div>
 
-      {/* Search + filters */}
-      <Glass className="p-4 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
-          <input
-            value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search recipes or ingredients..."
-            className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
+            <input
+              value={query} onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search recipes or ingredients..."
+              className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            aria-label="Filters" aria-expanded={showFilters}
+            className={[
+              "relative grid h-10 w-10 shrink-0 place-items-center rounded-full border transition active:scale-95",
+              showFilters || activeCount ? "bg-hotpink text-white border-hotpink" : "bg-white text-hotpink border-petal/60 hover:border-hotpink/50",
+            ].join(" ")}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {activeCount > 0 && (
+              <span className="absolute -top-1 -right-1 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-white text-hotpink text-[9px] font-black border border-hotpink/40">{activeCount}</span>
+            )}
+          </button>
         </div>
-        <div className="space-y-1.5">
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {PHASE_FILTERS.map((p) => (
-              <SelectPill key={p} active={phaseFilters.includes(p)} onClick={() => toggle(phaseFilters, p, setPhaseFilters)}>{PHASE_INFO[p].label}</SelectPill>
-            ))}
+
+        {/* Applied filters — removable chips, visible even when the panel is closed */}
+        {activeCount > 0 && !showFilters && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {phaseFilters.map((p) => <ActiveFilterChip key={p} label={PHASE_INFO[p].label} onRemove={() => toggle(phaseFilters, p, setPhaseFilters)} />)}
+            {mealFilters.map((m) => <ActiveFilterChip key={m} label={MEAL_LABELS[m]} onRemove={() => toggle(mealFilters, m, setMealFilters)} />)}
+            {timeFilter && <ActiveFilterChip label={TIME_FILTERS.find((t) => t.key === timeFilter)!.label} onRemove={() => setTimeFilter(null)} />}
+            {goalFilters.map((g) => <ActiveFilterChip key={g} label={GOAL_FILTERS.find((x) => x.key === g)!.label} onRemove={() => toggle(goalFilters, g, setGoalFilters)} />)}
+            <button onClick={clearAll} className="px-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/50 underline hover:text-hotpink">Clear</button>
           </div>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {MEAL_FILTERS.map((m) => (
-              <SelectPill key={m} active={mealFilters.includes(m)} onClick={() => toggle(mealFilters, m, setMealFilters)}>{MEAL_LABELS[m]}</SelectPill>
-            ))}
+        )}
+
+        {/* Filter panel — pick one and it folds away */}
+        {showFilters && (
+          <div className="space-y-1.5 pt-0.5 animate-fade-in">
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              {PHASE_FILTERS.map((p) => (
+                <SelectPill key={p} active={phaseFilters.includes(p)} onClick={() => pick(() => toggle(phaseFilters, p, setPhaseFilters))}>{PHASE_INFO[p].label}</SelectPill>
+              ))}
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              {MEAL_FILTERS.map((m) => (
+                <SelectPill key={m} active={mealFilters.includes(m)} onClick={() => pick(() => toggle(mealFilters, m, setMealFilters))}>{MEAL_LABELS[m]}</SelectPill>
+              ))}
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              {TIME_FILTERS.map((t) => (
+                <SelectPill key={t.key} active={timeFilter === t.key} onClick={() => pick(() => setTimeFilter((cur) => (cur === t.key ? null : t.key)))}>{t.label}</SelectPill>
+              ))}
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              {GOAL_FILTERS.map((g) => (
+                <SelectPill key={g.key} active={goalFilters.includes(g.key)} onClick={() => pick(() => toggle(goalFilters, g.key, setGoalFilters))}>{g.label}</SelectPill>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {TIME_FILTERS.map((t) => (
-              <SelectPill key={t.key} active={timeFilter === t.key} onClick={() => setTimeFilter((cur) => (cur === t.key ? null : t.key))}>{t.label}</SelectPill>
-            ))}
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {GOAL_FILTERS.map((g) => (
-              <SelectPill key={g.key} active={goalFilters.includes(g.key)} onClick={() => toggle(goalFilters, g.key, setGoalFilters)}>{g.label}</SelectPill>
-            ))}
-          </div>
-        </div>
+        )}
       </Glass>
 
       {!!pwRecipes.length && !filtersActive && (
@@ -1972,7 +2021,7 @@ export default function DietPage() {
       )}
 
       {/* HERO — full-bleed blended photo background, same technique as Today/Tools */}
-      <div className="relative isolate min-h-[150px] sm:min-h-[176px] -mt-3 sm:-mt-5 lg:-mt-6 mb-4 animate-card-pop-in">
+      <div className="relative isolate min-h-[150px] sm:min-h-[176px] -mt-3 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
         {/* base pink wash */}
         <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[540px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
         {/* photo — dissolves toward the bottom into the page */}
@@ -1984,15 +2033,6 @@ export default function DietPage() {
           <img src="/images/meal-oats.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[72%_42%]" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
         </div>
-
-        {/* Reset — preview the brand-new-user experience */}
-        <button
-          onClick={onReset}
-          title="Reset (preview first-time setup)"
-          className="absolute top-1 right-1 z-[2] inline-flex items-center gap-1 rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold text-hotpink border border-petal/60 shadow-sm active:scale-95 transition"
-        >
-          <RotateCcw className="h-3 w-3" /> Reset
-        </button>
 
         {/* content */}
         <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
@@ -2043,6 +2083,7 @@ export default function DietPage() {
             onPlanMeals={planMealsImplicit} onPlanMovement={planMovementImplicit}
             onUnplanMeals={unplanMealsImplicit} onUnplanMovement={unplanMovementImplicit}
             onSyncCycle={syncWeekToPhase}
+            onReset={onReset}
           />
         )}
         {tab === "cycle" && (
