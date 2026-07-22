@@ -2641,8 +2641,8 @@ function SessionActive({ session, onExit, onDone }: {
             const repNow = Math.min(reps, Math.floor((step.workSec - nr) / repSec) + 1);
             const repPrev = Math.min(reps, Math.floor((step.workSec - r) / repSec) + 1);
             if (repNow > repPrev) playTick(repNow > reps - 3 ? "count" : "soft");
-          } else if (nr <= 3 && step.kind !== "switch") {
-            playTick("count"); // final-3 countdown on holds/rest — but NOT on switch (music only)
+          } else if (nr <= 3) {
+            playTick("count"); // final-3 countdown on holds / switch / rest
           }
         }
         if (nr <= 0) {
