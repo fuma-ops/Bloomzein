@@ -169,7 +169,7 @@ function StepCard({ n, photo, Icon, tint, title, desc, done, cta, ctaCls, onCrea
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white border border-petal/50 p-2.5 flex flex-col">
       <span className="absolute right-2 top-2 z-10 rounded-full bg-hotpink text-white text-[8px] font-black px-1.5 py-0.5 uppercase tracking-wide">Step {n}</span>
-      <div className="relative h-16 -mx-2.5 -mt-2.5 mb-1.5 overflow-hidden">
+      <div className="relative h-16 sm:h-24 lg:h-28 -mx-2.5 -mt-2.5 mb-1.5 overflow-hidden">
         <img src={photo} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent" />
         <span className={["absolute left-2 bottom-1 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br text-white shadow-md", tint].join(" ")}><Icon className="h-4 w-4" strokeWidth={2} /></span>
@@ -205,7 +205,7 @@ function ReadyCard({ photo, Icon, tint, title, status, lines, cta, ctaCls, onCta
       <span className={["grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br text-white shadow-md", tint].join(" ")}><Icon className="h-3.5 w-3.5" strokeWidth={2} /></span>
       <p className="mt-1 text-[10.5px] font-bold text-[#831843] leading-none">{title}</p>
       <p className="text-[8px] font-bold text-emerald-600">{status}</p>
-      <div className="my-1 h-11 w-full overflow-hidden rounded-xl bg-blush/40">
+      <div className="my-1 h-11 sm:h-20 lg:h-24 w-full overflow-hidden rounded-xl bg-blush/40">
         <img src={photo} alt="" className={["h-full w-full", imgContain ? "object-contain" : "object-cover"].join(" ")} loading="lazy" referrerPolicy="no-referrer" />
       </div>
       {/* lines fill the remaining height so every card's CTA lands on one line */}
