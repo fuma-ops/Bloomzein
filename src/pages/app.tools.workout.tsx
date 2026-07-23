@@ -2656,15 +2656,16 @@ function SparkleField({ active, z = 53 }: { active: boolean; z?: number }) {
 // The big "WOW" — a one-shot radial EXPLOSION of strong-pink hearts, flowers and
 // stars bursting out of the centre with a pink flash. Fires once on mount.
 function PinkExplosion({ z = 56 }: { z?: number }) {
-  const bits = useMemo(() => Array.from({ length: 60 }, () => {
+  const bits = useMemo(() => Array.from({ length: 120 }, (_, i) => {
     const ang = Math.random() * Math.PI * 2;
-    const dist = 20 + Math.random() * 48; // vmin
+    // two waves — a tight inner burst and a big outer one — for depth + density
+    const dist = (i % 2 === 0 ? 16 + Math.random() * 34 : 44 + Math.random() * 42); // vmin
     return {
       x: `${Math.cos(ang) * dist}vmin`,
       y: `${Math.sin(ang) * dist}vmin`,
-      r: `${-200 + Math.random() * 400}deg`,
-      size: 16 + Math.random() * 30,
-      delay: Math.random() * 0.16,
+      r: `${-220 + Math.random() * 440}deg`,
+      size: 18 + Math.random() * 40,
+      delay: Math.random() * 0.22,
       color: ["#FF1493", "#EC4899", "#FF4FA3", "#FF69B4"][Math.floor(Math.random() * 4)],
       char: ["♥", "❤", "✿", "❀", "✦", "★", "❁", "💗", "💖", "🌸"][Math.floor(Math.random() * 10)],
     };
@@ -3012,6 +3013,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   const [remaining, setRemaining] = useState(steps[0]?.workSec ?? session.workSec);
   const [paused, setPaused] = useState(false);
   const [finished, setFinished] = useState(false);            // session complete → celebration overlays the frozen player
+  const [celebrateReady, setCelebrateReady] = useState(false); // after the "END" intro + 5s music fade
   const [finalElapsed, setFinalElapsed] = useState(0);
   const finishedRef = useRef(false);
   const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
@@ -3037,18 +3039,21 @@ function SessionActive({ session, programRef, onExit, onDone }: {
     if (finishedRef.current) return;
     finishedRef.current = true;
     setFinalElapsed(elapsedRef.current);
-    setFinished(true);
-    // Silence the player completely so nothing loops/"beeps" under the celebration
-    // (the looping music was the culprit) — a smooth fade, then stop.
-    const a = audioRef.current;
-    if (a) {
-      const iv = window.setInterval(() => {
-        a.volume = Math.max(0, a.volume - 0.04);
-        if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
-      }, 70);
-    }
+    setFinished(true);                 // freezes the player + stops the tick beeps (dep)
+    // Phase A — "The End" breathes over the pink veil while the music fades out
+    // over ~5s. Phase B (the congratulation + celebration) starts after that.
     const cue = cueRef.current;
     if (cue) { try { cue.pause(); } catch {} }
+    const a = audioRef.current;
+    if (a) {
+      const start = a.volume || MUSIC_VOL;
+      const stepDown = start / 50;     // 50 steps × 100ms = 5s fade
+      const iv = window.setInterval(() => {
+        a.volume = Math.max(0, a.volume - stepDown);
+        if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
+      }, 100);
+    }
+    window.setTimeout(() => setCelebrateReady(true), 5000);
   };
 
   const step = steps[index];
@@ -3242,7 +3247,9 @@ function SessionActive({ session, programRef, onExit, onDone }: {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [paused, starting, briefing, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
+    // `finished` MUST be here: without it the running interval keeps firing
+    // playTick("end") every second after the session ends → the "bip bip" bug.
+  }, [paused, starting, briefing, finished, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
 
   const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
@@ -3481,9 +3488,10 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                 </div>
               )}
 
-              {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
-              <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
-                <RepRing size={82} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
+              {/* Compact rep ring — phones only (desktop/tablet use the right rail).
+                  Bigger + a touch inset so the REP / % text sits comfortably inside. */}
+              <div className="md:hidden absolute top-2.5 right-2.5 z-[25] rounded-full bg-white/75 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1">
+                <RepRing size={104} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
                   rep={stepReps > 0 && !isSwitch ? currentRep : undefined}
                   total={stepReps > 0 && !isSwitch ? stepReps : undefined}
                   seconds={remaining} />
@@ -3491,25 +3499,26 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             </div>
           ) : (
             <>
-              {/* PHONE — compact: ring on top, small coming-up thumbnail row. */}
-              <div className="md:hidden relative w-full grid place-items-center rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5">
+              {/* PHONE — ring on top, then a BIGGER coming-up image that uses the
+                  space below (shown in full, not cropped). */}
+              <div className="md:hidden relative w-full flex flex-col items-center gap-3 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5">
                 <div className="text-center">
                   <p className="text-sm font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
-                  <p className="text-[11px] text-rose/55 mb-4">Breathe in… and out. ✿</p>
-                  <RepRing size={132} percent={ringPct} seconds={remaining} label="Rest" />
-                  {next && (
-                    <div className="mt-5 mx-auto max-w-xs">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                      <div className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur border border-white/70 p-2.5 text-left">
-                        <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 shrink-0 object-cover rounded-xl border border-petal/60" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-base font-bold text-rose leading-tight">{next.name}</p>
-                          {nextReps && <span className="mt-0.5 inline-block text-[11px] font-semibold text-hotpink">{nextReps}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <p className="text-[11px] text-rose/55">Breathe in… and out. ✿</p>
                 </div>
+                <RepRing size={120} percent={ringPct} seconds={remaining} label="Rest" />
+                {next && (
+                  <div className="w-full max-w-xs">
+                    <p className="text-center text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                    <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
+                      <ExercisePhoto exercise={next} zone={session.zone} className="w-full h-full object-contain" />
+                    </div>
+                    <p className="mt-2 text-center">
+                      <span className="text-base font-bold text-rose">{next.name}</span>
+                      {nextReps && <span className="ml-2 text-xs font-semibold text-hotpink">{nextReps}</span>}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* DESKTOP / TABLET — two columns: big coming-up image LEFT, ring RIGHT. */}
@@ -3572,16 +3581,20 @@ function SessionActive({ session, programRef, onExit, onDone }: {
       {/* Control bar — pinned to the bottom on phones */}
       <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{controlBar}</div>
 
-      {/* Session complete — instead of cutting to a new page, a flower blooms out
-          of the centre and the celebration eases in over the FROZEN player, behind
-          a soft pink veil. The music keeps going (ducked) under the voice. */}
-      {finished && (
-        <>
-          <div key="fin-burst" aria-hidden className="pointer-events-none fixed inset-0 z-[63] grid place-items-center">
-            <span className="animate-wk-go-center font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.9)]" style={{ fontSize: "clamp(6rem, 26vw, 15rem)" }}>✿</span>
+      {/* Session complete — no page switch. Phase A: "The End" breathes over the
+          pink veil while the music fades out (~5s). Phase B: the congratulation
+          + big celebration bloom in over the frozen player. */}
+      {finished && !celebrateReady && (
+        <div aria-hidden className="pointer-events-none fixed inset-0 z-[61] grid place-items-center animate-fade-in"
+          style={{ background: "linear-gradient(160deg, oklch(0.9 0.1 350 / 0.72), oklch(0.82 0.13 345 / 0.68))", backdropFilter: "blur(4px)" }}>
+          <div className="text-center">
+            <p className="animate-wk-end-breathe font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.85)]" style={{ fontSize: "clamp(5rem, 22vw, 13rem)" }}>The&nbsp;End&nbsp;✿</p>
+            <p className="mt-3 font-extrabold uppercase tracking-[0.34em] text-rose/70 text-xs sm:text-sm">You made it</p>
           </div>
-          <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} />
-        </>
+        </div>
+      )}
+      {finished && celebrateReady && (
+        <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} />
       )}
     </div>,
     document.body
@@ -3620,15 +3633,13 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
     };
     let fallback: number;
     if (sound) {
-      // In overlay mode the still-mounted player owns the music (already ducked),
-      // so we only add the voice here — no second music bed.
-      if (!overlay) {
-        try {
-          music = new Audio(WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0]);
-          music.loop = true; music.volume = 0.16; // kept, just turned down
-          music.play().catch(() => {});
-        } catch {}
-      }
+      // A LOW-volume music bed under the congratulation voice (the player's own
+      // music already faded out during the "End" intro).
+      try {
+        music = new Audio(WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0]);
+        music.loop = true; music.volume = overlay ? 0.12 : 0.16;
+        music.play().catch(() => {});
+      } catch {}
       try {
         voice = new Audio(CONGRATS_AUDIO[Math.floor(Math.random() * CONGRATS_AUDIO.length)]);
         voice.volume = 0.95;
