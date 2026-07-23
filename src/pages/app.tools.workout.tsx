@@ -2665,9 +2665,12 @@ function parseMuscles(s: string): string[] {
 }
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-/** A soft translucent glass panel — the building block for every side card. */
-function GlassCard({ icon: Icon, title, children, className = "", delay = 0 }: {
+/** A soft translucent glass panel — the building block for every side card.
+ *  `iconVibe` makes the title medallion sway + glow to the music (left rail);
+ *  `iconVibeDelay` offsets it so a stack of cards reads like an equalizer. */
+function GlassCard({ icon: Icon, title, children, className = "", delay = 0, iconVibe = false, iconVibeDelay = 0 }: {
   icon?: any; title?: string; children: React.ReactNode; className?: string; delay?: number;
+  iconVibe?: boolean; iconVibeDelay?: number;
 }) {
   return (
     <div
@@ -2676,7 +2679,14 @@ function GlassCard({ icon: Icon, title, children, className = "", delay = 0 }: {
     >
       {title && (
         <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70 mb-3">
-          {Icon && <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink/12 text-hotpink"><Icon className="h-3.5 w-3.5" /></span>}
+          {Icon && (
+            <span
+              className={["grid h-6 w-6 place-items-center rounded-full bg-hotpink/12 text-hotpink", iconVibe ? "animate-wk-icon-glow" : ""].join(" ")}
+              style={iconVibe ? { animationDelay: `${iconVibeDelay}s` } : undefined}
+            >
+              <Icon className={["h-3.5 w-3.5", iconVibe ? "animate-wk-icon-vibe" : ""].join(" ")} style={iconVibe ? { animationDelay: `${iconVibeDelay}s` } : undefined} />
+            </span>
+          )}
           {title}
         </p>
       )}
@@ -2746,7 +2756,7 @@ function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, go
  *  desktop, tablet and phone layouts all read from one place). */
 function FocusCard({ primary, zone, delay }: { primary: string; zone?: Zone; delay?: number }) {
   return (
-    <GlassCard icon={Target} title="Today's focus" delay={delay}>
+    <GlassCard icon={Target} title="Today's focus" delay={delay} iconVibe iconVibeDelay={0}>
       <div className="flex items-center gap-3">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-petal to-hotpink/70 text-white shadow-sm"><Flame className="h-5 w-5" /></span>
         <div className="min-w-0">
@@ -2760,7 +2770,7 @@ function FocusCard({ primary, zone, delay }: { primary: string; zone?: Zone; del
 function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: number }) {
   const list = (muscles.length ? muscles : ["Full body"]).slice(0, 4);
   return (
-    <GlassCard icon={Activity} title="Muscle target" delay={delay}>
+    <GlassCard icon={Activity} title="Muscle target" delay={delay} iconVibe iconVibeDelay={0.5}>
       <div className="space-y-2.5">
         {list.map((m, i) => (
           <div key={m + i}>
@@ -2780,7 +2790,7 @@ function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: numbe
 function CoachTipCard({ tip, delay }: { tip: string; delay?: number }) {
   if (!tip) return null;
   return (
-    <GlassCard icon={Lightbulb} title="Coach tip" delay={delay}>
+    <GlassCard icon={Lightbulb} title="Coach tip" delay={delay} iconVibe iconVibeDelay={1}>
       <p className="text-[13px] leading-snug font-medium text-rose/85">{tip}</p>
     </GlassCard>
   );
@@ -2849,18 +2859,16 @@ function SessionBackdrop({ exercise, zone, phase, paused, index }: {
 }
 
 /** One control in the glossy bottom bar (Previous / Skip / Voice / Favorite).
- *  When `beat` is on it pulses to the music tempo (staggered by `beatDelay`). */
-function WkCtrl({ icon: Icon, label, onClick, active, disabled, beat, beatDelay = 0 }: {
+ *  A still, luxe frosted-glass button — pink lux fill when `active`. */
+function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
   icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
-  beat?: boolean; beatDelay?: number;
 }) {
   return (
     <button onClick={onClick} disabled={disabled} aria-label={label}
       className="flex flex-col items-center gap-1 px-1 sm:px-2 disabled:opacity-40 active:scale-90 transition">
-      <span className={["grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full border transition",
-        active ? "bg-hotpink text-white border-hotpink shadow-md" : "bg-white/70 border-white/70 text-rose",
-        beat ? "animate-wk-beat" : ""].join(" ")} style={beat ? { animationDelay: `${beatDelay}s` } : undefined}>
-        <Icon className={["h-5 w-5", active && label === "Favorite" ? "fill-current" : ""].join(" ")} />
+      <span className={["relative grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full",
+        active ? "wk-lux-btn-on text-white" : "wk-lux-btn text-rose"].join(" ")}>
+        <Icon className={["relative z-[2] h-5 w-5", active && label === "Favorite" ? "fill-current" : ""].join(" ")} />
       </span>
       <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{label}</span>
     </button>
@@ -3126,24 +3134,22 @@ function SessionActive({ session, onExit, onDone }: {
     : totalSec > 0 ? 1 - remaining / totalSec : 0;
   const ringLabel = phase === "rest" ? "Rest" : isSwitch ? "Switch" : step.kind === "warmup" ? "Warm-up" : step.kind === "cooldown" ? "Cool-down" : "Seconds";
 
-  // Icons "dance" to the music while it's playing (paused/muted → still).
-  const beating = sound && !paused;
-
-  // The glossy bottom control bar — Previous · Pause · Skip · Voice · Favorite —
-  // rendered inside the centre column on tablet/desktop and pinned to the bottom
-  // on phones. Same frosted-glass treatment as every side card.
+  // The glossy bottom control bar — Previous · Pause · Skip · Voice · Favorite.
+  // Rendered inside the centre column on tablet/desktop and pinned to the bottom
+  // on phones. Each control is a still, luxe frosted-glass button (no motion) —
+  // the "music vibe" lives on the left-rail icons instead.
   const controlBar = (
     <div className="mx-auto w-full max-w-xl flex items-center justify-around gap-1 rounded-[1.6rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-2 sm:px-4 py-2 sm:py-2.5">
-      <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} beat={beating} beatDelay={0} />
+      <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} />
       <button onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"} className="flex flex-col items-center gap-1 active:scale-95 transition">
-        <span className="grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-[0_8px_24px_rgba(236,72,153,0.5)] animate-selected-glow">
-          {paused ? <Play className="h-7 w-7 sm:h-8 sm:w-8 fill-current" /> : <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />}
+        <span className="relative grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full wk-lux-btn-on text-white">
+          {paused ? <Play className="relative z-[2] h-7 w-7 sm:h-8 sm:w-8 fill-current" /> : <Pause className="relative z-[2] h-7 w-7 sm:h-8 sm:w-8 fill-current" />}
         </span>
         <span className="text-[10px] sm:text-[11px] font-bold text-hotpink">{paused ? "Resume" : "Pause"}</span>
       </button>
-      <WkCtrl icon={SkipForward} label="Skip" onClick={phase === "rest" ? skipRest : skip} beat={beating} beatDelay={0.12} />
-      <WkCtrl icon={voice ? Volume2 : VolumeX} label="Voice" active={voice} onClick={() => setVoice((v) => !v)} beat={beating} beatDelay={0.24} />
-      <WkCtrl icon={Heart} label="Favorite" active={isFav} onClick={toggleFav} beat={beating} beatDelay={0.36} />
+      <WkCtrl icon={SkipForward} label="Skip" onClick={phase === "rest" ? skipRest : skip} />
+      <WkCtrl icon={voice ? Volume2 : VolumeX} label="Voice" active={voice} onClick={() => setVoice((v) => !v)} />
+      <WkCtrl icon={Heart} label="Favorite" active={isFav} onClick={toggleFav} />
     </div>
   );
 
@@ -3163,16 +3169,17 @@ function SessionActive({ session, onExit, onDone }: {
       {starting && <BloomIntro title={session.name} count={intro} />}
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
-      {/* Brand logo — flower ABOVE the wordmark, bigger & alive: it spins slowly,
-          breathes in sync with the room (7s), and the colour drifts inside the
-          petals — so every screenshot reads unmistakably as Bloomzein. */}
-      <div aria-hidden className="pointer-events-none absolute bottom-3 left-4 z-[15] inline-flex flex-col items-center gap-1 rounded-[1.4rem] bg-white/60 backdrop-blur-md border border-white/60 px-4 py-2.5 shadow-[0_10px_28px_rgba(236,72,153,0.3)]">
-        <span className="animate-wk-flower-spin drop-shadow-[0_0_12px_oklch(0.7_0.24_350/0.65)]">
-          <span className="block animate-wk-logo-breathe">
-            <span className="block animate-wk-flower-hue text-hotpink"><BloomFlower size={44} /></span>
+      {/* Brand flower — no frame, no wordmark: just a big, strong-pink bloom that
+          spins slowly, breathes in sync with the room (7s) and pulses a soft pink
+          halo, so every screenshot still reads unmistakably as Bloomzein. */}
+      <div aria-hidden className="pointer-events-none absolute bottom-4 left-4 z-[15]">
+        <span className="block animate-wk-flower-spin">
+          <span className="block animate-wk-flower-glow">
+            <span className="block animate-wk-logo-breathe">
+              <BloomFlower size={72} petal="#FF1493" center="#FFE3F1" />
+            </span>
           </span>
         </span>
-        <span className="font-script text-2xl sm:text-3xl text-hotpink leading-none drop-shadow-sm">Bloomzein</span>
       </div>
 
       {/* ── Top bar: close · session progress · sound ── */}
@@ -3295,6 +3302,15 @@ function SessionActive({ session, onExit, onDone }: {
                   </>
                 )}
               </div>
+
+              {/* "GO ✿" blooming from the CENTRE of the image to announce the move —
+                  bigger than the ring burst, quick and self-clearing so it never nags. */}
+              {goRing > 0 && !isSwitch && (
+                <div key={`go-center-${goRing}`} aria-hidden className="pointer-events-none absolute inset-0 z-[24] grid place-items-center">
+                  <span className="animate-wk-go-center font-script text-white leading-none drop-shadow-[0_4px_22px_oklch(0.58_0.28_350/0.9)]"
+                    style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)" }}>GO ✿</span>
+                </div>
+              )}
 
               {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
               <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
