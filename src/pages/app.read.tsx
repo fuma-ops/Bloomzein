@@ -4,7 +4,8 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { FILTERS, ARTICLES, IMG, articleById, type Filter, type Article } from "@/lib/readsData";
 import { loadArticleBody } from "@/content/reads/registry";
-import { ArticleBody } from "@/components/bloom/read/ArticleBody";
+import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
+import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
 
 /* ---------- data ---------- */
 /* Compact labels for the filter row (full category names elsewhere). */
@@ -264,73 +265,100 @@ export default function ReadPage() {
   );
 }
 
-/* ---------- article reader (lazy-loaded structured body) ---------- */
+/* ---------- article reader (magazine layout: left-title hero + TOC + drop-cap body) ---------- */
 function ArticleReader({ article, saved, onSave, onBack }: { article: Article; saved: boolean; onSave: () => void; onBack: () => void }) {
-  const [markdown, setMarkdown] = useState<string | null>(null);
+  const [parsed, setParsed] = useState<ParsedArticle | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    setMarkdown(null);
+    setParsed(null);
     document.scrollingElement?.scrollTo({ top: 0 });
     loadArticleBody(article).then((body) => {
       if (!alive) return;
       // Legacy short reads return a bare paragraph — wrap it so every article
-      // renders through one path with a headline + dek.
+      // renders through one path with a headline.
       const md = !body
         ? `# ${article.title}\n\n*${article.excerpt}*\n\nThis story is coming soon.`
         : body.trimStart().startsWith("# ")
         ? body
         : `# ${article.title}\n\n*${article.excerpt}*\n\n${body}`;
-      setMarkdown(md);
+      setParsed(parseArticle(md));
       setLoading(false);
     });
     return () => { alive = false; };
   }, [article]);
 
+  const headline = parsed?.headline || article.title;
+
   return (
     <article className="relative animate-fade-in">
       <BloomBubbles count={8} />
-      <button
-        onClick={onBack}
-        className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
-      </button>
-      <div className="mt-4 overflow-hidden rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.4)]">
-        <img src={article.image} alt="" className="block h-56 sm:h-80 w-full object-cover" referrerPolicy="no-referrer" />
-      </div>
-      <header className="mt-6 flex flex-wrap items-center gap-3">
-        <TopicBadge topic={article.category} />
-        <ReadTime minutes={article.minutes} />
-        <BloomCount count={article.blooms} />
-        <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
-      </header>
 
-      <div className="mt-4 mx-auto max-w-2xl">
-        {loading || !markdown ? (
-          <div className="animate-pulse space-y-4 py-4">
-            <div className="h-10 w-3/4 rounded-full bg-petal/40" />
-            <div className="h-4 w-2/3 rounded-full bg-petal/30" />
-            <div className="mt-8 space-y-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <ArticleBody markdown={markdown} />
-        )}
-      </div>
-
-      <div className="mt-10 mb-2 flex justify-center">
+      {/* top bar: back + actions */}
+      <div className="flex items-center gap-2">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-4 py-2 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
         >
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
         </button>
+        <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
+      </div>
+
+      {/* HERO — title on the LEFT, floral wash on the right */}
+      <header className="relative mt-3 overflow-hidden rounded-[2rem] border border-petal/60 shadow-[0_20px_50px_-24px_oklch(0.6_0.27_350/0.4)]">
+        <img
+          src={article.image}
+          alt=""
+          className="animate-hero-breathe pointer-events-none absolute inset-0 h-full w-full object-cover object-[80%_30%]"
+          referrerPolicy="no-referrer"
+        />
+        {/* left→right fade keeps the title readable over the imagery */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-[#FFE1EE] via-[#FFE1EE]/85 to-[#FFE1EE]/10" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-white/40 to-transparent" />
+        <div className="relative z-[1] max-w-[70%] sm:max-w-[62%] px-5 py-8 sm:px-9 sm:py-12 lg:py-16">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <TopicBadge topic={article.category} />
+            <ReadTime minutes={article.minutes} />
+            <BloomCount count={article.blooms} />
+          </div>
+          <h1 className="mt-4 font-serif text-[1.9rem] sm:text-4xl lg:text-[2.9rem] font-semibold text-rose leading-[1.08] drop-shadow-[0_2px_10px_oklch(1_0_0/0.5)]">
+            {headline}
+          </h1>
+        </div>
+      </header>
+
+      {/* BODY — sticky "On this page" (desktop) + article column */}
+      <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-8 lg:items-start">
+        <aside className="hidden lg:block lg:sticky lg:top-4">
+          {parsed ? <ArticleTOC sections={parsed.sections} /> : null}
+        </aside>
+
+        <div className="min-w-0 max-w-[42rem]">
+          {loading || !parsed ? (
+            <div className="animate-pulse space-y-4 py-4">
+              <div className="h-4 w-2/3 rounded-full bg-petal/30" />
+              <div className="mt-8 space-y-3">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <ArticleBody parsed={parsed} />
+          )}
+
+          <div className="mt-10 mb-2 flex justify-center lg:justify-start">
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-4 py-2 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
+            </button>
+          </div>
+        </div>
       </div>
     </article>
   );
