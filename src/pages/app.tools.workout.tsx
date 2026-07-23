@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ArrowLeft, Play, Pause, RotateCcw, SkipForward, X, Trophy, CalendarHeart,
-  Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, Check, Wand2,
+  ArrowLeft, Play, Pause, RotateCcw, SkipForward, SkipBack, X, Trophy, CalendarHeart,
+  Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, ChevronUp, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
-  CircleCheck, Circle,
+  CircleCheck, Circle, Heart, Lightbulb, Target, Activity,
 } from "lucide-react";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -2598,6 +2598,176 @@ function BloomIntro({ title, count }: { title: string; count: number | "go" | nu
   );
 }
 
+// ── Live-session content + dashboard pieces ─────────────────────────────────
+// Warm lines the Bloom Coach speaks (rotate through the session, stable per step).
+const WK_COACH_LINES = [
+  "You've got this — control the movement and breathe. 💗",
+  "Beautiful form! Squeeze at the top and stay tall. ✨",
+  "Great job! Slow and steady — you're doing amazing. 🌸",
+  "Keep breathing, keep blooming. So strong. ✿",
+  "Lift with control and own every rep. You glow. 🌷",
+];
+// Affirmations for the banner across the photo.
+const WK_AFFIRMATIONS = [
+  "Every repetition is a promise you keep to yourself. ✨",
+  "Soft body, strong spirit — you're blooming. 🌸",
+  "This is your time. Breathe deep and rise. ✿",
+  "Strong is the softest thing you can be. 💗",
+  "One move closer to the woman you're becoming. 🌷",
+];
+// Emphasis weights for the muscle-target bars (primary → supporting muscles).
+const WK_MT_PCT = [88, 64, 46, 34];
+const WK_FAV_KEY = "bloom:workout-favorites";
+
+/** Split "Glutes, hamstrings, core (mobility)" → ["Glutes","hamstrings","core"]. */
+function parseMuscles(s: string): string[] {
+  return s.replace(/\(.*?\)/g, "").split(/[,/]/).map((m) => m.trim()).filter(Boolean);
+}
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+/** A soft translucent glass panel — the building block for every side card. */
+function GlassCard({ icon: Icon, title, children, className = "", delay = 0 }: {
+  icon?: any; title?: string; children: React.ReactNode; className?: string; delay?: number;
+}) {
+  return (
+    <div
+      className={["rounded-[1.5rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.13)] p-3.5 sm:p-4 animate-fade-in", className].join(" ")}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {title && (
+        <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70 mb-3">
+          {Icon && <span className="grid h-6 w-6 place-items-center rounded-full bg-hotpink/12 text-hotpink"><Icon className="h-3.5 w-3.5" /></span>}
+          {title}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/** The big circular progress ring — shows the live rep count (or seconds on a
+ *  hold / rest) with a soft pink track, matching the reference dashboard. */
+function RepRing({ rep, total, seconds, percent, size = 168, label }: {
+  rep?: number; total?: number; seconds?: number; percent: number; size?: number; label: string;
+}) {
+  const stroke = Math.max(8, Math.round(size / 15));
+  const r = size / 2 - stroke;
+  const c = 2 * Math.PI * r;
+  const off = c * (1 - Math.min(1, Math.max(0, percent)));
+  const showReps = rep != null && total != null && total > 0;
+  return (
+    <div className="relative mx-auto" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.93 0.035 350)" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.65 0.24 350)" strokeWidth={stroke} fill="none"
+          strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" style={{ transition: "stroke-dashoffset 1s linear" }} />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center leading-none px-2">
+        <div>
+          <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70">{showReps ? "Rep" : label}</p>
+          {showReps ? (
+            <p className="mt-1 whitespace-nowrap">
+              <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.3 }}>{rep}</span>
+              <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.16 }}> / {total}</span>
+            </p>
+          ) : (
+            <p className="mt-1 font-black text-rose tabular-nums" style={{ fontSize: size * 0.32 }}>{seconds}</p>
+          )}
+          <p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.13em] text-hotpink">{Math.round(percent * 100)}% <span className="text-hotpink/55">complete</span></p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Today's-focus + muscle-target + coach-tip cards (shared by the rails so the
+ *  desktop, tablet and phone layouts all read from one place). */
+function FocusCard({ primary, zone, delay }: { primary: string; zone?: Zone; delay?: number }) {
+  return (
+    <GlassCard icon={Target} title="Today's focus" delay={delay}>
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-petal to-hotpink/70 text-white shadow-sm"><Flame className="h-5 w-5" /></span>
+        <div className="min-w-0">
+          <p className="font-script text-2xl text-hotpink leading-none truncate">{cap(primary)}</p>
+          <p className="text-[11px] font-semibold text-rose/60">Primary muscles</p>
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
+function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: number }) {
+  const list = (muscles.length ? muscles : ["Full body"]).slice(0, 4);
+  return (
+    <GlassCard icon={Activity} title="Muscle target" delay={delay}>
+      <div className="space-y-2.5">
+        {list.map((m, i) => (
+          <div key={m + i}>
+            <div className="flex items-center justify-between text-[11px] font-bold text-rose mb-1">
+              <span className="truncate">{cap(m)}</span>
+              <span className="text-hotpink tabular-nums">{WK_MT_PCT[i] ?? 30}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-hotpink/10 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-700" style={{ width: `${WK_MT_PCT[i] ?? 30}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </GlassCard>
+  );
+}
+function CoachTipCard({ tip, delay }: { tip: string; delay?: number }) {
+  if (!tip) return null;
+  return (
+    <GlassCard icon={Lightbulb} title="Coach tip" delay={delay}>
+      <p className="text-[13px] leading-snug font-medium text-rose/85">{tip}</p>
+    </GlassCard>
+  );
+}
+function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; reps?: string; delay?: number }) {
+  return (
+    <GlassCard icon={ChevronRight} title="Next up" delay={delay}>
+      <div className="flex items-center gap-3">
+        <ExercisePhoto exercise={next} zone={zone} className="h-14 w-14 shrink-0 object-cover rounded-2xl border border-petal/60" />
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-rose leading-tight truncate">{next.name}</p>
+          {reps && <p className="text-[11px] font-semibold text-hotpink mt-0.5">{reps}</p>}
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
+function FormReminderCard({ cues, delay }: { cues: string[]; delay?: number }) {
+  if (!cues.length) return null;
+  return (
+    <GlassCard icon={ShieldCheck} title="Form reminder" delay={delay}>
+      <ul className="space-y-2">
+        {cues.map((c, i) => (
+          <li key={i} className="flex items-start gap-2 text-[12px] font-medium text-rose/85 leading-snug">
+            <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Check className="h-2.5 w-2.5" strokeWidth={3} /></span>
+            {c}
+          </li>
+        ))}
+      </ul>
+    </GlassCard>
+  );
+}
+
+/** One control in the glossy bottom bar (Previous / Skip / Voice / Favorite). */
+function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
+  icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
+}) {
+  return (
+    <button onClick={onClick} disabled={disabled} aria-label={label}
+      className="flex flex-col items-center gap-1 px-1 sm:px-2 disabled:opacity-40 active:scale-90 transition">
+      <span className={["grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full border transition",
+        active ? "bg-hotpink text-white border-hotpink shadow-md" : "bg-white/70 border-white/70 text-rose"].join(" ")}>
+        <Icon className={["h-5 w-5", active && label === "Favorite" ? "fill-current" : ""].join(" ")} />
+      </span>
+      <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{label}</span>
+    </button>
+  );
+}
+
 function SessionActive({ session, onExit, onDone }: {
   session: WorkoutSession;
   onExit: () => void;
@@ -2613,8 +2783,9 @@ function SessionActive({ session, onExit, onDone }: {
   const [goFlash, setGoFlash] = useState(0);                  // "GO ✿" flash key per move
   const [celebrate, setCelebrate] = useState(false);         // petal burst on milestones
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);   // master mute
-  const [voice] = useLS<boolean>(VOICE_KEY, true);             // spoken cues on/off
+  const [voice, setVoice] = useLS<boolean>(VOICE_KEY, true);   // spoken cues on/off
   const [musicTrack] = useLS<number>(MUSIC_KEY, 0);           // chosen background track
+  const [favs, setFavs] = useLS<string[]>(WK_FAV_KEY, []);    // saved moves (heart)
   const elapsedRef = useRef(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest cues
@@ -2802,6 +2973,14 @@ function SessionActive({ session, onExit, onDone }: {
     }
   };
   const skipRest = () => { setPhase("exercise"); setIndex((i) => i + 1); setRemaining(nextStepObj?.workSec ?? step.workSec); };
+  const prev = () => {
+    if (phase === "rest") { setPhase("exercise"); setRemaining(step.workSec); return; }
+    if (index === 0) { setRemaining(step.workSec); return; }
+    const pi = index - 1;
+    setIndex(pi); setPhase("exercise"); setRemaining(steps[pi].workSec);
+  };
+  const isFav = favs.includes(exercise.slug);
+  const toggleFav = () => setFavs((f) => f.includes(exercise.slug) ? f.filter((s) => s !== exercise.slug) : [...f, exercise.slug]);
 
   const totalSec = phase === "exercise" ? step.workSec : step.restSec;
   // Live rep count for a rep-based work step (paces "1…2…3…" to the target).
@@ -2810,8 +2989,47 @@ function SessionActive({ session, onExit, onDone }: {
     ? Math.min(stepReps, Math.max(1, Math.floor((step.workSec - remaining) / (step.workSec / stepReps)) + 1))
     : 0;
 
+  // ── Dashboard content, derived from the current move ──────────────────────
+  const isSwitch = step.kind === "switch";
+  const muscleList = parseMuscles(exercise.muscles);
+  const primaryMuscle = muscleList[0] ?? "Full body";
+  const coaching = getCoaching(exercise.slug);
+  const coachTip = coaching?.howTo ?? "";
+  const formCues = coaching?.cues ?? [];
+  const coachLine = WK_COACH_LINES[index % WK_COACH_LINES.length];
+  const affirmation = WK_AFFIRMATIONS[index % WK_AFFIRMATIONS.length];
+  const nextReps = nextStepObj
+    ? (nextStepObj.reps ? `${nextStepObj.reps} reps` : nextStepObj.repTarget ?? nextStepObj.exercise.muscles)
+    : "";
+  // Ring fill: rep progress on a rep move, else time elapsed on holds / rest.
+  const ringPct = phase === "exercise" && stepReps > 0
+    ? currentRep / stepReps
+    : totalSec > 0 ? 1 - remaining / totalSec : 0;
+  const ringLabel = phase === "rest" ? "Rest" : isSwitch ? "Switch" : step.kind === "warmup" ? "Warm-up" : step.kind === "cooldown" ? "Cool-down" : "Seconds";
+
+  // The glossy bottom control bar — Previous · Pause · Skip · Voice · Favorite —
+  // rendered inside the centre column on tablet/desktop and pinned to the bottom
+  // on phones. Same frosted-glass treatment as every side card.
+  const controlBar = (
+    <div className="mx-auto w-full max-w-xl flex items-center justify-around gap-1 rounded-[1.6rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-2 sm:px-4 py-2 sm:py-2.5">
+      <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} />
+      <button onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"} className="flex flex-col items-center gap-1 active:scale-95 transition">
+        <span className="grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-[0_8px_24px_rgba(236,72,153,0.5)] animate-selected-glow">
+          {paused ? <Play className="h-7 w-7 sm:h-8 sm:w-8 fill-current" /> : <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />}
+        </span>
+        <span className="text-[10px] sm:text-[11px] font-bold text-hotpink">{paused ? "Resume" : "Pause"}</span>
+      </button>
+      <WkCtrl icon={SkipForward} label="Skip" onClick={phase === "rest" ? skipRest : skip} />
+      <WkCtrl icon={voice ? Volume2 : VolumeX} label="Voice" active={voice} onClick={() => setVoice((v) => !v)} />
+      <WkCtrl icon={Heart} label="Favorite" active={isFav} onClick={toggleFav} />
+    </div>
+  );
+
   return createPortal(
-    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <div className="fixed inset-0 z-[60] flex flex-col bg-gradient-to-br from-[oklch(0.97_0.02_350)] via-[oklch(0.95_0.045_350)] to-[oklch(0.91_0.07_345)]" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {/* soft floral glow so the pink room feels alive behind the glass */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-70" style={{ background: "radial-gradient(60% 45% at 82% 12%, oklch(0.9 0.09 350 / 0.5), transparent 70%), radial-gradient(50% 40% at 12% 88%, oklch(0.9 0.08 345 / 0.45), transparent 70%)" }} />
+
       {/* Background music loop (controlled by the sound toggle) */}
       <audio ref={audioRef} src={musicSrc} loop preload="auto" />
       {/* Spoken cue channel — per-move / rest / switch recordings */}
@@ -2822,192 +3040,187 @@ function SessionActive({ session, onExit, onDone }: {
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
       {/* Brand watermark — every screenshot reads as Bloomzein */}
-      <div aria-hidden className="pointer-events-none absolute bottom-2.5 left-3 z-[15] inline-flex items-center gap-1.5 rounded-full bg-white/55 backdrop-blur px-2 py-0.5 text-hotpink/80 font-script text-sm leading-none shadow-sm">
+      <div aria-hidden className="pointer-events-none absolute bottom-1.5 left-3 z-[15] inline-flex items-center gap-1.5 rounded-full bg-white/55 backdrop-blur px-2 py-0.5 text-hotpink/80 font-script text-sm leading-none shadow-sm">
         <BloomFlower size={13} /> Bloomzein
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 bg-white/60 shrink-0">
-        <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
-      </div>
-
-      <div className="flex items-center justify-between p-3 shrink-0">
-        <button onClick={onExit} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60"><X className="h-5 w-5 sm:h-6 sm:w-6" /></button>
-        <div className="text-center">
-          <p className={[
-            "text-[10px] sm:text-xs font-bold uppercase tracking-wider leading-none",
-            step.kind === "warmup" ? "text-hotpink/60" : step.kind === "cooldown" ? "text-hotpink/60" : "text-hotpink",
-          ].join(" ")}>{step.label}</p>
-          <p className="text-base sm:text-xl font-bold text-rose leading-tight">{index + 1} / {steps.length}</p>
-        </div>
-        <button onClick={() => setSound((s) => !s)} className="rounded-full bg-white/90 p-2.5 sm:p-3 text-rose border border-petal/60">
-          {sound ? <Volume2 className="h-5 w-5 sm:h-6 sm:w-6" /> : <VolumeX className="h-5 w-5 sm:h-6 sm:w-6" />}
-        </button>
-      </div>
-
-      <div className="relative flex-1 min-h-0 overflow-hidden">
-        {phase === "exercise" && step.kind !== "switch" && next && nextStepObj?.kind !== "switch" && remaining > 0 && remaining <= 5 && (
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-3 rounded-2xl bg-white/95 border border-petal/60 shadow-lg p-2.5 sm:p-4 pr-3 sm:pr-6 animate-fade-in">
-            <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-28 sm:w-28 object-cover rounded-xl border border-petal/60" />
-            <div className="text-left">
-              <p className="text-xs sm:text-sm font-bold uppercase tracking-wide text-hotpink/70 leading-none">Next up</p>
-              <p className="text-base sm:text-2xl font-bold text-rose leading-tight mt-1">{next.name}</p>
+      {/* ── Top bar: close · session progress · sound ── */}
+      <header className="relative z-10 flex items-center gap-3 px-3 sm:px-5 py-2.5 shrink-0">
+        <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+        <div className="flex-1 min-w-0">
+          <p className="text-center text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
+          <div className="flex items-center gap-2.5">
+            <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
+              <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
             </div>
+            <span className="text-xs sm:text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
-        )}
-        {/* Fits the viewport with no scroll: the photo flexes to whatever height
-            is left, everything else stays a fixed, always-visible size. */}
-        <div className="h-full flex flex-col items-center justify-center gap-1.5 sm:gap-3 px-3 py-2">
-          {phase === "exercise" ? (
-            <>
-              {/* IMAGE — big & full-width like the yoga session; the timer is
-                  overlaid on it (as yoga overlays its breath pacer) so the
-                  photo keeps the whole section instead of sharing it. */}
-              <div className="relative flex-1 min-h-0 w-full rounded-3xl overflow-hidden border border-petal/60 shadow-md bg-[oklch(0.96_0.04_350)]">
-                {/* Inner box sized to the CONTAINED image, so the muscle glow +
-                    arrows line up with the photo (no letterbox offset). */}
-                <div
-                  key={index}
-                  className="absolute inset-0 m-auto animate-fade-in"
-                  style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}
-                >
-                  <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain",
-                    step.kind === "switch" ? "scale-x-[-1]" : (!paused ? "animate-wk-ken-burns" : "")].join(" ")} />
+        </div>
+        <button onClick={() => setSound((s) => !s)} aria-label="Sound" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+          {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
+      </header>
 
-                  {/* "GO ✿" flash at the start of a work move */}
-                  {goFlash > 0 && step.kind === "work" && (
-                    <div key={goFlash} aria-hidden className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
-                      <span className="animate-wk-go-flash font-script text-6xl sm:text-8xl text-white drop-shadow-[0_3px_14px_rgba(219,39,119,0.55)]">GO ✿</span>
-                    </div>
-                  )}
+      {/* ── Smart-responsive dashboard ──────────────────────────────────────
+          phone: single scrolling column · tablet: centre + right rail ·
+          desktop: left rail + centre + right rail (the reference layout). */}
+      <main className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_15rem] lg:grid-cols-[13.5rem_1fr_16.5rem] gap-3 px-3 sm:px-5 pb-2 overflow-y-auto md:overflow-hidden">
 
-                  {/* Switch-sides overlay — a clear cue to train the other side so
-                      no move is ever done on one side only. */}
-                  {step.kind === "switch" && (
-                    <div className="absolute inset-0 z-20 grid place-items-center bg-hotpink/45 backdrop-blur-[2px]">
-                      <div className="text-center px-4 animate-scale-in">
-                        <RotateCcw className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-white animate-spin drop-shadow" strokeWidth={2.6} style={{ animationDuration: "1.4s" }} />
-                        <p className="mt-2 font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">Switch sides!</p>
-                        <p className="mt-1 text-sm sm:text-lg font-bold text-white/95 drop-shadow">Now the other side ✿</p>
-                      </div>
-                    </div>
-                  )}
+        {/* LEFT RAIL — desktop only */}
+        <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
+          <FocusCard primary={primaryMuscle} zone={session.zone} delay={40} />
+          <MuscleTargetCard muscles={muscleList} delay={120} />
+          <CoachTipCard tip={coachTip} delay={200} />
+        </aside>
 
-                  {/* Muscle glow — a soft halo that pulses ONLY over the worked
-                      muscle (scanned from the photo's baked magenta highlight). */}
-                  {glow && !paused && step.kind !== "switch" && (
-                    <>
-                      {/* soft glow fill (screen-blend halo) */}
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute animate-muscle-pulse rounded-full"
-                        style={{
-                          left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`,
-                          width: `${glow.r * 240}%`, aspectRatio: "1",
-                          background: "radial-gradient(circle, oklch(0.72 0.3 350 / 0.95) 0%, oklch(0.72 0.3 350 / 0.4) 35%, transparent 70%)",
-                          mixBlendMode: "screen",
-                        }}
-                      />
-                      {/* breathing ring — solid outline, stays visible on any photo */}
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute animate-muscle-ring rounded-full"
-                        style={{
-                          left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`,
-                          width: `${glow.r * 240}%`, aspectRatio: "1",
-                          border: "3px solid oklch(0.75 0.32 350 / 0.95)",
-                          boxShadow: "0 0 18px oklch(0.72 0.3 350 / 0.7), inset 0 0 12px oklch(0.72 0.3 350 / 0.5)",
-                        }}
-                      />
-                    </>
-                  )}
-
-                  {/* Energy arrows — gentle marching glide at the sides so the
-                      still photo feels alive/in motion. */}
-                  {!paused && step.kind !== "switch" && (
-                    <>
-                      <div aria-hidden className="pointer-events-none absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
-                        {[0, 1, 2].map((i) => <ChevronRight key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-r" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
-                      </div>
-                      <div aria-hidden className="pointer-events-none absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
-                        {[0, 1, 2].map((i) => <ChevronLeft key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-l" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 rounded-full bg-white/85 backdrop-blur p-1.5 shadow-lg">
-                  <CircularTimer totalSec={totalSec} remainingSec={remaining} size={92} rep={currentRep} repTotal={stepReps} />
-                </div>
-              </div>
-              {/* INFO — compact block below the photo */}
-              <div className="shrink-0 w-full text-center">
-                <h2 className="font-script text-2xl sm:text-4xl text-hotpink leading-none">
-                  {step.kind === "switch" ? "Switch to the other side" : exercise.name}
-                </h2>
-                <p className="mt-0.5 text-xs sm:text-base text-rose/70 line-clamp-1">
-                  {step.kind === "switch" ? `${exercise.name} · other side` : exercise.muscles}
-                </p>
-                {/* Side badge for one-sided moves so it's clear which side you're on. */}
-                {step.side && step.kind !== "switch" && (
-                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
+        {/* CENTRE STAGE */}
+        <section className="relative min-h-0 flex flex-col gap-2">
+          {/* Title + muscle tags */}
+          <div className="shrink-0">
+            <h2 className="font-script text-[1.75rem] sm:text-4xl lg:text-5xl text-hotpink leading-none">
+              {phase === "rest" ? "Rest & breathe" : isSwitch ? "Switch sides" : exercise.name}
+            </h2>
+            <div className="mt-1 h-1 w-24 rounded-full bg-gradient-to-r from-hotpink to-transparent" />
+            {phase !== "rest" && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {muscleList.slice(0, 3).map((m, i) => (
+                  <span key={m + i} className="rounded-full bg-white/60 backdrop-blur border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-hotpink">{cap(m)}</span>
+                ))}
+                {step.side && !isSwitch && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
                     <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
                   </span>
                 )}
-                {step.kind !== "switch" && getCoaching(exercise.slug)?.cues[0] && (
-                  <p className="mt-1 max-w-md mx-auto text-center text-xs sm:text-sm font-semibold text-hotpink/80 flex items-center justify-center gap-1.5 px-2 line-clamp-1">
-                    <Sparkles className="h-3.5 w-3.5 shrink-0" /> {getCoaching(exercise.slug)!.cues[0]}
-                  </p>
-                )}
-                {/* Rep-based moves show the live count inside the timer circle;
-                    holds / warm-up / cool-down show their guidance label here. */}
-                {step.kind !== "switch" && stepReps === 0 && step.repTarget && (
-                  <span className="mt-1.5 inline-block rounded-full bg-hotpink/90 text-white text-xs sm:text-sm font-bold px-3 py-1">{step.repTarget}</span>
-                )}
               </div>
-            </>
-          ) : (
-            <div className="w-full max-w-md rounded-3xl bg-gradient-to-b from-white/95 to-blush/40 border border-petal/60 p-5 sm:p-7 text-center shadow-md">
-              <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
-              <p className="text-[11px] sm:text-xs text-rose/55 mb-3">Breathe in… and out. ✿</p>
-              <CircularTimer totalSec={totalSec} remainingSec={remaining} size={140} />
-              {next && (
-                <div className="mt-5">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                  <div className="flex items-center gap-3 rounded-2xl bg-white/85 border border-petal/50 p-2.5 text-left">
-                    <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 object-cover rounded-xl border border-petal/60" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-base sm:text-lg font-bold text-rose leading-tight">{next.name}</p>
-                      {nextStepObj?.repTarget && (
-                        <span className="mt-1 inline-block rounded-full bg-hotpink/90 text-white text-[10px] font-bold px-2 py-0.5">
-                          {nextStepObj.kind === "work" ? `Aim: ${nextStepObj.repTarget}` : nextStepObj.repTarget}
-                        </span>
-                      )}
+            )}
+          </div>
+
+          {/* Stage: the photo (exercise) or the rest card */}
+          {phase === "exercise" ? (
+            <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:flex-1 md:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
+              {/* Inner box sized to the CONTAINED image so the glow + arrows line up. */}
+              <div key={index} className="absolute inset-0 m-auto animate-fade-in"
+                style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}>
+                <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain",
+                  isSwitch ? "scale-x-[-1]" : (!paused ? "animate-wk-ken-burns" : "")].join(" ")} />
+
+                {/* "GO ✿" flash at the start of a work move */}
+                {goFlash > 0 && step.kind === "work" && (
+                  <div key={goFlash} aria-hidden className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
+                    <span className="animate-wk-go-flash font-script text-6xl sm:text-8xl text-white drop-shadow-[0_3px_14px_rgba(219,39,119,0.55)]">GO ✿</span>
+                  </div>
+                )}
+
+                {/* Switch-sides overlay */}
+                {isSwitch && (
+                  <div className="absolute inset-0 z-20 grid place-items-center bg-hotpink/45 backdrop-blur-[2px]">
+                    <div className="text-center px-4 animate-scale-in">
+                      <RotateCcw className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-white animate-spin drop-shadow" strokeWidth={2.6} style={{ animationDuration: "1.4s" }} />
+                      <p className="mt-2 font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">Switch sides!</p>
+                      <p className="mt-1 text-sm sm:text-lg font-bold text-white/95 drop-shadow">Now the other side ✿</p>
                     </div>
                   </div>
+                )}
+
+                {/* Muscle glow — pulses ONLY over the worked muscle */}
+                {glow && !paused && !isSwitch && (
+                  <>
+                    <div aria-hidden className="pointer-events-none absolute animate-muscle-pulse rounded-full"
+                      style={{ left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`, width: `${glow.r * 240}%`, aspectRatio: "1",
+                        background: "radial-gradient(circle, oklch(0.72 0.3 350 / 0.95) 0%, oklch(0.72 0.3 350 / 0.4) 35%, transparent 70%)", mixBlendMode: "screen" }} />
+                    <div aria-hidden className="pointer-events-none absolute animate-muscle-ring rounded-full"
+                      style={{ left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`, width: `${glow.r * 240}%`, aspectRatio: "1",
+                        border: "3px solid oklch(0.75 0.32 350 / 0.95)", boxShadow: "0 0 18px oklch(0.72 0.3 350 / 0.7), inset 0 0 12px oklch(0.72 0.3 350 / 0.5)" }} />
+                  </>
+                )}
+
+                {/* Energy arrows — gentle marching glide so the photo feels alive */}
+                {!paused && !isSwitch && (
+                  <>
+                    <div aria-hidden className="pointer-events-none absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
+                      {[0, 1, 2].map((i) => <ChevronRight key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-r" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
+                    </div>
+                    <div aria-hidden className="pointer-events-none absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
+                      {[0, 1, 2].map((i) => <ChevronLeft key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-l" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Bloom Coach speech bubble (over the photo, top-left) */}
+              {!isSwitch && (
+                <div className="absolute top-3 left-3 z-[25] max-w-[13rem] sm:max-w-[15rem] rounded-2xl rounded-bl-md bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3 py-2 animate-fade-in">
+                  <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink"><BloomFlower size={13} /> Bloom Coach</p>
+                  <p className="mt-0.5 text-[11.5px] sm:text-xs font-medium text-rose/85 leading-snug">{coachLine}</p>
                 </div>
               )}
-              <button onClick={skipRest} className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-5 py-2 sm:px-6 sm:py-2.5 text-sm font-semibold text-hotpink border border-petal/60 active:scale-95 transition">
-                <SkipForward className="h-4 w-4" /> Skip rest
-              </button>
+
+              {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
+              <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
+                <RepRing size={82} percent={ringPct} label={ringLabel}
+                  rep={stepReps > 0 && !isSwitch ? currentRep : undefined}
+                  total={stepReps > 0 && !isSwitch ? stepReps : undefined}
+                  seconds={remaining} />
+              </div>
+
+              {/* Affirmation banner (over the photo, bottom) */}
+              <div className="absolute inset-x-3 bottom-2.5 z-[25] mx-auto max-w-md rounded-full bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.16)] px-3.5 py-1.5 text-center animate-fade-in">
+                <p className="text-[11px] sm:text-[12.5px] font-semibold text-rose/85 leading-snug truncate">{affirmation}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="relative w-full md:flex-1 md:min-h-0 grid place-items-center rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5 sm:p-7">
+              <div className="text-center">
+                <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
+                <p className="text-[11px] sm:text-xs text-rose/55 mb-4">Breathe in… and out. ✿</p>
+                <RepRing size={150} percent={ringPct} seconds={remaining} label="Rest" />
+                {next && (
+                  <div className="mt-5 mx-auto max-w-xs">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                    <div className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur border border-white/70 p-2.5 text-left">
+                      <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 shrink-0 object-cover rounded-xl border border-petal/60" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-bold text-rose leading-tight">{next.name}</p>
+                        {nextReps && <span className="mt-0.5 inline-block text-[11px] font-semibold text-hotpink">{nextReps}</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
-        </div>
-      </div>
 
-      {phase === "exercise" && (
-        <div className="grid grid-cols-3 gap-2 p-3 bg-white/60 shrink-0">
-          <button onClick={() => setPaused((p) => !p)} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
-            {paused ? <Play className="h-5 w-5 sm:h-6 sm:w-6" /> : <Pause className="h-5 w-5 sm:h-6 sm:w-6" />} {paused ? "Resume" : "Pause"}
-          </button>
-          <button onClick={repeat} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
-            <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" /> Repeat this
-          </button>
-          <button onClick={skip} className="flex flex-col items-center gap-1 rounded-2xl bg-white/90 border border-petal/60 py-3 sm:py-4 text-sm sm:text-base font-semibold text-rose">
-            <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" /> Skip
-          </button>
-        </div>
-      )}
+          {/* Phone-only info cards (rails are hidden below md) */}
+          <div className="md:hidden grid grid-cols-1 gap-3">
+            <MuscleTargetCard muscles={muscleList} />
+            <CoachTipCard tip={coachTip} />
+            <FormReminderCard cues={formCues} />
+          </div>
+
+          {/* Control bar — inside the centre column on tablet/desktop */}
+          <div className="hidden md:block shrink-0 pt-1">{controlBar}</div>
+        </section>
+
+        {/* RIGHT RAIL — tablet + desktop */}
+        <aside className="hidden md:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
+          <GlassCard className="!py-4" delay={40}>
+            <RepRing size={168} percent={ringPct} label={ringLabel}
+              rep={stepReps > 0 && !isSwitch && phase === "exercise" ? currentRep : undefined}
+              total={stepReps > 0 && !isSwitch && phase === "exercise" ? stepReps : undefined}
+              seconds={remaining} />
+          </GlassCard>
+          {next && <NextUpCard next={next} zone={session.zone} reps={nextReps} delay={120} />}
+          <FormReminderCard cues={formCues} delay={200} />
+          {/* Tablet gets the focus/muscle/tip cards here (no left rail below lg) */}
+          <div className="lg:hidden flex flex-col gap-3">
+            <MuscleTargetCard muscles={muscleList} delay={260} />
+            <CoachTipCard tip={coachTip} delay={320} />
+          </div>
+        </aside>
+      </main>
+
+      {/* Control bar — pinned to the bottom on phones */}
+      <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{controlBar}</div>
     </div>,
     document.body
   );
