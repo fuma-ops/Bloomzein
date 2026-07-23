@@ -3345,7 +3345,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
       {/* Brand logo — no frame, part of the background: strong-pink flower (white
           centre) ABOVE the wordmark, both in the same pink. It just turns gently
           and breathes — no flash / light-sweep. */}
-      <div aria-hidden className="hidden lg:block pointer-events-none absolute bottom-3 left-3 z-[15]">
+      <div aria-hidden className="hidden md:block pointer-events-none absolute bottom-3 left-3 z-[15]">
         <div className="inline-flex flex-col items-center gap-1">
           <span className="animate-wk-flower-spin drop-shadow-sm">
             <span className="block animate-wk-logo-breathe">
@@ -3386,7 +3386,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
         </aside>
 
         {/* CENTRE STAGE */}
-        <section className="relative min-h-0 flex flex-col gap-2 md:justify-center lg:justify-start">
+        <section className="relative min-h-0 flex flex-col gap-2">
           {/* Title on the left · Bloom Coach + the muscle tags sit together in the
               empty top band (right on desktop, under the title on phones) — this
               keeps the row above the photo slim so the image gets more height. */}
@@ -3426,7 +3426,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
-            <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[68vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
+            <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
