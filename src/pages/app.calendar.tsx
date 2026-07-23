@@ -444,36 +444,33 @@ export default function CalendarPage() {
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
       <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[140px] sm:min-h-[180px] mb-3 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4">
-          {/* Title + subtitle + phase pill (left) · Today / prev / next (right) */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 w-[64%] sm:max-w-md">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none whitespace-nowrap drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-                Bloom Calendar
-              </h1>
-              <p className="animate-fade-in mt-0 font-script text-lg sm:text-2xl text-rose/90 leading-tight whitespace-nowrap" style={{ animationDelay: "150ms" }}>
-                Your life, beautifully planned.
-              </p>
-              <CyclePhasePill className="mt-1.5" />
-            </div>
-            <div className="animate-fade-in shrink-0 flex items-center gap-1" style={{ animationDelay: "220ms" }}>
-              <button onClick={goToday} className="rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1 text-[11px] font-bold text-hotpink shadow-sm transition hover:bg-white active:scale-95">
-                Today
-              </button>
-              <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </button>
-              <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
+          {/* Title + subtitle + phase pill. Month navigation lives on the month
+              label row below. */}
+          <div className="min-w-0 sm:max-w-md">
+            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
+              Bloom Calendar
+            </h1>
+            <p className="animate-fade-in mt-1 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
+              Your life, beautifully planned.
+            </p>
+            <CyclePhasePill className="mt-1.5" />
           </div>
         </div>
       </section>
 
       <div className="flex items-center justify-between mb-3 px-1">
-        <p className="text-sm font-bold text-hotpink inline-flex items-center gap-1">
-          {rangeLabel} <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-        </p>
+        {/* Month label with its prev / next arrows; tap the label to jump to today. */}
+        <div className="inline-flex items-center gap-1.5">
+          <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={goToday} className="text-sm font-bold text-hotpink px-1 transition hover:opacity-80 active:scale-95" title="Jump to today">
+            {rangeLabel}
+          </button>
+          <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
         <div className="inline-flex rounded-full bg-white/80 border border-petal/60 p-1 shadow-sm">
           {(["month", "week", "today"] as const).map((v) => (
             <button

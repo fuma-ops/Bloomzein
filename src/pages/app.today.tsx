@@ -869,8 +869,6 @@ export default function TodayPage() {
         }}
       >
         <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
-        {/* left fade → readable pink behind the greeting (same tone as the wash) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
         {/* right fade → soft melt into the page edge so there's no hard border */}
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
       </div>
@@ -882,9 +880,14 @@ export default function TodayPage() {
         className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[200px] sm:min-h-[250px] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
-        <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[68%] sm:max-w-md">
-          <h1 className="animate-text-pop font-script text-[3.25rem] sm:text-4xl text-hotpink leading-[0.95] sm:leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
-            {hello}, {displayName}
+        <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[74%] sm:max-w-md">
+          {/* Phone: greeting on one line, name beneath. Tablet/desktop: one flow. */}
+          <h1
+            className="animate-text-pop font-script text-[2.4rem] sm:text-4xl text-hotpink leading-[0.92] sm:leading-tight text-left"
+            style={{ textShadow: "0 1px 10px rgba(255,255,255,0.9), 0 2px 4px rgba(255,255,255,0.65)" }}
+          >
+            <span className="block whitespace-nowrap sm:inline">{hello}<span className="hidden sm:inline">, </span></span>
+            <span className="block sm:inline">{displayName}</span>
           </h1>
           <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
