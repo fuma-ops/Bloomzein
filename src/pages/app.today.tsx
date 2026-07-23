@@ -883,7 +883,7 @@ export default function TodayPage() {
         style={{ animationDelay: "0ms" }}
       >
         <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[68%] sm:max-w-md">
-          <h1 className="animate-text-pop font-script text-[1.75rem] sm:text-4xl text-hotpink leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
+          <h1 className="animate-text-pop font-script text-[3.25rem] sm:text-4xl text-hotpink leading-[0.95] sm:leading-tight break-words text-left drop-shadow-[0_2px_6px_oklch(1_0_0/0.5)]">
             {hello}, {displayName}
           </h1>
           <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
@@ -908,7 +908,9 @@ export default function TodayPage() {
                 );
               })()}
 
-              <p className="mt-1.5 sm:mt-2 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
+              {/* Phase quote — hidden on phone (title carries the hero there),
+                  shown on tablet/desktop. */}
+              <p className="mt-1.5 sm:mt-2 hidden sm:block font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
                 {PHASE_QUOTES[phase].map((line, i, arr) => (
                   <span key={i} className="block sm:inline">{line}{i < arr.length - 1 ? " " : ""}</span>
                 ))}
