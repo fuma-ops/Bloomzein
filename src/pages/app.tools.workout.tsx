@@ -2779,7 +2779,10 @@ function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: numbe
               <span className="text-hotpink tabular-nums">{WK_MT_PCT[i] ?? 30}%</span>
             </div>
             <div className="h-2 rounded-full bg-hotpink/10 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-700" style={{ width: `${WK_MT_PCT[i] ?? 30}%` }} />
+              <div className="relative h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-700 animate-wk-bar-pulse overflow-hidden"
+                style={{ width: `${WK_MT_PCT[i] ?? 30}%`, animationDelay: `${i * 0.22}s` }}>
+                <span aria-hidden className="absolute inset-0 animate-wk-bar-shimmer" style={{ animationDelay: `${i * 0.3}s` }} />
+              </div>
             </div>
           </div>
         ))}
@@ -3169,17 +3172,16 @@ function SessionActive({ session, onExit, onDone }: {
       {starting && <BloomIntro title={session.name} count={intro} />}
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
-      {/* Brand flower — no frame, no wordmark: just a big, strong-pink bloom that
-          spins slowly, breathes in sync with the room (7s) and pulses a soft pink
-          halo, so every screenshot still reads unmistakably as Bloomzein. */}
-      <div aria-hidden className="pointer-events-none absolute bottom-4 left-4 z-[15]">
-        <span className="block animate-wk-flower-spin">
-          <span className="block animate-wk-flower-glow">
-            <span className="block animate-wk-logo-breathe">
-              <BloomFlower size={72} petal="#FF1493" center="#FFE3F1" />
-            </span>
+      {/* Brand logo — flower ABOVE the wordmark. Alive but calm: it spins slowly
+          and breathes in sync with the room (7s), the colour drifting inside the
+          petals — no glow halo. Reads unmistakably as Bloomzein. */}
+      <div aria-hidden className="pointer-events-none absolute bottom-3 left-4 z-[15] inline-flex flex-col items-center gap-1 rounded-[1.4rem] bg-white/60 backdrop-blur-md border border-white/60 px-4 py-2.5 shadow-[0_10px_28px_rgba(236,72,153,0.3)]">
+        <span className="animate-wk-flower-spin">
+          <span className="block animate-wk-logo-breathe">
+            <span className="block animate-wk-flower-hue text-hotpink"><BloomFlower size={44} /></span>
           </span>
         </span>
+        <span className="font-script text-2xl sm:text-3xl text-hotpink leading-none drop-shadow-sm">Bloomzein</span>
       </div>
 
       {/* ── Top bar: close · session progress · sound ── */}
@@ -3302,15 +3304,6 @@ function SessionActive({ session, onExit, onDone }: {
                   </>
                 )}
               </div>
-
-              {/* "GO ✿" blooming from the CENTRE of the image to announce the move —
-                  bigger than the ring burst, quick and self-clearing so it never nags. */}
-              {goRing > 0 && !isSwitch && (
-                <div key={`go-center-${goRing}`} aria-hidden className="pointer-events-none absolute inset-0 z-[24] grid place-items-center">
-                  <span className="animate-wk-go-center font-script text-white leading-none drop-shadow-[0_4px_22px_oklch(0.58_0.28_350/0.9)]"
-                    style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)" }}>GO ✿</span>
-                </div>
-              )}
 
               {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
               <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
