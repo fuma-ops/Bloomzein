@@ -146,6 +146,16 @@ const PHASE_SEED_ARTICLES: Article[] = [
 /* ── Imported written articles (from the editorial sheet) ──
  * Long-form; bodies load lazily from src/content/reads/*. */
 const IMPORTED_ARTICLES: Article[] = [
+  { id: "CY001", title: "What Is the Menstrual Cycle?", category: "Cycle & Hormones", minutes: 7, blooms: "2.0k", image: CAT_IMG["Cycle & Hormones"],
+    excerpt: "Most of us were taught that the menstrual cycle is the week we bleed. In truth, it's a quiet, month-long performance happening…" },
+  { id: "CY002", title: "Understanding Your Hormones", category: "Cycle & Hormones", minutes: 7, blooms: "1.3k", image: CAT_IMG["Cycle & Hormones"],
+    excerpt: "They shape your mood, your skin, your energy and your cravings — yet most of us have never been properly introduced." },
+  { id: "CY003", title: "The Four Phases of Your Cycle", category: "Cycle & Hormones", minutes: 7, blooms: "1.8k", image: CAT_IMG["Cycle & Hormones"],
+    excerpt: "Your cycle isn't one long stretch of the same self, interrupted by a period. It moves through four distinct phases, each with its own gift." },
+  { id: "CY004", title: "How Your Cycle Changes Your Energy", category: "Cycle & Hormones", minutes: 7, blooms: "1.4k", image: CAT_IMG["Cycle & Hormones"],
+    excerpt: "Some weeks you could move mountains; others, making dinner feels like a lot. That isn't a discipline problem." },
+  { id: "CY005", title: "Why Tracking Your Cycle Matters", category: "Cycle & Hormones", minutes: 7, blooms: "1.0k", image: CAT_IMG["Cycle & Hormones"],
+    excerpt: "Tracking your cycle isn't about fertility charts or complicated apps. It's about learning to read the monthly report your body…" },
   { id: "BE005", title: "What Really Happens to Your Skin While You Sleep?", category: "Beauty", minutes: 6, blooms: "1.7k", image: CAT_IMG["Beauty"],
     excerpt: "The nighttime skincare secrets that transform your routine from simply applying products into supporting your skin's natural…" },
   { id: "BE010", title: "Seasonal Skincare", category: "Beauty", minutes: 5, blooms: "2.1k", image: CAT_IMG["Beauty"],
