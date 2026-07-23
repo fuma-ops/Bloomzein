@@ -2601,16 +2601,17 @@ function PetalBurst({ count = 18, z = 70 }: { count?: number; z?: number }) {
 // keep falling AND rising forever (looping animations), so the motion sustains
 // while the congratulation voice plays. Unmounts (stops) when `active` is false.
 function EndCelebration({ active, z = 52 }: { active: boolean; z?: number }) {
-  const bits = useMemo(() => Array.from({ length: 36 }, (_, i) => ({
+  const bits = useMemo(() => Array.from({ length: 48 }, (_, i) => ({
     left: Math.random() * 100,
     delay: Math.random() * 5,
     dur: 4.5 + Math.random() * 4.5,
-    size: 13 + Math.random() * 24,
+    size: 14 + Math.random() * 26,
     rise: i % 5 === 0 ? false : Math.random() > 0.5, // a mix rising / falling
     drift: -18 + Math.random() * 36,
     rot: Math.random() * 360,
-    color: ["#EC4899", "#F9A8D4", "#FBCFE8", "#FF1493"][Math.floor(Math.random() * 4)],
-    char: ["✿", "❀", "🌸", "✨", "💖", "🌷"][Math.floor(Math.random() * 6)],
+    // strong pinks only
+    color: ["#FF1493", "#EC4899", "#FF4FA3", "#FF69B4"][Math.floor(Math.random() * 4)],
+    char: ["♥", "❤", "✿", "❀", "✦", "★", "💗", "💖", "🌸"][Math.floor(Math.random() * 9)],
   })), []);
   if (!active) return null;
   return (
@@ -2632,12 +2633,12 @@ function EndCelebration({ active, z = 52 }: { active: boolean; z?: number }) {
 // Pink sparkles + stars twinkling ALL OVER the screen — the extra "wow" glitter
 // on the finish screen. Stops when `active` is false.
 function SparkleField({ active, z = 53 }: { active: boolean; z?: number }) {
-  const stars = useMemo(() => Array.from({ length: 42 }, () => ({
+  const stars = useMemo(() => Array.from({ length: 52 }, () => ({
     top: Math.random() * 100, left: Math.random() * 100,
     delay: Math.random() * 3, dur: 1.3 + Math.random() * 2.2,
     size: 8 + Math.random() * 18,
-    char: ["✦", "✧", "⭐", "✨", "🌟", "·"][Math.floor(Math.random() * 6)],
-    color: ["#EC4899", "#FF1493", "#F9A8D4", "#FBCFE8"][Math.floor(Math.random() * 4)],
+    char: ["✦", "✧", "★", "❤", "♥", "·"][Math.floor(Math.random() * 6)],
+    color: ["#FF1493", "#EC4899", "#FF4FA3", "#FF69B4"][Math.floor(Math.random() * 4)],
   })), []);
   if (!active) return null;
   return (
@@ -2647,6 +2648,37 @@ function SparkleField({ active, z = 53 }: { active: boolean; z?: number }) {
           top: `${s.top}%`, left: `${s.left}%`, fontSize: s.size, color: s.color, lineHeight: 1,
           animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s`,
         }}>{s.char}</span>
+      ))}
+    </div>
+  );
+}
+
+// The big "WOW" — a one-shot radial EXPLOSION of strong-pink hearts, flowers and
+// stars bursting out of the centre with a pink flash. Fires once on mount.
+function PinkExplosion({ z = 56 }: { z?: number }) {
+  const bits = useMemo(() => Array.from({ length: 60 }, () => {
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 20 + Math.random() * 48; // vmin
+    return {
+      x: `${Math.cos(ang) * dist}vmin`,
+      y: `${Math.sin(ang) * dist}vmin`,
+      r: `${-200 + Math.random() * 400}deg`,
+      size: 16 + Math.random() * 30,
+      delay: Math.random() * 0.16,
+      color: ["#FF1493", "#EC4899", "#FF4FA3", "#FF69B4"][Math.floor(Math.random() * 4)],
+      char: ["♥", "❤", "✿", "❀", "✦", "★", "❁", "💗", "💖", "🌸"][Math.floor(Math.random() * 10)],
+    };
+  }), []);
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: z }}>
+      {/* pink flash */}
+      <div className="absolute inset-0 animate-wk-flash" style={{ background: "radial-gradient(circle at 50% 45%, oklch(0.86 0.16 350 / 0.92), oklch(0.8 0.17 345 / 0.35) 40%, transparent 70%)" }} />
+      {bits.map((b, i) => (
+        <span key={i} className="absolute left-1/2 top-[45%] animate-wk-explode" style={{
+          fontSize: b.size, color: b.color, lineHeight: 1,
+          ["--x" as any]: b.x, ["--y" as any]: b.y, ["--r" as any]: b.r,
+          animationDelay: `${b.delay}s`,
+        }}>{b.char}</span>
       ))}
     </div>
   );
@@ -3006,26 +3038,17 @@ function SessionActive({ session, programRef, onExit, onDone }: {
     finishedRef.current = true;
     setFinalElapsed(elapsedRef.current);
     setFinished(true);
+    // Silence the player completely so nothing loops/"beeps" under the celebration
+    // (the looping music was the culprit) — a smooth fade, then stop.
     const a = audioRef.current;
     if (a) {
-      const target = 0.16;
       const iv = window.setInterval(() => {
-        if (!a) { window.clearInterval(iv); return; }
-        a.volume = Math.max(target, a.volume - 0.03);
-        if (a.volume <= target + 0.001) window.clearInterval(iv);
-      }, 60);
+        a.volume = Math.max(0, a.volume - 0.04);
+        if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
+      }, 70);
     }
-  };
-
-  // When the congratulation voice finishes, slowly fade the (looping) music out
-  // and stop it — so nothing keeps looping/"beeping" under the settled screen.
-  const fadeOutMusic = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    const iv = window.setInterval(() => {
-      a.volume = Math.max(0, a.volume - 0.02);
-      if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
-    }, 90);
+    const cue = cueRef.current;
+    if (cue) { try { cue.pause(); } catch {} }
   };
 
   const step = steps[index];
@@ -3312,7 +3335,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
       {/* Brand logo — no frame, part of the background: strong-pink flower (white
           centre) ABOVE the wordmark, both in the same pink. It just turns gently
           and breathes — no flash / light-sweep. */}
-      <div aria-hidden className="pointer-events-none absolute bottom-3 left-3 z-[15]">
+      <div aria-hidden className="hidden md:block pointer-events-none absolute bottom-3 left-3 z-[15]">
         <div className="inline-flex flex-col items-center gap-1">
           <span className="animate-wk-flower-spin drop-shadow-sm">
             <span className="block animate-wk-logo-breathe">
@@ -3378,7 +3401,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               )}
             </div>
             {!isSwitch && phase === "exercise" && (
-              <div className="lg:max-w-sm w-full lg:w-auto flex flex-col items-start gap-1.5">
+              <div className="hidden md:flex lg:max-w-sm w-full lg:w-auto flex-col items-start gap-1.5">
                 <div className={["w-full rounded-2xl rounded-tr-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in transition-transform",
                   briefing ? "animate-card-breathe" : ""].join(" ")}>
                   <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink">
@@ -3514,18 +3537,8 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             </>
           )}
 
-          {/* Phone-only info cards (rails are hidden below md) — the affirmation
-              rides along here on phones (on desktop/tablet it's in the right rail). */}
-          <div className="md:hidden grid grid-cols-1 gap-3">
-            <MuscleTargetCard muscles={muscleList} />
-            <CoachTipCard tip={coachTip} />
-            <FormReminderCard cues={formCues} />
-            {phase === "exercise" && !isSwitch && (
-              <div className="rounded-full bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.14)] px-4 py-2 text-center">
-                <p className="text-xs font-semibold text-rose/85 leading-snug">{affirmation}</p>
-              </div>
-            )}
-          </div>
+          {/* Phone keeps a clean player — no info cards; the context lives in the
+              rails on tablet/desktop only. */}
 
           {/* Control bar — inside the centre column on tablet/desktop */}
           <div className="hidden md:block shrink-0 pt-1">{controlBar}</div>
@@ -3567,7 +3580,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
           <div key="fin-burst" aria-hidden className="pointer-events-none fixed inset-0 z-[63] grid place-items-center">
             <span className="animate-wk-go-center font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.9)]" style={{ fontSize: "clamp(6rem, 26vw, 15rem)" }}>✿</span>
           </div>
-          <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} onVoiceEnd={fadeOutMusic} />
+          <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} />
         </>
       )}
     </div>,
@@ -3721,15 +3734,15 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
       {overlay && <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "linear-gradient(160deg, oklch(0.9 0.1 350 / 0.72), oklch(0.82 0.13 345 / 0.68))", backdropFilter: "blur(4px)" }} />}
       {/* Soft pink glow wash behind the card — warm, dreamy "wow". */}
       <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 51, background: "radial-gradient(58% 48% at 50% 42%, oklch(0.84 0.13 350 / 0.55), transparent 72%)" }} />
-      {/* Continuous flowers + sparkles — keeps moving until the voice finishes. */}
+      {/* Continuous strong-pink hearts + flowers — keeps moving until the voice ends. */}
       <EndCelebration active={celebrating} z={52} />
       {/* Twinkling pink stars all over the screen */}
       <SparkleField active={celebrating} z={53} />
-      {/* Initial celebration burst over the whole finish screen */}
-      <PetalBurst count={26} z={55} />
+      {/* The big WOW — a strong-pink explosion + flash bursting from the centre. */}
+      <PinkExplosion z={56} />
       {/* Glass "wow" card — frosted, translucent, glossy sheen (Barbie glass). */}
-      <div className="relative isolate z-[54] w-full max-w-md rounded-[2rem] border border-white/70 p-6 sm:p-8 text-center my-6 sm:my-8 overflow-hidden animate-scale-in shadow-[0_30px_80px_-20px_rgba(236,72,153,0.6)]"
-        style={{ background: "linear-gradient(160deg, oklch(1 0 0 / 0.52), oklch(0.96 0.06 350 / 0.4))", backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)", ...(overlay ? { animationDelay: "0.45s", animationFillMode: "both" as any } : {}) }}>
+      <div className="relative isolate z-[54] w-full max-w-md rounded-[2rem] border border-white/70 p-6 sm:p-8 text-center my-6 sm:my-8 overflow-hidden shadow-[0_30px_80px_-20px_rgba(236,72,153,0.6)] animate-wk-card-bloom"
+        style={{ background: "linear-gradient(160deg, oklch(1 0 0 / 0.52), oklch(0.96 0.06 350 / 0.4))", backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)", ...(overlay ? { animationDelay: "0.4s", animationFillMode: "both" as any } : {}) }}>
         {/* glossy crown sheen — behind the content (negative z within the card) */}
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "radial-gradient(120% 55% at 50% -12%, oklch(1 0 0 / 0.6), transparent 62%)" }} />
         {/* Celebration ring — the trophy squeezes + zooms; the medallion glows. */}
