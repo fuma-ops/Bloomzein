@@ -156,16 +156,20 @@ export default function ReadPage() {
       {/* HERO — transparent; the photo lives in the blended background above. */}
       <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[150px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
-          <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
-          <p className="animate-fade-in mt-0 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for your softest era ✿</p>
-          <CyclePhasePill className="mt-1.5" />
+          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
+          <p className="animate-fade-in mt-1 font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for your softest era ✿</p>
         </div>
       </section>
+
+      {/* Cycle-phase badges sit lower, in the open space just above the search. */}
+      <div className="relative z-[2] mt-10 sm:mt-4 px-1">
+        <CyclePhasePill />
+      </div>
 
       {/* SEARCH + FILTERS — one frosted control bar floating over the hero edge.
           Search on top; categories on a single scrollable line ("All" pinned
           left, active chip glows, a soft fade hints there's more to swipe). */}
-      <div className="relative z-[2] mt-14 sm:mt-4 mx-auto max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 backdrop-blur-xl p-2.5 sm:p-3.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] animate-card-pop-in">
+      <div className="relative z-[2] mt-2.5 sm:mt-3 mx-auto max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 backdrop-blur-xl p-2.5 sm:p-3.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] animate-card-pop-in">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
           <input
