@@ -310,6 +310,12 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
           className="animate-hero-breathe h-full w-full object-cover object-center"
           referrerPolicy="no-referrer"
         />
+        {/* left ~40% pink wash — blends the photo so white title text reads cleanly */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.9) 26%, rgba(226,46,134,0.5) 41%, rgba(226,46,134,0) 58%)" }}
+        />
         {/* gentle base tint so the photo settles into the page pink */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFE4F1]/70" />
       </div>
@@ -327,33 +333,27 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
         <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
       </div>
 
-      {/* HERO TITLE — sits directly on the image, no card; a soft white glow
-          lifts it off the imagery for legibility. */}
-      <header className="relative z-[1] flex min-h-[13rem] sm:min-h-[16rem] lg:min-h-[19rem] flex-col justify-end pb-5 sm:pb-7 max-w-[88%] sm:max-w-[74%] lg:max-w-[60%]">
-        {/* diffuse white halo behind the text — a soft shadow, not a panel */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -inset-x-4 -bottom-2 top-6 -z-[1]"
-          style={{ background: "radial-gradient(115% 78% at 22% 82%, rgba(255,255,255,0.9), rgba(255,255,255,0.45) 42%, transparent 74%)", filter: "blur(10px)" }}
-        />
-        <div className="flex flex-wrap items-center gap-2.5" style={{ filter: "drop-shadow(0 1px 6px rgba(255,255,255,0.9))" }}>
-          <TopicBadge topic={article.category} />
-          <ReadTime minutes={article.minutes} />
-          <BloomCount count={article.blooms} />
-        </div>
+      {/* HERO TITLE — white, sitting on the pink-washed left of the image;
+          category · time · views sit UNDER the title. */}
+      <header className="relative z-[1] flex min-h-[11rem] sm:min-h-[13rem] lg:min-h-[15rem] flex-col justify-center pb-3 max-w-[15rem] sm:max-w-[22rem] lg:max-w-[25rem]">
         <h1
-          className="mt-2.5 font-script text-[2.7rem] sm:text-5xl lg:text-6xl text-hotpink leading-[0.98]"
-          style={{ textShadow: "0 1px 2px rgba(255,255,255,0.95), 0 4px 22px rgba(255,255,255,0.85)" }}
+          className="font-script text-[2.7rem] sm:text-5xl lg:text-[3.5rem] text-white leading-[0.98]"
+          style={{ textShadow: "0 2px 16px rgba(140,18,74,0.55), 0 1px 2px rgba(140,18,74,0.45)" }}
         >
           {headline}
         </h1>
+        <div className="mt-3.5 flex flex-wrap items-center gap-2.5" style={{ filter: "drop-shadow(0 1px 5px rgba(140,18,74,0.4))" }}>
+          <TopicBadge topic={article.category} />
+          <ReadTime minutes={article.minutes} light />
+          <BloomCount count={article.blooms} light />
+        </div>
       </header>
 
       {/* On small screens the TOC sits on top, above the article. */}
       {parsed ? <ArticleTOC sections={parsed.sections} collapsible className="relative z-[1] lg:hidden mt-3 mb-4" /> : null}
 
       {/* BODY — sticky "On this page" (desktop) + white article card */}
-      <div className="relative z-[1] mt-2 lg:mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,42rem)] lg:gap-8 lg:items-start">
+      <div className="relative z-[1] mt-2 lg:mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8 lg:items-start">
         <aside className="hidden lg:block lg:sticky lg:top-4">
           {parsed ? <ArticleTOC sections={parsed.sections} /> : null}
         </aside>
