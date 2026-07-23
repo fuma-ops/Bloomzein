@@ -2825,15 +2825,15 @@ function CoachTipCard({ tip, delay }: { tip: string; delay?: number }) {
 }
 function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; reps?: string; delay?: number }) {
   return (
-    <GlassCard icon={ChevronRight} title="Next up" delay={delay}>
-      {/* Big preview image with the name overlaid — the coming-up move is the
-          star of the rail, not a tiny thumbnail. */}
-      <div className="relative w-full aspect-[16/11] rounded-2xl overflow-hidden border border-petal/60 shadow-sm">
-        <ExercisePhoto exercise={next} zone={zone} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent p-2.5 sm:p-3">
-          <p className="text-sm sm:text-base font-bold text-white leading-tight truncate drop-shadow">{next.name}</p>
-          {reps && <p className="text-[11px] font-semibold text-white/90 mt-0.5 drop-shadow">{reps}</p>}
-        </div>
+    <GlassCard icon={ChevronRight} title="Next up" delay={delay} className="animate-soft-glow">
+      {/* Bigger preview — the whole move is shown (contain, never cropped), with
+          the name below. */}
+      <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-petal/60 shadow-sm bg-blush/40">
+        <ExercisePhoto exercise={next} zone={zone} className="w-full h-full object-contain" />
+      </div>
+      <div className="mt-2 min-w-0">
+        <p className="text-sm sm:text-base font-bold text-rose leading-tight truncate">{next.name}</p>
+        {reps && <p className="text-[11px] font-semibold text-hotpink mt-0.5">{reps}</p>}
       </div>
     </GlassCard>
   );
@@ -3282,7 +3282,7 @@ function SessionActive({ session, onExit, onDone }: {
                 <div className={["w-full rounded-2xl rounded-tr-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in transition-transform",
                   briefing ? "animate-card-breathe" : ""].join(" ")}>
                   <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink">
-                    <BloomFlower size={13} /> Bloom Coach
+                    <span className="inline-block animate-wk-icon-vibe"><BloomFlower size={13} /></span> Bloom Coach
                     {briefing && <span className="ml-auto inline-flex items-end gap-0.5" style={{ height: 10 }}>{[0, 1, 2].map((i) => <span key={i} className="w-1 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />)}</span>}
                   </p>
                   <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
@@ -3367,27 +3367,24 @@ function SessionActive({ session, onExit, onDone }: {
               </div>
             </div>
           ) : (
-            <div className="relative w-full md:flex-1 md:min-h-0 flex flex-col rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-3.5 sm:p-4 overflow-hidden">
-              {/* Compact rest header — small ring + text in a slim row, so the
-                  coming-up preview gets the rest of the card. */}
-              <div className="shrink-0 flex items-center justify-center gap-3 sm:gap-4 mb-3">
-                <RepRing size={84} percent={ringPct} seconds={remaining} label="Rest" />
-                <div className="text-left">
-                  <p className="text-base sm:text-xl font-bold uppercase tracking-wide text-hotpink/75 leading-none">Rest</p>
-                  <p className="text-[11px] sm:text-sm text-rose/55 mt-1">Breathe in… and out. ✿</p>
-                </div>
+            <div className="relative w-full md:flex-1 md:min-h-0 flex flex-col items-center gap-2 sm:gap-3 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-3.5 sm:p-4 overflow-hidden">
+              {/* Rest header — compact, centred (stacked so nothing spreads out). */}
+              <div className="shrink-0 text-center">
+                <p className="text-base sm:text-xl font-bold uppercase tracking-wide text-hotpink/75 leading-none">Rest</p>
+                <p className="text-[11px] sm:text-sm text-rose/55 mt-1">Breathe in… and out. ✿</p>
               </div>
-              {/* BIG coming-up preview — hero image fills the remaining space. */}
+              <RepRing size={100} percent={ringPct} seconds={remaining} label="Rest" />
+              {/* Coming-up preview — large but shown in FULL (contain, never cropped). */}
               {next && (
-                <div className="flex-1 min-h-0 flex flex-col">
-                  <p className="shrink-0 text-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                  <div className="relative flex-1 min-h-[8rem] rounded-2xl overflow-hidden border border-white/70 shadow-md">
-                    <ExercisePhoto exercise={next} zone={session.zone} className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent p-3 sm:p-4">
-                      <p className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow">{next.name}</p>
-                      {nextReps && <span className="mt-0.5 inline-block text-xs sm:text-sm font-semibold text-white/90 drop-shadow">{nextReps}</span>}
-                    </div>
+                <div className="w-full max-w-xl flex-1 min-h-0 flex flex-col items-center">
+                  <p className="shrink-0 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                  <div className="relative w-full flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
+                    <ExercisePhoto exercise={next} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
                   </div>
+                  <p className="shrink-0 mt-2 text-center">
+                    <span className="text-base sm:text-lg font-bold text-rose">{next.name}</span>
+                    {nextReps && <span className="ml-2 text-xs sm:text-sm font-semibold text-hotpink">{nextReps}</span>}
+                  </p>
                 </div>
               )}
             </div>
