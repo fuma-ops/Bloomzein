@@ -76,13 +76,17 @@ export function ArticleTOC({ sections, className = "", collapsible = false }: { 
   const shell = "rounded-[1.5rem] border border-petal/60 bg-white/85 backdrop-blur shadow-[0_10px_30px_-18px_oklch(0.6_0.22_350/0.3)]";
 
   if (collapsible) {
+    // Starts CLOSED; the chevron gently bounces to invite a tap, and stops
+    // (rotating to point up) once opened.
     return (
-      <details open className={["group", shell, "px-4 py-3", className].join(" ")}>
+      <details className={["group", shell, "px-4 py-3", className].join(" ")}>
         <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-bold uppercase tracking-[0.18em] text-hotpink/80 [&::-webkit-details-marker]:hidden">
           On this page
-          <ChevronDown className="h-4 w-4 transition group-open:rotate-180" strokeWidth={2} />
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink group-open:bg-hotpink group-open:text-white transition">
+            <ChevronDown className="h-4 w-4 transition group-open:rotate-180 animate-cta-bounce group-open:animate-none" strokeWidth={2.4} />
+          </span>
         </summary>
-        <div className="mt-2.5">{list}</div>
+        <div className="mt-3">{list}</div>
       </details>
     );
   }

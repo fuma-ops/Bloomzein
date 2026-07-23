@@ -6,6 +6,7 @@ import { FILTERS, ARTICLES, IMG, articleById, type Filter, type Article } from "
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
 import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
+import { BloomFlower } from "@/components/bloom/read/BloomFlower";
 
 /* ---------- data ---------- */
 /* Compact labels for the filter row (full category names elsewhere). */
@@ -359,19 +360,27 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
         </aside>
 
         <div className="min-w-0">
-          <div className="rounded-[1.75rem] border border-petal/50 bg-white/92 backdrop-blur p-5 sm:p-8 lg:p-9 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)]">
-            {loading || !parsed ? (
-              <div className="animate-pulse space-y-4 py-2">
-                <div className="h-4 w-2/3 rounded-full bg-petal/30" />
-                <div className="mt-8 space-y-3">
-                  {Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
-                  ))}
+          <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/50 bg-white/92 backdrop-blur p-5 sm:p-8 lg:p-9 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)]">
+            {/* Soft, faded logo-flowers breathing in the article's white space. */}
+            <BloomFlower className="pointer-events-none absolute -right-8 top-24 w-32 sm:w-40 text-hotpink opacity-[0.08] animate-icon-breathe" />
+            <BloomFlower className="pointer-events-none absolute -left-10 top-[42%] w-36 sm:w-52 text-magenta opacity-[0.07] animate-icon-breathe" style={{ animationDelay: "1.1s" }} />
+            <BloomFlower className="pointer-events-none absolute -right-10 top-[70%] w-32 sm:w-44 text-hotpink opacity-[0.08] animate-icon-breathe" style={{ animationDelay: "2.2s" }} />
+            <BloomFlower className="pointer-events-none absolute left-[46%] bottom-6 w-24 sm:w-32 text-petal opacity-[0.12] animate-icon-breathe" style={{ animationDelay: "0.6s" }} />
+
+            <div className="relative z-[1]">
+              {loading || !parsed ? (
+                <div className="animate-pulse space-y-4 py-2">
+                  <div className="h-4 w-2/3 rounded-full bg-petal/30" />
+                  <div className="mt-8 space-y-3">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <ArticleBody parsed={parsed} />
-            )}
+              ) : (
+                <ArticleBody parsed={parsed} />
+              )}
+            </div>
           </div>
 
           <div className="mt-8 mb-2 flex justify-center lg:justify-start">
