@@ -140,8 +140,8 @@ const WORKOUT_MUSIC = [
   "/audio/workout-music-3.mp3", // Sands of Time
   "/audio/workout-music-4.mp3", // Sleek Alignment
 ];
-const MUSIC_VOL = 0.5;   // steady bed, always audible
-const CUE_VOL = 0.42;    // spoken cue sits UNDER the music, never overrides it
+const MUSIC_VOL = 0.44;  // steady bed, always audible
+const CUE_VOL = 0.32;    // spoken cue sits well UNDER the music (quieter for recording)
 
 // Play a spoken cue mp3 (per-move / rest / switch) UNDER the music. The music is
 // NOT ducked — it keeps its steady volume — so it stays coherent all session.
@@ -482,7 +482,8 @@ function CircularTimer({ totalSec, remainingSec, size = 96, rep, repTotal }: {
       <div className="absolute inset-0 grid place-items-center leading-none">
         {showReps ? (
           <div className="text-center">
-            <span className="block font-black text-hotpink tabular-nums" style={{ fontSize: size * 0.34 }}>{rep}</span>
+            {/* keyed by rep so it POPS on every beat */}
+            <span key={rep} className="block font-black text-hotpink tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.34 }}>{rep}</span>
             <span className="block font-bold text-rose/55 tabular-nums" style={{ fontSize: size * 0.13, marginTop: size * 0.01 }}>of {repTotal} reps</span>
           </div>
         ) : (
@@ -2551,6 +2552,52 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
 
 type ExercisePhase = "exercise" | "rest";
 
+// Falling flower petals — a soft Bloomzein celebration over the whole screen.
+function PetalBurst({ count = 18, z = 70 }: { count?: number; z?: number }) {
+  const petals = useMemo(() => Array.from({ length: count }, () => ({
+    left: Math.random() * 100,
+    delay: Math.random() * 0.7,
+    dur: 2.6 + Math.random() * 2.2,
+    size: 12 + Math.random() * 20,
+    rot: Math.random() * 360,
+    color: Math.random() > 0.5 ? "#EC4899" : Math.random() > 0.5 ? "#F9A8D4" : "#FBCFE8",
+    char: ["✿", "❀", "🌸"][Math.floor(Math.random() * 3)],
+  })), [count]);
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: z }}>
+      {petals.map((p, i) => (
+        <span key={i} className="absolute -top-6" style={{
+          left: `${p.left}%`, fontSize: p.size, color: p.color, lineHeight: 1,
+          transform: `rotate(${p.rot}deg)`,
+          animation: `wk-petal-fall ${p.dur}s linear ${p.delay}s forwards`,
+        }}>{p.char}</span>
+      ))}
+    </div>
+  );
+}
+
+/** A cute Bloomzein intro: the flower blooms in, a warm line, then 3·2·1·GO. */
+function BloomIntro({ title, count }: { title: string; count: number | "go" | null }) {
+  return (
+    <div className="absolute inset-0 z-[30] grid place-items-center bg-gradient-to-b from-hotpink/92 via-hotpink/80 to-[#DB2777]/92 backdrop-blur-sm text-center px-6">
+      {count == null ? (
+        <div className="animate-wk-bloom-in">
+          <span className="clay-blob mx-auto grid h-24 w-24 sm:h-28 sm:w-28 place-items-center rounded-[1.75rem] text-white shadow-2xl">
+            <BloomFlower size={54} />
+          </span>
+          <p className="mt-4 font-script text-4xl sm:text-5xl text-white leading-none drop-shadow">Let's bloom ✿</p>
+          <p className="mt-1.5 text-sm sm:text-base font-bold text-white/90 drop-shadow">{title}</p>
+        </div>
+      ) : (
+        <span key={String(count)} className="animate-wk-count-in font-script text-white leading-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
+          style={{ fontSize: count === "go" ? "6rem" : "9rem" }}>
+          {count === "go" ? "GO ✿" : count}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function SessionActive({ session, onExit, onDone }: {
   session: WorkoutSession;
   onExit: () => void;
@@ -2561,6 +2608,10 @@ function SessionActive({ session, onExit, onDone }: {
   const [phase, setPhase] = useState<ExercisePhase>("exercise");
   const [remaining, setRemaining] = useState(steps[0]?.workSec ?? session.workSec);
   const [paused, setPaused] = useState(false);
+  const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
+  const [intro, setIntro] = useState<number | "go" | null>(null); // countdown digit
+  const [goFlash, setGoFlash] = useState(0);                  // "GO ✿" flash key per move
+  const [celebrate, setCelebrate] = useState(false);         // petal burst on milestones
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);   // master mute
   const [voice] = useLS<boolean>(VOICE_KEY, true);             // spoken cues on/off
   const [musicTrack] = useLS<number>(MUSIC_KEY, 0);           // chosen background track
@@ -2628,15 +2679,48 @@ function SessionActive({ session, onExit, onDone }: {
     else a.pause();
   }, [sound, paused]);
 
-  // Spoken cue at the start of a step: the "switch sides" cue on a switch step,
-  // or the move's own cue when a move STARTS. The move cue does NOT replay when
-  // we flip to its 2nd side — only the switch cue + music carry that over.
+  // Cute Bloomzein entry: the flower blooms in, then 3 · 2 · 1 · GO, then start.
   useEffect(() => {
-    if (!sound || !voice || phase !== "exercise") return;
+    let cancelled = false;
+    const frames: { c: number | "go" | null; t: number }[] = [
+      { c: null, t: 1400 }, { c: 3, t: 750 }, { c: 2, t: 750 }, { c: 1, t: 750 }, { c: "go", t: 650 },
+    ];
+    let i = 0;
+    const run = () => {
+      if (cancelled) return;
+      if (i >= frames.length) { setStarting(false); setIntro(null); return; }
+      const f = frames[i]; setIntro(f.c);
+      if (sound && typeof f.c === "number") playTick("count");
+      if (sound && f.c === "go") playTick("end");
+      i++; window.setTimeout(run, f.t);
+    };
+    const s = window.setTimeout(run, 250);
+    return () => { cancelled = true; window.clearTimeout(s); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Spoken cue at the start of a step: the "switch sides" cue on a switch step,
+  // or the move's own cue when a move STARTS (not on its 2nd side). Waits for
+  // the intro to finish so the first cue lands on the first real move.
+  useEffect(() => {
+    if (starting || !sound || !voice || phase !== "exercise") return;
     if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current);
     else if (step.side !== "second") playCue(exercise.audio, cueRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, starting]);
+
+  // A "GO ✿" flash when a work move begins (not the first — the intro's GO
+  // covers that) + a soft petal celebration each time a side is completed.
+  useEffect(() => {
+    if (starting) return;
+    if (step.kind === "work") setGoFlash((k) => k + 1);
+    if (step.kind === "switch") {
+      setCelebrate(true);
+      const t = window.setTimeout(() => setCelebrate(false), 1900);
+      return () => window.clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, starting]);
 
   // Keep the screen awake for the duration of the workout.
   useEffect(() => {
@@ -2660,7 +2744,7 @@ function SessionActive({ session, onExit, onDone }: {
   }, []);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || starting) return;
     const t = setInterval(() => {
       elapsedRef.current += 1;
       setRemaining((r) => {
@@ -2701,7 +2785,7 @@ function SessionActive({ session, onExit, onDone }: {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [paused, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
+  }, [paused, starting, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
 
   const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
@@ -2732,6 +2816,16 @@ function SessionActive({ session, onExit, onDone }: {
       <audio ref={audioRef} src={musicSrc} loop preload="auto" />
       {/* Spoken cue channel — per-move / rest / switch recordings */}
       <audio ref={cueRef} preload="none" />
+
+      {/* Cute Bloomzein entry (blooms in → 3·2·1·GO) */}
+      {starting && <BloomIntro title={session.name} count={intro} />}
+      {/* Soft petal celebration when a side completes */}
+      {celebrate && <PetalBurst count={12} z={40} />}
+      {/* Brand watermark — every screenshot reads as Bloomzein */}
+      <div aria-hidden className="pointer-events-none absolute bottom-2.5 left-3 z-[15] inline-flex items-center gap-1.5 rounded-full bg-white/55 backdrop-blur px-2 py-0.5 text-hotpink/80 font-script text-sm leading-none shadow-sm">
+        <BloomFlower size={13} /> Bloomzein
+      </div>
+
       {/* Progress bar */}
       <div className="h-1.5 bg-white/60 shrink-0">
         <div className="h-full bg-hotpink transition-all" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
@@ -2773,10 +2867,19 @@ function SessionActive({ session, onExit, onDone }: {
                 {/* Inner box sized to the CONTAINED image, so the muscle glow +
                     arrows line up with the photo (no letterbox offset). */}
                 <div
-                  className="absolute inset-0 m-auto"
+                  key={index}
+                  className="absolute inset-0 m-auto animate-fade-in"
                   style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}
                 >
-                  <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain", step.kind === "switch" ? "scale-x-[-1]" : ""].join(" ")} />
+                  <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain",
+                    step.kind === "switch" ? "scale-x-[-1]" : (!paused ? "animate-wk-ken-burns" : "")].join(" ")} />
+
+                  {/* "GO ✿" flash at the start of a work move */}
+                  {goFlash > 0 && step.kind === "work" && (
+                    <div key={goFlash} aria-hidden className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
+                      <span className="animate-wk-go-flash font-script text-6xl sm:text-8xl text-white drop-shadow-[0_3px_14px_rgba(219,39,119,0.55)]">GO ✿</span>
+                    </div>
+                  )}
 
                   {/* Switch-sides overlay — a clear cue to train the other side so
                       no move is ever done on one side only. */}
@@ -2992,9 +3095,13 @@ function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: Work
     "You moved with your body today, not against it.",
   ];
   const cheer = CHEERS[displayStreak % CHEERS.length];
+  const totalReps = session.steps.filter((s) => s.kind === "work" && (s.reps ?? 0) > 0).reduce((a, s) => a + (s.reps as number), 0);
+  const hadSwitches = session.steps.some((s) => s.kind === "switch");
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-4 overflow-y-auto" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+      {/* Celebration petals rain over the whole finish screen */}
+      <PetalBurst count={26} z={55} />
       <div className="relative w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in">
         {/* Celebration ring */}
         <div className="mx-auto mb-3 relative grid place-items-center">
@@ -3003,9 +3110,14 @@ function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: Work
           </span>
         </div>
 
-        <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none mb-1 animate-text-pop">Beautifully done ✿</h1>
+        <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none mb-1 animate-text-pop">You bloomed today ✿</h1>
         <p className="text-sm text-rose/80">{session.name}</p>
         <p className="mt-1 text-xs text-rose/60 italic">{cheer}</p>
+        {(totalReps > 0 || hadSwitches) && (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink/10 border border-hotpink/20 px-3 py-1 text-[11px] font-bold text-hotpink">
+            {hadSwitches && <>Both sides trained ✓</>}{hadSwitches && totalReps > 0 && " · "}{totalReps > 0 && <>~{totalReps} reps done</>}
+          </p>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2.5 my-5">
