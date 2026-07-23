@@ -140,7 +140,7 @@ export default function ShopPage() {
         {/* HERO — transparent; the photo lives in the blended background above. */}
         <section className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[150px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
           <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[74%] sm:max-w-md">
-            <h1 className="animate-fade-in font-script text-4xl sm:text-6xl lg:text-7xl text-hotpink leading-none flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
+            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
               Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
             </h1>
             <p className="animate-fade-in mt-0.5 sm:mt-1 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>Curated treasures for your softest era ✿</p>
