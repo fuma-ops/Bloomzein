@@ -307,26 +307,36 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
         <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
       </div>
 
-      {/* HERO — title on the LEFT, floral wash on the right */}
-      <header className="relative mt-3 overflow-hidden rounded-[2rem] border border-petal/60 shadow-[0_20px_50px_-24px_oklch(0.6_0.27_350/0.4)]">
+      {/* HERO — the image stays beautiful; the title sits on a soft white/pink
+          aurora GLASS panel, left-aligned, only where the text lives. */}
+      <header className="relative mt-3 overflow-hidden rounded-[2rem] border border-white/50 shadow-[0_20px_50px_-24px_oklch(0.6_0.27_350/0.4)]">
         <img
           src={article.image}
           alt=""
-          className="animate-hero-breathe pointer-events-none absolute inset-0 h-full w-full object-cover object-[80%_30%]"
+          className="animate-hero-breathe pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
           referrerPolicy="no-referrer"
         />
-        {/* left→right fade keeps the title readable over the imagery */}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-[#FFE1EE] via-[#FFE1EE]/85 to-[#FFE1EE]/10" />
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-white/40 to-transparent" />
-        <div className="relative z-[1] max-w-[70%] sm:max-w-[62%] px-5 py-8 sm:px-9 sm:py-12 lg:py-16">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <TopicBadge topic={article.category} />
-            <ReadTime minutes={article.minutes} />
-            <BloomCount count={article.blooms} />
+        {/* whisper of contrast at the base only — keeps the photo readable, not hidden */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+        <div className="relative z-[1] flex min-h-[15rem] sm:min-h-[19rem] lg:min-h-[23rem] items-end p-3.5 sm:p-5 lg:p-6">
+          <div className="relative overflow-hidden max-w-[94%] sm:max-w-[70%] lg:max-w-[58%] rounded-[1.6rem] border border-white/60 bg-white/30 backdrop-blur-xl px-5 py-4 sm:px-7 sm:py-6 shadow-[0_14px_44px_-14px_rgba(120,20,70,0.35)]">
+            {/* soft pink aurora glowing inside the glass */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-10 opacity-80"
+              style={{ background: "radial-gradient(55% 60% at 18% 8%, rgba(255,255,255,0.95), transparent 62%), radial-gradient(70% 75% at 92% 105%, rgba(255,138,196,0.55), transparent 66%)" }}
+            />
+            <div className="relative">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <TopicBadge topic={article.category} />
+                <ReadTime minutes={article.minutes} />
+                <BloomCount count={article.blooms} />
+              </div>
+              <h1 className="mt-2.5 font-script text-[2.6rem] sm:text-5xl lg:text-6xl text-hotpink leading-[0.98] drop-shadow-[0_1px_10px_rgba(255,255,255,0.65)]">
+                {headline}
+              </h1>
+            </div>
           </div>
-          <h1 className="mt-4 font-serif text-[1.9rem] sm:text-4xl lg:text-[2.9rem] font-semibold text-rose leading-[1.08] drop-shadow-[0_2px_10px_oklch(1_0_0/0.5)]">
-            {headline}
-          </h1>
         </div>
       </header>
 

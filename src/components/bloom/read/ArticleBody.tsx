@@ -180,8 +180,8 @@ function DropCapParagraph({ text, k }: { text: string; k: string }) {
   const first = text.charAt(0);
   const rest = text.slice(1);
   return (
-    <p className="mt-1 text-[15px] sm:text-[17px] leading-8 text-rose/90">
-      <span className="float-left mr-2 mt-1 font-script text-6xl sm:text-7xl leading-[0.75] text-hotpink">{first}</span>
+    <p className="mt-1 text-[15px] sm:text-[17px] leading-8 text-rose/90 text-pretty sm:text-justify [hyphens:auto]">
+      <span className="float-left mr-2.5 mt-1.5 font-script text-6xl sm:text-7xl leading-[0.7] text-hotpink">{first}</span>
       {inline(rest, k)}
     </p>
   );
@@ -253,18 +253,18 @@ export function ArticleBody({ parsed }: { parsed: ParsedArticle }) {
         const k = `b${i}`;
         switch (b.kind) {
           case "h2":
-            return <h2 key={k} id={b.id} style={{ scrollMarginTop: "5rem" }} className="mt-10 font-serif text-2xl sm:text-[1.75rem] font-semibold text-rose leading-snug">{b.text}</h2>;
+            return <h2 key={k} id={b.id} style={{ scrollMarginTop: "5rem" }} className="mt-10 mb-1 font-script text-3xl sm:text-4xl text-hotpink leading-tight">{b.text}</h2>;
           case "h3":
-            return <h3 key={k} className="mt-6 font-serif text-lg sm:text-xl font-semibold text-hotpink">{b.text}</h3>;
+            return <h3 key={k} className="mt-6 font-script text-2xl text-hotpink leading-tight">{b.text}</h3>;
           case "p": {
             if (!firstParaSeen) { firstParaSeen = true; return <DropCapParagraph key={k} text={b.text} k={k} />; }
-            return <p key={k} className="mt-4 text-[15px] sm:text-[17px] leading-8 text-rose/90">{inline(b.text, k)}</p>;
+            return <p key={k} className="mt-4 text-[15px] sm:text-[17px] leading-8 text-rose/90 text-pretty sm:text-justify [hyphens:auto]">{inline(b.text, k)}</p>;
           }
           case "callout":
             return (
               <blockquote key={k} className="my-6 flex gap-3 rounded-2xl border border-hotpink/25 bg-gradient-to-br from-blush/55 to-white/70 p-4 sm:p-5 backdrop-blur shadow-[0_10px_28px_-18px_oklch(0.6_0.22_350/0.4)]">
                 <Flower2 className="mt-0.5 h-5 w-5 shrink-0 text-hotpink" strokeWidth={1.8} />
-                <p className="font-serif text-[15px] sm:text-lg italic leading-7 text-rose">{inline(b.text, k)}</p>
+                <p className="text-[15px] sm:text-lg italic leading-7 text-rose">{inline(b.text, k)}</p>
               </blockquote>
             );
           case "ul":
