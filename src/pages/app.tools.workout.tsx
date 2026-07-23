@@ -2825,11 +2825,12 @@ function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, go
   /** Bump to burst an animated "GO" out of the ring centre. */
   goKey?: number;
 }) {
-  const stroke = Math.max(8, Math.round(size / 15));
+  const stroke = Math.max(7, Math.round(size / 16));
   const r = size / 2 - stroke;
   const c = 2 * Math.PI * r;
   const off = c * (1 - Math.min(1, Math.max(0, percent)));
   const showReps = rep != null && total != null && total > 0;
+  const big = size >= 150; // room for the "complete" word only on the large ring
   return (
     <div className="relative mx-auto" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -2837,29 +2838,31 @@ function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, go
         <circle cx={size / 2} cy={size / 2} r={r} stroke="oklch(0.65 0.24 350)" strokeWidth={stroke} fill="none"
           strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" style={{ transition: "stroke-dashoffset 1s linear" }} />
       </svg>
-      <div className="absolute inset-0 grid place-items-center text-center leading-none px-2">
+      {/* Inner content is kept inside the inscribed circle (~15% padding) so text
+          never touches the ring stroke. */}
+      <div className="absolute inset-0 grid place-items-center text-center leading-none" style={{ padding: "15%" }}>
         {speaking ? (
           <div>
-            <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70">Coach</p>
-            <div className="mt-2 flex items-end justify-center gap-1" style={{ height: size * 0.18 }}>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">Coach</p>
+            <div className="mt-2 flex items-end justify-center gap-1" style={{ height: size * 0.16 }}>
               {[0, 1, 2, 3, 4].map((i) => (
                 <span key={i} className="w-1.5 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />
               ))}
             </div>
-            <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.13em] text-hotpink/70">listen ✿</p>
+            <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.12em] text-hotpink/70">listen ✿</p>
           </div>
         ) : (
           <div>
-            <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70">{showReps ? "Rep" : label}</p>
+            <p className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">{showReps ? "Rep" : label}</p>
             {showReps ? (
-              <p className="mt-1 whitespace-nowrap">
-                <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.3 }}>{rep}</span>
-                <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.16 }}> / {total}</span>
+              <p className="mt-0.5 whitespace-nowrap">
+                <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.26 }}>{rep}</span>
+                <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.14 }}> / {total}</span>
               </p>
             ) : (
-              <p className="mt-1 font-black text-rose tabular-nums" style={{ fontSize: size * 0.32 }}>{seconds}</p>
+              <p className="mt-0.5 font-black text-rose tabular-nums" style={{ fontSize: size * 0.28 }}>{seconds}</p>
             )}
-            <p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.13em] text-hotpink">{Math.round(percent * 100)}% <span className="text-hotpink/55">complete</span></p>
+            <p className="mt-0.5 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.1em] text-hotpink">{Math.round(percent * 100)}%{big && <span className="text-hotpink/55"> complete</span>}</p>
           </div>
         )}
       </div>
@@ -3342,7 +3345,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
       {/* Brand logo — no frame, part of the background: strong-pink flower (white
           centre) ABOVE the wordmark, both in the same pink. It just turns gently
           and breathes — no flash / light-sweep. */}
-      <div aria-hidden className="hidden md:block pointer-events-none absolute bottom-3 left-3 z-[15]">
+      <div aria-hidden className="hidden lg:block pointer-events-none absolute bottom-3 left-3 z-[15]">
         <div className="inline-flex flex-col items-center gap-1">
           <span className="animate-wk-flower-spin drop-shadow-sm">
             <span className="block animate-wk-logo-breathe">
@@ -3383,7 +3386,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
         </aside>
 
         {/* CENTRE STAGE */}
-        <section className="relative min-h-0 flex flex-col gap-2">
+        <section className="relative min-h-0 flex flex-col gap-2 md:justify-center lg:justify-start">
           {/* Title on the left · Bloom Coach + the muscle tags sit together in the
               empty top band (right on desktop, under the title on phones) — this
               keeps the row above the photo slim so the image gets more height. */}
@@ -3423,7 +3426,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
-            <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:flex-1 md:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
+            <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[68vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
@@ -3499,16 +3502,16 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             </div>
           ) : (
             <>
-              {/* PHONE — ring on top, then a BIGGER coming-up image that uses the
-                  space below (shown in full, not cropped). */}
-              <div className="md:hidden relative w-full flex flex-col items-center gap-3 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5">
+              {/* PHONE + TABLET — stacked (section under section): ring on top, then
+                  a BIGGER coming-up image that uses the space (shown in full). */}
+              <div className="lg:hidden relative w-full flex flex-col items-center gap-3 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5 md:p-6">
                 <div className="text-center">
-                  <p className="text-sm font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
-                  <p className="text-[11px] text-rose/55">Breathe in… and out. ✿</p>
+                  <p className="text-sm sm:text-base font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
+                  <p className="text-[11px] sm:text-xs text-rose/55">Breathe in… and out. ✿</p>
                 </div>
                 <RepRing size={120} percent={ringPct} seconds={remaining} label="Rest" />
                 {next && (
-                  <div className="w-full max-w-xs">
+                  <div className="w-full max-w-xs sm:max-w-sm">
                     <p className="text-center text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
                     <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
                       <ExercisePhoto exercise={next} zone={session.zone} className="w-full h-full object-contain" />
@@ -3521,8 +3524,8 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                 )}
               </div>
 
-              {/* DESKTOP / TABLET — two columns: big coming-up image LEFT, ring RIGHT. */}
-              <div className="hidden md:flex md:flex-1 md:min-h-0 gap-4 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-4 overflow-hidden">
+              {/* DESKTOP only — two columns: big coming-up image LEFT, ring RIGHT. */}
+              <div className="hidden lg:flex lg:flex-1 lg:min-h-0 gap-4 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-4 overflow-hidden">
                 {next && (
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
