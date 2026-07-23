@@ -344,6 +344,28 @@ const REP_COUNT: Record<Level, Record<WorkoutIntention, number>> = {
 // Stretch / recover moves are timed HOLDS, not reps.
 const HOLD_SEC: Record<Level, number> = { Beginner: 30, Intermediate: 35, Advanced: 40 };
 
+/** Audio-safe work time: >= the move's spoken clip + tail, rounded up to 5s. */
+export const audioSafeSec = (slug: string, base: number) => ceil5(Math.max(base, moveAudioSec(slug) + AUDIO_TAIL));
+
+/** Push one move into a step list. One-sided moves are split into
+ *  side 1 → "switch sides" cue → side 2, so both sides are always trained, and
+ *  the work time is audio-safe & 5s-aligned. Shared by free-plan AND program
+ *  sessions so both get the rep pacer + switch. */
+export function pushMove(
+  steps: SessionStep[], ex: Exercise, kind: StepKind,
+  workSec: number, restSec: number, label: string, repTarget: string | undefined, reps: number,
+) {
+  const w = audioSafeSec(ex.slug, workSec);
+  const r = restSec > 0 ? ceil5(restSec) : 0;
+  if (ex.unilateral) {
+    steps.push({ exercise: ex, kind, workSec: w, restSec: 0, label: `${label} · 1st side`, repTarget, reps, side: "first" });
+    steps.push({ exercise: ex, kind: "switch", workSec: SWITCH_SEC, restSec: 0, label: "Switch sides", repTarget: "other side", side: "second" });
+    steps.push({ exercise: ex, kind, workSec: w, restSec: r, label: `${label} · 2nd side`, repTarget, reps, side: "second" });
+  } else {
+    steps.push({ exercise: ex, kind, workSec: w, restSec: r, label, repTarget, reps });
+  }
+}
+
 export interface WorkoutSession {
   id: string;
   zone: Zone;
