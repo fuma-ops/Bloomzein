@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2 } from "lucide-react";
+import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2,
+  Sparkles, Salad, CookingPot, Gem, PersonStanding, Feather, Brain, Moon, Leaf,
+  HeartHandshake, NotebookPen, Compass, Star } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { FILTERS, ARTICLES, IMG, articleById, type Filter, type Article } from "@/lib/readsData";
@@ -18,6 +20,24 @@ const FILTER_LABELS: Partial<Record<Filter, string>> = {
   "Bloomzein Originals": "Originals",
 };
 const filterLabel = (f: Filter) => FILTER_LABELS[f] ?? f;
+
+/* A tiny icon per category so the filter row reads faster and feels richer. */
+const FILTER_ICONS: Record<Filter, typeof Sparkles> = {
+  All: Sparkles,
+  "Cycle & Hormones": Flower2,
+  Nutrition: Salad,
+  Recipes: CookingPot,
+  Beauty: Gem,
+  Yoga: PersonStanding,
+  "Soft Living": Feather,
+  "Mental Wellness": Brain,
+  Sleep: Moon,
+  "Herbal Wellness": Leaf,
+  Relationships: HeartHandshake,
+  Journaling: NotebookPen,
+  Lifestyle: Compass,
+  "Bloomzein Originals": Star,
+};
 
 const RECOMMENDED_IDS = ["a2", "a6", "a3", "a9", "a5"];
 
@@ -142,41 +162,49 @@ export default function ReadPage() {
         </div>
       </section>
 
-      {/* SEARCH */}
-      <div className="mt-3 sm:mt-5 relative max-w-xl mx-auto">
-        <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
-        <input
-          id="search-reads"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="What would you like to bloom into today?"
-          className="w-full rounded-full bg-white/90 backdrop-blur pl-11 pr-4 py-2 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/60 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
-        />
-      </div>
-
-      {/* FILTERS — a horizontal, scrollable strip (13 categories) under the search */}
-      <nav className="mt-3 -mx-3 sm:mx-0 relative">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar px-3 sm:px-1 sm:flex-wrap sm:justify-center">
-          {FILTERS.map((t) => {
-            const active = topic === t;
-            return (
-              <button
-                key={t}
-                onClick={() => setTopic(t)}
-                className={[
-                  "shrink-0 rounded-full px-3 sm:px-4 py-1 text-xs sm:text-sm font-semibold whitespace-nowrap transition border active:scale-95",
-                  active
-                    ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30"
-                    : "bg-white/85 text-rose border-petal/60 hover:bg-blush/60",
-                ].join(" ")}
-              >
-                {filterLabel(t)}
-              </button>
-            );
-          })}
+      {/* SEARCH + FILTERS — one frosted control bar floating over the hero edge.
+          Search on top; categories on a single scrollable line ("All" pinned
+          left, active chip glows, a soft fade hints there's more to swipe). */}
+      <div className="relative z-[2] mt-3 sm:mt-4 mx-auto max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 backdrop-blur-xl p-2.5 sm:p-3.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] animate-card-pop-in">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
+          <input
+            id="search-reads"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="What would you like to bloom into today?"
+            className="w-full rounded-full bg-white/85 backdrop-blur pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/50 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
+          />
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-blush sm:from-transparent to-transparent sm:hidden" />
-      </nav>
+
+        <div className="relative mt-2.5">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            {FILTERS.map((t) => {
+              const active = topic === t;
+              const Icon = FILTER_ICONS[t];
+              const pinned = t === "All";
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTopic(t)}
+                  className={[
+                    "shrink-0 inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs sm:text-[13px] font-semibold whitespace-nowrap border transition active:scale-95",
+                    pinned ? "sticky left-0 z-[1]" : "",
+                    active
+                      ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30 animate-selected-glow"
+                      : "bg-white/85 text-rose border-petal/60 hover:bg-blush/70",
+                  ].join(" ")}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                  {filterLabel(t)}
+                </button>
+              );
+            })}
+          </div>
+          {/* right fade hints there's more to swipe */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white/70 via-white/25 to-transparent" />
+        </div>
+      </div>
 
       {/* GRID */}
       <section className="mt-5 sm:mt-6">
