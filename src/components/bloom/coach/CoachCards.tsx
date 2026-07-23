@@ -337,7 +337,7 @@ export function PhaseReads({ reads }: { reads: Article[] }) {
             <div className="relative h-48 sm:h-52">
               <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-magenta/85 via-magenta/20 to-transparent" />
-              <span className="absolute top-3 left-3 inline-block rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">{a.topic}</span>
+              <span className="absolute top-3 left-3 inline-block rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">{a.category}</span>
               <div className="absolute inset-x-0 bottom-0 p-3.5">
                 <h4 className="font-script text-2xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}>{a.title}</h4>
                 <p className="mt-1 text-[11.5px] text-white/95 leading-snug line-clamp-2" style={{ textShadow: "0 1px 5px rgba(0,0,0,0.4)" }}>{a.excerpt}</p>

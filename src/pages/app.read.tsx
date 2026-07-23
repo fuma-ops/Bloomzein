@@ -1,19 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Heart, Clock, ArrowLeft, BookOpen, Sparkles, ArrowRight, Flower2 } from "lucide-react";
+import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
-import { TOPICS, ARTICLES, IMG, articleById, type Topic, type Article } from "@/lib/readsData";
+import { FILTERS, ARTICLES, IMG, articleById, type Filter, type Article } from "@/lib/readsData";
+import { loadArticleBody } from "@/content/reads/registry";
+import { ArticleBody } from "@/components/bloom/read/ArticleBody";
 
 /* ---------- data ---------- */
-const TOPIC_LABELS: Record<Topic, string> = {
-  All: "All",
-  "Cycle & Body": "Cycle & Body",
-  "Self-care": "Self-care",
-  Money: "Money",
-  Movement: "Movement",
-  Mindset: "Mind",
-  Recipes: "Recipes",
+/* Compact labels for the filter row (full category names elsewhere). */
+const FILTER_LABELS: Partial<Record<Filter, string>> = {
+  "Cycle & Hormones": "Cycle",
+  "Mental Wellness": "Mind",
+  "Soft Living": "Soft Living",
+  "Herbal Wellness": "Herbal",
+  "Bloomzein Originals": "Originals",
 };
+const filterLabel = (f: Filter) => FILTER_LABELS[f] ?? f;
 
 const RECOMMENDED_IDS = ["a2", "a6", "a3", "a9", "a5"];
 
@@ -69,7 +71,7 @@ function HeartBtn({ saved, onClick }: { saved: boolean; onClick: (e: React.Mouse
 /* ---------- page ---------- */
 export default function ReadPage() {
   const [query, setQuery] = useState("");
-  const [topic, setTopic] = useState<Topic>("All");
+  const [topic, setTopic] = useState<Filter>("All");
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [openId, setOpenId] = useState<string | null>(null);
   const heroRef = useRef<HTMLElement>(null);
@@ -88,8 +90,8 @@ export default function ReadPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return ARTICLES.filter((a) => {
-      const matchTopic = topic === "All" || a.topic === topic;
-      const matchQ = !q || a.title.toLowerCase().includes(q) || a.topic.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
+      const matchTopic = topic === "All" || a.category === topic;
+      const matchQ = !q || a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
       return matchTopic && matchQ;
     });
   }, [query, topic]);
@@ -99,30 +101,7 @@ export default function ReadPage() {
   const open = openId ? ARTICLES.find((a) => a.id === openId) : null;
 
   if (open) {
-    return (
-      <article className="relative animate-fade-in">
-        <BloomBubbles count={8} />
-        <button
-          onClick={() => setOpenId(null)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
-        </button>
-        <div className="mt-4 overflow-hidden rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.4)]">
-          <img src={open.image} alt="" className="block h-64 sm:h-80 w-full object-cover" referrerPolicy="no-referrer" />
-        </div>
-        <header className="mt-6 flex flex-wrap items-center gap-3">
-          <TopicBadge topic={open.topic} />
-          <ReadTime minutes={open.minutes} />
-          <div className="ml-auto"><HeartBtn saved={!!saved[open.id]} onClick={() => toggleSave(open.id)} /></div>
-        </header>
-        <h1 className="mt-3 font-script text-5xl sm:text-6xl text-hotpink leading-none">{open.title}</h1>
-        <p className="mt-2 text-base text-rose/80 italic">{open.excerpt}</p>
-        <div className="mt-6 rounded-3xl bg-white/85 backdrop-blur p-6 sm:p-8 border border-petal/50 shadow-[0_10px_30px_-15px_oklch(0.6_0.22_350/0.3)]">
-          <p className="text-[15px] leading-7 text-rose">{open.body}</p>
-        </div>
-      </article>
-    );
+    return <ArticleReader article={open} saved={!!saved[open.id]} onSave={() => toggleSave(open.id)} onBack={() => setOpenId(null)} />;
   }
 
   return (
@@ -173,10 +152,10 @@ export default function ReadPage() {
         />
       </div>
 
-      {/* FILTERS — under the search bar */}
-      <nav className="mt-3 max-w-2xl mx-auto px-1">
-        <div className="flex flex-wrap gap-2 justify-center">
-          {TOPICS.map((t) => {
+      {/* FILTERS — a horizontal, scrollable strip (13 categories) under the search */}
+      <nav className="mt-3 -mx-3 sm:mx-0 relative">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar px-3 sm:px-1 sm:flex-wrap sm:justify-center">
+          {FILTERS.map((t) => {
             const active = topic === t;
             return (
               <button
@@ -189,11 +168,12 @@ export default function ReadPage() {
                     : "bg-white/85 text-rose border-petal/60 hover:bg-blush/60",
                 ].join(" ")}
               >
-                {TOPIC_LABELS[t]}
+                {filterLabel(t)}
               </button>
             );
           })}
         </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-blush sm:from-transparent to-transparent sm:hidden" />
       </nav>
 
       {/* GRID */}
@@ -235,7 +215,7 @@ export default function ReadPage() {
               >
                 <div className="relative h-24 sm:h-36 overflow-hidden">
                   <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
-                  <div className="absolute top-2 left-2"><TopicBadge topic={a.topic} /></div>
+                  <div className="absolute top-2 left-2"><TopicBadge topic={a.category} /></div>
                 </div>
                 <div className="p-3 sm:p-4">
                   <h3 className="text-xs sm:text-sm font-bold text-rose leading-tight line-clamp-2">{a.title}</h3>
@@ -284,6 +264,78 @@ export default function ReadPage() {
   );
 }
 
+/* ---------- article reader (lazy-loaded structured body) ---------- */
+function ArticleReader({ article, saved, onSave, onBack }: { article: Article; saved: boolean; onSave: () => void; onBack: () => void }) {
+  const [markdown, setMarkdown] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setMarkdown(null);
+    document.scrollingElement?.scrollTo({ top: 0 });
+    loadArticleBody(article).then((body) => {
+      if (!alive) return;
+      // Legacy short reads return a bare paragraph — wrap it so every article
+      // renders through one path with a headline + dek.
+      const md = !body
+        ? `# ${article.title}\n\n*${article.excerpt}*\n\nThis story is coming soon.`
+        : body.trimStart().startsWith("# ")
+        ? body
+        : `# ${article.title}\n\n*${article.excerpt}*\n\n${body}`;
+      setMarkdown(md);
+      setLoading(false);
+    });
+    return () => { alive = false; };
+  }, [article]);
+
+  return (
+    <article className="relative animate-fade-in">
+      <BloomBubbles count={8} />
+      <button
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
+      </button>
+      <div className="mt-4 overflow-hidden rounded-[2.5rem] border border-petal/60 shadow-[0_20px_50px_-20px_oklch(0.6_0.27_350/0.4)]">
+        <img src={article.image} alt="" className="block h-56 sm:h-80 w-full object-cover" referrerPolicy="no-referrer" />
+      </div>
+      <header className="mt-6 flex flex-wrap items-center gap-3">
+        <TopicBadge topic={article.category} />
+        <ReadTime minutes={article.minutes} />
+        <BloomCount count={article.blooms} />
+        <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
+      </header>
+
+      <div className="mt-4 mx-auto max-w-2xl">
+        {loading || !markdown ? (
+          <div className="animate-pulse space-y-4 py-4">
+            <div className="h-10 w-3/4 rounded-full bg-petal/40" />
+            <div className="h-4 w-2/3 rounded-full bg-petal/30" />
+            <div className="mt-8 space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <ArticleBody markdown={markdown} />
+        )}
+      </div>
+
+      <div className="mt-10 mb-2 flex justify-center">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-4 py-2 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: Article; saved: boolean; onSave: () => void; onOpen: () => void; index?: number }) {
   return (
     <div
@@ -296,7 +348,7 @@ function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: A
     >
       <div className="relative h-28 sm:h-44 overflow-hidden">
         <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.topic} /></div>
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.category} /></div>
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3"><HeartBtn saved={saved} onClick={onSave} /></div>
       </div>
       <div className="p-3 sm:p-5">
