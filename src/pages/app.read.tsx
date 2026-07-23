@@ -58,10 +58,42 @@ function ReadTime({ minutes, light }: { minutes: number; light?: boolean }) {
   );
 }
 
+/** Count a "1.9k" / "890" figure up from zero the first time it scrolls in. */
+function useCountUp(target: string, duration = 1200) {
+  const parsed = useMemo(() => {
+    const m = target.trim().match(/^([\d.]+)\s*([a-zA-Z]*)$/);
+    if (!m) return null;
+    const numStr = m[1];
+    return { value: parseFloat(numStr), decimals: numStr.includes(".") ? numStr.split(".")[1].length : 0, suffix: m[2] };
+  }, [target]);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!parsed || !el) return;
+    let raf = 0;
+    const obs = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return;
+      obs.disconnect();
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        setVal(parsed.value * (1 - Math.pow(1 - t, 3))); // ease-out cubic
+        if (t < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, { threshold: 0.5 });
+    obs.observe(el);
+    return () => { obs.disconnect(); cancelAnimationFrame(raf); };
+  }, [parsed, duration]);
+  return { ref, display: parsed ? val.toFixed(parsed.decimals) + parsed.suffix : target };
+}
+
 function BloomCount({ count, light }: { count: string; light?: boolean }) {
+  const { ref, display } = useCountUp(count);
   return (
-    <span className={["inline-flex items-center gap-1 text-[11px] font-semibold", light ? "text-white/95" : "text-rose/70"].join(" ")}>
-      <Flower2 className="h-3 w-3" strokeWidth={1.8} /> {count}
+    <span ref={ref} className={["inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums", light ? "text-white/95" : "text-rose/70"].join(" ")}>
+      <Flower2 className="h-3 w-3" strokeWidth={1.8} /> {display}
     </span>
   );
 }
@@ -156,10 +188,10 @@ export default function ReadPage() {
       <BloomBubbles count={10} />
 
       {/* HERO — transparent; the photo lives in the blended background above. */}
-      <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[96px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+      <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[96px] sm:min-h-[124px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-2 pb-2 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
           <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
-          <p className="animate-fade-in mt-1 font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for your softest era ✿</p>
+          <p className="animate-fade-in mt-1 font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for <br className="sm:hidden" />your softest era ✿</p>
         </div>
       </section>
 
