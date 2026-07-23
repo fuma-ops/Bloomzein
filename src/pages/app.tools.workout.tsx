@@ -156,6 +156,13 @@ const WORKOUT_MUSIC = [
 const MUSIC_VOL = 0.44;  // steady bed, always audible
 const CUE_VOL = 0.32;    // spoken cue sits well UNDER the music (quieter for recording)
 
+// Congratulation voice-overs — one plays (at random) on the finish screen while
+// the music keeps going, ducked low underneath. (Spaces pre-encoded for the URL.)
+const CONGRATS_AUDIO = [
+  "/audio/congratulation%201%20WORKOUT.mp3",
+  "/audio/CONGRATULATION%202.mp3",
+];
+
 // Play a spoken cue mp3 (per-move / rest / switch) UNDER the music. The music is
 // NOT ducked — it keeps its steady volume — so it stays coherent all session.
 function playCue(src: string | undefined, cueEl: HTMLAudioElement | null) {
@@ -2589,6 +2596,38 @@ function PetalBurst({ count = 18, z = 70 }: { count?: number; z?: number }) {
   );
 }
 
+// Continuous "wow" celebration for the finish screen — flowers + sparkles that
+// keep falling AND rising forever (looping animations), so the motion sustains
+// while the congratulation voice plays. Unmounts (stops) when `active` is false.
+function EndCelebration({ active, z = 52 }: { active: boolean; z?: number }) {
+  const bits = useMemo(() => Array.from({ length: 36 }, (_, i) => ({
+    left: Math.random() * 100,
+    delay: Math.random() * 5,
+    dur: 4.5 + Math.random() * 4.5,
+    size: 13 + Math.random() * 24,
+    rise: i % 5 === 0 ? false : Math.random() > 0.5, // a mix rising / falling
+    drift: -18 + Math.random() * 36,
+    rot: Math.random() * 360,
+    color: ["#EC4899", "#F9A8D4", "#FBCFE8", "#FF1493"][Math.floor(Math.random() * 4)],
+    char: ["✿", "❀", "🌸", "✨", "💖", "🌷"][Math.floor(Math.random() * 6)],
+  })), []);
+  if (!active) return null;
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: z }}>
+      {bits.map((b, i) => (
+        <span key={i} className={b.rise ? "absolute bottom-0" : "absolute -top-8"} style={{
+          left: `${b.left}%`, fontSize: b.size, color: b.color, lineHeight: 1,
+          ...(b.rise
+            ? { ["--tw-translate-x" as any]: `${b.drift}px`,
+                animation: `wk-petal-drift ${b.dur}s linear ${b.delay}s infinite` }
+            : { transform: `rotate(${b.rot}deg)`,
+                animation: `wk-petal-fall ${b.dur}s linear ${b.delay}s infinite` }),
+        }}>{b.char}</span>
+      ))}
+    </div>
+  );
+}
+
 /** Sparse petals that drift up forever through the stage's blurred side-bands,
  *  so the letterbox margins feel alive instead of empty. Kept to the edges. */
 /** Ambient pink aurora over the stage — soft blurred radial blooms placed all
@@ -3470,9 +3509,52 @@ function SessionActive({ session, onExit, onDone }: {
 function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void }) {
   const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
+  const [sound] = useLS<boolean>(SOUND_KEY, true);
+  const [musicTrack] = useLS<number>(MUSIC_KEY, 0);
+  const [celebrating, setCelebrating] = useState(true);
   const calories = sessionCalories(session.intention, elapsedSec);
   const minutes = Math.floor(elapsedSec / 60);
   const seconds = elapsedSec % 60;
+
+  // A proper "wow" landing: the music keeps going (ducked low) while a random
+  // congratulation voice plays over it, and the celebration keeps moving until
+  // that voice finishes. If sound is off, the confetti still runs for a beat.
+  useEffect(() => {
+    let music: HTMLAudioElement | null = null;
+    let voice: HTMLAudioElement | null = null;
+    const fadeOut = (a: HTMLAudioElement, ms = 1200) => {
+      const step = a.volume / Math.max(1, ms / 50);
+      const iv = window.setInterval(() => {
+        a.volume = Math.max(0, a.volume - step);
+        if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
+      }, 50);
+    };
+    const stop = () => { setCelebrating(false); if (music) fadeOut(music); };
+    let fallback: number;
+    if (sound) {
+      try {
+        music = new Audio(WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0]);
+        music.loop = true; music.volume = 0.16; // kept, just turned down
+        music.play().catch(() => {});
+      } catch {}
+      try {
+        voice = new Audio(CONGRATS_AUDIO[Math.floor(Math.random() * CONGRATS_AUDIO.length)]);
+        voice.volume = 0.95;
+        voice.onended = stop;
+        voice.play().catch(() => { fallback = window.setTimeout(stop, 6000); });
+      } catch { fallback = window.setTimeout(stop, 6000); }
+      // Safety net in case 'ended' never fires (decode/network).
+      fallback = window.setTimeout(stop, 12000);
+    } else {
+      fallback = window.setTimeout(stop, 5000);
+    }
+    return () => {
+      window.clearTimeout(fallback);
+      if (voice) { voice.pause(); voice.src = ""; }
+      if (music) { music.pause(); music.src = ""; }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const phase = readCyclePhase() ?? "any";
@@ -3554,9 +3636,13 @@ function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: Work
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-4 overflow-y-auto" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
-      {/* Celebration petals rain over the whole finish screen */}
+      {/* Soft pink glow wash behind the card — warm, dreamy "wow". */}
+      <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 51, background: "radial-gradient(58% 48% at 50% 42%, oklch(0.84 0.13 350 / 0.55), transparent 72%)" }} />
+      {/* Continuous flowers + sparkles — keeps moving until the voice finishes. */}
+      <EndCelebration active={celebrating} z={52} />
+      {/* Initial celebration burst over the whole finish screen */}
       <PetalBurst count={26} z={55} />
-      <div className="relative w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in">
+      <div className="relative z-[54] w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in">
         {/* Celebration ring */}
         <div className="mx-auto mb-3 relative grid place-items-center">
           <span className="clay-blob animate-selected-glow grid h-20 w-20 sm:h-24 sm:w-24 place-items-center rounded-full text-white">
