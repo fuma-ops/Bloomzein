@@ -2826,11 +2826,13 @@ function CoachTipCard({ tip, delay }: { tip: string; delay?: number }) {
 function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; reps?: string; delay?: number }) {
   return (
     <GlassCard icon={ChevronRight} title="Next up" delay={delay}>
-      <div className="flex items-center gap-3">
-        <ExercisePhoto exercise={next} zone={zone} className="h-14 w-14 shrink-0 object-cover rounded-2xl border border-petal/60" />
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-rose leading-tight truncate">{next.name}</p>
-          {reps && <p className="text-[11px] font-semibold text-hotpink mt-0.5">{reps}</p>}
+      {/* Big preview image with the name overlaid — the coming-up move is the
+          star of the rail, not a tiny thumbnail. */}
+      <div className="relative w-full aspect-[16/11] rounded-2xl overflow-hidden border border-petal/60 shadow-sm">
+        <ExercisePhoto exercise={next} zone={zone} className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent p-2.5 sm:p-3">
+          <p className="text-sm sm:text-base font-bold text-white leading-tight truncate drop-shadow">{next.name}</p>
+          {reps && <p className="text-[11px] font-semibold text-white/90 mt-0.5 drop-shadow">{reps}</p>}
         </div>
       </div>
     </GlassCard>
@@ -3365,24 +3367,29 @@ function SessionActive({ session, onExit, onDone }: {
               </div>
             </div>
           ) : (
-            <div className="relative w-full md:flex-1 md:min-h-0 grid place-items-center rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5 sm:p-7">
-              <div className="text-center">
-                <p className="text-sm sm:text-lg font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
-                <p className="text-[11px] sm:text-xs text-rose/55 mb-4">Breathe in… and out. ✿</p>
-                <RepRing size={150} percent={ringPct} seconds={remaining} label="Rest" />
-                {next && (
-                  <div className="mt-5 mx-auto max-w-xs">
-                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                    <div className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur border border-white/70 p-2.5 text-left">
-                      <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 shrink-0 object-cover rounded-xl border border-petal/60" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-base font-bold text-rose leading-tight">{next.name}</p>
-                        {nextReps && <span className="mt-0.5 inline-block text-[11px] font-semibold text-hotpink">{nextReps}</span>}
-                      </div>
+            <div className="relative w-full md:flex-1 md:min-h-0 flex flex-col rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-3.5 sm:p-4 overflow-hidden">
+              {/* Compact rest header — small ring + text in a slim row, so the
+                  coming-up preview gets the rest of the card. */}
+              <div className="shrink-0 flex items-center justify-center gap-3 sm:gap-4 mb-3">
+                <RepRing size={84} percent={ringPct} seconds={remaining} label="Rest" />
+                <div className="text-left">
+                  <p className="text-base sm:text-xl font-bold uppercase tracking-wide text-hotpink/75 leading-none">Rest</p>
+                  <p className="text-[11px] sm:text-sm text-rose/55 mt-1">Breathe in… and out. ✿</p>
+                </div>
+              </div>
+              {/* BIG coming-up preview — hero image fills the remaining space. */}
+              {next && (
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <p className="shrink-0 text-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                  <div className="relative flex-1 min-h-[8rem] rounded-2xl overflow-hidden border border-white/70 shadow-md">
+                    <ExercisePhoto exercise={next} zone={session.zone} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent p-3 sm:p-4">
+                      <p className="text-lg sm:text-2xl font-bold text-white leading-tight drop-shadow">{next.name}</p>
+                      {nextReps && <span className="mt-0.5 inline-block text-xs sm:text-sm font-semibold text-white/90 drop-shadow">{nextReps}</span>}
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -3412,13 +3419,14 @@ function SessionActive({ session, onExit, onDone }: {
               seconds={remaining} />
           </GlassCard>
           {next && <NextUpCard next={next} zone={session.zone} reps={nextReps} delay={120} />}
-          <FormReminderCard cues={formCues} delay={200} />
-          {/* Affirmation — moved here (under Form Reminder) to free the image. */}
+          {/* Affirmation sits above Form Reminder so Next up keeps the space. */}
           {phase === "exercise" && !isSwitch && (
             <div className="rounded-[1.5rem] bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.13)] px-4 py-3 text-center animate-fade-in" style={{ animationDelay: "260ms" }}>
               <p className="text-[13px] font-semibold text-rose/85 leading-snug">{affirmation}</p>
             </div>
           )}
+          {/* Form Reminder — moved down so Next up gets the room above it. */}
+          <FormReminderCard cues={formCues} delay={200} />
           {/* Tablet gets the focus/muscle/tip cards here (no left rail below lg) */}
           <div className="lg:hidden flex flex-col gap-3">
             <MuscleTargetCard muscles={muscleList} delay={300} />
