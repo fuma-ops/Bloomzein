@@ -601,8 +601,9 @@ export default function WorkoutPage() {
     return (
       <SessionActive
         session={view.session}
+        programRef={view.programRef}
         onExit={() => setView({ kind: view.returnTo ?? tab })}
-        onDone={(elapsedSec) => setView({ kind: "session-end", session: view.session, elapsedSec, programRef: view.programRef, returnTo: view.returnTo })}
+        onDone={() => setView({ kind: view.returnTo ?? tab })}
       />
     );
   }
@@ -2944,8 +2945,9 @@ function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
   );
 }
 
-function SessionActive({ session, onExit, onDone }: {
+function SessionActive({ session, programRef, onExit, onDone }: {
   session: WorkoutSession;
+  programRef?: ProgramRef;
   onExit: () => void;
   onDone: (elapsedSec: number) => void;
 }) {
@@ -2954,6 +2956,9 @@ function SessionActive({ session, onExit, onDone }: {
   const [phase, setPhase] = useState<ExercisePhase>("exercise");
   const [remaining, setRemaining] = useState(steps[0]?.workSec ?? session.workSec);
   const [paused, setPaused] = useState(false);
+  const [finished, setFinished] = useState(false);            // session complete → celebration overlays the frozen player
+  const [finalElapsed, setFinalElapsed] = useState(0);
+  const finishedRef = useRef(false);
   const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
   const [intro, setIntro] = useState<number | "go" | null>(null); // countdown digit
   const [goRing, setGoRing] = useState(0);                    // "GO" burst key (from the ring)
@@ -2970,6 +2975,24 @@ function SessionActive({ session, onExit, onDone }: {
   const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest cues
   // The user's chosen background track — one coherent bed for the whole session.
   const musicSrc = WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0];
+
+  // Session complete → don't jump to a separate page. Freeze the player where it
+  // is, duck the music (keep it playing), and let the celebration bloom over it.
+  const finish = () => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    setFinalElapsed(elapsedRef.current);
+    setFinished(true);
+    const a = audioRef.current;
+    if (a) {
+      const target = 0.16;
+      const iv = window.setInterval(() => {
+        if (!a) { window.clearInterval(iv); return; }
+        a.volume = Math.max(target, a.volume - 0.03);
+        if (a.volume <= target + 0.001) window.clearInterval(iv);
+      }, 60);
+    }
+  };
 
   const step = steps[index];
   const nextStepObj = steps[index + 1];
@@ -3121,7 +3144,7 @@ function SessionActive({ session, onExit, onDone }: {
   }, []);
 
   useEffect(() => {
-    if (paused || starting || briefing) return;
+    if (paused || starting || briefing || finishedRef.current) return;
     const t = setInterval(() => {
       elapsedRef.current += 1;
       setRemaining((r) => {
@@ -3143,7 +3166,7 @@ function SessionActive({ session, onExit, onDone }: {
         if (nr <= 0) {
           if (phase === "exercise") {
             if (sound) playTick("end");
-            if (index === steps.length - 1) { onDone(elapsedRef.current); return 0; }
+            if (index === steps.length - 1) { finish(); return 0; }
             if (step.restSec > 0) {
               setPhase("rest");
               if (sound && voice) playCue(WORKOUT_REST_AUDIO, cueRef.current);
@@ -3167,7 +3190,7 @@ function SessionActive({ session, onExit, onDone }: {
   const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
     if (phase === "exercise") {
-      if (index === steps.length - 1) { onDone(elapsedRef.current); return; }
+      if (index === steps.length - 1) { finish(); return; }
       if (step.restSec > 0) {
         setPhase("rest"); setRemaining(step.restSec);
         if (sound && voice) playCue(WORKOUT_REST_AUDIO, cueRef.current);
@@ -3501,12 +3524,24 @@ function SessionActive({ session, onExit, onDone }: {
 
       {/* Control bar — pinned to the bottom on phones */}
       <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{controlBar}</div>
+
+      {/* Session complete — instead of cutting to a new page, a flower blooms out
+          of the centre and the celebration eases in over the FROZEN player, behind
+          a soft pink veil. The music keeps going (ducked) under the voice. */}
+      {finished && (
+        <>
+          <div key="fin-burst" aria-hidden className="pointer-events-none fixed inset-0 z-[63] grid place-items-center">
+            <span className="animate-wk-go-center font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.9)]" style={{ fontSize: "clamp(6rem, 26vw, 15rem)" }}>✿</span>
+          </div>
+          <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} />
+        </>
+      )}
     </div>,
     document.body
   );
 }
 
-function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void }) {
+function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void; overlay?: boolean }) {
   const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
   const [sound] = useLS<boolean>(SOUND_KEY, true);
@@ -3532,11 +3567,15 @@ function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: Work
     const stop = () => { setCelebrating(false); if (music) fadeOut(music); };
     let fallback: number;
     if (sound) {
-      try {
-        music = new Audio(WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0]);
-        music.loop = true; music.volume = 0.16; // kept, just turned down
-        music.play().catch(() => {});
-      } catch {}
+      // In overlay mode the still-mounted player owns the music (already ducked),
+      // so we only add the voice here — no second music bed.
+      if (!overlay) {
+        try {
+          music = new Audio(WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0]);
+          music.loop = true; music.volume = 0.16; // kept, just turned down
+          music.play().catch(() => {});
+        } catch {}
+      }
       try {
         voice = new Audio(CONGRATS_AUDIO[Math.floor(Math.random() * CONGRATS_AUDIO.length)]);
         voice.volume = 0.95;
@@ -3635,14 +3674,18 @@ function SessionEnd({ session, elapsedSec, programRef, onDone }: { session: Work
   const hadSwitches = session.steps.some((s) => s.kind === "switch");
 
   return (
-    <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-4 overflow-y-auto" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+    <div className={["fixed inset-0 z-[61] grid place-items-start sm:place-items-center p-4 overflow-y-auto",
+      overlay ? "animate-fade-in" : "bg-blush/95 backdrop-blur"].join(" ")} style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+      {/* Overlay mode: a soft pink veil over the frozen player — barely see-through. */}
+      {overlay && <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "oklch(0.9 0.09 350 / 0.55)", backdropFilter: "blur(2px)" }} />}
       {/* Soft pink glow wash behind the card — warm, dreamy "wow". */}
       <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 51, background: "radial-gradient(58% 48% at 50% 42%, oklch(0.84 0.13 350 / 0.55), transparent 72%)" }} />
       {/* Continuous flowers + sparkles — keeps moving until the voice finishes. */}
       <EndCelebration active={celebrating} z={52} />
       {/* Initial celebration burst over the whole finish screen */}
       <PetalBurst count={26} z={55} />
-      <div className="relative z-[54] w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in">
+      <div className="relative z-[54] w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in"
+        style={overlay ? { animationDelay: "0.45s", animationFillMode: "both" } : undefined}>
         {/* Celebration ring */}
         <div className="mx-auto mb-3 relative grid place-items-center">
           <span className="clay-blob animate-selected-glow grid h-20 w-20 sm:h-24 sm:w-24 place-items-center rounded-full text-white">
