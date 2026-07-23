@@ -2591,6 +2591,31 @@ function PetalBurst({ count = 18, z = 70 }: { count?: number; z?: number }) {
 
 /** Sparse petals that drift up forever through the stage's blurred side-bands,
  *  so the letterbox margins feel alive instead of empty. Kept to the edges. */
+/** Ambient pink aurora over the stage — soft blurred radial blooms placed all
+ *  around that breathe big↔small and glow, so the side-bands feel alive. Visible
+ *  but calm; sits behind the sharp photo and the drifting petals. */
+function StageAurora({ paused }: { paused: boolean }) {
+  const blobs = [
+    { pos: "-left-[8%] top-[6%]",      size: "h-[46%] w-[44%]", hue: 350, dur: 7,   delay: 0 },
+    { pos: "-right-[8%] top-[16%]",    size: "h-[52%] w-[46%]", hue: 338, dur: 8.6, delay: 1.3 },
+    { pos: "left-[14%] -bottom-[10%]", size: "h-[50%] w-[48%]", hue: 356, dur: 9.2, delay: 2.2 },
+    { pos: "right-[8%] -bottom-[6%]",  size: "h-[44%] w-[42%]", hue: 344, dur: 7.8, delay: 0.7 },
+    { pos: "left-[32%] top-[26%]",     size: "h-[40%] w-[40%]", hue: 350, dur: 8,   delay: 3 },
+  ];
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden z-[4]">
+      {blobs.map((b, i) => (
+        <div key={i} className={["absolute rounded-full blur-3xl animate-wk-aurora-pulse", b.pos, b.size].join(" ")}
+          style={{
+            background: `radial-gradient(circle, oklch(0.8 0.2 ${b.hue} / 0.6), oklch(0.82 0.16 ${b.hue} / 0.26) 45%, transparent 72%)`,
+            animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s`,
+            animationPlayState: paused ? "paused" : "running",
+          }} />
+      ))}
+    </div>
+  );
+}
+
 function StagePetals({ paused }: { paused: boolean }) {
   const petals = useMemo(() => Array.from({ length: 9 }, (_, i) => {
     // Bias toward the left/right side-bands, away from the centred pose.
@@ -2870,7 +2895,7 @@ function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
     <button onClick={onClick} disabled={disabled} aria-label={label}
       className="flex flex-col items-center gap-1 px-1 sm:px-2 disabled:opacity-40 active:scale-90 transition">
       <span className={["relative grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full",
-        active ? "wk-lux-btn-on text-white" : "wk-lux-btn text-rose"].join(" ")}>
+        active ? "wk-lux-btn-on text-white animate-soft-glow" : "wk-lux-btn text-rose"].join(" ")}>
         <Icon className={["relative z-[2] h-5 w-5", active && label === "Favorite" ? "fill-current" : ""].join(" ")} />
       </span>
       <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{label}</span>
@@ -2891,6 +2916,7 @@ function SessionActive({ session, onExit, onDone }: {
   const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
   const [intro, setIntro] = useState<number | "go" | null>(null); // countdown digit
   const [goRing, setGoRing] = useState(0);                    // "GO" burst key (from the ring)
+  const [goBurst, setGoBurst] = useState(0);                  // transient centre-image "GO" (fires only on the ring trigger)
   const [briefing, setBriefing] = useState(false);           // coach speaking → chrono held
   const briefingRef = useRef(false);                         // tracks a live move briefing
   const [celebrate, setCelebrate] = useState(false);         // petal burst on milestones
@@ -3023,6 +3049,15 @@ function SessionActive({ session, onExit, onDone }: {
     setGoRing((k) => k + 1); if (sound) playTick("go");
   };
 
+  // Centre-image "GO" fires ONLY when the ring triggers go (goRing bumps) and
+  // self-clears — so it can never flash on a plain photo change or a re-mount.
+  useEffect(() => {
+    if (goRing === 0) return;
+    setGoBurst(goRing);
+    const t = window.setTimeout(() => setGoBurst(0), 1200);
+    return () => window.clearTimeout(t);
+  }, [goRing]);
+
   // Keep the screen awake for the duration of the workout.
   useEffect(() => {
     let lock: any = null;
@@ -3145,7 +3180,7 @@ function SessionActive({ session, onExit, onDone }: {
     <div className="mx-auto w-full max-w-xl flex items-center justify-around gap-1 rounded-[1.6rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-2 sm:px-4 py-2 sm:py-2.5">
       <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} />
       <button onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"} className="flex flex-col items-center gap-1 active:scale-95 transition">
-        <span className="relative grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full wk-lux-btn-on text-white">
+        <span className="relative grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full wk-lux-btn-on text-white animate-soft-glow">
           {paused ? <Play className="relative z-[2] h-7 w-7 sm:h-8 sm:w-8 fill-current" /> : <Pause className="relative z-[2] h-7 w-7 sm:h-8 sm:w-8 fill-current" />}
         </span>
         <span className="text-[10px] sm:text-[11px] font-bold text-hotpink">{paused ? "Resume" : "Pause"}</span>
@@ -3173,20 +3208,16 @@ function SessionActive({ session, onExit, onDone }: {
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
       {/* Brand logo — no frame, part of the background: strong-pink flower (white
-          centre) ABOVE the wordmark, both in the same pink. It keeps turning and
-          carries the SAME light-sweep + brightness pulse as the muscle bars. */}
+          centre) ABOVE the wordmark, both in the same pink. It just turns gently
+          and breathes — no flash / light-sweep. */}
       <div aria-hidden className="pointer-events-none absolute bottom-3 left-3 z-[15]">
-        <div className="relative inline-flex flex-col items-center gap-1 px-2 py-1.5 animate-wk-bar-pulse">
+        <div className="inline-flex flex-col items-center gap-1">
           <span className="animate-wk-flower-spin drop-shadow-sm">
             <span className="block animate-wk-logo-breathe">
               <BloomFlower size={64} petal="var(--hotpink)" center="#FFFFFF" />
             </span>
           </span>
           <span className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Bloomzein</span>
-          {/* music-vibe light sweep, clipped to the logo box */}
-          <span aria-hidden className="absolute inset-0 overflow-hidden rounded-2xl">
-            <span className="absolute inset-0 animate-wk-bar-shimmer" />
-          </span>
         </div>
       </div>
 
@@ -3269,6 +3300,8 @@ function SessionActive({ session, onExit, onDone }: {
                   className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", isSwitch ? "scale-x-[-1]" : ""].join(" ")} />
                 <div className="absolute inset-0 bg-white/25" />
               </div>
+              {/* Ambient pink aurora — breathing radial blooms all around */}
+              <StageAurora paused={paused} />
               {/* Ambient petals drifting up through the side-bands */}
               <StagePetals paused={paused} />
               {/* Inner box sized to the CONTAINED image so the glow + arrows line up. */}
@@ -3313,10 +3346,11 @@ function SessionActive({ session, onExit, onDone }: {
                 )}
               </div>
 
-              {/* "GO ✿" blooming from the CENTRE of the image — same trigger as the
-                  rep-ring GO, so one "go" lights up both the ring and the image. */}
-              {goRing > 0 && !isSwitch && (
-                <div key={`go-center-${goRing}`} aria-hidden className="pointer-events-none absolute inset-0 z-[24] grid place-items-center">
+              {/* "GO ✿" blooming from the CENTRE of the image — driven by the
+                  transient goBurst so it fires exactly with the ring's GO, never
+                  on a photo change. */}
+              {goBurst > 0 && !isSwitch && (
+                <div key={`go-center-${goBurst}`} aria-hidden className="pointer-events-none absolute inset-0 z-[24] grid place-items-center">
                   <span className="animate-wk-go-center font-script text-white leading-none drop-shadow-[0_4px_22px_oklch(0.58_0.28_350/0.9)]"
                     style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)" }}>GO ✿</span>
                 </div>

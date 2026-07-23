@@ -1001,6 +1001,14 @@
 }
 @utility animate-wk-bar-pulse { animation: wk-bar-pulse 1.5s ease-in-out infinite; will-change: filter; }
 
+/* Stage aurora blobs — breathe big↔small while glowing brighter/dimmer, so the
+   side-bands read as a soft, living pink aurora (per-blob dur/delay inline). */
+@keyframes wk-aurora-pulse {
+  0%, 100% { transform: scale(0.82); opacity: 0.42; }
+  50%      { transform: scale(1.22); opacity: 0.78; }
+}
+@utility animate-wk-aurora-pulse { animation: wk-aurora-pulse 8s ease-in-out infinite; will-change: transform, opacity; }
+
 /* Player control — flat & matte, no gloss/sheen/dome. A clean frosted disc with
    just a soft ambient shadow; presses in on tap. */
 @utility wk-lux-btn {
