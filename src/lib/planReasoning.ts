@@ -202,12 +202,12 @@ function pickFrom(lib: ExploreItem[], dphase: ReturnType<typeof toDietPhase>, se
 }
 function exploreFor(phase: Phase, type: PlanItemType, seed: string): ExploreLink[] {
   const dphase = toDietPhase(phase);
-  const topicPref = type === "meal" ? ["Recipes", "Cycle & Body"]
-    : type === "yoga" || type === "workout" ? ["Movement", "Cycle & Body"]
-    : ["Mindset", "Self-care"];
+  const topicPref = type === "meal" ? ["Recipes", "Nutrition", "Cycle & Hormones"]
+    : type === "yoga" || type === "workout" ? ["Yoga", "Cycle & Hormones"]
+    : ["Mental Wellness", "Soft Living", "Beauty"];
   const readPool = [
     ...ARTICLES.filter((a) => a.phase === dphase),
-    ...ARTICLES.filter((a) => !a.phase && topicPref.includes(a.topic as string)),
+    ...ARTICLES.filter((a) => !a.phase && topicPref.includes(a.category as string)),
   ];
   const reads = readPool.length ? readPool : ARTICLES;
   const read = pick(reads, seed + "r");
