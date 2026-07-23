@@ -917,6 +917,15 @@
 }
 @utility animate-wk-aurora-breathe { animation: wk-aurora-breathe 0.9s ease-out; }
 
+/* Breathing backdrop — the blurred pose photo slowly swells in and out, like a
+   calm breath, behind the glass. Base scale keeps it overfilled so the blurred
+   edges never show. Paused inline when the session pauses. */
+@keyframes wk-bg-breathe {
+  0%, 100% { transform: scale(1.18); }
+  50%      { transform: scale(1.3); }
+}
+@utility animate-wk-bg-breathe { animation: wk-bg-breathe 7s ease-in-out infinite; will-change: transform; }
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:

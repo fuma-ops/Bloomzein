@@ -2758,31 +2758,30 @@ const WK_ZONE_HUE: Record<string, number> = {
   glutes: 350, core: 25, arms: 335, back: 345, legs: 12, "full-body": 350,
 };
 
-/** Living background — soft blobs that slowly drift and breathe behind the
- *  glass. It reacts to the session: it warms & tints to the trained zone on a
- *  work move, calms and cools during rest, gives a barely-there swell on each
- *  rep beat, and stills completely when paused. Meant to be felt, not stared at. */
-function SessionAurora({ zone, phase, rep, paused }: {
-  zone?: Zone; phase: ExercisePhase; rep: number; paused: boolean;
+/** Living background — the current pose photo, heavily blurred and slowly
+ *  breathing behind the glass, so the whole screen takes on the move's light
+ *  and colour. It reacts to the session: a warm scrim tinted to the trained
+ *  zone on a work move, a cooler/dimmer one during rest, and it stills when
+ *  paused. Clearly felt, never fighting the panels (a pink scrim keeps them
+ *  legible). Crossfades to the next move by photo. */
+function SessionBackdrop({ exercise, zone, phase, paused, index }: {
+  exercise: Exercise; zone?: Zone; phase: ExercisePhase; paused: boolean; index: number;
 }) {
   const resting = phase === "rest";
   const hue = resting ? 322 : (WK_ZONE_HUE[zone ?? ""] ?? 350);
-  const chroma = resting ? 0.07 : 0.12;
-  const col = (a: number) => `oklch(0.88 ${chroma} ${hue} / ${a})`;
-  const playState = paused ? "paused" : "running";
+  const c = resting ? 0.05 : 0.1;
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
-      <div className="absolute rounded-full animate-wk-aurora-1"
-        style={{ left: "48%", top: "-18%", width: "78vw", height: "78vw", background: `radial-gradient(circle, ${col(0.5)} 0%, transparent 65%)`, filter: "blur(32px)", animationDuration: resting ? "40s" : "26s", animationPlayState: playState }} />
-      <div className="absolute rounded-full animate-wk-aurora-2"
-        style={{ left: "-22%", top: "52%", width: "72vw", height: "72vw", background: `radial-gradient(circle, ${col(0.45)} 0%, transparent 65%)`, filter: "blur(34px)", animationDuration: resting ? "46s" : "32s", animationPlayState: playState }} />
-      <div className="absolute rounded-full animate-wk-aurora-3"
-        style={{ left: "60%", top: "55%", width: "60vw", height: "60vw", background: `radial-gradient(circle, ${col(0.4)} 0%, transparent 65%)`, filter: "blur(30px)", animationDuration: resting ? "34s" : "22s", animationPlayState: playState }} />
-      {/* Rep-beat breath — a faint central swell, only on a live work move. */}
-      {phase === "exercise" && rep > 0 && !paused && (
-        <div key={rep} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full animate-wk-aurora-breathe"
-          style={{ width: "58vw", height: "58vw", background: `radial-gradient(circle, ${col(0.26)} 0%, transparent 60%)`, filter: "blur(42px)" }} />
-      )}
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {/* the blurred, breathing pose photo */}
+      <div key={index} className="absolute inset-0 animate-fade-in">
+        <ExercisePhoto exercise={exercise} zone={zone}
+          className={["absolute inset-0 w-full h-full object-cover blur-2xl", paused ? "scale-125" : "animate-wk-bg-breathe"].join(" ")} />
+      </div>
+      {/* brand scrim — tinted to the zone (cooler on rest) so the glass panels
+          stay perfectly legible over the photo */}
+      <div className="absolute inset-0" style={{
+        background: `linear-gradient(160deg, oklch(0.96 ${c * 0.5} ${hue} / ${resting ? 0.5 : 0.4}) 0%, oklch(0.9 ${c} ${hue} / ${resting ? 0.42 : 0.3}) 52%, oklch(0.85 ${c} ${hue} / ${resting ? 0.54 : 0.44}) 100%)`,
+      }} />
     </div>
   );
 }
@@ -3062,9 +3061,9 @@ function SessionActive({ session, onExit, onDone }: {
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col bg-gradient-to-br from-[oklch(0.97_0.02_350)] via-[oklch(0.95_0.045_350)] to-[oklch(0.91_0.07_345)]" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-      {/* Living aurora — drifts, breathes with the reps, warms to the trained
-          zone and cools on rest. Softly present, felt more than seen. */}
-      <SessionAurora zone={session.zone} phase={phase} rep={currentRep} paused={paused} />
+      {/* Living backdrop — the pose photo, blurred + breathing behind the glass,
+          tinted to the trained zone (cooler on rest), stills when paused. */}
+      <SessionBackdrop exercise={exercise} zone={session.zone} phase={phase} paused={paused} index={index} />
 
       {/* Background music loop (controlled by the sound toggle) */}
       <audio ref={audioRef} src={musicSrc} loop preload="auto" />
