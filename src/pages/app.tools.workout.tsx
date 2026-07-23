@@ -2576,6 +2576,33 @@ function PetalBurst({ count = 18, z = 70 }: { count?: number; z?: number }) {
   );
 }
 
+/** Sparse petals that drift up forever through the stage's blurred side-bands,
+ *  so the letterbox margins feel alive instead of empty. Kept to the edges. */
+function StagePetals({ paused }: { paused: boolean }) {
+  const petals = useMemo(() => Array.from({ length: 9 }, (_, i) => {
+    // Bias toward the left/right side-bands, away from the centred pose.
+    const edge = i % 2 === 0 ? 2 + Math.random() * 12 : 86 + Math.random() * 12;
+    return {
+      left: edge, delay: Math.random() * 9, dur: 9 + Math.random() * 7,
+      size: 11 + Math.random() * 12, drift: -10 + Math.random() * 20,
+      color: Math.random() > 0.5 ? "#F9A8D4" : "#FBCFE8",
+      char: ["✿", "❀", "🌸"][Math.floor(Math.random() * 3)],
+    };
+  }), []);
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden z-[5]">
+      {petals.map((p, i) => (
+        <span key={i} className="absolute bottom-0 animate-wk-petal-drift" style={{
+          left: `${p.left}%`, fontSize: p.size, color: p.color, lineHeight: 1,
+          ["--tw-translate-x" as any]: `${p.drift}px`,
+          animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`,
+          animationPlayState: paused ? "paused" : "running",
+        }}>{p.char}</span>
+      ))}
+    </div>
+  );
+}
+
 /** A cute Bloomzein intro: the flower blooms in, a warm line, then 3·2·1·GO. */
 function BloomIntro({ title, count }: { title: string; count: number | "go" | null }) {
   return (
@@ -3074,9 +3101,11 @@ function SessionActive({ session, onExit, onDone }: {
       {starting && <BloomIntro title={session.name} count={intro} />}
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
-      {/* Brand watermark — every screenshot reads as Bloomzein */}
-      <div aria-hidden className="pointer-events-none absolute bottom-1.5 left-3 z-[15] inline-flex items-center gap-1.5 rounded-full bg-white/55 backdrop-blur px-2 py-0.5 text-hotpink/80 font-script text-sm leading-none shadow-sm">
-        <BloomFlower size={13} /> Bloomzein
+      {/* Brand logo — bigger & alive; the flower breathes in sync with the room
+          (same 7s beat as the backdrop) so every screenshot reads as Bloomzein. */}
+      <div aria-hidden className="pointer-events-none absolute bottom-3 left-4 z-[15] inline-flex items-center gap-2 rounded-full bg-white/60 backdrop-blur-md border border-white/60 px-3.5 py-1.5 shadow-[0_8px_24px_rgba(236,72,153,0.28)]">
+        <span className="animate-wk-logo-breathe text-hotpink drop-shadow-[0_0_10px_oklch(0.7_0.24_350/0.6)]"><BloomFlower size={26} /></span>
+        <span className="font-script text-xl sm:text-2xl text-hotpink leading-none drop-shadow-sm">Bloomzein</span>
       </div>
 
       {/* ── Top bar: close · session progress · sound ── */}
@@ -3110,22 +3139,31 @@ function SessionActive({ session, onExit, onDone }: {
 
         {/* CENTRE STAGE */}
         <section className="relative min-h-0 flex flex-col gap-2">
-          {/* Title + muscle tags */}
-          <div className="shrink-0">
-            <h2 className="font-script text-[1.75rem] sm:text-4xl lg:text-5xl text-hotpink leading-none">
-              {phase === "rest" ? "Rest & breathe" : isSwitch ? "Switch sides" : exercise.name}
-            </h2>
-            <div className="mt-1 h-1 w-24 rounded-full bg-gradient-to-r from-hotpink to-transparent" />
-            {phase !== "rest" && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {muscleList.slice(0, 3).map((m, i) => (
-                  <span key={m + i} className="rounded-full bg-white/60 backdrop-blur border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-hotpink">{cap(m)}</span>
-                ))}
-                {step.side && !isSwitch && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
-                    <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
-                  </span>
-                )}
+          {/* Title + muscle tags · Bloom Coach lives in the empty top band (right
+              of the title on desktop, wrapping under it on phones) — off the pose. */}
+          <div className="shrink-0 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2 lg:gap-4">
+            <div className="min-w-0">
+              <h2 className="font-script text-[1.75rem] sm:text-4xl lg:text-5xl text-hotpink leading-none">
+                {phase === "rest" ? "Rest & breathe" : isSwitch ? "Switch sides" : exercise.name}
+              </h2>
+              <div className="mt-1 h-1 w-24 rounded-full bg-gradient-to-r from-hotpink to-transparent" />
+              {phase !== "rest" && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {muscleList.slice(0, 3).map((m, i) => (
+                    <span key={m + i} className="rounded-full bg-white/60 backdrop-blur border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-hotpink">{cap(m)}</span>
+                  ))}
+                  {step.side && !isSwitch && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
+                      <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {!isSwitch && phase === "exercise" && (
+              <div className="lg:max-w-sm w-full lg:w-auto rounded-2xl rounded-tr-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in">
+                <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink"><BloomFlower size={13} /> Bloom Coach</p>
+                <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
               </div>
             )}
           </div>
@@ -3133,8 +3171,18 @@ function SessionActive({ session, onExit, onDone }: {
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
             <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-auto md:flex-1 md:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
+              {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
+                  the sharp contained photo sits framed by its own dreamy blur —
+                  no empty pink margins. */}
+              <div key={`bleed-${index}`} aria-hidden className="absolute inset-0 animate-fade-in">
+                <ExercisePhoto exercise={exercise} zone={session.zone}
+                  className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", isSwitch ? "scale-x-[-1]" : ""].join(" ")} />
+                <div className="absolute inset-0 bg-white/25" />
+              </div>
+              {/* Ambient petals drifting up through the side-bands */}
+              <StagePetals paused={paused} />
               {/* Inner box sized to the CONTAINED image so the glow + arrows line up. */}
-              <div key={index} className="absolute inset-0 m-auto animate-fade-in"
+              <div key={index} className="absolute inset-0 m-auto animate-fade-in z-[6]"
                 style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}>
                 <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain",
                   isSwitch ? "scale-x-[-1]" : (!paused ? "animate-wk-ken-burns" : "")].join(" ")} />
@@ -3182,25 +3230,12 @@ function SessionActive({ session, onExit, onDone }: {
                 )}
               </div>
 
-              {/* Bloom Coach speech bubble (over the photo, top-left) */}
-              {!isSwitch && (
-                <div className="absolute top-3 left-3 z-[25] max-w-[13rem] sm:max-w-[15rem] rounded-2xl rounded-bl-md bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3 py-2 animate-fade-in">
-                  <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink"><BloomFlower size={13} /> Bloom Coach</p>
-                  <p className="mt-0.5 text-[11.5px] sm:text-xs font-medium text-rose/85 leading-snug">{coachLine}</p>
-                </div>
-              )}
-
               {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
               <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
                 <RepRing size={82} percent={ringPct} label={ringLabel}
                   rep={stepReps > 0 && !isSwitch ? currentRep : undefined}
                   total={stepReps > 0 && !isSwitch ? stepReps : undefined}
                   seconds={remaining} />
-              </div>
-
-              {/* Affirmation banner (over the photo, bottom) */}
-              <div className="absolute inset-x-3 bottom-2.5 z-[25] mx-auto max-w-md rounded-full bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.16)] px-3.5 py-1.5 text-center animate-fade-in">
-                <p className="text-[11px] sm:text-[12.5px] font-semibold text-rose/85 leading-snug truncate">{affirmation}</p>
               </div>
             </div>
           ) : (
@@ -3222,6 +3257,13 @@ function SessionActive({ session, onExit, onDone }: {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Affirmation — its own row just below the photo, off the pose. */}
+          {phase === "exercise" && !isSwitch && (
+            <div className="shrink-0 mx-auto w-full max-w-lg rounded-full bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.14)] px-4 py-1.5 text-center animate-fade-in">
+              <p className="text-xs sm:text-sm font-semibold text-rose/85 leading-snug">{affirmation}</p>
             </div>
           )}
 

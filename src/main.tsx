@@ -12,7 +12,7 @@ initErrorLogging()
 // ── One-shot cache purge ───────────────────────────────────────────────────
 // Bump PURGE_KEY whenever a deploy keeps showing stale UI to force every
 // browser to unregister the old SW, wipe all caches, and reload fresh.
-const PURGE_KEY = "cache-purge-v28";
+const PURGE_KEY = "cache-purge-v29";
 try {
   if (!localStorage.getItem(PURGE_KEY)) {
     localStorage.setItem(PURGE_KEY, "1");
