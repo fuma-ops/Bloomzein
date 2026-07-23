@@ -9,6 +9,7 @@
   --breakpoint-fold: 820px;
   --font-script: "Caveat", "Dancing Script", cursive;
   --font-sans: "Quicksand", "Nunito", system-ui, sans-serif;
+  --font-serif: "Playfair Display", "Cormorant Garamond", Georgia, serif;
   --color-blush: var(--blush);
   --color-petal: var(--petal);
   --color-rose: var(--rose);
@@ -222,6 +223,10 @@
 
 @utility font-script {
   font-family: var(--font-script);
+}
+
+@utility font-serif {
+  font-family: var(--font-serif);
 }
 
 @utility bloom-glow {
