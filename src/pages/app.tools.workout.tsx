@@ -27,7 +27,7 @@ import {
   PHASE_OPTIMAL, HERO_IMAGES, ZONE_EXERCISES, buildSession, EXERCISES,
   type Zone, type WorkoutIntention, type Level, type Equipment, type Goal,
   type EnergyLevel, type WorkoutProfile, type WorkoutSession, type BodyType, type Exercise,
-  type SessionStep, WORKOUT_REST_AUDIO,
+  type SessionStep, WORKOUT_REST_AUDIO, WORKOUT_SWITCH_AUDIO, pushMove,
 } from "@/components/bloom/workout/data";
 import {
   PROGRAMS, getProgram, computeWeekSession, weekMeta, sessionVolume,
@@ -751,6 +751,13 @@ function repsToSeconds(reps: string): number {
   return Math.min(75, Math.max(25, Math.round((n * 3) / 5) * 5));
 }
 
+/** A numeric rep count for the pacer (0 = a timed hold like "30s"). */
+function repsToCount(reps: string): number {
+  if (/\d+\s*s\b/.test(reps)) return 0;      // time-based hold, not reps
+  const n = parseInt(reps, 10);
+  return isNaN(n) ? 0 : n;
+}
+
 // Convert a structured program session into a timed WorkoutSession (steps) so it
 // plays in the SessionActive chrono with the same warm-up → work → cool-down feel.
 function programToTimerSession(program: Program, week: number, sessionIndex: number): WorkoutSession {
@@ -772,13 +779,10 @@ function programToTimerSession(program: Program, week: number, sessionIndex: num
             if (ex.sets > 1) labelParts.push(`Set ${setNum + 1}/${ex.sets}`);
             if (!labelParts.length) labelParts.push(block.label);
           }
-          steps.push({
-            exercise, kind,
-            workSec: repsToSeconds(ex.reps),
-            restSec: ex.restSec,
-            label: labelParts.join(" · "),
-            repTarget: ex.reps,
-          });
+          // Same rich step model as free sessions: audio-safe timing, a rep
+          // count for the pacer, and one-sided moves split into side 1 → switch
+          // → side 2 (so the rep counter + switch show in programs too).
+          pushMove(steps, exercise, kind, repsToSeconds(ex.reps), ex.restSec, labelParts.join(" · "), ex.reps, repsToCount(ex.reps));
         }
       }
     }
@@ -2624,12 +2628,13 @@ function SessionActive({ session, onExit, onDone }: {
     else a.pause();
   }, [sound, paused]);
 
-  // Spoken cue when a move STARTS — but NOT again when we flip to its other
-  // side (side 2) and NOT on the switch step: the move's audio plays once, then
-  // only the music carries through the switch and the second side.
+  // Spoken cue at the start of a step: the "switch sides" cue on a switch step,
+  // or the move's own cue when a move STARTS. The move cue does NOT replay when
+  // we flip to its 2nd side — only the switch cue + music carry that over.
   useEffect(() => {
     if (!sound || !voice || phase !== "exercise") return;
-    if (step.kind !== "switch" && step.side !== "second") playCue(exercise.audio, cueRef.current);
+    if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current);
+    else if (step.side !== "second") playCue(exercise.audio, cueRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
