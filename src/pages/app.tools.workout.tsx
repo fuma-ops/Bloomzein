@@ -123,12 +123,25 @@ function tone(freq: number, peak: number, dur: number, type: OscillatorType = "s
 }
 // Timer rhythm — the tone grows louder & higher as a move nears its end, so the
 // user feels the rhythm and knows the finish is coming.
-type Tick = "soft" | "count" | "end" | "restEnd";
+type Tick = "soft" | "count" | "end" | "restEnd" | "go";
 function playTick(level: Tick) {
   if (level === "soft") tone(440, 0.05, 0.06);
   else if (level === "count") tone(760, 0.22, 0.15);
   else if (level === "end") tone(940, 0.32, 0.45);
   else if (level === "restEnd") [523.25, 659.25, 783.99].forEach((f, i) => setTimeout(() => tone(f, 0.16, 0.8), i * 80));
+  else if (level === "go") [660, 990].forEach((f, i) => setTimeout(() => tone(f, 0.3, 0.35, "triangle"), i * 70));
+}
+// Per-REP beep — a clear, punchy tick you can actually follow OVER the music.
+// The last few reps climb in pitch + brightness so the rhythm pulls you to the
+// finish line. `repNow` is 1-based; `reps` is the target count.
+function playRep(repNow: number, reps: number) {
+  const fromEnd = reps - repNow;         // 0 on the final rep
+  if (fromEnd <= 2) {
+    // Finish ramp: higher & brighter on each of the last three reps.
+    tone(720 + (2 - fromEnd) * 150, 0.34, 0.2, "triangle");
+  } else {
+    tone(560, 0.2, 0.1, "triangle");     // steady, audible rep beep
+  }
 }
 
 // Background music — royalty-free loops; missing files fail silently. One loop
@@ -2674,8 +2687,12 @@ function GlassCard({ icon: Icon, title, children, className = "", delay = 0 }: {
 
 /** The big circular progress ring — shows the live rep count (or seconds on a
  *  hold / rest) with a soft pink track, matching the reference dashboard. */
-function RepRing({ rep, total, seconds, percent, size = 168, label }: {
+function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, goKey = 0 }: {
   rep?: number; total?: number; seconds?: number; percent: number; size?: number; label: string;
+  /** Coach is talking — show a sound-wave and hold the count. */
+  speaking?: boolean;
+  /** Bump to burst an animated "GO" out of the ring centre. */
+  goKey?: number;
 }) {
   const stroke = Math.max(8, Math.round(size / 15));
   const r = size / 2 - stroke;
@@ -2690,19 +2707,37 @@ function RepRing({ rep, total, seconds, percent, size = 168, label }: {
           strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" style={{ transition: "stroke-dashoffset 1s linear" }} />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center leading-none px-2">
-        <div>
-          <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70">{showReps ? "Rep" : label}</p>
-          {showReps ? (
-            <p className="mt-1 whitespace-nowrap">
-              <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.3 }}>{rep}</span>
-              <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.16 }}> / {total}</span>
-            </p>
-          ) : (
-            <p className="mt-1 font-black text-rose tabular-nums" style={{ fontSize: size * 0.32 }}>{seconds}</p>
-          )}
-          <p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.13em] text-hotpink">{Math.round(percent * 100)}% <span className="text-hotpink/55">complete</span></p>
-        </div>
+        {speaking ? (
+          <div>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70">Coach</p>
+            <div className="mt-2 flex items-end justify-center gap-1" style={{ height: size * 0.18 }}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <span key={i} className="w-1.5 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />
+              ))}
+            </div>
+            <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.13em] text-hotpink/70">listen ✿</p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70">{showReps ? "Rep" : label}</p>
+            {showReps ? (
+              <p className="mt-1 whitespace-nowrap">
+                <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.3 }}>{rep}</span>
+                <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.16 }}> / {total}</span>
+              </p>
+            ) : (
+              <p className="mt-1 font-black text-rose tabular-nums" style={{ fontSize: size * 0.32 }}>{seconds}</p>
+            )}
+            <p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.13em] text-hotpink">{Math.round(percent * 100)}% <span className="text-hotpink/55">complete</span></p>
+          </div>
+        )}
       </div>
+      {/* "GO" bursting out from the centre when the coach finishes speaking */}
+      {goKey > 0 && (
+        <div key={goKey} aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+          <span className="animate-wk-go-ring font-script text-hotpink drop-shadow-[0_2px_10px_oklch(0.7_0.24_350/0.6)]" style={{ fontSize: size * 0.4 }}>GO ✿</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -2813,15 +2848,18 @@ function SessionBackdrop({ exercise, zone, phase, paused, index }: {
   );
 }
 
-/** One control in the glossy bottom bar (Previous / Skip / Voice / Favorite). */
-function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
+/** One control in the glossy bottom bar (Previous / Skip / Voice / Favorite).
+ *  When `beat` is on it pulses to the music tempo (staggered by `beatDelay`). */
+function WkCtrl({ icon: Icon, label, onClick, active, disabled, beat, beatDelay = 0 }: {
   icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
+  beat?: boolean; beatDelay?: number;
 }) {
   return (
     <button onClick={onClick} disabled={disabled} aria-label={label}
       className="flex flex-col items-center gap-1 px-1 sm:px-2 disabled:opacity-40 active:scale-90 transition">
       <span className={["grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full border transition",
-        active ? "bg-hotpink text-white border-hotpink shadow-md" : "bg-white/70 border-white/70 text-rose"].join(" ")}>
+        active ? "bg-hotpink text-white border-hotpink shadow-md" : "bg-white/70 border-white/70 text-rose",
+        beat ? "animate-wk-beat" : ""].join(" ")} style={beat ? { animationDelay: `${beatDelay}s` } : undefined}>
         <Icon className={["h-5 w-5", active && label === "Favorite" ? "fill-current" : ""].join(" ")} />
       </span>
       <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{label}</span>
@@ -2841,7 +2879,9 @@ function SessionActive({ session, onExit, onDone }: {
   const [paused, setPaused] = useState(false);
   const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
   const [intro, setIntro] = useState<number | "go" | null>(null); // countdown digit
-  const [goFlash, setGoFlash] = useState(0);                  // "GO ✿" flash key per move
+  const [goRing, setGoRing] = useState(0);                    // "GO" burst key (from the ring)
+  const [briefing, setBriefing] = useState(false);           // coach speaking → chrono held
+  const briefingRef = useRef(false);                         // tracks a live move briefing
   const [celebrate, setCelebrate] = useState(false);         // petal burst on milestones
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);   // master mute
   const [voice, setVoice] = useLS<boolean>(VOICE_KEY, true);   // spoken cues on/off
@@ -2911,11 +2951,12 @@ function SessionActive({ session, onExit, onDone }: {
     else a.pause();
   }, [sound, paused]);
 
-  // Cute Bloomzein entry: the flower blooms in, then 3 · 2 · 1 · GO, then start.
+  // Cute Bloomzein entry: the flower blooms in, then 3 · 2 · 1 — the "GO" itself
+  // now bursts from the ring once the coach has introduced the first move.
   useEffect(() => {
     let cancelled = false;
     const frames: { c: number | "go" | null; t: number }[] = [
-      { c: null, t: 1400 }, { c: 3, t: 750 }, { c: 2, t: 750 }, { c: 1, t: 750 }, { c: "go", t: 650 },
+      { c: null, t: 1400 }, { c: 3, t: 720 }, { c: 2, t: 720 }, { c: 1, t: 720 },
     ];
     let i = 0;
     const run = () => {
@@ -2931,28 +2972,45 @@ function SessionActive({ session, onExit, onDone }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Spoken cue at the start of a step: the "switch sides" cue on a switch step,
-  // or the move's own cue when a move STARTS (not on its 2nd side). Waits for
-  // the intro to finish so the first cue lands on the first real move.
+  // Move start. On a work move WITH a spoken cue (first side), HOLD the chrono
+  // and let the coach speak; when the cue finishes, "GO" bursts from the ring
+  // and the reps begin. Switch steps play the switch cue + celebrate. A move's
+  // 2nd side (no cue) and muted play just get a quick GO with no hold.
   useEffect(() => {
-    if (starting || !sound || !voice || phase !== "exercise") return;
-    if (step.kind === "switch") playCue(WORKOUT_SWITCH_AUDIO, cueRef.current);
-    else if (step.side !== "second") playCue(exercise.audio, cueRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, starting]);
+    if (starting || phase !== "exercise") return;
 
-  // A "GO ✿" flash when a work move begins (not the first — the intro's GO
-  // covers that) + a soft petal celebration each time a side is completed.
-  useEffect(() => {
-    if (starting) return;
-    if (step.kind === "work") setGoFlash((k) => k + 1);
     if (step.kind === "switch") {
+      briefingRef.current = false; setBriefing(false);
+      if (sound && voice) playCue(WORKOUT_SWITCH_AUDIO, cueRef.current);
       setCelebrate(true);
       const t = window.setTimeout(() => setCelebrate(false), 1900);
       return () => window.clearTimeout(t);
     }
+
+    const willSpeak = sound && voice && step.side !== "second" && !!exercise.audio;
+    if (willSpeak) {
+      briefingRef.current = true; setBriefing(true);
+      playCue(exercise.audio, cueRef.current);
+      // Fallback release if the cue never fires 'ended' (missing / decode fail).
+      const fb = window.setTimeout(() => {
+        if (!briefingRef.current) return;
+        briefingRef.current = false; setBriefing(false);
+        setGoRing((k) => k + 1); if (sound) playTick("go");
+      }, 15000);
+      return () => window.clearTimeout(fb);
+    }
+
+    briefingRef.current = false; setBriefing(false);
+    setGoRing((k) => k + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, starting]);
+
+  // The coach finished talking → release the hold, burst "GO", start the reps.
+  const onCueEnded = () => {
+    if (!briefingRef.current) return;
+    briefingRef.current = false; setBriefing(false);
+    setGoRing((k) => k + 1); if (sound) playTick("go");
+  };
 
   // Keep the screen awake for the duration of the workout.
   useEffect(() => {
@@ -2976,21 +3034,21 @@ function SessionActive({ session, onExit, onDone }: {
   }, []);
 
   useEffect(() => {
-    if (paused || starting) return;
+    if (paused || starting || briefing) return;
     const t = setInterval(() => {
       elapsedRef.current += 1;
       setRemaining((r) => {
         const nr = r - 1;
-        // Rhythm. On a rep-based work step, beat once PER REP (so you can follow
-        // "1…2…3…" to the target); the last 3 reps ring louder. On holds / switch
-        // / rest, tick down the final 3 seconds so the finish is felt.
+        // Rhythm. On a rep-based work step, a clear beep PER REP (so you can
+        // follow "1…2…3…" to the target); the last reps climb in pitch so the
+        // finish is felt. On holds / switch / rest, tick the final 3 seconds.
         if (sound && nr > 0) {
           const reps = phase === "exercise" ? (step.reps ?? 0) : 0;
           if (reps > 0) {
             const repSec = step.workSec / reps;
             const repNow = Math.min(reps, Math.floor((step.workSec - nr) / repSec) + 1);
             const repPrev = Math.min(reps, Math.floor((step.workSec - r) / repSec) + 1);
-            if (repNow > repPrev) playTick(repNow > reps - 3 ? "count" : "soft");
+            if (repNow > repPrev) playRep(repNow, reps);
           } else if (nr <= 3) {
             playTick("count"); // final-3 countdown on holds / switch / rest
           }
@@ -3017,7 +3075,7 @@ function SessionActive({ session, onExit, onDone }: {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [paused, starting, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
+  }, [paused, starting, briefing, phase, index, sound, voice, session, next, step, nextStepObj, steps.length]);
 
   const repeat = () => { setRemaining(phase === "exercise" ? step.workSec : step.restSec); };
   const skip = () => {
@@ -3068,21 +3126,24 @@ function SessionActive({ session, onExit, onDone }: {
     : totalSec > 0 ? 1 - remaining / totalSec : 0;
   const ringLabel = phase === "rest" ? "Rest" : isSwitch ? "Switch" : step.kind === "warmup" ? "Warm-up" : step.kind === "cooldown" ? "Cool-down" : "Seconds";
 
+  // Icons "dance" to the music while it's playing (paused/muted → still).
+  const beating = sound && !paused;
+
   // The glossy bottom control bar — Previous · Pause · Skip · Voice · Favorite —
   // rendered inside the centre column on tablet/desktop and pinned to the bottom
   // on phones. Same frosted-glass treatment as every side card.
   const controlBar = (
     <div className="mx-auto w-full max-w-xl flex items-center justify-around gap-1 rounded-[1.6rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-2 sm:px-4 py-2 sm:py-2.5">
-      <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} />
+      <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} beat={beating} beatDelay={0} />
       <button onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"} className="flex flex-col items-center gap-1 active:scale-95 transition">
         <span className="grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-[0_8px_24px_rgba(236,72,153,0.5)] animate-selected-glow">
           {paused ? <Play className="h-7 w-7 sm:h-8 sm:w-8 fill-current" /> : <Pause className="h-7 w-7 sm:h-8 sm:w-8 fill-current" />}
         </span>
         <span className="text-[10px] sm:text-[11px] font-bold text-hotpink">{paused ? "Resume" : "Pause"}</span>
       </button>
-      <WkCtrl icon={SkipForward} label="Skip" onClick={phase === "rest" ? skipRest : skip} />
-      <WkCtrl icon={voice ? Volume2 : VolumeX} label="Voice" active={voice} onClick={() => setVoice((v) => !v)} />
-      <WkCtrl icon={Heart} label="Favorite" active={isFav} onClick={toggleFav} />
+      <WkCtrl icon={SkipForward} label="Skip" onClick={phase === "rest" ? skipRest : skip} beat={beating} beatDelay={0.12} />
+      <WkCtrl icon={voice ? Volume2 : VolumeX} label="Voice" active={voice} onClick={() => setVoice((v) => !v)} beat={beating} beatDelay={0.24} />
+      <WkCtrl icon={Heart} label="Favorite" active={isFav} onClick={toggleFav} beat={beating} beatDelay={0.36} />
     </div>
   );
 
@@ -3094,18 +3155,24 @@ function SessionActive({ session, onExit, onDone }: {
 
       {/* Background music loop (controlled by the sound toggle) */}
       <audio ref={audioRef} src={musicSrc} loop preload="auto" />
-      {/* Spoken cue channel — per-move / rest / switch recordings */}
-      <audio ref={cueRef} preload="none" />
+      {/* Spoken cue channel — per-move / rest / switch recordings. When a move's
+          briefing cue ends, release the hold and burst "GO" from the ring. */}
+      <audio ref={cueRef} preload="none" onEnded={onCueEnded} />
 
       {/* Cute Bloomzein entry (blooms in → 3·2·1·GO) */}
       {starting && <BloomIntro title={session.name} count={intro} />}
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
-      {/* Brand logo — bigger & alive; the flower breathes in sync with the room
-          (same 7s beat as the backdrop) so every screenshot reads as Bloomzein. */}
-      <div aria-hidden className="pointer-events-none absolute bottom-3 left-4 z-[15] inline-flex items-center gap-2 rounded-full bg-white/60 backdrop-blur-md border border-white/60 px-3.5 py-1.5 shadow-[0_8px_24px_rgba(236,72,153,0.28)]">
-        <span className="animate-wk-logo-breathe text-hotpink drop-shadow-[0_0_10px_oklch(0.7_0.24_350/0.6)]"><BloomFlower size={26} /></span>
-        <span className="font-script text-xl sm:text-2xl text-hotpink leading-none drop-shadow-sm">Bloomzein</span>
+      {/* Brand logo — flower ABOVE the wordmark, bigger & alive: it spins slowly,
+          breathes in sync with the room (7s), and the colour drifts inside the
+          petals — so every screenshot reads unmistakably as Bloomzein. */}
+      <div aria-hidden className="pointer-events-none absolute bottom-3 left-4 z-[15] inline-flex flex-col items-center gap-1 rounded-[1.4rem] bg-white/60 backdrop-blur-md border border-white/60 px-4 py-2.5 shadow-[0_10px_28px_rgba(236,72,153,0.3)]">
+        <span className="animate-wk-flower-spin drop-shadow-[0_0_12px_oklch(0.7_0.24_350/0.65)]">
+          <span className="block animate-wk-logo-breathe">
+            <span className="block animate-wk-flower-hue text-hotpink"><BloomFlower size={44} /></span>
+          </span>
+        </span>
+        <span className="font-script text-2xl sm:text-3xl text-hotpink leading-none drop-shadow-sm">Bloomzein</span>
       </div>
 
       {/* ── Top bar: close · session progress · sound ── */}
@@ -3139,31 +3206,37 @@ function SessionActive({ session, onExit, onDone }: {
 
         {/* CENTRE STAGE */}
         <section className="relative min-h-0 flex flex-col gap-2">
-          {/* Title + muscle tags · Bloom Coach lives in the empty top band (right
-              of the title on desktop, wrapping under it on phones) — off the pose. */}
+          {/* Title on the left · Bloom Coach + the muscle tags sit together in the
+              empty top band (right on desktop, under the title on phones) — this
+              keeps the row above the photo slim so the image gets more height. */}
           <div className="shrink-0 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2 lg:gap-4">
             <div className="min-w-0">
               <h2 className="font-script text-[1.75rem] sm:text-4xl lg:text-5xl text-hotpink leading-none">
                 {phase === "rest" ? "Rest & breathe" : isSwitch ? "Switch sides" : exercise.name}
               </h2>
               <div className="mt-1 h-1 w-24 rounded-full bg-gradient-to-r from-hotpink to-transparent" />
-              {phase !== "rest" && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
+            </div>
+            {!isSwitch && phase === "exercise" && (
+              <div className="lg:max-w-sm w-full lg:w-auto flex flex-col items-start gap-1.5">
+                <div className={["w-full rounded-2xl rounded-tr-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in transition-transform",
+                  briefing ? "animate-card-breathe" : ""].join(" ")}>
+                  <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink">
+                    <BloomFlower size={13} /> Bloom Coach
+                    {briefing && <span className="ml-auto inline-flex items-end gap-0.5" style={{ height: 10 }}>{[0, 1, 2].map((i) => <span key={i} className="w-1 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />)}</span>}
+                  </p>
+                  <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
+                </div>
+                {/* muscle tags, moved here from above the image */}
+                <div className="flex flex-wrap gap-1.5">
                   {muscleList.slice(0, 3).map((m, i) => (
                     <span key={m + i} className="rounded-full bg-white/60 backdrop-blur border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-hotpink">{cap(m)}</span>
                   ))}
-                  {step.side && !isSwitch && (
+                  {step.side && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
                       <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
                     </span>
                   )}
                 </div>
-              )}
-            </div>
-            {!isSwitch && phase === "exercise" && (
-              <div className="lg:max-w-sm w-full lg:w-auto rounded-2xl rounded-tr-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in">
-                <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink"><BloomFlower size={13} /> Bloom Coach</p>
-                <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
               </div>
             )}
           </div>
@@ -3186,13 +3259,6 @@ function SessionActive({ session, onExit, onDone }: {
                 style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}>
                 <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain",
                   isSwitch ? "scale-x-[-1]" : (!paused ? "animate-wk-ken-burns" : "")].join(" ")} />
-
-                {/* "GO ✿" flash at the start of a work move */}
-                {goFlash > 0 && step.kind === "work" && (
-                  <div key={goFlash} aria-hidden className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
-                    <span className="animate-wk-go-flash font-script text-6xl sm:text-8xl text-white drop-shadow-[0_3px_14px_rgba(219,39,119,0.55)]">GO ✿</span>
-                  </div>
-                )}
 
                 {/* Switch-sides overlay */}
                 {isSwitch && (
@@ -3232,7 +3298,7 @@ function SessionActive({ session, onExit, onDone }: {
 
               {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
               <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
-                <RepRing size={82} percent={ringPct} label={ringLabel}
+                <RepRing size={82} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
                   rep={stepReps > 0 && !isSwitch ? currentRep : undefined}
                   total={stepReps > 0 && !isSwitch ? stepReps : undefined}
                   seconds={remaining} />
@@ -3260,18 +3326,17 @@ function SessionActive({ session, onExit, onDone }: {
             </div>
           )}
 
-          {/* Affirmation — its own row just below the photo, off the pose. */}
-          {phase === "exercise" && !isSwitch && (
-            <div className="shrink-0 mx-auto w-full max-w-lg rounded-full bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.14)] px-4 py-1.5 text-center animate-fade-in">
-              <p className="text-xs sm:text-sm font-semibold text-rose/85 leading-snug">{affirmation}</p>
-            </div>
-          )}
-
-          {/* Phone-only info cards (rails are hidden below md) */}
+          {/* Phone-only info cards (rails are hidden below md) — the affirmation
+              rides along here on phones (on desktop/tablet it's in the right rail). */}
           <div className="md:hidden grid grid-cols-1 gap-3">
             <MuscleTargetCard muscles={muscleList} />
             <CoachTipCard tip={coachTip} />
             <FormReminderCard cues={formCues} />
+            {phase === "exercise" && !isSwitch && (
+              <div className="rounded-full bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.14)] px-4 py-2 text-center">
+                <p className="text-xs font-semibold text-rose/85 leading-snug">{affirmation}</p>
+              </div>
+            )}
           </div>
 
           {/* Control bar — inside the centre column on tablet/desktop */}
@@ -3281,17 +3346,23 @@ function SessionActive({ session, onExit, onDone }: {
         {/* RIGHT RAIL — tablet + desktop */}
         <aside className="hidden md:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
           <GlassCard className="!py-4" delay={40}>
-            <RepRing size={168} percent={ringPct} label={ringLabel}
+            <RepRing size={168} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
               rep={stepReps > 0 && !isSwitch && phase === "exercise" ? currentRep : undefined}
               total={stepReps > 0 && !isSwitch && phase === "exercise" ? stepReps : undefined}
               seconds={remaining} />
           </GlassCard>
           {next && <NextUpCard next={next} zone={session.zone} reps={nextReps} delay={120} />}
           <FormReminderCard cues={formCues} delay={200} />
+          {/* Affirmation — moved here (under Form Reminder) to free the image. */}
+          {phase === "exercise" && !isSwitch && (
+            <div className="rounded-[1.5rem] bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.13)] px-4 py-3 text-center animate-fade-in" style={{ animationDelay: "260ms" }}>
+              <p className="text-[13px] font-semibold text-rose/85 leading-snug">{affirmation}</p>
+            </div>
+          )}
           {/* Tablet gets the focus/muscle/tip cards here (no left rail below lg) */}
           <div className="lg:hidden flex flex-col gap-3">
-            <MuscleTargetCard muscles={muscleList} delay={260} />
-            <CoachTipCard tip={coachTip} delay={320} />
+            <MuscleTargetCard muscles={muscleList} delay={300} />
+            <CoachTipCard tip={coachTip} delay={360} />
           </div>
         </aside>
       </main>
