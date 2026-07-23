@@ -3158,9 +3158,13 @@ function SessionActive({ session, onExit, onDone }: {
 
   // ── Dashboard content, derived from the current move ──────────────────────
   const isSwitch = step.kind === "switch";
-  const muscleList = parseMuscles(exercise.muscles);
+  // While resting, the reading panels PREVIEW the upcoming move (what "Coming up"
+  // shows) so she can prep during the rest; during the move itself they track the
+  // live exercise. (Live phase is unchanged since infoExercise === exercise then.)
+  const infoExercise = phase === "rest" && next ? next : exercise;
+  const muscleList = parseMuscles(infoExercise.muscles);
   const primaryMuscle = muscleList[0] ?? "Full body";
-  const coaching = getCoaching(exercise.slug);
+  const coaching = getCoaching(infoExercise.slug);
   const coachTip = coaching?.howTo ?? "";
   const formCues = coaching?.cues ?? [];
   const coachLine = WK_COACH_LINES[index % WK_COACH_LINES.length];
