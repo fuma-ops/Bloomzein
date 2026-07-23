@@ -996,7 +996,7 @@ export default function TodayPage() {
       {/* ── QUICK STATS — Mood · Symptom · Water — slim frosted chips (icon +
              text on one line) so they stay out of the way and let the hero
              photo show. Energy is NOT here — it reads on the phase hero. ── */}
-      <div className="relative z-[1] mt-2 sm:mt-3">
+      <div className="relative z-[1] mt-8 sm:mt-3">
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
             className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
@@ -1115,7 +1115,7 @@ export default function TodayPage() {
           {/* Daily affirmation — appears here, softly, under the title */}
           {affirmationCard}
 
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
+          <div className="mt-2 hidden sm:inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
             <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
           </div>
         </div>
