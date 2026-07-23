@@ -291,76 +291,90 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
   }, [article]);
 
   const headline = parsed?.headline || article.title;
+  const heroFade = "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)";
 
   return (
-    <article className="relative animate-fade-in">
+    // break out of the page padding so the hero can reach the very top & edges,
+    // then re-add the padding inside so the content keeps its normal alignment.
+    <article className="relative animate-fade-in -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 px-3 sm:px-6 lg:px-8 pt-3 sm:pt-5 lg:pt-6">
+      {/* HERO IMAGE as a blended page background — reaches the top, and melts
+          into the pink page background as it passes behind the content below. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[26rem] sm:h-[30rem] lg:h-[34rem] overflow-hidden"
+        style={{ WebkitMaskImage: heroFade, maskImage: heroFade }}
+      >
+        <img
+          src={article.image}
+          alt=""
+          className="animate-hero-breathe h-full w-full object-cover object-center"
+          referrerPolicy="no-referrer"
+        />
+        {/* gentle base tint so the photo settles into the page pink */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFE4F1]/70" />
+      </div>
+
       <BloomBubbles count={8} />
 
-      {/* top bar: back + actions */}
-      <div className="flex items-center gap-2">
+      {/* top bar over the hero: back (left) + heart (right) */}
+      <div className="relative z-[1] flex items-center gap-2">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-white/70 shadow-sm hover:bg-white transition active:scale-95"
         >
           <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
         </button>
         <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
       </div>
 
-      {/* HERO — the image stays beautiful; the title sits on a soft white/pink
-          aurora GLASS panel, left-aligned, only where the text lives. */}
-      <header className="relative mt-3 overflow-hidden rounded-[2rem] border border-white/50 shadow-[0_20px_50px_-24px_oklch(0.6_0.27_350/0.4)]">
-        <img
-          src={article.image}
-          alt=""
-          className="animate-hero-breathe pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
-          referrerPolicy="no-referrer"
+      {/* HERO TITLE — sits directly on the image, no card; a soft white glow
+          lifts it off the imagery for legibility. */}
+      <header className="relative z-[1] flex min-h-[13rem] sm:min-h-[16rem] lg:min-h-[19rem] flex-col justify-end pb-5 sm:pb-7 max-w-[88%] sm:max-w-[74%] lg:max-w-[60%]">
+        {/* diffuse white halo behind the text — a soft shadow, not a panel */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-x-4 -bottom-2 top-6 -z-[1]"
+          style={{ background: "radial-gradient(115% 78% at 22% 82%, rgba(255,255,255,0.9), rgba(255,255,255,0.45) 42%, transparent 74%)", filter: "blur(10px)" }}
         />
-        {/* whisper of contrast at the base only — keeps the photo readable, not hidden */}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-        <div className="relative z-[1] flex min-h-[15rem] sm:min-h-[19rem] lg:min-h-[23rem] items-end p-3.5 sm:p-5 lg:p-6">
-          <div className="relative overflow-hidden max-w-[94%] sm:max-w-[70%] lg:max-w-[58%] rounded-[1.6rem] border border-white/60 bg-white/30 backdrop-blur-xl px-5 py-4 sm:px-7 sm:py-6 shadow-[0_14px_44px_-14px_rgba(120,20,70,0.35)]">
-            {/* soft pink aurora glowing inside the glass */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-10 opacity-80"
-              style={{ background: "radial-gradient(55% 60% at 18% 8%, rgba(255,255,255,0.95), transparent 62%), radial-gradient(70% 75% at 92% 105%, rgba(255,138,196,0.55), transparent 66%)" }}
-            />
-            <div className="relative">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <TopicBadge topic={article.category} />
-                <ReadTime minutes={article.minutes} />
-                <BloomCount count={article.blooms} />
-              </div>
-              <h1 className="mt-2.5 font-script text-[2.6rem] sm:text-5xl lg:text-6xl text-hotpink leading-[0.98] drop-shadow-[0_1px_10px_rgba(255,255,255,0.65)]">
-                {headline}
-              </h1>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-2.5" style={{ filter: "drop-shadow(0 1px 6px rgba(255,255,255,0.9))" }}>
+          <TopicBadge topic={article.category} />
+          <ReadTime minutes={article.minutes} />
+          <BloomCount count={article.blooms} />
         </div>
+        <h1
+          className="mt-2.5 font-script text-[2.7rem] sm:text-5xl lg:text-6xl text-hotpink leading-[0.98]"
+          style={{ textShadow: "0 1px 2px rgba(255,255,255,0.95), 0 4px 22px rgba(255,255,255,0.85)" }}
+        >
+          {headline}
+        </h1>
       </header>
 
-      {/* BODY — sticky "On this page" (desktop) + article column */}
-      <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-8 lg:items-start">
+      {/* On small screens the TOC sits on top, above the article. */}
+      {parsed ? <ArticleTOC sections={parsed.sections} collapsible className="relative z-[1] lg:hidden mt-3 mb-4" /> : null}
+
+      {/* BODY — sticky "On this page" (desktop) + white article card */}
+      <div className="relative z-[1] mt-2 lg:mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,42rem)] lg:gap-8 lg:items-start">
         <aside className="hidden lg:block lg:sticky lg:top-4">
           {parsed ? <ArticleTOC sections={parsed.sections} /> : null}
         </aside>
 
-        <div className="min-w-0 max-w-[42rem]">
-          {loading || !parsed ? (
-            <div className="animate-pulse space-y-4 py-4">
-              <div className="h-4 w-2/3 rounded-full bg-petal/30" />
-              <div className="mt-8 space-y-3">
-                {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
-                ))}
+        <div className="min-w-0">
+          <div className="rounded-[1.75rem] border border-petal/50 bg-white/92 backdrop-blur p-5 sm:p-8 lg:p-9 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)]">
+            {loading || !parsed ? (
+              <div className="animate-pulse space-y-4 py-2">
+                <div className="h-4 w-2/3 rounded-full bg-petal/30" />
+                <div className="mt-8 space-y-3">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : (
-            <ArticleBody parsed={parsed} />
-          )}
+            ) : (
+              <ArticleBody parsed={parsed} />
+            )}
+          </div>
 
-          <div className="mt-10 mb-2 flex justify-center lg:justify-start">
+          <div className="mt-8 mb-2 flex justify-center lg:justify-start">
             <button
               onClick={onBack}
               className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-4 py-2 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"

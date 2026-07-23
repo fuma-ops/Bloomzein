@@ -172,7 +172,36 @@ export function parseArticle(md: string): ParsedArticle {
     blocks.push({ kind: "p", text: line });
     i++;
   }
-  return { headline, dek, sections, blocks };
+  return { headline, dek, sections, blocks: coalesceParagraphs(blocks) };
+}
+
+/**
+ * The editorial voice writes almost every sentence on its own line. Rendered
+ * verbatim that leaves a column full of tiny orphan lines and whitespace, so we
+ * merge consecutive sentence-paragraphs into fuller ones (~3 sentences) that
+ * read like a magazine column. Headings, lists, callouts and dividers still
+ * break paragraphs.
+ */
+const PARA_TARGET = 220;
+function coalesceParagraphs(blocks: Block[]): Block[] {
+  const out: Block[] = [];
+  let buf: string[] = [];
+  const flush = () => {
+    if (!buf.length) return;
+    let cur = "";
+    for (const s of buf) {
+      cur = cur ? `${cur} ${s}` : s;
+      if (cur.length >= PARA_TARGET) { out.push({ kind: "p", text: cur }); cur = ""; }
+    }
+    if (cur) out.push({ kind: "p", text: cur });
+    buf = [];
+  };
+  for (const b of blocks) {
+    if (b.kind === "p") buf.push(b.text);
+    else { flush(); out.push(b); }
+  }
+  flush();
+  return out;
 }
 
 /* ── renderers ── */
