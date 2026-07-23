@@ -3172,16 +3172,22 @@ function SessionActive({ session, onExit, onDone }: {
       {starting && <BloomIntro title={session.name} count={intro} />}
       {/* Soft petal celebration when a side completes */}
       {celebrate && <PetalBurst count={12} z={40} />}
-      {/* Brand logo — flower ABOVE the wordmark. Alive but calm: it spins slowly
-          and breathes in sync with the room (7s), the colour drifting inside the
-          petals — no glow halo. Reads unmistakably as Bloomzein. */}
-      <div aria-hidden className="pointer-events-none absolute bottom-3 left-4 z-[15] inline-flex flex-col items-center gap-1 rounded-[1.4rem] bg-white/60 backdrop-blur-md border border-white/60 px-4 py-2.5 shadow-[0_10px_28px_rgba(236,72,153,0.3)]">
-        <span className="animate-wk-flower-spin">
-          <span className="block animate-wk-logo-breathe">
-            <span className="block animate-wk-flower-hue text-hotpink"><BloomFlower size={44} /></span>
+      {/* Brand logo — no frame, part of the background: strong-pink flower (white
+          centre) ABOVE the wordmark, both in the same pink. It keeps turning and
+          carries the SAME light-sweep + brightness pulse as the muscle bars. */}
+      <div aria-hidden className="pointer-events-none absolute bottom-3 left-3 z-[15]">
+        <div className="relative inline-flex flex-col items-center gap-1 px-2 py-1.5 animate-wk-bar-pulse">
+          <span className="animate-wk-flower-spin drop-shadow-sm">
+            <span className="block animate-wk-logo-breathe">
+              <BloomFlower size={64} petal="var(--hotpink)" center="#FFFFFF" />
+            </span>
           </span>
-        </span>
-        <span className="font-script text-2xl sm:text-3xl text-hotpink leading-none drop-shadow-sm">Bloomzein</span>
+          <span className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Bloomzein</span>
+          {/* music-vibe light sweep, clipped to the logo box */}
+          <span aria-hidden className="absolute inset-0 overflow-hidden rounded-2xl">
+            <span className="absolute inset-0 animate-wk-bar-shimmer" />
+          </span>
+        </div>
       </div>
 
       {/* ── Top bar: close · session progress · sound ── */}
@@ -3224,6 +3230,19 @@ function SessionActive({ session, onExit, onDone }: {
                 {phase === "rest" ? "Rest & breathe" : isSwitch ? "Switch sides" : exercise.name}
               </h2>
               <div className="mt-1 h-1 w-24 rounded-full bg-gradient-to-r from-hotpink to-transparent" />
+              {/* muscle tags — sit right under the title */}
+              {!isSwitch && phase === "exercise" && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {muscleList.slice(0, 3).map((m, i) => (
+                    <span key={m + i} className="rounded-full bg-white/60 backdrop-blur border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-hotpink">{cap(m)}</span>
+                  ))}
+                  {step.side && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
+                      <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             {!isSwitch && phase === "exercise" && (
               <div className="lg:max-w-sm w-full lg:w-auto flex flex-col items-start gap-1.5">
@@ -3234,17 +3253,6 @@ function SessionActive({ session, onExit, onDone }: {
                     {briefing && <span className="ml-auto inline-flex items-end gap-0.5" style={{ height: 10 }}>{[0, 1, 2].map((i) => <span key={i} className="w-1 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />)}</span>}
                   </p>
                   <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
-                </div>
-                {/* muscle tags, moved here from above the image */}
-                <div className="flex flex-wrap gap-1.5">
-                  {muscleList.slice(0, 3).map((m, i) => (
-                    <span key={m + i} className="rounded-full bg-white/60 backdrop-blur border border-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-hotpink">{cap(m)}</span>
-                  ))}
-                  {step.side && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
-                      <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
-                    </span>
-                  )}
                 </div>
               </div>
             )}
@@ -3304,6 +3312,15 @@ function SessionActive({ session, onExit, onDone }: {
                   </>
                 )}
               </div>
+
+              {/* "GO ✿" blooming from the CENTRE of the image — same trigger as the
+                  rep-ring GO, so one "go" lights up both the ring and the image. */}
+              {goRing > 0 && !isSwitch && (
+                <div key={`go-center-${goRing}`} aria-hidden className="pointer-events-none absolute inset-0 z-[24] grid place-items-center">
+                  <span className="animate-wk-go-center font-script text-white leading-none drop-shadow-[0_4px_22px_oklch(0.58_0.28_350/0.9)]"
+                    style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)" }}>GO ✿</span>
+                </div>
+              )}
 
               {/* Compact rep ring — phones only (desktop/tablet use the right rail) */}
               <div className="md:hidden absolute top-3 right-3 z-[25] rounded-full bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1.5">
