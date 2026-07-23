@@ -2752,6 +2752,41 @@ function FormReminderCard({ cues, delay }: { cues: string[]; delay?: number }) {
   );
 }
 
+// Each body zone gets its own warm mood (oklch hue, kept in the pink family so
+// it never clips out of sRGB). Rest cools everything toward a soft lilac.
+const WK_ZONE_HUE: Record<string, number> = {
+  glutes: 350, core: 25, arms: 335, back: 345, legs: 12, "full-body": 350,
+};
+
+/** Living background — soft blobs that slowly drift and breathe behind the
+ *  glass. It reacts to the session: it warms & tints to the trained zone on a
+ *  work move, calms and cools during rest, gives a barely-there swell on each
+ *  rep beat, and stills completely when paused. Meant to be felt, not stared at. */
+function SessionAurora({ zone, phase, rep, paused }: {
+  zone?: Zone; phase: ExercisePhase; rep: number; paused: boolean;
+}) {
+  const resting = phase === "rest";
+  const hue = resting ? 322 : (WK_ZONE_HUE[zone ?? ""] ?? 350);
+  const chroma = resting ? 0.07 : 0.12;
+  const col = (a: number) => `oklch(0.88 ${chroma} ${hue} / ${a})`;
+  const playState = paused ? "paused" : "running";
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
+      <div className="absolute rounded-full animate-wk-aurora-1"
+        style={{ left: "48%", top: "-18%", width: "78vw", height: "78vw", background: `radial-gradient(circle, ${col(0.5)} 0%, transparent 65%)`, filter: "blur(32px)", animationDuration: resting ? "40s" : "26s", animationPlayState: playState }} />
+      <div className="absolute rounded-full animate-wk-aurora-2"
+        style={{ left: "-22%", top: "52%", width: "72vw", height: "72vw", background: `radial-gradient(circle, ${col(0.45)} 0%, transparent 65%)`, filter: "blur(34px)", animationDuration: resting ? "46s" : "32s", animationPlayState: playState }} />
+      <div className="absolute rounded-full animate-wk-aurora-3"
+        style={{ left: "60%", top: "55%", width: "60vw", height: "60vw", background: `radial-gradient(circle, ${col(0.4)} 0%, transparent 65%)`, filter: "blur(30px)", animationDuration: resting ? "34s" : "22s", animationPlayState: playState }} />
+      {/* Rep-beat breath — a faint central swell, only on a live work move. */}
+      {phase === "exercise" && rep > 0 && !paused && (
+        <div key={rep} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full animate-wk-aurora-breathe"
+          style={{ width: "58vw", height: "58vw", background: `radial-gradient(circle, ${col(0.26)} 0%, transparent 60%)`, filter: "blur(42px)" }} />
+      )}
+    </div>
+  );
+}
+
 /** One control in the glossy bottom bar (Previous / Skip / Voice / Favorite). */
 function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
   icon: any; label: string; onClick: () => void; active?: boolean; disabled?: boolean;
@@ -3027,8 +3062,9 @@ function SessionActive({ session, onExit, onDone }: {
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col bg-gradient-to-br from-[oklch(0.97_0.02_350)] via-[oklch(0.95_0.045_350)] to-[oklch(0.91_0.07_345)]" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
-      {/* soft floral glow so the pink room feels alive behind the glass */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-70" style={{ background: "radial-gradient(60% 45% at 82% 12%, oklch(0.9 0.09 350 / 0.5), transparent 70%), radial-gradient(50% 40% at 12% 88%, oklch(0.9 0.08 345 / 0.45), transparent 70%)" }} />
+      {/* Living aurora — drifts, breathes with the reps, warms to the trained
+          zone and cools on rest. Softly present, felt more than seen. */}
+      <SessionAurora zone={session.zone} phase={phase} rep={currentRep} paused={paused} />
 
       {/* Background music loop (controlled by the sound toggle) */}
       <audio ref={audioRef} src={musicSrc} loop preload="auto" />

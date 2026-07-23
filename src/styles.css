@@ -890,6 +890,33 @@
   100% { transform: translateY(112vh) rotate(420deg); opacity: 0; }
 }
 
+/* Living session aurora — soft blobs that slowly drift + breathe behind the
+   frosted glass of the workout player. Felt more than seen. Transform/opacity
+   only, so it stays GPU-cheap. Duration + colour are overridden inline so the
+   background can react to the session (rest = slower/cooler, work = warmer). */
+@keyframes wk-aurora-1 {
+  0%, 100% { transform: translate(-6%, -4%) scale(1); }
+  50%      { transform: translate(6%, 5%) scale(1.16); }
+}
+@keyframes wk-aurora-2 {
+  0%, 100% { transform: translate(5%, 6%) scale(1.12); }
+  50%      { transform: translate(-5%, -6%) scale(0.94); }
+}
+@keyframes wk-aurora-3 {
+  0%, 100% { transform: translate(0, 4%) scale(1); }
+  50%      { transform: translate(4%, -5%) scale(1.22); }
+}
+@utility animate-wk-aurora-1 { animation: wk-aurora-1 26s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-aurora-2 { animation: wk-aurora-2 32s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-aurora-3 { animation: wk-aurora-3 22s ease-in-out infinite; will-change: transform; }
+/* Gentle "breath" on the rep beat — a barely-there swell, keyed by rep. */
+@keyframes wk-aurora-breathe {
+  0%   { opacity: 0.55; transform: scale(1); }
+  40%  { opacity: 0.8;  transform: scale(1.08); }
+  100% { opacity: 0.55; transform: scale(1); }
+}
+@utility animate-wk-aurora-breathe { animation: wk-aurora-breathe 0.9s ease-out; }
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:
