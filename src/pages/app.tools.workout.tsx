@@ -2629,6 +2629,29 @@ function EndCelebration({ active, z = 52 }: { active: boolean; z?: number }) {
   );
 }
 
+// Pink sparkles + stars twinkling ALL OVER the screen — the extra "wow" glitter
+// on the finish screen. Stops when `active` is false.
+function SparkleField({ active, z = 53 }: { active: boolean; z?: number }) {
+  const stars = useMemo(() => Array.from({ length: 42 }, () => ({
+    top: Math.random() * 100, left: Math.random() * 100,
+    delay: Math.random() * 3, dur: 1.3 + Math.random() * 2.2,
+    size: 8 + Math.random() * 18,
+    char: ["✦", "✧", "⭐", "✨", "🌟", "·"][Math.floor(Math.random() * 6)],
+    color: ["#EC4899", "#FF1493", "#F9A8D4", "#FBCFE8"][Math.floor(Math.random() * 4)],
+  })), []);
+  if (!active) return null;
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: z }}>
+      {stars.map((s, i) => (
+        <span key={i} className="absolute animate-wk-twinkle" style={{
+          top: `${s.top}%`, left: `${s.left}%`, fontSize: s.size, color: s.color, lineHeight: 1,
+          animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s`,
+        }}>{s.char}</span>
+      ))}
+    </div>
+  );
+}
+
 /** Sparse petals that drift up forever through the stage's blurred side-bands,
  *  so the letterbox margins feel alive instead of empty. Kept to the edges. */
 /** Ambient pink aurora over the stage — soft blurred radial blooms placed all
@@ -2994,6 +3017,17 @@ function SessionActive({ session, programRef, onExit, onDone }: {
     }
   };
 
+  // When the congratulation voice finishes, slowly fade the (looping) music out
+  // and stop it — so nothing keeps looping/"beeping" under the settled screen.
+  const fadeOutMusic = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    const iv = window.setInterval(() => {
+      a.volume = Math.max(0, a.volume - 0.02);
+      if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
+    }, 90);
+  };
+
   const step = steps[index];
   const nextStepObj = steps[index + 1];
   const exercise = step.exercise;
@@ -3296,7 +3330,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
           <p className="text-center text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
           <div className="flex items-center gap-2.5">
             <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
-              <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${finished ? 100 : ((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
             </div>
             <span className="text-xs sm:text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
@@ -3533,7 +3567,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
           <div key="fin-burst" aria-hidden className="pointer-events-none fixed inset-0 z-[63] grid place-items-center">
             <span className="animate-wk-go-center font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.9)]" style={{ fontSize: "clamp(6rem, 26vw, 15rem)" }}>✿</span>
           </div>
-          <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} />
+          <SessionEnd overlay session={session} elapsedSec={finalElapsed} programRef={programRef} onDone={() => onDone(finalElapsed)} onVoiceEnd={fadeOutMusic} />
         </>
       )}
     </div>,
@@ -3541,7 +3575,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   );
 }
 
-function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void; overlay?: boolean }) {
+function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, onVoiceEnd }: { session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; onDone: () => void; overlay?: boolean; onVoiceEnd?: () => void }) {
   const [streak, setStreak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
   const [sound] = useLS<boolean>(SOUND_KEY, true);
@@ -3564,7 +3598,13 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false }
         if (a.volume <= 0.001) { a.pause(); window.clearInterval(iv); }
       }, 50);
     };
-    const stop = () => { setCelebrating(false); if (music) fadeOut(music); };
+    let stopped = false;
+    const stop = () => {
+      if (stopped) return; stopped = true;
+      setCelebrating(false);
+      if (music) fadeOut(music, 2200);   // slow, graceful fade
+      onVoiceEnd?.();                     // let the player fade its (ducked) music out
+    };
     let fallback: number;
     if (sound) {
       // In overlay mode the still-mounted player owns the music (already ducked),
@@ -3676,20 +3716,26 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false }
   return (
     <div className={["fixed inset-0 z-[61] grid place-items-start sm:place-items-center p-4 overflow-y-auto",
       overlay ? "animate-fade-in" : "bg-blush/95 backdrop-blur"].join(" ")} style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
-      {/* Overlay mode: a soft pink veil over the frozen player — barely see-through. */}
-      {overlay && <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "oklch(0.9 0.09 350 / 0.55)", backdropFilter: "blur(2px)" }} />}
+      {/* Overlay mode: a soft pink veil over the frozen player — present but you
+          can still sense the player behind it. */}
+      {overlay && <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "linear-gradient(160deg, oklch(0.9 0.1 350 / 0.72), oklch(0.82 0.13 345 / 0.68))", backdropFilter: "blur(4px)" }} />}
       {/* Soft pink glow wash behind the card — warm, dreamy "wow". */}
       <div aria-hidden className="pointer-events-none fixed inset-0" style={{ zIndex: 51, background: "radial-gradient(58% 48% at 50% 42%, oklch(0.84 0.13 350 / 0.55), transparent 72%)" }} />
       {/* Continuous flowers + sparkles — keeps moving until the voice finishes. */}
       <EndCelebration active={celebrating} z={52} />
+      {/* Twinkling pink stars all over the screen */}
+      <SparkleField active={celebrating} z={53} />
       {/* Initial celebration burst over the whole finish screen */}
       <PetalBurst count={26} z={55} />
-      <div className="relative z-[54] w-full max-w-md rounded-3xl bg-white/96 border border-petal/60 p-6 sm:p-8 shadow-2xl text-center my-6 sm:my-8 animate-scale-in"
-        style={overlay ? { animationDelay: "0.45s", animationFillMode: "both" } : undefined}>
-        {/* Celebration ring */}
+      {/* Glass "wow" card — frosted, translucent, glossy sheen (Barbie glass). */}
+      <div className="relative isolate z-[54] w-full max-w-md rounded-[2rem] border border-white/70 p-6 sm:p-8 text-center my-6 sm:my-8 overflow-hidden animate-scale-in shadow-[0_30px_80px_-20px_rgba(236,72,153,0.6)]"
+        style={{ background: "linear-gradient(160deg, oklch(1 0 0 / 0.52), oklch(0.96 0.06 350 / 0.4))", backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)", ...(overlay ? { animationDelay: "0.45s", animationFillMode: "both" as any } : {}) }}>
+        {/* glossy crown sheen — behind the content (negative z within the card) */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: "radial-gradient(120% 55% at 50% -12%, oklch(1 0 0 / 0.6), transparent 62%)" }} />
+        {/* Celebration ring — the trophy squeezes + zooms; the medallion glows. */}
         <div className="mx-auto mb-3 relative grid place-items-center">
           <span className="clay-blob animate-selected-glow grid h-20 w-20 sm:h-24 sm:w-24 place-items-center rounded-full text-white">
-            <Trophy className="h-9 w-9 sm:h-11 sm:w-11 animate-icon-breathe" strokeWidth={1.6} />
+            <Trophy className="h-9 w-9 sm:h-11 sm:w-11 animate-wk-trophy-pop" strokeWidth={1.6} />
           </span>
         </div>
 
