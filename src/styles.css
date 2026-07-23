@@ -926,6 +926,24 @@
 }
 @utility animate-wk-bg-breathe { animation: wk-bg-breathe 7s ease-in-out infinite; will-change: transform; }
 
+/* Logo flower breath — gentle swell, SAME 7s period as the backdrop so the
+   brand mark breathes in sync with the room. */
+@keyframes wk-logo-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+@utility animate-wk-logo-breathe { animation: wk-logo-breathe 7s ease-in-out infinite; will-change: transform; }
+
+/* Ambient petals that rise softly through the stage side-bands (per-petal
+   left/delay/duration set inline). */
+@keyframes wk-petal-drift {
+  0%   { transform: translateY(15%) rotate(0deg);    opacity: 0; }
+  12%  { opacity: 0.75; }
+  85%  { opacity: 0.75; }
+  100% { transform: translateY(-115%) rotate(200deg); opacity: 0; }
+}
+@utility animate-wk-petal-drift { animation: wk-petal-drift linear infinite; will-change: transform, opacity; }
+
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
   background:
