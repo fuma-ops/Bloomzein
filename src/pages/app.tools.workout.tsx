@@ -2482,26 +2482,26 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
 
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-3 sm:p-4 overflow-y-auto" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
-      <div className="relative w-full max-w-md rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden my-4 sm:my-8 animate-scale-in">
-        {/* Hero */}
-        <div className="relative aspect-[16/10] overflow-hidden">
+      <div className="relative w-full max-w-md lg:max-w-4xl rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden my-4 sm:my-8 animate-scale-in lg:grid lg:grid-cols-2 lg:items-stretch">
+        <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90 shadow-sm"><X className="h-4 w-4" /></button>
+        {/* Hero — full-height left column on desktop */}
+        <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[32rem] overflow-hidden">
           <ExercisePhoto exercise={first} zone={session.zone} className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
-          <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90"><X className="h-4 w-4" /></button>
           {phase !== "any" && session.phaseOptimal.includes(phase) && (
             <span className="absolute top-3 left-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {PHASE_LABEL[phase]} optimized</span>
           )}
-          <div className="absolute bottom-0 inset-x-0 p-4">
+          <div className="absolute bottom-0 inset-x-0 p-4 lg:p-6">
             <div className="flex flex-wrap gap-1.5 mb-1.5">
               {zone && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{zone.label}</span>}
               {intention && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{intention.label}</span>}
             </div>
-            <h1 className="font-script text-3xl sm:text-4xl text-white leading-none drop-shadow">{session.name}</h1>
-            <p className="text-[11px] sm:text-xs text-white/90 mt-1 drop-shadow">{session.durationMin} min · {session.level} · {session.structureNote}</p>
+            <h1 className="font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none drop-shadow">{session.name}</h1>
+            <p className="text-[11px] sm:text-xs lg:text-sm text-white/90 mt-1 drop-shadow">{session.durationMin} min · {session.level} · {session.structureNote}</p>
           </div>
         </div>
 
-        <div className="p-4 sm:p-5 space-y-4">
+        <div className="p-4 sm:p-5 lg:p-6 space-y-4 lg:space-y-5 lg:overflow-y-auto lg:max-h-[85vh]">
           {/* What's inside */}
           <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 text-left">
             <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">What's inside</p>
@@ -2515,7 +2515,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
           {/* Moves preview */}
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-2">The moves · {uniqueMoves.length}</p>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none lg:flex-wrap lg:overflow-visible">
               {uniqueMoves.map((s, i) => (
                 <div key={`${s.exercise.slug}-${i}`} className="shrink-0 w-20 text-center">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-petal/50">
