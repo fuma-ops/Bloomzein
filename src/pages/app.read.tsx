@@ -165,7 +165,7 @@ export default function ReadPage() {
       {/* SEARCH + FILTERS — one frosted control bar floating over the hero edge.
           Search on top; categories on a single scrollable line ("All" pinned
           left, active chip glows, a soft fade hints there's more to swipe). */}
-      <div className="relative z-[2] mt-3 sm:mt-4 mx-auto max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 backdrop-blur-xl p-2.5 sm:p-3.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] animate-card-pop-in">
+      <div className="relative z-[2] mt-14 sm:mt-4 mx-auto max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 backdrop-blur-xl p-2.5 sm:p-3.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] animate-card-pop-in">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
           <input
@@ -201,8 +201,6 @@ export default function ReadPage() {
               );
             })}
           </div>
-          {/* right fade hints there's more to swipe */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white/70 via-white/25 to-transparent" />
         </div>
       </div>
 
