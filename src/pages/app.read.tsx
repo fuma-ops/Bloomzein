@@ -337,10 +337,17 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
           className="animate-hero-breathe h-full w-full object-cover object-center"
           referrerPolicy="no-referrer"
         />
-        {/* left ~40% pink wash — blends the photo so white title text reads cleanly */}
+        {/* Pink wash behind the title so white text always reads cleanly.
+            Mobile reaches a little further right (the title needs more room);
+            tablet/desktop keep it to the left ~40% so the photo stays open. */}
         <div
           aria-hidden
-          className="absolute inset-0"
+          className="absolute inset-0 sm:hidden"
+          style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.93) 42%, rgba(226,46,134,0.55) 62%, rgba(226,46,134,0) 80%)" }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 hidden sm:block"
           style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.9) 26%, rgba(226,46,134,0.5) 41%, rgba(226,46,134,0) 58%)" }}
         />
         {/* gentle base tint so the photo settles into the page pink */}
@@ -362,17 +369,20 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
 
       {/* HERO TITLE — white, sitting on the pink-washed left of the image;
           category · time · views sit UNDER the title. */}
-      <header className="relative z-[1] flex min-h-[11rem] sm:min-h-[13rem] lg:min-h-[15rem] flex-col justify-center pb-3 max-w-[15rem] sm:max-w-[22rem] lg:max-w-[25rem]">
+      <header className="relative z-[1] flex min-h-[11rem] sm:min-h-[13rem] lg:min-h-[15rem] flex-col justify-center pb-3 max-w-[14rem] sm:max-w-[22rem] lg:max-w-[25rem]">
         <h1
-          className="font-script text-[2.7rem] sm:text-5xl lg:text-[3.5rem] text-white leading-[0.98]"
+          className="font-script text-[2.15rem] sm:text-5xl lg:text-[3.5rem] text-white leading-[1.0]"
           style={{ textShadow: "0 2px 16px rgba(140,18,74,0.55), 0 1px 2px rgba(140,18,74,0.45)" }}
         >
           {headline}
         </h1>
-        <div className="mt-3.5 flex flex-wrap items-center gap-2.5" style={{ filter: "drop-shadow(0 1px 5px rgba(140,18,74,0.4))" }}>
+        {/* category on its own line; time + views sit under it (single row on ≥sm) */}
+        <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2.5" style={{ filter: "drop-shadow(0 1px 5px rgba(140,18,74,0.4))" }}>
           <TopicBadge topic={article.category} />
-          <ReadTime minutes={article.minutes} light />
-          <BloomCount count={article.blooms} light />
+          <div className="flex items-center gap-2.5">
+            <ReadTime minutes={article.minutes} light />
+            <BloomCount count={article.blooms} light />
+          </div>
         </div>
       </header>
 
