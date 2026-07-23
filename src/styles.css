@@ -1009,6 +1009,14 @@
 }
 @utility animate-wk-aurora-pulse { animation: wk-aurora-pulse 8s ease-in-out infinite; will-change: transform, opacity; }
 
+/* Soft attention pulse for a label + its icon (e.g. the "Next up" title) — a
+   barely-there scale + fade that draws the eye without shouting. */
+@keyframes wk-attn {
+  0%, 100% { transform: scale(1);    opacity: 0.72; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+@utility animate-wk-attn { animation: wk-attn 2.4s ease-in-out infinite; transform-origin: left center; will-change: transform, opacity; }
+
 /* Player control — flat & matte, no gloss/sheen/dome. A clean frosted disc with
    just a soft ambient shadow; presses in on tap. */
 @utility wk-lux-btn {

@@ -2693,9 +2693,9 @@ const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 /** A soft translucent glass panel — the building block for every side card.
  *  `iconVibe` makes the title medallion sway + glow to the music (left rail);
  *  `iconVibeDelay` offsets it so a stack of cards reads like an equalizer. */
-function GlassCard({ icon: Icon, title, children, className = "", delay = 0, iconVibe = false, iconVibeDelay = 0 }: {
+function GlassCard({ icon: Icon, title, children, className = "", delay = 0, iconVibe = false, iconVibeDelay = 0, titleAttn = false }: {
   icon?: any; title?: string; children: React.ReactNode; className?: string; delay?: number;
-  iconVibe?: boolean; iconVibeDelay?: number;
+  iconVibe?: boolean; iconVibeDelay?: number; titleAttn?: boolean;
 }) {
   return (
     <div
@@ -2703,7 +2703,7 @@ function GlassCard({ icon: Icon, title, children, className = "", delay = 0, ico
       style={{ animationDelay: `${delay}ms` }}
     >
       {title && (
-        <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70 mb-3">
+        <p className={["flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70 mb-3", titleAttn ? "w-fit animate-wk-attn" : ""].join(" ")}>
           {Icon && (
             <span
               className={["grid h-6 w-6 place-items-center rounded-full bg-hotpink/12 text-hotpink", iconVibe ? "animate-wk-icon-glow" : ""].join(" ")}
@@ -2825,7 +2825,7 @@ function CoachTipCard({ tip, delay }: { tip: string; delay?: number }) {
 }
 function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; reps?: string; delay?: number }) {
   return (
-    <GlassCard icon={ChevronRight} title="Next up" delay={delay} className="animate-soft-glow">
+    <GlassCard icon={ChevronRight} title="Next up" delay={delay} titleAttn>
       {/* Bigger preview — the whole move is shown (contain, never cropped), with
           the name below. */}
       <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-petal/60 shadow-sm bg-blush/40">
@@ -3367,27 +3367,51 @@ function SessionActive({ session, onExit, onDone }: {
               </div>
             </div>
           ) : (
-            <div className="relative w-full md:flex-1 md:min-h-0 flex flex-col items-center gap-2 sm:gap-3 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-3.5 sm:p-4 overflow-hidden">
-              {/* Rest header — compact, centred (stacked so nothing spreads out). */}
-              <div className="shrink-0 text-center">
-                <p className="text-base sm:text-xl font-bold uppercase tracking-wide text-hotpink/75 leading-none">Rest</p>
-                <p className="text-[11px] sm:text-sm text-rose/55 mt-1">Breathe in… and out. ✿</p>
-              </div>
-              <RepRing size={100} percent={ringPct} seconds={remaining} label="Rest" />
-              {/* Coming-up preview — large but shown in FULL (contain, never cropped). */}
-              {next && (
-                <div className="w-full max-w-xl flex-1 min-h-0 flex flex-col items-center">
-                  <p className="shrink-0 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                  <div className="relative w-full flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                    <ExercisePhoto exercise={next} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
-                  </div>
-                  <p className="shrink-0 mt-2 text-center">
-                    <span className="text-base sm:text-lg font-bold text-rose">{next.name}</span>
-                    {nextReps && <span className="ml-2 text-xs sm:text-sm font-semibold text-hotpink">{nextReps}</span>}
-                  </p>
+            <>
+              {/* PHONE — compact: ring on top, small coming-up thumbnail row. */}
+              <div className="md:hidden relative w-full grid place-items-center rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5">
+                <div className="text-center">
+                  <p className="text-sm font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
+                  <p className="text-[11px] text-rose/55 mb-4">Breathe in… and out. ✿</p>
+                  <RepRing size={132} percent={ringPct} seconds={remaining} label="Rest" />
+                  {next && (
+                    <div className="mt-5 mx-auto max-w-xs">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                      <div className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur border border-white/70 p-2.5 text-left">
+                        <ExercisePhoto exercise={next} zone={session.zone} className="h-16 w-16 shrink-0 object-cover rounded-xl border border-petal/60" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-bold text-rose leading-tight">{next.name}</p>
+                          {nextReps && <span className="mt-0.5 inline-block text-[11px] font-semibold text-hotpink">{nextReps}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+
+              {/* DESKTOP / TABLET — two columns: big coming-up image LEFT, ring RIGHT. */}
+              <div className="hidden md:flex md:flex-1 md:min-h-0 gap-4 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-4 overflow-hidden">
+                {next && (
+                  <div className="flex-1 min-w-0 flex flex-col">
+                    <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
+                    <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
+                      <ExercisePhoto exercise={next} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
+                    </div>
+                    <p className="shrink-0 mt-2">
+                      <span className="text-lg font-bold text-rose">{next.name}</span>
+                      {nextReps && <span className="ml-2 text-sm font-semibold text-hotpink">{nextReps}</span>}
+                    </p>
+                  </div>
+                )}
+                <div className="w-52 lg:w-60 shrink-0 flex flex-col items-center justify-center gap-4 text-center border-l border-white/50 pl-4">
+                  <div>
+                    <p className="text-xl font-bold uppercase tracking-wide text-hotpink/75 leading-none">Rest</p>
+                    <p className="text-sm text-rose/55 mt-1">Breathe in… and out. ✿</p>
+                  </div>
+                  <RepRing size={150} percent={ringPct} seconds={remaining} label="Rest" />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Phone-only info cards (rails are hidden below md) — the affirmation
