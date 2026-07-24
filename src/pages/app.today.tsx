@@ -869,6 +869,9 @@ export default function TodayPage() {
         }}
       >
         <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
+        {/* left wash ONLY — confined to the left ~40% behind the greeting, then fully
+            transparent so the rest of the photo shows clean & vivid (no overlay). */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.4)_22%,transparent_40%)]" />
         {/* right fade → soft melt into the page edge so there's no hard border */}
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
       </div>
