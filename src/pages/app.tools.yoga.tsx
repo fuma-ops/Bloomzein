@@ -5,7 +5,7 @@ import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
-  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw,
+  GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
   Trash2, CircleCheck, Circle,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
@@ -25,7 +25,7 @@ import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trai
 import { PickerField } from "@/components/bloom/PickerField";
 import { YogaOnboarding, type YogaTourTab } from "@/components/bloom/YogaOnboarding";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
-import { isPremium, openPaywall } from "@/lib/entitlements";
+import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
 
 // ===================== DATA =====================
 
@@ -1522,7 +1522,7 @@ function YogaHero({
           <div className="inline-flex rounded-full bg-white/70 backdrop-blur border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
             <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
             <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
-            <button data-tour="yg-tab-library" onClick={onLibrary} className={tabClass(active === "library")}>Library</button>
+            <button data-tour="yg-tab-library" onClick={() => { if (!isPremium()) { openPaywall("yoga"); return; } onLibrary(); }} className={tabClass(active === "library")}>Library{!isPremium() && <Lock className="inline h-3 w-3 ml-1 -mt-0.5 text-[#B76E79]" strokeWidth={2.4} />}</button>
           </div>
         </div>
       </div>
@@ -1912,6 +1912,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
 
   // Fill the week with flows matched to the current cycle phase (opt-in).
   const syncToCycle = () => {
+    if (!isPremium()) { openPaywall("yoga"); return; } // cycle-sync is Bloom+
     const dayList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const plan = PHASE_DEFAULT_PLAN[phase];
     const next: Record<string, string | null> = {};
@@ -1934,7 +1935,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
     try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(next)); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
     askForNotifications();
     setBuildStep(false);
-    setEditing(true); // land in the editor to fine-tune the suggested week
+    setEditing(false); // land straight on the plan (img 3) — no need to tap Done
     clearYogaTuned(); // her own build → no longer the Diet goal plan
   };
 
@@ -2032,7 +2033,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               options={REMINDER_TIME_OPTIONS}
               onChange={updateReminder}
             />
-            <button onClick={() => setEditing((v) => !v)} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
+            <button onClick={() => { if (!editing && !isPremium()) { openPaywall("yoga"); return; } setEditing((v) => !v); }} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
               {editing ? "Done" : "Edit"}
             </button>
             <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -2305,9 +2306,15 @@ function YogaPlanSetup({ onBack, onCreate }: {
   onBack: () => void;
   onCreate: (level: Level, goal: YogaGoal, days: number) => void;
 }) {
-  const [level, setLevel] = useState<Level>(() => readYogaProfileLevel());
+  const premium = usePremium();
+  // Free plan can build ONLY: Beginner · Calm & restore · 2 days.
+  const [level, setLevel] = useState<Level>(() => (premium ? readYogaProfileLevel() : "Beginner"));
   const [goal, setGoal] = useState<YogaGoal>("calm");
-  const [days, setDays] = useState(3);
+  const [days, setDays] = useState(premium ? 3 : 2);
+  const freeCombo = level === "Beginner" && goal === "calm" && days === 2;
+  const lockLevel = (lv: Level) => !premium && lv !== "Beginner";
+  const lockGoal = (k: YogaGoal) => !premium && k !== "calm";
+  const lockDays = (d: number) => !premium && d !== 2;
   return (
     <div className="space-y-3.5 animate-fade-in">
       <div>
@@ -2315,17 +2322,29 @@ function YogaPlanSetup({ onBack, onCreate }: {
         <p className="text-[12px] text-rose/70">Set your level &amp; focus — we&apos;ll lay out a week you can fine-tune.</p>
       </div>
       <PickGroup label="Your level" icon={GraduationCap}>
-        {LEVELS.map((lv) => <Chip key={lv} active={level === lv} onClick={() => setLevel(lv)}>{lv}</Chip>)}
+        {LEVELS.map((lv) => { const lk = lockLevel(lv); return (
+          <Chip key={lv} active={level === lv} onClick={() => { if (lk) { openPaywall("yoga"); return; } setLevel(lv); }}>
+            {lv}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+          </Chip>
+        ); })}
       </PickGroup>
       <PickGroup label="What do you want?" icon={Heart}>
-        {YOGA_GOALS.map((g) => <Chip key={g.key} active={goal === g.key} onClick={() => setGoal(g.key)}>{g.label}</Chip>)}
+        {YOGA_GOALS.map((g) => { const lk = lockGoal(g.key); return (
+          <Chip key={g.key} active={goal === g.key} onClick={() => { if (lk) { openPaywall("yoga"); return; } setGoal(g.key); }}>
+            {g.label}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+          </Chip>
+        ); })}
       </PickGroup>
       <PickGroup label="Days per week" icon={Calendar}>
-        {[2, 3, 4, 5].map((d) => <Chip key={d} active={days === d} onClick={() => setDays(d)}>{d} days</Chip>)}
+        {[2, 3, 4, 5].map((d) => { const lk = lockDays(d); return (
+          <Chip key={d} active={days === d} onClick={() => { if (lk) { openPaywall("yoga"); return; } setDays(d); }}>
+            {d} days{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+          </Chip>
+        ); })}
       </PickGroup>
       <div className="flex items-center gap-2 pt-1">
         <button onClick={onBack} className="rounded-full bg-white/85 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Back</button>
-        <button onClick={() => onCreate(level, goal, days)} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white inline-flex items-center justify-center gap-2">
+        <button onClick={() => { if (!premium && !freeCombo) { openPaywall("yoga"); return; } onCreate(level, goal, days); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white inline-flex items-center justify-center gap-2">
           Create my week <ArrowRight className="h-4 w-4" />
         </button>
       </div>
