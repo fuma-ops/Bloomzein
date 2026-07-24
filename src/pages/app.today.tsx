@@ -11,7 +11,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
-import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useScrollReveal, useInView, useCountUp } from "@/lib/useScrollReveal";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { energyBalance } from "@/lib/nutritionTargets";
@@ -806,6 +806,10 @@ export default function TodayPage() {
   // circumference for SVG ring (r=15.9)
   const CIRC = 2 * Math.PI * 15.9; // ≈ 99.9
 
+  // Bloom ring + % count up when the section scrolls into view (not on load).
+  const [ringRef, ringInView] = useInView<HTMLDivElement>();
+  const ringPercent = Math.round(useCountUp(bloomPercent, ringInView));
+
   // FINALE — when her whole world is built (cycle + meals + diet + movement +
   // today's mood) AND she's still on the guided flow, play the closing moment:
   // a "your Today plan is ready" celebration, then a soft pink outline sweeps
@@ -882,9 +886,10 @@ export default function TodayPage() {
         }}
       >
         <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — confined to the left ~40% behind the greeting, then fully
-            transparent so the rest of the photo shows clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.4)_22%,transparent_40%)]" />
+        {/* left wash ONLY — a soft radial spotlight behind the greeting (~50% of
+            the width), fading to fully transparent so the rest of the photo shows
+            clean & vivid (no overlay). */}
+        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
         {/* right fade → soft melt into the page edge so there's no hard border */}
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
       </div>
@@ -1281,8 +1286,8 @@ export default function TodayPage() {
             {/* Ring + tip on top; checklist full-width below (roomy labels) */}
             <div className="mt-3.5">
               <div className="flex items-center gap-3">
-                {/* Bloom ring — strong pink */}
-                <div className="relative shrink-0">
+                {/* Bloom ring — strong pink; fills + counts up on scroll-in */}
+                <div ref={ringRef} className="relative shrink-0">
                   <svg viewBox="0 0 36 36" className="w-[112px] h-[112px] -rotate-90">
                     <defs>
                       <linearGradient id="bloom-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1294,16 +1299,15 @@ export default function TodayPage() {
                     <circle
                       cx="18" cy="18" r="15.9" fill="none"
                       stroke="url(#bloom-ring-grad)" strokeWidth="3.4"
-                      strokeDasharray={`${CIRC}`} strokeDashoffset={CIRC * (1 - bloomPercent / 100)}
+                      strokeDasharray={`${CIRC}`} strokeDashoffset={CIRC * (1 - ringPercent / 100)}
                       strokeLinecap="round"
-                      style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)" }}
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    {bloomFull
+                    {bloomFull && ringPercent >= 100
                       ? <Star className="h-8 w-8 text-hotpink animate-icon-breathe" strokeWidth={1.5} fill="currentColor" />
                       : <>
-                          <p className="font-script text-[2rem] text-hotpink leading-none">{bloomPercent}%</p>
+                          <p className="font-script text-[2rem] text-hotpink leading-none">{ringPercent}%</p>
                           <p className="mt-0.5 text-[8.5px] font-black uppercase tracking-[0.15em] text-hotpink/70">Bloomed</p>
                         </>
                     }

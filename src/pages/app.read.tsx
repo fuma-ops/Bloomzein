@@ -181,9 +181,10 @@ export default function ReadPage() {
         {/* On phones, zoom from the bottom so the face rises (cropping the empty
             top of the room) and clears the search card as the layout tightens. */}
         <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[55%_32%] origin-bottom scale-[1.22] sm:scale-100" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — confined to the left ~40% behind the title, then fully
-            transparent so the rest of the photo shows clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.4)_22%,transparent_40%)]" />
+        {/* left wash ONLY — a soft radial spotlight behind the title (~50% of the
+            width), fading to fully transparent so the rest of the photo shows
+            clean & vivid (no overlay). */}
+        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
       </div>
 
       <BloomBubbles count={10} />
@@ -192,7 +193,7 @@ export default function ReadPage() {
       <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[96px] sm:min-h-[124px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-2 pb-2 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
           <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
-          <p className="animate-fade-in mt-1 font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for <br className="sm:hidden" />your softest era ✿</p>
+          <p className="animate-fade-in mt-1 hidden sm:block font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for <br className="sm:hidden" />your softest era ✿</p>
         </div>
       </section>
 

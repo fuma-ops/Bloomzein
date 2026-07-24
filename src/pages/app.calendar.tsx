@@ -438,9 +438,10 @@ export default function CalendarPage() {
         }}
       >
         <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — confined to the left ~40% behind the title, then fully
-            transparent so the rest of the photo shows clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.4)_22%,transparent_40%)]" />
+        {/* left wash ONLY — a soft radial spotlight behind the title (~50% of the
+            width), fading to fully transparent so the rest of the photo shows
+            clean & vivid (no overlay). */}
+        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
       </div>
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
@@ -452,7 +453,7 @@ export default function CalendarPage() {
             <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
               Bloom Calendar
             </h1>
-            <p className="animate-fade-in mt-1 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
+            <p className="animate-fade-in mt-1 hidden sm:block font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
               Your life, beautifully planned.
             </p>
             <CyclePhasePill className="mt-1.5" />
