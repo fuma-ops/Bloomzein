@@ -130,6 +130,14 @@ export default function ReadPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const heroRef = useRef<HTMLElement>(null);
 
+  // How many distinct articles she's read — persisted, shown as a soft "reads"
+  // score under the energy pill on the hero.
+  const [reads, setReads] = useState<string[]>(() => {
+    try { const r = JSON.parse(localStorage.getItem("bloom:reads") || "[]"); return Array.isArray(r) ? r : []; }
+    catch { return []; }
+  });
+  const readCount = reads.length;
+
   // Deep-link: /app/read?a=<id> opens that article (used by the coach's
   // "A moment for you" and the Diet phase-reads carousel).
   useEffect(() => {
@@ -153,6 +161,18 @@ export default function ReadPage() {
   const recommended = RECOMMENDED_IDS.map((id) => ARTICLES.find((a) => a.id === id)!).filter(Boolean);
   const savedArticles = ARTICLES.filter((a) => saved[a.id]);
   const open = openId ? ARTICLES.find((a) => a.id === openId) : null;
+
+  // Opening a real article counts it as read (deduped, persisted) — covers deep
+  // links, card taps and recommendations alike.
+  useEffect(() => {
+    if (!openId || !articleById(openId)) return;
+    setReads((prev) => {
+      if (prev.includes(openId)) return prev;
+      const next = [...prev, openId];
+      try { localStorage.setItem("bloom:reads", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [openId]);
 
   if (open) {
     return <ArticleReader article={open} saved={!!saved[open.id]} onSave={() => toggleSave(open.id)} onBack={() => setOpenId(null)} />;
@@ -197,9 +217,13 @@ export default function ReadPage() {
         </div>
       </section>
 
-      {/* Cycle-phase badges sit right under the title (no empty gap on phone). */}
-      <div className="relative z-[2] mt-1.5 sm:mt-4 px-1">
+      {/* Cycle-phase badges sit right under the title (no empty gap on phone).
+          A soft "reads" score sits under the energy pill. */}
+      <div className="relative z-[2] mt-1.5 sm:mt-4 px-1 flex flex-col items-start gap-1.5">
         <CyclePhasePill />
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-petal/80 backdrop-blur text-hotpink border border-hotpink/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
+          <BookOpen className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> {readCount} {readCount === 1 ? "read" : "reads"}
+        </span>
       </div>
 
       {/* SEARCH + FILTERS — one frosted control bar floating over the hero edge.
