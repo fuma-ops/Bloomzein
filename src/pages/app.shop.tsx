@@ -108,6 +108,10 @@ export default function ShopPage() {
 
   return (
     <div className="relative isolate animate-fade-in">
+      {/* Shop isn't live yet — the whole page is blurred behind a "Coming soon"
+          card for EVERYONE (free and Bloom+). */}
+      <ShopComingSoon />
+      <div className="pointer-events-none select-none blur-[6px] opacity-70">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
@@ -331,6 +335,25 @@ export default function ShopPage() {
         onDec={dec}
         onRemove={remove}
       />
+      </div>
+    </div>
+  );
+}
+
+/* Blurred "Coming soon" cover for the whole shop — shown to every plan. */
+function ShopComingSoon() {
+  return (
+    <div className="absolute inset-x-0 top-0 z-30 grid min-h-[75vh] place-items-center p-6">
+      <div className="text-center max-w-sm rounded-[2rem] border bg-white/85 backdrop-blur-xl p-7 shadow-2xl" style={{ borderColor: "#B76E7955" }}>
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-white shadow-md animate-icon-breathe" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
+          <ShoppingBag className="h-6 w-6" strokeWidth={1.8} />
+        </span>
+        <p className="mt-3 font-script text-3xl text-hotpink leading-none">The Bloom Shop</p>
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
+          <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Coming soon
+        </p>
+        <p className="mt-3 text-sm text-rose/75 leading-snug">Our curated self-care, beauty &amp; cycle-care collection is blooming. We'll tell you the moment it opens ✿</p>
+      </div>
     </div>
   );
 }

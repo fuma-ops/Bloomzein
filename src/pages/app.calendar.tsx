@@ -29,6 +29,7 @@ import { MEALS_PLAN_KEY } from "./app.tools.meals";
 import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { readWorkoutPlanDays, readMealPlan } from "@/lib/crossToolData";
 import { TODAY_WATER_KEY } from "./app.today";
+import { PlusLock } from "@/components/bloom/premium/PremiumKit";
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
 function fmtLocalDate(d: Date) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
@@ -993,11 +994,13 @@ function DayDrawer({
 
         <div className="mt-5">
           <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">Plans this day</p>
-          <DayPlanCards
-            date={date} mealsPlan={mealsPlan} reminders={reminders}
-            yogaSchedule={yogaSchedule} yogaReminder={yogaReminder}
-            history={history} workoutPlanDays={workoutPlanDays}
-          />
+          <PlusLock feature="coach" title="This day's plan" blurb="Your meals, movement & flow for the day — planned around your cycle." minH="min-h-[160px]">
+            <DayPlanCards
+              date={date} mealsPlan={mealsPlan} reminders={reminders}
+              yogaSchedule={yogaSchedule} yogaReminder={yogaReminder}
+              history={history} workoutPlanDays={workoutPlanDays}
+            />
+          </PlusLock>
         </div>
 
         {mood && (

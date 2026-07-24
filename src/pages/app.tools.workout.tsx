@@ -4,7 +4,7 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, SkipBack, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, ChevronUp, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
-  CircleCheck, Circle, Heart, Lightbulb, Target, Activity,
+  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock,
 } from "lucide-react";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -12,7 +12,8 @@ import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
-import { isPremium, openPaywall } from "@/lib/entitlements";
+import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
+import { PlusLock, LockChip } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
@@ -1111,7 +1112,10 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
   const tip = phase !== "any" ? session.phaseTips?.[phase] : undefined;
   const meta = weekMeta(program, week);
 
-  const startTimer = () => onStartTimer(programToTimerSession(program, week, sessionIndex));
+  const startTimer = () => {
+    if (!isPremium()) { openPaywall("workout"); return; }
+    onStartTimer(programToTimerSession(program, week, sessionIndex));
+  };
 
   const markComplete = () => {
     if (completed) return;
@@ -1182,7 +1186,9 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
         </div>
       )}
 
-      {/* Blocks */}
+      {/* Blocks — free users see the program info above, but the actual session
+          moves are teaser-locked (Bloom+ to see & do them). */}
+      <PlusLock feature="workout" title="This session's moves" blurb="Every exercise, set, tempo & cue — unlock the full program with Bloom+.">
       <div className="space-y-4">
         {session.blocks.map((block, bIdx) => (
           <div key={bIdx}>
@@ -1227,6 +1233,7 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
           </div>
         ))}
       </div>
+      </PlusLock>
 
       {/* Primary: start the guided chrono session (same player as Discover) */}
       <button
@@ -1399,6 +1406,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
   onBestShape: () => void;
   onGoToPlan: () => void;
 }) {
+  const premium = usePremium();
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [energy, setEnergy] = useLS<{ date: string; level: EnergyLevel | null }>(ENERGY_KEY, { date: "", level: null });
   const [streak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
@@ -1459,6 +1467,8 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
   };
 
   const onPickSession = (session: WorkoutSession) => {
+    // Free users can test only the 10-minute session; 20/30-min are Bloom+.
+    if (!isPremium() && session.durationMin > 10) { openPaywall("workout"); return; }
     setSelectedSessionId(session.id);
     setTimeout(() => onStartSession(session), 200);
   };
@@ -1624,6 +1634,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
             {intentionList.map((session) => {
               const active = selectedSessionId === session.id;
               const optimal = phase !== "any" && session.phaseOptimal.includes(phase);
+              const locked = !premium && session.durationMin > 10; // free = 10-min only
               return (
               <button
                 key={session.id}
@@ -1647,9 +1658,15 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                   <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70 leading-snug">{session.structureNote}</p>
                   <p className="text-[10px] text-rose/55">{session.level} · {session.workSec}s work / {session.restSec}s rest</p>
                 </div>
-                <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white shadow-sm shadow-hotpink/30">
-                  <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />
-                </span>
+                {locked ? (
+                  <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-sm" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
+                    <Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Bloom+
+                  </span>
+                ) : (
+                  <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white shadow-sm shadow-hotpink/30">
+                    <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />
+                  </span>
+                )}
               </button>
               );
             })}
@@ -1912,7 +1929,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const goal = readDietProfile().goal;
   // Shared preference: show recovery meals inside the plan, or keep it simple.
   const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
-  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+  const toggleFuel = () => { if (!isPremium()) { openPaywall("meals"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   // Build-your-own-week: hand-pick a zone/intensity/duration per day.
   const [editing, setEditing] = useState(false);
@@ -2363,6 +2380,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 // ===================== LIBRARY =====================
 
 function Library() {
+  const premium = usePremium();
   const [zone, setZone] = useState<Zone>("glutes");
   const exercises = ZONE_EXERCISES[zone];
   const zoneMeta = ZONES.find((z) => z.key === zone);
@@ -2385,16 +2403,19 @@ function Library() {
           {ZONES.map((z) => {
             const Icon = z.icon;
             const active = zone === z.key;
+            const locked = !premium && z.key !== "glutes"; // free = Glutes only
             return (
               <button
                 key={z.key}
-                onClick={() => setZone(z.key)}
+                onClick={() => { if (locked) { openPaywall("workout"); return; } setZone(z.key); }}
                 className={[
                   "shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
-                  active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
+                  active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : locked ? "bg-white/70 text-rose/50 border-petal/50" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
                 ].join(" ")}
               >
-                <Icon className={["h-3.5 w-3.5", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
+                {locked
+                  ? <Lock className="h-3.5 w-3.5 text-[#B76E79]" strokeWidth={2.4} />
+                  : <Icon className={["h-3.5 w-3.5", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />}
                 {z.label}
               </button>
             );
