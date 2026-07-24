@@ -265,6 +265,15 @@ export function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, s
   return plan;
 }
 
+/** Small rose-gold "Bloom+" tag for gated options in a setup list. */
+function PlusTag() {
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
+      <Lock className="h-2 w-2" strokeWidth={3} /> Bloom+
+    </span>
+  );
+}
+
 // ===================== EXERCISE PHOTO (with graceful placeholder) =====================
 
 function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone?: Zone; className: string }) {
@@ -1991,6 +2000,21 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
     // the guided celebration sees the fresh plan immediately.
     try { localStorage.setItem(PROGRAM_KEY, JSON.stringify(wk)); window.dispatchEvent(new Event("bloom:workout-updated")); } catch {}
   };
+  // Free Bloom plan — a gentle 2-day, 10-minute week so free users can finish
+  // setup (Today's guided flow) without hitting the Bloom+ wall.
+  const generateFreeWeek = () => {
+    if (activeProgram) { saveActiveProgram(null); setActive(null); }
+    const empty: Record<string, DayPlan | null> = {};
+    DAYS.forEach((d) => { empty[d] = null; });
+    const days = ACTIVE_DAY_PATTERNS[2];
+    const zones = buildZoneWeek(days.length, seed + 1);
+    days.forEach((d, i) => { empty[d] = { zone: zones[i], intention: "tonify", durationMin: 10 }; });
+    setProgram(empty);
+    setProgramPhase(phase);
+    setSeed(seed + 1);
+    clearTuned();
+    try { localStorage.setItem(PROGRAM_KEY, JSON.stringify(empty)); window.dispatchEvent(new Event("bloom:workout-updated")); } catch {}
+  };
   const goalWord = (g: string) => (g === "lose" ? "lean" : g === "gain" ? "build" : "maintain");
   // Regenerate replaces the whole week → always warn first.
   const onGenerateClick = () => {
@@ -2156,10 +2180,22 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
           </div>
+          {/* FREE Bloom plan — a gentle 2-day, 10-min week so free users can
+              finish setup without hitting the wall. (Premium has the full set.) */}
+          {!isPremium() && (
+            <button onClick={generateFreeWeek} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
+              <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-rose flex items-center gap-1.5">Free starter week <span className="rounded-full bg-hotpink/15 text-hotpink text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5">Free</span></p>
+                <p className="text-[11px] text-rose/70 leading-snug">A gentle 2-day · 10-min week — yours on Bloom, ready to start.</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+            </button>
+          )}
           <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Trophy className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose">Follow a flagship program</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Follow a flagship program {!isPremium() && <PlusTag />}</p>
               <p className="text-[11px] text-rose/70 leading-snug">A structured multi-week journey, spread smartly across your week.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
@@ -2167,7 +2203,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <button onClick={onGenerateClick} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose">Generate a freestyle week</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Generate a freestyle week {!isPremium() && <PlusTag />}</p>
               <p className="text-[11px] text-rose/70 leading-snug">One-tap auto plan from your level, goal, days/week and phase.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
@@ -2175,7 +2211,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <button onClick={buildMyOwn} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Dumbbell className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose">Build my own week</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Build my own week {!isPremium() && <PlusTag />}</p>
               <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day — e.g. glutes Mon, legs Wed, abs Fri.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
