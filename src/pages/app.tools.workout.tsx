@@ -856,11 +856,8 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
               <div className="relative w-28 sm:w-40 shrink-0 overflow-hidden">
                 <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
-                <span className={[
-                  "absolute top-2 left-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm",
-                  p.tier === "premium" ? "bg-hotpink/90 text-white" : "bg-white/90 text-hotpink",
-                ].join(" ")}>
-                  {p.tier === "premium" ? <><Sparkles className="h-2.5 w-2.5" /> Premium</> : "Free"}
+                <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-hotpink/90 text-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm">
+                  <Sparkles className="h-2.5 w-2.5" /> Premium
                 </span>
                 {pct > 0 && (
                   <div className="absolute bottom-0 inset-x-0 px-2 pb-2">
@@ -1243,17 +1240,6 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
         <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start guided session
       </button>
 
-      {/* Secondary: quick-log without the timer */}
-      <button
-        onClick={markComplete}
-        disabled={completed}
-        className={[
-          "mt-2 w-full rounded-full py-2.5 text-sm font-semibold transition flex items-center justify-center gap-2 border",
-          completed ? "bg-blush/50 text-hotpink border-petal/60" : "bg-white/90 text-rose border-petal/60 hover:border-hotpink/40",
-        ].join(" ")}
-      >
-        {completed ? <><Check className="h-4 w-4" strokeWidth={3} /> Logged as done ✿</> : <>Mark done without timer</>}
-      </button>
       {completed && (
         <button onClick={onBack} className="mt-2 w-full text-center text-sm font-semibold text-hotpink">
           Back to my plan
@@ -1964,6 +1950,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   // Start a blank custom week (leaves any active program) and open the editor.
   const buildMyOwn = () => {
+    if (!isPremium()) { openPaywall("workout"); return; } // build-my-own week is Bloom+
     if (activeProgram) { saveActiveProgram(null); setActive(null); }
     const empty: Record<string, DayPlan | null> = {};
     DAYS.forEach((d) => { empty[d] = null; });
@@ -2017,6 +2004,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   };
   // Editing a goal-tuned week makes it her own → warn it drops the auto-tuning.
   const onEditClick = () => {
+    if (!isPremium()) { openPaywall("workout"); return; } // editing the week is Bloom+
     if (tunedGoal) {
       setConfirmChange({
         title: "Customise this week?",
