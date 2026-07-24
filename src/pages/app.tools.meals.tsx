@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
-import { LockChip } from "@/components/bloom/premium/PremiumKit";
+import { LockChip, PlusLock } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { NotifCard } from "@/components/bloom/NotifCard";
 import {
@@ -1139,6 +1139,7 @@ function WeekTab({
           />
         </div>
       ) : (
+        <PlusLock feature="meals" title="Your meal week plan" blurb="I cook your whole week for you — 7 days of meals synced to your goal & phase.">
         <section className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-3.5 sm:p-4 space-y-3">
           {/* Compact header — title + the awareness labels (goal · diet · phase)
               so she always knows what's set up, and the Edit + Regenerate controls
@@ -1297,6 +1298,7 @@ function WeekTab({
             isToday={isCurrentWeek && selDay === todayDayName()}
           />
         </section>
+        </PlusLock>
       )}
 
       {weekDone && (
