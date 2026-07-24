@@ -1326,7 +1326,16 @@ export default function YogaPage() {
       {view.kind === "library" && <Library onTryFlow={() => setView({ kind: "setup" })} />}
 
       {view.kind === "plan" && (
-        <PlanPage onSetup={(preset) => setView({ kind: "setup", preset })} />
+        <PlanPage
+          onSetup={(preset) => setView({ kind: "setup", preset })}
+          onQuickStart={(intention, durationMin) => {
+            // Free plan: tapping a flow in the plan goes STRAIGHT to the player —
+            // don't re-show the (locked) setup screen.
+            const cfg = { intention, durationMin, level: "Beginner" as Level, lang: "en" as Lang, sound: DEFAULT_SOUND, mode: "visual" as Mode, phase: mapToYogaPhase(readCyclePhase()) };
+            const flow = buildFlow(cfg);
+            setView({ kind: "session", flow, lang: cfg.lang, mode: cfg.mode, intention: cfg.intention, hold: holdSecondsFor(cfg.durationMin, cfg.level), durationMin: cfg.durationMin, sound: cfg.sound });
+          }}
+        />
       )}
 
       {view.kind === "setup" && (
@@ -1606,20 +1615,26 @@ function YogaHome({
       <CuratedPlans onApply={onApplyPlan} />
 
       {/* FLOW SESSIONS — by moment / by intention carousels */}
-      <FlowSessionsSection onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
+      <FlowSessionsSection onStart={startFlow} />
     </div>
   );
 }
 
 // ===================== MY PLAN =====================
 
-function PlanPage({ onSetup }: { onSetup: (preset?: { intention: Intention; durationMin: number }) => void }) {
+function PlanPage({ onSetup, onQuickStart }: {
+  onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
+  onQuickStart: (intention: Intention, durationMin: number) => void;
+}) {
   const { streak, phaseSuggestion } = useYogaPhaseAndStreak();
+  // Free users go straight to the player from a plan flow; premium keeps the setup.
+  const startFlow = (intention: Intention, durationMin: number) =>
+    isPremium() ? onSetup({ intention, durationMin }) : onQuickStart(intention, durationMin);
 
   return (
     <div className="space-y-4 yoga-fade">
       {/* TODAY HERO + WEEK (day by day, tappable to start) */}
-      <Organizer phase={phaseSuggestion.phase} onStart={(intention, durationMin) => onSetup({ intention, durationMin })} />
+      <Organizer phase={phaseSuggestion.phase} onStart={startFlow} />
 
       {/* SAFETY */}
       <p className="animate-scale-in text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5" style={{ animationDelay: "640ms" }}>
@@ -1772,13 +1787,14 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
           return (
             <button
               key={p.id}
-              onClick={() => { if (guided) return guidedNudge(); setConfirm(p); }}
+              onClick={() => { if (guided) return guidedNudge(); if (!isPremium()) { openPaywall("yoga"); return; } setConfirm(p); }}
               className="group w-full text-left flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="relative w-28 sm:w-36 shrink-0 overflow-hidden">
                 <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
+                <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Bloom+</span>
               </div>
               <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
                 <span className="self-start rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{dayCount} days / week</span>
@@ -2359,9 +2375,11 @@ function Setup({
   onStart: (cfg: { durationMin: number; intention: Intention; level: Level; lang: Lang; sound: typeof SOUNDS[number]; mode: Mode; phase: Phase }) => void;
   preset?: { intention: Intention; durationMin: number };
 }) {
-  const [durationMin, setDuration] = useState(preset?.durationMin ?? 20);
+  const premium = usePremium();
+  // Free plan can build only: 10 min · Morning energy · Beginner.
+  const [durationMin, setDuration] = useState(preset?.durationMin ?? (premium ? 20 : 10));
   const [intention, setIntention] = useState<Intention>(preset?.intention ?? "morning");
-  const [level, setLevel] = useState<Level>(() => readYogaProfileLevel());
+  const [level, setLevel] = useState<Level>(() => (premium ? readYogaProfileLevel() : "Beginner"));
   const [lang, setLang] = useState<Lang>("en");
   const [sound, setSound] = useState<typeof SOUNDS[number]>(DEFAULT_SOUND);
   const [mode, setMode] = useState<Mode>("visual");
@@ -2390,17 +2408,18 @@ function Setup({
       </div>
 
       <PickGroup label="Duration" icon={Clock}>
-        {DURATIONS.map((d) => (
-          <Chip key={d} active={durationMin === d} onClick={() => setDuration(d)}>{d} min</Chip>
-        ))}
+        {DURATIONS.map((d) => { const lk = !premium && d !== 10; return (
+          <Chip key={d} active={durationMin === d} onClick={() => { if (lk) { openPaywall("yoga"); return; } setDuration(d); }}>{d} min{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}</Chip>
+        ); })}
       </PickGroup>
 
       <PickGroup label="Intention" icon={Heart}>
         {INTENTIONS.map((i) => {
           const Ico = i.icon;
+          const lk = !premium && i.id !== "morning";
           return (
-            <Chip key={i.id} active={intention === i.id} onClick={() => setIntention(i.id)}>
-              <Ico className="h-3.5 w-3.5 mr-1" /> {i.label}
+            <Chip key={i.id} active={intention === i.id} onClick={() => { if (lk) { openPaywall("yoga"); return; } setIntention(i.id); }}>
+              <Ico className="h-3.5 w-3.5 mr-1" /> {i.label}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
             </Chip>
           );
         })}
@@ -2415,9 +2434,9 @@ function Setup({
       )}
 
       <PickGroup label="Level" icon={GraduationCap}>
-        {LEVELS.map((lv) => (
-          <Chip key={lv} active={level === lv} onClick={() => setLevel(lv)}>{lv}</Chip>
-        ))}
+        {LEVELS.map((lv) => { const lk = !premium && lv !== "Beginner"; return (
+          <Chip key={lv} active={level === lv} onClick={() => { if (lk) { openPaywall("yoga"); return; } setLevel(lv); }}>{lv}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}</Chip>
+        ); })}
       </PickGroup>
 
       <PickGroup label="Language" icon={Languages}>
@@ -2455,7 +2474,7 @@ function Setup({
 
       <div className="pt-2 flex justify-end">
         <button
-          onClick={() => onStart({ durationMin, intention, level, lang, sound, mode, phase })}
+          onClick={() => { if (!premium && (durationMin !== 10 || intention !== "morning" || level !== "Beginner")) { openPaywall("yoga"); return; } onStart({ durationMin, intention, level, lang, sound, mode, phase }); }}
           className="bloom-luxury-btn inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white"
         >
           <Play className="h-4 w-4" /> Begin practice
