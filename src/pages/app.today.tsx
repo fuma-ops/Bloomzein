@@ -1119,6 +1119,7 @@ export default function TodayPage() {
             <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
           </div>
         </div>
+        <PlusLock feature="coach" title="Today's Plan" blurb="Your whole day — meals, movement, flow & reflection, synced to your phase.">
         <div className="divide-y divide-petal/20 border-t border-petal/30">
           {planItems.map((item, i) => {
             const done   = isItemDone(item);
@@ -1205,6 +1206,7 @@ export default function TodayPage() {
             );
           })}
         </div>
+        </PlusLock>
         <a href="/app/calendar" className="flex items-center justify-center gap-1 border-t border-petal/30 px-4 py-2.5 text-[11px] font-bold text-hotpink animate-soft-glow">
           Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
         </a>

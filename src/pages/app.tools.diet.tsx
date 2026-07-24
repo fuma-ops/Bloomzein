@@ -2091,9 +2091,15 @@ export default function DietPage() {
           <CycleNutritionTab cycleReady={cycleReady} onOpenRecipe={(id) => { const r = RECIPES.find((x) => x.id === id); if (r) openRecipeAt(r); }} />
         )}
         {tab === "today" && (
-          <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />
+          <PlusLock feature="diet" title="Your Diet · Today" blurb="Log meals, macro rings & your phase-nutrient balance — the full daily picture." minH="min-h-[420px]">
+            <TodayTab phase={cyclePhase} cycleDay={cycleDay} profile={profile} dayMeals={dayMeals} onSetSlot={onSetSlot} onOpenRecipe={openRecipeAt} />
+          </PlusLock>
         )}
-        {tab === "recipes" && <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={openRecipeAt} />}
+        {tab === "recipes" && (
+          <PlusLock feature="meals" title="Your recipe library" blurb="Every recipe, filtered to your diet, allergies & phase — tap to cook." minH="min-h-[420px]">
+            <RecipesTab phase={cyclePhase} profile={profile} onOpenRecipe={openRecipeAt} />
+          </PlusLock>
+        )}
       </div>
 
       {openRecipe && <RecipeModal recipe={openRecipe.recipe} portion={openRecipe.portion} onClose={() => setOpenRecipe(null)} onAddToPlan={addToPlan} />}
