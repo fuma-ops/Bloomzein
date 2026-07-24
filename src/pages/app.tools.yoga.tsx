@@ -25,6 +25,7 @@ import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trai
 import { PickerField } from "@/components/bloom/PickerField";
 import { YogaOnboarding, type YogaTourTab } from "@/components/bloom/YogaOnboarding";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
+import { isPremium, openPaywall } from "@/lib/entitlements";
 
 // ===================== DATA =====================
 
@@ -1333,6 +1334,9 @@ export default function YogaPage() {
           preset={view.preset}
           onBack={() => setView({ kind: "home" })}
           onStart={(cfg) => {
+            // Free plan can build & do only Beginner flows (the free "build my own
+            // week" path); every other level is Bloom+.
+            if (!isPremium() && cfg.level !== "Beginner") { openPaywall("yoga"); return; }
             const flow = buildFlow(cfg);
             setView({ kind: "session", flow, lang: cfg.lang, mode: cfg.mode, intention: cfg.intention, hold: holdSecondsFor(cfg.durationMin, cfg.level), durationMin: cfg.durationMin, sound: cfg.sound });
           }}
@@ -1412,6 +1416,7 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
   try { schedule = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || "{}"); } catch { schedule = {}; }
   const synced = known && WEEK.every((d, i) => (schedule[d] ?? null) === rec[i]);
   const onSync = () => {
+    if (!isPremium()) { openPaywall("yoga"); return; } // cycle-sync is Bloom+
     if (!known) { window.location.href = "/app/calendar"; return; }
     const next: Record<string, string | null> = {};
     WEEK.forEach((d, i) => { next[d] = rec[i]; });
@@ -1884,7 +1889,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   );
   // Shared preference: show recovery meals inside the plan, or keep it simple.
   const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
-  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+  const toggleFuel = () => { if (!isPremium()) { openPaywall("yoga"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   useEffect(() => {
     try {
