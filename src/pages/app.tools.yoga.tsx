@@ -13,7 +13,7 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
-import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, yogaSessionKcal, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel } from "@/lib/crossToolData";
+import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, yogaSessionKcal, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel, yogaFocusImage } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
@@ -581,17 +581,19 @@ const FOCUS_PREVIEW: Record<string, { image: string; duration: string }> = {
 
 // Maps a scheduled focus label to a runnable flow (intention + duration + image),
 // so a day in the plan can be started in one tap.
+// Images come from the canonical YOGA_FOCUS map (crossToolData) so Today, the
+// Calendar and this tool always show the SAME picture per focus.
 const FOCUS_META: Record<string, { intention: Intention; duration: number; image: string; blurb: string }> = {
-  "Morning energy":     { intention: "morning",  duration: 15, image: "/images/pose-mountain.webp",              blurb: "Wake the body, light up the day" },
-  "Stress relief":      { intention: "stress",   duration: 15, image: "/images/pose-childs-pose.webp",           blurb: "Soft, slow — exhale the day away" },
-  "Sleep prep":         { intention: "sleep",    duration: 20, image: "/images/pose-legs-up-wall.webp",          blurb: "Gentle floor flow into deep rest" },
-  "Cycle sync":         { intention: "cycle",    duration: 20, image: "/images/pose-reclined-bound-angle.webp",  blurb: "Matched to today's phase" },
-  "Strength":           { intention: "strength", duration: 25, image: "/images/pose-plank.webp",                 blurb: "Build steady, mindful power" },
-  "Emotional release":  { intention: "release",  duration: 20, image: "/images/pose-pigeon.webp",                blurb: "Open hips & heart, let it move" },
-  "Core & abs":         { intention: "core",     duration: 20, image: "/images/pose-boat.webp",                  blurb: "Steady, mindful core strength" },
-  "Balance & focus":    { intention: "balance",  duration: 20, image: "/images/pose-tree.webp",                  blurb: "Steady the body, quiet the mind" },
-  "Back & neck relief": { intention: "backcare", duration: 15, image: "/images/pose-cat-cow.webp",               blurb: "Unwind desk-day tension" },
-  "Full-body flow":     { intention: "fullbody", duration: 30, image: "/images/pose-downward-dog.webp",          blurb: "One flowing practice, head to toe" },
+  "Morning energy":     { intention: "morning",  duration: 15, image: yogaFocusImage("Morning energy"),     blurb: "Wake the body, light up the day" },
+  "Stress relief":      { intention: "stress",   duration: 15, image: yogaFocusImage("Stress relief"),      blurb: "Soft, slow — exhale the day away" },
+  "Sleep prep":         { intention: "sleep",    duration: 20, image: yogaFocusImage("Sleep prep"),         blurb: "Gentle floor flow into deep rest" },
+  "Cycle sync":         { intention: "cycle",    duration: 20, image: yogaFocusImage("Cycle sync"),         blurb: "Matched to today's phase" },
+  "Strength":           { intention: "strength", duration: 25, image: yogaFocusImage("Strength"),           blurb: "Build steady, mindful power" },
+  "Emotional release":  { intention: "release",  duration: 20, image: yogaFocusImage("Emotional release"),  blurb: "Open hips & heart, let it move" },
+  "Core & abs":         { intention: "core",     duration: 20, image: yogaFocusImage("Core & abs"),         blurb: "Steady, mindful core strength" },
+  "Balance & focus":    { intention: "balance",  duration: 20, image: yogaFocusImage("Balance & focus"),    blurb: "Steady the body, quiet the mind" },
+  "Back & neck relief": { intention: "backcare", duration: 15, image: yogaFocusImage("Back & neck relief"), blurb: "Unwind desk-day tension" },
+  "Full-body flow":     { intention: "fullbody", duration: 30, image: yogaFocusImage("Full-body flow"),     blurb: "One flowing practice, head to toe" },
 };
 
 // ── Curated weekly plans (yoga "programs") ──────────────────────────────────
