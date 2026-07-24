@@ -1615,7 +1615,7 @@ function YogaHome({
       <CuratedPlans onApply={onApplyPlan} />
 
       {/* FLOW SESSIONS — by moment / by intention carousels */}
-      <FlowSessionsSection onStart={startFlow} />
+      <FlowSessionsSection onStart={(intention, durationMin) => { if (!isPremium()) { openPaywall("yoga"); return; } onSetup({ intention, durationMin }); }} />
     </div>
   );
 }
