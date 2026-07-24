@@ -360,6 +360,7 @@ function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" 
   try { const v = localStorage.getItem(PROGRAM_PHASE_KEY); programPhase = v ? JSON.parse(v) : null; } catch { programPhase = null; }
   const synced = known && !!program && programPhase === phase;
   const onSync = () => {
+    if (!isPremium()) { openPaywall("workout"); return; } // cycle-sync is Bloom+
     if (!known) { window.location.href = "/app/calendar"; return; }
     let profile = DEFAULT_PROFILE;
     try { const v = localStorage.getItem(PROFILE_KEY); if (v) profile = JSON.parse(v); } catch { profile = DEFAULT_PROFILE; }
@@ -1261,20 +1262,23 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
 // ===================== SETUP PROFILE =====================
 
 function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p: WorkoutProfile) => void }) {
-  const [level, setLevel] = useState<Level>(initial.level);
+  const premium = usePremium();
+  // Free plan: Beginner · Nothing/Mat · 2–3 days. Start free users on safe values.
+  const eqFree = (e: Equipment) => e === "none" || e === "mat";
+  const [level, setLevel] = useState<Level>(!premium && initial.level !== "Beginner" ? "Beginner" : initial.level);
   const [goal, setGoal] = useState<Goal>(initial.goal);
-  const [equipment, setEquipment] = useState<Equipment>(initial.equipment);
-  const [days, setDays] = useState<2 | 3 | 4 | 5>(initial.daysPerWeek);
+  const [equipment, setEquipment] = useState<Equipment>(!premium && !eqFree(initial.equipment) ? "none" : initial.equipment);
+  const [days, setDays] = useState<2 | 3 | 4 | 5>(!premium && initial.daysPerWeek > 3 ? 3 : initial.daysPerWeek);
 
-  const Pill = ({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) => (
+  const Pill = ({ active, label, onClick, locked }: { active: boolean; label: string; onClick: () => void; locked?: boolean }) => (
     <button
-      onClick={onClick}
+      onClick={() => { if (locked) { openPaywall("workout"); return; } onClick(); }}
       className={[
-        "rounded-full px-3.5 py-1.5 text-[13px] font-semibold border shadow-sm transition active:scale-95",
-        active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
+        "rounded-full px-3.5 py-1.5 text-[13px] font-semibold border shadow-sm transition active:scale-95 inline-flex items-center gap-1",
+        active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : locked ? "bg-white/70 text-rose/45 border-petal/50" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
       ].join(" ")}
     >
-      {label}
+      {label}{locked && <Lock className="h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
     </button>
   );
 
@@ -1300,7 +1304,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
             <p className="text-[13px] font-bold text-rose mb-1.5">Your level</p>
             <div className="flex flex-wrap gap-1.5">
               {(["Beginner", "Intermediate", "Advanced"] as Level[]).map((l) => (
-                <Pill key={l} active={level === l} label={l} onClick={() => setLevel(l)} />
+                <Pill key={l} active={level === l} label={l} locked={!premium && l !== "Beginner"} onClick={() => setLevel(l)} />
               ))}
             </div>
           </div>
@@ -1329,7 +1333,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
                 { key: "dumbbells", label: "Dumbbells" },
                 { key: "gym", label: "Full gym" },
               ] as { key: Equipment; label: string }[]).map((e) => (
-                <Pill key={e.key} active={equipment === e.key} label={e.label} onClick={() => setEquipment(e.key)} />
+                <Pill key={e.key} active={equipment === e.key} label={e.label} locked={!premium && !eqFree(e.key)} onClick={() => setEquipment(e.key)} />
               ))}
             </div>
           </div>
@@ -1338,14 +1342,19 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
             <p className="text-[13px] font-bold text-rose mb-1.5">Days available per week</p>
             <div className="flex flex-wrap gap-1.5">
               {([2, 3, 4, 5] as const).map((d) => (
-                <Pill key={d} active={days === d} label={d === 5 ? "5+" : String(d)} onClick={() => setDays(d)} />
+                <Pill key={d} active={days === d} label={d === 5 ? "5+" : String(d)} locked={!premium && d > 3} onClick={() => setDays(d)} />
               ))}
             </div>
           </div>
         </div>
 
         <button
-          onClick={() => onDone({ level, goal, equipment, daysPerWeek: days })}
+          onClick={() => {
+            const lv: Level = !premium && level !== "Beginner" ? "Beginner" : level;
+            const eq: Equipment = !premium && !eqFree(equipment) ? "none" : equipment;
+            const dd = (!premium && days > 3 ? 3 : days) as 2 | 3 | 4 | 5;
+            onDone({ level: lv, goal, equipment: eq, daysPerWeek: dd });
+          }}
           className="bloom-luxury-btn mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white"
         >
           Start <ChevronRight className="h-4 w-4" />
