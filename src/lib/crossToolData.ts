@@ -164,6 +164,35 @@ export function readYogaPlanDays(): string[] {
   return Object.entries(sched).filter(([, v]) => !!v).map(([d]) => d);
 }
 
+/** Canonical yoga FOCUS → album pose image + launch params. ONE source of truth
+ *  so Today, Calendar and the Yoga tool all show the SAME picture (and open the
+ *  same flow) per scheduled focus — no tool invents its own yoga artwork. The
+ *  Yoga tool's FOCUS_META reads its image from here. */
+export interface YogaFocusInfo { image: string; intention: string; duration: number; blurb: string }
+export const YOGA_FOCUS: Record<string, YogaFocusInfo> = {
+  "Morning energy":     { image: "/images/pose-mountain.webp",              intention: "morning",  duration: 15, blurb: "Wake the body, light up the day" },
+  "Stress relief":      { image: "/images/pose-childs-pose.webp",           intention: "stress",   duration: 15, blurb: "Soft, slow — exhale the day away" },
+  "Sleep prep":         { image: "/images/pose-legs-up-wall.webp",          intention: "sleep",    duration: 20, blurb: "Gentle floor flow into deep rest" },
+  "Cycle sync":         { image: "/images/pose-reclined-bound-angle.webp",  intention: "cycle",    duration: 20, blurb: "Matched to today's phase" },
+  "Strength":           { image: "/images/pose-plank.webp",                 intention: "strength", duration: 25, blurb: "Build steady, mindful power" },
+  "Emotional release":  { image: "/images/pose-pigeon.webp",                intention: "release",  duration: 20, blurb: "Open hips & heart, let it move" },
+  "Core & abs":         { image: "/images/pose-boat.webp",                  intention: "core",     duration: 20, blurb: "Steady, mindful core strength" },
+  "Balance & focus":    { image: "/images/pose-tree.webp",                  intention: "balance",  duration: 20, blurb: "Steady the body, quiet the mind" },
+  "Back & neck relief": { image: "/images/pose-cat-cow.webp",               intention: "backcare", duration: 15, blurb: "Unwind desk-day tension" },
+  "Full-body flow":     { image: "/images/pose-downward-dog.webp",          intention: "fullbody", duration: 30, blurb: "One flowing practice, head to toe" },
+};
+
+/** The pose image for a scheduled yoga focus (falls back to a neutral pose). */
+export function yogaFocusImage(focus?: string | null): string {
+  return (focus && YOGA_FOCUS[focus]?.image) || "/images/pose-mountain.webp";
+}
+
+/** The yoga focus the user scheduled for a given weekday label (Mon..Sun). */
+export function readYogaFocusForDay(day: string): string | null {
+  const sched = readJSON<Record<string, string | null>>(YOGA_SCHEDULE_KEY, {});
+  return sched[day] ?? null;
+}
+
 /** Weekday labels (Mon..Sun) the user has a workout planned (freestyle or program). */
 export function readWorkoutPlanDays(): string[] {
   const free = readJSON<Record<string, unknown> | null>(WORKOUT_PROGRAM_KEY, null);

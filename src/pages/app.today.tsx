@@ -24,7 +24,7 @@ import { PersonalizedBloomPreview } from "@/components/bloom/today/PersonalizedB
 import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
-import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday } from "@/lib/crossToolData";
+import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday, readYogaFocusForDay, YOGA_FOCUS } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
 import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
@@ -682,7 +682,17 @@ export default function TodayPage() {
       };
     };
     const items: PlanItem[] = [];
-    if (yogaPlanned) items.push({ id: "yoga", label: p.yoga.title, time: p.yoga.time, Icon: Flower2, tool: "/app/tools/yoga", image: p.yoga.image, blurb: p.yoga.blurb, launch: { key: LAUNCH_YOGA_KEY, val: p.yoga.launch } });
+    if (yogaPlanned) {
+      // Show the flow the user actually scheduled in Yoga (its album image, title
+      // & launch) — not a generic phase default — so Today matches the Yoga tool.
+      const focus = readYogaFocusForDay(dow);
+      const fi = focus ? YOGA_FOCUS[focus] : null;
+      items.push({
+        id: "yoga", label: focus ?? p.yoga.title, time: p.yoga.time, Icon: Flower2, tool: "/app/tools/yoga",
+        image: fi?.image ?? p.yoga.image, blurb: fi?.blurb ?? p.yoga.blurb,
+        launch: { key: LAUNCH_YOGA_KEY, val: fi ? { intention: fi.intention, durationMin: fi.duration } : p.yoga.launch },
+      });
+    }
     items.push(mealItem("breakfast"));
     items.push(mealItem("lunch"));
     items.push(mealItem("snack"));

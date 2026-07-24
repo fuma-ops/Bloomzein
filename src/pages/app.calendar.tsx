@@ -27,7 +27,7 @@ import {
 } from "./app.tools.workout";
 import { MEALS_PLAN_KEY } from "./app.tools.meals";
 import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
-import { readWorkoutPlanDays, readMealPlan } from "@/lib/crossToolData";
+import { readWorkoutPlanDays, readMealPlan, yogaFocusImage } from "@/lib/crossToolData";
 import { TODAY_WATER_KEY } from "./app.today";
 import { PlusLock } from "@/components/bloom/premium/PremiumKit";
 
@@ -808,7 +808,7 @@ function DayPlanCards({ date, mealsPlan, reminders, yogaSchedule, yogaReminder, 
   return (
     <div className="space-y-3">
       {yogaFocus && (
-        <TodayCard href="/app/tools/yoga" image="/images/read-movement.webp" phaseLabel={phaseLabel} delay={nextDelay()}
+        <TodayCard href="/app/tools/yoga" image={yogaFocusImage(yogaFocus)} phaseLabel={phaseLabel} delay={nextDelay()}
           title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
       )}
 
