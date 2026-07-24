@@ -3549,8 +3549,17 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             </>
           )}
 
-          {/* Phone keeps a clean player — no info cards; the context lives in the
-              rails on tablet/desktop only. */}
+          {/* Phone: the only card kept is Bloom Coach, filling the space under the
+              photo (the rest of the context lives in the rails on tablet/desktop). */}
+          {!isSwitch && phase === "exercise" && (
+            <div className="md:hidden w-full rounded-2xl bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2.5 animate-fade-in">
+              <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink">
+                <span className="inline-block animate-wk-icon-vibe"><BloomFlower size={13} /></span> Bloom Coach
+                {briefing && <span className="ml-auto inline-flex items-end gap-0.5" style={{ height: 10 }}>{[0, 1, 2].map((i) => <span key={i} className="w-1 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />)}</span>}
+              </p>
+              <p className="mt-0.5 text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
+            </div>
+          )}
 
           {/* Control bar — inside the centre column on tablet/desktop */}
           <div className="hidden md:block shrink-0 pt-1">{controlBar}</div>
