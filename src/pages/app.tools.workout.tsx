@@ -1912,7 +1912,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const goal = readDietProfile().goal;
   // Shared preference: show recovery meals inside the plan, or keep it simple.
   const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
-  const toggleFuel = () => { const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+  const toggleFuel = () => { if (!isPremium()) { openPaywall("meals"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   // Build-your-own-week: hand-pick a zone/intensity/duration per day.
   const [editing, setEditing] = useState(false);
