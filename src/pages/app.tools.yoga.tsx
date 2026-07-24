@@ -2117,10 +2117,22 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Set up your soft week ✿</h3>
               <p className="text-[12px] text-rose/70">Choose how to start — you can always change it.</p>
             </div>
+            {/* FREE Bloom plan — a gentle 2-day Calm & Restore week so free users
+                can finish setup without hitting the wall. */}
+            {!isPremium() && (
+              <button onClick={() => createOwnWeek("Beginner", "calm", 2)} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
+                <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-rose flex items-center gap-1.5">Free starter week <span className="rounded-full bg-hotpink/15 text-hotpink text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5">Free</span></p>
+                  <p className="text-[11px] text-rose/70 leading-snug">A gentle 2-day Calm &amp; Restore week — yours on Bloom.</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+              </button>
+            )}
             <button onClick={syncToCycle} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose">Sync to my cycle</p>
+                <p className="text-sm font-bold text-rose flex items-center gap-1.5">Sync to my cycle {!isPremium() && <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2 w-2" strokeWidth={3} /> Bloom+</span>}</p>
                 <p className="text-[11px] text-rose/70 leading-snug">Auto-fill the week with flows matched to your {phase} phase.</p>
               </div>
               <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
