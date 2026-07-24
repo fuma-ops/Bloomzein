@@ -561,8 +561,12 @@ export default function WorkoutPage() {
   // time a plan exists while she's in the guided flow, celebrate and hand back.
   const [guidedDone, setGuidedDone] = useState(false);
   const guidedShownRef = useRef(false);
+  // Once a plan exists the guided SETUP is done — from then on show the full tool
+  // (hero + tabs + features), keeping only a slim "Finish on Today" bar.
+  const [hasPlan, setHasPlan] = useState(() => readWorkoutPlanDays().length > 0);
   useEffect(() => {
     const onUpdate = () => {
+      setHasPlan(readWorkoutPlanDays().length > 0);
       if (guidedShownRef.current) return;
       if (isGuided() && readWorkoutPlanDays().length > 0) { guidedShownRef.current = true; setGuidedDone(true); }
     };
@@ -570,12 +574,13 @@ export default function WorkoutPage() {
     return () => window.removeEventListener("bloom:workout-updated", onUpdate);
   }, []);
 
-  // While guided, keep her on My Plan — never the discover/programs/library browser.
+  // While guided AND still setting up (no plan yet), keep her on My Plan — never
+  // the discover/programs/library browser. Once a plan exists she can roam freely.
   useEffect(() => {
-    if (guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "library")) {
+    if (guided && !hasPlan && (view.kind === "discover" || view.kind === "programs" || view.kind === "library")) {
       setTab("program"); setView({ kind: "program" });
     }
-  }, [guided, view.kind]);
+  }, [guided, hasPlan, view.kind]);
 
   useEffect(() => {
     // Deep-link from Today / Cycle: build the prescribed session and open its
@@ -694,14 +699,20 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+      {/* Still setting up (guided, no plan yet) → focused hero + finish bar. */}
+      {guided && !hasPlan && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <>
           <GuidedFocusHero label="Movement" phaseLabel={guidedPhaseLabel} image={HERO_IMAGES.program} />
-          <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Your strength week is set — tap any day to tweak it." className="mb-3" />
+          <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Set up your week to finish this step." className="mb-3" />
         </>
       )}
 
-      {!guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+      {/* Setup done (or not guided) → the full tool. Keep a slim finish bar while guided. */}
+      {(!guided || hasPlan) && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && guided && hasPlan && (
+        <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Your week is set — explore the tool, or finish on Today." className="mb-3" />
+      )}
+
+      {(!guided || hasPlan) && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
           tab={tab}
