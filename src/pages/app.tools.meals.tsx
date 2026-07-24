@@ -901,7 +901,6 @@ function ChoicePill({ active, onClick, children }: { active: boolean; onClick: (
    pantry is optional (skippable). Cooking time & allergies write to the shared
    Diet profile so there is one source of truth. */
 function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, generating, dietSetup, pantrySkip, onSkipPantry }: any) {
-  const premium = usePremium();
   const initial = readDietProfile();
   const [cooking, setCooking] = useState<CookingFrequency>(initial.cookingFrequency);
   const [allergies, setAllergies] = useState<Allergy[]>(initial.allergies);
@@ -988,7 +987,7 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
         data-tour="meals-plan"
         className="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-3 text-[14px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
       >
-        <Sparkles className="h-4 w-4" /> {generating ? "Building your week…" : "Plan my week"} {premium ? <ChevronRight className="h-4 w-4" /> : <LockChip />}
+        <Sparkles className="h-4 w-4" /> {generating ? "Building your week…" : "Plan my week"} <ChevronRight className="h-4 w-4" />
       </button>
       {/* Persistent reminder of what the plan follows */}
       <p className="mt-1.5 text-center text-[11px] text-rose/55 leading-snug">
@@ -1072,8 +1071,9 @@ function WeekTab({
   const phaseSynced = intention === "cycle" && phase !== "any";
 
   const handleGenerate = () => {
-    // Bloom+ gate: auto-planning the whole week (and regenerating) is premium.
-    if (!isPremium()) { openPaywall("meals"); return; }
+    // Free users still generate their week — but it shows BLURRED behind the
+    // PlusLock (see §"Your meal week plan"), so setup ends on a curious teaser
+    // of the real plan rather than a hard wall.
     const wasEmpty = planEmpty;
     setGenerating(true);
     onGenerate();
