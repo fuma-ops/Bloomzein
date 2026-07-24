@@ -73,8 +73,9 @@ export default function ToolsIndex() {
         }}
       >
         <img src="/images/tools-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_58%]" referrerPolicy="no-referrer" />
-        {/* left fade → readable light pink behind the title */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/50 to-transparent" />
+        {/* left wash ONLY — confined to the left ~40% behind the title, then fully
+            transparent so the rest of the photo shows clean & vivid (no overlay). */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.4)_22%,transparent_40%)]" />
       </div>
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
