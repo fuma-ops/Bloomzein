@@ -16,6 +16,7 @@ import {
   computeTargets, movementFoodLine,
   type EnergyBalance,
 } from "@/lib/nutritionTargets";
+import { useInView, useCountUp } from "@/lib/useScrollReveal";
 import { RECIPES, recipeImageSrc, type Recipe } from "@/components/bloom/recipes/data";
 import { BloomPlanSetup } from "@/components/bloom/diet/BloomPlanSetup";
 
@@ -392,6 +393,12 @@ export function CoachCard({ onSetupWorkouts, onPlanMeals }: { onSetupWorkouts?: 
 export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
   const [activeSnack, setActiveSnack] = useState<Recipe | null>(null);
   const remaining = Math.max(0, e.remaining);
+  // Ring + numbers count up together when the card scrolls into view. A single
+  // 0→1 driver keeps them in sync and, since its target never changes, later
+  // data updates just reflect instantly (no annoying re-animation).
+  const [cardRef, cardInView] = useInView<HTMLDivElement>();
+  const grow = useCountUp(1, cardInView, 1100);
+  const g = (n: number) => Math.round(n * grow);
   // How "on track" she is — the ring & meal bar fill by planned intake against
   // what she can eat today (goal + what she'll burn).
   const eatenPct  = e.allowance > 0 ? Math.min(100, Math.round((e.eaten / e.allowance) * 100)) : 0;
@@ -410,7 +417,7 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
   const snacks = remaining > 0 ? snackIdeasFor(remaining, 4) : [];
 
   return (
-    <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-white shadow-[0_12px_34px_rgba(219,39,119,0.10)] animate-fade-in">
+    <div ref={cardRef} className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-white shadow-[0_12px_34px_rgba(219,39,119,0.10)] animate-fade-in">
       {/* soft blush wash */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blush/40 via-white to-petal/25" />
 
@@ -428,7 +435,7 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
           <div className="hidden sm:flex shrink-0 items-center gap-2 rounded-2xl bg-white/85 border border-petal/60 px-3.5 py-2 shadow-sm">
             <Flame className="h-5 w-5 text-hotpink" strokeWidth={2} />
             <div className="leading-tight">
-              <p className="font-black text-hotpink text-lg tabular-nums leading-none">{remaining.toLocaleString()} <span className="text-[12px] font-bold text-rose/70">kcal left</span></p>
+              <p className="font-black text-hotpink text-lg tabular-nums leading-none">{g(remaining).toLocaleString()} <span className="text-[12px] font-bold text-rose/70">kcal left</span></p>
               <p className="text-[10px] font-semibold text-rose/55 inline-flex items-center gap-1">to enjoy today <Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
             </div>
           </div>
@@ -446,10 +453,10 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
                   <p className="text-[9.5px] font-semibold text-rose/50 leading-tight">{r.sub}</p>
                 </div>
                 <span className="relative h-2.5 flex-1 rounded-full bg-petal/25 overflow-hidden">
-                  <span className={["absolute inset-y-0 left-0 rounded-full bg-gradient-to-r transition-all duration-700", r.bar].join(" ")} style={{ width: `${Math.max(2, Math.round((r.value / scale) * 100))}%` }} />
+                  <span className={["absolute inset-y-0 left-0 rounded-full bg-gradient-to-r transition-all duration-700", r.bar].join(" ")} style={{ width: `${cardInView ? Math.max(2, Math.round((r.value / scale) * 100)) : 0}%` }} />
                 </span>
                 <span className="w-14 shrink-0 text-right leading-none">
-                  <span className="block font-black text-hotpink tabular-nums text-[15px]">{Math.round(r.value).toLocaleString()}</span>
+                  <span className="block font-black text-hotpink tabular-nums text-[15px]">{g(r.value).toLocaleString()}</span>
                   <span className="block text-[9px] font-bold uppercase tracking-wide text-rose/45">kcal</span>
                 </span>
               </div>
@@ -459,10 +466,10 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
           {/* ring + tip */}
           <div className="lg:col-span-2 flex flex-col items-center gap-2.5">
             <div className="relative">
-              <Ring pct={eatenPct} size={132} stroke={10}>
+              <Ring pct={cardInView ? eatenPct : 0} size={132} stroke={10}>
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50">You have</p>
-                  <p className="font-black text-hotpink leading-none text-4xl tabular-nums">{remaining.toLocaleString()}</p>
+                  <p className="font-black text-hotpink leading-none text-4xl tabular-nums">{g(remaining).toLocaleString()}</p>
                   <p className="text-[10px] font-bold text-rose/60 inline-flex items-center gap-1 justify-center">kcal left <Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
                 </div>
               </Ring>
