@@ -146,8 +146,8 @@
 :root[data-phase="follicular"] {  /* fresh pink */
   --phase-h: 344; --phase-cm: 1.2;  --phase-wash: oklch(0.84 0.14 340);
 }
-:root[data-phase="ovulation"] {  /* rose-gold radiance — warm & luminous, not coral */
-  --phase-h: 34;  --phase-cm: 1.15; --phase-wash: oklch(0.85 0.10 33);
+:root[data-phase="ovulation"] {  /* soft luminous pink (fertile glow) — not orange */
+  --phase-h: 348; --phase-cm: 1.15; --phase-wash: oklch(0.86 0.13 348);
 }
 :root[data-phase="luteal"] {  /* calm mauve/lilac */
   --phase-h: 310; --phase-cm: 1.25; --phase-wash: oklch(0.78 0.14 308);

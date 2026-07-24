@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "claude/workout-player-animations-7j6l68": false
+    }
+  },
   "headers": [
     {
       "source": "/sw.js",
