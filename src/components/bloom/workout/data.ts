@@ -175,7 +175,7 @@ export const EXERCISES: Record<string, Exercise> = {
   "standing-leg-circles": E("standing-leg-circles", "Standing Leg Circles", "Hips, balance", { audio: true }),
   "squat": E("squat", "Squat", "Quads, glutes, hamstrings", { audio: true }),
   "walking-lunge": E("walking-lunge", "Walking Lunge", "Quads, glutes", { audio: true }),
-  "jump-squat": E("jump-squat", "Jump Squat", "Legs, power"),
+  "jump-squat": E("jump-squat", "Jump Squat", "Legs, power", { audio: true }),
   "wall-sit": E("wall-sit", "Wall Sit", "Quads (isometric)", { audio: true }),
   "single-leg-deadlift": E("single-leg-deadlift", "Single-Leg Deadlift", "Hamstrings, balance", { audio: true }),
   "standing-quad-stretch": E("standing-quad-stretch", "Standing Quad Stretch", "Quads", { audio: true }),
@@ -322,7 +322,7 @@ const AUDIO_SEC: Record<string, number> = {
   "reclined-butterfly": 11.7, "supine-twist": 11.5, "pigeon-pose": 11.3,
   "butterfly-seated": 11.2, "kettlebell-swing": 11.2, "low-lunge-hip-flexor": 11.2,
   "fire-hydrants": 11.1, "clamshells": 10.6, "figure-four-stretch": 10.6,
-  "squat-jump": 10.6, "side-lying-leg-raises": 10.4, "childs-pose": 10.2,
+  "squat-jump": 10.6, "jump-squat": 10.6, "side-lying-leg-raises": 10.4, "childs-pose": 10.2,
   "glute-bridge": 10.2, "step-ups": 10.2, "donkey-kicks": 10.1, "weighted-hip-thrust": 10.0,
 };
 const moveAudioSec = (slug: string) => AUDIO_SEC[slug] ?? 0;
