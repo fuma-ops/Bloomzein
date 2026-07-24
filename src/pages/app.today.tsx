@@ -11,6 +11,7 @@ import {
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
+import { useScrollReveal } from "@/lib/useScrollReveal";
 import { useAuth } from "@/contexts/AuthContext";
 import { phaseForDay, readCycleSettings, broadcastCyclePhase, hasCycleSettings, PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { energyBalance } from "@/lib/nutritionTargets";
@@ -327,6 +328,8 @@ function loadDueTodayReminders(): DueReminder[] {
 // ── Main component ───────────────────────────────────────────────────────────
 export default function TodayPage() {
   const { profile } = useAuth();
+  const revealRef = useRef<HTMLDivElement>(null);
+  useScrollReveal(revealRef);
   const { text: hello, Icon: HelloIcon } = useMemo(greeting, []);
   const today           = useMemo(fmtDate, []);
   const phase           = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
@@ -852,7 +855,7 @@ export default function TodayPage() {
   ) : null;
 
   return (
-    <div className="relative isolate">
+    <div ref={revealRef} className="relative isolate">
       {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface.
           FULL-BLEED to the whole main area (w-screen, centred) so on a wide
           laptop the wash fills edge-to-edge instead of stopping at the centred
@@ -1082,7 +1085,7 @@ export default function TodayPage() {
              a "how it all syncs" setup menu once her cycle's set but nothing's
              planned; nothing at all for a brand-new user (the checklist guides her). ── */}
       {!hasPlanContent && cycleReady && (
-        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
+        <section data-reveal className="mt-4 sm:mt-6">
           <SectionTitle>Today's Plan ✿</SectionTitle>
           <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
             Nothing planned yet — set up a tool and Today fills itself. Everything syncs to your <span className="font-bold text-hotpink">goal</span> &amp; <span className="font-bold text-hotpink">phase</span> ✿
@@ -1108,7 +1111,7 @@ export default function TodayPage() {
       )}
 
       {hasPlanContent && (
-      <section id="todays-plan" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "50ms" }}>
+      <section id="todays-plan" data-reveal className="mt-4 sm:mt-6">
         <div className="rounded-[2rem] overflow-hidden bg-white/80 backdrop-blur-md border border-petal/50 shadow-[0_10px_30px_rgba(219,39,119,0.08)]">
         {/* Card header — a big personal title, phase blurb, the day's affirmation
             (tucked under the title) & a gentle nudge, all contained. */}
@@ -1133,7 +1136,7 @@ export default function TodayPage() {
           </div>
         </div>
         <PlusLock feature="coach" title="Today's Plan" blurb="Your whole day — meals, movement, flow & reflection, synced to your phase.">
-        <div className="divide-y divide-petal/20 border-t border-petal/30">
+        <div data-reveal-stagger className="divide-y divide-petal/20 border-t border-petal/30">
           {planItems.map((item, i) => {
             const done   = isItemDone(item);
             const timing = planItemTiming(item.time);
@@ -1231,7 +1234,7 @@ export default function TodayPage() {
              Hidden until she's set up her cycle or planned meals, so a brand-new
              user never sees a default calorie target dressed up as real data. ── */}
       {(cycleReady || mealPlanned) && (
-        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "70ms" }}>
+        <section data-reveal className="mt-4 sm:mt-6">
           {/* Bloom+ : the real energy engine (target / eaten / burned numbers). */}
           <PlusLock feature="diet" title="Your energy numbers" blurb="Your real daily target, what you've eaten & burned — the full picture." minH="min-h-[190px]">
             <TodayEnergyStrip e={energyBalance()} />
@@ -1244,7 +1247,7 @@ export default function TodayPage() {
              Only once her world is set up (before that, the locked preview
              above stands in for it). ── */}
       {cycleReady && allSetup && (
-        <section className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 animate-card-pop-in" style={{ animationDelay: "80ms" }}>
+        <section data-reveal-stagger className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
           <DiscoverBloomPlus feature="general" />
         </section>
       )}
@@ -1258,7 +1261,7 @@ export default function TodayPage() {
       {/* ── 3. YOUR BLOOM TODAY (ring + checklist) — hidden on a fresh reset; the
              FreshReveal + Build-your-world checklist carry the first-run story. ── */}
       {!isFresh && (
-      <section id="bloom-today" className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
+      <section id="bloom-today" data-reveal className="mt-4 sm:mt-6">
         <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-gradient-to-br from-blush/55 via-white to-petal/35 shadow-[0_14px_36px_rgba(219,39,119,0.12)]">
           <div className="p-4 sm:p-5">
             {/* Header */}
@@ -1381,7 +1384,7 @@ export default function TodayPage() {
 
       {/* ── 3. DUE TODAY ─────────────────────────────────────────────────────── */}
       {hasDueItems && !isFresh && (
-        <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "90ms" }}>
+        <section data-reveal className="mt-4 sm:mt-6">
           <SectionTitle hint="don't forget">Due Today</SectionTitle>
           <div className="bloom-pearl-card pearl-sheen rounded-3xl p-3 sm:p-4 flex flex-col gap-2">
             {/* Daily pill */}
@@ -1435,7 +1438,7 @@ export default function TodayPage() {
       {/* ── BLOOM INSPIRATION — the "Today's Bloom" guide isn't launched yet, so it
              lives here at the very end as a blurred "coming soon" teaser. ── */}
       {!isFresh && (
-        <section id="bloom-inspiration" className="relative mt-4 sm:mt-6 overflow-hidden rounded-[1.75rem] animate-card-pop-in">
+        <section id="bloom-inspiration" data-reveal className="relative mt-4 sm:mt-6 overflow-hidden rounded-[1.75rem]">
           <span className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
             <Sparkles className="h-3 w-3" strokeWidth={2.5} /> Coming soon
           </span>
