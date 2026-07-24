@@ -809,6 +809,8 @@ export default function TodayPage() {
   // Bloom ring + % count up when the section scrolls into view (not on load).
   const [ringRef, ringInView] = useInView<HTMLDivElement>();
   const ringPercent = Math.round(useCountUp(bloomPercent, ringInView));
+  // Streak counts up on load (it's in the always-visible hero).
+  const shownStreak = Math.round(useCountUp(streak, true));
 
   // FINALE — when her whole world is built (cycle + meals + diet + movement +
   // today's mood) AND she's still on the guided flow, play the closing moment:
@@ -958,7 +960,7 @@ export default function TodayPage() {
         <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[2] rounded-2xl bg-white/60 backdrop-blur px-2.5 py-1 sm:px-3 sm:py-1.5 text-center border border-white/50 shadow-md">
           {streak > 0 ? (
             <>
-              <p className="font-script text-lg sm:text-xl text-hotpink leading-none">{streak}</p>
+              <p className="font-script text-lg sm:text-xl text-hotpink leading-none tabular-nums">{shownStreak}</p>
               <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{streak === 1 ? "day blooming" : "days blooming"}</p>
             </>
           ) : (
