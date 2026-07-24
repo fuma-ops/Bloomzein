@@ -181,8 +181,9 @@ export default function ReadPage() {
         {/* On phones, zoom from the bottom so the face rises (cropping the empty
             top of the room) and clears the search card as the layout tightens. */}
         <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[55%_32%] origin-bottom scale-[1.22] sm:scale-100" referrerPolicy="no-referrer" />
-        {/* left fade → keep it gentle so the photo reads through behind the title */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
+        {/* left wash ONLY — confined to the left ~40% behind the title, then fully
+            transparent so the rest of the photo shows clean & vivid (no overlay). */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.4)_22%,transparent_40%)]" />
       </div>
 
       <BloomBubbles count={10} />
