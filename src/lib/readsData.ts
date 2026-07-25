@@ -23,6 +23,7 @@ export const CATEGORIES = [
   "Herbal Wellness",
   "Relationships",
   "Journaling",
+  "Money",
   "Lifestyle",
   "Bloomzein Originals",
 ] as const;
@@ -74,7 +75,8 @@ export const CAT_IMG: Record<Category, string> = {
   "Herbal Wellness": "/images/read-selfcare.webp",
   Relationships: "/images/read-selfcare.webp",
   Journaling: "/images/read-mindset.webp",
-  Lifestyle: "/images/read-money.webp",
+  Money: "/images/read-money.webp",
+  Lifestyle: "/images/read-selfcare.webp",
   "Bloomzein Originals": "/images/read-featured.webp",
 };
 
@@ -91,7 +93,7 @@ const PHASE_SEED_ARTICLES: Article[] = [
   { id: "a2", title: "Soft girl morning ritual", category: "Soft Living", minutes: 4, blooms: "1.9k", image: CAT_IMG["Soft Living"],
     excerpt: "Ten gentle minutes that change the entire tone of your day.",
     body: "Open the curtains slowly. Warm water with lemon. A two-song stretch. Mist your face. Write one sentence in your journal — just one. The point isn't productivity; it's softness." },
-  { id: "a3", title: "Pink budgeting that actually works", category: "Lifestyle", minutes: 8, blooms: "1.6k", image: CAT_IMG["Lifestyle"],
+  { id: "a3", title: "Pink budgeting that actually works", category: "Money", minutes: 8, blooms: "1.6k", image: CAT_IMG["Money"],
     excerpt: "A kinder framework for the girlie who hates spreadsheets.",
     body: "Forget restriction. Try the 50/30/20 with a twist: 50% needs, 20% future-you, 30% joy. Name your joy categories — flowers, lattes, books — so spending feels intentional, not guilty." },
   { id: "a4", title: "Moon salutation flow", category: "Yoga", minutes: 5, blooms: "2.1k", image: CAT_IMG["Yoga"],
