@@ -8,12 +8,12 @@ import { HormoneChart } from "./HormoneChart";
  *   @tool cycle | Track your period as you read it — open your Cycle Tracker
  */
 const TOOLS: Record<string, { href: string; label: string; icon: typeof Sparkles; image: string }> = {
-  cycle:   { href: "/app/tools/cycle",   label: "Cycle Tracker",   icon: CalendarHeart,   image: "/images/cycle-insight-hero.webp" },
+  cycle:   { href: "/app/tools/cycle",   label: "Cycle Tracker",   icon: CalendarHeart,   image: "/images/setup-cycle.webp" },
   mood:    { href: "/app/tools/diary",   label: "Mood & Journal",  icon: PenLine,         image: "/images/diary-hero.webp" },
   diary:   { href: "/app/tools/diary",   label: "Diary",           icon: PenLine,         image: "/images/diary-hero.webp" },
-  meals:   { href: "/app/tools/meals",   label: "Meals Planner",   icon: Salad,           image: "/images/meals-hero-new.webp" },
-  diet:    { href: "/app/tools/diet",    label: "Cycle Nutrition", icon: Salad,           image: "/images/meal-buddha.webp" },
-  yoga:    { href: "/app/tools/yoga",    label: "Yoga",            icon: PersonStanding,  image: "/images/read-movement.webp" },
+  meals:   { href: "/app/tools/meals",   label: "Meals Planner",   icon: Salad,           image: "/images/setup-meals.webp" },
+  diet:    { href: "/app/tools/diet",    label: "Cycle Nutrition", icon: Salad,           image: "/images/setup-meals.webp" },
+  yoga:    { href: "/app/tools/yoga",    label: "Yoga",            icon: PersonStanding,  image: "/images/setup-movement.webp" },
   workout: { href: "/app/tools/workout", label: "Movement",        icon: Dumbbell,        image: "/images/setup-movement.webp" },
 };
 
