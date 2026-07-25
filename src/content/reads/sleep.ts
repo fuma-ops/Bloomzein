@@ -512,5 +512,407 @@ It is created by gently choosing to let go of what no longer belongs to today.
 
 When your mind learns to rest, your heart follows. And when your heart rests, tomorrow begins with a little more light than yesterday ended with.
 `,
+  "SP010": `# Why You Keep Waking Up at 3 A.M.
+
+*Same time, almost every night. Eyes open in the dark, mind suddenly loud, the clock glowing 3-something. It feels like your body has an alarm you never set — and it turns out, in a way, it does.*
+
+You fall asleep just fine.
+
+That's the strange part. You're not lying awake at bedtime — you drift off easily. And then, hours later, you're wide awake in the small hours, staring at the ceiling, oddly alert, as if someone flipped a switch.
+
+Then it happens again the next night. And the next.
+
+This isn't random, and it usually isn't the insomnia you fear. Your body is doing something specific in those small hours — and once you understand what, the 3 a.m. wake-up loosens its grip.
+
+## The Hormone That Wakes You On Schedule
+
+Meet the quiet culprit: cortisol.
+
+We think of cortisol as the "stress hormone," but it's really your body's internal *get up* signal — and it runs on a schedule. It reaches its lowest point around the middle of the night, then begins a slow climb toward morning to gently rouse you.
+
+For many women, that climb starts early — around 3 a.m. If your nervous system is already running a little hot from stress, that natural rise is enough to tip you from deep sleep into wakefulness.
+
+You're not broken. You're catching the very beginning of your body's morning countdown, hours before you need it.
+
+## Why Your Mind Races the Moment You Wake
+
+There's a reason the thoughts arrive so fast and feel so catastrophic.
+
+At 3 a.m., the rational, calming part of your brain is still half-asleep, while the emotional, threat-scanning part is wide awake. Every worry feels enormous and unsolvable — money, that email, a conversation from three days ago — because you're literally thinking without your brain's calming brakes online.
+
+This is why 3 a.m. problems almost never survive daylight. The problem didn't shrink; your brain came back.
+
+Knowing this is oddly freeing: the panic isn't truth. It's just the hour talking.
+
+## The Quiet Things Feeding It
+
+A few ordinary habits make the 3 a.m. wake-up far more likely.
+
+A glass of wine in the evening helps you fall asleep, then fragments the second half of the night as it wears off. Blood sugar that dips too low overnight can nudge cortisol up early. And a mind that never got a chance to unload before bed will happily do its filing at 3 a.m. instead.
+
+@tool cycle | Waking at odd hours through part of your month? Track it alongside your cycle and watch the pattern surface — open your Cycle Tracker
+
+None of these mean something is wrong with you. They're small, adjustable inputs — which means the wake-up is far more fixable than it feels at 3 a.m.
+
+## What To Do When You're Awake
+
+The worst move is the instinctive one: lying there, watching the clock, willing yourself back to sleep.
+
+That effort raises the very alertness keeping you up. Instead, do the counterintuitive thing — if you're still awake after fifteen minutes or so, get up. Sit somewhere dim, no bright screens, and do something quiet and boring until sleepiness returns. Then go back to bed.
+
+And before then — before you even sleep — give your racing mind an earlier appointment.
+
+@read SP006 | Can't switch the thoughts off? A gentle wind-down that quiets the noise before it starts →
+
+The goal isn't to fight the wake-up. It's to make yourself a calmer, softer place for sleep to return to.
+
+## Bloom Reflection
+
+For a long time, 3 a.m. may have felt like proof that something was wrong — with your sleep, your nerves, your ability to simply rest like everyone else.
+
+But that wake-up was never a verdict. It was biology: a cortisol tide rising a little early, a mind without its daytime brakes, a few small evening habits quietly stacking the odds.
+
+When you stop fighting the hour and start understanding it, 3 a.m. softens from a nightly dread into something you can meet — and, more and more often, sleep straight through.
+
+## Bloom Tips
+
+- Know the 3 a.m. wake-up is often just cortisol rising early — biology, not failure.
+- Don't trust 3 a.m. thoughts; your brain's calming centre is still offline, so worries feel huge.
+- Watch the evening inputs — alcohol, a too-light dinner, and an un-emptied mind all feed it.
+- If you're awake past fifteen minutes, get up, stay dim, and return when sleepy — don't clock-watch.
+- Give your worries an earlier slot with a wind-down, so they don't book the 3 a.m. one.
+
+## Today's Bloom
+
+Tonight, before bed, spend three minutes writing down every loose thought and tomorrow-worry on paper.
+
+You're giving your mind an earlier appointment to do its filing — so it's far less likely to wake you at 3 a.m. demanding one.
+
+## Bloom Reminder
+
+3 a.m. was never proof that something is wrong with you.
+
+It's a tide rising a little early — and once you understand it, you can let it roll past and sleep on.
+`,
+  "SP011": `# You Sleep 8 Hours — So Why Are You Still Exhausted?
+
+*You did everything right. In bed on time, a solid eight hours, no 2 a.m. scrolling — and you woke up feeling like you'd been hit by a truck. If more sleep isn't fixing your tiredness, it's because the number was never the whole story.*
+
+Eight hours.
+
+It's the figure we all chase, the gold standard we feel guilty for missing. So when you finally hit it — a full, uninterrupted night — and *still* drag yourself through the morning foggy and flat, it's genuinely confusing. Even a little unfair.
+
+You start to wonder if something's wrong with you.
+
+But here's the piece the "eight hours" rule leaves out: not all sleep is equal. You can spend the right amount of time in bed and still miss the sleep that actually restores you. Quantity was only ever half the equation.
+
+## Sleep Comes in Chapters
+
+Your night isn't one long, flat stretch of unconsciousness. It's a story told in cycles.
+
+Roughly every ninety minutes, you move through lighter sleep, then deep sleep, then dream-rich REM sleep, and around again — four or five times a night. Each stage does a different job. Deep sleep repairs your body and consolidates rest; REM sleep processes emotion and memory.
+
+When these cycles flow smoothly, you wake genuinely restored. When they're broken up — even by micro-awakenings you don't remember — you can log eight hours of *time* while collecting only a fraction of the deep, restorative sleep you needed.
+
+The clock says you slept. Your body knows you didn't, quite.
+
+## The Silent Sleep Wreckers
+
+Often, something is quietly fragmenting those cycles without ever fully waking you.
+
+A late glass of wine sedates you at first, then chops up the back half of the night. A warm bedroom keeps your body from the temperature drop deep sleep needs. Snoring or disrupted breathing pulls you toward the surface again and again. Even a phone buzzing across the room registers, softly, in your sleeping brain.
+
+You don't remember these interruptions — but your morning does.
+
+## Waking at the Wrong Moment
+
+Ever notice how some mornings you wake clear-headed, and others you feel drugged, no matter the hour?
+
+That's often about *where in a cycle* your alarm catches you. Blast awake in the middle of deep sleep and you get that thick, groggy, underwater feeling — a state with its own name: sleep inertia. Wake naturally at the end of a cycle, in lighter sleep, and you surface easily.
+
+@read SP003 | The evening habits that build deep, unbroken sleep — before your head even hits the pillow →
+
+Sometimes the fix isn't more sleep. It's better-timed sleep, so your alarm meets you in the shallows instead of the depths.
+
+## When It's Not About Sleep At All
+
+Here's the twist worth sitting with: sometimes flawless sleep and constant tiredness point somewhere else entirely.
+
+Low iron, an under-active thyroid, dehydration, blood sugar that swings all day, or simply relentless stress can leave you exhausted no matter how perfectly you sleep. And your energy naturally ebbs and flows across your cycle, too — some phases are simply more tired than others, by design.
+
+@tool cycle | Bone-tired in the same stretch each month? See it laid against your phases — open your Cycle Tracker
+
+If good sleep truly isn't touching your fatigue, that's not a failure to sleep harder. It's your body pointing at something else, and worth listening to.
+
+## Bloom Reflection
+
+You were taught to measure sleep like a bank balance — hit the number, wake up rich with energy. So when the number lied, it felt like your fault.
+
+But rest was never just hours in a ledger. It's the quiet quality of the cycles inside those hours, the cool dark room, the untroubled mind — and sometimes, it's a whisper from your body about iron, or thyroid, or a season of too much stress.
+
+When you stop chasing the number and start honouring the conditions, tiredness stops being a mystery you're failing to solve — and becomes a message you're finally ready to hear.
+
+## Bloom Tips
+
+- Chase quality, not just quantity — eight broken hours can restore less than seven whole ones.
+- Protect your deep-sleep cycles: cool, dark room, no late alcohol, no buzzing phone nearby.
+- Blame grogginess on timing — an alarm in deep sleep causes "sleep inertia," not too little rest.
+- If perfect sleep still leaves you flat, check the non-sleep causes: iron, thyroid, hydration, stress.
+- Notice tiredness across your cycle; some phases are naturally lower-energy, and that's normal.
+
+## Today's Bloom
+
+Tonight, pick one cycle-protector: drop the nightcap, cool the room, or move your phone across the room.
+
+You're not adding hours — you're protecting the deep sleep already hiding inside them. That's where the energy actually lives.
+
+## Bloom Reminder
+
+The number was never the point.
+
+Restful sleep is about the quality of the hours — and sometimes, about what your tiredness is quietly trying to tell you.
+`,
+  "SP012": `# The Last Thing You Do Before Bed Is Wrecking Your Sleep
+
+*It feels harmless. Relaxing, even — the little ritual you close almost every night with. But the last few minutes before you sleep quietly set the tone for the entire night, and most of us spend them doing the one thing guaranteed to keep the brain switched on.*
+
+You know the scene.
+
+Lights off, head on the pillow, and then — just for a minute — the phone. A quick scroll to unwind. A few messages. One more video. A last check of a world that will still be there in the morning.
+
+It feels like decompressing. It is very much the opposite.
+
+Those final waking minutes are prime real estate for your brain. Whatever you feed it there, it carries into sleep. And a glowing screen full of other people's lives is about the least restful thing you could hand it.
+
+## Your Brain Takes the Last Thing to Bed
+
+Here's what most people don't realise about falling asleep: your brain doesn't switch off like a light. It fades down, slowly, still chewing on whatever you gave it last.
+
+Feed it a stressful email, a comparison-heavy scroll, or a cliffhanger episode, and it carries that stimulation across the threshold into sleep — keeping you lighter, more restless, quicker to wake. The transition into rest isn't a hard cut. It's a dissolve, and the last image lingers.
+
+This is why *what* you do before bed often matters more than how long you spent trying to relax before it.
+
+## The Two Ways a Screen Steals Your Night
+
+A phone at bedtime works against you on two fronts at once.
+
+First, the light. Bright, blue-tinged screens tell your brain it's still daytime, suppressing melatonin — the hormone that should be rising to make you drowsy. You're chemically postponing your own sleepiness.
+
+Second, and often worse, the *content*. Even calm-seeming scrolling floods your mind with tiny hits of stimulation, emotion and comparison — precisely when it needs to be powering down. The light delays sleep; the content agitates it.
+
+Your body is trying to release you into rest, and the phone keeps tapping it on the shoulder.
+
+## The Racing Mind You Bring to Bed
+
+For many women, the real thief isn't the screen at all. It's the un-emptied mind.
+
+You lie down and the day finally goes quiet enough for every loose thread to speak up — the unanswered message, tomorrow's list, the thing you forgot. With no earlier outlet, your brain uses the one moment it has your attention: bedtime.
+
+@read SP006 | A short, guided way to quiet the mental noise and drift off softer →
+
+The fix isn't to *try harder* to stop thinking. It's to give those thoughts somewhere to go before your head hits the pillow.
+
+## Building a Softer Landing
+
+The good news: a better last few minutes are simple to build, and cost nothing.
+
+Set a soft "screens down" point twenty to thirty minutes before sleep, and let the phone charge across the room, not on your pillow. Fill that gap with something that lets your brain descend — a few pages of a paper book, a warm shower, slow breathing, or a two-minute brain-dump onto paper so tomorrow's worries have a home that isn't your head.
+
+@tool diary | Empty the day onto the page before bed, so your mind isn't still filing at midnight — open your Diary
+
+You're not banning the phone forever. You're just refusing to let it be the very last thing you hand your sleeping brain.
+
+## Bloom Reflection
+
+That bedtime scroll felt like the reward at the end of a long day — the one quiet moment that was finally, entirely yours.
+
+But it was never really rest. It was your tired mind reaching for stimulation at the exact moment it needed the opposite, and quietly paying for it all night long.
+
+When you change the last thing you do — trade the glowing screen for something soft and dim — you're not losing your wind-down. You're finally giving it to yourself: a gentle landing instead of a bright, buzzing cliff-edge into sleep.
+
+## Bloom Tips
+
+- Treat the last minutes before bed as prime real estate — your brain carries them into sleep.
+- Set a "screens down" point 20–30 minutes before sleep; charge the phone across the room.
+- Remember screens hit you twice: blue light delays melatonin, and content agitates the mind.
+- Replace the scroll with a soft landing — a paper book, warm shower, or slow breathing.
+- Brain-dump tomorrow's worries onto paper so your mind isn't filing them at midnight.
+
+## Today's Bloom
+
+Tonight, plug your phone in across the room and pick up something on paper for the last ten minutes instead.
+
+Notice how much softer the edge into sleep feels when the last thing you saw wasn't a glowing screen full of everyone else's day.
+
+## Bloom Reminder
+
+Your brain takes the last thing to bed with it.
+
+Hand it something calm and dim — and let the whole night settle from there.
+`,
+  "SP013": `# Why You Sleep Worse the Week Before Your Period
+
+*Restless nights. Waking at 3 a.m. Sleep that simply stops working — and then, a week later, works fine again. If your worst sleep arrives on a monthly schedule, you're not imagining it. Your hormones are quietly rewriting your nights.*
+
+It's one of the most overlooked patterns in women's sleep.
+
+For a week or so before your period, sleep gets harder. You toss more, wake more, lie there more. Mornings feel heavier. And because no one connects it to the calendar, you blame stress, or your mattress, or some personal failing at the simple act of resting.
+
+Then your period comes, and within days you're sleeping like yourself again.
+
+That isn't coincidence, and it isn't in your head. The luteal phase — those days between ovulation and your period — changes your body in ways that reach directly into your sleep. Once you see it, you can finally work *with* it.
+
+## The Hormone That Was Helping You Sleep — Then Leaves
+
+The main character here is progesterone.
+
+After ovulation, progesterone rises, and one of its quiet gifts is that it's calming and mildly sedating — nature's own sleep aid. But as you move toward your period and no pregnancy occurs, progesterone falls steeply.
+
+That withdrawal is the problem. You lose the soothing hormone that had been smoothing your nights, and sleep becomes lighter and more easily broken. It's a little like a gentle sedative being taken away right when your body had grown used to it.
+
+@tool cycle | See exactly where your restless nights fall in the month — open your Cycle Tracker
+
+You didn't suddenly forget how to sleep. A hormone that was helping simply stepped away.
+
+## Your Body Runs Warmer — and Sleep Hates Heat
+
+There's a second, sneakier reason, and it's about temperature.
+
+To fall into deep sleep, your body needs to *cool down* slightly — that drop is part of the signal to sleep deeply. But in the luteal phase, your core body temperature runs a little higher than usual, right up until your period begins.
+
+That extra warmth works against the cooling your brain is waiting for, leaving you restless, kicking off the covers, waking in the night faintly too hot. It's a small shift with an outsized effect on how deeply you rest.
+
+Cool the room, cool the body, and you hand back some of what the phase took.
+
+## The Rest of the Luteal Pile-On
+
+As if that weren't enough, the luteal phase brings company.
+
+This is when many women feel more anxious or low, when cravings and blood-sugar swings creep in, when cramps or tender breasts make comfort harder to find. Each of these, on its own, nibbles at your sleep — and together, in the same week, they explain a lot.
+
+@read SP010 | Waking at 3 a.m. this week too? Here's what your body's actually doing in the dark →
+
+None of it means something is wrong. It means a lot is happening at once — and your sleep is simply reflecting the busiest hormonal week of your month.
+
+## Sleeping Kindly Through the Luteal Week
+
+You can't stop progesterone from falling. But you can meet the phase halfway.
+
+Cool your bedroom more than usual and choose lighter bedding — actively counter the temperature rise. Be gentler with caffeine and alcohol now, since your sleep has less resilience to spare. Steady your blood sugar with balanced evening meals, lean harder on your wind-down ritual, and — crucially — stop expecting luteal-week sleep to match follicular-week sleep.
+
+Some weeks, good sleep means *protecting* rest rather than perfecting it. That's not lowering the bar. That's syncing with your body.
+
+## Bloom Reflection
+
+For years, the pre-period bad nights probably felt like random sabotage — sleep turning on you for no reason, one week in every four.
+
+But there was always a reason, written in hormones: a calming chemical withdrawing, a body running warm, a whole system doing its most demanding work of the month. Your sleep wasn't failing. It was faithfully reflecting everything happening inside you.
+
+When you know the restless week is coming, it stops being a betrayal and becomes something you can prepare for — a cooler room, a softer routine, a little extra self-forgiveness — until your period arrives and easy sleep returns, right on cue.
+
+## Bloom Tips
+
+- Expect lighter sleep the week before your period — falling progesterone removes a natural sedative.
+- Counter the luteal temperature rise: cooler room, lighter bedding, no overheating.
+- Go gentler on caffeine and alcohol now; your sleep has less resilience to spare.
+- Steady evening blood sugar and lean harder on your wind-down ritual this week.
+- Track it, so the restless nights become predictable and preparable — not a monthly mystery.
+
+## Today's Bloom
+
+If you're in your luteal week, cool your bedroom tonight — lower the heat, lighter covers, a window cracked.
+
+You're working *with* your body's warmth instead of against it. It's the simplest way to hand back some of the deep sleep this phase quietly borrows.
+
+## Bloom Reminder
+
+Your pre-period bad nights were never random.
+
+They're a hormonal season — and once you can see it coming, you can sleep softly through it and wait for the tide to turn.
+`,
+  "SP014": `# What Your Body Secretly Does While You Sleep
+
+*You think of sleep as switching off — the empty hours between one day and the next. But while you lie there, still and unconscious, your body is doing some of the most extraordinary work of your entire day. Rest was never nothing. It's your night shift.*
+
+We treat sleep as an absence.
+
+The lights go out, you disappear for a few hours, and then you reappear in the morning, hopefully refreshed. Nothing much happened; you were simply *off.*
+
+Except you weren't. Not even close.
+
+The moment you fall asleep, your body launches into a precise, brilliant sequence of repair and restoration — work so important it can only happen when you're offline. Understanding it changes sleep from a thing you grudgingly fit in to something you'd never want to shortchange again.
+
+## Your Brain Takes Out the Trash
+
+Start with the most astonishing discovery.
+
+While you sleep, your brain physically *cleans itself.* The spaces between its cells widen, and fluid washes through, flushing out the metabolic waste that builds up during a day of thinking — including proteins linked to long-term brain health.
+
+It's essentially a nightly rinse cycle for your mind, and it barely runs when you're awake. This is a real reason that a bad night leaves you foggy and short-tempered: the mental clutter never got washed away.
+
+Every clear-headed morning you've ever had was built on this quiet, invisible housekeeping.
+
+## The Repair Crew Clocks In
+
+While your brain cleans, your body rebuilds.
+
+Deep sleep is when growth hormone peaks and physical repair happens in earnest — muscles mend, tissues regenerate, and the small daily wear of being alive gets quietly fixed. Your immune system uses these hours to produce and organise its defences, which is why run-down, under-slept people catch every cold going round.
+
+Even your skin joins in. Overnight, blood flow to the skin rises and cell renewal accelerates — the literal, biological basis of "beauty sleep."
+
+@read BE005 | Your skin does its real repair overnight — here's how to help it while you rest →
+
+You go to bed a little worn, and a whole crew works through the night to hand you back a repaired version by morning.
+
+## Your Mind Files the Day
+
+Sleep doesn't just restore your body. It sorts out your mind.
+
+During the night, especially in dream-rich REM sleep, your brain replays and files the day — moving fragile new memories into long-term storage and weaving learning into place. It also processes emotion, taking the sharp edges off the day's stresses so they feel more manageable by morning.
+
+This is why a problem often looks different after sleeping on it, and why sleep loss makes everything feel more emotional and raw. You didn't get to file the day, so it's all still sitting on the desk.
+
+@tool diary | Help your mind file the day before sleep even starts — a few written lines, and rest does the rest →
+
+Rest, it turns out, is where your experiences quietly become *you.*
+
+## Why Cutting It Short Costs So Much
+
+Here's what makes all this matter tonight.
+
+This work runs on a schedule, in stages, across the whole night — deep sleep loaded earlier, dreaming richer toward morning. Cut your sleep short and you don't trim a little off each job evenly; you amputate whole shifts of it, often the very repair or emotional processing you needed most.
+
+So "I'll catch up later" doesn't quite work. The brain-cleaning, the rebuilding, the filing — they have their window, and a shortened night simply leaves some of it undone.
+
+Protecting your hours isn't indulgence. It's protecting the work that makes tomorrow possible.
+
+## Bloom Reflection
+
+We're taught to see sleep as time lost — the boring gap we'd skip if only we could, the first thing we sacrifice when life gets full.
+
+But nothing about your night is empty. While you rest, your brain rinses itself clean, your body rebuilds, your immune system arms itself, your skin renews, and your mind quietly turns the day into memory and meaning.
+
+When you understand what you're actually protecting when you protect your sleep, it stops feeling like laziness and starts feeling like what it is: the most productive, restorative thing you do all day — done, beautifully, with your eyes closed.
+
+## Bloom Tips
+
+- Respect sleep as active work — your brain literally flushes out waste while you're unconscious.
+- Guard deep sleep especially; it's when growth hormone, tissue repair and immunity do their work.
+- Know that skin renews overnight — "beauty sleep" is a genuine biological process, not a saying.
+- Let sleep file your day; REM helps store memory and soften emotion, so problems ease by morning.
+- Don't count on "catching up" — cutting a night short amputates whole shifts of this repair.
+
+## Today's Bloom
+
+Tonight, as you get into bed, picture the night shift about to begin — the cleaning, the mending, the filing.
+
+You're not switching off. You're handing your body the hours it needs to rebuild you. Give it a full night to finish the job.
+
+## Bloom Reminder
+
+Sleep was never nothing.
+
+It's the most extraordinary work your body does all day — and you do it simply by letting yourself rest.
+`,
 };
 export default bodies;
