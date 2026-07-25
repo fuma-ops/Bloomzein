@@ -17,6 +17,7 @@ type Loader = () => Promise<{ default: BodyMap }>;
 /** Only categories that already have a content chunk are listed. */
 const LOADERS: Partial<Record<Category, Loader>> = {
   "Cycle & Hormones": () => import("./cycle"),
+  Nutrition: () => import("./nutrition"),
   Beauty: () => import("./beauty"),
   Yoga: () => import("./yoga"),
   "Soft Living": () => import("./soft-living"),
