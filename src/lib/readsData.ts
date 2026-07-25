@@ -48,6 +48,9 @@ export interface Article {
   phase?: DietPhase;
   /** Surface this as a hero/featured pick within its category. */
   featured?: boolean;
+  /** "review" shows the editorial review panel (comment + validate) on the
+   * article until it's approved; absent/"published" is a clean live read. */
+  status?: "review";
   /**
    * Short legacy reads keep their single-paragraph body inline; long-form
    * editorial articles omit this and load their markdown body lazily instead.
@@ -156,6 +159,16 @@ const IMPORTED_ARTICLES: Article[] = [
     excerpt: "Some weeks you could move mountains; others, making dinner feels like a lot. That isn't a discipline problem." },
   { id: "CY005", title: "Why Tracking Your Cycle Matters", category: "Cycle & Hormones", minutes: 7, blooms: "1.0k", image: CAT_IMG["Cycle & Hormones"],
     excerpt: "Tracking your cycle isn't about fertility charts or complicated apps. It's about learning to read the monthly report your body…" },
+  { id: "CY006", title: "Your Period Is Trying to Tell You Something", category: "Cycle & Hormones", minutes: 5, blooms: "1.1k", image: CAT_IMG["Cycle & Hormones"], phase: "menstrual", status: "review",
+    excerpt: "Your period is a monthly report card for your whole body — once you learn to read it, it tells you more than any app." },
+  { id: "CY007", title: "The Week Your Body Was Built to Shine", category: "Cycle & Hormones", minutes: 4, blooms: "2.4k", image: CAT_IMG["Cycle & Hormones"], phase: "ovulatory", status: "review",
+    excerpt: "For a few days each month, your biology quietly turns everything up — energy, confidence, glow. Here's the science behind your brightest week." },
+  { id: "CY008", title: "Why Everything Suddenly Feels Harder", category: "Cycle & Hormones", minutes: 4, blooms: "1.9k", image: CAT_IMG["Cycle & Hormones"], phase: "luteal", status: "review",
+    excerpt: "The week before your period, ordinary tasks start to feel uphill. It's not you losing your edge — it's a hormone shift with a purpose." },
+  { id: "CY009", title: "What Your Cravings Are Really Trying to Tell You", category: "Cycle & Hormones", minutes: 4, blooms: "2.2k", image: CAT_IMG["Cycle & Hormones"], phase: "luteal", status: "review",
+    excerpt: "That pull toward chocolate and carbs before your period isn't weakness or a lack of willpower. It's biology — and it makes surprising sense." },
+  { id: "CY010", title: "Is Your Period Actually Normal?", category: "Cycle & Hormones", minutes: 5, blooms: "1.3k", image: CAT_IMG["Cycle & Hormones"], status: "review",
+    excerpt: "Almost every woman quietly wonders it — and almost no one asks out loud. Here's the real range of normal, and the signs worth a doctor's ear." },
   { id: "BE005", title: "What Really Happens to Your Skin While You Sleep?", category: "Beauty", minutes: 6, blooms: "1.7k", image: CAT_IMG["Beauty"],
     excerpt: "The nighttime skincare secrets that transform your routine from simply applying products into supporting your skin's natural…" },
   { id: "BE010", title: "Seasonal Skincare", category: "Beauty", minutes: 5, blooms: "2.1k", image: CAT_IMG["Beauty"],
