@@ -788,6 +788,8 @@ So a period that shows up in a predictable rhythm isn't just "no news."
 
 It's quiet proof that a remarkable amount of your biology is working.
 
+@read CY002 | Curious which hormones run that monthly conversation? Meet the four →
+
 That's why a sudden change in your cycle can be worth noticing. It's rarely about the blood itself — it's a signal that something upstream, like stress, sleep, nutrition or thyroid function, may have shifted.
 
 ## What the Colour Is Telling You
@@ -812,6 +814,8 @@ A period that suddenly becomes much heavier, much lighter, much longer or far le
 
 This is where tracking earns its place. When you know your baseline, you can hear it clearly the month your body says something different.
 
+@tool cycle | Track your period, flow and symptoms in one place — open your Cycle Tracker
+
 You're not looking for perfection. You're listening for change.
 
 ## The Things Your Period Notices Before You Do
@@ -819,6 +823,8 @@ You're not looking for perfection. You're listening for change.
 Here's the quietly astonishing part: your cycle often registers stress before your mind admits to it.
 
 A stretch of poor sleep, an intense few weeks at work, heavy travel, under-eating, over-exercising — your reproductive system treats these as signals that now might not be a safe time. Ovulation can shift later, and your period follows.
+
+@tool meals | Under-eating can quietly throw your cycle off — plan steady, balanced meals for today
 
 A late or unusually light period, then, isn't always a problem. Sometimes it's your body being protective — pressing pause during a season it reads as demanding.
 
@@ -912,6 +918,8 @@ So if you feel bolder this week — quicker to speak up, more magnetic in a room
 
 Once you know this week is coming, you can meet it on purpose.
 
+@tool cycle | Know your glow week is coming — track it in your Cycle Tracker
+
 This is the phase to schedule the things that ask for energy and courage: the big conversation, the pitch, the first date, the event you'd usually talk yourself out of.
 
 Your body is lending you confidence. It's a wonderful time to spend it.
@@ -925,6 +933,8 @@ Here's the gentlest thing to remember: this week is not your baseline.
 If ovulation is your highlight reel, the days that follow are meant to soften. Estrogen dips, another hormone rises, and your energy naturally turns more inward.
 
 That isn't you slipping. It's the next season of your month arriving on schedule.
+
+@read CY008 | When the glow fades, everything feels harder — here's why →
 
 Knowing your glow week is temporary makes it easier to enjoy without clinging — and easier to forgive yourself later, when the light turns quieter.
 
@@ -1002,7 +1012,11 @@ You can't delete this phase, but you can stop fighting it.
 
 Where you can, protect your luteal days from the tasks that need your brightest, boldest energy. Save the big pitch and the packed social calendar for earlier in your cycle, and let this week hold the quieter, more finishing kind of work.
 
+@tool cycle | See your luteal week coming so you can plan around it — open your Cycle Tracker
+
 Lower the bar on purpose. Fewer commitments, more white space, earlier nights.
+
+@read CY009 | Craving carbs and chocolate this week? Here's what that's really about →
 
 And be gentler with the voice in your head. The inner critic often gets louder in the luteal phase — and it's worth remembering that it's frequently speaking through a temporary dip in brain chemistry, not telling you the truth about your life.
 
@@ -1084,11 +1098,15 @@ This is why restriction so often backfires now. The harder you fight the craving
 
 The craving was never the problem. The war against it usually is.
 
+@read CY008 | Feeling low and heavy alongside the cravings? There's a reason →
+
 ## How to Meet Cravings Well
 
 You don't have to choose between white-knuckle restriction and a shame spiral. There's a gentler, smarter middle.
 
 Reach for the version of the craving that actually holds you: complex carbohydrates like oats, sweet potato and whole grains lift serotonin more steadily than a sugar rush that spikes and crashes.
+
+@tool meals | Plan balanced, satisfying meals so cravings don't run your evening
 
 Pair carbs with a little protein or healthy fat so the comfort lasts longer than ten minutes.
 
@@ -1160,9 +1178,13 @@ Here's the more useful idea: the most important pattern isn't the textbook one. 
 
 Once you know your own rhythm — your usual length, your usual flow, your usual few days of discomfort — you have a baseline. And a baseline is powerful, because it lets you notice change.
 
+@tool cycle | Learn your own normal — track your cycle month to month
+
 A cycle that's always been 33 days isn't "irregular." A period that's reliably five days isn't "too long." What's worth noticing is when your own pattern shifts and stays shifted — that's your body telling you something has changed upstream.
 
 Stop measuring yourself against 28. Start knowing your own.
+
+@read CY006 | Once you know your normal, learn to read what your period is telling you →
 
 ## What's Usually Just Fine
 
