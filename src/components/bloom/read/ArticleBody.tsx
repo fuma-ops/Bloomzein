@@ -1,19 +1,20 @@
 import { Fragment, type ReactNode } from "react";
 import { Sparkles, Flower2, Sun, Quote, ArrowRight, BookOpen,
   CalendarHeart, PenLine, Salad, PersonStanding, Dumbbell } from "lucide-react";
+import { HormoneChart } from "./HormoneChart";
 
 /**
  * In-article CTAs that softly surface a Bloomzein tool. Authored in the body as
  *   @tool cycle | Track your period as you read it — open your Cycle Tracker
  */
-const TOOLS: Record<string, { href: string; label: string; icon: typeof Sparkles }> = {
-  cycle:   { href: "/app/tools/cycle",   label: "Cycle Tracker",   icon: CalendarHeart },
-  mood:    { href: "/app/tools/diary",   label: "Mood & Journal",  icon: PenLine },
-  diary:   { href: "/app/tools/diary",   label: "Diary",           icon: PenLine },
-  meals:   { href: "/app/tools/meals",   label: "Meals Planner",   icon: Salad },
-  diet:    { href: "/app/tools/diet",    label: "Cycle Nutrition", icon: Salad },
-  yoga:    { href: "/app/tools/yoga",    label: "Yoga",            icon: PersonStanding },
-  workout: { href: "/app/tools/workout", label: "Movement",        icon: Dumbbell },
+const TOOLS: Record<string, { href: string; label: string; icon: typeof Sparkles; image: string }> = {
+  cycle:   { href: "/app/tools/cycle",   label: "Cycle Tracker",   icon: CalendarHeart,   image: "/images/cycle-insight-hero.webp" },
+  mood:    { href: "/app/tools/diary",   label: "Mood & Journal",  icon: PenLine,         image: "/images/diary-hero.webp" },
+  diary:   { href: "/app/tools/diary",   label: "Diary",           icon: PenLine,         image: "/images/diary-hero.webp" },
+  meals:   { href: "/app/tools/meals",   label: "Meals Planner",   icon: Salad,           image: "/images/meals-hero-new.webp" },
+  diet:    { href: "/app/tools/diet",    label: "Cycle Nutrition", icon: Salad,           image: "/images/meal-buddha.webp" },
+  yoga:    { href: "/app/tools/yoga",    label: "Yoga",            icon: PersonStanding,  image: "/images/read-movement.webp" },
+  workout: { href: "/app/tools/workout", label: "Movement",        icon: Dumbbell,        image: "/images/setup-movement.webp" },
 };
 
 /**
@@ -48,6 +49,7 @@ type Block =
   | { kind: "callout"; text: string }
   | { kind: "tool"; toolKey: string; text: string }
   | { kind: "read"; id: string; text: string }
+  | { kind: "chart"; chartKey: string }
   | { kind: "hr" }
   | { kind: "bloom"; key: string; label: string; id: string; body: Block[] };
 
@@ -172,6 +174,10 @@ export function parseArticle(md: string): ParsedArticle {
     if (line.startsWith("@read ")) {
       const [id, ...rest] = line.slice(6).split("|");
       blocks.push({ kind: "read", id: id.trim(), text: rest.join("|").trim() });
+      i++; continue;
+    }
+    if (line.startsWith("@chart ")) {
+      blocks.push({ kind: "chart", chartKey: line.slice(7).trim() });
       i++; continue;
     }
 
@@ -333,19 +339,29 @@ export function ArticleBody({ parsed }: { parsed: ParsedArticle }) {
               <a
                 key={k}
                 href={tool.href}
-                className="group my-6 flex items-center gap-3.5 rounded-2xl border border-hotpink/25 bg-gradient-to-br from-blush/60 via-white/70 to-petal/30 p-3.5 sm:p-4 backdrop-blur shadow-[0_12px_30px_-18px_oklch(0.6_0.22_350/0.45)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-18px_oklch(0.6_0.22_350/0.55)]"
+                className="group my-6 flex items-stretch gap-3.5 overflow-hidden rounded-[1.4rem] border border-hotpink/25 bg-gradient-to-br from-blush/60 via-white/75 to-petal/30 p-2.5 sm:p-3 backdrop-blur shadow-[0_14px_34px_-18px_oklch(0.6_0.22_350/0.5)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_-18px_oklch(0.6_0.22_350/0.6)]"
               >
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hotpink text-white shadow-md shadow-hotpink/30 animate-icon-breathe">
-                  <Icon className="h-5 w-5" strokeWidth={1.9} />
+                <span className="relative h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 overflow-hidden rounded-[1.1rem] shadow-md shadow-hotpink/20">
+                  <img src={tool.image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" referrerPolicy="no-referrer" />
+                  <span className="absolute inset-0 bg-gradient-to-t from-hotpink/45 via-transparent to-transparent" />
+                  <span className="absolute bottom-1 left-1 grid h-5 w-5 place-items-center rounded-full bg-white/95 text-hotpink shadow-sm">
+                    <Icon className="h-3 w-3" strokeWidth={2.2} />
+                  </span>
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-hotpink/70">{tool.label}</span>
-                  <span className="block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{inline(b.text, k)}</span>
+                <span className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-hotpink/70">
+                    <Sparkles className="h-3 w-3" strokeWidth={2.2} /> {tool.label}
+                  </span>
+                  <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{inline(b.text, k)}</span>
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink opacity-80">
+                    Open <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" strokeWidth={2.4} />
+                  </span>
                 </span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-hotpink transition group-hover:translate-x-0.5" strokeWidth={2.2} />
               </a>
             );
           }
+          case "chart":
+            return b.chartKey === "hormones" ? <HormoneChart key={k} /> : null;
           case "read":
             return (
               <a
