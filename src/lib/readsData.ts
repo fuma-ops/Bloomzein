@@ -207,3 +207,15 @@ export function readsForPhase(phase: DietPhase): Article[] {
 export function articlesByCategory(category: Category): Article[] {
   return ARTICLES.filter((a) => a.category === category);
 }
+
+/**
+ * "Keep reading" picks for the end of an article: same phase first, then same
+ * category, then anything — de-duplicated, current article excluded.
+ */
+export function relatedArticles(article: Article, count = 3): Article[] {
+  const pool = ARTICLES.filter((a) => a.id !== article.id);
+  const score = (a: Article) =>
+    (article.phase && a.phase === article.phase ? 2 : 0) +
+    (a.category === article.category ? 1 : 0);
+  return [...pool].sort((a, b) => score(b) - score(a)).slice(0, count);
+}

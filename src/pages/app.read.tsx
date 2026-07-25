@@ -4,7 +4,7 @@ import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2,
   HeartHandshake, NotebookPen, Compass, Star } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
-import { FILTERS, ARTICLES, IMG, articleById, type Filter, type Article } from "@/lib/readsData";
+import { FILTERS, ARTICLES, IMG, articleById, relatedArticles, type Filter, type Article } from "@/lib/readsData";
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
 import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
@@ -175,7 +175,7 @@ export default function ReadPage() {
   }, [openId]);
 
   if (open) {
-    return <ArticleReader article={open} saved={!!saved[open.id]} onSave={() => toggleSave(open.id)} onBack={() => setOpenId(null)} />;
+    return <ArticleReader article={open} saved={!!saved[open.id]} onSave={() => toggleSave(open.id)} onBack={() => setOpenId(null)} onOpenArticle={setOpenId} />;
   }
 
   return (
@@ -357,7 +357,8 @@ export default function ReadPage() {
 }
 
 /* ---------- article reader (magazine layout: left-title hero + TOC + drop-cap body) ---------- */
-function ArticleReader({ article, saved, onSave, onBack }: { article: Article; saved: boolean; onSave: () => void; onBack: () => void }) {
+function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { article: Article; saved: boolean; onSave: () => void; onBack: () => void; onOpenArticle: (id: string) => void }) {
+  const related = useMemo(() => relatedArticles(article, 3), [article]);
   const [parsed, setParsed] = useState<ParsedArticle | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -482,6 +483,36 @@ function ArticleReader({ article, saved, onSave, onBack }: { article: Article; s
               )}
             </div>
           </div>
+
+          {/* KEEP READING — related picks so one article becomes three. */}
+          {related.length > 0 && (
+            <section className="mt-8">
+              <h2 className="font-script text-2xl sm:text-3xl text-hotpink">Keep reading ✿</h2>
+              <p className="text-xs text-rose/70">More for your {article.phase ? `${article.phase} phase` : article.category}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {related.map((a, i) => (
+                  <button
+                    key={a.id}
+                    onClick={() => onOpenArticle(a.id)}
+                    style={{ animationDelay: `${i * 0.06}s` }}
+                    className="group relative text-left overflow-hidden rounded-2xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95 animate-card-pop-in"
+                  >
+                    <div className="relative h-24 sm:h-28 overflow-hidden">
+                      <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+                      <div className="absolute top-2 left-2"><TopicBadge topic={a.category} /></div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-[13px] font-bold text-rose leading-snug line-clamp-2">{a.title}</h3>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <ReadTime minutes={a.minutes} />
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition ml-auto">Read <ArrowRight className="h-3 w-3" strokeWidth={2} /></span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           <div className="mt-8 mb-2 flex justify-center lg:justify-start">
             <button
