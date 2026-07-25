@@ -766,5 +766,463 @@ Not as a warning—
 
 but as a quiet reminder that incredible things are happening beneath the surface, even when you cannot see them.
 `,
+  "CY006": `# Your Period Is Trying to Tell You Something
+
+*Most of us were taught to hide it, manage it, get through it. Almost no one taught us to read it — yet your period is quietly reporting on your health every single month.*
+
+For a long time, a period was something to survive. You tracked it only to avoid being caught off guard, tucked a spare in your bag, and hoped it would be quiet.
+
+What almost no one mentioned is that your period is information.
+
+Doctors have started calling it the fifth vital sign — sitting alongside your pulse, your breath, your temperature and your blood pressure. Not because bleeding is dramatic, but because a monthly bleed only happens when a long, delicate chain of events has gone right.
+
+Your period is the final page of a report your body writes every month. Learning to read it changes it from an inconvenience into one of the most honest health signals you have.
+
+## Why a Bleed Means So Much
+
+A period isn't random. It's the closing act of a month-long conversation between your brain, your ovaries and your uterus.
+
+For a bleed to arrive on a fairly regular schedule, your brain has to send the right signals, an egg has to mature and release, and your hormones have to rise and fall in sequence. When all of that happens, the uterus lining it built is gently released.
+
+So a period that shows up in a predictable rhythm isn't just "no news."
+
+It's quiet proof that a remarkable amount of your biology is working.
+
+That's why a sudden change in your cycle can be worth noticing. It's rarely about the blood itself — it's a signal that something upstream, like stress, sleep, nutrition or thyroid function, may have shifted.
+
+## What the Colour Is Telling You
+
+The shade of your period isn't cosmetic. It mostly comes down to one thing: how long the blood has been exposed to air.
+
+Bright red usually means fresh, steady flow — blood that's leaving quickly, common on your heavier days.
+
+Darker, brownish blood is simply older. It's had time to oxidise, which is why it often shows up at the very beginning or the tail end of your period, when flow is slower. It looks alarming and is almost always completely ordinary.
+
+A very pale, watery pink can sometimes appear when flow is light.
+
+Think of it like a cut apple. The moment it meets air, it darkens — not because anything is wrong, but because that's what time and oxygen do. Your period follows the same simple chemistry.
+
+## Flow and Timing: The Real Signals
+
+If colour is the small talk, flow and timing are the real conversation.
+
+Most cycles fall somewhere between 24 and 38 days, and most periods last between three and seven days. But your normal is yours — the useful information is in the change, not the exact number.
+
+A period that suddenly becomes much heavier, much lighter, much longer or far less predictable than your own usual pattern is worth paying attention to.
+
+This is where tracking earns its place. When you know your baseline, you can hear it clearly the month your body says something different.
+
+You're not looking for perfection. You're listening for change.
+
+## The Things Your Period Notices Before You Do
+
+Here's the quietly astonishing part: your cycle often registers stress before your mind admits to it.
+
+A stretch of poor sleep, an intense few weeks at work, heavy travel, under-eating, over-exercising — your reproductive system treats these as signals that now might not be a safe time. Ovulation can shift later, and your period follows.
+
+A late or unusually light period, then, isn't always a problem. Sometimes it's your body being protective — pressing pause during a season it reads as demanding.
+
+Your period can be one of the first honest mirrors of how much you're actually carrying.
+
+## When to Talk to Someone
+
+Reading your period is empowering, but it isn't a replacement for care. A few patterns are worth bringing to a doctor rather than decoding alone.
+
+- Periods that soak through a pad or tampon every hour for several hours
+- Bleeding that regularly lasts longer than seven days
+- Cycles that suddenly become very irregular, stop, or come far more often
+- Pain that stops you living your normal life
+- Bleeding between periods or after intimacy
+
+None of these mean something is certainly wrong. They simply mean your body is asking for a second, trained set of eyes — and you deserve that.
+
+## Bloom Reflection
+
+For years, your period may have felt like an interruption to your real life.
+
+It was always more than that.
+
+It's a monthly letter from the deepest, quietest systems of your body — written in colour, flow and timing. You don't have to become an expert to read it. You only have to start paying attention.
+
+The month you stop dreading your period and start listening to it is the month your body gains a voice.
+
+## Bloom Tips
+
+- Note the first day of every period — it's the single most useful number you can track.
+- Learn your own normal for flow and length, then watch for change rather than chasing a "perfect" cycle.
+- Don't panic over dark or brown blood at the start or end — that's just older blood meeting air.
+- Treat a suddenly late or light period as a possible sign of stress, sleep debt or under-eating.
+- Book a check-up for very heavy, very long, very irregular, or very painful bleeding.
+
+## Today's Bloom
+
+Open your notes or your tracker and mark today somewhere in your cycle.
+
+That one small act is the beginning of a conversation — the moment you stop guessing and start understanding.
+
+## Bloom Reminder
+
+Your period was never just an inconvenience to get through.
+
+It's one of the most honest health signals your body has — a monthly report written just for you, if you're willing to read it.
+`,
+  "CY007": `# The Week Your Body Was Built to Shine
+
+*Some weeks you catch your reflection and feel unstoppable. That isn't luck or a good night's sleep — it's ovulation, and the science behind it is more flattering than you'd expect.*
+
+There's a week most women can feel but few can name.
+
+Your skin seems to catch the light. Conversations come easily. You feel more like saying yes. Even your reflection seems to be on your side.
+
+It arrives, roughly, in the middle of your cycle — and then, just as quietly, it fades.
+
+For a long time you might have chalked it up to mood, or coffee, or a good few days. In truth, it's one of the most beautifully engineered moments of your entire month: ovulation, the brief window your body was designed to shine.
+
+## What's Actually Happening Inside
+
+In the days leading up to ovulation, estrogen climbs to its highest point of the whole cycle.
+
+Then your brain fires a sudden surge of luteinising hormone, and a mature egg is released from the ovary.
+
+That single peak of estrogen is the quiet author of almost everything you feel this week. It isn't only about fertility — estrogen touches your skin, your brain, your energy and your confidence all at once.
+
+For these few days, your biology is essentially turning up the brightness on you.
+
+## Why Your Skin Really Does Glow
+
+The glow is not in your imagination, and it isn't only good lighting.
+
+High estrogen supports collagen and boosts hydration in the skin, so it tends to look plumper and more luminous around ovulation. Circulation is a little livelier too, lending a natural flush.
+
+Think of estrogen as a gardener who has been watering all week. By ovulation, everything looks fuller, dewier and more alive.
+
+This is also, for many women, the clearest-skinned stretch of the month — the calm before the pre-period shift that comes later.
+
+## The Confidence Isn't a Coincidence
+
+Here's the part almost no one is told: ovulation can genuinely change how you feel about yourself.
+
+Around this peak, many women report feeling more social, more expressive and more drawn to connection. Studies have even found subtle shifts — women tend to feel, and be perceived as, more attractive around ovulation.
+
+Your body is briefly wired to be seen. It's the most outward-facing moment of your entire cycle.
+
+So if you feel bolder this week — quicker to speak up, more magnetic in a room — that's not vanity. That's your hormones, doing exactly what they evolved to do.
+
+## How to Use Your Brightest Week
+
+Once you know this week is coming, you can meet it on purpose.
+
+This is the phase to schedule the things that ask for energy and courage: the big conversation, the pitch, the first date, the event you'd usually talk yourself out of.
+
+Your body is lending you confidence. It's a wonderful time to spend it.
+
+It's also a naturally high-energy window for movement — many women feel strongest and most powerful in their workouts right around now, so it's a beautiful moment for something that makes you feel capable.
+
+## When the Glow Fades
+
+Here's the gentlest thing to remember: this week is not your baseline.
+
+If ovulation is your highlight reel, the days that follow are meant to soften. Estrogen dips, another hormone rises, and your energy naturally turns more inward.
+
+That isn't you slipping. It's the next season of your month arriving on schedule.
+
+Knowing your glow week is temporary makes it easier to enjoy without clinging — and easier to forgive yourself later, when the light turns quieter.
+
+## Bloom Reflection
+
+For one week a month, your body quietly makes the case for you.
+
+It brightens your skin, steadies your confidence and opens you toward the world — not by accident, but by design.
+
+You don't have to earn this week. You only have to notice it, and let yourself enjoy being exactly as radiant as your biology intended.
+
+## Bloom Tips
+
+- Track your cycle so you can predict your ovulation week — roughly the middle, but yours may differ.
+- Book the bold things (interviews, dates, big asks) into this high-confidence window on purpose.
+- Lean into stronger, more energetic movement now, while your body feels most powerful.
+- Keep skincare simple — this is often your clearest week; let it show.
+- Take the photo. You'll want to remember this glow.
+
+## Today's Bloom
+
+Look at where you are in your cycle. If your glow week is near — or here — put one brave, joyful thing on the calendar and let this energy carry it.
+
+## Bloom Reminder
+
+There is a week each month your body was built to shine.
+
+It asks nothing of you but attention. Notice it, and let yourself feel as luminous as you actually are.
+`,
+  "CY008": `# Why Everything Suddenly Feels Harder
+
+*One week you're flying. The next, the same to-do list feels like wading through honey. Nothing in your life changed — but something inside it did, and it has a name.*
+
+You know the feeling, even if you've never had words for it.
+
+A few days ago you were capable, bright, on top of things. Now the same emails feel heavier. Your patience is thinner. Small things land harder, and you catch yourself wondering what's wrong with you.
+
+Usually, the honest answer is: nothing.
+
+You've simply entered the luteal phase — the stretch between ovulation and your period — and the shift you're feeling isn't a personal failing. It's chemistry, and once you understand it, it stops feeling like self-sabotage.
+
+## Meet the Hormone Behind the Slowdown
+
+After ovulation, a hormone called progesterone rises and takes over the second half of your cycle.
+
+Progesterone is calming and steadying — it's your body's built-in wind-down. But it also has a sedating quality. It can make you feel softer, sleepier and more sensitive than the sharp, outward energy of the week before.
+
+At the same time, estrogen — the hormone that lifted your mood and confidence around ovulation — begins to fall.
+
+So you're not imagining the drop. You're feeling the exact moment your internal weather turns from bright and breezy to grey and still.
+
+## Why Your Brain Feels Foggier
+
+There's a reason focus can feel slippery in the luteal phase.
+
+Estrogen supports serotonin, one of the brain chemicals tied to steady mood and mental clarity. As estrogen dips before your period, serotonin can dip with it — and that can show up as low mood, irritability, or the sense that your thoughts are moving through fog.
+
+Picture a room where someone has slowly turned down the lights. Nothing in the room has changed. You just can't see it all as easily.
+
+That's your luteal brain. The capability is still there. The lighting is simply lower.
+
+## The Purpose Hidden in the Slowdown
+
+Here's the reframe that changes everything: this phase isn't a malfunction. It has a job.
+
+If the first half of your cycle is outward — social, energetic, ready to start things — the luteal phase is inward. It's the season for finishing, tidying, noticing what's no longer working, and turning toward rest.
+
+Many women find they're more honest with themselves in this phase. The things you happily ignore during your bright weeks suddenly feel worth addressing.
+
+That irritation you feel? Sometimes it's information. Your luteal self has less patience for what doesn't actually serve you.
+
+## How to Work With It, Not Against It
+
+You can't delete this phase, but you can stop fighting it.
+
+Where you can, protect your luteal days from the tasks that need your brightest, boldest energy. Save the big pitch and the packed social calendar for earlier in your cycle, and let this week hold the quieter, more finishing kind of work.
+
+Lower the bar on purpose. Fewer commitments, more white space, earlier nights.
+
+And be gentler with the voice in your head. The inner critic often gets louder in the luteal phase — and it's worth remembering that it's frequently speaking through a temporary dip in brain chemistry, not telling you the truth about your life.
+
+## When It's More Than a Dip
+
+For most women, luteal heaviness is real but manageable. For some, it tips into something stronger.
+
+If, in the week or two before your period, you experience severe low mood, anxiety, hopelessness or irritability that seriously disrupts your relationships or daily life — and it lifts once your period arrives — that pattern is worth taking to a doctor. It has a name, PMDD, and it deserves real support, not silent endurance.
+
+Struggling deeply every single month is common, but it is not something you simply have to accept.
+
+## Bloom Reflection
+
+The week everything feels harder isn't proof that you're falling behind.
+
+It's a season — one your body moves through every month, on purpose. The slowdown is not the absence of your strength. It's a different kind of it: quieter, more inward, more honest.
+
+You don't need to push through this week as though it were the last one. You need to meet it as what it is.
+
+## Bloom Tips
+
+- Track your cycle so you can see the luteal dip coming — and stop blaming yourself for it.
+- Schedule demanding, high-energy tasks earlier in your cycle; keep luteal days lighter.
+- Treat luteal irritation as information — it often points to what genuinely isn't working.
+- Protect your sleep and lower your commitments on purpose this week.
+- If low mood or anxiety before your period is severe and lifts when your period starts, talk to a doctor about PMDD.
+
+## Today's Bloom
+
+If this week feels heavy, take one thing off your list instead of adding one.
+
+Rest isn't quitting. In this phase, it's exactly what your body is asking for.
+
+## Bloom Reminder
+
+The week everything feels harder is not you failing.
+
+It's your body turning inward — and there is nothing wrong with a season that asks you to slow down.
+`,
+  "CY009": `# What Your Cravings Are Really Trying to Tell You
+
+*The week before your period, the fridge starts calling your name. Before you label it a lack of willpower, meet the biology behind the craving — it's smarter than it feels.*
+
+It usually arrives a few days before your period.
+
+Suddenly the chocolate in the cupboard is all you can think about. Bread, pasta, something warm and comforting — your body seems to want it with a strange, specific urgency.
+
+And then comes the guilt. The quiet story that you have no self-control, that you've "been so good" and now you're ruining it.
+
+Here's the truth that changes the whole conversation: premenstrual cravings are not a character flaw. They're a predictable, physical event — and once you understand what's driving them, you can meet them with kindness instead of shame.
+
+## Your Brain Chemistry Dips First
+
+The biggest driver of pre-period cravings isn't your stomach. It's your brain.
+
+In the luteal phase, as estrogen falls, so can serotonin — the brain chemical tied to calm and steady mood. When serotonin drops, your body looks for the fastest way to lift it.
+
+And it knows exactly where to find it: carbohydrates. Eating carbs helps the body produce more serotonin, which is why bread, chocolate and comfort food feel almost medicinal before your period.
+
+So that craving for something sweet and soft isn't random greed. It's your brain reaching for a mood repair kit — using the tools it has.
+
+## Your Body Is Also Burning More
+
+There's a physical reason too.
+
+In the luteal phase, your body's resting energy needs quietly tick upward. Many women burn modestly more calories in the days before their period than they do earlier in the cycle.
+
+More fuel burned means more hunger signals sent. So a bigger appetite this week isn't a loss of discipline — it's your body accurately asking for the extra energy it's actually using.
+
+Picture a fire burning a little hotter. Of course it asks for more wood.
+
+## Why It Feels So Emotional
+
+Pre-period cravings rarely feel neutral. They feel urgent, almost emotional — and that's part of the biology too.
+
+With serotonin lower and progesterone high, you're already more sensitive this week. Food that feels comforting genuinely is comforting; it soothes a nervous system that's running a little raw.
+
+This is why restriction so often backfires now. The harder you fight the craving, the louder it gets — and the worse you feel about yourself when you finally give in.
+
+The craving was never the problem. The war against it usually is.
+
+## How to Meet Cravings Well
+
+You don't have to choose between white-knuckle restriction and a shame spiral. There's a gentler, smarter middle.
+
+Reach for the version of the craving that actually holds you: complex carbohydrates like oats, sweet potato and whole grains lift serotonin more steadily than a sugar rush that spikes and crashes.
+
+Pair carbs with a little protein or healthy fat so the comfort lasts longer than ten minutes.
+
+Magnesium-rich foods — dark chocolate, pumpkin seeds, nuts — can genuinely help this week, easing both cravings and cramps. Yes, that means a little good dark chocolate is working with your body, not against it.
+
+And eat enough earlier in the day. Cravings are always louder when you've spent the day slightly underfed and are running on empty by evening.
+
+## The Kindest Reframe
+
+Try this the next time the craving hits: instead of "what's wrong with me," ask "what is my body asking for?"
+
+Usually the answer is simple. Comfort. Fuel. A little more gentleness than usual.
+
+Meeting that need on purpose — with real food and without the guilt — is not a failure of discipline. It's you finally listening.
+
+## Bloom Reflection
+
+For years, pre-period cravings may have felt like a monthly test of willpower you kept failing.
+
+You were never failing. You were responding — accurately — to a dip in brain chemistry and a rise in your body's real needs.
+
+The month you stop fighting your cravings and start understanding them is the month food becomes gentle again.
+
+## Bloom Tips
+
+- Choose complex carbs — oats, sweet potato, whole grains — to lift mood more steadily than sugar.
+- Pair the comfort with protein or healthy fat so it actually keeps you satisfied.
+- Lean into magnesium-rich foods like dark chocolate, nuts and pumpkin seeds — they help cravings and cramps.
+- Eat enough earlier in the day so evening cravings aren't amplified by hunger.
+- Drop the guilt — a nourishing treat, chosen on purpose, beats restriction and the crash that follows.
+
+## Today's Bloom
+
+If a craving arrives today, pause and ask it one question: comfort, or fuel?
+
+Then give your body the kind, real version of what it's asking for — no guilt attached.
+
+## Bloom Reminder
+
+Your cravings were never a weakness.
+
+They're a message from a body that's working a little harder this week — and it deserves to be met with kindness, not a fight.
+`,
+  "CY010": `# Is Your Period Actually Normal?
+
+*It's the question almost every woman has whispered to herself and almost no one has said aloud. So let's answer it honestly — what's normal, what's just yours, and what's worth a conversation.*
+
+Somewhere along the way, you probably wondered it.
+
+Is this much pain normal? Is my cycle too long, too short, too unpredictable? Is what I go through every month just… how it is for everyone, or is something off?
+
+And then, most likely, you said nothing. We compare notes on almost everything, but rarely on this.
+
+So here is the honest, reassuring, sometimes surprising truth about what "normal" actually means — and, just as importantly, when your body is asking you to check in with someone.
+
+## Normal Is a Range, Not a Number
+
+The first thing to unlearn is the idea of a perfect 28-day cycle.
+
+Twenty-eight days is an average, not a rule. A healthy cycle is generally anywhere from about 24 to 38 days, counted from the first day of one period to the first day of the next. Periods themselves usually last somewhere between three and seven days.
+
+That's a wide window on purpose. Your cycle is not a machine; it responds to your life.
+
+So if yours runs a little longer or shorter than a friend's, that's not automatically a problem. Normal is a range — and much of the range is simply personal.
+
+## Your Normal Is the One That Matters
+
+Here's the more useful idea: the most important pattern isn't the textbook one. It's yours.
+
+Once you know your own rhythm — your usual length, your usual flow, your usual few days of discomfort — you have a baseline. And a baseline is powerful, because it lets you notice change.
+
+A cycle that's always been 33 days isn't "irregular." A period that's reliably five days isn't "too long." What's worth noticing is when your own pattern shifts and stays shifted — that's your body telling you something has changed upstream.
+
+Stop measuring yourself against 28. Start knowing your own.
+
+## What's Usually Just Fine
+
+A surprising amount of what women quietly worry about falls comfortably inside normal.
+
+Dark or brown blood at the start or end of your period? Usually just older blood, completely ordinary. Mild cramps in the first day or two? Common, and often eased with warmth and gentle movement. Small clots on your heaviest days? Frequently normal too.
+
+A cycle that varies by a few days from month to month? Also normal — bodies aren't metronomes.
+
+Even a single odd cycle after a stressful stretch, a big trip, illness or a change in sleep is often just your body responding to your life, not a sign something is wrong.
+
+## The Signs Worth a Doctor's Ear
+
+Reassurance matters — and so does knowing the handful of patterns that genuinely deserve professional eyes rather than private worry.
+
+- Bleeding so heavy you soak through a pad or tampon every hour for several hours in a row
+- Periods that regularly last longer than seven days
+- Cycles that suddenly become very irregular, much more frequent, or stop altogether (when you're not pregnant)
+- Pain that's severe enough to keep you home, double you over, or that painkillers don't touch
+- Bleeding between periods, or after intimacy
+
+None of these mean something is definitely wrong. They simply cross the line from "track it and see" to "let someone trained take a look." Pain that steals your normal life, in particular, is never something you should be told to just tolerate.
+
+## Why We Have to Say It Out Loud
+
+Perhaps the quietest harm in period silence is this: without comparison, we normalise our own suffering.
+
+Women live with debilitating pain for years because they assume everyone feels it. Conditions like endometriosis are diagnosed late, partly because "bad periods" get waved away as ordinary.
+
+Asking the question — out loud, to a friend or a doctor — is not dramatic. It's how you find out whether what you carry is truly normal, or whether you've simply been enduring something you were never meant to endure alone.
+
+## Bloom Reflection
+
+"Is my period normal?" is one of the most common questions women never ask.
+
+The answer, most of the time, is gently reassuring: normal is a wide, forgiving range, and much of what you worry about lives inside it.
+
+But part of the answer is also permission — permission to notice, to compare, and to speak up when your body crosses from your normal into something that steals from your life.
+
+You deserve to know the difference. And you're allowed to ask.
+
+## Bloom Tips
+
+- Let go of the 28-day myth — a cycle of roughly 24 to 38 days is well within normal.
+- Learn your own baseline, then watch for lasting change rather than chasing perfection.
+- Relax about dark blood, mild cramps and small clots on heavy days — usually all ordinary.
+- See a doctor for very heavy, very long, or newly irregular bleeding, or bleeding between periods.
+- Never accept pain that stops your life as "just periods" — that one is always worth investigating.
+
+## Today's Bloom
+
+Ask yourself one honest question: is there anything about my cycle I've been quietly worrying about?
+
+If there is, that's not drama. That's your cue to write it down — and, if it's on the list above, to book the conversation.
+
+## Bloom Reminder
+
+Normal is a wide, kind range, and most of your worries live safely inside it.
+
+But you are always allowed to ask the question out loud — and to be taken seriously when you do.
+`,
 };
 export default bodies;

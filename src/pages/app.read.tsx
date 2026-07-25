@@ -9,6 +9,7 @@ import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
 import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
 import { BloomFlower } from "@/components/bloom/read/BloomFlower";
+import { ReviewPanel } from "@/components/bloom/read/ReviewPanel";
 
 /* ---------- data ---------- */
 /* Compact labels for the filter row (full category names elsewhere). */
@@ -451,6 +452,9 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
         </div>
       </header>
 
+      {/* Editorial review panel — only while this article is awaiting approval. */}
+      {article.status === "review" && <ReviewPanel article={article} />}
+
       {/* On small screens the TOC sits on top, above the article. */}
       {parsed ? <ArticleTOC sections={parsed.sections} collapsible className="relative z-[1] lg:hidden mt-3 mb-4" /> : null}
 
@@ -542,6 +546,11 @@ function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: A
         <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.category} /></div>
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3"><HeartBtn saved={saved} onClick={onSave} /></div>
+        {article.status === "review" && (
+          <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 inline-flex items-center gap-1 rounded-full bg-hotpink/90 backdrop-blur px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm animate-selected-glow">
+            ✎ Review
+          </span>
+        )}
       </div>
       <div className="p-3 sm:p-5">
         <h3 className="text-sm sm:text-base font-bold text-rose leading-snug line-clamp-2">{article.title}</h3>
