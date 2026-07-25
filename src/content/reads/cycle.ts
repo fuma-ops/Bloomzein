@@ -938,6 +938,20 @@ That isn't you slipping. It's the next season of your month arriving on schedule
 
 Knowing your glow week is temporary makes it easier to enjoy without clinging — and easier to forgive yourself later, when the light turns quieter.
 
+## Loving the Quieter Week That Follows
+
+Here's what almost no one says out loud: the week after your glow is not a lesser version of you. It's a different one — and she has her own quiet gifts.
+
+Where ovulation reaches outward, the days that follow turn gently inward. This is the part of your month made for softness, honesty and rest — for finishing what you started, journaling what you actually feel, and letting your body do less without a single apology.
+
+Try meeting it the way you'd meet a tired friend: with warmth, not pressure. Lower the bar on purpose. Trade the packed calendar for an early night, the intense workout for a slow walk, the need to sparkle for the permission to simply be.
+
+Because here is the truth worth holding close — you are not only your brightest week. You are allowed to be radiant, and you are allowed to be quiet, and neither one is more you than the other.
+
+@read CY008 | Want to understand the quieter week more deeply? Here's why it feels harder →
+
+When you stop fighting the dip, it stops feeling like a loss. It starts to feel like coming home to yourself.
+
 ## Bloom Reflection
 
 For one week a month, your body quietly makes the case for you.
@@ -985,6 +999,8 @@ Progesterone is calming and steadying — it's your body's built-in wind-down. B
 At the same time, estrogen — the hormone that lifted your mood and confidence around ovulation — begins to fall.
 
 So you're not imagining the drop. You're feeling the exact moment your internal weather turns from bright and breezy to grey and still.
+
+@chart hormones
 
 ## Why Your Brain Feels Foggier
 

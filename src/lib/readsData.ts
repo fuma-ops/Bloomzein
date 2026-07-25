@@ -161,7 +161,7 @@ const IMPORTED_ARTICLES: Article[] = [
     excerpt: "Tracking your cycle isn't about fertility charts or complicated apps. It's about learning to read the monthly report your body…" },
   { id: "CY006", title: "Your Period Is Trying to Tell You Something", category: "Cycle & Hormones", minutes: 5, blooms: "1.1k", image: CAT_IMG["Cycle & Hormones"], phase: "menstrual", status: "review",
     excerpt: "Your period is a monthly report card for your whole body — once you learn to read it, it tells you more than any app." },
-  { id: "CY007", title: "The Week Your Body Was Built to Shine", category: "Cycle & Hormones", minutes: 4, blooms: "2.4k", image: CAT_IMG["Cycle & Hormones"], phase: "ovulatory", status: "review",
+  { id: "CY007", title: "The Week Your Body Was Built to Shine", category: "Cycle & Hormones", minutes: 5, blooms: "2.4k", image: CAT_IMG["Cycle & Hormones"], phase: "ovulatory", status: "review",
     excerpt: "For a few days each month, your biology quietly turns everything up — energy, confidence, glow. Here's the science behind your brightest week." },
   { id: "CY008", title: "Why Everything Suddenly Feels Harder", category: "Cycle & Hormones", minutes: 4, blooms: "1.9k", image: CAT_IMG["Cycle & Hormones"], phase: "luteal", status: "review",
     excerpt: "The week before your period, ordinary tasks start to feel uphill. It's not you losing your edge — it's a hormone shift with a purpose." },
