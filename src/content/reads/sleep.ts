@@ -512,166 +512,6 @@ It is created by gently choosing to let go of what no longer belongs to today.
 
 When your mind learns to rest, your heart follows. And when your heart rests, tomorrow begins with a little more light than yesterday ended with.
 `,
-  "SP010": `# Why You Keep Waking Up at 3 A.M.
-
-*Same time, almost every night. Eyes open in the dark, mind suddenly loud, the clock glowing 3-something. It feels like your body has an alarm you never set — and it turns out, in a way, it does.*
-
-You fall asleep just fine.
-
-That's the strange part. You're not lying awake at bedtime — you drift off easily. And then, hours later, you're wide awake in the small hours, staring at the ceiling, oddly alert, as if someone flipped a switch.
-
-Then it happens again the next night. And the next.
-
-This isn't random, and it usually isn't the insomnia you fear. Your body is doing something specific in those small hours — and once you understand what, the 3 a.m. wake-up loosens its grip.
-
-## The Hormone That Wakes You On Schedule
-
-Meet the quiet culprit: cortisol.
-
-We think of cortisol as the "stress hormone," but it's really your body's internal *get up* signal — and it runs on a schedule. It reaches its lowest point around the middle of the night, then begins a slow climb toward morning to gently rouse you.
-
-For many women, that climb starts early — around 3 a.m. If your nervous system is already running a little hot from stress, that natural rise is enough to tip you from deep sleep into wakefulness.
-
-You're not broken. You're catching the very beginning of your body's morning countdown, hours before you need it.
-
-## Why Your Mind Races the Moment You Wake
-
-There's a reason the thoughts arrive so fast and feel so catastrophic.
-
-At 3 a.m., the rational, calming part of your brain is still half-asleep, while the emotional, threat-scanning part is wide awake. Every worry feels enormous and unsolvable — money, that email, a conversation from three days ago — because you're literally thinking without your brain's calming brakes online.
-
-This is why 3 a.m. problems almost never survive daylight. The problem didn't shrink; your brain came back.
-
-Knowing this is oddly freeing: the panic isn't truth. It's just the hour talking.
-
-## The Quiet Things Feeding It
-
-A few ordinary habits make the 3 a.m. wake-up far more likely.
-
-A glass of wine in the evening helps you fall asleep, then fragments the second half of the night as it wears off. Blood sugar that dips too low overnight can nudge cortisol up early. And a mind that never got a chance to unload before bed will happily do its filing at 3 a.m. instead.
-
-@tool cycle | Waking at odd hours through part of your month? Track it alongside your cycle and watch the pattern surface — open your Cycle Tracker
-
-None of these mean something is wrong with you. They're small, adjustable inputs — which means the wake-up is far more fixable than it feels at 3 a.m.
-
-## What To Do When You're Awake
-
-The worst move is the instinctive one: lying there, watching the clock, willing yourself back to sleep.
-
-That effort raises the very alertness keeping you up. Instead, do the counterintuitive thing — if you're still awake after fifteen minutes or so, get up. Sit somewhere dim, no bright screens, and do something quiet and boring until sleepiness returns. Then go back to bed.
-
-And before then — before you even sleep — give your racing mind an earlier appointment.
-
-@read SP006 | Can't switch the thoughts off? A gentle wind-down that quiets the noise before it starts →
-
-The goal isn't to fight the wake-up. It's to make yourself a calmer, softer place for sleep to return to.
-
-## Bloom Reflection
-
-For a long time, 3 a.m. may have felt like proof that something was wrong — with your sleep, your nerves, your ability to simply rest like everyone else.
-
-But that wake-up was never a verdict. It was biology: a cortisol tide rising a little early, a mind without its daytime brakes, a few small evening habits quietly stacking the odds.
-
-When you stop fighting the hour and start understanding it, 3 a.m. softens from a nightly dread into something you can meet — and, more and more often, sleep straight through.
-
-## Bloom Tips
-
-- Know the 3 a.m. wake-up is often just cortisol rising early — biology, not failure.
-- Don't trust 3 a.m. thoughts; your brain's calming centre is still offline, so worries feel huge.
-- Watch the evening inputs — alcohol, a too-light dinner, and an un-emptied mind all feed it.
-- If you're awake past fifteen minutes, get up, stay dim, and return when sleepy — don't clock-watch.
-- Give your worries an earlier slot with a wind-down, so they don't book the 3 a.m. one.
-
-## Today's Bloom
-
-Tonight, before bed, spend three minutes writing down every loose thought and tomorrow-worry on paper.
-
-You're giving your mind an earlier appointment to do its filing — so it's far less likely to wake you at 3 a.m. demanding one.
-
-## Bloom Reminder
-
-3 a.m. was never proof that something is wrong with you.
-
-It's a tide rising a little early — and once you understand it, you can let it roll past and sleep on.
-`,
-  "SP011": `# You Sleep 8 Hours — So Why Are You Still Exhausted?
-
-*You did everything right. In bed on time, a solid eight hours, no 2 a.m. scrolling — and you woke up feeling like you'd been hit by a truck. If more sleep isn't fixing your tiredness, it's because the number was never the whole story.*
-
-Eight hours.
-
-It's the figure we all chase, the gold standard we feel guilty for missing. So when you finally hit it — a full, uninterrupted night — and *still* drag yourself through the morning foggy and flat, it's genuinely confusing. Even a little unfair.
-
-You start to wonder if something's wrong with you.
-
-But here's the piece the "eight hours" rule leaves out: not all sleep is equal. You can spend the right amount of time in bed and still miss the sleep that actually restores you. Quantity was only ever half the equation.
-
-## Sleep Comes in Chapters
-
-Your night isn't one long, flat stretch of unconsciousness. It's a story told in cycles.
-
-Roughly every ninety minutes, you move through lighter sleep, then deep sleep, then dream-rich REM sleep, and around again — four or five times a night. Each stage does a different job. Deep sleep repairs your body and consolidates rest; REM sleep processes emotion and memory.
-
-When these cycles flow smoothly, you wake genuinely restored. When they're broken up — even by micro-awakenings you don't remember — you can log eight hours of *time* while collecting only a fraction of the deep, restorative sleep you needed.
-
-The clock says you slept. Your body knows you didn't, quite.
-
-## The Silent Sleep Wreckers
-
-Often, something is quietly fragmenting those cycles without ever fully waking you.
-
-A late glass of wine sedates you at first, then chops up the back half of the night. A warm bedroom keeps your body from the temperature drop deep sleep needs. Snoring or disrupted breathing pulls you toward the surface again and again. Even a phone buzzing across the room registers, softly, in your sleeping brain.
-
-You don't remember these interruptions — but your morning does.
-
-## Waking at the Wrong Moment
-
-Ever notice how some mornings you wake clear-headed, and others you feel drugged, no matter the hour?
-
-That's often about *where in a cycle* your alarm catches you. Blast awake in the middle of deep sleep and you get that thick, groggy, underwater feeling — a state with its own name: sleep inertia. Wake naturally at the end of a cycle, in lighter sleep, and you surface easily.
-
-@read SP003 | The evening habits that build deep, unbroken sleep — before your head even hits the pillow →
-
-Sometimes the fix isn't more sleep. It's better-timed sleep, so your alarm meets you in the shallows instead of the depths.
-
-## When It's Not About Sleep At All
-
-Here's the twist worth sitting with: sometimes flawless sleep and constant tiredness point somewhere else entirely.
-
-Low iron, an under-active thyroid, dehydration, blood sugar that swings all day, or simply relentless stress can leave you exhausted no matter how perfectly you sleep. And your energy naturally ebbs and flows across your cycle, too — some phases are simply more tired than others, by design.
-
-@tool cycle | Bone-tired in the same stretch each month? See it laid against your phases — open your Cycle Tracker
-
-If good sleep truly isn't touching your fatigue, that's not a failure to sleep harder. It's your body pointing at something else, and worth listening to.
-
-## Bloom Reflection
-
-You were taught to measure sleep like a bank balance — hit the number, wake up rich with energy. So when the number lied, it felt like your fault.
-
-But rest was never just hours in a ledger. It's the quiet quality of the cycles inside those hours, the cool dark room, the untroubled mind — and sometimes, it's a whisper from your body about iron, or thyroid, or a season of too much stress.
-
-When you stop chasing the number and start honouring the conditions, tiredness stops being a mystery you're failing to solve — and becomes a message you're finally ready to hear.
-
-## Bloom Tips
-
-- Chase quality, not just quantity — eight broken hours can restore less than seven whole ones.
-- Protect your deep-sleep cycles: cool, dark room, no late alcohol, no buzzing phone nearby.
-- Blame grogginess on timing — an alarm in deep sleep causes "sleep inertia," not too little rest.
-- If perfect sleep still leaves you flat, check the non-sleep causes: iron, thyroid, hydration, stress.
-- Notice tiredness across your cycle; some phases are naturally lower-energy, and that's normal.
-
-## Today's Bloom
-
-Tonight, pick one cycle-protector: drop the nightcap, cool the room, or move your phone across the room.
-
-You're not adding hours — you're protecting the deep sleep already hiding inside them. That's where the energy actually lives.
-
-## Bloom Reminder
-
-The number was never the point.
-
-Restful sleep is about the quality of the hours — and sometimes, about what your tiredness is quietly trying to tell you.
-`,
   "SP012": `# The Last Thing You Do Before Bed Is Wrecking Your Sleep
 
 *It feels harmless. Relaxing, even — the little ritual you close almost every night with. But the last few minutes before you sleep quietly set the tone for the entire night, and most of us spend them doing the one thing guaranteed to keep the brain switched on.*
@@ -913,6 +753,198 @@ You're not switching off. You're handing your body the hours it needs to rebuild
 Sleep was never nothing.
 
 It's the most extraordinary work your body does all day — and you do it simply by letting yourself rest.
+`,
+  "SP010": `# Why You Keep Waking Up at 3 A.M.
+
+*Same time, almost every night. Eyes open in the dark, mind suddenly loud, the clock glowing 3-something. It feels like your body has an alarm you never set — and it turns out, in a way, it does.*
+
+You fall asleep just fine.
+
+That's the strange part. You're not lying awake at bedtime — you drift off easily. And then, hours later, you're wide awake in the small hours, staring at the ceiling, oddly alert, as if someone flipped a switch.
+
+Then it happens again the next night. And the next.
+
+This isn't random, and it usually isn't the insomnia you fear. Your body is doing something specific in those small hours — and once you understand what, the 3 a.m. wake-up loosens its grip.
+
+## The Hormone That Wakes You On Schedule
+
+Meet the quiet culprit: cortisol.
+
+We think of cortisol as the "stress hormone," but it's really your body's internal *get up* signal — and it runs on a schedule. It reaches its lowest point around the middle of the night, then begins a slow climb toward morning to gently rouse you.
+
+For many women, that climb starts early — around 3 a.m. If your nervous system is already running a little hot from stress, that natural rise is enough to tip you from deep sleep into wakefulness.
+
+You're not broken. You're catching the very beginning of your body's morning countdown, hours before you need it.
+
+## Why Your Mind Races the Moment You Wake
+
+There's a reason the thoughts arrive so fast and feel so catastrophic.
+
+At 3 a.m., the rational, calming part of your brain is still half-asleep, while the emotional, threat-scanning part is wide awake. Every worry feels enormous and unsolvable — money, that email, a conversation from three days ago — because you're literally thinking without your brain's calming brakes online.
+
+This is why 3 a.m. problems almost never survive daylight. The problem didn't shrink; your brain came back.
+
+Knowing this is oddly freeing: the panic isn't truth. It's just the hour talking.
+
+## The Quiet Things Feeding It
+
+A few ordinary habits make the 3 a.m. wake-up far more likely.
+
+A glass of wine in the evening helps you fall asleep, then fragments the second half of the night as it wears off. Blood sugar that dips too low overnight can nudge cortisol up early. And a mind that never got a chance to unload before bed will happily do its filing at 3 a.m. instead.
+
+None of these mean something is wrong with you. They're small, adjustable inputs — which means the wake-up is far more fixable than it feels at 3 a.m.
+
+## Turn It Into a Pattern You Can See
+
+Here's the shift that changes everything: one bad night is noise, but a *month* of nights is a signal.
+
+The single most useful thing you can do about 3 a.m. isn't a supplement or a gadget — it's paying attention. Each morning, take one second to note how you slept: deep and easy, in-between, or restless. On its own, a single rating means little. Gathered night after night, it draws a picture you could never see from inside one groggy morning.
+
+@chart sleep-quality |
+
+And this is where it gets powerful, because your sleep doesn't drift at random — it moves with your cycle. When you log how you slept *beside* your mood and your symptoms, the 3 a.m. wake-ups often cluster in the same stretch each month: the restless week before your period, when falling progesterone stops smoothing your nights. Suddenly the mystery has a shape.
+
+@tool cycle | Log a nightly sleep rating beside your mood and symptoms, and watch the pattern surface across the month — open your Cycle Tracker
+
+Once you can see *when* 3 a.m. tends to visit, you stop bracing for it every night and start preparing only for the nights that need it.
+
+## What To Do When You're Awake
+
+The worst move is the instinctive one: lying there, watching the clock, willing yourself back to sleep.
+
+That effort raises the very alertness keeping you up. Instead, do the counterintuitive thing — if you're still awake after fifteen minutes or so, get up. Sit somewhere dim, no bright screens, and do something quiet and boring until sleepiness returns. Then go back to bed.
+
+And before then — before you even sleep — give your racing mind an earlier appointment.
+
+@read SP006 | Can't switch the thoughts off? A gentle wind-down that quiets the noise before it starts →
+
+The goal isn't to fight the wake-up. It's to make yourself a calmer, softer place for sleep to return to.
+
+## Bloom Reflection
+
+For a long time, 3 a.m. may have felt like proof that something was wrong — with your sleep, your nerves, your ability to simply rest like everyone else.
+
+But that wake-up was never a verdict. It was biology: a cortisol tide rising a little early, a mind without its daytime brakes, a few small evening habits quietly stacking the odds — often on the same nights each month.
+
+When you stop fighting the hour and start *tracking* it, 3 a.m. softens from a nightly dread into a pattern you can read, meet, and more and more often, sleep straight through.
+
+## Bloom Tips
+
+- Know the 3 a.m. wake-up is often just cortisol rising early — biology, not failure.
+- Don't trust 3 a.m. thoughts; your brain's calming centre is still offline, so worries feel huge.
+- Watch the evening inputs — alcohol, a too-light dinner, and an un-emptied mind all feed it.
+- Rate your sleep each morning; a month of ratings reveals a rhythm one night never could.
+- Log it beside your cycle — the restless nights often cluster in the week before your period.
+- If you're awake past fifteen minutes, get up, stay dim, and return when sleepy — don't clock-watch.
+
+## Today's Bloom
+
+Tomorrow morning, give your night a single rating — rested, in-between, or restless — and note where you are in your cycle.
+
+Do it for a month and you'll stop guessing. You'll be able to *see* your sleep, and meet the restless week before it arrives.
+
+## Bloom Reminder
+
+3 a.m. was never proof that something is wrong with you.
+
+It's a tide rising a little early — and once you can track it, you can see it coming and let it roll past.
+`,
+  "SP011": `# You Sleep 8 Hours — So Why Are You Still Exhausted?
+
+*You did everything right. In bed on time, a solid eight hours, no 2 a.m. scrolling — and you woke up feeling like you'd been hit by a truck. If more sleep isn't fixing your tiredness, it's because the number was never the whole story. What happens *inside* those hours matters far more.*
+
+Eight hours.
+
+It's the figure we all chase, the gold standard we feel guilty for missing. So when you finally hit it — a full, uninterrupted night — and *still* drag yourself through the morning foggy and flat, it's genuinely confusing. Even a little unfair.
+
+You start to wonder if something's wrong with you.
+
+Sometimes there is a real, fixable reason hiding underneath — and we'll get to those. But first, the piece the "eight hours" rule leaves out entirely: not all sleep is equal. You can spend the right amount of time in bed and still miss the sleep that actually restores you. To understand your tiredness, you have to understand what your brain is doing while you're unconscious.
+
+## Sleep Is Not One Thing — It's Four
+
+Your night isn't one long, flat stretch of nothing. It's a structured journey through four distinct stages, each doing a completely different job.
+
+**Light sleep (N1 and N2)** is the doorway — the drifting-off and the majority of your night. Your heartbeat and breathing slow, your muscles relax, and your brain begins filing memories. It's genuine, useful rest, even if it feels shallow.
+
+**Deep sleep (N3)** is the repair shop. This is the heaviest, hardest-to-wake stage, when growth hormone peaks, your body mends muscle and tissue, and your immune system does its work. It's the sleep that leaves you *physically* restored — and you get most of it in the first half of the night.
+
+**REM sleep** is where you dream, and where your brain processes emotion and cements learning. Your mind is almost as active as when you're awake, sorting through the day and taking the sharp edges off it. REM periods get *longer* toward morning — which is why your most vivid dreams come just before you wake.
+
+## The Ninety-Minute Rhythm
+
+These stages aren't random. They run in a beautifully predictable cycle.
+
+Roughly every 90 minutes, you travel down from light sleep into deep sleep, then back up into REM, then around again — four or five times a night. Early cycles are rich in deep, physical repair; later cycles are rich in REM and dreaming. A whole night is really this rhythm, repeating.
+
+@chart sleep-stages |
+
+This is the key to the mystery of the exhausting eight hours: if something keeps interrupting these cycles, you can spend all night in bed and still collect only a fraction of the deep and REM sleep you actually needed. The clock says you slept. Your brain knows it never finished a single clean lap.
+
+## What Happens When a Cycle Is Broken
+
+Here's what makes interruptions so costly — and why "waking briefly, then falling back asleep" is not as harmless as it feels.
+
+When something pulls you out of a cycle before it completes — a noise, a hot flush, a snoring partner, a full bladder, a buzzing phone — your brain doesn't simply pause and resume where it left off. It has to *start the descent over again*, dropping back through light sleep before it can reach the deep or REM stage it was building toward. Do that a few times a night and you can miss the deepest, most restorative sleep almost entirely, even across eight full hours.
+
+Worse, being yanked out of *deep* sleep produces that thick, drugged, underwater feeling with its own name: sleep inertia. Your brain was in its most unconscious state, and it takes a while to fully come back online — which is why some mornings you wake clear, and others you feel hungover on sleep alone.
+
+Chronic interruptions also keep your stress system switched on. Instead of the calm, restorative night your body was reaching for, you get a fragmented one that leaves you foggy, irritable, and emotionally raw the next day — because the very stages that repair your body and settle your mind never got to run.
+
+## When Your Cycle Steals Your Sleep
+
+For women, there's an extra layer the standard advice ignores: your sleep architecture shifts across your monthly cycle.
+
+In the luteal phase, before your period, falling progesterone removes a natural sedative and your core body temperature rises — and deep sleep needs a *cool* body to take hold. The result is lighter, more broken sleep in the same stretch each month, no matter how many hours you log.
+
+@read SP013 | Sleeping worse right before your period? Here's exactly what your hormones are doing →
+
+It isn't in your head, and it isn't a personal failing. It's your architecture, quietly rearranged by your hormones.
+
+## When It's Not About Sleep At All
+
+Now the part the review rightly asked for — because sometimes flawless sleep and relentless tiredness are pointing at something medical, and these are worth knowing so you can advocate for yourself.
+
+- **Iron-deficiency anaemia.** One of the most common causes of exhaustion in women, especially with heavy periods. Low iron starves your cells of oxygen, and no amount of sleep fixes it — but a simple blood test and treatment often can.
+- **Thyroid disorders.** An *under*-active thyroid (hypothyroidism) slows everything down: bone-deep fatigue, weight changes, cold hands, low mood. An *over*-active one can wreck sleep from the other direction. Both are diagnosed with a blood test and very treatable.
+- **Sleep apnoea.** Breathing repeatedly pauses through the night, jolting you toward the surface hundreds of times without you ever remembering. It's under-diagnosed in women and a classic cause of "I slept eight hours and feel destroyed." Loud snoring, gasping, or morning headaches are red flags worth raising.
+- **Restless legs syndrome.** An irresistible urge to move your legs at night that fragments sleep — often linked, tellingly, to low iron.
+- **Blood-sugar swings and diabetes.** Glucose that spikes and crashes overnight disturbs sleep and drains daytime energy; persistent thirst or frequent urination deserve a check.
+- **Depression and anxiety.** Both can leave you sleeping plenty yet waking unrefreshed, or waking too early — fatigue that lives in the mind as much as the body.
+- **Low vitamin D or B12.** Quiet, common deficiencies that show up as fatigue and are easily tested and corrected.
+
+@tool cycle | Bone-tired in the same stretch each month? Track your energy and symptoms against your phases — open your Cycle Tracker
+
+None of this is cause for alarm — it's a reason to be curious rather than self-blaming. If good sleep genuinely isn't touching your fatigue, that's not a signal to sleep *harder*. It's your body asking you to look closer, and often, to see a doctor for a simple blood test.
+
+## Bloom Reflection
+
+You were taught to measure sleep like a bank balance — hit the number, wake up rich with energy. So when the number lied, it felt like your fault.
+
+But rest was never just hours in a ledger. It's the quiet architecture inside those hours — the deep repair, the dreaming, the uninterrupted cycles — and sometimes it's a whisper from your body about iron, or thyroid, or breathing, or a season of too much stress.
+
+When you stop chasing the number and start honouring what happens inside it — and listening when your tiredness won't lift — exhaustion stops being a mystery you're failing to solve, and becomes a message you're finally equipped to read.
+
+## Bloom Tips
+
+- Chase quality, not just quantity — eight broken hours can restore less than seven whole ones.
+- Protect your cycles: every interruption forces your brain to start the descent to deep sleep over.
+- Blame grogginess on timing — being pulled from deep sleep causes "sleep inertia," not too little rest.
+- Expect lighter sleep before your period, when progesterone drops and your body runs warm.
+- If perfect sleep still leaves you flat, get curious about iron, thyroid, sleep apnoea and B12.
+- See a doctor for persistent unexplained fatigue — a simple blood test often holds the answer.
+
+## Today's Bloom
+
+Tonight, protect your cycles instead of counting your hours: cool the room, silence the phone, remove one thing that tends to wake you.
+
+And if the tiredness has lingered for weeks no matter what you do, book the blood test. Your body may be telling you something a longer sleep never could.
+
+## Bloom Reminder
+
+The number was never the point.
+
+Restful sleep is the architecture inside the hours — and when even that isn't enough, it's your body pointing, gently, at something worth checking.
 `,
 };
 export default bodies;
