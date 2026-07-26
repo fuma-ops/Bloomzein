@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
 import Landing from "./pages/Landing";
 import { AppIcon } from "./components/bloom/AppIcon";
+import { trackPageView } from "./lib/analytics";
 
 // After a deploy, a browser holding a stale index.html may request a chunk
 // filename that no longer exists → the dynamic import rejects and the page
@@ -67,6 +68,18 @@ function PageLoader() {
 
 function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
+
+  // GA4 page tracking. index.html already sent the page_view for the initial
+  // load, so we skip the first render here and only report SPA navigations —
+  // otherwise the landing page would be double-counted.
+  const isInitialPageView = useRef(true);
+  useEffect(() => {
+    if (isInitialPageView.current) {
+      isInitialPageView.current = false;
+      return;
+    }
+    trackPageView(path);
+  }, [path]);
 
   useEffect(() => {
     const handlePopState = () => setPath(window.location.pathname);
