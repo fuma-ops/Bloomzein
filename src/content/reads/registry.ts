@@ -24,6 +24,7 @@ const LOADERS: Partial<Record<Category, Loader>> = {
   Sleep: () => import("./sleep"),
   "Herbal Wellness": () => import("./herbal-wellness"),
   Journaling: () => import("./journaling"),
+  "Mental Wellness": () => import("./mental-wellness"),
   "Bloomzein Originals": () => import("./originals"),
 };
 
