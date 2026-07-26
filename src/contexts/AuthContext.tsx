@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import type { Session, User } from "@supabase/supabase-js"
 import { supabase, type Profile } from "@/lib/supabase"
 import { initCloudSync, startCloudSync, stopCloudSync } from "@/lib/cloudSync"
+import { trackEvent } from "@/lib/analytics"
 
 type AuthContextValue = {
   user: User | null
@@ -70,6 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = async () => {
+    // OAuth redirects away, so completion can't be observed here reliably —
+    // record the intent at the click (Google handles both new + returning users).
+    trackEvent("login", { method: "google" })
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin + window.location.pathname },
@@ -78,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (!error) trackEvent("login", { method: "email" })
     return { error: error?.message ?? null }
   }
 
@@ -87,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: { emailRedirectTo: window.location.origin + "/app/today" },
     })
+    if (!error) trackEvent("sign_up", { method: "email" })
     // When email confirmation is enabled, sign-up succeeds but returns no
     // session — the user must click the link in their inbox first.
     return { error: error?.message ?? null, needsConfirm: !error && !data.session }

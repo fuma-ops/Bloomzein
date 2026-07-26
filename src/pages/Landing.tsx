@@ -9,6 +9,7 @@ import { DreamyFallingIcons } from "@/components/bloom/DreamyFallingIcons";
 import { ConnectionsDiagram } from "@/components/bloom/ConnectionsDiagram";
 import { ToolboxPreview } from "@/components/bloom/ToolboxPreview";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
+import { trackEvent } from "@/lib/analytics";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
@@ -180,7 +181,7 @@ export default function Landing() {
             <div className="flex flex-col gap-4 border-t border-petal/30 pt-6">
               <a
                 href="/app/today"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => { trackEvent("get_started_click", { location: "mobile_menu" }); setMobileMenuOpen(false); }}
                 className="bloom-luxury-btn w-full py-3 sm:py-3.5 font-bold text-white text-center"
               >
                 Start Blooming
@@ -238,6 +239,7 @@ export default function Landing() {
               <div className="mt-4 flex flex-row items-center gap-2 sm:mt-8 sm:gap-3 lg:mt-10">
                 <a
                   href="/app/today"
+                  onClick={() => trackEvent("get_started_click", { location: "hero" })}
                   className="bloom-luxury-btn hover-scale animate-float-soft inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
                   Start Blooming <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
