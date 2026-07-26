@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
+import { trackEvent } from "@/lib/analytics";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
 const GOLD = "#B76E79";
@@ -32,6 +33,13 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
   const [done, setDone] = useState(false);
 
   const startTrial = () => {
+    // Trial-start intent. When real billing is wired this maps 1:1 to the
+    // checkout redirect; for now it measures how many users begin the trial.
+    trackEvent("begin_checkout", {
+      plan: annual ? "annual" : "monthly",
+      value: annual ? 59 : 9.99,
+      currency: "USD",
+    });
     setPlan("plus"); // testing: unlocks instantly. (Billing webhook writes this later.)
     setDone(true);
     setTimeout(onClose, 1400);

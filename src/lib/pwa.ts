@@ -1,3 +1,5 @@
+import { trackEvent } from "./analytics"
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
@@ -30,6 +32,7 @@ export async function triggerPWAInstall(): Promise<"accepted" | "dismissed" | "u
   await _deferred.prompt()
   const { outcome } = await _deferred.userChoice
   _deferred = null
+  trackEvent("pwa_install", { outcome }) // accepted | dismissed — lets us see the ratio
   return outcome
 }
 
