@@ -41,7 +41,7 @@ const FILTER_ICONS: Record<Filter, typeof Sparkles> = {
   "Bloomzein Originals": Star,
 };
 
-const RECOMMENDED_IDS = ["a2", "a6", "a3", "a9", "a5"];
+const RECOMMENDED_IDS = ["SP010", "BE002", "NU002", "CY008", "HW001"];
 
 /* ---------- atoms ---------- */
 function TopicBadge({ topic }: { topic: string }) {

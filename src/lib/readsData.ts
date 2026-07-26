@@ -82,74 +82,9 @@ export const CAT_IMG: Record<Category, string> = {
 
 export const IMG = { featured: "/images/read-featured.webp", ...CAT_IMG } as const;
 
-/* ── Phase-seed reads ──
- * Short, single-paragraph reads that power the four-phase "For your phase"
- * carousels on Today and Diet. They predate the long-form library; new
- * phase-tagged articles enrich the same carousels as batches land. */
-const PHASE_SEED_ARTICLES: Article[] = [
-  { id: "a1", title: "Cycle syncing 101", category: "Cycle & Hormones", minutes: 6, blooms: "2.3k", image: CAT_IMG["Cycle & Hormones"],
-    excerpt: "Match your routine to your phase and feel like yourself again.",
-    body: "Your cycle is a four-season superpower. In follicular days, lean into new beginnings — pitch ideas, try new workouts. Ovulation is your social peak. Luteal asks for slower, nourishing rituals. Menstrual is rest — and rest is productive too." },
-  { id: "a2", title: "Soft girl morning ritual", category: "Soft Living", minutes: 4, blooms: "1.9k", image: CAT_IMG["Soft Living"],
-    excerpt: "Ten gentle minutes that change the entire tone of your day.",
-    body: "Open the curtains slowly. Warm water with lemon. A two-song stretch. Mist your face. Write one sentence in your journal — just one. The point isn't productivity; it's softness." },
-  { id: "a3", title: "Pink budgeting that actually works", category: "Money", minutes: 8, blooms: "1.6k", image: CAT_IMG["Money"],
-    excerpt: "A kinder framework for the girlie who hates spreadsheets.",
-    body: "Forget restriction. Try the 50/30/20 with a twist: 50% needs, 20% future-you, 30% joy. Name your joy categories — flowers, lattes, books — so spending feels intentional, not guilty." },
-  { id: "a4", title: "Moon salutation flow", category: "Yoga", minutes: 5, blooms: "2.1k", image: CAT_IMG["Yoga"],
-    excerpt: "A slow flow for evenings when sun salutations feel like too much.",
-    body: "Start in mountain pose. Sweep arms overhead, fold, step into a low lunge. Move like honey — there's nowhere to be. Finish in child's pose with three long breaths." },
-  { id: "a5", title: "Reframing 'I should'", category: "Mental Wellness", minutes: 5, blooms: "1.4k", image: CAT_IMG["Mental Wellness"],
-    excerpt: "How to soften your inner voice without losing your edge.",
-    body: "Every time you catch a should, swap it for 'I get to' or 'I'm choosing'. Watch what happens. The task is the same; the relationship to it transforms." },
-  { id: "a6", title: "Strawberry oat bowl", category: "Recipes", minutes: 3, blooms: "2.6k", image: CAT_IMG["Recipes"],
-    excerpt: "A pink breakfast that feels like a hug in a bowl.",
-    body: "Blend frozen strawberries with banana and oat milk until creamy. Top with toasted oats, coconut, and a swirl of almond butter. Eat with your favorite spoon." },
-  { id: "a7", title: "Luteal phase glow-up", category: "Cycle & Hormones", minutes: 7, blooms: "1.8k", image: CAT_IMG["Cycle & Hormones"], phase: "luteal",
-    excerpt: "Why the week before your period can be your most creative.",
-    body: "Luteal is finishing energy. It's when you tidy projects, journal honestly, and crave warmth. Honor the inward pull — schedule deep work and decline what doesn't matter." },
-  { id: "a8", title: "The 7-minute skincare edit", category: "Beauty", minutes: 4, blooms: "2.0k", image: CAT_IMG["Beauty"],
-    excerpt: "Three steps, two products, one glowing you.",
-    body: "Cleanse with cool water. Pat — never rub. A pea of moisturizer on damp skin locks in everything. SPF every morning. That's it. The rest is marketing." },
-  { id: "a9", title: "Hip-opening sequence", category: "Yoga", minutes: 6, blooms: "1.5k", image: CAT_IMG["Yoga"],
-    excerpt: "Release a week of sitting in one delicious flow.",
-    body: "Pigeon, then half-frog, then a deep malasana squat. Hold each for 8 slow breaths. Your hips store your stress — let them spill it out." },
-  { id: "a10", title: "Rose latte at home", category: "Recipes", minutes: 3, blooms: "1.2k", image: CAT_IMG["Recipes"],
-    excerpt: "Café vibes for the cost of one rose petal.",
-    body: "Warm oat milk with a teaspoon of rose syrup and a shot of espresso. Top with foam and a dusting of cardamom. Drink slowly by the window." },
-
-  // Menstrual
-  { id: "m1", title: "Your rest-day face-care ritual", category: "Beauty", minutes: 4, blooms: "1.1k", image: CAT_IMG["Beauty"], phase: "menstrual",
-    excerpt: "Puffy, tender skin? Keep it soft and simple this week.",
-    body: "Menstrual skin loves gentleness. Cleanse with lukewarm water, press a cool jade roller along your jaw, and layer a rich moisturizer on damp skin. Skip actives — this is a comfort week, not a project. Warm compress, deep breath, early night." },
-  { id: "m2", title: "Comfort foods that love your period", category: "Nutrition", minutes: 5, blooms: "1.4k", image: CAT_IMG["Nutrition"], phase: "menstrual",
-    excerpt: "Iron, magnesium and warmth — what your body is asking for.",
-    body: "Lean into iron (lentils, spinach, beets) with a squeeze of vitamin-C citrus to absorb it. Magnesium — dark chocolate, pumpkin seeds — eases cramps. Keep meals warm and cooked; save raw and cold for later phases. Ginger tea is your friend." },
-  // Follicular
-  { id: "f1", title: "Fresh-start glow face routine", category: "Beauty", minutes: 4, blooms: "1.7k", image: CAT_IMG["Beauty"], phase: "follicular",
-    excerpt: "Rising estrogen = your skin's comeback week.",
-    body: "Follicular skin is resilient — a great time for a gentle exfoliation and a vitamin-C serum to catch that natural glow. Cleanse, treat, moisturize, SPF. Add a two-minute facial massage and your favorite song. New-you energy, radiant skin." },
-  { id: "f2", title: "Fuel the momentum", category: "Nutrition", minutes: 5, blooms: "1.3k", image: CAT_IMG["Nutrition"], phase: "follicular",
-    excerpt: "Light, bright food for your rising-energy days.",
-    body: "Estrogen is climbing and so is your appetite for novelty. Try fermented foods (yoghurt, kefir), fresh greens, eggs and citrus. It's the perfect week to try a new recipe you've been eyeing — your body is primed for change." },
-  // Ovulatory
-  { id: "o1", title: "Your glow-week face edit", category: "Beauty", minutes: 4, blooms: "2.2k", image: CAT_IMG["Beauty"], phase: "ovulatory",
-    excerpt: "You're at peak radiance — let your skin show it.",
-    body: "Ovulation is your natural highlight reel. Keep it dewy: hydrating mist, lightweight moisturizer, a touch of cream blush on the cheekbones. Less is more this week — your skin is doing the work. Take the photo; you'll want to remember this glow." },
-  { id: "o2", title: "The radiant ovulation plate", category: "Recipes", minutes: 4, blooms: "1.5k", image: CAT_IMG["Recipes"], phase: "ovulatory",
-    excerpt: "Crunchy, colorful, antioxidant-rich — eat to perform.",
-    body: "Peak energy loves fiber and antioxidants: raw crunchy veg, cruciferous greens, quinoa and bright fruit. A vibrant plate now supports the way you feel — social, strong and glowing. Add a fresh-pressed juice and savor it slowly." },
-  // Luteal
-  { id: "l1", title: "Luteal wind-down ritual", category: "Soft Living", minutes: 5, blooms: "1.9k", image: CAT_IMG["Soft Living"], phase: "luteal",
-    excerpt: "Soothe skin and nerves as your energy turns inward.",
-    body: "Luteal skin can be reactive — simplify and calm. A warm cleanse, a barrier-loving moisturizer, and a few drops of facial oil to seal it. Pair it with warm juice, a comfort playlist and no screens. Cozy over busy: this is your soft landing." },
-  { id: "l2", title: "Satisfy cravings, kindly", category: "Nutrition", minutes: 6, blooms: "2.0k", image: CAT_IMG["Nutrition"], phase: "luteal",
-    excerpt: "Cravings are real — here's how to meet them well.",
-    body: "Serotonin dips before your period, so cravings for carbs and chocolate are biology, not weakness. Reach for complex carbs (sweet potato, oats), dark chocolate and walnuts. A healthy dessert made with love beats restriction every time." },
-];
-
-/* ── Imported written articles (from the editorial sheet) ──
- * Long-form; bodies load lazily from src/content/reads/*. */
+/* ── Written articles (the editorial library) ──
+ * Long-form; bodies load lazily from src/content/reads/*. Phase-tagged pieces
+ * also power the four-phase "For your phase" carousels on Today and Diet. */
 const IMPORTED_ARTICLES: Article[] = [
   { id: "CY001", title: "What Is the Menstrual Cycle?", category: "Cycle & Hormones", minutes: 7, blooms: "2.0k", image: CAT_IMG["Cycle & Hormones"],
     excerpt: "Most of us were taught that the menstrual cycle is the week we bleed. In truth, it's a quiet, month-long performance happening…" },
@@ -213,11 +148,11 @@ const IMPORTED_ARTICLES: Article[] = [
     excerpt: "Beautiful days begin with peaceful nights." },
   { id: "SP006", title: "Night Meditation", category: "Sleep", minutes: 5, blooms: "2.2k", image: CAT_IMG["Sleep"],
     excerpt: "The most peaceful nights begin the moment you stop carrying the weight of the day." },
-  { id: "SP010", title: "Why You Keep Waking Up at 3 A.M.", category: "Sleep", minutes: 6, blooms: "3.1k", image: CAT_IMG["Sleep"], status: "review",
+  { id: "SP010", title: "Why You Keep Waking Up at 3 A.M.", category: "Sleep", minutes: 6, blooms: "3.1k", image: CAT_IMG["Sleep"],
     excerpt: "Same time, almost every night — eyes open, mind racing, the clock glowing 3-something. It isn't random, and it isn't insomnia. Your body is doing something very specific." },
-  { id: "SP011", title: "You Sleep 8 Hours — So Why Are You Still Exhausted?", category: "Sleep", minutes: 8, blooms: "2.8k", image: CAT_IMG["Sleep"], status: "review",
+  { id: "SP011", title: "You Sleep 8 Hours — So Why Are You Still Exhausted?", category: "Sleep", minutes: 8, blooms: "2.8k", image: CAT_IMG["Sleep"],
     excerpt: "You did everything right. In bed on time, a full night's sleep, no midnight scrolling — and you still woke up feeling like you barely slept. The number was never the point." },
-  { id: "SP012", title: "The Last Thing You Do Before Bed Is Wrecking Your Sleep", category: "Sleep", minutes: 4, blooms: "2.5k", image: CAT_IMG["Sleep"], status: "review",
+  { id: "SP012", title: "The Last Thing You Do Before Bed Is Wrecking Your Sleep", category: "Sleep", minutes: 4, blooms: "2.5k", image: CAT_IMG["Sleep"],
     excerpt: "It feels harmless — even relaxing. The little ritual you end almost every day with. But those final minutes before sleep hold more power over your night than the whole hour before them." },
   { id: "SP013", title: "Why You Sleep Worse the Week Before Your Period", category: "Sleep", minutes: 4, blooms: "2.4k", image: CAT_IMG["Sleep"], phase: "luteal",
     excerpt: "Restless nights, 3 a.m. wake-ups, sleep that suddenly stops working — right on schedule, every month. You're not imagining it. Your hormones are quietly rewriting your nights." },
@@ -236,7 +171,7 @@ const IMPORTED_ARTICLES: Article[] = [
 ];
 
 /** The full catalogue: long-form editorial reads first, then the phase seeds. */
-export const ARTICLES: Article[] = [...IMPORTED_ARTICLES, ...PHASE_SEED_ARTICLES];
+export const ARTICLES: Article[] = [...IMPORTED_ARTICLES];
 
 /** Article lookup by id (for /app/read?a=<id> deep links). */
 export function articleById(id: string | null | undefined): Article | undefined {
