@@ -3,6 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google Analytics (GA4). Loads the tag + records the first page_view on
+         full page load. Subsequent SPA route changes are tracked from
+         src/lib/analytics.ts (see App.tsx). -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-62HR1CQLQV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-62HR1CQLQV');
+    </script>
     <!-- The app is designed light-only. Declaring this stops mobile browsers'
          "auto dark"/force-dark from inverting our soft pink borders to cyan. -->
     <meta name="color-scheme" content="light" />
