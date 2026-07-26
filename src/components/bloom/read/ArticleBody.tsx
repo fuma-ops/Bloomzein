@@ -2,6 +2,8 @@ import { Fragment, type ReactNode } from "react";
 import { Sparkles, Flower2, Sun, Quote, ArrowRight, BookOpen,
   CalendarHeart, PenLine, Salad, PersonStanding, Dumbbell } from "lucide-react";
 import { HormoneChart } from "./HormoneChart";
+import { SleepStagesChart } from "./SleepStagesChart";
+import { SleepQualityChart } from "./SleepQualityChart";
 
 /**
  * In-article CTAs that softly surface a Bloomzein tool. Authored in the body as
@@ -361,7 +363,10 @@ export function ArticleBody({ parsed }: { parsed: ParsedArticle }) {
             );
           }
           case "chart":
-            return b.chartKey === "hormones" ? <HormoneChart key={k} /> : null;
+            if (b.chartKey === "hormones") return <HormoneChart key={k} />;
+            if (b.chartKey === "sleep-stages") return <SleepStagesChart key={k} />;
+            if (b.chartKey === "sleep-quality") return <SleepQualityChart key={k} />;
+            return null;
           case "read":
             return (
               <a
