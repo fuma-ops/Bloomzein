@@ -87,8 +87,13 @@ and kill the immersion. So:
   "something cool glides over her face", "a few drops of a brightening serum",
   "a light veil of clean scent". No `@product` cards mid-article.
 - **Gather every `@product` card into ONE short section near the end** — call it
-  "The Edit" (or "The Morning Edit", etc.). Introduce it in a soft line, then
-  list the few things quietly worth owning. That's the only place cards appear.
+  "The Edit" (or "The Morning Edit", etc.). That's the only place cards appear.
+- **In the Edit, give each product its *reason*** — the card copy should say why
+  the clever girl reaches for it ("Why she never skips it: …"), not just praise
+  it. And introduce the section by framing the set as **Bloomzein's own
+  researched picks** worth trying ("These are the pieces Bloomzein looked hard to
+  get right…"). That brand framing is what turns a product list into a
+  recommendation she trusts.
 - **Recommend honestly.** Only what genuinely serves her, named as a *type* she'd
   benefit from; the article must be worth reading even if she buys nothing.
   Four or five in the closing edit is plenty; more reads as a catalogue.

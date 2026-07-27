@@ -32,6 +32,7 @@ export const PRODUCTS: Record<string, AffiliateProduct> = {
   iceRoller:     { name: "Facial Ice Roller",        type: "Cooling tool",     blurb: "De-puffs and wakes tired skin in 60 seconds flat.", href: "#" },
   guaSha:        { name: "Gua Sha Stone",            type: "Facial massage",   blurb: "Two minutes of sculpting that drains overnight puffiness.", href: "#" },
   vitcSerum:     { name: "Vitamin C Serum",          type: "Brightening serum",blurb: "The lit-from-within step most routines quietly skip.", href: "#" },
+  moisturizer:   { name: "Gel-Cream Moisturiser",    type: "Moisturiser",      blurb: "Seals water into damp skin so it stays plump and dewy all day.", href: "#" },
   spf:           { name: "Invisible Daily SPF",      type: "Sunscreen",        blurb: "The one anti-ageing step dermatologists agree on — weightless, no white cast.", href: "#" },
   lipBalm:       { name: "Tinted Lip Balm",          type: "Lip care",         blurb: "Your-lips-but-better colour that never looks like effort.", href: "#" },
 
