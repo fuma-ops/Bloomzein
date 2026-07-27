@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart,
+  Search, Clock, ArrowRight, Flower2, Sparkles, Salad, CookingPot, Gem,
+  PersonStanding, Feather, Brain, Moon, Leaf, HeartHandshake, NotebookPen, Compass, Star } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { supabase } from "@/lib/supabase";
-import { ARTICLES, CATEGORIES, articlesByCategory } from "@/lib/readsData";
+import { ARTICLES, FILTERS, IMG, articlesByCategory, type Filter, type Article } from "@/lib/readsData";
 import { articleSlug, articleBySlug } from "@/lib/blog";
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
+import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
+import { BloomBubbles } from "@/components/bloom/BloomBubbles";
+import { BloomFlower } from "@/components/bloom/read/BloomFlower";
 
 /* ------------------------------------------------------------------ *
  * Public, indexable content pages — Help Center, Guides, FAQ.
@@ -496,11 +501,135 @@ export function GuidePage({ slug }: { slug: string }) {
 /* ================================================================= *
  * BLOG — public, indexable articles (SEO surface over the Read library)
  *
- * The same catalogue that powers the in-app Read page (behind /app/, blocked
- * from crawlers) is published here on crawlable /blog/<slug> URLs so Google can
- * index and rank the articles. Bodies load lazily per category, exactly like
- * the app reader.
+ * Same catalogue as the in-app Read page (behind /app/, blocked from crawlers),
+ * published here on crawlable /blog/<slug> URLs — and wearing the SAME design as
+ * the app's Read page: photo hero, search, category filters, article cards and
+ * the magazine reader. The difference is public plumbing: real <a> links (not
+ * in-app open state), canonical + Article JSON-LD, and no auth-only bits
+ * (saved/recommended/phase).
  * ================================================================= */
+
+/* Compact labels + per-category icons for the filter row (mirrors app.read). */
+const FILTER_LABELS: Partial<Record<Filter, string>> = {
+  "Cycle & Hormones": "Cycle",
+  "Mental Wellness": "Mind",
+  "Soft Living": "Soft Living",
+  "Herbal Wellness": "Herbal",
+  "Bloomzein Originals": "Originals",
+};
+const filterLabel = (f: Filter) => FILTER_LABELS[f] ?? f;
+const FILTER_ICONS: Record<Filter, typeof Sparkles> = {
+  All: Sparkles,
+  "Cycle & Hormones": Flower2,
+  Nutrition: Salad,
+  Recipes: CookingPot,
+  Beauty: Gem,
+  Yoga: PersonStanding,
+  "Soft Living": Feather,
+  "Mental Wellness": Brain,
+  Sleep: Moon,
+  "Herbal Wellness": Leaf,
+  Relationships: HeartHandshake,
+  Journaling: NotebookPen,
+  Lifestyle: Compass,
+  "Bloomzein Originals": Star,
+};
+
+/* Public top bar — logo home + Start Blooming CTA (blog has no AppShell). */
+function BlogTopBar() {
+  return (
+    <div className="sticky top-0 z-30 border-b border-petal/40 bg-white/70 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2.5 sm:px-6">
+        <a href="/" className="flex items-center gap-2">
+          <AppIcon size={30} />
+          <span className="font-script text-xl text-hotpink">Bloomzein</span>
+        </a>
+        <a href="/app/today" className="bloom-luxury-btn hover-scale inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-white">
+          Start Blooming <ArrowRight className="h-3.5 w-3.5" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function TopicBadge({ topic }: { topic: string }) {
+  return (
+    <span className="inline-block rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
+      {topic}
+    </span>
+  );
+}
+function ReadTime({ minutes, light }: { minutes: number; light?: boolean }) {
+  return (
+    <span className={["inline-flex items-center gap-1 text-[11px] font-semibold", light ? "text-white/95" : "text-rose/70"].join(" ")}>
+      <Clock className="h-3 w-3" strokeWidth={1.8} /> {minutes} min
+    </span>
+  );
+}
+/** Count a "1.9k" figure up from zero the first time it scrolls in. */
+function useCountUp(target: string, duration = 1200) {
+  const parsed = useMemo(() => {
+    const m = target.trim().match(/^([\d.]+)\s*([a-zA-Z]*)$/);
+    if (!m) return null;
+    const numStr = m[1];
+    return { value: parseFloat(numStr), decimals: numStr.includes(".") ? numStr.split(".")[1].length : 0, suffix: m[2] };
+  }, [target]);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!parsed || !el) return;
+    let raf = 0;
+    const obs = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return;
+      obs.disconnect();
+      const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / duration);
+        setVal(parsed.value * (1 - Math.pow(1 - t, 3)));
+        if (t < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, { threshold: 0.5 });
+    obs.observe(el);
+    return () => { obs.disconnect(); cancelAnimationFrame(raf); };
+  }, [parsed, duration]);
+  return { ref, display: parsed ? val.toFixed(parsed.decimals) + parsed.suffix : target };
+}
+function BloomCount({ count, light }: { count: string; light?: boolean }) {
+  const { ref, display } = useCountUp(count);
+  return (
+    <span ref={ref} className={["inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums", light ? "text-white/95" : "text-rose/70"].join(" ")}>
+      <Flower2 className="h-3 w-3" strokeWidth={1.8} /> {display}
+    </span>
+  );
+}
+
+/** Article card — same look as the app's, but a real <a> link for crawlers. */
+function BlogCard({ article, index = 0 }: { article: Article; index?: number }) {
+  return (
+    <a
+      href={`/blog/${articleSlug(article)}`}
+      style={{ animationDelay: `${index * 0.06}s` }}
+      className="group relative block text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] animate-card-pop-in"
+    >
+      <div className="relative h-28 sm:h-44 overflow-hidden">
+        <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.category} /></div>
+      </div>
+      <div className="p-3 sm:p-5">
+        <h2 className="text-sm sm:text-base font-bold text-rose leading-snug line-clamp-2">{article.title}</h2>
+        <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-rose/75 line-clamp-2 hidden sm:block">{article.excerpt}</p>
+        <div className="mt-2 sm:mt-3 flex items-center justify-between">
+          <span className="flex items-center gap-2"><ReadTime minutes={article.minutes} /><BloomCount count={article.blooms} /></span>
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition">
+            Read <ArrowRight className="h-3 w-3" strokeWidth={2} />
+          </span>
+        </div>
+      </div>
+    </a>
+  );
+}
 
 export function BlogIndexPage() {
   useSeo(
@@ -508,32 +637,105 @@ export function BlogIndexPage() {
     "Soft, cycle-aware wellness articles: hormones and your cycle, eating by phase, beauty, yoga, sleep, journaling and gentle living — from Bloomzein.",
     "/blog",
   );
-  const categories = CATEGORIES.filter((c) => articlesByCategory(c).length > 0);
+  const [query, setQuery] = useState("");
+  const [topic, setTopic] = useState<Filter>("All");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return ARTICLES.filter((a) => {
+      const matchTopic = topic === "All" || a.category === topic;
+      const matchQ = !q || a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
+      return matchTopic && matchQ;
+    });
+  }, [query, topic]);
+
   return (
-    <ContentShell
-      eyebrow="Blog"
-      title="Soft reads for your softest era"
-      subtitle="Gentle, science-friendly wellness writing — understand your cycle, eat for your phase, and build a life that feels good to live."
-    >
-      {categories.map((cat) => (
-        <section key={cat}>
-          <H2>{cat}</H2>
-          <div className="mt-3 grid gap-3">
-            {articlesByCategory(cat).map((a) => (
-              <a
-                key={a.id}
-                href={`/blog/${articleSlug(a)}`}
-                className="block rounded-2xl border border-[#F4C6DD] bg-white p-4 transition hover:border-[#EC4899]/40 hover:shadow-md"
-              >
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[#EC4899]">{a.minutes} min read</p>
-                <h3 className="mt-0.5 font-script text-xl text-[#831843] leading-tight">{a.title}</h3>
-                <p className="mt-1 text-[13.5px] text-[#8a5c74]">{a.excerpt}</p>
-              </a>
-            ))}
-          </div>
+    <div className="min-h-screen bg-[#FFF0F6] text-rose">
+      <BlogTopBar />
+      <div className="relative isolate mx-auto max-w-5xl px-3 pb-16 sm:px-6 lg:px-8">
+        {/* Hero photo as a blended full-bleed background — same technique as Read. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[540px] w-screen -translate-x-1/2 overflow-hidden"
+          style={{
+            WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+          }}
+        >
+          <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[55%_32%] origin-bottom scale-[1.22] sm:scale-100" referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]" />
+        </div>
+
+        <BloomBubbles count={10} />
+
+        {/* HERO title */}
+        <section className="relative z-[1] max-w-[80%] pt-5 pb-1 sm:max-w-md sm:pt-9">
+          <h1 className="animate-fade-in font-script text-[3.25rem] leading-[0.9] text-hotpink drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)] sm:text-6xl lg:text-7xl">Read</h1>
+          <p className="animate-fade-in mt-1 font-script text-xl leading-tight text-rose/90 sm:text-2xl" style={{ animationDelay: "150ms" }}>
+            soft reads for <br className="sm:hidden" />your softest era ✿
+          </p>
         </section>
-      ))}
-    </ContentShell>
+
+        {/* SEARCH + FILTERS */}
+        <div className="relative z-[2] mx-auto mt-4 max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 p-2.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] backdrop-blur-xl animate-card-pop-in sm:p-3.5">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-hotpink" strokeWidth={2.2} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="What would you like to bloom into today?"
+              className="w-full rounded-full border border-petal/50 bg-white/85 py-2.5 pl-11 pr-4 text-sm text-rose outline-none backdrop-blur transition placeholder:text-rose/50 focus:border-hotpink focus:ring-4 focus:ring-hotpink/20 sm:py-3"
+            />
+          </div>
+          <div className="mt-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            {FILTERS.map((t) => {
+              const active = topic === t;
+              const Icon = FILTER_ICONS[t];
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTopic(t)}
+                  className={[
+                    "shrink-0 inline-flex items-center gap-1.5 rounded-full border py-1.5 pl-2.5 pr-3 text-xs font-semibold whitespace-nowrap transition active:scale-95 sm:text-[13px]",
+                    t === "All" ? "sticky left-0 z-[1]" : "",
+                    active
+                      ? "border-hotpink bg-hotpink text-white shadow-md shadow-hotpink/30 animate-selected-glow"
+                      : "border-petal/60 bg-white/85 text-rose hover:bg-blush/70",
+                  ].join(" ")}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                  {filterLabel(t)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* GRID */}
+        <section className="mt-6">
+          {filtered.length === 0 ? (
+            <div className="rounded-3xl border border-petal/50 bg-white/85 p-10 text-center backdrop-blur">
+              <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-blush text-hotpink">
+                <BookOpen className="h-5 w-5" strokeWidth={1.6} />
+              </span>
+              <p className="mt-3 text-sm text-rose">{query ? `No articles matching "${query}".` : "No articles in this topic yet."}</p>
+              <button
+                onClick={() => { setQuery(""); setTopic("All"); }}
+                className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
+              >
+                See all articles <ArrowRight className="h-3 w-3" strokeWidth={2} />
+              </button>
+            </div>
+          ) : (
+            <div key={topic + query} className="grid grid-cols-2 gap-3 animate-fade-in sm:gap-5 lg:grid-cols-3">
+              {filtered.map((a, i) => <BlogCard key={a.id} article={a} index={i} />)}
+            </div>
+          )}
+        </section>
+
+        <CTA />
+      </div>
+    </div>
   );
 }
 
@@ -546,29 +748,46 @@ export function BlogArticlePage({ slug }: { slug: string }) {
   );
 
   const [parsed, setParsed] = useState<ParsedArticle | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     setParsed(null);
-    setLoaded(false);
-    if (!article) { setLoaded(true); return; }
-    loadArticleBody(article).then((md) => {
+    if (!article) { setLoading(false); return; }
+    try { window.scrollTo({ top: 0 }); } catch { /* ignore */ }
+    loadArticleBody(article).then((body) => {
       if (!alive) return;
-      setParsed(md ? parseArticle(md) : null);
-      setLoaded(true);
+      // Legacy short reads return a bare paragraph — wrap so every article
+      // renders through one path with a headline (same as the app reader).
+      const md = !body
+        ? `# ${article.title}\n\n*${article.excerpt}*\n\nThis story is coming soon.`
+        : body.trimStart().startsWith("# ")
+        ? body
+        : `# ${article.title}\n\n*${article.excerpt}*\n\n${body}`;
+      setParsed(parseArticle(md));
+      setLoading(false);
     });
     return () => { alive = false; };
   }, [article]);
 
   if (!article) {
     return (
-      <ContentShell eyebrow="Blog" title="Article not found" subtitle="That article doesn't exist — browse all our articles instead.">
-        <P><A href="/blog">← Back to all articles</A></P>
-      </ContentShell>
+      <div className="min-h-screen bg-[#FFF0F6] text-rose">
+        <BlogTopBar />
+        <div className="mx-auto max-w-3xl px-5 py-20 text-center">
+          <h1 className="font-script text-4xl text-hotpink">Article not found</h1>
+          <p className="mt-2 text-sm text-rose/80">That article doesn't exist — browse all our articles instead.</p>
+          <a href="/blog" className="bloom-luxury-btn mt-5 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white">
+            <ArrowLeft className="h-4 w-4" /> All articles
+          </a>
+        </div>
+      </div>
     );
   }
 
-  const related = articlesByCategory(article.category).filter((a) => a.id !== article.id).slice(0, 5);
+  const headline = parsed?.headline || article.title;
+  const related = articlesByCategory(article.category).filter((a) => a.id !== article.id).slice(0, 6);
+  const heroFade = "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)";
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -581,30 +800,88 @@ export function BlogArticlePage({ slug }: { slug: string }) {
   };
 
   return (
-    <ContentShell eyebrow={`${article.category} · ${article.minutes} min read`} title={article.title} subtitle={article.excerpt}>
-      <JsonLd data={articleSchema} />
-      <p className="text-sm"><A href="/blog">← All articles</A></p>
-      {!loaded ? (
-        <div className="space-y-3" aria-hidden>
-          <div className="h-4 w-3/4 animate-pulse rounded bg-[#F4C6DD]/60" />
-          <div className="h-4 w-full animate-pulse rounded bg-[#F4C6DD]/60" />
-          <div className="h-4 w-5/6 animate-pulse rounded bg-[#F4C6DD]/60" />
+    <div className="min-h-screen bg-[#FFF0F6] text-rose">
+      <BlogTopBar />
+      <article className="relative isolate mx-auto max-w-5xl animate-fade-in px-3 pb-16 sm:px-6 lg:px-8">
+        <JsonLd data={articleSchema} />
+
+        {/* HERO IMAGE — full-bleed blended background with a pink wash for the title. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[26rem] w-screen -translate-x-1/2 overflow-hidden sm:h-[30rem] lg:h-[34rem]"
+          style={{ WebkitMaskImage: heroFade, maskImage: heroFade }}
+        >
+          <img src={article.image} alt="" className="animate-hero-breathe h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 sm:hidden" style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.93) 42%, rgba(226,46,134,0.55) 62%, rgba(226,46,134,0) 80%)" }} />
+          <div className="absolute inset-0 hidden sm:block" style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.9) 26%, rgba(226,46,134,0.5) 41%, rgba(226,46,134,0) 58%)" }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]/70" />
         </div>
-      ) : parsed ? (
-        <ArticleBody parsed={parsed} />
-      ) : (
-        <P>{article.excerpt}</P>
-      )}
-      {related.length > 0 && (
-        <section>
-          <H2>More in {article.category}</H2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 marker:text-[#EC4899]">
-            {related.map((a) => (
-              <li key={a.id}><A href={`/blog/${articleSlug(a)}`}>{a.title}</A></li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </ContentShell>
+
+        <BloomBubbles count={8} />
+
+        {/* back to blog */}
+        <div className="relative z-[1] flex items-center gap-2 pt-3">
+          <a href="/blog" className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-semibold text-hotpink shadow-sm backdrop-blur transition hover:bg-white active:scale-95">
+            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Blog
+          </a>
+        </div>
+
+        {/* HERO TITLE over the pink-washed image */}
+        <header className="relative z-[1] flex min-h-[11rem] max-w-[14rem] flex-col justify-center pb-3 sm:min-h-[13rem] sm:max-w-[22rem] lg:min-h-[15rem] lg:max-w-[25rem]">
+          <h1 className="font-script text-[2.15rem] leading-[1.0] text-white sm:text-5xl lg:text-[3.5rem]" style={{ textShadow: "0 2px 16px rgba(140,18,74,0.55), 0 1px 2px rgba(140,18,74,0.45)" }}>
+            {headline}
+          </h1>
+          <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2.5" style={{ filter: "drop-shadow(0 1px 5px rgba(140,18,74,0.4))" }}>
+            <TopicBadge topic={article.category} />
+            <div className="flex items-center gap-2.5">
+              <ReadTime minutes={article.minutes} light />
+              <BloomCount count={article.blooms} light />
+            </div>
+          </div>
+        </header>
+
+        {parsed ? <ArticleTOC sections={parsed.sections} collapsible className="relative z-[1] lg:hidden mt-3 mb-4" /> : null}
+
+        {/* BODY — sticky "On this page" (desktop) + white article card */}
+        <div className="relative z-[1] mt-2 lg:mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8 lg:items-start">
+          <aside className="hidden lg:sticky lg:top-4 lg:block">
+            {parsed ? <ArticleTOC sections={parsed.sections} /> : null}
+          </aside>
+
+          <div className="min-w-0">
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/50 bg-white/92 p-5 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)] backdrop-blur sm:p-8 lg:p-9">
+              <BloomFlower className="pointer-events-none absolute -right-8 top-24 w-32 text-hotpink opacity-[0.08] animate-icon-breathe sm:w-40" />
+              <BloomFlower className="pointer-events-none absolute -left-10 top-[42%] w-36 text-magenta opacity-[0.07] animate-icon-breathe sm:w-52" style={{ animationDelay: "1.1s" }} />
+              <BloomFlower className="pointer-events-none absolute -right-10 top-[70%] w-32 text-hotpink opacity-[0.08] animate-icon-breathe sm:w-44" style={{ animationDelay: "2.2s" }} />
+              <div className="relative z-[1]">
+                {loading || !parsed ? (
+                  <div className="animate-pulse space-y-4 py-2" aria-hidden>
+                    <div className="h-4 w-2/3 rounded-full bg-petal/30" />
+                    <div className="mt-8 space-y-3">
+                      {Array.from({ length: 7 }).map((_, i) => (
+                        <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <ArticleBody parsed={parsed} />
+                )}
+              </div>
+            </div>
+
+            {related.length > 0 && (
+              <section className="mt-10">
+                <h2 className="font-script text-2xl text-hotpink sm:text-3xl">More in {article.category} ✿</h2>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+                  {related.map((a, i) => <BlogCard key={a.id} article={a} index={i} />)}
+                </div>
+              </section>
+            )}
+
+            <CTA />
+          </div>
+        </div>
+      </article>
+    </div>
   );
 }
