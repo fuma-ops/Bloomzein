@@ -85,6 +85,12 @@ or die on immersion, not information. Hold to this:
 - **Give a real secret.** Not "drink water, use SPF". A genuine insight she
   hasn't heard — e.g. *the effortless morning is built the night before.* If the
   article reveals nothing, it fails.
+- **Explain the *why* behind every step — lightly, woven into the sensation.**
+  Why a morning shower actually wakes you, why clean scent lifts mood and energy,
+  why vitamin C → moisturiser → SPF in that order, how results come from *daily
+  consistency*, not one perfect day. The reasons are what make her believe it and
+  do it. Thread the recurring truths of the aesthetic too — e.g. the clean girl
+  is, by nature, *smartly organised* and, above all, *consistent*.
 - **Describe the sensation of every step**, so reading it feels like living it.
   Warmth, scent, texture, the feeling of being cared-for. This is where the
   persuasion actually happens — she buys the *feeling*, and the products follow.
