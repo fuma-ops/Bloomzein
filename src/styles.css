@@ -1,4 +1,3 @@
-
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -84,8 +83,8 @@
   /* Living phase theme (Bloom+): the soft ambient pinks shift HUE with the
      cycle phase, while the brand pinks (rose/hotpink/magenta) stay fixed.
      Default = hue 350 (classic Bloom pink). Set data-phase on <html> to shift. */
-  --phase-h: 350;   /* ambient hue    */
-  --phase-cm: 1;    /* chroma multiplier */
+  --phase-h: 350; /* ambient hue    */
+  --phase-cm: 1; /* chroma multiplier */
 
   /* Bloom palette — ambient tokens follow --phase-h; brand tokens do NOT. */
   --cream: oklch(0.985 calc(0.012 * var(--phase-cm)) var(--phase-h));
@@ -131,26 +130,50 @@
 
 /* Register the phase vars so their change CROSS-FADES smoothly (700ms) instead
    of snapping — the whole app gently "blooms" into the new phase's tint. */
-@property --phase-h  { syntax: "<number>"; inherits: true; initial-value: 350; }
-@property --phase-cm { syntax: "<number>"; inherits: true; initial-value: 1; }
-:root { transition: --phase-h 700ms ease, --phase-cm 700ms ease; }
+@property --phase-h {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 350;
+}
+@property --phase-cm {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+:root {
+  transition:
+    --phase-h 700ms ease,
+    --phase-cm 700ms ease;
+}
 
 /* The 4 phase tints — AURORA style. The app canvas stays the classic soft
    neutral Bloom pink; the phase shows only as gentle coloured LIGHT (an aurora)
    pooling at the screen edges, plus a whisper-shift of the ambient hue. Brand
    pinks (hotpink/magenta), the card fills and text all stay put — no
    full-screen colour fill, no supersaturated canvas. */
-:root[data-phase="menstrual"] {  /* rich, unmistakably pink rose — the boldest of the four */
-  --phase-h: 356; --phase-cm: 1.5;  --phase-wash: oklch(0.72 0.22 356);
+:root[data-phase="menstrual"] {
+  /* rich, unmistakably pink rose — the boldest of the four */
+  --phase-h: 356;
+  --phase-cm: 1.5;
+  --phase-wash: oklch(0.72 0.22 356);
 }
-:root[data-phase="follicular"] {  /* fresh pink */
-  --phase-h: 344; --phase-cm: 1.2;  --phase-wash: oklch(0.84 0.14 340);
+:root[data-phase="follicular"] {
+  /* fresh pink */
+  --phase-h: 344;
+  --phase-cm: 1.2;
+  --phase-wash: oklch(0.84 0.14 340);
 }
-:root[data-phase="ovulation"] {  /* soft luminous pink (fertile glow) — not orange */
-  --phase-h: 348; --phase-cm: 1.15; --phase-wash: oklch(0.86 0.13 348);
+:root[data-phase="ovulation"] {
+  /* soft luminous pink (fertile glow) — not orange */
+  --phase-h: 348;
+  --phase-cm: 1.15;
+  --phase-wash: oklch(0.86 0.13 348);
 }
-:root[data-phase="luteal"] {  /* calm mauve/lilac */
-  --phase-h: 310; --phase-cm: 1.25; --phase-wash: oklch(0.78 0.14 308);
+:root[data-phase="luteal"] {
+  /* calm mauve/lilac */
+  --phase-h: 310;
+  --phase-cm: 1.25;
+  --phase-wash: oklch(0.78 0.14 308);
 }
 
 /* The aurora: soft ribbons of the phase's colour drifting at the top corners
@@ -159,18 +182,28 @@
 .phase-wash {
   opacity: 0;
   background:
-    radial-gradient(55% 38% at 16% 0%,  var(--phase-wash, transparent), transparent 68%),
-    radial-gradient(50% 34% at 86% 5%,  var(--phase-wash, transparent), transparent 70%),
+    radial-gradient(55% 38% at 16% 0%, var(--phase-wash, transparent), transparent 68%),
+    radial-gradient(50% 34% at 86% 5%, var(--phase-wash, transparent), transparent 70%),
     radial-gradient(62% 42% at 60% 106%, var(--phase-wash, transparent), transparent 72%);
-  transition: opacity 700ms ease, background 700ms ease;
+  transition:
+    opacity 700ms ease,
+    background 700ms ease;
 }
-:root[data-phase] .phase-wash { opacity: 0.45; }
+:root[data-phase] .phase-wash {
+  opacity: 0.45;
+}
 /* Menstrual reads a touch stronger so its bold pink stands clearly apart. */
-:root[data-phase="menstrual"] .phase-wash { opacity: 0.58; }
+:root[data-phase="menstrual"] .phase-wash {
+  opacity: 0.58;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  :root { transition: none; }
-  .phase-wash { transition: none; }
+  :root {
+    transition: none;
+  }
+  .phase-wash {
+    transition: none;
+  }
 }
 
 .dark {
@@ -231,15 +264,11 @@
 }
 
 @utility bloom-stripes {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    var(--hotpink) 0 14px,
-    transparent 14px 28px
-  );
+  background-image: repeating-linear-gradient(-45deg, var(--hotpink) 0 14px, transparent 14px 28px);
 }
 
 @utility text-bloom-gradient {
-  background-image: linear-gradient(135deg, #EC4899, oklch(0.55 0.3 0), oklch(0.7 0.25 20));
+  background-image: linear-gradient(135deg, #ec4899, oklch(0.55 0.3 0), oklch(0.7 0.25 20));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -257,54 +286,125 @@
 }
 
 @keyframes bloom-aurora-shift {
-  0%, 100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
-  50% { background-position: 20% 30%, 70% 40%, 40% 70%, 0 0; }
+  0%,
+  100% {
+    background-position:
+      0% 0%,
+      100% 0%,
+      50% 100%,
+      0 0;
+  }
+  50% {
+    background-position:
+      20% 30%,
+      70% 40%,
+      40% 70%,
+      0 0;
+  }
 }
 
 @keyframes bloom-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-12px) rotate(6deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(6deg);
+  }
 }
 
 @keyframes bloom-sparkle {
-  0%, 100% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
-  50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.7) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
 }
 
 @keyframes bloom-orbit {
-  from { transform: rotate(0deg) translateX(var(--r, 180px)) rotate(0deg); }
-  to { transform: rotate(360deg) translateX(var(--r, 180px)) rotate(-360deg); }
+  from {
+    transform: rotate(0deg) translateX(var(--r, 180px)) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(var(--r, 180px)) rotate(-360deg);
+  }
 }
 
 @keyframes bloom-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.15); opacity: 0.8; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
 }
 
 @keyframes bloom-rise {
-  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-  10% { opacity: 0.8; }
-  90% { opacity: 0.7; }
-  100% { transform: translateY(-120vh) translateX(20px) scale(1.1); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-120vh) translateX(20px) scale(1.1);
+    opacity: 0;
+  }
 }
 
 @keyframes bloom-bounce-in {
-  0% { transform: scale(0.85); }
-  50% { transform: scale(1.18); }
-  100% { transform: scale(1.05); }
+  0% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes bloom-peak-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.55), 0 0 12px 2px rgba(236, 72, 153, 0.4); transform: scale(1); }
-  50% { box-shadow: 0 0 0 8px rgba(236, 72, 153, 0), 0 0 22px 6px rgba(236, 72, 153, 0.7); transform: scale(1.06); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(236, 72, 153, 0.55),
+      0 0 12px 2px rgba(236, 72, 153, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(236, 72, 153, 0),
+      0 0 22px 6px rgba(236, 72, 153, 0.7);
+    transform: scale(1.06);
+  }
 }
 
 /* Bottom sheet spring entrance — soft elastic overshoot, settles cleanly */
 @keyframes bloom-sheet-rise {
-  0% { transform: translateY(100%); }
-  60% { transform: translateY(-3%); }
-  80% { transform: translateY(1.5%); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(100%);
+  }
+  60% {
+    transform: translateY(-3%);
+  }
+  80% {
+    transform: translateY(1.5%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 @utility animate-bloom-sheet-rise {
   animation: bloom-sheet-rise 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -319,24 +419,45 @@
 
 /* Gentle vertical float, no rotation — for text and buttons */
 @keyframes float-soft {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 @utility animate-float-soft {
   animation: float-soft 4s ease-in-out infinite;
 }
 /* Slow breathing zoom — for card background photos */
 @keyframes card-bg-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
 }
 @utility animate-card-bg-breathe {
   animation: card-bg-breathe 8s ease-in-out infinite;
 }
 /* Very light, transparent pink gradient that slowly drifts — for the connections section */
 @keyframes connections-bg-shift {
-  0%, 100% { background-position: 0% 50%, 100% 50%, 50% 100%; }
-  50% { background-position: 30% 60%, 70% 40%, 40% 70%; }
+  0%,
+  100% {
+    background-position:
+      0% 50%,
+      100% 50%,
+      50% 100%;
+  }
+  50% {
+    background-position:
+      30% 60%,
+      70% 40%,
+      40% 70%;
+  }
 }
 @utility bloom-connections-bg {
   background:
@@ -363,31 +484,53 @@
 }
 
 @keyframes bloom-drift {
-  0%   { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
-  25%  { transform: translate3d(20px,-30px,0) rotate(8deg) scale(1.05); }
-  50%  { transform: translate3d(-15px,-55px,0) rotate(-6deg) scale(0.97); }
-  75%  { transform: translate3d(25px,-30px,0) rotate(10deg) scale(1.04); }
-  100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); }
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translate3d(20px, -30px, 0) rotate(8deg) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-15px, -55px, 0) rotate(-6deg) scale(0.97);
+  }
+  75% {
+    transform: translate3d(25px, -30px, 0) rotate(10deg) scale(1.04);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
 }
 @utility animate-bloom-drift {
   animation: bloom-drift 16s ease-in-out infinite;
 }
 
 @keyframes bloom-spin-slow {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 @utility animate-bloom-spin-slow {
   animation: bloom-spin-slow 22s linear infinite;
 }
 
 @keyframes bloom-gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 /* Slow zoom breathing for the card background photos */
 @keyframes photo-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
 }
 @utility animate-photo-breathe {
   animation: photo-breathe 10s ease-in-out infinite;
@@ -395,11 +538,22 @@
 
 /* One-off horizontal nudge on the universes carousel, hinting that it's swipeable */
 @keyframes carousel-swipe-hint {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-16px); }
-  40% { transform: translateX(10px); }
-  60% { transform: translateX(-7px); }
-  80% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-16px);
+  }
+  40% {
+    transform: translateX(10px);
+  }
+  60% {
+    transform: translateX(-7px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
 }
 @utility animate-carousel-hint {
   animation: carousel-swipe-hint 1.4s ease-in-out 1;
@@ -408,11 +562,13 @@
 
 /* Soft moving rainbow wash echoing the Body/Mind/Life card glow colors */
 @utility bloom-rainbow-bg {
-  background: linear-gradient(120deg,
+  background: linear-gradient(
+    120deg,
     oklch(0.9 0.13 350 / 0.35),
     oklch(0.88 0.13 300 / 0.32) 33%,
     oklch(0.9 0.13 20 / 0.32) 66%,
-    oklch(0.9 0.13 350 / 0.35) 100%);
+    oklch(0.9 0.13 350 / 0.35) 100%
+  );
   background-size: 300% 300%;
   animation: bloom-gradient-shift 16s ease-in-out infinite;
 }
@@ -428,7 +584,8 @@
 }
 
 @keyframes bloom-button-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 0 0 rgba(236, 72, 153, 0.55),
       0 6px 22px rgba(236, 72, 153, 0.55),
@@ -447,22 +604,33 @@
   animation: bloom-button-glow 2.2s ease-in-out infinite;
 }
 @utility bloom-button-gradient {
-  background: linear-gradient(120deg, #EC4899, oklch(0.6 0.3 10) 45%, #EC4899);
+  background: linear-gradient(120deg, #ec4899, oklch(0.6 0.3 10) 45%, #ec4899);
   background-size: 200% 200%;
-  animation: bloom-gradient-shift 4s ease-in-out infinite, bloom-button-glow 2.2s ease-in-out infinite;
+  animation:
+    bloom-gradient-shift 4s ease-in-out infinite,
+    bloom-button-glow 2.2s ease-in-out infinite;
 }
 
 @keyframes bloom-shimmer {
-  0% { transform: translateX(-120%) skewX(-20deg); }
-  100% { transform: translateX(220%) skewX(-20deg); }
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
 }
 @utility animate-bloom-shimmer {
   animation: bloom-shimmer 2.8s ease-in-out infinite;
 }
 
 @utility bloom-bubble {
-  background:
-    radial-gradient(circle at 30% 28%, oklch(1 0 0 / 0.85), oklch(0.95 0.05 350 / 0.35) 35%, oklch(0.85 0.15 350 / 0.18) 65%, transparent 75%);
+  background: radial-gradient(
+    circle at 30% 28%,
+    oklch(1 0 0 / 0.85),
+    oklch(0.95 0.05 350 / 0.35) 35%,
+    oklch(0.85 0.15 350 / 0.18) 65%,
+    transparent 75%
+  );
   border: 1px solid oklch(1 0 0 / 0.5);
   box-shadow:
     inset -4px -6px 12px oklch(0.7 0.18 350 / 0.18),
@@ -482,7 +650,8 @@
     opacity: var(--max-opacity, 0.7);
   }
   100% {
-    transform: translateY(115vh) translateX(var(--drift-x, 60px)) rotate(var(--rotation, 360deg)) scale(var(--end-scale, 1.1));
+    transform: translateY(115vh) translateX(var(--drift-x, 60px)) rotate(var(--rotation, 360deg))
+      scale(var(--end-scale, 1.1));
     opacity: 0;
   }
 }
@@ -495,7 +664,9 @@
 
 /* Center bloom flower spins continuously in place */
 @keyframes bloom-flower-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 @utility animate-bloom-flower-spin {
   animation: bloom-flower-spin 9s linear infinite;
@@ -505,9 +676,18 @@
 
 /* Soft pulsing rings radiating outward — used to give the "brain" of the reveal some life */
 @keyframes pulse-ring {
-  0% { transform: scale(0.85); opacity: 0.55; }
-  70% { transform: scale(1.5); opacity: 0; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 @utility animate-pulse-ring {
   animation: pulse-ring 3.6s ease-out infinite;
@@ -515,8 +695,14 @@
 
 /* Tool icons pop in, staggered via animation-delay */
 @keyframes onboarding-icon-pop {
-  0% { opacity: 0; transform: scale(0.3); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @utility animate-onboarding-icon-pop {
   animation: onboarding-icon-pop 0.5s ease-out both;
@@ -524,7 +710,9 @@
 
 /* The whole orbit (icons + connector lines) revolves slowly around the center flower */
 @keyframes orbit-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 @utility animate-orbit-spin {
   animation: orbit-spin 24s linear infinite;
@@ -532,7 +720,9 @@
 
 /* Icons counter-rotate against the orbit so they stay upright while revolving */
 @keyframes orbit-counter-spin {
-  to { transform: rotate(-360deg); }
+  to {
+    transform: rotate(-360deg);
+  }
 }
 @utility animate-orbit-counter-spin {
   animation: orbit-counter-spin 24s linear infinite;
@@ -540,15 +730,23 @@
 
 /* Dotted connector lines pulse outward from the flower, like data flowing to each tool */
 @keyframes flow-dash {
-  to { stroke-dashoffset: -24; }
+  to {
+    stroke-dashoffset: -24;
+  }
 }
 @utility animate-flow-dash {
   animation: flow-dash 1.2s linear infinite;
 }
 
 @keyframes onboarding-text {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @utility animate-onboarding-text {
   animation: onboarding-text 0.4s ease-out both;
@@ -568,8 +766,14 @@
 }
 
 @keyframes bloom-shine-sweep {
-  0%, 15% { transform: translateX(-150%) skewX(-20deg); }
-  55%, 100% { transform: translateX(150%) skewX(-20deg); }
+  0%,
+  15% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  55%,
+  100% {
+    transform: translateX(150%) skewX(-20deg);
+  }
 }
 
 @utility bloom-shine {
@@ -599,15 +803,15 @@
   box-shadow:
     /* small, slightly stronger contact shadow directly under the button */
     0 2px 5px -1px oklch(0.32 0.18 340 / 0.46),
-    /* softer ambient shadow (toned down ~15%, less colored halo) */
-    0 13px 22px -13px oklch(0.6 0.22 345 / 0.34),
-    /* polished acrylic inner border */
-    inset 0 0 0 1px oklch(1 0 0 / 0.22),
-    /* top rim thickness */
-    inset 0 1px 0 oklch(1 0 0 / 0.5),
-    /* base recess for roundness */
-    inset 0 -5px 9px oklch(0.32 0.22 340 / 0.35);
-  transition: transform 0.25s cubic-bezier(0.22, 0.9, 0.32, 1.1), box-shadow 0.3s ease, filter 0.2s ease;
+    /* softer ambient shadow (toned down ~15%, less colored halo) */ 0 13px 22px -13px
+      oklch(0.6 0.22 345 / 0.34),
+    /* polished acrylic inner border */ inset 0 0 0 1px oklch(1 0 0 / 0.22),
+    /* top rim thickness */ inset 0 1px 0 oklch(1 0 0 / 0.5),
+    /* base recess for roundness */ inset 0 -5px 9px oklch(0.32 0.22 340 / 0.35);
+  transition:
+    transform 0.25s cubic-bezier(0.22, 0.9, 0.32, 1.1),
+    box-shadow 0.3s ease,
+    filter 0.2s ease;
 
   /* large soft curved highlight following the capsule's dome */
   &::before {
@@ -660,13 +864,17 @@
 @utility bloom-pearl-card {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(180deg, oklch(0.96 0.045 350 / 0.94) 0%, oklch(0.93 0.07 350 / 0.92) 100%);
+  background: linear-gradient(
+    180deg,
+    oklch(0.96 0.045 350 / 0.94) 0%,
+    oklch(0.93 0.07 350 / 0.92) 100%
+  );
   box-shadow:
     0 16px 32px -22px rgba(236, 72, 153, 0.38),
     0 2px 6px -3px oklch(0.4 0.06 340 / 0.12),
     inset 0 0 0 1px oklch(1 0 0 / 0.5),
     inset 0 1px 0 oklch(1 0 0 / 0.7),
-    inset 0 -1px 8px oklch(0.80 0.12 345 / 0.22);
+    inset 0 -1px 8px oklch(0.8 0.12 345 / 0.22);
 }
 
 /* Light pink ambient shadow used to ground each landing-page section on the page */
@@ -682,13 +890,10 @@
   box-shadow:
     /* bright top edge highlight, fading toward the sides */
     inset 0 1px 0 oklch(1 0 0 / 0.75),
-    /* faint side edges */
-    inset 1px 0 0 oklch(1 0 0 / 0.25),
+    /* faint side edges */ inset 1px 0 0 oklch(1 0 0 / 0.25),
     inset -1px 0 0 oklch(1 0 0 / 0.12),
-    /* soft dark base recess for roundness */
-    inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18),
-    /* soft outer glow */
-    0 16px 38px -14px rgba(236, 72, 153, 0.6);
+    /* soft dark base recess for roundness */ inset 0 -1px 6px oklch(0.45 0.2 340 / 0.18),
+    /* soft outer glow */ 0 16px 38px -14px rgba(236, 72, 153, 0.6);
 
   /* curved highlight sweeping across the top (centered, broad — no corner notch) */
   &::before {
@@ -718,7 +923,8 @@
 }
 
 @keyframes chevron-glow {
-  0%, 100% {
+  0%,
+  100% {
     color: rgba(236, 72, 153, 0.7);
     filter: drop-shadow(0 0 2px rgba(236, 72, 153, 0.4));
     transform: translateX(0);
@@ -736,8 +942,13 @@
 
 /* Soft nudge for inline arrow links — no color/glow change, just a gentle drift */
 @keyframes arrow-nudge {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
 }
 
 @utility animate-arrow-nudge {
@@ -746,11 +957,22 @@
 
 /* Playful wiggle for the little item icons inside the universe cards */
 @keyframes icon-wiggle {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  20%      { transform: rotate(-14deg) scale(1.08); }
-  40%      { transform: rotate(10deg) scale(1.08); }
-  60%      { transform: rotate(-6deg) scale(1); }
-  80%      { transform: rotate(4deg) scale(1); }
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-14deg) scale(1.08);
+  }
+  40% {
+    transform: rotate(10deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(-6deg) scale(1);
+  }
+  80% {
+    transform: rotate(4deg) scale(1);
+  }
 }
 
 @utility animate-icon-wiggle {
@@ -759,8 +981,13 @@
 
 /* Friendly little bounce to keep CTA buttons feeling alive */
 @keyframes cta-bounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 @utility animate-cta-bounce {
@@ -768,8 +995,13 @@
 }
 
 @keyframes icon-breathe {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.08) rotate(-2deg); }
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.08) rotate(-2deg);
+  }
 }
 
 @utility animate-icon-breathe {
@@ -778,16 +1010,26 @@
 
 /* Soft zoom in / out — a gentle scale pulse, no rotation. */
 @keyframes soft-zoom {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.07); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
 }
 @utility animate-soft-zoom {
   animation: soft-zoom 2.4s ease-in-out infinite;
 }
 
 @keyframes hero-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.07); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
 }
 
 @utility animate-hero-breathe {
@@ -797,8 +1039,13 @@
 /* Soft, slow drift for the calendar's floral background — a gentle Ken-Burns
    breathe so the blooms feel alive without distracting from the grid. */
 @keyframes cal-bloom-drift {
-  0%, 100% { transform: scale(1.04) translate3d(0, 0, 0); }
-  50%      { transform: scale(1.08) translate3d(0, -8px, 0); }
+  0%,
+  100% {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate3d(0, -8px, 0);
+  }
 }
 
 @utility animate-cal-bloom {
@@ -810,8 +1057,15 @@
    breathes ONLY over the worked muscle (its position is found by scanning the
    photo for the baked-in magenta glow), so the rest of the image stays still. */
 @keyframes muscle-pulse {
-  0%, 100% { transform: translate(-50%, -50%) scale(0.9);  opacity: 0.35; }
-  50%      { transform: translate(-50%, -50%) scale(1.15); opacity: 0.8; }
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.8;
+  }
 }
 @utility animate-muscle-pulse {
   animation: muscle-pulse 1.9s ease-in-out infinite;
@@ -821,8 +1075,15 @@
 /* Steady breathing ring over the muscle — a solid outline that stays visible
    even on top of the already-bright pink highlight (never fades out). */
 @keyframes muscle-ring {
-  0%, 100% { transform: translate(-50%, -50%) scale(0.94); opacity: 0.8; }
-  50%      { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.94);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+    opacity: 1;
+  }
 }
 @utility animate-muscle-ring {
   animation: muscle-ring 1.9s ease-in-out infinite;
@@ -832,62 +1093,150 @@
 /* Gentle "energy" arrows at the sides of the photo — a small marching glide so
    the still photo feels alive/in motion. */
 @keyframes arrow-flow-l {
-  0%   { opacity: 0;   transform: translateX(6px); }
-  35%  { opacity: 0.9; }
-  100% { opacity: 0;   transform: translateX(-8px); }
+  0% {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
 }
 @keyframes arrow-flow-r {
-  0%   { opacity: 0;   transform: translateX(-6px); }
-  35%  { opacity: 0.9; }
-  100% { opacity: 0;   transform: translateX(8px); }
+  0% {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(8px);
+  }
 }
-@utility animate-arrow-l { animation: arrow-flow-l 2s ease-in-out infinite; }
-@utility animate-arrow-r { animation: arrow-flow-r 2s ease-in-out infinite; }
+@utility animate-arrow-l {
+  animation: arrow-flow-l 2s ease-in-out infinite;
+}
+@utility animate-arrow-r {
+  animation: arrow-flow-r 2s ease-in-out infinite;
+}
 
 /* ── Workout session "come alive" set (screenshot / video friendly) ───────── */
 /* Slow Ken-Burns push so a still exercise photo breathes like footage. */
 @keyframes wk-ken-burns {
-  0%   { transform: scale(1)    translate(0, 0); }
-  50%  { transform: scale(1.08) translate(-1.5%, -1%); }
-  100% { transform: scale(1)    translate(0, 0); }
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate(-1.5%, -1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
 }
-@utility animate-wk-ken-burns { animation: wk-ken-burns 14s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-ken-burns {
+  animation: wk-ken-burns 14s ease-in-out infinite;
+  will-change: transform;
+}
 
 /* Rep number pops on each beat. */
-@keyframes wk-rep-pop { 0% { transform: scale(1); } 28% { transform: scale(1.4); } 100% { transform: scale(1); } }
-@utility animate-wk-rep-pop { animation: wk-rep-pop 0.42s ease-out; }
+@keyframes wk-rep-pop {
+  0% {
+    transform: scale(1);
+  }
+  28% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@utility animate-wk-rep-pop {
+  animation: wk-rep-pop 0.42s ease-out;
+}
 
 /* "GO ✿" flash at the start of a move. */
 @keyframes wk-go-flash {
-  0%   { opacity: 0; transform: scale(0.55); }
-  22%  { opacity: 1; transform: scale(1.12); }
-  70%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.2); }
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
 }
-@utility animate-wk-go-flash { animation: wk-go-flash 0.9s ease-out forwards; }
+@utility animate-wk-go-flash {
+  animation: wk-go-flash 0.9s ease-out forwards;
+}
 
 /* Countdown digit (3·2·1) in the cute intro. */
 @keyframes wk-count-in {
-  0%   { opacity: 0; transform: scale(1.7); }
-  32%  { opacity: 1; transform: scale(1); }
-  78%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.8); }
+  0% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+  32% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
 }
-@utility animate-wk-count-in { animation: wk-count-in 0.72s ease-out both; }
+@utility animate-wk-count-in {
+  animation: wk-count-in 0.72s ease-out both;
+}
 
 /* Bloom logo entrance for the intro. */
 @keyframes wk-bloom-in {
-  0%   { opacity: 0; transform: scale(0.35) rotate(-28deg); }
-  60%  { opacity: 1; transform: scale(1.12) rotate(6deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
+  0% {
+    opacity: 0;
+    transform: scale(0.35) rotate(-28deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12) rotate(6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
 }
-@utility animate-wk-bloom-in { animation: wk-bloom-in 1s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+@utility animate-wk-bloom-in {
+  animation: wk-bloom-in 1s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
 
 /* Falling petals for milestone + finish celebrations (per-petal delay/dur inline). */
 @keyframes wk-petal-fall {
-  0%   { transform: translateY(-12%) rotate(0deg);   opacity: 0; }
-  8%   { opacity: 1; }
-  100% { transform: translateY(112vh) rotate(420deg); opacity: 0; }
+  0% {
+    transform: translateY(-12%) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(112vh) rotate(420deg);
+    opacity: 0;
+  }
 }
 
 /* Living session aurora — soft blobs that slowly drift + breathe behind the
@@ -895,100 +1244,215 @@
    only, so it stays GPU-cheap. Duration + colour are overridden inline so the
    background can react to the session (rest = slower/cooler, work = warmer). */
 @keyframes wk-aurora-1 {
-  0%, 100% { transform: translate(-6%, -4%) scale(1); }
-  50%      { transform: translate(6%, 5%) scale(1.16); }
+  0%,
+  100% {
+    transform: translate(-6%, -4%) scale(1);
+  }
+  50% {
+    transform: translate(6%, 5%) scale(1.16);
+  }
 }
 @keyframes wk-aurora-2 {
-  0%, 100% { transform: translate(5%, 6%) scale(1.12); }
-  50%      { transform: translate(-5%, -6%) scale(0.94); }
+  0%,
+  100% {
+    transform: translate(5%, 6%) scale(1.12);
+  }
+  50% {
+    transform: translate(-5%, -6%) scale(0.94);
+  }
 }
 @keyframes wk-aurora-3 {
-  0%, 100% { transform: translate(0, 4%) scale(1); }
-  50%      { transform: translate(4%, -5%) scale(1.22); }
+  0%,
+  100% {
+    transform: translate(0, 4%) scale(1);
+  }
+  50% {
+    transform: translate(4%, -5%) scale(1.22);
+  }
 }
-@utility animate-wk-aurora-1 { animation: wk-aurora-1 26s ease-in-out infinite; will-change: transform; }
-@utility animate-wk-aurora-2 { animation: wk-aurora-2 32s ease-in-out infinite; will-change: transform; }
-@utility animate-wk-aurora-3 { animation: wk-aurora-3 22s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-aurora-1 {
+  animation: wk-aurora-1 26s ease-in-out infinite;
+  will-change: transform;
+}
+@utility animate-wk-aurora-2 {
+  animation: wk-aurora-2 32s ease-in-out infinite;
+  will-change: transform;
+}
+@utility animate-wk-aurora-3 {
+  animation: wk-aurora-3 22s ease-in-out infinite;
+  will-change: transform;
+}
 /* Gentle "breath" on the rep beat — a barely-there swell, keyed by rep. */
 @keyframes wk-aurora-breathe {
-  0%   { opacity: 0.55; transform: scale(1); }
-  40%  { opacity: 0.8;  transform: scale(1.08); }
-  100% { opacity: 0.55; transform: scale(1); }
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
 }
-@utility animate-wk-aurora-breathe { animation: wk-aurora-breathe 0.9s ease-out; }
+@utility animate-wk-aurora-breathe {
+  animation: wk-aurora-breathe 0.9s ease-out;
+}
 
 /* Breathing backdrop — the blurred pose photo slowly swells in and out, like a
    calm breath, behind the glass. Base scale keeps it overfilled so the blurred
    edges never show. Paused inline when the session pauses. */
 @keyframes wk-bg-breathe {
-  0%, 100% { transform: scale(1.18); }
-  50%      { transform: scale(1.3); }
+  0%,
+  100% {
+    transform: scale(1.18);
+  }
+  50% {
+    transform: scale(1.3);
+  }
 }
-@utility animate-wk-bg-breathe { animation: wk-bg-breathe 7s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-bg-breathe {
+  animation: wk-bg-breathe 7s ease-in-out infinite;
+  will-change: transform;
+}
 
 /* Logo flower breath — gentle swell, SAME 7s period as the backdrop so the
    brand mark breathes in sync with the room. */
 @keyframes wk-logo-breathe {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.12); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
 }
-@utility animate-wk-logo-breathe { animation: wk-logo-breathe 7s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-logo-breathe {
+  animation: wk-logo-breathe 7s ease-in-out infinite;
+  will-change: transform;
+}
 
 /* Logo flower — spins slowly (own layer) while it breathes (own layer) and the
    colour drifts inside it (hue on a third layer), all at once. */
-@keyframes wk-flower-spin { to { transform: rotate(360deg); } }
-@utility animate-wk-flower-spin { animation: wk-flower-spin 16s linear infinite; will-change: transform; }
-@keyframes wk-flower-hue {
-  0%, 100% { filter: hue-rotate(0deg) saturate(1); }
-  33%      { filter: hue-rotate(-18deg) saturate(1.25); }
-  66%      { filter: hue-rotate(14deg) saturate(1.15); }
+@keyframes wk-flower-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
-@utility animate-wk-flower-hue { animation: wk-flower-hue 6s ease-in-out infinite; will-change: filter; }
+@utility animate-wk-flower-spin {
+  animation: wk-flower-spin 16s linear infinite;
+  will-change: transform;
+}
+@keyframes wk-flower-hue {
+  0%,
+  100% {
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  33% {
+    filter: hue-rotate(-18deg) saturate(1.25);
+  }
+  66% {
+    filter: hue-rotate(14deg) saturate(1.15);
+  }
+}
+@utility animate-wk-flower-hue {
+  animation: wk-flower-hue 6s ease-in-out infinite;
+  will-change: filter;
+}
 
 /* "GO" bursting out from inside the rep ring after the coach finishes speaking. */
 @keyframes wk-go-ring {
-  0%   { transform: scale(0.2); opacity: 0; }
-  25%  { opacity: 1; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
 }
-@utility animate-wk-go-ring { animation: wk-go-ring 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@utility animate-wk-go-ring {
+  animation: wk-go-ring 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
 
 /* Speaking sound-wave bars (coach is talking, chrono held). */
 @keyframes wk-eq {
-  0%, 100% { transform: scaleY(0.35); }
-  50%      { transform: scaleY(1); }
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
-@utility animate-wk-eq { animation: wk-eq 0.6s ease-in-out infinite; transform-origin: center; }
+@utility animate-wk-eq {
+  animation: wk-eq 0.6s ease-in-out infinite;
+  transform-origin: center;
+}
 
 /* Player-icon beat pulse — a gentle ~120bpm swell; staggered per icon so the
    row reads like an equalizer dancing to the music. */
 @keyframes wk-beat {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.14); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
 }
-@utility animate-wk-beat { animation: wk-beat 0.5s ease-in-out infinite; will-change: transform; }
+@utility animate-wk-beat {
+  animation: wk-beat 0.5s ease-in-out infinite;
+  will-change: transform;
+}
 
 /* Left-rail card icons "vibe" to the music — a gentle sway + scale, like a
    little dancer swaying. Staggered per card (inline animationDelay) so the rail
    reads like a soft equalizer. Calm, alive, never busy. */
 @keyframes wk-icon-vibe {
-  0%, 100% { transform: rotate(-6deg) scale(1); }
-  50%      { transform: rotate(6deg) scale(1.12); }
+  0%,
+  100% {
+    transform: rotate(-6deg) scale(1);
+  }
+  50% {
+    transform: rotate(6deg) scale(1.12);
+  }
 }
-@utility animate-wk-icon-vibe { animation: wk-icon-vibe 2.1s ease-in-out infinite; transform-origin: center; will-change: transform; }
+@utility animate-wk-icon-vibe {
+  animation: wk-icon-vibe 2.1s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
 /* Soft pink glow that breathes on the icon medallion, in time with the sway. */
 @keyframes wk-icon-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.7 0.24 350 / 0); }
-  50%      { box-shadow: 0 0 15px 1px oklch(0.7 0.24 350 / 0.5); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.7 0.24 350 / 0);
+  }
+  50% {
+    box-shadow: 0 0 15px 1px oklch(0.7 0.24 350 / 0.5);
+  }
 }
-@utility animate-wk-icon-glow { animation: wk-icon-glow 2.1s ease-in-out infinite; }
+@utility animate-wk-icon-glow {
+  animation: wk-icon-glow 2.1s ease-in-out infinite;
+}
 
 /* Cute music-vibe on the left-rail muscle-target bars: a bright light sweeps
    across each fill while it gently brightens — staggered per bar (inline delay)
    so the stack reads like a soft equalizer bouncing to the beat. */
 @keyframes wk-bar-shimmer {
-  0%       { transform: translateX(-130%); }
-  60%,100% { transform: translateX(360%); }
+  0% {
+    transform: translateX(-130%);
+  }
+  60%,
+  100% {
+    transform: translateX(360%);
+  }
 }
 @utility animate-wk-bar-shimmer {
   background: linear-gradient(100deg, transparent 12%, oklch(1 0 0 / 0.6) 50%, transparent 88%);
@@ -996,70 +1460,169 @@
   will-change: transform;
 }
 @keyframes wk-bar-pulse {
-  0%, 100% { filter: brightness(1) saturate(1); }
-  50%      { filter: brightness(1.15) saturate(1.22); }
+  0%,
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(1.15) saturate(1.22);
+  }
 }
-@utility animate-wk-bar-pulse { animation: wk-bar-pulse 1.5s ease-in-out infinite; will-change: filter; }
+@utility animate-wk-bar-pulse {
+  animation: wk-bar-pulse 1.5s ease-in-out infinite;
+  will-change: filter;
+}
 
 /* Stage aurora blobs — breathe big↔small while glowing brighter/dimmer, so the
    side-bands read as a soft, living pink aurora (per-blob dur/delay inline). */
 @keyframes wk-aurora-pulse {
-  0%, 100% { transform: scale(0.82); opacity: 0.42; }
-  50%      { transform: scale(1.22); opacity: 0.78; }
+  0%,
+  100% {
+    transform: scale(0.82);
+    opacity: 0.42;
+  }
+  50% {
+    transform: scale(1.22);
+    opacity: 0.78;
+  }
 }
-@utility animate-wk-aurora-pulse { animation: wk-aurora-pulse 8s ease-in-out infinite; will-change: transform, opacity; }
+@utility animate-wk-aurora-pulse {
+  animation: wk-aurora-pulse 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
 
 /* Soft attention pulse for a label + its icon (e.g. the "Next up" title) — a
    barely-there scale + fade that draws the eye without shouting. */
 @keyframes wk-attn {
-  0%, 100% { transform: scale(1);    opacity: 0.72; }
-  50%      { transform: scale(1.05); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
 }
-@utility animate-wk-attn { animation: wk-attn 2.4s ease-in-out infinite; transform-origin: left center; will-change: transform, opacity; }
+@utility animate-wk-attn {
+  animation: wk-attn 2.4s ease-in-out infinite;
+  transform-origin: left center;
+  will-change: transform, opacity;
+}
 
 /* Finish-screen trophy — a bouncy squeeze + zoom in/out, over and over. */
 @keyframes wk-trophy-pop {
-  0%, 100% { transform: scale(1); }
-  30%      { transform: scale(1.22); }
-  45%      { transform: scale(0.9); }
-  62%      { transform: scale(1.12); }
-  78%      { transform: scale(0.97); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.22);
+  }
+  45% {
+    transform: scale(0.9);
+  }
+  62% {
+    transform: scale(1.12);
+  }
+  78% {
+    transform: scale(0.97);
+  }
 }
-@utility animate-wk-trophy-pop { animation: wk-trophy-pop 1.8s ease-in-out infinite; transform-origin: center; will-change: transform; }
+@utility animate-wk-trophy-pop {
+  animation: wk-trophy-pop 1.8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
 
 /* Pink star/sparkle twinkle across the finish screen (dur/delay set inline). */
 @keyframes wk-twinkle {
-  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
-  50%      { opacity: 1; transform: scale(1.1) rotate(20deg); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(20deg);
+  }
 }
-@utility animate-wk-twinkle { animation: wk-twinkle ease-in-out infinite; will-change: transform, opacity; }
+@utility animate-wk-twinkle {
+  animation: wk-twinkle ease-in-out infinite;
+  will-change: transform, opacity;
+}
 
 /* One-shot radial EXPLOSION — each bit flies out from the centre (per-bit
    --x/--y/--r set inline) while scaling up and fading. */
 @keyframes wk-explode {
-  0%   { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 1; }
-  70%  { opacity: 1; }
-  100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1) rotate(var(--r)); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1) rotate(var(--r));
+    opacity: 0;
+  }
 }
-@utility animate-wk-explode { animation: wk-explode 1.25s cubic-bezier(0.15, 0.7, 0.2, 1) forwards; will-change: transform, opacity; }
+@utility animate-wk-explode {
+  animation: wk-explode 1.25s cubic-bezier(0.15, 0.7, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
 /* Quick pink flash at the moment of the burst. */
-@keyframes wk-flash { 0% { opacity: 0; } 12% { opacity: 0.85; } 100% { opacity: 0; } }
-@utility animate-wk-flash { animation: wk-flash 0.85s ease-out forwards; }
+@keyframes wk-flash {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@utility animate-wk-flash {
+  animation: wk-flash 0.85s ease-out forwards;
+}
 
 /* "Wow" card bloom — scales up from small with a soft overshoot. */
 @keyframes wk-card-bloom {
-  0%   { opacity: 0; transform: scale(0.5); }
-  60%  { opacity: 1; transform: scale(1.06); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
-@utility animate-wk-card-bloom { animation: wk-card-bloom 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+@utility animate-wk-card-bloom {
+  animation: wk-card-bloom 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
 
 /* Big cute "The End" breathing on the finish intro. */
 @keyframes wk-end-breathe {
-  0%, 100% { transform: scale(1);    opacity: 0.85; }
-  50%      { transform: scale(1.08); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
-@utility animate-wk-end-breathe { animation: wk-end-breathe 2.2s ease-in-out infinite; transform-origin: center; will-change: transform, opacity; }
+@utility animate-wk-end-breathe {
+  animation: wk-end-breathe 2.2s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
 
 /* Player control — flat & matte, no gloss/sheen/dome. A clean frosted disc with
    just a soft ambient shadow; presses in on tap. */
@@ -1068,9 +1631,16 @@
   backdrop-filter: blur(10px);
   border: 1px solid oklch(0.9 0.05 350 / 0.7);
   box-shadow: 0 6px 16px -10px oklch(0.6 0.22 345 / 0.4);
-  transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.2s ease;
-  &:hover { filter: brightness(1.02); }
-  &:active { transform: scale(0.95); }
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    filter 0.2s ease;
+  &:hover {
+    filter: brightness(1.02);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
 }
 /* The "on"/primary control — a flat, solid brand-pink disc (active toggles +
    the central Play/Pause). No gloss, just a soft pink ambient shadow. */
@@ -1078,35 +1648,76 @@
   background: var(--hotpink);
   border: 1px solid oklch(0.55 0.24 0 / 0.5);
   box-shadow: 0 6px 16px -8px oklch(0.55 0.24 350 / 0.5);
-  transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.2s ease;
-  &:hover { filter: brightness(1.04); }
-  &:active { transform: scale(0.95); }
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    filter 0.2s ease;
+  &:hover {
+    filter: brightness(1.04);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 /* "GO ✿" blooming from the CENTRE of the exercise image — fires on the SAME
    trigger as the rep-ring GO, a quick beautiful flourish that clears itself. */
 @keyframes wk-go-center {
-  0%   { opacity: 0; transform: scale(0.35); filter: blur(6px); }
-  28%  { opacity: 1; transform: scale(1.08); filter: blur(0); }
-  62%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.4); filter: blur(3px); }
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+    filter: blur(6px);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1.08);
+    filter: blur(0);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+    filter: blur(3px);
+  }
 }
-@utility animate-wk-go-center { animation: wk-go-center 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@utility animate-wk-go-center {
+  animation: wk-go-center 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
 
 /* Ambient petals that rise softly through the stage side-bands (per-petal
    left/delay/duration set inline). */
 @keyframes wk-petal-drift {
-  0%   { transform: translateY(15%) rotate(0deg);    opacity: 0; }
-  12%  { opacity: 0.75; }
-  85%  { opacity: 0.75; }
-  100% { transform: translateY(-115%) rotate(200deg); opacity: 0; }
+  0% {
+    transform: translateY(15%) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.75;
+  }
+  85% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(-115%) rotate(200deg);
+    opacity: 0;
+  }
 }
-@utility animate-wk-petal-drift { animation: wk-petal-drift linear infinite; will-change: transform, opacity; }
+@utility animate-wk-petal-drift {
+  animation: wk-petal-drift linear infinite;
+  will-change: transform, opacity;
+}
 
 /* Glossy clay gradient blob — used behind tool icons */
 @utility clay-blob {
-  background:
-    radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), #EC4899 45%, oklch(0.58 0.28 0) 90%);
+  background: radial-gradient(
+    circle at 30% 25%,
+    oklch(0.82 0.22 350 / 0.95),
+    #ec4899 45%,
+    oklch(0.58 0.28 0) 90%
+  );
   box-shadow:
     inset 4px 6px 12px oklch(1 0 0 / 0.45),
     inset -6px -8px 14px oklch(0.45 0.26 0 / 0.5),
@@ -1115,8 +1726,14 @@
 }
 
 @keyframes bloom-scroll-hint {
-  0%, 55%, 100% { transform: translateX(0); }
-  30% { transform: translateX(-18px); }
+  0%,
+  55%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-18px);
+  }
 }
 
 @utility animate-bloom-scroll-hint {
@@ -1125,13 +1742,14 @@
 
 /* One-time pink "I'm here" glow on the workout hero border, on first reveal */
 @keyframes hero-border-signal {
-  0%, 100% {
+  0%,
+  100% {
     border-color: oklch(1 0 0 / 0.6);
-    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
   }
   35% {
-    border-color: #EC4899;
-    box-shadow: 0 0 0 6px rgba(236, 72, 153,0.25);
+    border-color: #ec4899;
+    box-shadow: 0 0 0 6px rgba(236, 72, 153, 0.25);
   }
 }
 
@@ -1141,8 +1759,13 @@
 
 /* Quick attention "pop" for the energy-check heading */
 @keyframes text-pop {
-  0%, 100% { transform: scale(1); }
-  40% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.1);
+  }
 }
 
 @utility animate-text-pop {
@@ -1155,13 +1778,14 @@
 
 /* Continuous "pick me" glow hint for an unselected option group */
 @keyframes hint-glow {
-  0%, 100% {
+  0%,
+  100% {
     border-color: oklch(0.85 0.1 350 / 0.5);
-    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
   }
   50% {
-    border-color: rgba(236, 72, 153,0.8);
-    box-shadow: 0 0 12px 2px rgba(236, 72, 153,0.4);
+    border-color: rgba(236, 72, 153, 0.8);
+    box-shadow: 0 0 12px 2px rgba(236, 72, 153, 0.4);
   }
 }
 
@@ -1171,13 +1795,14 @@
 
 /* Gentler version of hint-glow — subtle border/shadow pulse for tighter spaces */
 @keyframes soft-hint-glow {
-  0%, 100% {
+  0%,
+  100% {
     border-color: oklch(0.85 0.1 350 / 0.3);
-    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
   }
   50% {
     border-color: oklch(0.75 0.15 350 / 0.5);
-    box-shadow: 0 0 6px 1px rgba(236, 72, 153,0.2);
+    box-shadow: 0 0 6px 1px rgba(236, 72, 153, 0.2);
   }
 }
 
@@ -1193,11 +1818,14 @@
 
 /* One-time glow hint ring for the "Discover" tab pill (step 1 of guided tour) */
 @keyframes tab-glow-hint {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(236, 72, 153,0);
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(236, 72, 153,0.45), 0 0 16px 4px rgba(236, 72, 153,0.5);
+    box-shadow:
+      0 0 0 5px rgba(236, 72, 153, 0.45),
+      0 0 16px 4px rgba(236, 72, 153, 0.5);
   }
 }
 
@@ -1209,8 +1837,13 @@
 
 /* Persistent soft glow for a selected choice (energy / intention) */
 @keyframes selected-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153,0.35); }
-  50% { box-shadow: 0 0 14px 3px rgba(236, 72, 153,0.55); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 14px 3px rgba(236, 72, 153, 0.55);
+  }
 }
 
 @utility animate-selected-glow {
@@ -1219,8 +1852,15 @@
 
 /* Today's calendar cell — zoom in/out + pink glow so user finds it immediately */
 @keyframes today-breathe {
-  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(236, 72, 153,0.4); }
-  50%       { transform: scale(1.09); box-shadow: 0 0 10px 3px rgba(236, 72, 153,0.6); }
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    transform: scale(1.09);
+    box-shadow: 0 0 10px 3px rgba(236, 72, 153, 0.6);
+  }
 }
 @utility animate-today-breathe {
   animation: today-breathe 2s ease-in-out infinite;
@@ -1228,8 +1868,13 @@
 
 /* Gentler version of selected-glow — subtle shadow pulse for tighter spaces */
 @keyframes soft-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153,0.15); }
-  50% { box-shadow: 0 0 8px 1px rgba(236, 72, 153,0.25); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(236, 72, 153, 0.25);
+  }
 }
 
 @utility animate-soft-glow {
@@ -1238,9 +1883,18 @@
 
 /* Cute staggered "pop in" entrance for tool cards */
 @keyframes card-pop-in {
-  0% { opacity: 0; transform: translateY(16px) scale(0.85) rotate(-3deg); }
-  60% { opacity: 1; transform: translateY(-3px) scale(1.04) rotate(1.5deg); }
-  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85) rotate(-3deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.04) rotate(1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
 }
 
 @utility animate-card-pop-in {
@@ -1250,13 +1904,53 @@
 
 /* Gentle fade + rise for swapped preview panels (toolbox section) */
 @keyframes fade-in {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @utility animate-fade-in {
   animation: fade-in 0.35s ease-out 1;
   animation-fill-mode: backwards;
+}
+
+/* Cute, smooth swap when the whole page switches to another cycle phase —
+   a soft rise + gentle scale with a clearing blur, so every section melts in. */
+@keyframes phase-swap {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+    filter: blur(7px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@utility animate-phase-swap {
+  animation: phase-swap 0.55s cubic-bezier(0.22, 1, 0.36, 1) 1;
+  animation-fill-mode: backwards;
+}
+
+/* Draw an SVG line on from start to end (paths use pathLength="1"). */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@utility animate-draw-line {
+  animation: draw-line 1.15s ease-out both;
 }
 
 /* Hide scrollbars while keeping horizontal scroll usable */
@@ -1270,9 +1964,16 @@
 
 /* One-time nudge to hint a row can be scrolled horizontally */
 @keyframes scroll-hint {
-  0%, 100% { transform: translateX(0); }
-  40% { transform: translateX(-22px); }
-  70% { transform: translateX(-22px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-22px);
+  }
+  70% {
+    transform: translateX(-22px);
+  }
 }
 
 @utility animate-scroll-hint {
@@ -1283,8 +1984,13 @@
 
 /* Very subtle ambient breathing for hero cards — calm, slow, almost imperceptible */
 @keyframes card-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.012); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.012);
+  }
 }
 
 @utility animate-card-breathe {
@@ -1293,8 +1999,15 @@
 
 /* Soft glow pulse for primary CTAs */
 @keyframes cta-glow-pulse {
-  0%, 100% { box-shadow: 0 8px 22px -10px rgba(236, 72, 153,0.55); }
-  50%      { box-shadow: 0 8px 26px -6px rgba(236, 72, 153,0.9), 0 0 0 6px rgba(236, 72, 153, 0.16); }
+  0%,
+  100% {
+    box-shadow: 0 8px 22px -10px rgba(236, 72, 153, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 8px 26px -6px rgba(236, 72, 153, 0.9),
+      0 0 0 6px rgba(236, 72, 153, 0.16);
+  }
 }
 
 @utility animate-cta-glow {
@@ -1303,8 +2016,17 @@
 
 /* Lively breathing pulse for onboarding CTAs — scales gently up and back, with a brighter glow at the peak */
 @keyframes cta-pulse {
-  0%, 100% { transform: translateY(-2px) scale(1); box-shadow: 0 8px 22px -10px rgba(236, 72, 153,0.55); }
-  50%      { transform: translateY(-2px) scale(1.045); box-shadow: 0 10px 28px -6px rgba(236, 72, 153,0.9), 0 0 0 7px rgba(236, 72, 153, 0.18); }
+  0%,
+  100% {
+    transform: translateY(-2px) scale(1);
+    box-shadow: 0 8px 22px -10px rgba(236, 72, 153, 0.55);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.045);
+    box-shadow:
+      0 10px 28px -6px rgba(236, 72, 153, 0.9),
+      0 0 0 7px rgba(236, 72, 153, 0.18);
+  }
 }
 
 @utility animate-cta-pulse {
@@ -1313,9 +2035,18 @@
 
 /* Pops a question into view with a little bounce, drawing the eye to what needs an answer */
 @keyframes question-pop {
-  0% { opacity: 0; transform: translateY(10px) scale(0.92); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.03); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @utility animate-question-pop {
@@ -1324,9 +2055,18 @@
 
 /* A soft pink ring that flashes a couple of times to point at the next step in a guided flow */
 @keyframes step-highlight {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
-  15%, 55% { box-shadow: 0 0 0 5px rgba(236, 72, 153, 0.22); }
-  35%, 75% { box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.12); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+  }
+  15%,
+  55% {
+    box-shadow: 0 0 0 5px rgba(236, 72, 153, 0.22);
+  }
+  35%,
+  75% {
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.12);
+  }
 }
 
 @utility animate-step-highlight {
@@ -1335,8 +2075,15 @@
 
 /* Gentle drifting sparkle accents inside hero cards */
 @keyframes sparkle-drift {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
-  50%      { transform: translate(6px, -10px) scale(1.2); opacity: 1; }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(6px, -10px) scale(1.2);
+    opacity: 1;
+  }
 }
 
 @utility animate-sparkle-drift {
@@ -1345,10 +2092,18 @@
 
 /* Quick pop feedback when tapping a heart/save button */
 @keyframes heart-pop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.35); }
-  60%  { transform: scale(0.92); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  60% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @utility animate-heart-pop {
@@ -1357,25 +2112,50 @@
 
 /* Occasional gentle vibration — mostly still, with a brief shimmy now and then */
 @keyframes card-vibrate {
-  0%, 92%, 100% { transform: translateX(0) rotate(0deg); }
-  93% { transform: translateX(-1.5px) rotate(-0.4deg); }
-  94% { transform: translateX(1.5px) rotate(0.4deg); }
-  95% { transform: translateX(-1.5px) rotate(-0.4deg); }
-  96% { transform: translateX(1.5px) rotate(0.4deg); }
-  97% { transform: translateX(-1px) rotate(-0.2deg); }
-  98% { transform: translateX(1px) rotate(0.2deg); }
+  0%,
+  92%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  93% {
+    transform: translateX(-1.5px) rotate(-0.4deg);
+  }
+  94% {
+    transform: translateX(1.5px) rotate(0.4deg);
+  }
+  95% {
+    transform: translateX(-1.5px) rotate(-0.4deg);
+  }
+  96% {
+    transform: translateX(1.5px) rotate(0.4deg);
+  }
+  97% {
+    transform: translateX(-1px) rotate(-0.2deg);
+  }
+  98% {
+    transform: translateX(1px) rotate(0.2deg);
+  }
 }
 
 /* Combines the existing entrance pop-in with the periodic vibration */
 @utility animate-card-vibrate {
-  animation: card-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1, card-vibrate 9s ease-in-out infinite;
+  animation:
+    card-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1,
+    card-vibrate 9s ease-in-out infinite;
   animation-fill-mode: backwards, none;
 }
 
 /* Flower "blooms" open then closes again, on loop — for the title flower icon */
 @keyframes flower-bloom {
-  0%, 100% { transform: scale(0.85) rotate(-6deg); opacity: 0.85; }
-  50% { transform: scale(1.2) rotate(6deg); opacity: 1; }
+  0%,
+  100% {
+    transform: scale(0.85) rotate(-6deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.2) rotate(6deg);
+    opacity: 1;
+  }
 }
 @utility animate-flower-bloom {
   display: inline-block;
@@ -1385,8 +2165,13 @@
 
 /* Soft pink glow pulse for the title flower icon */
 @keyframes flower-glow {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(236, 72, 153, 0.35)); }
-  50% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.8)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 0 3px rgba(236, 72, 153, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.8));
+  }
 }
 @utility animate-flower-glow {
   animation: flower-glow 3s ease-in-out infinite;
@@ -1394,8 +2179,17 @@
 
 /* Soft glowing text pulse — marks copy as important/live data */
 @keyframes text-glow-pulse {
-  0%, 100% { text-shadow: 0 0 4px rgba(236, 72, 153, 0.3), 0 0 1px rgba(236, 72, 153,0.2); }
-  50% { text-shadow: 0 0 16px rgba(236, 72, 153, 0.75), 0 0 6px rgba(236, 72, 153,0.55); }
+  0%,
+  100% {
+    text-shadow:
+      0 0 4px rgba(236, 72, 153, 0.3),
+      0 0 1px rgba(236, 72, 153, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 0 16px rgba(236, 72, 153, 0.75),
+      0 0 6px rgba(236, 72, 153, 0.55);
+  }
 }
 @utility animate-text-glow {
   animation: text-glow-pulse 2.4s ease-in-out infinite;
@@ -1403,24 +2197,60 @@
 
 /* ── Onboarding "seduction layer" — spring card entrances ─────────────── */
 @keyframes spring-in-left {
-  0%   { opacity: 0; transform: translateX(-60px) scale(0.96); }
-  65%  { opacity: 1; transform: translateX(8px) scale(1.01); }
-  100% { opacity: 1; transform: translateX(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(-60px) scale(0.96);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(8px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 @keyframes spring-in-right {
-  0%   { opacity: 0; transform: translateX(60px) scale(0.96); }
-  65%  { opacity: 1; transform: translateX(-8px) scale(1.01); }
-  100% { opacity: 1; transform: translateX(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateX(60px) scale(0.96);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-8px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 @keyframes spring-in-bottom {
-  0%   { opacity: 0; transform: translateY(60px) scale(0.96); }
-  65%  { opacity: 1; transform: translateY(-6px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.96);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @keyframes spring-in-center {
-  0%   { opacity: 0; transform: scale(0.85); }
-  65%  { opacity: 1; transform: scale(1.04); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @utility animate-spring-left {
   animation: spring-in-left 0.6s cubic-bezier(0.22, 1.6, 0.36, 1) both;
@@ -1437,8 +2267,13 @@
 
 /* Slow ambient background tint shift — used behind the "sync everything" reveal */
 @keyframes ambient-tint-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 @utility animate-ambient-tint {
   background-size: 200% 200%;
@@ -1447,8 +2282,13 @@
 
 /* Soft continuous glow for the cycle anchor card */
 @keyframes anchor-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.25); }
-  50%      { box-shadow: 0 0 0 10px rgba(236, 72, 153, 0.12); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(236, 72, 153, 0.12);
+  }
 }
 @utility animate-anchor-glow {
   animation: anchor-glow 3s ease-in-out infinite;
@@ -1456,7 +2296,10 @@
 
 /* Scatter cards offscreen when finishing onboarding */
 @keyframes scatter-out {
-  to { opacity: 0; transform: translateY(-40px) scale(0.8); }
+  to {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.8);
+  }
 }
 @utility animate-scatter-out {
   animation: scatter-out 0.4s ease-in forwards;
@@ -1464,8 +2307,15 @@
 
 /* Gentle, soft glow inviting the user to pick today's date — stops once a date is chosen */
 @keyframes pick-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.22); transform: scale(1); }
-  50%      { box-shadow: 0 0 0 5px rgba(236, 72, 153, 0.16); transform: scale(1.06); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.22);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(236, 72, 153, 0.16);
+    transform: scale(1.06);
+  }
 }
 @utility animate-pick-glow {
   animation: pick-glow 2.2s ease-in-out infinite;
@@ -1473,8 +2323,15 @@
 
 /* Soft "tap me" hint for selectable cards before a choice is made */
 @keyframes tap-hint {
-  0%, 100% { box-shadow: 0 4px 14px -8px rgba(236, 72, 153,0.22); transform: scale(1) translateY(0); }
-  50%      { box-shadow: 0 7px 18px -6px rgba(236, 72, 153,0.38); transform: scale(1.012) translateY(-1px); }
+  0%,
+  100% {
+    box-shadow: 0 4px 14px -8px rgba(236, 72, 153, 0.22);
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    box-shadow: 0 7px 18px -6px rgba(236, 72, 153, 0.38);
+    transform: scale(1.012) translateY(-1px);
+  }
 }
 @utility animate-tap-hint {
   animation: tap-hint 3.2s ease-in-out infinite;
@@ -1482,13 +2339,14 @@
 
 /* Beautifully animated pink gradient — used as the cycle phase-timeline card background */
 @utility bloom-pink-wave {
-  background: linear-gradient(135deg,
-    #FFF0F6 0%,
-    #FBCFE8 20%,
-    #F9A8D4 40%,
-    #FCE7F3 55%,
-    #FBCFE8 70%,
-    #FFF0F6 100%
+  background: linear-gradient(
+    135deg,
+    #fff0f6 0%,
+    #fbcfe8 20%,
+    #f9a8d4 40%,
+    #fce7f3 55%,
+    #fbcfe8 70%,
+    #fff0f6 100%
   );
   background-size: 300% 300%;
   animation: bloom-gradient-shift 5s ease-in-out infinite;
@@ -1496,8 +2354,14 @@
 
 /* ── Card stagger-in: individual card entrance, more visible than fade-in ── */
 @keyframes card-stagger-in {
-  0%   { opacity: 0; transform: translateY(16px) scale(0.93); }
-  100% { opacity: 1; transform: translateY(0)    scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.93);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 @utility animate-card-stagger-in {
   animation: card-stagger-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1517,7 +2381,11 @@
   transform: translateY(0);
 }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-on-scroll { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 /* ── Zoom-reveal: elements start slightly enlarged, settle to natural size on scroll ── */
@@ -1534,17 +2402,26 @@
   transform: scale(1);
 }
 @media (prefers-reduced-motion: reduce) {
-  .zoom-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .zoom-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 /* ── Suggestion card attention pulse — glow + micro-zoom, pauses on hover/click ── */
 @keyframes suggestion-attention {
-  0%, 100% {
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 0 0 0 rgba(236,72,153,0);
+  0%,
+  100% {
+    box-shadow:
+      0 1px 4px rgba(0, 0, 0, 0.04),
+      0 0 0 0 rgba(236, 72, 153, 0);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 6px 22px rgba(236,72,153,0.28), 0 0 0 2.5px rgba(236,72,153,0.22);
+    box-shadow:
+      0 6px 22px rgba(236, 72, 153, 0.28),
+      0 0 0 2.5px rgba(236, 72, 153, 0.22);
     transform: scale(1.025);
   }
 }
@@ -1554,10 +2431,15 @@
 
 /* Recipe popup slide-up (mobile bottom sheet feel, centered on desktop) */
 @keyframes recipeSlideUp {
-  0%   { opacity: 0; transform: translateY(48px) scale(0.97); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(48px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-
 
 /* ============================================================================
    Scroll-reveal — sections fade + slide up as they enter the viewport (driven
@@ -1568,8 +2450,9 @@
   [data-reveal] {
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
-                transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
     will-change: opacity, transform;
   }
   [data-reveal][data-reveal-in] {
@@ -1581,19 +2464,36 @@
   [data-reveal-stagger] > * {
     opacity: 0;
     transform: translateY(16px);
-    transition: opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
-                transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition:
+      opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   [data-reveal-stagger][data-reveal-in] > * {
     opacity: 1;
     transform: none;
   }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(1)  { transition-delay: 0.04s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(2)  { transition-delay: 0.10s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(3)  { transition-delay: 0.16s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(4)  { transition-delay: 0.22s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(5)  { transition-delay: 0.28s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(6)  { transition-delay: 0.34s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(7)  { transition-delay: 0.40s; }
-  [data-reveal-stagger][data-reveal-in] > *:nth-child(n+8){ transition-delay: 0.46s; }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(1) {
+    transition-delay: 0.04s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(2) {
+    transition-delay: 0.1s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(3) {
+    transition-delay: 0.16s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(4) {
+    transition-delay: 0.22s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(5) {
+    transition-delay: 0.28s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(6) {
+    transition-delay: 0.34s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(7) {
+    transition-delay: 0.4s;
+  }
+  [data-reveal-stagger][data-reveal-in] > *:nth-child(n + 8) {
+    transition-delay: 0.46s;
+  }
 }

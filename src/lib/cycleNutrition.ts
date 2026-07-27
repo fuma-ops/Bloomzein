@@ -71,6 +71,8 @@ export interface CycleNutritionContent {
   accent: string;
   /** the emotional one-liner under the title */
   tagline: string;
+  /** one plain-language reading of the hormones × energy × mood chart */
+  chartNote: string;
   /** "Your Body Today" paragraph */
   bodyToday: string;
   meters: PhaseMeters;
@@ -114,6 +116,8 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     heroImage: "/images/read-cycle.webp",
     accent: "oklch(0.58 0.23 0)",
     tagline: "Rest is productive too — nourish deeply and be tender with yourself.",
+    chartNote:
+      "Estrogen and progesterone both sit at their lowest, so the energy and mood lines bottom out here too — the whole graph dips. This is the natural rest point of your month, not a failing.",
     bodyToday:
       "Estrogen and progesterone are at their lowest, so energy dips and your body is working hard to renew. This is a week to slow down, keep warm, and replenish the iron you lose — gentle, mineral-rich food helps you feel steadier and less depleted.",
     meters: { energy: 32, mood: 55, focus: 45, recovery: 70 },
@@ -198,6 +202,8 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     heroImage: "/images/cycle-insight-hero.webp",
     accent: "oklch(0.64 0.22 350)",
     tagline: "Your energy is climbing — say yes to something new and fuel the momentum.",
+    chartNote:
+      "As estrogen climbs out of your period, watch energy and mood climb right behind it — the three lines rise together toward your mid-cycle peak while progesterone stays flat and low.",
     bodyToday:
       "Estrogen is rising, helping you feel more energetic, confident and mentally clear. This is your time to grow — take action and build healthy habits. Light, fresh food and lean protein keep insulin steady so your new-found momentum lasts all day.",
     meters: { energy: 80, mood: 70, focus: 80, recovery: 60 },
@@ -282,6 +288,8 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     heroImage: "/images/hero-girl.webp",
     accent: "oklch(0.62 0.24 12)",
     tagline: "You're at your brightest — shine, connect and enjoy how good you feel.",
+    chartNote:
+      "Estrogen peaks and energy and mood peak right with it — this is the highest point on the whole chart. Progesterone is still low, so nothing is weighing you down yet.",
     bodyToday:
       "Estrogen peaks and testosterone gives a short, powerful boost — you feel social, magnetic and strong. Your metabolism runs a little hotter, so fibre and antioxidant-rich veg help your body clear excess estrogen and keep your glow steady.",
     meters: { energy: 95, mood: 88, focus: 82, recovery: 55 },
@@ -358,6 +366,8 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     heroImage: "/images/landing-cycle-personalized.webp",
     accent: "oklch(0.55 0.2 320)",
     tagline: "Cravings and big feelings are normal now — comfort yourself, kindly.",
+    chartNote:
+      "Estrogen dips while progesterone rises and peaks. As both fall again near the end, the energy and mood lines slope down too — that downward tail is the PMS dip you can feel.",
     bodyToday:
       "Progesterone rises and your metabolism speeds up, so appetite and cravings grow — that's biology, not a lack of willpower. Complex carbs and magnesium steady your blood sugar and calm PMS, while warm, comforting food keeps you satisfied.",
     meters: { energy: 50, mood: 48, focus: 55, recovery: 65 },
@@ -432,4 +442,72 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
 /** The content for a phase (safe fallback to follicular). */
 export function cycleNutritionFor(phase: DietPhase): CycleNutritionContent {
   return CYCLE_NUTRITION[phase] ?? CYCLE_NUTRITION.follicular;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * Cycle rhythm chart — hormones × energy × mood across one 28-day cycle.
+ *
+ * Illustrative, textbook-shaped curves (relative 0–100, not lab units) sampled
+ * at representative cycle days, so a single line chart can tell the whole story:
+ * estrogen leading energy and mood up to the ovulatory peak, progesterone
+ * taking over in the luteal phase, everything easing down before the next
+ * period. The categorical colours were validated with the dataviz palette
+ * checker (4-slot, light surface): all separation checks pass.
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/** The cycle days each curve is sampled at (1-indexed, 28-day model). */
+export const CYCLE_CURVE_DAYS = [1, 5, 8, 11, 14, 17, 21, 24, 28] as const;
+
+export interface CycleCurve {
+  key: "estrogen" | "progesterone" | "energy" | "mood";
+  label: string;
+  /** validated categorical hex */
+  color: string;
+  /** relative level 0–100 at each CYCLE_CURVE_DAYS point */
+  values: number[];
+}
+
+export const CYCLE_CURVES: CycleCurve[] = [
+  {
+    key: "estrogen",
+    label: "Estrogen",
+    color: "#EC4899",
+    values: [15, 25, 45, 70, 95, 55, 62, 45, 20],
+  },
+  {
+    key: "progesterone",
+    label: "Progesterone",
+    color: "#8B5CF6",
+    values: [8, 8, 10, 12, 18, 55, 92, 60, 15],
+  },
+  {
+    key: "energy",
+    label: "Energy",
+    color: "#F59E0B",
+    values: [25, 35, 55, 72, 96, 70, 55, 45, 30],
+  },
+  { key: "mood", label: "Mood", color: "#14B8A6", values: [45, 52, 65, 78, 90, 72, 55, 42, 40] },
+];
+
+/** Contiguous phase bands on the day axis (start inclusive → end for drawing). */
+export const CYCLE_BANDS: { phase: DietPhase; startDay: number; endDay: number; midDay: number }[] =
+  [
+    { phase: "menstrual", startDay: 1, endDay: 5.5, midDay: 3 },
+    { phase: "follicular", startDay: 5.5, endDay: 13.5, midDay: 9.5 },
+    { phase: "ovulatory", startDay: 13.5, endDay: 16.5, midDay: 15 },
+    { phase: "luteal", startDay: 16.5, endDay: 28, midDay: 22.5 },
+  ];
+
+/** Linear-interpolate a curve's value at any cycle day (for the phase readout). */
+export function curveValueAtDay(curve: CycleCurve, day: number): number {
+  const xs = CYCLE_CURVE_DAYS;
+  if (day <= xs[0]) return curve.values[0];
+  if (day >= xs[xs.length - 1]) return curve.values[curve.values.length - 1];
+  for (let i = 1; i < xs.length; i++) {
+    if (day <= xs[i]) {
+      const t = (day - xs[i - 1]) / (xs[i] - xs[i - 1]);
+      return Math.round(curve.values[i - 1] + t * (curve.values[i] - curve.values[i - 1]));
+    }
+  }
+  return curve.values[curve.values.length - 1];
 }
