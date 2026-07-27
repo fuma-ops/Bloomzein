@@ -1259,6 +1259,18 @@
   animation-fill-mode: backwards;
 }
 
+/* Cute, smooth swap when the whole page switches to another cycle phase —
+   a soft rise + gentle scale with a clearing blur, so every section melts in. */
+@keyframes phase-swap {
+  0% { opacity: 0; transform: translateY(12px) scale(0.985); filter: blur(7px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@utility animate-phase-swap {
+  animation: phase-swap 0.55s cubic-bezier(0.22, 1, 0.36, 1) 1;
+  animation-fill-mode: backwards;
+}
+
 /* Hide scrollbars while keeping horizontal scroll usable */
 .scrollbar-hide {
   scrollbar-width: none;
