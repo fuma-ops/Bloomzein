@@ -14,48 +14,10 @@ import { PhaseThemeControl } from "@/components/bloom/premium/PhaseThemeControl"
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
-import { ConsistencyDashboard } from "@/components/bloom/me/ConsistencyDashboard";
 import { SmartPredictions } from "@/components/bloom/me/SmartPredictions";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
-import { setPlan } from "@/lib/entitlements";
-import { readCycleSettings, writeCycleSettings } from "@/components/bloom/cyclePhase";
-import { setPhaseThemeOn } from "@/lib/phaseTheme";
-
-/* ───────────── TEMP TEST PANEL — phase theme (remove later) ─────────────
-   Jumps the cycle into each phase (+ turns Bloom+ on) so you can feel the
-   living theme instantly. Lands on Today to show the tinted hero. */
-function PhaseThemeTester() {
-  const jump = (daysAgo: number) => {
-    setPlan("plus");
-    setPhaseThemeOn(true);
-    const s = readCycleSettings();
-    const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - daysAgo);
-    writeCycleSettings({ ...s, lastPeriodStart: d });
-    window.location.href = "/app/today";
-  };
-  const B = ({ label, n, emoji }: { label: string; n: number; emoji: string }) => (
-    <button onClick={() => jump(n)} className="rounded-full bg-white border border-hotpink/40 px-3 py-1.5 text-xs font-bold text-hotpink active:scale-95 hover:bg-blush/50">
-      {emoji} {label}
-    </button>
-  );
-  return (
-    <div className="mb-4 rounded-2xl border-2 border-dashed border-hotpink/50 bg-white/80 p-3">
-      <p className="text-[11px] font-black uppercase tracking-widest text-hotpink">🧪 Test — living phase theme (remove later)</p>
-      <p className="mt-0.5 text-[11px] text-rose/70">Tap a phase → jumps there + turns Bloom+ on → opens Today so you see the tint.</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <B label="Menstrual" n={1} emoji="🌙" />
-        <B label="Follicular" n={8} emoji="🌱" />
-        <B label="Ovulation" n={14} emoji="☀️" />
-        <B label="Luteal" n={20} emoji="🍫" />
-        <button onClick={() => { setPlan("free"); window.location.href = "/app/today"; }} className="rounded-full bg-rose/10 border border-rose/30 px-3 py-1.5 text-xs font-bold text-rose active:scale-95">
-          Free (no tint)
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // ── Real data helpers ─────────────────────────────────────────────────────────
 function readJSON<T>(key: string, fb: T): T {
@@ -194,8 +156,6 @@ export default function MePage() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      <PhaseThemeTester />
-
       {demoMode && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-petal/60 bg-white/90 p-3 shadow-sm">
           <span className="text-xs font-bold uppercase tracking-wider text-hotpink">Demo</span>
@@ -257,13 +217,6 @@ export default function MePage() {
       <div className="mt-5 sm:mt-8">
         <PlusLock feature="me" title="Smart predictions" blurb="Your period, PMS, energy, cravings, mood & fertility — predicted for the week ahead." minH="min-h-[300px]">
           <SmartPredictions />
-        </PlusLock>
-      </div>
-
-      {/* CONSISTENCY DASHBOARD — Bloom+ (full glow dashboard) */}
-      <div className="mt-5 sm:mt-8">
-        <PlusLock feature="me" title="Your glow dashboard" blurb="Consistency, mood over time, goal progress & weight — your whole bloom, measured." minH="min-h-[280px]">
-          <ConsistencyDashboard />
         </PlusLock>
       </div>
 
