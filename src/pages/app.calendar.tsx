@@ -450,8 +450,8 @@ export default function CalendarPage() {
           {/* Title + subtitle + phase pill. Month navigation lives on the month
               label row below. */}
           <div className="min-w-0 sm:max-w-md">
-            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-              Bloom Calendar
+            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
+              Calendar <Sparkles className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} />
             </h1>
             <p className="animate-fade-in mt-1 hidden sm:block font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
               Your life, beautifully planned.

@@ -214,7 +214,7 @@ export default function ReadPage() {
       {/* HERO — transparent; the photo lives in the blended background above. */}
       <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-0 sm:min-h-[124px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-2 pb-0 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
-          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read</h1>
+          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read <BookOpen className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} /></h1>
           <p className="animate-fade-in mt-1 hidden sm:block font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for <br className="sm:hidden" />your softest era ✿</p>
         </div>
       </section>
