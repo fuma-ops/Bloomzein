@@ -80,8 +80,15 @@ or die on immersion, not information. Hold to this:
 
 - **Open with a vivid, sensory portrait, not a thesis.** Make her *long* to be
   the girl in the article. Describe what she smells like, how her skin looks,
-  the calm she moves with — second person, present, cinematic. The reader should
-  want to step into the scene. (CG001's opening is the reference standard.)
+  the calm she moves with — present, cinematic. The reader should want to step
+  into the scene. (CG001's opening is the reference standard.)
+- **Then switch from "she" to "you" at the hinge moment.** Build the aspiration
+  in third person, then find the best moment to turn and address the reader
+  directly — *"she isn't special… stop watching her, be her"* — and re-narrate
+  the rest in second person so she *lives* it ("You wake without a fight. You
+  step into the shower…"). Done right, this is the "waw, I can be her" moment
+  that makes the whole piece land. (CG001's "Stop Watching Her. Be Her." is the
+  reference for the pivot.)
 - **Give a real secret.** Not "drink water, use SPF". A genuine insight she
   hasn't heard — e.g. *the effortless morning is built the night before.* If the
   article reveals nothing, it fails.

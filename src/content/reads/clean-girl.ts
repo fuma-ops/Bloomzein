@@ -367,7 +367,7 @@ Build a small gold edit you never take off — and it finishes everything.
 `,
   "CG001": `# The Clean Girl Morning Routine Everyone Is Copying
 
-*You've met her — the girl who seems to have woken up effortless. This is what her mornings actually feel like from the inside, and why each small thing she does genuinely works. The real secret isn't anything she does at 7 a.m. It's what she quietly set up the night before — and the fact that she does it every single day.*
+*You've met her — the girl who seems to have woken up effortless. First you'll see exactly what her mornings are made of. Then something better happens: you become her. Because none of it is talent, and all of it is yours to take.*
 
 Picture the girl you've met once, or the one you've quietly wanted to be.
 
@@ -375,95 +375,103 @@ She smells clean. Not a cloud of expensive perfume announcing her from the corri
 
 Nothing about her is expensive. Nothing about her is trying. She is simply the cleanest, simplest, most beautiful version of a woman — and she moves through the morning like she woke up already whole.
 
-Here is the part no one admits: she did not wake up that way, and she did not spend two frantic hours getting there either. Her morning runs like slow water for two quiet reasons. Everything difficult was handled the night before — and she does the same small things every single day, so they've stopped costing her any effort at all.
-
-**An effortless morning is built the evening before it happens, and kept by doing it daily.**
+Here is the part no one admits: she did not wake up that way, and she did not spend two frantic hours getting there either. Her morning runs like slow water for two quiet reasons. Everything difficult was handled the night before — and she does the same small things every single day, until they've stopped costing her any effort at all.
 
 ## She's Organised in a Quiet, Clever Way
 
-Before her morning makes sense, you have to notice how her life is arranged.
+Before her morning makes sense, notice how her life is arranged.
 
-The clean girl is organised — not rigidly, not obsessively, but *smartly*. Everything she reaches for has a home. Her products sit in a small, tidy line-up, not a cluttered heap. Her surfaces stay clear. She thinks a step ahead and quietly takes care of future-her. This isn't a personality she was born with; it's a handful of simple systems that make looking clean and put-together almost automatic. When your life has order, looking ordered takes no effort at all.
+The clean girl is organised — not rigidly, not obsessively, but *smartly*. Everything she reaches for has a home. Her products sit in a small, tidy line-up, not a cluttered heap. Her surfaces stay clear. She thinks a step ahead and quietly takes care of future-her. This isn't a personality she was born with; it's a handful of simple systems that make looking clean almost automatic. When your life has order, looking ordered takes no effort at all.
 
-That quiet organisation is the invisible engine under everything that follows.
+That quiet organisation is the invisible engine under everything she does.
 
-## The Night Before Is Where It's Really Made
+## Now — Stop Watching Her. Be Her.
 
-Walk into her evening and you'll understand her morning.
+Here's the part that should make you sit up straight: she is not special.
 
-Before she sleeps, tomorrow is already decided. The outfit is chosen and hanging ready — not thrown on a chair, but hung, smoothed, the shoes underneath, the little gold earrings set beside it. Her bag is packed by the door. A glass of water waits on the nightstand. The bathroom surfaces are wiped and clear, her few morning things lined up in the order she'll reach for them. Her phone charges across the room, not by her pillow.
+She wasn't handed better genes, more money, or more hours in the day. Everything you've just watched her do is habit, not talent — which means every bit of it is available to *you*, starting tonight. The only thing standing between you and her is a few small things done in a certain order, kept up gently.
 
-She has, without ceremony, removed every choice from her morning. Nothing to decide, nothing to hunt for, nothing to fix. When she wakes, the day is already laid out like a set waiting for her to simply walk on.
+So close the gap. Stop watching her from across the room and step into her skin. From here on, she isn't *her* anymore.
 
-That calm you envy in her at 8 a.m.? It was quietly built at 10 p.m., in five unglamorous minutes.
+She's you.
 
-## She Wakes Without a Fight
+## Tonight, You Set the Stage
 
-So the morning begins gently, because there is nothing to battle.
+It starts the evening before, while everyone else is scrolling themselves tired.
 
-No war with the snooze button, no lurch of panic about what to wear or where her keys are. Light comes into the room. She reaches for the water she left herself and drinks it slowly, waking her body from the inside before her feet even touch the floor. A long stretch. A breath. A minute that belongs only to her.
+You choose tomorrow's outfit and hang it, smoothed, the shoes underneath, the little gold earrings set beside it. You pack your bag and leave it by the door. You fill a glass of water and put it on your nightstand. You wipe the bathroom surface clear and line up your few morning things in the order you'll reach for them. You plug your phone in across the room — not by your pillow.
 
-This is what "morning person" actually looks like from the inside — not more willpower, just less chaos to wake up into.
+In five unglamorous minutes, you've quietly removed every decision from your morning. Nothing to choose, nothing to hunt for, nothing to fix. Tomorrow is already laid out like a stage, waiting for you to walk on.
 
-## The Shower That Genuinely Wakes Her
+That calm the effortless girl always seemed to have? You just built it, at 10 p.m., with your own hands.
 
-Then the shower — and there's a real reason she takes it now, not only at night.
+## You Wake Without a Fight
 
-A morning shower does something physical, not just cosmetic. The warm water followed by the cooler air as you step out nudges your circulation and lifts your body temperature, easing you out of the grogginess of sleep and into genuine alertness. It rinses off the night and, with it, the mental fog. That soft, clean scent begins its quiet work on her mood before she's even dry. She steps out not merely clean but *awake* — body switched on, head clear, the day already feeling possible. It's the closest thing to a reset button she has, and she presses it every morning.
+Morning comes, and there's nothing to battle.
 
-## The Two Quiet Minutes That Make Her Glow — and Why They Work
+No war with the snooze button, no lurch of panic about what to wear. Light fills the room. You reach for the water you left yourself and drink it slowly, waking your body from the inside before your feet touch the floor. A long stretch. One breath that belongs only to you. This is what a "morning person" actually is — not more willpower, just less chaos to wake into.
 
-Her skincare is almost nothing, and every step earns its place.
+## Your Shower Genuinely Wakes You
 
-Onto clean skin, a few drops of a brightening vitamin C — it defends her face against the daily dulling of pollution and light, and, used morning after morning, quietly builds that lit-from-within brightness. Then a light moisturiser pressed into still-damp skin, sealing in water so her face stays plump and dewy rather than tight. And last, without fail, sun protection — the single step that preserves everything underneath it, the real reason her skin stays clear, even, and young while she does so little else.
+Then you step into the shower — and there's a real reason you take it now, not only at night.
 
-But here is the part that actually matters: none of it works once. It works because she does it *every day*. Skin renews slowly, so the glow she's building this morning shows up in a few weeks, not tomorrow — and the girls who look effortless are simply the girls who kept going. Consistency is the whole secret. The clean girl's skin isn't the result of one perfect routine; it's the result of the same small routine, repeated, until her face just looks like someone who takes care of herself. Because she does.
+A morning shower does something physical, not just cosmetic. The warm water, and the cooler air as you step out, nudge your circulation and lift your body temperature, easing you out of the heaviness of sleep and into genuine alertness. It rinses off the night, and the mental fog goes with it. You step out not merely clean but *awake* — body switched on, head clear, the day suddenly feeling possible. It's the closest thing to a reset button you have, and now you press it every morning.
 
-@read CG004 | The simple, sleek hairstyles that finish the whole clean-girl look →
+## Your Two Quiet Minutes — and Why They Work
 
-## Why She Always Smells Faintly Clean
+Your skincare is almost nothing, and every step earns its place.
 
-A single light veil of clean scent at her pulse points, and this, too, does more than it seems.
+Onto clean skin, a few drops of vitamin C — it shields your face from the daily dulling of pollution and light, and, used morning after morning, quietly builds a brightness that's truly yours. Then a light moisturiser pressed into still-damp skin, sealing in water so your face stays plump and dewy instead of tight. And last, without fail, sun protection — the single step that preserves everything beneath it, the real reason your skin stays clear, even, and young while you do so little else.
 
-Scent is wired straight to the part of the brain that runs emotion — smell something fresh and clean and your mood lifts before you've consciously noticed it. Feeling softly scented isn't vanity; it genuinely changes how she carries herself. It lifts her energy, steadies her confidence, and quietly tells the world — and, more importantly, herself — that she is cared for and put together. She smells good, so she feels good, so she moves through her whole day a little lighter.
+But here is what actually matters: none of it works once. It works because you do it *every day*. Skin renews slowly, so the glow you build this morning shows up in a few weeks, not tomorrow — and the girls who look effortless are simply the ones who kept going. Consistency is the whole secret. Your skin won't be the result of one perfect routine; it'll be the result of the same small routine, repeated, until your face just looks like someone who takes care of herself. Because you do.
 
-@read CG003 | How she smells this clean without heavy perfume — the scent method, step by step →
+@read CG004 | The simple, sleek hairstyles that finish the whole look — your hair, sorted in minutes →
 
-## She Simply Steps Into the Day
+## You Smell Clean, and It Lifts You
 
-And then the moment the whole evening was for: she gets dressed in the outfit already hanging there, steps into her waiting shoes, picks up her packed bag, and leaves — unhurried, composed, glowing.
+A single light veil of clean scent at your pulse points, and this does more than it seems.
 
-No frantic mirror check. No forgotten anything. She walks out looking like she has her whole life together, and the truth is gentler than that: she just has her *morning* together, because she was kind and organised enough to set it up the night before — and disciplined enough, quietly, to do it again today.
+Scent is wired straight to the part of your brain that runs emotion — smell something fresh and clean and your mood lifts before you've consciously noticed. Feeling softly scented isn't vanity; it changes how you carry yourself. It lifts your energy, steadies your confidence, and quietly tells the world — and, more importantly, *you* — that you are cared for and put together. You smell good, so you feel good, so you move through your whole day a little lighter.
 
-## The Weekly Reset That Keeps It Effortless
+@read CG003 | How to smell this clean without heavy perfume — the scent method, step by step →
+
+## You Simply Step Into Your Day
+
+And then the moment the whole evening was for: you dress in the outfit already hanging there, step into your waiting shoes, pick up your packed bag, and leave — unhurried, composed, glowing.
+
+No frantic mirror check. Nothing forgotten. You walk out looking like you have your whole life together, and the truth is gentler than that: you just have your *morning* together, because you were kind and organised enough to set it up the night before — and you'll be kind enough to do it again tomorrow.
+
+You are, quietly, the girl from the start of this article. You always could have been.
+
+## Your Weekly Reset
 
 One habit holds the whole thing up.
 
-Once a week — a slow Sunday, usually — she resets. She tidies and refills her little line-up of products so nothing runs out mid-week, glances at what she's got and roughly plans her outfits, restocks the bag. Twenty minutes that buy her seven easy mornings. This is the scaffolding under the effortlessness: not daily heroics, but one small weekly tending that lets every ordinary morning stay light.
+Once a week — a slow Sunday, usually — you reset. You tidy and refill your little line-up of products so nothing runs out mid-week, glance at what you have and roughly plan your outfits, restock the bag. Twenty minutes that buy you seven easy mornings. This is the scaffolding under the effortlessness: not daily heroics, but one small weekly tending that keeps every ordinary morning light.
 
 ## The Morning Edit
 
-The clean girl doesn't own *more* than you — she owns the right few, and she knows exactly why each one earns its place on her shelf. These are the pieces Bloomzein looked hard to get right: researched, simple, genuinely effective, and actually worth trying. Here's what she reaches for, and why:
+You don't need *more* — you need the right few, and to know why each one earns its place on your shelf. These are the pieces Bloomzein researched to get right: proven ingredients, genuinely effective, and worth trying. Here's what to reach for, and the science behind each:
 
-@product waterBottle | Why it's always by her bed: the first and best habit made automatic — her glow starts with the water she drinks before the day even begins.
+@product waterBottle | Why it's by your bed: the first and best habit made automatic — glowing skin starts with the water you drink before the day begins.
 
-@product iceRoller | Why she reaches for it: sixty cold seconds drain the puffiness of sleep and leave her face awake and sculpted — the fastest real difference in the routine.
+@product iceRoller | The science: cold causes vasoconstriction, shrinking the tiny vessels behind morning puffiness — sixty seconds and your face looks de-puffed and awake.
 
-@product vitcSerum | Why it matters: a few drops each morning defend her skin from daily dullness and build that lit-from-within glow over weeks of steady use.
+@product vitcSerum | Why Bloomzein picked it: 10% pure vitamin C with vitamin E and ferulic-style antioxidants — a stable form your skin can actually use to brighten and defend against daily damage.
 
-@product moisturizer | Why she never skips it: pressed into damp skin, it seals in water so her face stays plump and dewy instead of tight.
+@product moisturizer | Why it works: three skin-identical ceramides plus hyaluronic acid in slow-release tech genuinely rebuild your barrier and hold hydration for hours, not minutes.
 
-@product spf | Why it's non-negotiable: the one step that preserves everything else — the quiet reason her skin stays clear, even, and young.
+@product spf | Why it's non-negotiable: broad-spectrum SPF50+ with calming niacinamide and no white cast — the one step that preserves every other, in a texture you'll actually wear daily.
 
-@product lipBalm | Why it finishes her: a your-lips-but-better wash of colour that makes a bare face look intentional, never undone.
+@product lipBalm | Why it finishes you: murumuru and shea butter flood lips with lasting moisture and a soft, your-lips-but-better sheen — care and colour in one.
 
 ## Bloom Reflection
 
-For so long, the effortless girl can feel like a locked door — as if she has some access to time, or money, or ease that you simply weren't given. You watch her glide through a morning you spend scrambling, and it's easy to feel a small, quiet lack.
+For so long, the effortless girl felt like a locked door — as if she had some access to time, or money, or ease you simply weren't given. You watched her glide through a morning you spent scrambling, and it was easy to feel a small, quiet lack.
 
-But there was never a locked door. There was only a girl who kept her life a little organised, who decided the night before to be gentle with her morning self — and who does these same small kindnesses every single day, until they cost her nothing. Her calm wasn't a gift, and her glow wasn't luck. Both were built, quietly and consistently, by her own hand.
+But there was never a locked door, and now you know it — because somewhere in the last few minutes, she quietly became you. She was only ever a girl who kept a little order, who set the stage the night before, and who did these same small kindnesses every day until they cost her nothing. Her calm wasn't a gift. Her glow wasn't luck. Both were built, gently and consistently — and now you know exactly how.
 
-You can begin the same way tonight. And if you keep it — gently, daily — you'll slowly meet the version of you that was always in there: the one who wakes up slowly, glows quietly, and simply steps into her day.
+You can begin tonight. And if you keep it, gently, daily, you won't be copying her anymore. You'll just be her.
 
 ## Bloom Tips
 
@@ -477,13 +485,13 @@ You can begin the same way tonight. And if you keep it — gently, daily — you
 
 Tonight, do just one thing: lay out tomorrow's whole outfit — clothes, shoes, jewellery — and set a glass of water by your bed.
 
-Then notice, in the morning, how different it feels to wake into a day that's already waiting for you. Do it again tomorrow. That quiet consistency is the entire secret.
+Then notice, in the morning, how different it feels to wake into a day that's already waiting for you. Do it again tomorrow. That quiet consistency is the entire secret — and it's already yours.
 
 ## Bloom Reminder
 
-The effortless morning was never effortless.
+The effortless morning was never effortless, and the effortless girl was never someone else.
 
-It was built the night before, kept by doing it daily — and that quiet, consistent kindness is yours to give yourself, starting tonight.
+Build it the night before, keep it daily — and you don't copy her. You become her.
 `,
 };
 export default bodies;

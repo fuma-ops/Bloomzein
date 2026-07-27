@@ -29,12 +29,14 @@ export interface AffiliateProduct {
 
 export const PRODUCTS: Record<string, AffiliateProduct> = {
   // ── Skin / glow ──
-  iceRoller:     { name: "Facial Ice Roller",        type: "Cooling tool",     blurb: "De-puffs and wakes tired skin in 60 seconds flat.", href: "#" },
-  guaSha:        { name: "Gua Sha Stone",            type: "Facial massage",   blurb: "Two minutes of sculpting that drains overnight puffiness.", href: "#" },
-  vitcSerum:     { name: "Vitamin C Serum",          type: "Brightening serum",blurb: "The lit-from-within step most routines quietly skip.", href: "#" },
-  moisturizer:   { name: "Gel-Cream Moisturiser",    type: "Moisturiser",      blurb: "Seals water into damp skin so it stays plump and dewy all day.", href: "#" },
-  spf:           { name: "Invisible Daily SPF",      type: "Sunscreen",        blurb: "The one anti-ageing step dermatologists agree on — weightless, no white cast.", href: "#" },
-  lipBalm:       { name: "Tinted Lip Balm",          type: "Lip care",         blurb: "Your-lips-but-better colour that never looks like effort.", href: "#" },
+  // Real, widely-recommended products with a genuine ingredient story. These are
+  // proposals — swap names/links for your own affiliate partners any time.
+  iceRoller:     { name: "Stainless-Steel Ice Roller", type: "Cooling tool",     blurb: "Cold triggers vasoconstriction — it shrinks the vessels behind morning puffiness, so skin looks instantly de-puffed and awake.", href: "#" },
+  guaSha:        { name: "Gua Sha Stone",              type: "Facial massage",   blurb: "Two minutes of lymphatic sweeping that drains overnight puffiness and sculpts.", href: "#" },
+  vitcSerum:     { name: "La Roche-Posay Pure Vitamin C10", type: "Brightening serum", blurb: "10% pure vitamin C with vitamin E + salicylic acid — a stable antioxidant shield that measurably brightens and smooths.", href: "#" },
+  moisturizer:   { name: "CeraVe Moisturising Cream",  type: "Moisturiser",      blurb: "Three skin-identical ceramides + hyaluronic acid in slow-release MVE tech — rebuilds the barrier and holds water for hours.", href: "#" },
+  spf:           { name: "Beauty of Joseon Relief Sun SPF50+", type: "Sunscreen", blurb: "Broad-spectrum SPF50+ with calming niacinamide and rice extract — high protection, zero white cast, genuinely nice to wear daily.", href: "#" },
+  lipBalm:       { name: "Laneige Lip Glowy Balm",     type: "Lip care",         blurb: "Murumuru + shea flood lips with lasting moisture and a your-lips-but-better sheen — care and colour in one.", href: "#" },
 
   // ── Ritual / body ──
   waterBottle:   { name: "Half-Gallon Water Bottle", type: "Hydration",        blurb: "The clean-girl accessory that actually earns its place.", href: "#" },

@@ -88,12 +88,18 @@ and kill the immersion. So:
   "a light veil of clean scent". No `@product` cards mid-article.
 - **Gather every `@product` card into ONE short section near the end** — call it
   "The Edit" (or "The Morning Edit", etc.). That's the only place cards appear.
-- **In the Edit, give each product its *reason*** — the card copy should say why
-  the clever girl reaches for it ("Why she never skips it: …"), not just praise
-  it. And introduce the section by framing the set as **Bloomzein's own
-  researched picks** worth trying ("These are the pieces Bloomzein looked hard to
-  get right…"). That brand framing is what turns a product list into a
-  recommendation she trusts.
+- **Recommend a *real, specific* product with a *brief scientific why*** — not a
+  generic "a good vitamin C serum" (a reader called that "not convincing"). Name
+  an actual, well-regarded product in `PRODUCTS` and let the card copy give the
+  one-line mechanism: the ingredient and what it does ("10% pure vitamin C with
+  vitamin E — a stable antioxidant that measurably brightens and defends";
+  "three skin-identical ceramides that rebuild the barrier"). Prefer genuinely
+  effective, mostly affordable picks that fit the clean/simple ethos. These are
+  proposals the user swaps for their affiliate partners — real names make them
+  believable now.
+- **Frame the section as Bloomzein's own researched picks** ("These are the
+  pieces Bloomzein researched to get right…"). That brand framing plus the real
+  product plus the science is what turns a list into a recommendation she trusts.
 - **Recommend honestly.** Only what genuinely serves her, named as a *type* she'd
   benefit from; the article must be worth reading even if she buys nothing.
   Four or five in the closing edit is plenty; more reads as a catalogue.
