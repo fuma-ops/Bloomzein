@@ -437,11 +437,10 @@ export default function CalendarPage() {
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_46%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — a soft radial spotlight over the left ~40% behind the
-            title, fading to fully transparent so the rest of the photo shows
-            clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[radial-gradient(110%_120%_at_0%_44%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.45)_20%,transparent_40%)]" />
+        <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%]" referrerPolicy="no-referrer" />
+        {/* left wash ONLY — a soft radial spotlight behind the title, fading to
+            fully transparent so the rest of the photo shows clean & vivid. */}
+        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
       </div>
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
