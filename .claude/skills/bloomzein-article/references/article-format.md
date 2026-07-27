@@ -79,27 +79,40 @@ If the copy is omitted, the product's own `blurb` is used. Real affiliate URLs
 are filled into each product's `href` later; until then they point to `#`, so
 nothing breaks. To recommend something new, add it to `PRODUCTS` first.
 
-**Placement is everything — this is the lesson a reader taught us with a "0".**
-Product cards scattered through the body make the whole article read as an ad
-and kill the immersion. So:
+**The Bloomzein product philosophy: help her NOT waste money.** Most affiliate
+sites try to convince readers to *click*. Bloomzein tries to convince them not
+to waste money — and that honesty is exactly why she trusts a recommendation
+when we do make one. Say plainly when something is optional, when the cheap
+version is enough, and when she should try the free routine first ("You probably
+don't need this unless…"; "The cheaper option is enough for most people"; "Don't
+buy this until you've done two weeks of the basics"; "This luxury one is lovely,
+but the budget pick gets 90% of the results").
 
+**Placement (a reader gave the salesy first draft a "0"):**
 - **In the body, mention products only *implicitly*, woven into the sensation** —
-  "something cool glides over her face", "a few drops of a brightening serum",
-  "a light veil of clean scent". No `@product` cards mid-article.
-- **Gather every `@product` card into ONE short section near the end** — call it
-  "The Edit" (or "The Morning Edit", etc.). That's the only place cards appear.
-- **Recommend a *real, specific* product with a *brief scientific why*** — not a
-  generic "a good vitamin C serum" (a reader called that "not convincing"). Name
-  an actual, well-regarded product in `PRODUCTS` and let the card copy give the
-  one-line mechanism: the ingredient and what it does ("10% pure vitamin C with
-  vitamin E — a stable antioxidant that measurably brightens and defends";
-  "three skin-identical ceramides that rebuild the barrier"). Prefer genuinely
-  effective, mostly affordable picks that fit the clean/simple ethos. These are
-  proposals the user swaps for their affiliate partners — real names make them
-  believable now.
-- **Frame the section as Bloomzein's own researched picks** ("These are the
-  pieces Bloomzein researched to get right…"). That brand framing plus the real
-  product plus the science is what turns a list into a recommendation she trusts.
+  "a few drops of a brightening serum", "a light veil of clean scent". No
+  `@product` cards mid-article.
+- **Gather every `@product` card into ONE section near the end** — "The Edit"
+  (or "The Morning Edit", etc.). Open it by naming the honest ethos, not by
+  selling. That's the only place cards appear.
+
+**Every product must honestly answer these seven questions** (the structured
+fields on `AffiliateProduct`, rendered by `ProductCard` as an expandable
+"honest review" — collapsed shows the problem + a plain verdict, "the honest
+word" expands the rest):
+1. `solves` — what problem does this solve?
+2. `why` — why did Bloomzein choose it over similar products?
+3. `bestFor` — who is it best for?
+4. `notFor` — who might not like it?
+5. `actives` — what ingredients/materials make it effective?
+6. `results` — what results, realistically, and in what timeframe?
+7. `cheaper` — is there a cheaper alternative that works nearly as well?
+
+Plus a `verdict`: the plain "should you even buy this" line, often "skip unless…".
+Use **real, specific, mostly-affordable products** (names are proposals the user
+swaps for affiliate partners) with genuine ingredient/material reasoning — never
+a vague "a good serum". At least one product per Edit should honestly tell her
+to save her money; that's what makes the whole page trustworthy.
 - **Recommend honestly.** Only what genuinely serves her, named as a *type* she'd
   benefit from; the article must be worth reading even if she buys nothing.
   Four or five in the closing edit is plenty; more reads as a catalogue.
