@@ -202,11 +202,10 @@ export default function ReadPage() {
       >
         {/* On phones, frame toward the face (right side) so her smile shows
             instead of being cropped to the mouth. */}
-        <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[72%_48%] sm:object-[60%_42%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — a soft radial spotlight over the left ~40% behind the
-            title, fading to fully transparent so the rest of the photo shows
-            clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[radial-gradient(110%_120%_at_0%_44%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.45)_20%,transparent_40%)]" />
+        <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[66%_26%] sm:object-[55%_32%]" referrerPolicy="no-referrer" />
+        {/* left wash ONLY — a soft radial spotlight behind the title, fading to
+            fully transparent so the rest of the photo shows clean & vivid. */}
+        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
       </div>
 
       <BloomBubbles count={10} />
