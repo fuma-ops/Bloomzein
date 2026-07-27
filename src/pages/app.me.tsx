@@ -9,12 +9,11 @@ import {
 /** Only this account sees the private admin inbox link. */
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { DiscoverBloomPlus, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
+import { DiscoverBloomPlus, PlanToggle } from "@/components/bloom/premium/PremiumKit";
 import { PhaseThemeControl } from "@/components/bloom/premium/PhaseThemeControl";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
-import { SmartPredictions } from "@/components/bloom/me/SmartPredictions";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
@@ -212,13 +211,6 @@ export default function MePage() {
           </div>
         </div>
       </section>
-
-      {/* SMART PREDICTIONS — Bloom+ (Bloomzein predicts your week) */}
-      <div className="mt-5 sm:mt-8">
-        <PlusLock feature="me" title="Smart predictions" blurb="Your period, PMS, energy, cravings, mood & fertility — predicted for the week ahead." minH="min-h-[300px]">
-          <SmartPredictions />
-        </PlusLock>
-      </div>
 
       {/* BLOOM+ — discover premium, and a dev switch to feel both experiences */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
