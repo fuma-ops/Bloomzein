@@ -32,6 +32,8 @@ const HelpPage = lazyRetry(() => import("./pages/Content").then((m) => ({ defaul
 const FaqPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
 const GuidesIndexPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
 const GuidePage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
+const BlogIndexPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.BlogIndexPage })));
+const BlogArticlePage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.BlogArticlePage })));
 const AdminMessagesPage = lazyRetry(() => import("./pages/Admin").then((m) => ({ default: m.AdminMessagesPage })));
 const ToolsIndex = lazyRetry(() => import("./pages/app.tools.index"));
 const BudgetPage = lazyRetry(() => import("./pages/budget"));
@@ -159,6 +161,12 @@ function AppContent() {
   }
   if (path.startsWith("/guides/")) {
     return <Suspense fallback={<PageLoader />}><GuidePage slug={path.split("/").pop() || ""} /></Suspense>;
+  }
+  if (path === "/blog") {
+    return <Suspense fallback={<PageLoader />}><BlogIndexPage /></Suspense>;
+  }
+  if (path.startsWith("/blog/")) {
+    return <Suspense fallback={<PageLoader />}><BlogArticlePage slug={decodeURIComponent(path.split("/").pop() || "")} /></Suspense>;
   }
 
   // Private admin inbox — gated by email + Supabase RLS inside the page

@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { supabase } from "@/lib/supabase";
+import { ARTICLES, CATEGORIES, articlesByCategory } from "@/lib/readsData";
+import { articleSlug, articleBySlug } from "@/lib/blog";
+import { loadArticleBody } from "@/content/reads/registry";
+import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
 
 /* ------------------------------------------------------------------ *
  * Public, indexable content pages — Help Center, Guides, FAQ.
@@ -485,6 +489,122 @@ export function GuidePage({ slug }: { slug: string }) {
           ))}
         </ul>
       </section>
+    </ContentShell>
+  );
+}
+
+/* ================================================================= *
+ * BLOG — public, indexable articles (SEO surface over the Read library)
+ *
+ * The same catalogue that powers the in-app Read page (behind /app/, blocked
+ * from crawlers) is published here on crawlable /blog/<slug> URLs so Google can
+ * index and rank the articles. Bodies load lazily per category, exactly like
+ * the app reader.
+ * ================================================================= */
+
+export function BlogIndexPage() {
+  useSeo(
+    "Blog — cycle, nutrition, beauty & soft-living articles | Bloomzein",
+    "Soft, cycle-aware wellness articles: hormones and your cycle, eating by phase, beauty, yoga, sleep, journaling and gentle living — from Bloomzein.",
+    "/blog",
+  );
+  const categories = CATEGORIES.filter((c) => articlesByCategory(c).length > 0);
+  return (
+    <ContentShell
+      eyebrow="Blog"
+      title="Soft reads for your softest era"
+      subtitle="Gentle, science-friendly wellness writing — understand your cycle, eat for your phase, and build a life that feels good to live."
+    >
+      {categories.map((cat) => (
+        <section key={cat}>
+          <H2>{cat}</H2>
+          <div className="mt-3 grid gap-3">
+            {articlesByCategory(cat).map((a) => (
+              <a
+                key={a.id}
+                href={`/blog/${articleSlug(a)}`}
+                className="block rounded-2xl border border-[#F4C6DD] bg-white p-4 transition hover:border-[#EC4899]/40 hover:shadow-md"
+              >
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#EC4899]">{a.minutes} min read</p>
+                <h3 className="mt-0.5 font-script text-xl text-[#831843] leading-tight">{a.title}</h3>
+                <p className="mt-1 text-[13.5px] text-[#8a5c74]">{a.excerpt}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </ContentShell>
+  );
+}
+
+export function BlogArticlePage({ slug }: { slug: string }) {
+  const article = articleBySlug(slug);
+  useSeo(
+    article ? `${article.title} | Bloomzein` : "Article not found — Bloomzein",
+    article?.excerpt ?? "Read soft, cycle-aware wellness articles on Bloomzein.",
+    `/blog/${slug}`,
+  );
+
+  const [parsed, setParsed] = useState<ParsedArticle | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setParsed(null);
+    setLoaded(false);
+    if (!article) { setLoaded(true); return; }
+    loadArticleBody(article).then((md) => {
+      if (!alive) return;
+      setParsed(md ? parseArticle(md) : null);
+      setLoaded(true);
+    });
+    return () => { alive = false; };
+  }, [article]);
+
+  if (!article) {
+    return (
+      <ContentShell eyebrow="Blog" title="Article not found" subtitle="That article doesn't exist — browse all our articles instead.">
+        <P><A href="/blog">← Back to all articles</A></P>
+      </ContentShell>
+    );
+  }
+
+  const related = articlesByCategory(article.category).filter((a) => a.id !== article.id).slice(0, 5);
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt,
+    articleSection: article.category,
+    author: { "@type": "Organization", name: "Bloomzein" },
+    publisher: { "@type": "Organization", name: "Bloomzein" },
+    mainEntityOfPage: `${SITE}/blog/${slug}`,
+  };
+
+  return (
+    <ContentShell eyebrow={`${article.category} · ${article.minutes} min read`} title={article.title} subtitle={article.excerpt}>
+      <JsonLd data={articleSchema} />
+      <p className="text-sm"><A href="/blog">← All articles</A></p>
+      {!loaded ? (
+        <div className="space-y-3" aria-hidden>
+          <div className="h-4 w-3/4 animate-pulse rounded bg-[#F4C6DD]/60" />
+          <div className="h-4 w-full animate-pulse rounded bg-[#F4C6DD]/60" />
+          <div className="h-4 w-5/6 animate-pulse rounded bg-[#F4C6DD]/60" />
+        </div>
+      ) : parsed ? (
+        <ArticleBody parsed={parsed} />
+      ) : (
+        <P>{article.excerpt}</P>
+      )}
+      {related.length > 0 && (
+        <section>
+          <H2>More in {article.category}</H2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 marker:text-[#EC4899]">
+            {related.map((a) => (
+              <li key={a.id}><A href={`/blog/${articleSlug(a)}`}>{a.title}</A></li>
+            ))}
+          </ul>
+        </section>
+      )}
     </ContentShell>
   );
 }

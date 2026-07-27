@@ -583,6 +583,8 @@ export default function Landing() {
                 {[
                   { label: "About Us", href: "#features" },
                   { label: "Our Mission", href: "#universes" },
+                  { label: "Blog", href: "/blog" },
+                  { label: "Guides", href: "/guides" },
                   { label: "Privacy Policy", href: "/privacy" },
                   { label: "Terms of Service", href: "/terms" },
                 ].map(({ label, href }) => (
