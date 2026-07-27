@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2,
   Sparkles, Salad, CookingPot, Gem, PersonStanding, Feather, Brain, Moon, Leaf,
-  HeartHandshake, NotebookPen, Compass, Star, PiggyBank } from "lucide-react";
+  HeartHandshake, NotebookPen, Compass, Star, PiggyBank, Droplets } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { FILTERS, ARTICLES, IMG, articleById, relatedArticles, type Filter, type Article } from "@/lib/readsData";
@@ -37,6 +37,7 @@ const FILTER_ICONS: Record<Filter, typeof Sparkles> = {
   Relationships: HeartHandshake,
   Journaling: NotebookPen,
   Money: PiggyBank,
+  "Clean Girl": Droplets,
   Lifestyle: Compass,
   "Bloomzein Originals": Star,
 };

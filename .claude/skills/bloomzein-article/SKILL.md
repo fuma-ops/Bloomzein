@@ -26,8 +26,9 @@ reviews them on the live site, then validates (publish) or comments (revise).
 
 ## The loop at a glance
 
-1. **Pick the batch** — a category (often one that's thin or empty) and 5 topics
-   anchored to what women actually search for. See `references/title-craft.md`.
+1. **Pick the batch** — usually the next topic group from the user's master
+   list in `references/content-backlog.md`, or a thin/empty category. Anchor
+   every title to what women actually search for — see `references/title-craft.md`.
 2. **Write the bodies** — full Bloom structure, tool cards, cross-links, and a
    chart where a visual makes the idea land. See `references/article-format.md`.
 3. **Add them to the catalogue + a content chunk** — via the batch script.
@@ -68,6 +69,10 @@ demand and earn the cleverness on top.
   would genuinely benefit ("track this alongside your cycle") — never bolted on.
 - **It connects to the rest of the library.** One or two `@read` cross-links to
   related articles so one read becomes three (time-on-page is the whole game).
+- **It can sell, honestly.** Shopping/aesthetic pieces implicitly recommend
+  products via `@product` affiliate cards (with a required "affiliate"
+  disclosure tag). Recommend only what genuinely helps, make the product the
+  natural next step, and keep the article useful even if she buys nothing.
 - **A chart when a visual truly helps.** Hormone curves, a sleep hypnogram, a
   monthly tracker — see the `@chart` directives. Don't force one.
 - **The Bloom close.** Reflection → Tips → Today's Bloom → Reminder. This
@@ -83,6 +88,8 @@ never a private copy. The project's root `CLAUDE.md` is the authority; skim its
 
 ## Reference files
 
+- `references/content-backlog.md` — the user's master topic list to work
+  through in batches, with the category mapping for each topic group.
 - `references/title-craft.md` — **read first.** The high-SEO + curiosity title
   system: how to source search demand, the title patterns that convert, the
   balance between searchable and beautiful, worked examples, and pitfalls.

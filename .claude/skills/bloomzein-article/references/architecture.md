@@ -64,6 +64,14 @@ export default bodies;
 
 The batch script appends into that `bodies` object.
 
+## Affiliate products
+
+`@product` cards read from `src/lib/affiliateProducts.ts` (`PRODUCTS`: key →
+name, type, blurb, href, optional image). Add a product there before referencing
+its key. `href` is `"#"` until the user supplies real affiliate URLs — they drop
+them into this one file. The card auto-renders the required "affiliate"
+disclosure tag; don't remove it.
+
 ## Helpers you should reuse (never fork)
 
 In `readsData.ts`: `articleById`, `readsForPhase`, `articlesByCategory`,

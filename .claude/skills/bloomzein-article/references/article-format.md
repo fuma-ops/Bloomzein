@@ -17,6 +17,7 @@ Paragraph text.                → body paragraph; **bold** and *italic* inline
 > callout text                 → soft highlighted callout box
 ---                            → soft flower divider
 @tool <key> | text             → in-article tool card (see keys below)
+@product <key> | text          → affiliate product card (see below)
 @read <articleId> | text       → cross-link card to another article
 @chart <key>                   → renders an illustrative chart (see keys below)
 ```
@@ -62,6 +63,26 @@ renders nothing:
 
 Write the copy as a soft invitation that reads as help:
 `@tool cycle | Log how you sleep beside your mood and symptoms, and watch the pattern surface — open your Cycle Tracker`
+
+## Affiliate product cards (`@product <key> | copy`)
+
+Some articles (beauty, clean-girl, fashion, lifestyle) implicitly recommend
+products the reader can buy through an affiliate link. Keys are defined in
+`src/lib/affiliateProducts.ts` (`PRODUCTS`); the card renders a shop tile with
+the product name, a persuasive line, a **"Shop"** link, and — always — a small
+**"affiliate" disclosure tag**. That tag is legally required (FTC) and, kept
+soft, reads as honesty rather than a hard sell. Never remove it.
+
+`@product vitcSerum | The lit-from-within step most routines quietly skip.`
+
+If the copy is omitted, the product's own `blurb` is used. Real affiliate URLs
+are filled into each product's `href` later; until then they point to `#`, so
+nothing breaks. To recommend something new, add it to `PRODUCTS` first.
+
+**Recommend honestly.** Suggest a product only where it genuinely serves the
+reader, name a *type* she'd actually benefit from, and let the article earn the
+recommendation — the article must be useful even if she buys nothing. Two to
+four product cards in a shopping-oriented piece is plenty; more reads as an ad.
 
 ## Cross-link cards (`@read <id> | copy`)
 
