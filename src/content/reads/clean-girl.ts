@@ -1,105 +1,5 @@
 /* Clean Girl — long-form article bodies (lazy-loaded). */
 const bodies: Record<string, string> = {
-  "CG001": `# The Clean Girl Morning Routine Everyone Is Copying
-
-*The glowing skin, the slicked hair, the just-woke-up-like-this freshness. It looks like something you're either born with or can't afford. It's neither — it's a short, repeatable morning that anyone can copy. Here's the whole thing, step by step.*
-
-You've seen her.
-
-Dewy skin, clean lines, that unbothered radiance that makes a plain white tee look expensive. She looks like she has her life together before 8 a.m., and some quiet part of you wonders what she knows that you don't.
-
-Here's the secret, and it's genuinely freeing: it's not a face, it's a *routine*. The clean-girl look isn't built on good genes or a shelf of designer products. It's built on a handful of small, consistent steps — most of them free, a few worth the small spend — done in the same order every morning.
-
-Copy the sequence and you get the look. Let's walk through it.
-
-## It's Built, Not Born
-
-Before the steps, the mindset — because it changes how you do all of them.
-
-The clean-girl aesthetic is really the aesthetic of *care*. It's what skin, hair, and a body look like when they're consistently looked after: hydrated, protected, unhurried. Nothing here is about hiding yourself under product. It's about tending yourself so the real you looks rested and lit.
-
-That's why it works on everyone, and why it doesn't require much. You're not buying a look. You're building one, five minutes at a time.
-
-## Step 1 — Hydrate Before You Do Anything
-
-The routine starts before you touch your face, with a glass of water.
-
-Overnight you dehydrate, and it shows — flat skin, puffiness, low energy. Drinking a big glass first thing plumps your skin from the inside, wakes up your system, and is genuinely half the "glow" nobody photographs. Keep it visible and keep it big, and you'll actually do it.
-
-@product waterBottle | The oversized bottle that makes hydrating a habit instead of an afterthought.
-
-One glass down before your feet hit the floor, and you're already ahead.
-
-## Step 2 — The 60-Second De-Puff
-
-Next, wake the face up — literally.
-
-Morning puffiness is fluid that pooled while you slept. A minute of cold, gliding from the centre of your face outward and down toward your jaw, drains it and leaves you sculpted and awake. It's the single most dramatic before/after in the whole routine, and it takes one minute.
-
-@product iceRoller | De-puffs and wakes tired morning skin in 60 seconds flat.
-
-Cold water splashed on your face works in a pinch — but the roller is the effortless version.
-
-## Step 3 — Glow, Then Protect
-
-Now the two steps that do the real long-term work: brighten, then shield.
-
-A few drops of vitamin C on clean skin evens tone and builds that lit-from-within brightness over weeks. Then — non-negotiable — sunscreen, every single morning, cloudy days included. It's the one step that keeps skin clear, even, and young, and the clean-girl glow simply doesn't exist without it.
-
-@product vitcSerum | The lit-from-within step most routines quietly skip.
-
-@product spf | The one anti-ageing step every dermatologist agrees on — weightless, no white cast.
-
-@read BE003 | Ever notice your skin glows more some weeks than others? Here's the cycle behind it →
-
-Serum for the glow, SPF to keep it. Skip the second and you undo the first.
-
-## Step 4 — The "No-Makeup" Finish
-
-The look is barely-there, so the finish is barely-there too.
-
-Groomed brows, maybe a touch of cream blush, and a tinted balm that gives your lips a soft wash of colour — your-lips-but-better, never done-looking. That's the whole face. The point isn't coverage; it's a clean, dewy, *you* that reads as effortless because it nearly is.
-
-@product lipBalm | Your-lips-but-better colour that never looks like effort.
-
-Five minutes, and you're done.
-
-## Why Everyone's Copying It
-
-The reason this routine went everywhere is simple: it delivers a lot for very little. It's fast, it's affordable, it flatters every face because it's really just *you, well cared for* — and it's built on consistency, which means it keeps working the longer you do it.
-
-@read CG002 | The routine is step one — these are the 15 small daily habits that complete the look →
-
-Do it for a week and you'll feel the difference before you see it.
-
-## Bloom Reflection
-
-It's easy to look at the effortless girl and feel a small, quiet lack — like she has access to something you don't, some secret of money or genetics or luck.
-
-But there was never a secret you were locked out of. There was only a routine, repeated: water before the day, a cold minute to wake the skin, a glow step and a shield step, a soft finish. Care, in a consistent order.
-
-You don't need to become someone else to look effortless. You just need a handful of small kindnesses to yourself, done in the same order each morning — and given a little time.
-
-## Bloom Tips
-
-- Treat the look as a routine, not a face — it's care made consistent, and it works on everyone.
-- Hydrate first thing; half the "glow" is simply skin that isn't dehydrated.
-- Give yourself a 60-second cold de-puff — it's the biggest instant before/after there is.
-- Never skip morning SPF; it's what keeps the glow you build with serum from unravelling.
-- Keep the finish barely-there — tinted balm and groomed brows read as effortless because they nearly are.
-
-## Today's Bloom
-
-Tomorrow morning, do just three of these in order: a big glass of water, a cold minute on your face, and SPF before you leave the mirror.
-
-That's the spine of the whole look — and you can add the rest as it becomes a habit.
-
-## Bloom Reminder
-
-The clean-girl glow was never genetics or money.
-
-It's a short routine, repeated — and it's completely yours to copy.
-`,
   "CG002": `# 15 Habits Every Clean Girl Does Every Day
 
 *The effortless, put-together girl doesn't have one big secret. She has fifteen tiny ones — small daily habits so ordinary you'd never guess they're the whole game. Individually they take seconds. Together they're the glow. Here are all fifteen.*
@@ -464,6 +364,114 @@ Wear just those for a week and let the rest rest. You'll feel how much more *fin
 She doesn't own more jewellery. She owns the right few.
 
 Build a small gold edit you never take off — and it finishes everything.
+`,
+  "CG001": `# The Clean Girl Morning Routine Everyone Is Copying
+
+*You've met her — the girl who seems to have woken up effortless. This is what her mornings actually feel like from the inside. And the real secret isn't anything she does at 7 a.m. It's what she quietly did the night before.*
+
+Picture the girl you've met once, or the one you've quietly wanted to be.
+
+She smells clean. Not a cloud of expensive perfume announcing her from the corridor — something softer than that, like warm skin and fresh cotton, a scent you only catch when she leans in close. Her skin is almost bare and somehow luminous: no heavy makeup, nothing to cover, just that baby-soft, well-rested glow that looks lit from underneath. Her hair falls healthy and simple, cut to suit her face so exactly it looks like it grew that way on purpose. White teeth. Clean, neat nails. A thread of small gold jewellery, and nothing more.
+
+Nothing about her is expensive. Nothing about her is trying. She is simply the cleanest, simplest, most beautiful version of a woman — and she moves through the morning like she woke up already whole.
+
+Here is the part no one admits: she did not wake up that way, and she did not spend two frantic hours getting there either. Her morning runs like slow water because every difficult decision, every scramble, was handled the night before. That's the secret the routines never tell you.
+
+**An effortless morning is built the evening before it happens.**
+
+## The Night Before Is Where It's Really Made
+
+Walk into her evening and you'll understand her morning.
+
+Before she sleeps, tomorrow is already decided. The outfit is chosen and hanging ready — not thrown on a chair, but hung, smoothed, the shoes underneath, the little gold earrings set beside it. Her bag is packed by the door. A glass of water waits on the nightstand. The bathroom surfaces are wiped and clear, her few morning things lined up in the order she'll reach for them. Her phone is charging across the room, not by her pillow.
+
+She has, without ceremony, removed every choice from her morning. Nothing to decide, nothing to hunt for, nothing to fix. When she wakes, the day is already laid out like a set waiting for her to simply walk on.
+
+That calm you envy in her at 8 a.m.? It was quietly built at 10 p.m., in five unglamorous minutes.
+
+## She Wakes Without a Fight
+
+So the morning begins gently, because there is nothing to battle.
+
+No war with the snooze button, no lurch of panic about what to wear or where her keys are. Light comes into the room. She reaches for the water she left herself and drinks it slowly, waking her body from the inside before her feet even touch the floor. A long stretch. A breath. A minute that belongs only to her.
+
+This is what "morning person" actually looks like from the inside — not more willpower, just less chaos to wake up into.
+
+## The Shower That Resets Her
+
+Then the shower — less a task than a small daily baptism.
+
+Warm water, a wash that smells softly clean rather than sweet, the particular pleasure of starting the day genuinely fresh from the skin out. She isn't rushing; she's resetting. She steps out feeling brand new, wrapped in warmth, and that clean-from-the-inside feeling is the true base of the whole look — long before a single product touches her face.
+
+## The Two Quiet Minutes That Make Her Glow
+
+Her skincare is almost nothing, and that's the point.
+
+Something cool glides over her face to wake it and drain the sleep from it. A few drops of a brightening serum, pressed in. A light moisturiser smoothed onto still-damp skin so it drinks it in. And then, without fail, sun protection — the one step she never, ever skips, because she knows it's the quiet reason her skin stays this clear and even. A soft wash of tinted balm on her lips, groomed brows, and she is done. Two minutes. No mask of makeup — just her, dewy and awake.
+
+## Hair, Scent, and the Last Soft Touches
+
+The finish is quick, because the thinking was done long ago.
+
+Her hair takes moments — smoothed back, or half-clipped, simple and shining. A single light veil of clean scent at her pulse points, so subtle it reads as *her* rather than as perfume. The small gold jewellery she set out last night goes on without a thought. Every piece is already decided, already waiting.
+
+@read CG004 | The simple, sleek hairstyles that finish the whole clean-girl look →
+
+@read CG003 | How she smells so clean without heavy perfume — the scent method, step by step →
+
+## She Simply Steps Into the Day
+
+And then the moment the whole evening was for: she gets dressed in the outfit already hanging there, steps into her waiting shoes, picks up her packed bag, and leaves — unhurried, composed, glowing.
+
+No frantic mirror check. No forgotten anything. She walks out looking like she has her whole life together, and the truth is gentler than that: she just has her *morning* together, because she was kind enough to set it up for herself the night before.
+
+## The Weekly Reset That Keeps It Effortless
+
+One more quiet habit holds the whole thing up.
+
+Once a week — a slow Sunday, usually — she resets. She tidies and refills her little line-up of products so nothing runs out mid-week, glances at what she's got on and roughly plans her outfits, restocks the bag. Twenty minutes that buy her seven easy mornings. This is the scaffolding under the effortlessness: not daily discipline, but one small weekly tending that lets every ordinary morning stay light.
+
+## The Morning Edit
+
+None of this asks for much — and nothing here is expensive. A cool little tool to wake the skin, one glow drop, a good invisible SPF, a soft tinted balm, and the water bottle that keeps you actually drinking. The few things quietly worth owning:
+
+@product iceRoller | The cool minute that drains sleep from your face and leaves it awake.
+
+@product vitcSerum | A few drops for that lit-from-within glow, pressed into clean skin.
+
+@product spf | The one step she never skips — weightless, invisible, and why her skin stays clear.
+
+@product lipBalm | The soft wash of your-lips-but-better colour that finishes a bare face.
+
+@product waterBottle | Left by the bed at night, it makes the first, best habit automatic.
+
+## Bloom Reflection
+
+For so long, the effortless girl can feel like a locked door — as if she has some access to time, or money, or ease that you simply weren't given. You watch her glide through a morning you spend scrambling, and it's easy to feel a small, quiet lack.
+
+But there was never a locked door. There was only a girl who decided, the night before, to be gentle with her morning self — who hung the outfit, filled the glass, cleared the surface, and set the little things in a row. Her calm wasn't a gift. It was a kindness she did for herself, twelve hours early.
+
+You can do that same kindness tonight. And tomorrow you'll meet the version of you that has always been in there — the one who gets to wake up slowly, glow quietly, and simply step into her day.
+
+## Bloom Tips
+
+- Build tomorrow's morning tonight: hang the outfit, pack the bag, fill the water glass, clear the surface.
+- Charge your phone across the room, so you wake to light and quiet instead of a screen.
+- Keep skincare to two minutes — wake the skin, glow drop, moisturiser on damp skin, always SPF.
+- Do one weekly reset (refill, tidy, plan outfits) so every daily morning stays effortless.
+- Let the look be bare and dewy — the goal is *you*, well cared for, not covered up.
+
+## Today's Bloom
+
+Tonight, do just one thing: lay out tomorrow's whole outfit — clothes, shoes, jewellery — and set a glass of water by your bed.
+
+Then notice, in the morning, how different it feels to wake up to a day that's already waiting for you. That feeling is the entire secret.
+
+## Bloom Reminder
+
+The effortless morning was never effortless.
+
+It was simply built the night before — and that quiet kindness is yours to give yourself tonight.
 `,
 };
 export default bodies;

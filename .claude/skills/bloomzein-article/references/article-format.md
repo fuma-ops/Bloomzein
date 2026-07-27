@@ -79,10 +79,19 @@ If the copy is omitted, the product's own `blurb` is used. Real affiliate URLs
 are filled into each product's `href` later; until then they point to `#`, so
 nothing breaks. To recommend something new, add it to `PRODUCTS` first.
 
-**Recommend honestly.** Suggest a product only where it genuinely serves the
-reader, name a *type* she'd actually benefit from, and let the article earn the
-recommendation — the article must be useful even if she buys nothing. Two to
-four product cards in a shopping-oriented piece is plenty; more reads as an ad.
+**Placement is everything — this is the lesson a reader taught us with a "0".**
+Product cards scattered through the body make the whole article read as an ad
+and kill the immersion. So:
+
+- **In the body, mention products only *implicitly*, woven into the sensation** —
+  "something cool glides over her face", "a few drops of a brightening serum",
+  "a light veil of clean scent". No `@product` cards mid-article.
+- **Gather every `@product` card into ONE short section near the end** — call it
+  "The Edit" (or "The Morning Edit", etc.). Introduce it in a soft line, then
+  list the few things quietly worth owning. That's the only place cards appear.
+- **Recommend honestly.** Only what genuinely serves her, named as a *type* she'd
+  benefit from; the article must be worth reading even if she buys nothing.
+  Four or five in the closing edit is plenty; more reads as a catalogue.
 
 ## Cross-link cards (`@read <id> | copy`)
 

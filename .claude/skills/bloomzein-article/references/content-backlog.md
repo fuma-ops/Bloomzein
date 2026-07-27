@@ -72,12 +72,26 @@ Routine Before Vacation Photos
 Timeline: What Actually Changes in 30 Days · The Morning Habits That Make You
 Look More Attractive · How to Wake Up Looking Fresh Every Morning
 
-## Voice for this list
+## Voice for this list — write it so she *feels* it
 
-These are catchy, aspirational, list-and-how-to pieces — lighter than the
-hormone/medical articles, but hold the same standards: a hook that opens a loop,
-one idea per section, each section ending pointing at the next, and the full
-Bloom close. The persuasion goal is real: the reader should finish *convinced*
-and reach for a recommended product — so make the product genuinely the natural
-next step, never a bolted-on ad. Keep the searchable phrase in the title (see
-`title-craft.md`) even on the trend-driven ones.
+A reader gave the first draft of these a "0" and told us exactly why, and it's
+the most important guidance in this file. These aspirational/beauty pieces live
+or die on immersion, not information. Hold to this:
+
+- **Open with a vivid, sensory portrait, not a thesis.** Make her *long* to be
+  the girl in the article. Describe what she smells like, how her skin looks,
+  the calm she moves with — second person, present, cinematic. The reader should
+  want to step into the scene. (CG001's opening is the reference standard.)
+- **Give a real secret.** Not "drink water, use SPF". A genuine insight she
+  hasn't heard — e.g. *the effortless morning is built the night before.* If the
+  article reveals nothing, it fails.
+- **Describe the sensation of every step**, so reading it feels like living it.
+  Warmth, scent, texture, the feeling of being cared-for. This is where the
+  persuasion actually happens — she buys the *feeling*, and the products follow.
+- **Stay tightly on the one topic.** A "morning routine" article is about the
+  morning (and the night-before prep, the weekly reset) — not general skincare.
+  Push adjacent topics out to sister articles with `@read`.
+- **Products stay implicit in the body; all `@product` cards go in one closing
+  "Edit".** See `article-format.md`. Peppering cards through the body is exactly
+  what earned the "0".
+- Still keep the searchable title (`title-craft.md`) and the Bloom close.
