@@ -99,7 +99,7 @@ export default function Landing() {
             <a href="#features" className="hover:text-hotpink transition">About</a>
             <a href="#contact" className="hover:text-hotpink transition">Contact</a>
             {/* Start Blooming CTA */}
-            <a href="/app/today" className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-hotpink px-4 py-1.5 text-sm font-bold text-hotpink transition hover:bg-hotpink hover:text-white">
+            <a href="/app/today" onClick={() => trackEvent("get_started_click", { location: "header" })} className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-hotpink px-4 py-1.5 text-sm font-bold text-hotpink transition hover:bg-hotpink hover:text-white">
               Start Blooming <ArrowRight className="h-3.5 w-3.5" />
             </a>
             {/* Download App with QR popover */}
@@ -123,7 +123,7 @@ export default function Landing() {
             </div>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
-            <a href="/app/today" className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-3 py-1.5 text-xs font-bold text-white">
+            <a href="/app/today" onClick={() => trackEvent("get_started_click", { location: "header_mobile" })} className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-3 py-1.5 text-xs font-bold text-white">
               Start <ArrowRight className="h-3 w-3" />
             </a>
             <button
