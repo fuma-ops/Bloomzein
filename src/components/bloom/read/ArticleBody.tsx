@@ -1,10 +1,11 @@
 import { Fragment, type ReactNode } from "react";
 import { Sparkles, Flower2, Sun, Quote, ArrowRight, BookOpen,
-  CalendarHeart, PenLine, Salad, PersonStanding, Dumbbell, ShoppingBag } from "lucide-react";
+  CalendarHeart, PenLine, Salad, PersonStanding, Dumbbell } from "lucide-react";
 import { HormoneChart } from "./HormoneChart";
 import { SleepStagesChart } from "./SleepStagesChart";
 import { SleepQualityChart } from "./SleepQualityChart";
 import { PRODUCTS } from "@/lib/affiliateProducts";
+import { ProductCard } from "./ProductCard";
 
 /**
  * In-article CTAs that softly surface a Bloomzein tool. Authored in the body as
@@ -372,34 +373,7 @@ export function ArticleBody({ parsed }: { parsed: ParsedArticle }) {
           case "product": {
             const product = PRODUCTS[b.productKey];
             if (!product) return null;
-            return (
-              <a
-                key={k}
-                href={product.href}
-                target="_blank"
-                rel="nofollow sponsored noopener noreferrer"
-                className="group my-6 flex items-stretch gap-3.5 overflow-hidden rounded-[1.4rem] border border-amber-300/50 bg-gradient-to-br from-amber-50/80 via-white/80 to-rose-50/50 p-2.5 sm:p-3 backdrop-blur shadow-[0_14px_34px_-18px_oklch(0.7_0.12_70/0.55)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_-18px_oklch(0.7_0.12_70/0.65)]"
-              >
-                <span className="relative grid h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 place-items-center overflow-hidden rounded-[1.1rem] bg-gradient-to-br from-amber-100 to-rose-100 shadow-md shadow-amber-200/40">
-                  {product.image ? (
-                    <img src={product.image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" referrerPolicy="no-referrer" />
-                  ) : (
-                    <ShoppingBag className="h-7 w-7 text-amber-500" strokeWidth={1.6} />
-                  )}
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-600/80">
-                    {product.type}
-                    <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-600/90">affiliate</span>
-                  </span>
-                  <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{product.name}</span>
-                  <span className="mt-0.5 block text-[12px] text-rose/70 leading-snug">{inline(b.text || product.blurb, k)}</span>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 opacity-90">
-                    Shop <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" strokeWidth={2.4} />
-                  </span>
-                </span>
-              </a>
-            );
+            return <ProductCard key={k} product={product} lead={b.text} />;
           }
           case "chart":
             if (b.chartKey === "hormones") return <HormoneChart key={k} />;
