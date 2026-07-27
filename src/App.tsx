@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
 import Landing from "./pages/Landing";
 import { AppIcon } from "./components/bloom/AppIcon";
-import { trackPageView } from "./lib/analytics";
+import { trackPageView, trackToolOpen } from "./lib/analytics";
 
 // After a deploy, a browser holding a stale index.html may request a chunk
 // filename that no longer exists → the dynamic import rejects and the page
@@ -32,6 +32,8 @@ const HelpPage = lazyRetry(() => import("./pages/Content").then((m) => ({ defaul
 const FaqPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
 const GuidesIndexPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
 const GuidePage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidePage })));
+const BlogIndexPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.BlogIndexPage })));
+const BlogArticlePage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.BlogArticlePage })));
 const AdminMessagesPage = lazyRetry(() => import("./pages/Admin").then((m) => ({ default: m.AdminMessagesPage })));
 const ToolsIndex = lazyRetry(() => import("./pages/app.tools.index"));
 const BudgetPage = lazyRetry(() => import("./pages/budget"));
@@ -75,10 +77,14 @@ function AppContent() {
   const isInitialPageView = useRef(true);
   useEffect(() => {
     if (isInitialPageView.current) {
+      // index.html already sent the first page_view — don't double-count it.
       isInitialPageView.current = false;
-      return;
+    } else {
+      trackPageView(path);
     }
-    trackPageView(path);
+    // tool_open is a custom event index.html doesn't send, so fire it on every
+    // path incl. direct deep-links to a tool page.
+    trackToolOpen(path);
   }, [path]);
 
   useEffect(() => {
@@ -155,6 +161,12 @@ function AppContent() {
   }
   if (path.startsWith("/guides/")) {
     return <Suspense fallback={<PageLoader />}><GuidePage slug={path.split("/").pop() || ""} /></Suspense>;
+  }
+  if (path === "/blog") {
+    return <Suspense fallback={<PageLoader />}><BlogIndexPage /></Suspense>;
+  }
+  if (path.startsWith("/blog/")) {
+    return <Suspense fallback={<PageLoader />}><BlogArticlePage slug={decodeURIComponent(path.split("/").pop() || "")} /></Suspense>;
   }
 
   // Private admin inbox — gated by email + Supabase RLS inside the page

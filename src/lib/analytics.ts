@@ -34,3 +34,24 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
   window.gtag("event", name, params);
 }
+
+// Route → friendly tool name. Lets GA4 rank tools by name ("cycle", "meals"…)
+// via a single tool_open event, instead of forcing us to read raw URL paths.
+const TOOL_BY_PATH: Record<string, string> = {
+  "/app/tools/cycle": "cycle",
+  "/app/tools/meals": "meals",
+  "/app/tools/diet": "diet",
+  "/app/tools/yoga": "yoga",
+  "/app/tools/workout": "workout",
+  "/app/tools/notes": "notes",
+  "/app/tools/diary": "diary",
+  "/app/tools/budget": "budget",
+  "/budget": "budget",
+  "/app/calendar": "calendar",
+};
+
+/** If `path` is a known tool page, report which tool the user opened. */
+export function trackToolOpen(path: string): void {
+  const tool = TOOL_BY_PATH[path];
+  if (tool) trackEvent("tool_open", { tool_name: tool });
+}

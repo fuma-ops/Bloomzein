@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.bloomzein.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.bloomzein.com/blog</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.bloomzein.com/guides</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.bloomzein.com/guides/cycle-syncing</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://www.bloomzein.com/guides/eating-for-your-cycle</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -9,4 +10,43 @@
   <url><loc>https://www.bloomzein.com/help</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://www.bloomzein.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://www.bloomzein.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/what-is-the-menstrual-cycle</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/understanding-your-hormones</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/the-four-phases-of-your-cycle</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/how-your-cycle-changes-your-energy</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/why-tracking-your-cycle-matters</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/what-really-happens-to-your-skin-while-you-sleep</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/seasonal-skincare</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/your-soft-life-guide</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/how-to-build-a-life-you-dont-need-to-escape-from</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/creating-your-personal-sanctuary</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/the-art-of-rest</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/a-sharp-pain-during-ovulation-heres-what-your-body-may-be-trying-to-tell-you</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/why-has-chamomile-been-a-womens-wellness-secret-for-thousands-of-years</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/beginner-journal-prompts</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/sleep-hygiene</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/night-meditation</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/enjoying-silence</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/soft-productivity</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/a-beautiful-morning-starts-the-night-before</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/morning-yoga</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/sitting-all-day-what-5-minutes-of-stretching-can-do-for-your-body-at-work</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/cycle-syncing-101</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/soft-girl-morning-ritual</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/pink-budgeting-that-actually-works</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/moon-salutation-flow</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/reframing-i-should</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/strawberry-oat-bowl</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/luteal-phase-glow-up</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/the-7-minute-skincare-edit</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/hip-opening-sequence</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/rose-latte-at-home</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/your-rest-day-face-care-ritual</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/comfort-foods-that-love-your-period</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/fresh-start-glow-face-routine</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/fuel-the-momentum</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/your-glow-week-face-edit</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/the-radiant-ovulation-plate</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/luteal-wind-down-ritual</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.bloomzein.com/blog/satisfy-cravings-kindly</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>
