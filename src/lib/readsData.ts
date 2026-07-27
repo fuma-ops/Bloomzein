@@ -24,6 +24,7 @@ export const CATEGORIES = [
   "Relationships",
   "Journaling",
   "Money",
+  "Clean Girl",
   "Lifestyle",
   "Bloomzein Originals",
 ] as const;
@@ -76,6 +77,7 @@ export const CAT_IMG: Record<Category, string> = {
   Relationships: "/images/read-selfcare.webp",
   Journaling: "/images/read-mindset.webp",
   Money: "/images/read-money.webp",
+  "Clean Girl": "/images/read-selfcare.webp",
   Lifestyle: "/images/read-selfcare.webp",
   "Bloomzein Originals": "/images/read-featured.webp",
 };
@@ -178,6 +180,16 @@ const IMPORTED_ARTICLES: Article[] = [
     excerpt: "Wake your body with kindness, and your day will follow the same rhythm." },
   { id: "YG005", title: "Sitting All Day? What 5 Minutes of Stretching Can Do for Your Body at Work", category: "Yoga", minutes: 6, blooms: "1.0k", image: CAT_IMG["Yoga"],
     excerpt: "Your desk isn't the problem—staying in the same position for hours is. Here's how a few intentional stretches can completely…" },
+  { id: "CG001", title: "The Clean Girl Morning Routine Everyone Is Copying", category: "Clean Girl", minutes: 5, blooms: "4.2k", image: CAT_IMG["Clean Girl"], status: "review",
+    excerpt: "That dewy, effortless, put-together look isn't genetics and it isn't money. It's a 15-minute morning anyone can copy — here it is, step by step." },
+  { id: "CG002", title: "15 Habits Every Clean Girl Does Every Day", category: "Clean Girl", minutes: 5, blooms: "3.6k", image: CAT_IMG["Clean Girl"], status: "review",
+    excerpt: "The clean-girl look isn't one big secret — it's fifteen tiny habits, repeated daily, that quietly add up to that put-together glow. Here are all fifteen." },
+  { id: "CG003", title: "How to Smell Like a Clean Girl", category: "Clean Girl", minutes: 5, blooms: "3.9k", image: CAT_IMG["Clean Girl"], status: "review",
+    excerpt: "Not heavy perfume — that soft, just-showered, clean-skin scent that seems to follow her around. Here's exactly how to smell fresh and expensive all day." },
+  { id: "CG004", title: "The Hairstyles Every Clean Girl Loves", category: "Clean Girl", minutes: 5, blooms: "3.3k", image: CAT_IMG["Clean Girl"], status: "review",
+    excerpt: "Slicked-back, effortless, never trying too hard — the clean-girl hair look is really four or five simple styles on repeat. Here they are, and how to nail each one." },
+  { id: "CG005", title: "The Jewelry Every Clean Girl Owns", category: "Clean Girl", minutes: 4, blooms: "3.1k", image: CAT_IMG["Clean Girl"], status: "review",
+    excerpt: "Not a jewellery box overflowing with trends — just a few quiet, dainty gold pieces that finish every outfit. Here's the small, timeless edit worth actually owning." },
 ];
 
 /** The full catalogue: long-form editorial reads first, then the phase seeds. */
