@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
 import Landing from "./pages/Landing";
 import { AppIcon } from "./components/bloom/AppIcon";
-import { trackPageView } from "./lib/analytics";
+import { trackPageView, trackToolOpen } from "./lib/analytics";
 
 // After a deploy, a browser holding a stale index.html may request a chunk
 // filename that no longer exists → the dynamic import rejects and the page
@@ -75,10 +75,14 @@ function AppContent() {
   const isInitialPageView = useRef(true);
   useEffect(() => {
     if (isInitialPageView.current) {
+      // index.html already sent the first page_view — don't double-count it.
       isInitialPageView.current = false;
-      return;
+    } else {
+      trackPageView(path);
     }
-    trackPageView(path);
+    // tool_open is a custom event index.html doesn't send, so fire it on every
+    // path incl. direct deep-links to a tool page.
+    trackToolOpen(path);
   }, [path]);
 
   useEffect(() => {
