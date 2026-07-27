@@ -1,0 +1,304 @@
+/**
+ * Health history — the "everything you've really logged, from day one" layer.
+ *
+ * This is a PURE READER. It never tracks or invents data: every figure traces
+ * back to a canonical store another tool already writes — confirmed period
+ * starts (periodLog), completed workout & yoga sessions (their dated histories),
+ * the symptom log, the mood log, the eaten-meal log and the weight history. It
+ * only *composes* those real, user-confirmed events into lifetime insights and a
+ * doctor-shareable report. Keep it that way: read stores, don't fork them.
+ *
+ * Design choice (honest data): we report what actually happened. Calories BURNED
+ * come from real completed sessions (they store their kcal). We deliberately do
+ * NOT reconstruct past calories EATEN — the meal plan is a weekday template, not
+ * a dated ledger, so a past date's exact intake can't be proven; instead we
+ * report meal-logging consistency (how many days she logged, how many meals),
+ * which is real. Dates are LOCAL calendar days throughout (localDate.ts).
+ */
+import { localDateISO, todayISO } from "@/lib/localDate";
+import {
+  readPeriodStarts,
+  avgCycleLength,
+  recentCycleLengths,
+  cycleRegularity,
+} from "@/lib/periodLog";
+import { moodValence } from "@/lib/meDashboard";
+
+function read<T>(key: string, fallback: T): T {
+  try {
+    const v = localStorage.getItem(key);
+    return v ? (JSON.parse(v) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const MS_DAY = 86_400_000;
+const toTime = (iso: string) => new Date(iso + "T00:00:00").getTime();
+
+/* ---------- shapes ---------- */
+
+export interface DatedKcal {
+  date: string;
+  calories: number;
+  durationMin?: number;
+}
+
+export interface WeekBurn {
+  weekStartISO: string; // Monday of the week (local)
+  label: string; // "Jul 7"
+  kcal: number;
+  sessions: number;
+}
+
+export interface Counted {
+  label: string;
+  count: number;
+}
+
+export interface MoodPoint {
+  date: string;
+  mood: string;
+  score: number; // 1..5 valence
+}
+
+export interface CycleInsight {
+  starts: string[]; // confirmed real period-start dates (local ISO)
+  count: number; // number of confirmed starts
+  cyclesMeasured: number; // gaps between starts (= count - 1, clamped ≥ 0)
+  avgLength: number | null; // learned average cycle length (days)
+  recentLengths: number[]; // last few real cycle lengths
+  regularity: "regular" | "irregular" | "learning";
+  lastStart: string | null;
+}
+
+export interface WeightInsight {
+  series: { date: string; kg: number }[];
+  startKg: number | null;
+  currentKg: number | null;
+  changeKg: number | null; // current - start (signed)
+  goal: "lose" | "maintain" | "gain";
+  targetKg: number | null;
+}
+
+export interface MovementInsight {
+  workouts: number; // completed workout sessions (lifetime)
+  yoga: number; // completed yoga flows (lifetime)
+  totalSessions: number;
+  totalKcal: number; // real burned kcal, lifetime
+  workoutKcal: number;
+  yogaKcal: number;
+  activeDays: number; // distinct days with any session
+  weekly: WeekBurn[]; // last N weeks of burn
+}
+
+export interface NourishInsight {
+  daysLogged: number; // distinct days ≥1 meal logged
+  mealsLogged: number; // total meals ticked eaten
+  daysFullLogged: number; // days with ≥3 meals
+}
+
+export interface HealthHistory {
+  trackingSince: string | null; // earliest real event, local ISO
+  daysTracked: number; // whole days from trackingSince to today (inclusive)
+  cycle: CycleInsight;
+  movement: MovementInsight;
+  symptoms: { total: number; days: number; byLabel: Counted[] };
+  mood: { days: number; series: MoodPoint[]; byMood: Counted[]; avgScore: number | null };
+  weight: WeightInsight;
+  nourish: NourishInsight;
+}
+
+/* ---------- helpers ---------- */
+
+/** Monday (local) of the week containing `d`, as ISO. */
+function mondayISO(d: Date): string {
+  const copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const back = (copy.getDay() + 6) % 7; // 0 = Monday
+  copy.setDate(copy.getDate() - back);
+  return localDateISO(copy);
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function shortLabel(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+/** Weekly burn buckets for the last `weeks` weeks (oldest → newest). */
+function weeklyBurn(all: DatedKcal[], weeks: number): WeekBurn[] {
+  const thisMonday = mondayISO(new Date());
+  const buckets: WeekBurn[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = localDateISO(new Date(toTime(thisMonday) - i * 7 * MS_DAY));
+    buckets.push({ weekStartISO: start, label: shortLabel(start), kcal: 0, sessions: 0 });
+  }
+  const firstStart = toTime(buckets[0].weekStartISO);
+  for (const e of all) {
+    if (!e?.date) continue;
+    const t = toTime(e.date);
+    if (isNaN(t) || t < firstStart) continue;
+    const idx = Math.floor((t - firstStart) / (7 * MS_DAY));
+    if (idx >= 0 && idx < buckets.length) {
+      buckets[idx].kcal += Math.max(0, Math.round(e.calories || 0));
+      buckets[idx].sessions += 1;
+    }
+  }
+  return buckets;
+}
+
+function earliest(...isoLists: string[][]): string | null {
+  let min: string | null = null;
+  for (const list of isoLists) {
+    for (const iso of list) {
+      if (iso && (min === null || iso < min)) min = iso;
+    }
+  }
+  return min;
+}
+
+/* ---------- the composed history ---------- */
+
+export function computeHealthHistory(weeks = 8): HealthHistory {
+  // ── Real stores (dated event logs) ──
+  const workoutHist = read<DatedKcal[]>("bloom:workout-history", []).filter((h) => h?.date);
+  const yogaHist = read<DatedKcal[]>("bloom:yoga-history", []).filter((h) => h?.date);
+  const symptomsLog = read<Record<string, string[]>>("bloom:symptoms-log-v2", {});
+  const moodLog = read<Record<string, string>>("bloom:mood-log-v2", {});
+  const eaten = read<Record<string, string[]>>("bloom:diet-eaten", {});
+  const profile = read<{
+    goal?: string;
+    targetWeight?: number;
+    weight?: number;
+    weightHistory?: { date: string; kg: number }[];
+  }>("bloom:diet-profile", {});
+  const periodStarts = readPeriodStarts();
+
+  // ── Cycle ──
+  const cycle: CycleInsight = {
+    starts: periodStarts,
+    count: periodStarts.length,
+    cyclesMeasured: Math.max(0, periodStarts.length - 1),
+    avgLength: avgCycleLength(periodStarts),
+    recentLengths: recentCycleLengths(6),
+    regularity: cycleRegularity(),
+    lastStart: periodStarts.length ? periodStarts[periodStarts.length - 1] : null,
+  };
+
+  // ── Movement / burned calories (real completed sessions) ──
+  const sum = (list: DatedKcal[]) =>
+    list.reduce((s, h) => s + Math.max(0, Math.round(h.calories || 0)), 0);
+  const workoutKcal = sum(workoutHist);
+  const yogaKcal = sum(yogaHist);
+  const activeDays = new Set([...workoutHist, ...yogaHist].map((h) => h.date)).size;
+  const movement: MovementInsight = {
+    workouts: workoutHist.length,
+    yoga: yogaHist.length,
+    totalSessions: workoutHist.length + yogaHist.length,
+    totalKcal: workoutKcal + yogaKcal,
+    workoutKcal,
+    yogaKcal,
+    activeDays,
+    weekly: weeklyBurn([...workoutHist, ...yogaHist], weeks),
+  };
+
+  // ── Symptoms (only what she logged) ──
+  const symptomCounts = new Map<string, number>();
+  let symptomTotal = 0;
+  let symptomDays = 0;
+  for (const labels of Object.values(symptomsLog)) {
+    if (!Array.isArray(labels) || !labels.length) continue;
+    symptomDays++;
+    for (const l of labels) {
+      symptomCounts.set(l, (symptomCounts.get(l) ?? 0) + 1);
+      symptomTotal++;
+    }
+  }
+  const symptomsByLabel: Counted[] = [...symptomCounts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // ── Mood (only what she logged) ──
+  const moodEntries = Object.entries(moodLog).filter(([, m]) => !!m);
+  const moodSeries: MoodPoint[] = moodEntries
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([date, mood]) => ({ date, mood, score: moodValence(mood) }));
+  const moodCountMap = new Map<string, number>();
+  for (const [, m] of moodEntries) moodCountMap.set(m, (moodCountMap.get(m) ?? 0) + 1);
+  const moodByMood: Counted[] = [...moodCountMap.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
+  const avgScore = moodSeries.length
+    ? Math.round((moodSeries.reduce((s, p) => s + p.score, 0) / moodSeries.length) * 10) / 10
+    : null;
+
+  // ── Weight ──
+  const wSeries = (profile.weightHistory ?? [])
+    .filter((w) => w && w.date && typeof w.kg === "number")
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const startKg = wSeries.length
+    ? wSeries[0].kg
+    : typeof profile.weight === "number"
+      ? profile.weight
+      : null;
+  const currentKg = wSeries.length ? wSeries[wSeries.length - 1].kg : startKg;
+  const weight: WeightInsight = {
+    series: wSeries,
+    startKg,
+    currentKg,
+    changeKg:
+      startKg != null && currentKg != null ? Math.round((currentKg - startKg) * 10) / 10 : null,
+    goal:
+      profile.goal === "lose" || profile.goal === "gain" || profile.goal === "maintain"
+        ? profile.goal
+        : "maintain",
+    targetKg: typeof profile.targetWeight === "number" ? profile.targetWeight : null,
+  };
+
+  // ── Nourishment (real meal-logging consistency) ──
+  const eatenEntries = Object.entries(eaten).filter(
+    ([, slots]) => Array.isArray(slots) && slots.length,
+  );
+  const nourish: NourishInsight = {
+    daysLogged: eatenEntries.length,
+    mealsLogged: eatenEntries.reduce((s, [, slots]) => s + slots.length, 0),
+    daysFullLogged: eatenEntries.filter(([, slots]) => slots.length >= 3).length,
+  };
+
+  // ── Tracking-since (earliest real event across every store) ──
+  const trackingSince = earliest(
+    workoutHist.map((h) => h.date),
+    yogaHist.map((h) => h.date),
+    Object.keys(symptomsLog),
+    Object.keys(moodLog),
+    Object.keys(eaten),
+    wSeries.map((w) => w.date),
+    periodStarts,
+  );
+  const daysTracked = trackingSince
+    ? Math.floor((toTime(todayISO()) - toTime(trackingSince)) / MS_DAY) + 1
+    : 0;
+
+  return {
+    trackingSince,
+    daysTracked,
+    cycle,
+    movement,
+    symptoms: { total: symptomTotal, days: symptomDays, byLabel: symptomsByLabel },
+    mood: { days: moodSeries.length, series: moodSeries, byMood: moodByMood, avgScore },
+    weight,
+    nourish,
+  };
+}
+
+/** Pretty date for headers/reports (e.g. "7 Jul 2026"). */
+export function prettyDate(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** Title-case a mood key for display ("energetic" → "Energetic"). */
+export function titleCase(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
