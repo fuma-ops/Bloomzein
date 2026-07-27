@@ -7,10 +7,6 @@ import { supabase } from "@/lib/supabase";
 import { ARTICLES, FILTERS, IMG, articlesByCategory, type Filter, type Article } from "@/lib/readsData";
 import { articleSlug, articleBySlug } from "@/lib/blog";
 import { loadArticleBody } from "@/content/reads/registry";
-import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
-import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
-import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { BloomFlower } from "@/components/bloom/read/BloomFlower";
 
 /* ------------------------------------------------------------------ *
  * Public, indexable content pages — Help Center, Guides, FAQ.
@@ -666,8 +662,6 @@ export function BlogIndexPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]" />
         </div>
 
-        <BloomBubbles count={10} />
-
         {/* HERO title */}
         <section className="relative z-[1] max-w-[80%] pt-5 pb-1 sm:max-w-md sm:pt-9">
           <h1 className="animate-fade-in font-script text-[3.25rem] leading-[0.9] text-hotpink drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)] sm:text-6xl lg:text-7xl">Read</h1>
@@ -739,6 +733,122 @@ export function BlogIndexPage() {
   );
 }
 
+/* Self-contained article-body renderer — a tiny markdown dialect, with NO
+   app-component imports, so the public blog never depends on an auth-gated
+   shared chunk (that dependency was crashing the deployed page with React #130).
+   Produces clean semantic HTML (h2/h3/p/ul/blockquote) for SEO. */
+function renderInline(text: string, keyBase: string): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  let last = 0, i = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(<span key={`${keyBase}-t${i}`}>{text.slice(last, m.index)}</span>);
+    const tok = m[0];
+    if (tok.startsWith("**")) out.push(<strong key={`${keyBase}-b${i}`} className="font-semibold text-rose">{tok.slice(2, -2)}</strong>);
+    else out.push(<em key={`${keyBase}-i${i}`} className="italic">{tok.slice(1, -1)}</em>);
+    last = m.index + tok.length;
+    i++;
+  }
+  if (last < text.length) out.push(<span key={`${keyBase}-t${i}`}>{text.slice(last)}</span>);
+  return out;
+}
+
+type Blk =
+  | { t: "h2" | "h3" | "p" | "quote"; text: string }
+  | { t: "ul"; items: string[] }
+  | { t: "hr" };
+
+function parseBlogBody(md: string): { headline: string; blocks: Blk[] } {
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const blocks: Blk[] = [];
+  let headline = "";
+  let seenHeadline = false;
+  let para: string[] = [];
+  const flush = () => { if (para.length) { blocks.push({ t: "p", text: para.join(" ") }); para = []; } };
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (!line) { flush(); i++; continue; }
+    if (line.startsWith("# ") && !line.startsWith("## ")) {
+      headline = line.slice(2).trim();
+      seenHeadline = true;
+      flush();
+      i++;
+      let j = i;
+      while (j < lines.length && !lines[j].trim()) j++;
+      if (/^\*[^*].*\*$/.test(lines[j]?.trim() || "")) i = j + 1;
+      continue;
+    }
+    if (line.startsWith("### ")) { flush(); blocks.push({ t: "h3", text: line.slice(4).trim() }); i++; continue; }
+    if (line.startsWith("## ")) { flush(); blocks.push({ t: "h2", text: line.slice(3).trim() }); i++; continue; }
+    if (line === "---") { flush(); blocks.push({ t: "hr" }); i++; continue; }
+    if (line.startsWith(">")) {
+      flush();
+      const buf: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith(">")) { buf.push(lines[i].trim().replace(/^>\s?/, "")); i++; }
+      blocks.push({ t: "quote", text: buf.join(" ") });
+      continue;
+    }
+    if (/^[-*]\s+/.test(line)) {
+      flush();
+      const items: string[] = [];
+      while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^[-*]\s+/, "")); i++; }
+      blocks.push({ t: "ul", items });
+      continue;
+    }
+    if (!seenHeadline && /^\*[^*].*\*$/.test(line)) { i++; continue; } // stray dek before headline
+    para.push(line);
+    i++;
+  }
+  flush();
+  return { headline, blocks };
+}
+
+function BlogArticleBody({ md }: { md: string }) {
+  const { blocks } = useMemo(() => parseBlogBody(md), [md]);
+  let firstPara = true;
+  return (
+    <div>
+      {blocks.map((b, i) => {
+        const k = `b${i}`;
+        if (b.t === "h2") return <h2 key={k} className="mt-10 mb-1 font-script text-3xl leading-tight text-hotpink sm:text-4xl">{b.text}</h2>;
+        if (b.t === "h3") return <h3 key={k} className="mt-6 font-script text-2xl leading-tight text-hotpink">{b.text}</h3>;
+        if (b.t === "hr") return (
+          <div key={k} className="my-8 flex items-center justify-center gap-2 text-hotpink/60">
+            <span className="h-px w-12 bg-petal/70" />✿<span className="h-px w-12 bg-petal/70" />
+          </div>
+        );
+        if (b.t === "quote") return (
+          <blockquote key={k} className="my-6 rounded-2xl border border-hotpink/25 bg-gradient-to-br from-blush/55 to-white/70 p-4 text-[15px] italic leading-7 text-rose sm:p-5 sm:text-lg">
+            {renderInline(b.text, k)}
+          </blockquote>
+        );
+        if (b.t === "ul") return (
+          <ul key={k} className="mt-4 space-y-2.5">
+            {b.items.map((it, ii) => (
+              <li key={`${k}-${ii}`} className="flex gap-2.5 text-[15px] leading-7 text-rose/90 sm:text-[17px]">
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-hotpink" />
+                <span>{renderInline(it, `${k}-${ii}`)}</span>
+              </li>
+            ))}
+          </ul>
+        );
+        if (firstPara) {
+          firstPara = false;
+          return (
+            <p key={k} className="mt-1 text-[15px] leading-8 text-rose/90 sm:text-[17px]">
+              <span className="float-left mr-2.5 mt-1.5 font-script text-6xl leading-[0.7] text-hotpink sm:text-7xl">{b.text.charAt(0)}</span>
+              {renderInline(b.text.slice(1), k)}
+            </p>
+          );
+        }
+        return <p key={k} className="mt-4 text-[15px] leading-8 text-rose/90 sm:text-[17px]">{renderInline(b.text, k)}</p>;
+      })}
+    </div>
+  );
+}
+
 export function BlogArticlePage({ slug }: { slug: string }) {
   const article = articleBySlug(slug);
   useSeo(
@@ -747,24 +857,24 @@ export function BlogArticlePage({ slug }: { slug: string }) {
     `/blog/${slug}`,
   );
 
-  const [parsed, setParsed] = useState<ParsedArticle | null>(null);
+  const [md, setMd] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    setParsed(null);
+    setMd(null);
     if (!article) { setLoading(false); return; }
     try { window.scrollTo({ top: 0 }); } catch { /* ignore */ }
     loadArticleBody(article).then((body) => {
       if (!alive) return;
       // Legacy short reads return a bare paragraph — wrap so every article
-      // renders through one path with a headline (same as the app reader).
-      const md = !body
+      // renders through one path with a leading headline.
+      const text = !body
         ? `# ${article.title}\n\n*${article.excerpt}*\n\nThis story is coming soon.`
         : body.trimStart().startsWith("# ")
         ? body
         : `# ${article.title}\n\n*${article.excerpt}*\n\n${body}`;
-      setParsed(parseArticle(md));
+      setMd(text);
       setLoading(false);
     });
     return () => { alive = false; };
@@ -785,7 +895,6 @@ export function BlogArticlePage({ slug }: { slug: string }) {
     );
   }
 
-  const headline = parsed?.headline || article.title;
   const related = articlesByCategory(article.category).filter((a) => a.id !== article.id).slice(0, 6);
   const heroFade = "linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%)";
   const articleSchema = {
@@ -817,8 +926,6 @@ export function BlogArticlePage({ slug }: { slug: string }) {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]/70" />
         </div>
 
-        <BloomBubbles count={8} />
-
         {/* back to blog */}
         <div className="relative z-[1] flex items-center gap-2 pt-3">
           <a href="/blog" className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 text-xs font-semibold text-hotpink shadow-sm backdrop-blur transition hover:bg-white active:scale-95">
@@ -829,7 +936,7 @@ export function BlogArticlePage({ slug }: { slug: string }) {
         {/* HERO TITLE over the pink-washed image */}
         <header className="relative z-[1] flex min-h-[11rem] max-w-[14rem] flex-col justify-center pb-3 sm:min-h-[13rem] sm:max-w-[22rem] lg:min-h-[15rem] lg:max-w-[25rem]">
           <h1 className="font-script text-[2.15rem] leading-[1.0] text-white sm:text-5xl lg:text-[3.5rem]" style={{ textShadow: "0 2px 16px rgba(140,18,74,0.55), 0 1px 2px rgba(140,18,74,0.45)" }}>
-            {headline}
+            {article.title}
           </h1>
           <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2.5" style={{ filter: "drop-shadow(0 1px 5px rgba(140,18,74,0.4))" }}>
             <TopicBadge topic={article.category} />
@@ -840,46 +947,33 @@ export function BlogArticlePage({ slug }: { slug: string }) {
           </div>
         </header>
 
-        {parsed ? <ArticleTOC sections={parsed.sections} collapsible className="relative z-[1] lg:hidden mt-3 mb-4" /> : null}
-
-        {/* BODY — sticky "On this page" (desktop) + white article card */}
-        <div className="relative z-[1] mt-2 lg:mt-4 lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8 lg:items-start">
-          <aside className="hidden lg:sticky lg:top-4 lg:block">
-            {parsed ? <ArticleTOC sections={parsed.sections} /> : null}
-          </aside>
-
-          <div className="min-w-0">
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/50 bg-white/92 p-5 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)] backdrop-blur sm:p-8 lg:p-9">
-              <BloomFlower className="pointer-events-none absolute -right-8 top-24 w-32 text-hotpink opacity-[0.08] animate-icon-breathe sm:w-40" />
-              <BloomFlower className="pointer-events-none absolute -left-10 top-[42%] w-36 text-magenta opacity-[0.07] animate-icon-breathe sm:w-52" style={{ animationDelay: "1.1s" }} />
-              <BloomFlower className="pointer-events-none absolute -right-10 top-[70%] w-32 text-hotpink opacity-[0.08] animate-icon-breathe sm:w-44" style={{ animationDelay: "2.2s" }} />
-              <div className="relative z-[1]">
-                {loading || !parsed ? (
-                  <div className="animate-pulse space-y-4 py-2" aria-hidden>
-                    <div className="h-4 w-2/3 rounded-full bg-petal/30" />
-                    <div className="mt-8 space-y-3">
-                      {Array.from({ length: 7 }).map((_, i) => (
-                        <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <ArticleBody parsed={parsed} />
-                )}
-              </div>
-            </div>
-
-            {related.length > 0 && (
-              <section className="mt-10">
-                <h2 className="font-script text-2xl text-hotpink sm:text-3xl">More in {article.category} ✿</h2>
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-                  {related.map((a, i) => <BlogCard key={a.id} article={a} index={i} />)}
+        {/* BODY — single readable column, white article card */}
+        <div className="relative z-[1] mx-auto mt-4 max-w-3xl">
+          <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/50 bg-white/92 p-5 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)] backdrop-blur sm:p-8 lg:p-9">
+            {loading || !md ? (
+              <div className="animate-pulse space-y-4 py-2" aria-hidden>
+                <div className="h-4 w-2/3 rounded-full bg-petal/30" />
+                <div className="mt-8 space-y-3">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="h-3.5 rounded-full bg-petal/25" style={{ width: `${92 - (i % 3) * 12}%` }} />
+                  ))}
                 </div>
-              </section>
+              </div>
+            ) : (
+              <BlogArticleBody md={md} />
             )}
-
-            <CTA />
           </div>
+
+          {related.length > 0 && (
+            <section className="mt-10">
+              <h2 className="font-script text-2xl text-hotpink sm:text-3xl">More in {article.category} ✿</h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+                {related.map((a, i) => <BlogCard key={a.id} article={a} index={i} />)}
+              </div>
+            </section>
+          )}
+
+          <CTA />
         </div>
       </article>
     </div>
