@@ -44,6 +44,7 @@ import {
   Utensils,
   CalendarHeart,
   Check,
+  LineChart,
 } from "lucide-react";
 import type { DayCoach } from "@/lib/todayCoach";
 import {
@@ -51,6 +52,10 @@ import {
   CYCLE_PHASE_ORDER,
   PHASE_DAY_RANGE,
   cycleNutritionFor,
+  CYCLE_CURVES,
+  CYCLE_CURVE_DAYS,
+  CYCLE_BANDS,
+  curveValueAtDay,
   type NutrientNeed,
   type Tip,
 } from "@/lib/cycleNutrition";
@@ -248,6 +253,231 @@ function heroRecipeFor(phase: DietPhase): Recipe | undefined {
   return [...pool].sort((a, b) => b.macros.protein - a.macros.protein)[0];
 }
 
+/* ---------- Cycle rhythm chart — hormones × energy × mood over the month ---------- */
+
+// Smooth (Catmull-Rom → cubic bezier) path through points, for organic curves.
+function smoothPath(pts: [number, number][]): string {
+  if (pts.length < 2) return pts.length ? `M ${pts[0][0]} ${pts[0][1]}` : "";
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C ${c1x} ${c1y} ${c2x} ${c2y} ${p2[0]} ${p2[1]}`;
+  }
+  return d;
+}
+
+const READOUT_TAG = (v: number) =>
+  v >= 80 ? "Peak" : v >= 55 ? "High" : v >= 35 ? "Rising" : "Low";
+
+function CycleRhythmChart({
+  selected,
+  onSelect,
+}: {
+  selected: DietPhase;
+  onSelect: (p: DietPhase) => void;
+}) {
+  // viewBox geometry — scales fluidly to any width via preserveAspectRatio.
+  const W = 720,
+    H = 340,
+    padL = 46,
+    padR = 18,
+    padT = 40,
+    padB = 34;
+  const x0 = padL,
+    x1 = W - padR,
+    yTop = padT,
+    yBot = H - padB;
+  const LAST = CYCLE_CURVE_DAYS[CYCLE_CURVE_DAYS.length - 1];
+  const xForDay = (d: number) => x0 + ((d - 1) / (LAST - 1)) * (x1 - x0);
+  const yForVal = (v: number) => yBot - (v / 100) * (yBot - yTop);
+
+  const band = CYCLE_BANDS.find((b) => b.phase === selected) ?? CYCLE_BANDS[1];
+  const guideX = xForDay(band.midDay);
+
+  const gridLines = [
+    { v: 100, label: "Peak" },
+    { v: 50, label: "Mid" },
+    { v: 0, label: "Low" },
+  ];
+  const dayTicks = [1, 7, 14, 21, 28];
+
+  return (
+    <Card className="p-3 sm:p-4">
+      {/* legend — identity by dot + label (never colour alone) */}
+      <div className="mb-2 flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+        {CYCLE_CURVES.map((c) => (
+          <span
+            key={c.key}
+            className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-rose/75"
+          >
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
+            {c.label}
+          </span>
+        ))}
+      </div>
+
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Line chart of estrogen, progesterone, energy and mood across a 28-day cycle"
+      >
+        {/* phase bands — tappable to switch phase */}
+        {CYCLE_BANDS.map((b) => {
+          const active = b.phase === selected;
+          const bx = xForDay(b.startDay);
+          const bw = xForDay(b.endDay) - bx;
+          return (
+            <g key={b.phase} onClick={() => onSelect(b.phase)} style={{ cursor: "pointer" }}>
+              <rect
+                x={bx}
+                y={yTop}
+                width={bw}
+                height={yBot - yTop}
+                rx={8}
+                fill={active ? "oklch(0.62 0.24 0 / 0.1)" : "oklch(0.92 0.05 340 / 0.28)"}
+                stroke={active ? "oklch(0.62 0.24 0 / 0.5)" : "transparent"}
+                strokeWidth={active ? 1.5 : 0}
+              />
+              <text
+                x={bx + bw / 2}
+                y={yTop - 14}
+                textAnchor="middle"
+                className="font-bold uppercase"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 0.5,
+                  fill: active ? "oklch(0.5 0.26 0)" : "oklch(0.5 0.18 0 / 0.55)",
+                }}
+              >
+                {CYCLE_NUTRITION[b.phase].label}
+              </text>
+              <text
+                x={bx + bw / 2}
+                y={yTop - 2}
+                textAnchor="middle"
+                style={{ fontSize: 9, fill: "oklch(0.5 0.18 0 / 0.45)" }}
+              >
+                {PHASE_DAY_RANGE[b.phase].replace("Days ", "")}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* horizontal gridlines + y labels */}
+        {gridLines.map((g) => (
+          <g key={g.v}>
+            <line
+              x1={x0}
+              x2={x1}
+              y1={yForVal(g.v)}
+              y2={yForVal(g.v)}
+              stroke="oklch(0.5 0.18 0 / 0.12)"
+              strokeWidth={1}
+              strokeDasharray={g.v === 0 ? "0" : "3 4"}
+            />
+            <text
+              x={x0 - 8}
+              y={yForVal(g.v) + 3}
+              textAnchor="end"
+              style={{ fontSize: 9.5, fontWeight: 700, fill: "oklch(0.5 0.18 0 / 0.5)" }}
+            >
+              {g.label}
+            </text>
+          </g>
+        ))}
+
+        {/* selected-phase guide line */}
+        <line
+          x1={guideX}
+          x2={guideX}
+          y1={yTop}
+          y2={yBot}
+          stroke="oklch(0.62 0.24 0 / 0.45)"
+          strokeWidth={1.5}
+          strokeDasharray="4 4"
+        />
+
+        {/* the four curves */}
+        {CYCLE_CURVES.map((c, ci) => {
+          const pts = CYCLE_CURVE_DAYS.map(
+            (d, i) => [xForDay(d), yForVal(c.values[i])] as [number, number],
+          );
+          const gy = yForVal(curveValueAtDay(c, band.midDay));
+          return (
+            <g key={c.key}>
+              <path
+                d={smoothPath(pts)}
+                fill="none"
+                stroke={c.color}
+                strokeWidth={2.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                pathLength={1}
+                strokeDasharray={1}
+                className="animate-draw-line"
+                style={{ animationDelay: `${ci * 160}ms` }}
+              />
+              {/* marker where the guide meets this curve */}
+              <circle cx={guideX} cy={gy} r={5} fill="white" stroke={c.color} strokeWidth={2.4} />
+            </g>
+          );
+        })}
+
+        {/* day axis */}
+        {dayTicks.map((d) => (
+          <text
+            key={d}
+            x={xForDay(d)}
+            y={yBot + 20}
+            textAnchor="middle"
+            style={{ fontSize: 9.5, fontWeight: 600, fill: "oklch(0.5 0.18 0 / 0.5)" }}
+          >
+            {d === 1 ? "Day 1" : d}
+          </text>
+        ))}
+      </svg>
+
+      {/* selected-phase readout — the four levels, explained in numbers */}
+      <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {CYCLE_CURVES.map((c) => {
+          const v = curveValueAtDay(c, band.midDay);
+          return (
+            <div
+              key={c.key}
+              className="rounded-xl border border-petal/50 bg-white/70 px-2.5 py-2"
+              style={{ borderLeft: `3px solid ${c.color}` }}
+            >
+              <p className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-rose/70">
+                <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+                {c.label}
+              </p>
+              <p className="mt-0.5 flex items-baseline gap-1">
+                <span className="text-[16px] font-black text-magenta">{v}</span>
+                <span className="text-[10px] font-bold" style={{ color: c.color }}>
+                  {READOUT_TAG(v)}
+                </span>
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-3 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-2.5 text-[12.5px] leading-snug text-[#831843]">
+        <b className="text-hotpink">{CYCLE_NUTRITION[selected].label} ·</b>{" "}
+        {CYCLE_NUTRITION[selected].chartNote}
+      </p>
+    </Card>
+  );
+}
+
 /* ---------- main view ---------- */
 
 export function CycleNutritionView({
@@ -412,6 +642,16 @@ export function CycleNutritionView({
       {/* Everything below the hero switches with the phase too — one smooth,
           cute swap for the whole page (keyed on the selected phase). */}
       <div key={selected} className="animate-phase-swap space-y-6">
+        {/* ── Cycle rhythm chart · hormones × energy × mood over the month ── */}
+        <section>
+          <SectionTitle
+            Icon={LineChart}
+            title="Hormones × Energy × Mood"
+            sub="how they rise and fall together across your whole cycle · tap a phase band to explore"
+          />
+          <CycleRhythmChart selected={selected} onSelect={setSelected} />
+        </section>
+
         {/* ── What Your Body Needs Today · nutrient cards ── */}
         <section key={`n-${selected}`}>
           <SectionTitle
