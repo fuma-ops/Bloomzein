@@ -9,7 +9,8 @@ import {
 /** Only this account sees the private admin inbox link. */
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
-import { DiscoverBloomPlus, PlanToggle } from "@/components/bloom/premium/PremiumKit";
+import { DiscoverBloomPlus, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
+import { HealthHistoryPanel } from "@/components/bloom/me/HealthHistory";
 import { PhaseThemeControl } from "@/components/bloom/premium/PhaseThemeControl";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { useAuth } from "@/contexts/AuthContext";
@@ -211,6 +212,13 @@ export default function MePage() {
           </div>
         </div>
       </section>
+
+      {/* YOUR HISTORY — Bloom+ (every real logged event + doctor-shareable report) */}
+      <div className="mt-5 sm:mt-8">
+        <PlusLock feature="me" title="Your history & report" blurb="Every real thing you've logged — cycle regularity, calories burned, symptoms, mood & weight — from day one, downloadable as a report for your doctor." minH="min-h-[300px]">
+          <HealthHistoryPanel userName={displayName} />
+        </PlusLock>
+      </div>
 
       {/* BLOOM+ — discover premium, and a dev switch to feel both experiences */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
