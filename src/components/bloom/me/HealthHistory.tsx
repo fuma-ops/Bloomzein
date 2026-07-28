@@ -142,12 +142,19 @@ function ChartFooter({
   );
 }
 
-/* ---------- shared axis geometry ---------- */
+/* ---------- shared axis geometry + calm, unified palette ---------- */
 
-const AX = { W: 340, H: 178, mL: 30, mR: 8, mT: 12, mB: 26 };
-const GRID = "oklch(0.5 0.18 0 / 0.13)";
-const AXIS = "oklch(0.5 0.18 0 / 0.35)";
-const LABEL = "oklch(0.5 0.18 0 / 0.6)";
+// Compact charts: a shorter plot so nothing dominates the page.
+const AX = { W: 340, H: 132, mL: 28, mR: 8, mT: 12, mB: 22 };
+const GRID = "oklch(0.5 0.12 350 / 0.12)";
+const AXIS = "oklch(0.5 0.12 350 / 0.28)";
+const LABEL = "oklch(0.5 0.1 350 / 0.55)";
+
+// ONE soft rose for every bar chart and ONE muted berry for every line — so the
+// page reads as a calm, single system instead of many strong colours competing.
+const BAR_C = "#e07aab"; // soft rose (bar gradient top)
+const LINE_C = "#c85d95"; // muted berry (lines + dots)
+const SEL_C = "#a23c72"; // deeper berry for the selected point/bar
 
 function niceMax(v: number): number {
   if (v <= 0) return 1;
@@ -235,7 +242,7 @@ function BarsChart({
                 rx={1.5}
                 fill={`url(#${gid})`}
                 opacity={p.faded ? 0.4 : 1}
-                stroke={active ? "oklch(0.4 0.24 0)" : "none"}
+                stroke={active ? SEL_C : "none"}
                 strokeWidth={active ? 1.5 : 0}
               />
             </g>
@@ -353,7 +360,7 @@ function LineChart({
                 cx={x(i)}
                 cy={y(p.value)}
                 r={active ? 4.5 : 2.6}
-                fill={active ? "oklch(0.4 0.24 0)" : color}
+                fill={active ? SEL_C : color}
                 stroke="#fff"
                 strokeWidth={active ? 1.8 : 1}
               />
@@ -438,12 +445,13 @@ const cyclePoints = (cycles: Cycle[]): ChartPoint[] =>
 
 /* ---------- combined "cycle × your body" chart ---------- */
 
-// Soft, distinct phase band colours (rose / pale-pink / gold / violet).
+// Muted, harmonious phase tints — pale enough to sit quietly behind the line,
+// distinguishable by hue within one soft warm→cool family.
 const PHASE_FILL: Record<PhaseKey, string> = {
-  menstrual: "#fb7185",
-  follicular: "#fbcfe8",
-  ovulatory: "#f59e0b",
-  luteal: "#c084fc",
+  menstrual: "#e79aad", // dusty rose
+  follicular: "#f0cbb6", // soft peach
+  ovulatory: "#e6dca6", // soft sand-gold
+  luteal: "#d6c5e6", // soft lilac
 };
 
 interface Metric {
@@ -469,7 +477,8 @@ function CycleOverlayChart({
   const [sel, setSel] = useState<string | null>(null);
   const metric = metrics.find((m) => m.key === metricKey) ?? metrics[0];
 
-  const { W, H, mR, mT, mB } = AX;
+  const { W, mR, mT, mB } = AX;
+  const H = 150; // the big one gets a little more room than the compact charts
   const mLeft = 26;
   const x0 = mLeft,
     x1 = W - mR,
@@ -519,12 +528,9 @@ function CycleOverlayChart({
                 setSel(null);
               }}
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${on ? "border-transparent text-white shadow-sm" : "border-petal/60 bg-white/70 text-rose hover:bg-blush/60"}`}
-              style={on ? { background: m.color } : undefined}
+              style={on ? { background: LINE_C } : undefined}
             >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: on ? "#fff" : m.color }}
-              />{" "}
+              <span className="h-2 w-2 rounded-full" style={{ background: on ? "#fff" : LINE_C }} />{" "}
               {m.label}
             </button>
           );
@@ -546,7 +552,7 @@ function CycleOverlayChart({
             width={Math.max(0.5, xAt(s.endISO) - xAt(s.startISO) + dayW)}
             height={y1 - y0}
             fill={PHASE_FILL[s.phase]}
-            opacity={0.16}
+            opacity={0.32}
           />
         ))}
         {/* y High/Low + baseline */}
@@ -562,7 +568,7 @@ function CycleOverlayChart({
           <path
             d={line}
             fill="none"
-            stroke={metric.color}
+            stroke={LINE_C}
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -581,7 +587,7 @@ function CycleOverlayChart({
                 cx={xAt(p.date)}
                 cy={yAt(p.value)}
                 r={active ? 4.5 : 2.4}
-                fill={active ? "oklch(0.4 0.24 0)" : metric.color}
+                fill={active ? SEL_C : LINE_C}
                 stroke="#fff"
                 strokeWidth={active ? 1.8 : 0.8}
               />
@@ -711,6 +717,101 @@ function buildMetrics(h: HealthHistory): Metric[] {
   ].filter((m) => m.points.length > 0);
 }
 
+/* ---------- new-user empty state, with a faded example preview ---------- */
+
+function makePreview() {
+  const base = new Date();
+  const iso = (n: number) => {
+    const d = new Date(base);
+    d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const N = 56;
+  const range = { startISO: iso(N), endISO: iso(0) };
+  const pat: [PhaseKey, number][] = [
+    ["menstrual", 5],
+    ["follicular", 8],
+    ["ovulatory", 3],
+    ["luteal", 12],
+  ];
+  const segments: PhaseSegment[] = [];
+  let day = N;
+  while (day > 0) {
+    for (const [phase, len] of pat) {
+      segments.push({ startISO: iso(day), endISO: iso(Math.max(0, day - len + 1)), phase });
+      day -= len;
+      if (day <= 0) break;
+    }
+  }
+  const mood: { date: string; value: number }[] = [];
+  const burn: { date: string; value: number }[] = [];
+  for (let n = N; n >= 0; n -= 2)
+    mood.push({ date: iso(n), value: 3 + 1.4 * Math.sin(((N - n) / N) * 6.5) });
+  for (let n = N; n >= 0; n -= 3)
+    burn.push({ date: iso(n), value: 130 + 70 * Math.abs(Math.sin((N - n) / 6)) });
+  const metrics: Metric[] = [
+    { key: "mood", label: "Mood", unit: "/5", color: LINE_C, points: mood },
+    { key: "burn", label: "Burn", unit: "kcal", color: LINE_C, points: burn },
+  ];
+  return { range, segments, metrics };
+}
+
+function EmptyPreview() {
+  const p = useMemo(makePreview, []);
+  return (
+    <div className="space-y-4">
+      <Panel>
+        <p className="font-script text-2xl text-hotpink">Your history starts today ✿</p>
+        <p className="mt-1 text-[13px] text-rose/75 leading-snug">
+          Right now this is empty — but it fills itself in from the things you already do. Here's
+          how it grows:
+        </p>
+        <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[12.5px] text-[#831843]">
+          {[
+            ["Confirm your period days", "your cycle rhythm & regularity"],
+            ["Finish workouts & yoga flows", "your calories burned, day by day"],
+            ["Log mood & symptoms", "how you feel across your cycle"],
+            ["Weigh in now and then", "your weight trend over time"],
+          ].map(([a, b]) => (
+            <li
+              key={a}
+              className="flex items-start gap-2 rounded-xl bg-blush/40 border border-petal/50 px-3 py-2"
+            >
+              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
+              <span>
+                <b>{a}</b> → {b}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-[12px] text-rose/70 leading-snug">
+          In a month or two it looks like this 👇 — your real story, in your colours.
+        </p>
+      </Panel>
+
+      {/* Faded example — non-interactive, clearly labelled as a preview */}
+      <div className="relative">
+        <span className="absolute right-3 top-3 z-10 rounded-full bg-white/90 border border-petal/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink shadow-sm">
+          Example preview
+        </span>
+        <Panel className="border-hotpink/20 bg-gradient-to-br from-blush/40 via-white/70 to-petal/25">
+          <PanelHead Icon={Sparkles} title="Your cycle × your body" hint="example" />
+          <div className="pointer-events-none opacity-60 select-none" aria-hidden>
+            <CycleOverlayChart range={p.range} segments={p.segments} metrics={p.metrics} />
+          </div>
+          <p className="mt-2 text-center text-[12px] font-semibold text-hotpink">
+            Start logging on{" "}
+            <a href="/app/today" className="pointer-events-auto underline">
+              Today
+            </a>{" "}
+            and watch this become yours ✿
+          </p>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- main ---------- */
 
 export function HealthHistoryPanel({ userName }: { userName: string }) {
@@ -768,14 +869,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
       </div>
 
       {!hasAnything ? (
-        <Panel className="text-center">
-          <p className="font-script text-2xl text-hotpink">Your history starts today ✿</p>
-          <p className="mt-1 text-sm text-rose/70 max-w-md mx-auto">
-            As you confirm your period days, finish workouts &amp; flows, and log mood, symptoms and
-            weight, it all gathers here — real, only what you logged — and becomes a report you can
-            download anytime.
-          </p>
-        </Panel>
+        <EmptyPreview />
       ) : (
         <div className="space-y-4">
           {/* Summary tiles */}
@@ -806,30 +900,6 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             />
           </div>
 
-          {/* THE BIG ONE — everything, coloured by cycle phase, over time */}
-          {h.range && h.phaseSegments.length > 0 && metrics.length > 0 && (
-            <Panel>
-              <PanelHead
-                Icon={Sparkles}
-                title="Your cycle × your body"
-                hint="by phase & over time"
-              />
-              <p className="mb-2 text-[12px] leading-snug text-rose/70">
-                Pick a metric to see it plotted over time, with the background coloured by your
-                cycle phase — so you can see how each phase shapes how you feel and move.
-              </p>
-              <CycleOverlayChart range={h.range} segments={h.phaseSegments} metrics={metrics} />
-              <p className="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">
-                How you do in each phase
-              </p>
-              <ByPhaseCards byPhase={h.byPhase} />
-              <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
-                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
-                <span>{h.patterns.combined}</span>
-              </p>
-            </Panel>
-          )}
-
           {/* Cycle regularity verdict + the by-cycle histogram */}
           <Panel>
             <PanelHead
@@ -852,7 +922,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <BarsChart
               points={cyclePoints(h.cycle.cycles)}
               unit="days"
-              color="#be185d"
+              color={BAR_C}
               tapHint="Tap a cycle to see when it started, ended & how long it lasted."
               interpretation={h.patterns.cycle}
             />
@@ -881,7 +951,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <LineChart
               points={weightPoints(h.weight.series)}
               unit="kg"
-              color="#db2777"
+              color={LINE_C}
               tapHint="Tap a point to see that day's weight."
               interpretation={h.patterns.weight}
             />
@@ -894,7 +964,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               <BarsChart
                 points={burnPoints(h.movement.workoutDaily)}
                 unit="kcal"
-                color="#db2777"
+                color={BAR_C}
                 tapHint="Tap a day to see calories burned & sessions."
                 interpretation={h.patterns.workout}
               />
@@ -904,7 +974,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               <BarsChart
                 points={burnPoints(h.movement.yogaDaily)}
                 unit="kcal"
-                color="#ec4899"
+                color={BAR_C}
                 tapHint="Tap a day to see calories burned & flows."
                 interpretation={h.patterns.yoga}
               />
@@ -922,7 +992,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               <LineChart
                 points={moodPoints(h.mood.series)}
                 unit="score"
-                color="#db2777"
+                color={LINE_C}
                 yMin={1}
                 yMax={5}
                 tapHint="Tap a point to see that day's mood."
@@ -938,7 +1008,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               <BarsChart
                 points={symptomPoints(h.symptoms.daily)}
                 unit="count"
-                color="#a21caf"
+                color={BAR_C}
                 tapHint="Tap a day to see which symptoms you logged."
                 interpretation={h.patterns.symptoms}
               />
@@ -978,6 +1048,30 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               We track how consistently you log meals — real, not reconstructed.
             </p>
           </Panel>
+
+          {/* THE BIG ONE — everything, coloured by cycle phase, over time (last) */}
+          {h.range && h.phaseSegments.length > 0 && metrics.length > 0 && (
+            <Panel className="border-hotpink/25 bg-gradient-to-br from-blush/40 via-white/70 to-petal/25">
+              <PanelHead
+                Icon={Sparkles}
+                title="Your cycle × your body"
+                hint="by phase & over time"
+              />
+              <p className="mb-2 text-[12px] leading-snug text-rose/70">
+                The whole picture: pick a metric and see it over time, with the background coloured
+                by your cycle phase — so you can see how each phase shapes how you feel and move.
+              </p>
+              <CycleOverlayChart range={h.range} segments={h.phaseSegments} metrics={metrics} />
+              <p className="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">
+                How you do in each phase
+              </p>
+              <ByPhaseCards byPhase={h.byPhase} />
+              <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
+                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
+                <span>{h.patterns.combined}</span>
+              </p>
+            </Panel>
+          )}
 
           {/* Honest-data footnote */}
           <p className="flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-3.5 py-2.5 text-[11.5px] leading-snug text-rose/70">

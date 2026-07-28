@@ -132,10 +132,11 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
     : "—";
 
   // ── chart points + full detail tables (the tap-only data, on paper) ──
-  const C1 = "#be185d",
-    C2 = "#db2777",
-    C3 = "#ec4899",
-    C4 = "#a21caf";
+  // One calm rose for bars, one muted berry for lines — matches the in-app charts.
+  const C1 = "#e07aab",
+    C2 = "#c85d95",
+    C3 = "#e07aab",
+    C4 = "#e07aab";
 
   const cyclePts = h.cycle.cycles.map((c) => ({
     label: c.monthLabel,
@@ -304,7 +305,7 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
 
     ${chartBlock(
       "Workout burn (per day)",
-      svgBars(woPts, C2),
+      svgBars(woPts, C1),
       h.patterns.workout,
       "<tr><th>Date</th><th>Burned</th><th>Sessions</th></tr>",
       woRows,
