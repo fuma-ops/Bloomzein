@@ -27,6 +27,7 @@ import {
   Info,
   Activity,
   Moon,
+  UtensilsCrossed,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -898,6 +899,173 @@ function buildMetrics(h: HealthHistory): Metric[] {
   ].filter((m) => m.points.length > 0);
 }
 
+/* ---------- planned vs logged calories (dual line) ---------- */
+
+// Two soft, distinguishable lines on one kcal axis: what her plan proposed vs
+// what she actually ticked eaten. Planned reads as a calm reference (dashed,
+// faint fill); logged is the solid, tappable line on top — so the gap between
+// "plan" and "plate" is legible at a glance.
+const PLAN_C = "#e0a3c0"; // soft rose — the plan (reference)
+const LOG_C = "#c85d95"; // berry — what she logged (matches the app's line colour)
+
+function PlannedVsLoggedChart({
+  series,
+  tapHint,
+  interpretation,
+}: {
+  series: HealthHistory["nutrition"]["series"];
+  tapHint: string;
+  interpretation: string;
+}) {
+  const shown = series.slice(-MAX_POINTS);
+  const [sel, setSel] = useState<string | null>(null);
+  const gid = "n" + useId().replace(/[^a-zA-Z0-9]/g, "");
+  const { W, H, mL, mR, mT, mB } = AX;
+  const x0 = mL,
+    x1 = W - mR,
+    y0 = mT,
+    y1 = H - mB;
+
+  if (shown.length < 2) {
+    return (
+      <div>
+        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
+          Plan your meals & tick a few off to see this
+        </div>
+        <ChartFooter sel={null} hint={tapHint} interpretation={interpretation} />
+      </div>
+    );
+  }
+
+  const max = niceMax(Math.max(1, ...shown.map((d) => Math.max(d.planned, d.logged))));
+  const x = (i: number) => x0 + (i / (shown.length - 1)) * (x1 - x0);
+  const y = (v: number) => y1 - (v / max) * (y1 - y0);
+  const path = (key: "planned" | "logged") =>
+    shown
+      .map((d, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(d[key]).toFixed(1)}`)
+      .join(" ");
+  const loggedArea = `${path("logged")} L ${x(shown.length - 1).toFixed(1)} ${y1} L ${x(0).toFixed(1)} ${y1} Z`;
+  const ticks = [0, max / 2, max];
+  const selDay = shown.find((d) => d.date === sel) ?? null;
+
+  return (
+    <div>
+      {/* legend */}
+      <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1">
+        {[
+          ["Planned", PLAN_C],
+          ["Logged", LOG_C],
+        ].map(([label, c]) => (
+          <span
+            key={label}
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-rose/70"
+          >
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
+            {label}
+          </span>
+        ))}
+      </div>
+
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Planned vs logged calories"
+      >
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={LOG_C} stopOpacity="0.24" />
+            <stop offset="100%" stopColor={LOG_C} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+          kcal
+        </text>
+        {ticks.map((t) => (
+          <g key={t}>
+            <line x1={x0} x2={x1} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
+            <text x={x0 - 4} y={y(t) + 3} textAnchor="end" style={{ fontSize: 8, fill: LABEL }}>
+              {Math.round(t)}
+            </text>
+          </g>
+        ))}
+        <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+
+        {/* logged fill + line */}
+        <path d={loggedArea} fill={`url(#${gid})`} stroke="none" />
+        {/* planned reference — dashed, no dots */}
+        <path
+          d={path("planned")}
+          fill="none"
+          stroke={PLAN_C}
+          strokeWidth={2}
+          strokeDasharray="4 3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d={path("logged")}
+          fill="none"
+          stroke={LOG_C}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {shown.map((d, i) => {
+          const active = d.date === sel;
+          return (
+            <g
+              key={d.date}
+              onClick={() => setSel(active ? null : d.date)}
+              style={{ cursor: "pointer" }}
+            >
+              <circle cx={x(i)} cy={y(d.logged)} r={10} fill="transparent" />
+              <circle
+                cx={x(i)}
+                cy={y(d.logged)}
+                r={active ? 4.5 : 2.6}
+                fill={active ? SEL_C : LOG_C}
+                stroke="#fff"
+                strokeWidth={active ? 1.8 : 1}
+              />
+            </g>
+          );
+        })}
+        {xLabelIdx(shown.length).map(
+          (i) =>
+            shown[i] && (
+              <text
+                key={i}
+                x={x(i)}
+                y={y1 + 12}
+                textAnchor={i === 0 ? "start" : i === shown.length - 1 ? "end" : "middle"}
+                style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
+              >
+                {shortDay(shown[i].date)}
+              </text>
+            ),
+        )}
+      </svg>
+
+      <div className="mt-2.5 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
+        {selDay ? (
+          <span className="text-[#831843]">
+            <b className="text-hotpink">{shortDay(selDay.date)}</b> · ate{" "}
+            {selDay.logged.toLocaleString()} of {selDay.planned.toLocaleString()} planned kcal
+            {selDay.planned > 0 ? ` · ${Math.round((selDay.logged / selDay.planned) * 100)}%` : ""}
+          </span>
+        ) : (
+          <span className="text-rose/50">{tapHint}</span>
+        )}
+      </div>
+      <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
+        <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
+        <span>{interpretation}</span>
+      </p>
+    </div>
+  );
+}
+
 /* ---------- new-user empty state, with a faded example preview ---------- */
 
 function makePreview() {
@@ -1169,7 +1337,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             </Panel>
           </div>
 
-          {/* Mood + Sleep — both "how you feel & rest", paired on desktop */}
+          {/* Mood + Symptoms — how you feel, paired side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel>
               <PanelHead
@@ -1189,37 +1357,19 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             </Panel>
             <Panel>
               <PanelHead
-                Icon={Moon}
-                title="Sleep over time"
-                hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
+                Icon={Activity}
+                title="Symptoms by day"
+                hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
               />
-              <LineChart
-                points={sleepPoints(h.sleep.series)}
-                unit="score"
-                color={LINE_C}
-                yMin={1}
-                yMax={5}
-                tapHint="Tap a point to see that night's sleep."
-                interpretation={h.patterns.sleep}
+              <BarsChart
+                points={symptomPoints(h.symptoms.daily)}
+                unit="count"
+                color={BAR_C}
+                tapHint="Tap a day to see which symptoms you logged."
+                interpretation={h.patterns.symptoms}
               />
             </Panel>
           </div>
-
-          {/* Symptoms — full width */}
-          <Panel>
-            <PanelHead
-              Icon={Activity}
-              title="Symptoms by day"
-              hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
-            />
-            <BarsChart
-              points={symptomPoints(h.symptoms.daily)}
-              unit="count"
-              color={BAR_C}
-              tapHint="Tap a day to see which symptoms you logged."
-              interpretation={h.patterns.symptoms}
-            />
-          </Panel>
 
           {/* Nourishment */}
           <Panel>
@@ -1254,6 +1404,43 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               We track how consistently you log meals — real, not reconstructed.
             </p>
           </Panel>
+
+          {/* Sleep + Planned-vs-logged calories — how you rest & fuel, paired
+              right under Nourishment on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel>
+              <PanelHead
+                Icon={Moon}
+                title="Sleep over time"
+                hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
+              />
+              <LineChart
+                points={sleepPoints(h.sleep.series)}
+                unit="score"
+                color={LINE_C}
+                yMin={1}
+                yMax={5}
+                tapHint="Tap a point to see that night's sleep."
+                interpretation={h.patterns.sleep}
+              />
+            </Panel>
+            <Panel>
+              <PanelHead
+                Icon={UtensilsCrossed}
+                title="Planned vs eaten"
+                hint={
+                  h.nutrition.adherencePct != null
+                    ? `${h.nutrition.adherencePct}% on plan`
+                    : "calories"
+                }
+              />
+              <PlannedVsLoggedChart
+                series={h.nutrition.series}
+                tapHint="Tap a day to see what you ate vs what you planned."
+                interpretation={h.patterns.nutrition}
+              />
+            </Panel>
+          </div>
 
           {/* THE BIG ONE — everything, coloured by cycle phase, over time (last) */}
           {h.range && h.phaseSegments.length > 0 && metrics.length > 0 && (

@@ -6,7 +6,7 @@
  * like hydration, so it feels part of the same warm daily flow.
  */
 import { useEffect, useState } from "react";
-import { Moon, Minus, Plus, Sparkles } from "lucide-react";
+import { Moon, Minus, Plus, Sparkles, type LucideIcon } from "lucide-react";
 import { todayISO } from "@/lib/localDate";
 import {
   readSleepForDay,
@@ -33,6 +33,23 @@ const INSIGHT: Record<number, string> = {
   4: "Good rest — your body and mood will thank you.",
   5: "Wonderful sleep — you recover and glow on nights like this. ✨",
 };
+
+// Quality shown as ONE pink glyph (never a multi-colour emoji) so every sleep
+// picker stays on-brand: a moon that brightens as the night gets more restful,
+// blooming into a sparkle for a great night. Shared with the Today quick-picker.
+const SLEEP_GLYPH: Record<number, { Icon: LucideIcon; op: number }> = {
+  1: { Icon: Moon, op: 0.4 },
+  2: { Icon: Moon, op: 0.58 },
+  3: { Icon: Moon, op: 0.76 },
+  4: { Icon: Moon, op: 0.92 },
+  5: { Icon: Sparkles, op: 1 },
+};
+
+export function SleepGlyph({ q, className = "" }: { q: number; className?: string }) {
+  const g = SLEEP_GLYPH[q] ?? SLEEP_GLYPH[3];
+  const Icon = g.Icon;
+  return <Icon className={className} style={{ opacity: g.op }} strokeWidth={2} />;
+}
 
 export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
   const [entry, setEntry] = useState<SleepEntry | null>(() => readSleepForDay());
@@ -90,7 +107,7 @@ export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
                   : "border-petal/50 bg-white/60 hover:bg-blush/50",
               ].join(" ")}
             >
-              <span className="text-lg leading-none">{o.emoji}</span>
+              <SleepGlyph q={o.q} className="h-5 w-5 text-hotpink" />
               <span
                 className={`text-[9.5px] font-bold leading-none ${on ? "text-hotpink" : "text-rose/55"}`}
               >

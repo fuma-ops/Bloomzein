@@ -193,11 +193,22 @@ export function seedEmma(): void {
     waterLog[iso(daysAgo(n))] = { water: 6 + ((DAYS - n) % 3), goal: 8 }; // 6–8
   set("bloom:daily-log", waterLog);
 
-  // ── Meals: eaten log (3 meals most days) + a phase-matched weekly plan ──
+  // ── Meals: eaten log + a phase-matched weekly plan. She's mostly on plan, with
+  //    a realistic wobble — the odd lighter day, a skipped lunch, a busy morning —
+  //    so the "planned vs eaten" chart reads as a real, living adherence story. ──
   const eaten: Record<string, string[]> = {};
-  for (let n = DAYS; n >= 0; n--)
-    eaten[iso(daysAgo(n))] =
-      n % 6 === 0 ? ["breakfast", "lunch"] : ["breakfast", "lunch", "dinner"];
+  for (let n = DAYS; n >= 0; n--) {
+    const r = (DAYS - n) % 7;
+    const slots =
+      r === 3
+        ? ["breakfast", "lunch"] // lighter day — skipped dinner
+        : r === 6
+          ? ["breakfast"] // busy morning — only breakfast logged
+          : r === 5
+            ? ["breakfast", "dinner"] // skipped lunch
+            : ["breakfast", "lunch", "dinner"]; // right on plan
+    eaten[iso(daysAgo(n))] = slots;
+  }
   set("bloom:diet-eaten", eaten);
   const plannedDay = { breakfast: "b01", lunch: "l02", dinner: "d13", snack: null, lunchbox: null };
   const mealsPlan: Record<string, typeof plannedDay> = {};
