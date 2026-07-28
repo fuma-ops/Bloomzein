@@ -72,7 +72,7 @@ export default function ToolsIndex() {
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        <img src="/images/tools-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_58%]" referrerPolicy="no-referrer" />
+        <img src="/images/page-bg-tools.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[78%_55%] sm:object-[70%_52%]" referrerPolicy="no-referrer" />
         {/* left wash ONLY — a soft radial spotlight behind the title (~50% of the
             width), fading to fully transparent so the rest of the photo shows
             clean & vivid (no overlay). */}

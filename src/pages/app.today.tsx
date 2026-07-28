@@ -341,6 +341,15 @@ export default function TodayPage() {
   const revealRef = useRef<HTMLDivElement>(null);
   useScrollReveal(revealRef);
   const { text: hello, Icon: HelloIcon } = useMemo(greeting, []);
+  // Time-of-day hero photo — a sunrise "good morning" scene before evening, a
+  // moonlit "good evening" one after ~5pm — matching the greeting above it.
+  const heroBg = useMemo(
+    () =>
+      new Date().getHours() < 17
+        ? "/images/page-bg-today-morning.webp"
+        : "/images/page-bg-today-evening.webp",
+    [],
+  );
   const today           = useMemo(fmtDate, []);
   const phase           = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
   const cycleDay        = useMemo(cycleDayNumber, []);
@@ -911,7 +920,10 @@ export default function TodayPage() {
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        <img src="/images/today-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[76%_15%]" referrerPolicy="no-referrer" />
+        {/* Frame toward her face (upper-right) so it's never cropped on phones or
+            tablets — pull in a little closer to the right on the narrowest screens,
+            easing back to the full scene on desktop. */}
+        <img src={heroBg} alt="" className="animate-hero-breathe h-full w-full object-cover object-[88%_26%] sm:object-[84%_26%] lg:object-[78%_22%]" referrerPolicy="no-referrer" />
         {/* left wash ONLY — a soft radial spotlight behind the greeting (~50% of
             the width), fading to fully transparent so the rest of the photo shows
             clean & vivid (no overlay). */}
