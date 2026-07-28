@@ -98,15 +98,46 @@ export interface NourishInsight {
   daysFullLogged: number; // days with ≥3 meals
 }
 
+/* ---------- per-day detail (drives the interactive charts) ---------- */
+
+export interface DayBurn {
+  date: string;
+  kcal: number;
+  sessions: number;
+  items: { calories: number; name: string; durationMin: number }[];
+}
+export interface SymptomDay {
+  date: string;
+  labels: string[];
+}
+export interface Cycle {
+  startISO: string;
+  endISO: string; // last day before the next start (or today if ongoing)
+  lengthDays: number; // days from this start to the next (or to today if ongoing)
+  monthLabel: string; // "4 May" — the start day, for the x-axis
+  ongoing: boolean;
+}
+
+/** One plain-language reading of the pattern in each chart. */
+export interface Patterns {
+  weight: string;
+  workout: string;
+  yoga: string;
+  mood: string;
+  symptoms: string;
+  cycle: string;
+}
+
 export interface HealthHistory {
   trackingSince: string | null; // earliest real event, local ISO
   daysTracked: number; // whole days from trackingSince to today (inclusive)
-  cycle: CycleInsight;
-  movement: MovementInsight;
-  symptoms: { total: number; days: number; byLabel: Counted[] };
+  cycle: CycleInsight & { cycles: Cycle[] };
+  movement: MovementInsight & { workoutDaily: DayBurn[]; yogaDaily: DayBurn[] };
+  symptoms: { total: number; days: number; byLabel: Counted[]; daily: SymptomDay[] };
   mood: { days: number; series: MoodPoint[]; byMood: Counted[]; avgScore: number | null };
   weight: WeightInsight;
   nourish: NourishInsight;
+  patterns: Patterns;
 }
 
 /* ---------- helpers ---------- */
@@ -157,11 +188,150 @@ function earliest(...isoLists: string[][]): string | null {
   return min;
 }
 
+/** Day label like "4 May" from an ISO date. */
+function dayLabel(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+/** Group dated kcal entries into one bar per LOCAL day (chronological). */
+function dailyBurn(
+  hist: (DatedKcal & { sessionName?: string })[],
+  fallbackName: string,
+): DayBurn[] {
+  const byDay = new Map<string, DayBurn>();
+  for (const e of hist) {
+    if (!e?.date) continue;
+    const kcal = Math.max(0, Math.round(e.calories || 0));
+    const cur = byDay.get(e.date) ?? { date: e.date, kcal: 0, sessions: 0, items: [] };
+    cur.kcal += kcal;
+    cur.sessions += 1;
+    cur.items.push({
+      calories: kcal,
+      name: e.sessionName || fallbackName,
+      durationMin: e.durationMin || 0,
+    });
+    byDay.set(e.date, cur);
+  }
+  return [...byDay.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+/** Build one cycle per consecutive pair of confirmed starts (+ the ongoing one). */
+function buildCycles(starts: string[]): Cycle[] {
+  const out: Cycle[] = [];
+  for (let i = 0; i < starts.length - 1; i++) {
+    const len = Math.round((toTime(starts[i + 1]) - toTime(starts[i])) / MS_DAY);
+    const endISO = localDateISO(new Date(toTime(starts[i + 1]) - MS_DAY));
+    out.push({
+      startISO: starts[i],
+      endISO,
+      lengthDays: len,
+      monthLabel: dayLabel(starts[i]),
+      ongoing: false,
+    });
+  }
+  // The current, still-running cycle (last confirmed start → today).
+  if (starts.length) {
+    const last = starts[starts.length - 1];
+    const len = Math.max(1, Math.round((toTime(todayISO()) - toTime(last)) / MS_DAY) + 1);
+    out.push({
+      startISO: last,
+      endISO: todayISO(),
+      lengthDays: len,
+      monthLabel: dayLabel(last),
+      ongoing: true,
+    });
+  }
+  return out;
+}
+
+/* ---------- pattern interpretations (one honest sentence per chart) ---------- */
+
+function pctChange(a: number, b: number): number {
+  return a === 0 ? 0 : Math.round(((b - a) / Math.abs(a)) * 100);
+}
+
+function buildPatterns(h: {
+  weight: WeightInsight;
+  workoutDaily: DayBurn[];
+  yogaDaily: DayBurn[];
+  moodSeries: MoodPoint[];
+  moodTop: string | null;
+  moodAvg: number | null;
+  symptomsDaily: SymptomDay[];
+  symptomsTop: Counted | null;
+  cycles: Cycle[];
+  avgCycle: number | null;
+  regularity: CycleInsight["regularity"];
+}): Patterns {
+  // Weight
+  let weight = "Log a few weigh-ins and your trend will read here.";
+  if (h.weight.series.length >= 2 && h.weight.changeKg != null) {
+    const dir = h.weight.changeKg < 0 ? "down" : h.weight.changeKg > 0 ? "up" : "steady";
+    weight =
+      dir === "steady"
+        ? `Holding steady around ${h.weight.currentKg} kg across ${h.weight.series.length} weigh-ins.`
+        : `${dir === "down" ? "Down" : "Up"} ${Math.abs(h.weight.changeKg)} kg since your first weigh-in — a ${dir === "down" ? "gentle downward" : "rising"} trend over ${h.weight.series.length} readings.`;
+  }
+
+  const burnLine = (days: DayBurn[], kind: string) => {
+    if (!days.length) return `No ${kind} logged yet — finish a session and it charts here.`;
+    const total = days.reduce((s, d) => s + d.kcal, 0);
+    const sessions = days.reduce((s, d) => s + d.sessions, 0);
+    const avg = Math.round(total / Math.max(1, sessions));
+    const best = [...days].sort((a, b) => b.kcal - a.kcal)[0];
+    return `${sessions} ${kind} on ${days.length} day${days.length === 1 ? "" : "s"} · ${total.toLocaleString()} kcal total · ~${avg} kcal each. Biggest burn: ${dayLabel(best.date)} (${best.kcal} kcal).`;
+  };
+  const workout = burnLine(h.workoutDaily, "workouts");
+  const yoga = burnLine(h.yogaDaily, "yoga flows");
+
+  // Mood
+  let mood = "Log your mood and its ups and downs will show here.";
+  if (h.moodSeries.length) {
+    let trend = "";
+    if (h.moodSeries.length >= 4) {
+      const mid = Math.floor(h.moodSeries.length / 2);
+      const first = h.moodSeries.slice(0, mid);
+      const second = h.moodSeries.slice(mid);
+      const avg = (arr: MoodPoint[]) => arr.reduce((s, p) => s + p.score, 0) / arr.length;
+      const change = pctChange(avg(first), avg(second));
+      if (change >= 8) trend = " — trending brighter lately";
+      else if (change <= -8) trend = " — dipping a little lately";
+      else trend = " — fairly steady";
+    }
+    mood = `Mostly ${h.moodTop ?? "mixed"} across ${h.moodSeries.length} logged days · average positivity ${h.moodAvg}/5${trend}.`;
+  }
+
+  // Symptoms
+  let symptoms = "Tag how you feel and your symptom pattern builds here.";
+  if (h.symptomsDaily.length) {
+    symptoms = `Logged on ${h.symptomsDaily.length} day${h.symptomsDaily.length === 1 ? "" : "s"}${h.symptomsTop ? ` · most common: ${h.symptomsTop.label} (${h.symptomsTop.count}×)` : ""}.`;
+  }
+
+  // Cycle
+  let cycle = "Confirm two period starts and your cycle lengths will chart here.";
+  const done = h.cycles.filter((c) => !c.ongoing);
+  if (done.length >= 1) {
+    const reg =
+      h.regularity === "regular"
+        ? "a regular rhythm (varies ≤ 3 days)"
+        : h.regularity === "irregular"
+          ? "an irregular rhythm (varies > 3 days)"
+          : "still settling";
+    cycle = `${done.length} completed cycle${done.length === 1 ? "" : "s"}${h.avgCycle ? ` · average ${h.avgCycle} days` : ""} · ${reg}.`;
+  }
+
+  return { weight, workout, yoga, mood, symptoms, cycle };
+}
+
 /* ---------- the composed history ---------- */
 
 export function computeHealthHistory(weeks = 8): HealthHistory {
   // ── Real stores (dated event logs) ──
-  const workoutHist = read<DatedKcal[]>("bloom:workout-history", []).filter((h) => h?.date);
+  const workoutHist = read<(DatedKcal & { sessionName?: string })[]>(
+    "bloom:workout-history",
+    [],
+  ).filter((h) => h?.date);
   const yogaHist = read<DatedKcal[]>("bloom:yoga-history", []).filter((h) => h?.date);
   const symptomsLog = read<Record<string, string[]>>("bloom:symptoms-log-v2", {});
   const moodLog = read<Record<string, string>>("bloom:mood-log-v2", {});
@@ -217,6 +387,10 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
   const symptomsByLabel: Counted[] = [...symptomCounts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count);
+  const symptomsDaily: SymptomDay[] = Object.entries(symptomsLog)
+    .filter(([, labels]) => Array.isArray(labels) && labels.length)
+    .map(([date, labels]) => ({ date, labels }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
 
   // ── Mood (only what she logged) ──
   const moodEntries = Object.entries(moodLog).filter(([, m]) => !!m);
@@ -279,15 +453,40 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     ? Math.floor((toTime(todayISO()) - toTime(trackingSince)) / MS_DAY) + 1
     : 0;
 
+  // ── Per-day detail for the interactive charts ──
+  const workoutDaily = dailyBurn(workoutHist, "Workout");
+  const yogaDaily = dailyBurn(yogaHist, "Yoga flow");
+  const cycles = buildCycles(periodStarts);
+
+  const patterns = buildPatterns({
+    weight,
+    workoutDaily,
+    yogaDaily,
+    moodSeries,
+    moodTop: moodByMood.length ? titleCase(moodByMood[0].label) : null,
+    moodAvg: avgScore,
+    symptomsDaily,
+    symptomsTop: symptomsByLabel[0] ?? null,
+    cycles,
+    avgCycle: cycle.avgLength,
+    regularity: cycle.regularity,
+  });
+
   return {
     trackingSince,
     daysTracked,
-    cycle,
-    movement,
-    symptoms: { total: symptomTotal, days: symptomDays, byLabel: symptomsByLabel },
+    cycle: { ...cycle, cycles },
+    movement: { ...movement, workoutDaily, yogaDaily },
+    symptoms: {
+      total: symptomTotal,
+      days: symptomDays,
+      byLabel: symptomsByLabel,
+      daily: symptomsDaily,
+    },
     mood: { days: moodSeries.length, series: moodSeries, byMood: moodByMood, avgScore },
     weight,
     nourish,
+    patterns,
   };
 }
 

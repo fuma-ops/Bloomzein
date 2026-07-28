@@ -36,6 +36,87 @@ const REGULARITY_TEXT: Record<HealthHistory["cycle"]["regularity"], string> = {
   learning: "Still learning — log at least two period starts to assess regularity.",
 };
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const shortDay = (iso: string) => {
+  const d = new Date(iso + "T00:00:00");
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+};
+
+/* ---------- static SVG chart builders (mirror the in-app interactive charts) ---------- */
+
+interface Pt {
+  label: string;
+  value: number;
+  faded?: boolean;
+}
+
+function svgBars(pts: Pt[], hex: string): string {
+  if (!pts.length) return `<div class="empty">No data logged</div>`;
+  const W = 360,
+    H = 132,
+    padX = 6,
+    padT = 14,
+    padB = 20;
+  const max = Math.max(1, ...pts.map((p) => p.value));
+  const n = pts.length;
+  const bw = (W - padX * 2) / n;
+  const gap = n > 40 ? 0.6 : 2;
+  const bars = pts
+    .map((p, i) => {
+      const bh = Math.max(p.value > 0 ? 3 : 1, (p.value / max) * (H - padT - padB));
+      const x = padX + i * bw + gap / 2;
+      const y = H - padB - bh;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0.5, bw - gap).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${hex}"${p.faded ? ' opacity="0.4"' : ""}/>`;
+    })
+    .join("");
+  const last =
+    n > 1
+      ? `<text x="${W - padX}" y="${H - 5}" text-anchor="end" class="axl">${esc(pts[n - 1].label)}</text>`
+      : "";
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img">${bars}<text x="${padX}" y="${H - 5}" class="axl">${esc(pts[0].label)}</text>${last}</svg>`;
+}
+
+function svgLine(pts: Pt[], hex: string, yMin?: number, yMax?: number): string {
+  if (pts.length < 2) return `<div class="empty">Not enough points</div>`;
+  const W = 360,
+    H = 132,
+    pad = 12,
+    padB = 20;
+  const vals = pts.map((p) => p.value);
+  const lo = yMin ?? Math.min(...vals);
+  const hi = yMax ?? Math.max(...vals);
+  const span = hi - lo || 1;
+  const x = (i: number) => pad + (i / (pts.length - 1)) * (W - pad * 2);
+  const y = (v: number) => pad + (1 - (v - lo) / span) * (H - pad - padB);
+  const d = pts
+    .map((p, i) => `${i ? "L" : "M"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`)
+    .join(" ");
+  const dots = pts
+    .map(
+      (p, i) =>
+        `<circle cx="${x(i).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="2.4" fill="${hex}"/>`,
+    )
+    .join("");
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img"><path d="${d}" fill="none" stroke="${hex}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}<text x="${pad}" y="${H - 5}" class="axl">${esc(pts[0].label)}</text><text x="${W - pad}" y="${H - 5}" text-anchor="end" class="axl">${esc(pts[pts.length - 1].label)}</text></svg>`;
+}
+
+/** A chart + its interpretation + a full detail table (the tap-only data, on paper). */
+function chartBlock(
+  title: string,
+  svg: string,
+  interpretation: string,
+  tableHead: string,
+  tableRows: string,
+): string {
+  return `<section>
+      <h2>${esc(title)}</h2>
+      <div class="chartgrid">
+        <div class="chartcol">${svg}<p class="interp">${esc(interpretation)}</p></div>
+        <div class="tablecol"><table class="data"><thead>${tableHead}</thead><tbody>${tableRows || `<tr><td class="muted">None logged</td></tr>`}</tbody></table></div>
+      </div>
+    </section>`;
+}
+
 /* ---------- HTML report ---------- */
 
 export function buildReportHTML(h: HealthHistory, userName: string): string {
@@ -50,38 +131,56 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
     ? h.cycle.starts.map((s) => prettyDate(s)).join(", ")
     : "—";
 
-  const weeklyRows = h.movement.weekly
+  // ── chart points + full detail tables (the tap-only data, on paper) ──
+  const C1 = "#be185d",
+    C2 = "#db2777",
+    C3 = "#ec4899",
+    C4 = "#a21caf";
+
+  const cyclePts = h.cycle.cycles.map((c) => ({
+    label: c.monthLabel,
+    value: c.lengthDays,
+    faded: c.ongoing,
+  }));
+  const cycleRows = h.cycle.cycles
     .map(
-      (w) =>
-        `<tr><td>${esc(w.label)}</td><td>${w.sessions}</td><td>${w.kcal.toLocaleString()}</td></tr>`,
+      (c) =>
+        `<tr><td>${esc(prettyDate(c.startISO))}</td><td>${esc(prettyDate(c.endISO))}</td><td>${c.lengthDays}d${c.ongoing ? " *" : ""}</td></tr>`,
     )
     .join("");
 
-  const symptomRows = h.symptoms.byLabel.length
-    ? h.symptoms.byLabel
-        .map(
-          (s) =>
-            `<tr><td>${esc(s.label)}</td><td>${s.count} day${s.count === 1 ? "" : "s"}</td></tr>`,
-        )
-        .join("")
-    : `<tr><td colspan="2" class="muted">None logged</td></tr>`;
+  const weightPts = h.weight.series.map((w) => ({ label: shortDay(w.date), value: w.kg }));
+  const weightRows = h.weight.series
+    .map((w) => `<tr><td>${esc(prettyDate(w.date))}</td><td>${w.kg} kg</td></tr>`)
+    .join("");
 
-  const moodRows = h.mood.byMood.length
-    ? h.mood.byMood
-        .map(
-          (m) =>
-            `<tr><td>${esc(titleCase(m.label))}</td><td>${m.count} day${m.count === 1 ? "" : "s"}</td></tr>`,
-        )
-        .join("")
-    : `<tr><td colspan="2" class="muted">None logged</td></tr>`;
+  const woPts = h.movement.workoutDaily.map((d) => ({ label: shortDay(d.date), value: d.kcal }));
+  const woRows = h.movement.workoutDaily
+    .map(
+      (d) =>
+        `<tr><td>${esc(prettyDate(d.date))}</td><td>${d.kcal} kcal</td><td>${d.sessions}</td></tr>`,
+    )
+    .join("");
+  const ygPts = h.movement.yogaDaily.map((d) => ({ label: shortDay(d.date), value: d.kcal }));
+  const ygRows = h.movement.yogaDaily
+    .map(
+      (d) =>
+        `<tr><td>${esc(prettyDate(d.date))}</td><td>${d.kcal} kcal</td><td>${d.sessions}</td></tr>`,
+    )
+    .join("");
 
-  const wRecent = h.weight.series.slice(-12);
-  const weightRows = wRecent.length
-    ? wRecent.map((w) => `<tr><td>${esc(prettyDate(w.date))}</td><td>${w.kg} kg</td></tr>`).join("")
-    : `<tr><td colspan="2" class="muted">None logged</td></tr>`;
+  const moodPts = h.mood.series.map((m) => ({ label: shortDay(m.date), value: m.score }));
+  const moodRows = h.mood.series
+    .map(
+      (m) =>
+        `<tr><td>${esc(prettyDate(m.date))}</td><td>${esc(titleCase(m.mood))}</td><td>${m.score}/5</td></tr>`,
+    )
+    .join("");
 
-  const changeStr =
-    h.weight.changeKg == null ? "—" : `${h.weight.changeKg > 0 ? "+" : ""}${h.weight.changeKg} kg`;
+  const sxPts = h.symptoms.daily.map((s) => ({ label: shortDay(s.date), value: s.labels.length }));
+  const sxRows = h.symptoms.daily
+    .map((s) => `<tr><td>${esc(prettyDate(s.date))}</td><td>${esc(s.labels.join(", "))}</td></tr>`)
+    .join("");
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" />
@@ -117,8 +216,15 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
   .lea { background: var(--wash); color: var(--muted); }
   .muted { color: var(--muted); }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .chartgrid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: start; }
+  .chart { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--wash); }
+  .axl { font-size: 8px; fill: var(--muted); font-weight: 600; }
+  .interp { font-size: 12px; color: var(--ink); font-style: italic; margin: 8px 2px 0; }
+  .tablecol table { font-size: 12px; }
+  .empty { padding: 22px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; font-size: 12px; }
+  .note { font-size: 12px; color: var(--muted); margin: 0 0 22px; }
   footer { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 12px; font-size: 11.5px; color: var(--muted); }
-  @media (max-width: 620px) { .tiles { grid-template-columns: repeat(2, 1fr); } .two { grid-template-columns: 1fr; } }
+  @media (max-width: 620px) { .tiles { grid-template-columns: repeat(2, 1fr); } .two, .chartgrid { grid-template-columns: 1fr; } }
   @media print { .bar { display: none; } .wrap { padding: 0; max-width: none; } body { font-size: 12px; } }
 </style></head>
 <body>
@@ -133,6 +239,8 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
     </header>
 
     <div class="disc"><strong>Please note:</strong> This is a personal wellness summary generated from data ${esc(userName || "the user")} logged in the Bloomzein app. It reflects self-recorded activity, symptoms and measurements — it is not a medical record, diagnosis, or clinical advice.</div>
+
+    <p class="note">Each chart below is interactive in the app — tapping a point reveals that day's details. In this printed copy those details are listed in full in the table beside every chart, so nothing is hidden.</p>
 
     <section>
       <h2>At a glance</h2>
@@ -158,52 +266,65 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
       </table>
     </section>
 
-    <section>
-      <h2>Movement &amp; calories burned</h2>
-      <div class="two">
-        <table>
-          ${row("Workout sessions", String(h.movement.workouts))}
-          ${row("Yoga flows", String(h.movement.yoga))}
-          ${row("Active days", String(h.movement.activeDays))}
-          ${row("Calories burned (total)", `${h.movement.totalKcal.toLocaleString()} kcal`)}
-          ${row("— from workouts", `${h.movement.workoutKcal.toLocaleString()} kcal`)}
-          ${row("— from yoga", `${h.movement.yogaKcal.toLocaleString()} kcal`)}
-        </table>
-        <table class="data">
-          <thead><tr><th>Week of</th><th>Sessions</th><th>kcal</th></tr></thead>
-          <tbody>${weeklyRows}</tbody>
-        </table>
-      </div>
-    </section>
+    ${chartBlock(
+      "Cycle by cycle",
+      svgBars(cyclePts, C1),
+      h.patterns.cycle,
+      "<tr><th>Start</th><th>End</th><th>Length</th></tr>",
+      cycleRows,
+    )}
 
     <section>
-      <div class="two">
-        <div>
-          <h2>Symptoms logged</h2>
-          <table class="data"><thead><tr><th>Symptom</th><th>Frequency</th></tr></thead><tbody>${symptomRows}</tbody></table>
-          <p class="muted" style="font-size:12px;margin-top:8px">${h.symptoms.total} entries across ${h.symptoms.days} day${h.symptoms.days === 1 ? "" : "s"}.</p>
-        </div>
-        <div>
-          <h2>Mood logged</h2>
-          <table class="data"><thead><tr><th>Mood</th><th>Frequency</th></tr></thead><tbody>${moodRows}</tbody></table>
-          <p class="muted" style="font-size:12px;margin-top:8px">${h.mood.days} day${h.mood.days === 1 ? "" : "s"} logged${h.mood.avgScore != null ? ` · average positivity ${h.mood.avgScore} / 5` : ""}.</p>
-        </div>
-      </div>
+      <h2>Movement summary</h2>
+      <table>
+        ${row("Workout sessions", String(h.movement.workouts))}
+        ${row("Yoga flows", String(h.movement.yoga))}
+        ${row("Active days", String(h.movement.activeDays))}
+        ${row("Calories burned (total)", `${h.movement.totalKcal.toLocaleString()} kcal`)}
+        ${row("— from workouts", `${h.movement.workoutKcal.toLocaleString()} kcal`)}
+        ${row("— from yoga", `${h.movement.yogaKcal.toLocaleString()} kcal`)}
+      </table>
     </section>
 
-    <section>
-      <h2>Weight</h2>
-      <div class="two">
-        <table>
-          ${row("Goal", titleCase(h.weight.goal))}
-          ${row("Starting weight", h.weight.startKg != null ? `${h.weight.startKg} kg` : "—")}
-          ${row("Current weight", h.weight.currentKg != null ? `${h.weight.currentKg} kg` : "—")}
-          ${row("Change", changeStr)}
-          ${row("Target", h.weight.targetKg != null ? `${h.weight.targetKg} kg` : "—")}
-        </table>
-        <table class="data"><thead><tr><th>Date</th><th>Weight</th></tr></thead><tbody>${weightRows}</tbody></table>
-      </div>
-    </section>
+    ${chartBlock(
+      "Workout burn (per day)",
+      svgBars(woPts, C2),
+      h.patterns.workout,
+      "<tr><th>Date</th><th>Burned</th><th>Sessions</th></tr>",
+      woRows,
+    )}
+
+    ${chartBlock(
+      "Yoga burn (per day)",
+      svgBars(ygPts, C3),
+      h.patterns.yoga,
+      "<tr><th>Date</th><th>Burned</th><th>Flows</th></tr>",
+      ygRows,
+    )}
+
+    ${chartBlock(
+      "Weight (per weigh-in)",
+      svgLine(weightPts, C2),
+      h.patterns.weight,
+      "<tr><th>Date</th><th>Weight</th></tr>",
+      weightRows,
+    )}
+
+    ${chartBlock(
+      "Mood over time",
+      svgLine(moodPts, C2, 1, 5),
+      h.patterns.mood,
+      "<tr><th>Date</th><th>Mood</th><th>Score</th></tr>",
+      moodRows,
+    )}
+
+    ${chartBlock(
+      "Symptoms (per day)",
+      svgBars(sxPts, C4),
+      h.patterns.symptoms,
+      "<tr><th>Date</th><th>Symptoms logged</th></tr>",
+      sxRows,
+    )}
 
     <section>
       <h2>Nourishment</h2>
@@ -242,14 +363,25 @@ export function buildReportCSV(h: HealthHistory): string {
   push("cycle_summary", "regularity", h.cycle.regularity);
   if (h.cycle.avgLength != null) push("cycle_summary", "avg_length_days", h.cycle.avgLength);
 
-  h.movement.weekly.forEach((w) =>
-    push("burn_week", w.weekStartISO, w.kcal, `${w.sessions} sessions`),
+  h.cycle.cycles.forEach((c) =>
+    push(
+      "cycle",
+      c.startISO,
+      c.lengthDays,
+      `${c.startISO}→${c.endISO}${c.ongoing ? " (ongoing)" : ""}`,
+    ),
   );
+  h.movement.workoutDaily.forEach((d) =>
+    push("workout_burn", d.date, d.kcal, `${d.sessions} sessions`),
+  );
+  h.movement.yogaDaily.forEach((d) => push("yoga_burn", d.date, d.kcal, `${d.sessions} flows`));
   push("movement_summary", "workouts", h.movement.workouts);
   push("movement_summary", "yoga_flows", h.movement.yoga);
   push("movement_summary", "total_kcal", h.movement.totalKcal);
 
-  h.symptoms.byLabel.forEach((s) => push("symptom", s.label, s.count, "days logged"));
+  h.symptoms.daily.forEach((s) =>
+    push("symptom_day", s.date, s.labels.length, s.labels.join("; ")),
+  );
   h.mood.series.forEach((m) => push("mood", m.date, m.mood, `score ${m.score}`));
   h.weight.series.forEach((w) => push("weight", w.date, w.kg, "kg"));
 
