@@ -68,24 +68,28 @@ function StatTile({
 }) {
   return (
     <div
-      className="rounded-2xl border border-petal/60 bg-white/85 p-3 sm:p-3.5 shadow-sm animate-card-pop-in"
+      className="flex items-center justify-between gap-2 rounded-2xl border border-hotpink/20 bg-white/85 px-3.5 py-2.5 shadow-[0_2px_12px_-6px_rgba(219,39,119,0.28)] animate-card-pop-in"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <span className="grid h-8 w-8 place-items-center rounded-xl bg-blush/70">
+      <div className="min-w-0">
+        <p className="text-xl sm:text-2xl font-black text-magenta leading-none">{value}</p>
+        <p className="mt-1 text-[10.5px] font-bold uppercase tracking-wide text-rose/55 leading-tight">
+          {label}
+        </p>
+      </div>
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blush to-petal/70">
         <Icon className="h-4 w-4 text-hotpink" strokeWidth={2} />
       </span>
-      <p className="mt-2 text-xl sm:text-2xl font-black text-magenta leading-none">{value}</p>
-      <p className="mt-1 text-[10.5px] font-bold uppercase tracking-wide text-rose/55 leading-tight">
-        {label}
-      </p>
     </div>
   );
 }
 
+// A slightly richer pink edge (border + soft pink glow) so cards read defined,
+// not washed-out pale — without a loud/poppy fill.
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-[1.4rem] border border-petal/60 bg-white/85 backdrop-blur p-4 sm:p-5 shadow-sm ${className}`}
+      className={`rounded-[1.4rem] border border-hotpink/20 bg-white/85 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)] ${className}`}
     >
       {children}
     </div>
@@ -152,7 +156,8 @@ const LABEL = "oklch(0.5 0.1 350 / 0.55)";
 
 // ONE soft rose for every bar chart and ONE muted berry for every line — so the
 // page reads as a calm, single system instead of many strong colours competing.
-const BAR_C = "#e07aab"; // soft rose (bar gradient top)
+const BAR_TOP = "#d24d86"; // richer pink at the very top edge (soft, not poppy)
+const BAR_C = "#e685b0"; // soft rose body of the bar
 const LINE_C = "#c85d95"; // muted berry (lines + dots)
 const SEL_C = "#a23c72"; // deeper berry for the selected point/bar
 
@@ -214,11 +219,11 @@ function BarsChart({
         aria-label="Bar chart with axes"
       >
         <defs>
-          {/* soft, faded premium gradient: brighter top, melting to a pale base */}
+          {/* premium gradient: a richer pink edge at the top, melting to a pale base */}
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} />
-            <stop offset="55%" stopColor={color} stopOpacity="0.75" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.32" />
+            <stop offset="0%" stopColor={BAR_TOP} />
+            <stop offset="22%" stopColor={color} />
+            <stop offset="100%" stopColor={color} stopOpacity="0.3" />
           </linearGradient>
         </defs>
         <text x="2" y={mT + 2} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
@@ -559,6 +564,9 @@ function CycleOverlayChart({
     return segments.find((s) => t >= toTime(s.startISO) && t <= toTime(s.endISO))?.phase ?? null;
   };
 
+  // Each new cycle begins at a menstrual-phase start — mark them with dividers.
+  const cycleStarts = segments.filter((s) => s.phase === "menstrual").map((s) => s.startISO);
+
   // month labels along the axis
   const months: { x: number; label: string }[] = [];
   const cur = new Date(t0);
@@ -640,6 +648,32 @@ function CycleOverlayChart({
                   stroke="oklch(1 0 0 / 0.6)"
                   strokeWidth={0.75}
                 />
+              </g>
+            );
+          })}
+
+          {/* dotted CYCLE dividers (each new period start = a new cycle) + label */}
+          {cycleStarts.map((cs, i) => {
+            const cx = xAt(cs);
+            return (
+              <g key={cs}>
+                <line
+                  x1={cx}
+                  x2={cx}
+                  y1={y0 - 1}
+                  y2={y1}
+                  stroke="#8b5aa0"
+                  strokeOpacity={0.5}
+                  strokeWidth={1}
+                  strokeDasharray="2 2.5"
+                />
+                <text
+                  x={cx + 3}
+                  y={y0 + 6}
+                  style={{ fontSize: 7.5, fill: "#8b5aa0", fontWeight: 800 }}
+                >
+                  Cycle {i + 1}
+                </text>
               </g>
             );
           })}
