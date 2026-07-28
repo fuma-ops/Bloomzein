@@ -53,6 +53,7 @@ const EMMA_KEYS = [
   "bloom:mood-log-v2",
   "bloom:today-mood",
   "bloom:symptoms-log-v2",
+  "bloom:sleep-log-v2",
   "bloom:today-water",
   "bloom:today-water-goal",
   "bloom:daily-log",
@@ -160,6 +161,29 @@ export function seedEmma(): void {
     else if (dayOfCycle >= 24 && n % 2 === 0) symptomsLog[iso(daysAgo(n))] = ["Bloating"];
   }
   set("bloom:symptoms-log-v2", symptomsLog);
+
+  // ── Sleep: cycle-aware — lighter around the period & late luteal, best mid-cycle ──
+  const sleepLog: Record<string, { q: number; h: number }> = {};
+  for (let n = DAYS; n >= 0; n--) {
+    if (n % 2 === 1 && n > 2) continue; // ~every other night logged
+    const dayOfCycle = (((DAYS - n - 8) % 28) + 28) % 28;
+    let q: number, h: number;
+    if (dayOfCycle < 3) {
+      q = 2;
+      h = 6;
+    } else if (dayOfCycle < 14) {
+      q = 4 + ((DAYS - n) % 2);
+      h = 7.5 + ((DAYS - n) % 2) * 0.5;
+    } else if (dayOfCycle < 18) {
+      q = 4;
+      h = 7.5;
+    } else {
+      q = 3 - (n % 2 === 0 ? 1 : 0);
+      h = 6.5;
+    }
+    sleepLog[iso(daysAgo(n))] = { q: Math.max(1, Math.min(5, q)), h };
+  }
+  set("bloom:sleep-log-v2", sleepLog);
 
   // ── Hydration: today 7/8, history mostly hitting goal ──
   set("bloom:today-water", { date: iso(today), count: 7 });

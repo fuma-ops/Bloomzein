@@ -23,6 +23,7 @@ import { CoachTodayCompact } from "@/components/bloom/coach/CoachCards";
 import { BuildBloomWorld } from "@/components/bloom/today/BuildBloomWorld";
 import { PersonalizedBloomPreview } from "@/components/bloom/today/PersonalizedBloomPreview";
 import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
+import { SleepCard } from "@/components/bloom/today/SleepCard";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday, readYogaFocusForDay, YOGA_FOCUS } from "@/lib/crossToolData";
@@ -1387,6 +1388,9 @@ export default function TodayPage() {
           highlight={highlightId === "hydration"}
         />
       )}
+
+      {/* ── LAST NIGHT'S SLEEP — a quick daily-ritual card beside hydration ── */}
+      {!isFresh && <SleepCard phase={phase} />}
 
       {/* ── 3. DUE TODAY ─────────────────────────────────────────────────────── */}
       {hasDueItems && !isFresh && (

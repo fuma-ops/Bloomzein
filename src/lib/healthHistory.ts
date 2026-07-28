@@ -23,6 +23,7 @@ import {
   cycleRegularity,
 } from "@/lib/periodLog";
 import { readCycleSettings } from "@/components/bloom/cyclePhase";
+import { readSleepLog } from "@/lib/sleepLog";
 import { moodValence } from "@/lib/meDashboard";
 
 function read<T>(key: string, fallback: T): T {
@@ -99,6 +100,18 @@ export interface NourishInsight {
   daysFullLogged: number; // days with ≥3 meals
 }
 
+export interface SleepDay {
+  date: string;
+  quality: number; // 1..5
+  hours?: number;
+}
+export interface SleepInsight {
+  days: number;
+  avgQuality: number | null; // 1..5
+  avgHours: number | null;
+  series: SleepDay[]; // chronological
+}
+
 /* ---------- per-day detail (drives the interactive charts) ---------- */
 
 export interface DayBurn {
@@ -126,6 +139,7 @@ export interface Patterns {
   yoga: string;
   mood: string;
   symptoms: string;
+  sleep: string;
   cycle: string;
   combined: string;
 }
@@ -153,6 +167,8 @@ export interface PhaseStat {
   burnKcal: number;
   sessions: number;
   symptomDays: number;
+  sleepAvg: number | null; // avg quality 1..5
+  sleepDays: number;
 }
 
 export interface HealthHistory {
@@ -165,6 +181,7 @@ export interface HealthHistory {
   mood: { days: number; series: MoodPoint[]; byMood: Counted[]; avgScore: number | null };
   weight: WeightInsight;
   nourish: NourishInsight;
+  sleep: SleepInsight;
   phaseSegments: PhaseSegment[]; // cycle-phase bands across the tracking window
   byPhase: PhaseStat[]; // how she does in each phase
   patterns: Patterns;
@@ -339,19 +356,26 @@ function buildByPhase(
   workoutDaily: DayBurn[],
   yogaDaily: DayBurn[],
   symptomsDaily: SymptomDay[],
+  sleepSeries: SleepDay[],
 ): PhaseStat[] {
   const s = readCycleSettings();
   const periodLen = s.periodLength || 5;
   const fallbackLen = avgCycleLength(starts) ?? s.cycleLength ?? 28;
   const phaseOf = (iso: string) => histPhase(toTime(iso), starts, periodLen, fallbackLen);
-  const acc: Record<
-    PhaseKey,
-    { moodSum: number; moodDays: number; burn: number; sessions: number; sxDays: number }
-  > = {
-    menstrual: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
-    follicular: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
-    ovulatory: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
-    luteal: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
+  const blank = () => ({
+    moodSum: 0,
+    moodDays: 0,
+    burn: 0,
+    sessions: 0,
+    sxDays: 0,
+    sleepSum: 0,
+    sleepDays: 0,
+  });
+  const acc: Record<PhaseKey, ReturnType<typeof blank>> = {
+    menstrual: blank(),
+    follicular: blank(),
+    ovulatory: blank(),
+    luteal: blank(),
   };
   for (const m of moodSeries) {
     const p = phaseOf(m.date);
@@ -371,6 +395,13 @@ function buildByPhase(
     const p = phaseOf(d.date);
     if (p) acc[p].sxDays++;
   }
+  for (const d of sleepSeries) {
+    const p = phaseOf(d.date);
+    if (p) {
+      acc[p].sleepSum += d.quality;
+      acc[p].sleepDays++;
+    }
+  }
   const order: PhaseKey[] = ["menstrual", "follicular", "ovulatory", "luteal"];
   return order.map((phase) => {
     const a = acc[phase];
@@ -382,6 +413,8 @@ function buildByPhase(
       burnKcal: a.burn,
       sessions: a.sessions,
       symptomDays: a.sxDays,
+      sleepAvg: a.sleepDays ? Math.round((a.sleepSum / a.sleepDays) * 10) / 10 : null,
+      sleepDays: a.sleepDays,
     };
   });
 }
@@ -401,6 +434,7 @@ function buildPatterns(h: {
   moodAvg: number | null;
   symptomsDaily: SymptomDay[];
   symptomsTop: Counted | null;
+  sleep: SleepInsight;
   cycles: Cycle[];
   avgCycle: number | null;
   regularity: CycleInsight["regularity"];
@@ -450,6 +484,15 @@ function buildPatterns(h: {
     symptoms = `Logged on ${h.symptomsDaily.length} day${h.symptomsDaily.length === 1 ? "" : "s"}${h.symptomsTop ? ` · most common: ${h.symptomsTop.label} (${h.symptomsTop.count}×)` : ""}.`;
   }
 
+  // Sleep
+  let sleep = "Log how you sleep each night and your rest pattern shows here.";
+  if (h.sleep.days) {
+    const worst = [...h.byPhase]
+      .filter((p) => p.sleepAvg != null)
+      .sort((a, b) => (a.sleepAvg ?? 5) - (b.sleepAvg ?? 5))[0];
+    sleep = `Averaging ${h.sleep.avgQuality}/5${h.sleep.avgHours ? ` (~${h.sleep.avgHours}h)` : ""} across ${h.sleep.days} night${h.sleep.days === 1 ? "" : "s"}${worst ? ` · lightest in your ${worst.label.toLowerCase()} phase` : ""}.`;
+  }
+
   // Cycle
   let cycle = "Confirm two period starts and your cycle lengths will chart here.";
   const done = h.cycles.filter((c) => !c.ongoing);
@@ -482,7 +525,7 @@ function buildPatterns(h: {
     combined = `Across your cycle, ${bits.join(" and ")} — the coloured bands show each phase over time.`;
   }
 
-  return { weight, workout, yoga, mood, symptoms, cycle, combined };
+  return { weight, workout, yoga, mood, symptoms, sleep, cycle, combined };
 }
 
 /* ---------- the composed history ---------- */
@@ -600,6 +643,30 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     daysFullLogged: eatenEntries.filter(([, slots]) => slots.length >= 3).length,
   };
 
+  // ── Sleep (only what she logged) ──
+  const sleepLog = readSleepLog();
+  const sleepSeries: SleepDay[] = Object.entries(sleepLog)
+    .filter(([, e]) => e && typeof e.q === "number")
+    .map(([date, e]) => ({
+      date,
+      quality: e.q,
+      hours: typeof e.h === "number" ? e.h : undefined,
+    }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const hoursOnly = sleepSeries.filter((d) => typeof d.hours === "number");
+  const sleep: SleepInsight = {
+    days: sleepSeries.length,
+    avgQuality: sleepSeries.length
+      ? Math.round((sleepSeries.reduce((s, d) => s + d.quality, 0) / sleepSeries.length) * 10) / 10
+      : null,
+    avgHours: hoursOnly.length
+      ? Math.round(
+          (hoursOnly.reduce((s, d) => s + (d.hours as number), 0) / hoursOnly.length) * 10,
+        ) / 10
+      : null,
+    series: sleepSeries,
+  };
+
   // ── Tracking-since (earliest real event across every store) ──
   const trackingSince = earliest(
     workoutHist.map((h) => h.date),
@@ -608,6 +675,7 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     Object.keys(moodLog),
     Object.keys(eaten),
     wSeries.map((w) => w.date),
+    sleepSeries.map((d) => d.date),
     periodStarts,
   );
   const daysTracked = trackingSince
@@ -622,7 +690,14 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
   // ── Phase timeline + by-phase summary (drives the combined chart) ──
   const range = trackingSince ? { startISO: trackingSince, endISO: todayISO() } : null;
   const phaseSegments = range ? buildPhaseSegments(range.startISO, range.endISO, periodStarts) : [];
-  const byPhase = buildByPhase(periodStarts, moodSeries, workoutDaily, yogaDaily, symptomsDaily);
+  const byPhase = buildByPhase(
+    periodStarts,
+    moodSeries,
+    workoutDaily,
+    yogaDaily,
+    symptomsDaily,
+    sleepSeries,
+  );
 
   const patterns = buildPatterns({
     weight,
@@ -633,6 +708,7 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     moodAvg: avgScore,
     symptomsDaily,
     symptomsTop: symptomsByLabel[0] ?? null,
+    sleep,
     cycles,
     avgCycle: cycle.avgLength,
     regularity: cycle.regularity,
@@ -654,6 +730,7 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     mood: { days: moodSeries.length, series: moodSeries, byMood: moodByMood, avgScore },
     weight,
     nourish,
+    sleep,
     phaseSegments,
     byPhase,
     patterns,

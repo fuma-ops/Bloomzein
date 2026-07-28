@@ -181,13 +181,22 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
   const byPhaseRows = h.byPhase
     .map(
       (p) =>
-        `<tr><td>${esc(p.label)}</td><td>${p.moodAvg != null ? `${p.moodAvg}/5` : "—"}</td><td>${p.burnKcal ? p.burnKcal.toLocaleString() + " kcal" : "—"}</td><td>${p.sessions || "—"}</td><td>${p.symptomDays || "—"}</td></tr>`,
+        `<tr><td>${esc(p.label)}</td><td>${p.moodAvg != null ? `${p.moodAvg}/5` : "—"}</td><td>${p.sleepAvg != null ? `${p.sleepAvg}/5` : "—"}</td><td>${p.burnKcal ? p.burnKcal.toLocaleString() + " kcal" : "—"}</td><td>${p.sessions || "—"}</td><td>${p.symptomDays || "—"}</td></tr>`,
     )
     .join("");
 
   const sxPts = h.symptoms.daily.map((s) => ({ label: shortDay(s.date), value: s.labels.length }));
   const sxRows = h.symptoms.daily
     .map((s) => `<tr><td>${esc(prettyDate(s.date))}</td><td>${esc(s.labels.join(", "))}</td></tr>`)
+    .join("");
+
+  const SLEEP_WORDS = ["", "Rough", "Poor", "OK", "Good", "Great"];
+  const slPts = h.sleep.series.map((d) => ({ label: shortDay(d.date), value: d.quality }));
+  const slRows = h.sleep.series
+    .map(
+      (d) =>
+        `<tr><td>${esc(prettyDate(d.date))}</td><td>${d.quality}/5 · ${esc(SLEEP_WORDS[d.quality] ?? "")}</td><td>${d.hours != null ? `${d.hours} h` : "—"}</td></tr>`,
+    )
     .join("");
 
   return `<!doctype html>
@@ -286,7 +295,7 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
       <h2>Your cycle × your body</h2>
       <p class="interp" style="margin:0 0 10px">${esc(h.patterns.combined)}</p>
       <table class="data">
-        <thead><tr><th>Phase</th><th>Avg mood</th><th>Burn</th><th>Sessions</th><th>Symptom days</th></tr></thead>
+        <thead><tr><th>Phase</th><th>Avg mood</th><th>Avg sleep</th><th>Burn</th><th>Sessions</th><th>Symptom days</th></tr></thead>
         <tbody>${byPhaseRows || `<tr><td class="muted">Not enough logged yet</td></tr>`}</tbody>
       </table>
     </section>
@@ -333,6 +342,14 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
       h.patterns.mood,
       "<tr><th>Date</th><th>Mood</th><th>Score</th></tr>",
       moodRows,
+    )}
+
+    ${chartBlock(
+      "Sleep over time",
+      svgLine(slPts, C2, 1, 5),
+      h.patterns.sleep,
+      "<tr><th>Date</th><th>Quality</th><th>Hours</th></tr>",
+      slRows,
     )}
 
     ${chartBlock(
@@ -419,6 +436,9 @@ export function buildReportCSV(h: HealthHistory): string {
     push("symptom_day", s.date, s.labels.length, s.labels.join("; ")),
   );
   h.mood.series.forEach((m) => push("mood", m.date, m.mood, `score ${m.score}`));
+  h.sleep.series.forEach((d) =>
+    push("sleep", d.date, d.quality, d.hours != null ? `${d.hours}h` : "quality 1-5"),
+  );
   h.weight.series.forEach((w) => push("weight", w.date, w.kg, "kg"));
 
   push("nourish", "days_logged", h.nourish.daysLogged);
