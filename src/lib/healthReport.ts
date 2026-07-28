@@ -177,6 +177,13 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
     )
     .join("");
 
+  const byPhaseRows = h.byPhase
+    .map(
+      (p) =>
+        `<tr><td>${esc(p.label)}</td><td>${p.moodAvg != null ? `${p.moodAvg}/5` : "—"}</td><td>${p.burnKcal ? p.burnKcal.toLocaleString() + " kcal" : "—"}</td><td>${p.sessions || "—"}</td><td>${p.symptomDays || "—"}</td></tr>`,
+    )
+    .join("");
+
   const sxPts = h.symptoms.daily.map((s) => ({ label: shortDay(s.date), value: s.labels.length }));
   const sxRows = h.symptoms.daily
     .map((s) => `<tr><td>${esc(prettyDate(s.date))}</td><td>${esc(s.labels.join(", "))}</td></tr>`)
@@ -273,6 +280,15 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
       "<tr><th>Start</th><th>End</th><th>Length</th></tr>",
       cycleRows,
     )}
+
+    <section>
+      <h2>Your cycle × your body</h2>
+      <p class="interp" style="margin:0 0 10px">${esc(h.patterns.combined)}</p>
+      <table class="data">
+        <thead><tr><th>Phase</th><th>Avg mood</th><th>Burn</th><th>Sessions</th><th>Symptom days</th></tr></thead>
+        <tbody>${byPhaseRows || `<tr><td class="muted">Not enough logged yet</td></tr>`}</tbody>
+      </table>
+    </section>
 
     <section>
       <h2>Movement summary</h2>

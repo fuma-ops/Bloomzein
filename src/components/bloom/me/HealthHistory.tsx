@@ -13,7 +13,7 @@
  * Responsive per the Bloomzein directive: mobile stacks single-column with
  * two-up stat tiles; desktop uses multi-column.
  */
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import {
   Download,
   FileText,
@@ -34,10 +34,15 @@ import {
   computeHealthHistory,
   prettyDate,
   titleCase,
+  PHASE_LABEL,
   type DayBurn,
   type Cycle,
   type MoodPoint,
   type SymptomDay,
+  type PhaseKey,
+  type PhaseSegment,
+  type PhaseStat,
+  type HealthHistory,
 } from "@/lib/healthHistory";
 import { downloadHealthReport, downloadHealthCSV } from "@/lib/healthReport";
 
@@ -137,65 +142,138 @@ function ChartFooter({
   );
 }
 
-/** Simple clickable bar chart (one series). */
+/* ---------- shared axis geometry ---------- */
+
+const AX = { W: 340, H: 178, mL: 30, mR: 8, mT: 12, mB: 26 };
+const GRID = "oklch(0.5 0.18 0 / 0.13)";
+const AXIS = "oklch(0.5 0.18 0 / 0.35)";
+const LABEL = "oklch(0.5 0.18 0 / 0.6)";
+
+function niceMax(v: number): number {
+  if (v <= 0) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(v)));
+  const f = v / pow;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * pow;
+}
+const fmtNum = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+/** Which point indices get an x-axis date label (first, middle, last). */
+function xLabelIdx(n: number): number[] {
+  if (n <= 1) return [0];
+  return [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
+}
+
+/** Clickable bar chart with real x/y axes, gridlines & a unit label. */
 function BarsChart({
   points,
+  unit,
+  color,
   tapHint,
   interpretation,
-  accentFrom = "from-hotpink",
-  accentTo = "to-magenta",
 }: {
   points: ChartPoint[];
+  unit: string;
+  color: string;
   tapHint: string;
   interpretation: string;
-  accentFrom?: string;
-  accentTo?: string;
 }) {
   const shown = points.slice(-MAX_POINTS);
   const [sel, setSel] = useState<string | null>(null);
-  const max = Math.max(1, ...shown.map((p) => p.value));
+  const gid = "g" + useId().replace(/[^a-zA-Z0-9]/g, "");
+  const { W, H, mL, mR, mT, mB } = AX;
+  const x0 = mL,
+    x1 = W - mR,
+    y0 = mT,
+    y1 = H - mB;
+  const max = niceMax(Math.max(1, ...shown.map((p) => p.value)));
+  const yv = (v: number) => y1 - (v / max) * (y1 - y0);
+  const n = shown.length || 1;
+  const bw = (x1 - x0) / n;
+  const gap = n > 40 ? 0.5 : Math.min(3, bw * 0.28);
+  const ticks = [0, max / 2, max];
   const selPoint = shown.find((p) => p.key === sel) ?? null;
   return (
     <div>
-      <div className="flex items-end gap-[3px] h-24 sm:h-28">
-        {shown.map((p) => {
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Bar chart with axes"
+      >
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} />
+            <stop offset="100%" stopColor={color} stopOpacity="0.55" />
+          </linearGradient>
+        </defs>
+        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+          {unit}
+        </text>
+        {ticks.map((t) => (
+          <g key={t}>
+            <line x1={x0} x2={x1} y1={yv(t)} y2={yv(t)} stroke={GRID} strokeWidth={1} />
+            <text x={x0 - 4} y={yv(t) + 3} textAnchor="end" style={{ fontSize: 8, fill: LABEL }}>
+              {fmtNum(Math.round(t))}
+            </text>
+          </g>
+        ))}
+        <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+        {shown.map((p, i) => {
           const active = p.key === sel;
+          const bx = x0 + i * bw;
           return (
-            <button
+            <g
               key={p.key}
               onClick={() => setSel(active ? null : p.key)}
-              className="group flex h-full flex-1 min-w-0 items-end"
-              title={`${p.label} · ${p.readout}`}
-              aria-label={`${p.label} · ${p.readout}`}
+              style={{ cursor: "pointer" }}
             >
-              <span
-                className={`w-full rounded-t-[4px] bg-gradient-to-t ${accentFrom} ${accentTo} transition-all duration-500 group-hover:brightness-110 ${active ? "ring-2 ring-hotpink ring-offset-1" : ""} ${p.faded ? "opacity-45" : ""}`}
-                style={{ height: `${Math.max(p.value > 0 ? 6 : 2, (p.value / max) * 100)}%` }}
+              <rect x={bx} y={y0} width={bw} height={y1 - y0} fill="transparent" />
+              <rect
+                x={bx + gap / 2}
+                y={yv(p.value)}
+                width={Math.max(0.6, bw - gap)}
+                height={Math.max(p.value > 0 ? 1.5 : 0, y1 - yv(p.value))}
+                rx={1.5}
+                fill={`url(#${gid})`}
+                opacity={p.faded ? 0.4 : 1}
+                stroke={active ? "oklch(0.4 0.24 0)" : "none"}
+                strokeWidth={active ? 1.5 : 0}
               />
-            </button>
+            </g>
           );
         })}
-      </div>
-      {shown.length > 0 && (
-        <div className="mt-1 flex justify-between text-[9px] font-semibold text-rose/40">
-          <span>{shown[0].label}</span>
-          {shown.length > 1 && <span>{shown[shown.length - 1].label}</span>}
-        </div>
-      )}
+        {xLabelIdx(shown.length).map(
+          (i) =>
+            shown[i] && (
+              <text
+                key={i}
+                x={x0 + i * bw + bw / 2}
+                y={y1 + 12}
+                textAnchor="middle"
+                style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
+              >
+                {shown[i].label}
+              </text>
+            ),
+        )}
+      </svg>
       <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
     </div>
   );
 }
 
-/** Simple clickable line chart (one series) with a chosen y-range. */
+/** Clickable line chart with real x/y axes, gridlines & a unit label. */
 function LineChart({
   points,
+  unit,
+  color,
   yMin,
   yMax,
   tapHint,
   interpretation,
 }: {
   points: ChartPoint[];
+  unit: string;
+  color: string;
   yMin?: number;
   yMax?: number;
   tapHint: string;
@@ -204,13 +282,15 @@ function LineChart({
   const shown = points.slice(-MAX_POINTS);
   const [sel, setSel] = useState<string | null>(null);
   const selPoint = shown.find((p) => p.key === sel) ?? null;
-  const W = 320,
-    H = 96,
-    pad = 8;
+  const { W, H, mL, mR, mT, mB } = AX;
+  const x0 = mL,
+    x1 = W - mR,
+    y0 = mT,
+    y1 = H - mB;
   if (shown.length < 2) {
     return (
       <div>
-        <div className="grid h-24 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
+        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
           Not enough points yet
         </div>
         <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
@@ -218,26 +298,44 @@ function LineChart({
     );
   }
   const vals = shown.map((p) => p.value);
-  const lo = yMin ?? Math.min(...vals);
-  const hi = yMax ?? Math.max(...vals);
+  let lo = yMin ?? Math.min(...vals);
+  let hi = yMax ?? Math.max(...vals);
+  if (yMin == null && yMax == null) {
+    const pad = (hi - lo || 1) * 0.15;
+    lo -= pad;
+    hi += pad;
+  }
   const span = hi - lo || 1;
-  const x = (i: number) => pad + (i / (shown.length - 1)) * (W - pad * 2);
-  const y = (v: number) => pad + (1 - (v - lo) / span) * (H - pad * 2);
+  const x = (i: number) => x0 + (i / (shown.length - 1)) * (x1 - x0);
+  const y = (v: number) => y0 + (1 - (v - lo) / span) * (y1 - y0);
   const d = shown
     .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`)
     .join(" ");
+  const ticks = [lo, (lo + hi) / 2, hi];
   return (
     <div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full h-24 sm:h-28"
+        className="w-full h-auto"
         role="img"
-        aria-label="Trend chart"
+        aria-label="Line chart with axes"
       >
+        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+          {unit}
+        </text>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={x0} x2={x1} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
+            <text x={x0 - 4} y={y(t) + 3} textAnchor="end" style={{ fontSize: 8, fill: LABEL }}>
+              {fmtNum(Math.round(t * 10) / 10)}
+            </text>
+          </g>
+        ))}
+        <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
         <path
           d={d}
           fill="none"
-          stroke="oklch(0.62 0.24 0)"
+          stroke={color}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -250,18 +348,32 @@ function LineChart({
               onClick={() => setSel(active ? null : p.key)}
               style={{ cursor: "pointer" }}
             >
-              <circle cx={x(i)} cy={y(p.value)} r={11} fill="transparent" />
+              <circle cx={x(i)} cy={y(p.value)} r={10} fill="transparent" />
               <circle
                 cx={x(i)}
                 cy={y(p.value)}
-                r={active ? 5 : 3}
-                fill={active ? "oklch(0.5 0.26 0)" : "oklch(0.62 0.24 0)"}
+                r={active ? 4.5 : 2.6}
+                fill={active ? "oklch(0.4 0.24 0)" : color}
                 stroke="#fff"
-                strokeWidth={active ? 2 : 1}
+                strokeWidth={active ? 1.8 : 1}
               />
             </g>
           );
         })}
+        {xLabelIdx(shown.length).map(
+          (i) =>
+            shown[i] && (
+              <text
+                key={i}
+                x={x(i)}
+                y={y1 + 12}
+                textAnchor={i === 0 ? "start" : i === shown.length - 1 ? "end" : "middle"}
+                style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
+              >
+                {shown[i].label}
+              </text>
+            ),
+        )}
       </svg>
       <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
     </div>
@@ -324,10 +436,286 @@ const cyclePoints = (cycles: Cycle[]): ChartPoint[] =>
     readout: `${prettyDate(c.startISO)} → ${prettyDate(c.endISO)} · ${c.lengthDays} days${c.ongoing ? " (ongoing)" : ""}`,
   }));
 
+/* ---------- combined "cycle × your body" chart ---------- */
+
+// Soft, distinct phase band colours (rose / pale-pink / gold / violet).
+const PHASE_FILL: Record<PhaseKey, string> = {
+  menstrual: "#fb7185",
+  follicular: "#fbcfe8",
+  ovulatory: "#f59e0b",
+  luteal: "#c084fc",
+};
+
+interface Metric {
+  key: string;
+  label: string;
+  unit: string;
+  color: string;
+  points: { date: string; value: number }[];
+}
+
+const toTime = (iso: string) => new Date(iso + "T00:00:00").getTime();
+
+function CycleOverlayChart({
+  range,
+  segments,
+  metrics,
+}: {
+  range: { startISO: string; endISO: string };
+  segments: PhaseSegment[];
+  metrics: Metric[];
+}) {
+  const [metricKey, setMetricKey] = useState(metrics[0]?.key ?? "");
+  const [sel, setSel] = useState<string | null>(null);
+  const metric = metrics.find((m) => m.key === metricKey) ?? metrics[0];
+
+  const { W, H, mR, mT, mB } = AX;
+  const mLeft = 26;
+  const x0 = mLeft,
+    x1 = W - mR,
+    y0 = mT,
+    y1 = H - mB;
+  const t0 = toTime(range.startISO);
+  const t1 = Math.max(t0 + 86400000, toTime(range.endISO));
+  const dayW = ((x1 - x0) / (t1 - t0)) * 86400000;
+  const xAt = (iso: string) => x0 + ((toTime(iso) - t0) / (t1 - t0)) * (x1 - x0);
+
+  const pts = metric?.points ?? [];
+  const vals = pts.map((p) => p.value);
+  const lo = vals.length ? Math.min(...vals) : 0;
+  const hi = vals.length ? Math.max(...vals) : 1;
+  const span = hi - lo || 1;
+  const yAt = (v: number) => y0 + (1 - (v - lo) / span) * (y1 - y0);
+  const line = pts
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(p.date).toFixed(1)} ${yAt(p.value).toFixed(1)}`)
+    .join(" ");
+
+  const phaseAt = (iso: string): PhaseKey | null => {
+    const t = toTime(iso);
+    const seg = segments.find((s) => t >= toTime(s.startISO) && t <= toTime(s.endISO));
+    return seg ? seg.phase : null;
+  };
+  const selPt = pts.find((p) => p.date === sel) ?? null;
+  const selPhase = selPt ? phaseAt(selPt.date) : null;
+
+  // ~4 evenly spaced month/date ticks on the time axis
+  const tickN = Math.min(4, Math.max(2, pts.length));
+  const xTicks = Array.from({ length: tickN }, (_, i) => {
+    const t = t0 + (i / (tickN - 1)) * (t1 - t0);
+    return { x: x0 + (i / (tickN - 1)) * (x1 - x0), label: shortDay(localFromT(t)) };
+  });
+
+  return (
+    <div>
+      {/* metric selector */}
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {metrics.map((m) => {
+          const on = m.key === metricKey;
+          return (
+            <button
+              key={m.key}
+              onClick={() => {
+                setMetricKey(m.key);
+                setSel(null);
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold transition active:scale-95 ${on ? "border-transparent text-white shadow-sm" : "border-petal/60 bg-white/70 text-rose hover:bg-blush/60"}`}
+              style={on ? { background: m.color } : undefined}
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: on ? "#fff" : m.color }}
+              />{" "}
+              {m.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Metric over time, coloured by cycle phase"
+      >
+        {/* phase bands */}
+        {segments.map((s, i) => (
+          <rect
+            key={i}
+            x={xAt(s.startISO)}
+            y={y0}
+            width={Math.max(0.5, xAt(s.endISO) - xAt(s.startISO) + dayW)}
+            height={y1 - y0}
+            fill={PHASE_FILL[s.phase]}
+            opacity={0.16}
+          />
+        ))}
+        {/* y High/Low + baseline */}
+        <text x="2" y={y0 + 4} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+          High
+        </text>
+        <text x="2" y={y1} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+          Low
+        </text>
+        <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+        {/* line + dots */}
+        {pts.length >= 2 && (
+          <path
+            d={line}
+            fill="none"
+            stroke={metric.color}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+        {pts.map((p) => {
+          const active = p.date === sel;
+          return (
+            <g
+              key={p.date}
+              onClick={() => setSel(active ? null : p.date)}
+              style={{ cursor: "pointer" }}
+            >
+              <circle cx={xAt(p.date)} cy={yAt(p.value)} r={9} fill="transparent" />
+              <circle
+                cx={xAt(p.date)}
+                cy={yAt(p.value)}
+                r={active ? 4.5 : 2.4}
+                fill={active ? "oklch(0.4 0.24 0)" : metric.color}
+                stroke="#fff"
+                strokeWidth={active ? 1.8 : 0.8}
+              />
+            </g>
+          );
+        })}
+        {xTicks.map((t, i) => (
+          <text
+            key={i}
+            x={t.x}
+            y={y1 + 12}
+            textAnchor={i === 0 ? "start" : i === xTicks.length - 1 ? "end" : "middle"}
+            style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
+          >
+            {t.label}
+          </text>
+        ))}
+      </svg>
+
+      {/* phase legend */}
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+        {(Object.keys(PHASE_FILL) as PhaseKey[]).map((p) => (
+          <span
+            key={p}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose/60"
+          >
+            <span
+              className="h-2.5 w-2.5 rounded-[3px]"
+              style={{ background: PHASE_FILL[p], opacity: 0.5 }}
+            />{" "}
+            {PHASE_LABEL[p]}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-2 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
+        {selPt ? (
+          <span className="text-[#831843]">
+            <b className="text-hotpink">{prettyDate(selPt.date)}</b>
+            {selPhase ? <> · {PHASE_LABEL[selPhase]} phase</> : null} · {metric.label}{" "}
+            {fmtNum(selPt.value)}
+            {metric.unit && metric.unit !== "count" ? ` ${metric.unit}` : ""}
+          </span>
+        ) : (
+          <span className="text-rose/50">
+            Pick a metric, then tap a point to see its value &amp; which phase you were in.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function localFromT(t: number): string {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Four phase cards — the aggregate "how you do in each phase". */
+function ByPhaseCards({ byPhase }: { byPhase: PhaseStat[] }) {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {byPhase.map((p) => (
+        <div
+          key={p.phase}
+          className="rounded-2xl border border-petal/50 bg-white/70 p-3"
+          style={{ borderTop: `3px solid ${PHASE_FILL[p.phase]}` }}
+        >
+          <p className="text-[12px] font-black text-magenta leading-none">{p.label}</p>
+          <ul className="mt-2 space-y-1 text-[11px] text-rose/70">
+            <li className="flex justify-between gap-1">
+              <span>Mood</span>
+              <b className="text-[#831843]">{p.moodAvg != null ? `${p.moodAvg}/5` : "—"}</b>
+            </li>
+            <li className="flex justify-between gap-1">
+              <span>Burn</span>
+              <b className="text-[#831843]">
+                {p.burnKcal ? `${p.burnKcal.toLocaleString()}` : "—"}
+              </b>
+            </li>
+            <li className="flex justify-between gap-1">
+              <span>Sessions</span>
+              <b className="text-[#831843]">{p.sessions || "—"}</b>
+            </li>
+            <li className="flex justify-between gap-1">
+              <span>Symptom days</span>
+              <b className="text-[#831843]">{p.symptomDays || "—"}</b>
+            </li>
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function buildMetrics(h: HealthHistory): Metric[] {
+  const burnByDay = new Map<string, number>();
+  for (const d of [...h.movement.workoutDaily, ...h.movement.yogaDaily]) {
+    burnByDay.set(d.date, (burnByDay.get(d.date) ?? 0) + d.kcal);
+  }
+  const burn = [...burnByDay.entries()]
+    .map(([date, value]) => ({ date, value }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  return [
+    {
+      key: "mood",
+      label: "Mood",
+      unit: "/5",
+      color: "#db2777",
+      points: h.mood.series.map((m) => ({ date: m.date, value: m.score })),
+    },
+    { key: "burn", label: "Burn", unit: "kcal", color: "#0891b2", points: burn },
+    {
+      key: "weight",
+      label: "Weight",
+      unit: "kg",
+      color: "#4338ca",
+      points: h.weight.series.map((w) => ({ date: w.date, value: w.kg })),
+    },
+    {
+      key: "symptoms",
+      label: "Symptoms",
+      unit: "count",
+      color: "#9333ea",
+      points: h.symptoms.daily.map((s) => ({ date: s.date, value: s.labels.length })),
+    },
+  ].filter((m) => m.points.length > 0);
+}
+
 /* ---------- main ---------- */
 
 export function HealthHistoryPanel({ userName }: { userName: string }) {
   const h = useMemo(() => computeHealthHistory(8), []);
+  const metrics = useMemo(() => buildMetrics(h), [h]);
   const reg = REG_META[h.cycle.regularity];
 
   const hasAnything =
@@ -418,6 +806,30 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             />
           </div>
 
+          {/* THE BIG ONE — everything, coloured by cycle phase, over time */}
+          {h.range && h.phaseSegments.length > 0 && metrics.length > 0 && (
+            <Panel>
+              <PanelHead
+                Icon={Sparkles}
+                title="Your cycle × your body"
+                hint="by phase & over time"
+              />
+              <p className="mb-2 text-[12px] leading-snug text-rose/70">
+                Pick a metric to see it plotted over time, with the background coloured by your
+                cycle phase — so you can see how each phase shapes how you feel and move.
+              </p>
+              <CycleOverlayChart range={h.range} segments={h.phaseSegments} metrics={metrics} />
+              <p className="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">
+                How you do in each phase
+              </p>
+              <ByPhaseCards byPhase={h.byPhase} />
+              <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
+                <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
+                <span>{h.patterns.combined}</span>
+              </p>
+            </Panel>
+          )}
+
           {/* Cycle regularity verdict + the by-cycle histogram */}
           <Panel>
             <PanelHead
@@ -439,10 +851,10 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             </div>
             <BarsChart
               points={cyclePoints(h.cycle.cycles)}
+              unit="days"
+              color="#be185d"
               tapHint="Tap a cycle to see when it started, ended & how long it lasted."
               interpretation={h.patterns.cycle}
-              accentFrom="from-magenta"
-              accentTo="to-hotpink"
             />
           </Panel>
 
@@ -468,6 +880,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             )}
             <LineChart
               points={weightPoints(h.weight.series)}
+              unit="kg"
+              color="#db2777"
               tapHint="Tap a point to see that day's weight."
               interpretation={h.patterns.weight}
             />
@@ -479,6 +893,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               <PanelHead Icon={Dumbbell} title="Workout burn" hint="per day" />
               <BarsChart
                 points={burnPoints(h.movement.workoutDaily)}
+                unit="kcal"
+                color="#db2777"
                 tapHint="Tap a day to see calories burned & sessions."
                 interpretation={h.patterns.workout}
               />
@@ -487,10 +903,10 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               <PanelHead Icon={Sparkles} title="Yoga burn" hint="per day" />
               <BarsChart
                 points={burnPoints(h.movement.yogaDaily)}
+                unit="kcal"
+                color="#ec4899"
                 tapHint="Tap a day to see calories burned & flows."
                 interpretation={h.patterns.yoga}
-                accentFrom="from-petal"
-                accentTo="to-hotpink"
               />
             </Panel>
           </div>
@@ -505,6 +921,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               />
               <LineChart
                 points={moodPoints(h.mood.series)}
+                unit="score"
+                color="#db2777"
                 yMin={1}
                 yMax={5}
                 tapHint="Tap a point to see that day's mood."
@@ -519,10 +937,10 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               />
               <BarsChart
                 points={symptomPoints(h.symptoms.daily)}
+                unit="count"
+                color="#a21caf"
                 tapHint="Tap a day to see which symptoms you logged."
                 interpretation={h.patterns.symptoms}
-                accentFrom="from-petal"
-                accentTo="to-magenta"
               />
             </Panel>
           </div>
