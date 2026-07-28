@@ -190,6 +190,8 @@ const IMPORTED_ARTICLES: Article[] = [
     excerpt: "Same tutorial, same gel — and your sleek bun still looks flat while hers looks like glass. The secret isn't the style. It's everything that happens before you touch your hair." },
   { id: "CG005", title: "The Jewelry Every Clean Girl Owns", category: "Clean Girl", minutes: 5, blooms: "3.1k", image: CAT_IMG["Clean Girl"], status: "review",
     excerpt: "A few quiet gold pieces, rarely taken off, that read expensive because they're restrained — the hoops, the chain, the watch, the ring, and the one signature piece that's entirely you." },
+  { id: "LS001", title: "Why the Happiest People Don't Have Better Lives", category: "Lifestyle", minutes: 6, blooms: "3.4k", image: CAT_IMG["Lifestyle"], status: "review",
+    excerpt: "We keep waiting to be happy — after the promotion, the move, the better life. But the happiest people don't have better lives at all. They just live them differently." },
 ];
 
 /** The full catalogue: long-form editorial reads first, then the phase seeds. */
