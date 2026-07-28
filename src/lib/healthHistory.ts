@@ -22,6 +22,7 @@ import {
   recentCycleLengths,
   cycleRegularity,
 } from "@/lib/periodLog";
+import { readCycleSettings } from "@/components/bloom/cyclePhase";
 import { moodValence } from "@/lib/meDashboard";
 
 function read<T>(key: string, fallback: T): T {
@@ -126,17 +127,46 @@ export interface Patterns {
   mood: string;
   symptoms: string;
   cycle: string;
+  combined: string;
+}
+
+/* ---------- phase timeline (drives the combined "by phase × time" chart) ---------- */
+
+export type PhaseKey = "menstrual" | "follicular" | "ovulatory" | "luteal";
+export const PHASE_LABEL: Record<PhaseKey, string> = {
+  menstrual: "Menstrual",
+  follicular: "Follicular",
+  ovulatory: "Ovulatory",
+  luteal: "Luteal",
+};
+
+export interface PhaseSegment {
+  startISO: string;
+  endISO: string;
+  phase: PhaseKey;
+}
+export interface PhaseStat {
+  phase: PhaseKey;
+  label: string;
+  moodAvg: number | null;
+  moodDays: number;
+  burnKcal: number;
+  sessions: number;
+  symptomDays: number;
 }
 
 export interface HealthHistory {
   trackingSince: string | null; // earliest real event, local ISO
   daysTracked: number; // whole days from trackingSince to today (inclusive)
+  range: { startISO: string; endISO: string } | null; // tracking window for time-axis charts
   cycle: CycleInsight & { cycles: Cycle[] };
   movement: MovementInsight & { workoutDaily: DayBurn[]; yogaDaily: DayBurn[] };
   symptoms: { total: number; days: number; byLabel: Counted[]; daily: SymptomDay[] };
   mood: { days: number; series: MoodPoint[]; byMood: Counted[]; avgScore: number | null };
   weight: WeightInsight;
   nourish: NourishInsight;
+  phaseSegments: PhaseSegment[]; // cycle-phase bands across the tracking window
+  byPhase: PhaseStat[]; // how she does in each phase
   patterns: Patterns;
 }
 
@@ -245,6 +275,117 @@ function buildCycles(starts: string[]): Cycle[] {
   return out;
 }
 
+/** Which cycle phase a historic day fell in — anchored to the most recent REAL
+ *  confirmed start (and that cycle's real length), mirroring phaseForDay's math.
+ *  Returns null for days before her first confirmed start. */
+function histPhase(
+  dayMs: number,
+  starts: string[],
+  periodLen: number,
+  fallbackLen: number,
+): PhaseKey | null {
+  let s0: number | null = null;
+  let idx = -1;
+  for (let i = 0; i < starts.length; i++) {
+    const t = toTime(starts[i]);
+    if (t <= dayMs) {
+      s0 = t;
+      idx = i;
+    } else break;
+  }
+  if (s0 == null) return null;
+  const next = idx + 1 < starts.length ? toTime(starts[idx + 1]) : null;
+  const cycleLen = next ? Math.max(18, Math.round((next - s0) / MS_DAY)) : fallbackLen;
+  const dayOfCycle = Math.floor((dayMs - s0) / MS_DAY);
+  const ov = Math.max(10, cycleLen - 14);
+  if (dayOfCycle < periodLen) return "menstrual";
+  if (dayOfCycle >= ov - 2 && dayOfCycle <= ov + 1) return "ovulatory";
+  if (dayOfCycle < ov) return "follicular";
+  return "luteal";
+}
+
+/** Contiguous phase bands from `fromISO`..`toISO` (inclusive), local days. */
+function buildPhaseSegments(fromISO: string, toISO: string, starts: string[]): PhaseSegment[] {
+  if (!starts.length) return [];
+  const s = readCycleSettings();
+  const periodLen = s.periodLength || 5;
+  const fallbackLen = avgCycleLength(starts) ?? s.cycleLength ?? 28;
+  const segs: PhaseSegment[] = [];
+  let curPhase: PhaseKey | null = null;
+  let segStart = fromISO;
+  const t1 = toTime(toISO);
+  for (let t = toTime(fromISO); t <= t1; t += MS_DAY) {
+    const iso = localDateISO(new Date(t));
+    const p = histPhase(t, starts, periodLen, fallbackLen);
+    if (p !== curPhase) {
+      if (curPhase)
+        segs.push({
+          startISO: segStart,
+          endISO: localDateISO(new Date(t - MS_DAY)),
+          phase: curPhase,
+        });
+      curPhase = p;
+      segStart = iso;
+    }
+  }
+  if (curPhase) segs.push({ startISO: segStart, endISO: toISO, phase: curPhase });
+  return segs;
+}
+
+/** How she does in each phase — avg mood, burn, sessions, symptom-days. */
+function buildByPhase(
+  starts: string[],
+  moodSeries: MoodPoint[],
+  workoutDaily: DayBurn[],
+  yogaDaily: DayBurn[],
+  symptomsDaily: SymptomDay[],
+): PhaseStat[] {
+  const s = readCycleSettings();
+  const periodLen = s.periodLength || 5;
+  const fallbackLen = avgCycleLength(starts) ?? s.cycleLength ?? 28;
+  const phaseOf = (iso: string) => histPhase(toTime(iso), starts, periodLen, fallbackLen);
+  const acc: Record<
+    PhaseKey,
+    { moodSum: number; moodDays: number; burn: number; sessions: number; sxDays: number }
+  > = {
+    menstrual: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
+    follicular: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
+    ovulatory: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
+    luteal: { moodSum: 0, moodDays: 0, burn: 0, sessions: 0, sxDays: 0 },
+  };
+  for (const m of moodSeries) {
+    const p = phaseOf(m.date);
+    if (p) {
+      acc[p].moodSum += m.score;
+      acc[p].moodDays++;
+    }
+  }
+  for (const d of [...workoutDaily, ...yogaDaily]) {
+    const p = phaseOf(d.date);
+    if (p) {
+      acc[p].burn += d.kcal;
+      acc[p].sessions += d.sessions;
+    }
+  }
+  for (const d of symptomsDaily) {
+    const p = phaseOf(d.date);
+    if (p) acc[p].sxDays++;
+  }
+  const order: PhaseKey[] = ["menstrual", "follicular", "ovulatory", "luteal"];
+  return order.map((phase) => {
+    const a = acc[phase];
+    return {
+      phase,
+      label: PHASE_LABEL[phase],
+      moodAvg: a.moodDays ? Math.round((a.moodSum / a.moodDays) * 10) / 10 : null,
+      moodDays: a.moodDays,
+      burnKcal: a.burn,
+      sessions: a.sessions,
+      symptomDays: a.sxDays,
+    };
+  });
+}
+
 /* ---------- pattern interpretations (one honest sentence per chart) ---------- */
 
 function pctChange(a: number, b: number): number {
@@ -263,6 +404,7 @@ function buildPatterns(h: {
   cycles: Cycle[];
   avgCycle: number | null;
   regularity: CycleInsight["regularity"];
+  byPhase: PhaseStat[];
 }): Patterns {
   // Weight
   let weight = "Log a few weigh-ins and your trend will read here.";
@@ -321,7 +463,26 @@ function buildPatterns(h: {
     cycle = `${done.length} completed cycle${done.length === 1 ? "" : "s"}${h.avgCycle ? ` · average ${h.avgCycle} days` : ""} · ${reg}.`;
   }
 
-  return { weight, workout, yoga, mood, symptoms, cycle };
+  // Combined (by phase × time) — name the phase where mood is brightest and where
+  // she moves most, so the overlay chart reads as a takeaway, not just lines.
+  let combined =
+    "As you log across a full cycle, this shows how your body moves through each phase.";
+  const moodRanked = h.byPhase
+    .filter((p) => p.moodAvg != null)
+    .sort((a, b) => (b.moodAvg ?? 0) - (a.moodAvg ?? 0));
+  const burnRanked = h.byPhase
+    .filter((p) => p.burnKcal > 0)
+    .sort((a, b) => b.burnKcal - a.burnKcal);
+  if (moodRanked.length || burnRanked.length) {
+    const bits: string[] = [];
+    if (moodRanked.length)
+      bits.push(`your mood is brightest in your ${moodRanked[0].label.toLowerCase()} phase`);
+    if (burnRanked.length)
+      bits.push(`you move most in your ${burnRanked[0].label.toLowerCase()} phase`);
+    combined = `Across your cycle, ${bits.join(" and ")} — the coloured bands show each phase over time.`;
+  }
+
+  return { weight, workout, yoga, mood, symptoms, cycle, combined };
 }
 
 /* ---------- the composed history ---------- */
@@ -458,6 +619,11 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
   const yogaDaily = dailyBurn(yogaHist, "Yoga flow");
   const cycles = buildCycles(periodStarts);
 
+  // ── Phase timeline + by-phase summary (drives the combined chart) ──
+  const range = trackingSince ? { startISO: trackingSince, endISO: todayISO() } : null;
+  const phaseSegments = range ? buildPhaseSegments(range.startISO, range.endISO, periodStarts) : [];
+  const byPhase = buildByPhase(periodStarts, moodSeries, workoutDaily, yogaDaily, symptomsDaily);
+
   const patterns = buildPatterns({
     weight,
     workoutDaily,
@@ -470,11 +636,13 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     cycles,
     avgCycle: cycle.avgLength,
     regularity: cycle.regularity,
+    byPhase,
   });
 
   return {
     trackingSince,
     daysTracked,
+    range,
     cycle: { ...cycle, cycles },
     movement: { ...movement, workoutDaily, yogaDaily },
     symptoms: {
@@ -486,6 +654,8 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     mood: { days: moodSeries.length, series: moodSeries, byMood: moodByMood, avgScore },
     weight,
     nourish,
+    phaseSegments,
+    byPhase,
     patterns,
   };
 }
