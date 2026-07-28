@@ -26,6 +26,7 @@ import {
   Sparkles,
   Info,
   Activity,
+  Moon,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -467,6 +468,14 @@ const symptomPoints = (daily: SymptomDay[]): ChartPoint[] =>
     value: d.labels.length,
     readout: d.labels.join(", "),
   }));
+const SLEEP_WORDS = ["", "Rough", "Poor", "OK", "Good", "Great"];
+const sleepPoints = (series: HealthHistory["sleep"]["series"]): ChartPoint[] =>
+  series.map((d) => ({
+    key: d.date,
+    label: shortDay(d.date),
+    value: d.quality,
+    readout: `${SLEEP_WORDS[d.quality] ?? d.quality} · ${d.quality}/5${d.hours != null ? ` · ${d.hours}h` : ""}`,
+  }));
 const monthOf = (iso: string) => MONTHS[new Date(iso + "T00:00:00").getMonth()];
 const cyclePoints = (cycles: Cycle[]): ChartPoint[] =>
   cycles.map((c) => ({
@@ -502,6 +511,7 @@ const METRIC_COLOR: Record<string, string> = {
   burn: "#4fa89d", // soft teal
   weight: "#7b83cf", // periwinkle
   symptoms: "#b06fc0", // soft orchid
+  sleep: "#6f76c4", // soft indigo
 };
 
 const toTime = (iso: string) => new Date(iso + "T00:00:00").getTime();
@@ -829,6 +839,10 @@ function ByPhaseCards({ byPhase }: { byPhase: PhaseStat[] }) {
               </b>
             </li>
             <li className="flex justify-between gap-1">
+              <span>Sleep</span>
+              <b className="text-[#831843]">{p.sleepAvg != null ? `${p.sleepAvg}/5` : "—"}</b>
+            </li>
+            <li className="flex justify-between gap-1">
               <span>Sessions</span>
               <b className="text-[#831843]">{p.sessions || "—"}</b>
             </li>
@@ -874,6 +888,13 @@ function buildMetrics(h: HealthHistory): Metric[] {
       color: "#9333ea",
       points: h.symptoms.daily.map((s) => ({ date: s.date, value: s.labels.length })),
     },
+    {
+      key: "sleep",
+      label: "Sleep",
+      unit: "/5",
+      color: METRIC_COLOR.sleep,
+      points: h.sleep.series.map((d) => ({ date: d.date, value: d.quality })),
+    },
   ].filter((m) => m.points.length > 0);
 }
 
@@ -905,13 +926,17 @@ function makePreview() {
   }
   const mood: { date: string; value: number }[] = [];
   const burn: { date: string; value: number }[] = [];
+  const sleep: { date: string; value: number }[] = [];
   for (let n = N; n >= 0; n -= 2)
     mood.push({ date: iso(n), value: 3 + 1.4 * Math.sin(((N - n) / N) * 6.5) });
   for (let n = N; n >= 0; n -= 3)
     burn.push({ date: iso(n), value: 130 + 70 * Math.abs(Math.sin((N - n) / 6)) });
+  for (let n = N; n >= 0; n -= 2)
+    sleep.push({ date: iso(n), value: 3.2 + 1.3 * Math.sin(((N - n) / N) * 6.5 + 1) });
   const metrics: Metric[] = [
-    { key: "mood", label: "Mood", unit: "/5", color: LINE_C, points: mood },
-    { key: "burn", label: "Burn", unit: "kcal", color: LINE_C, points: burn },
+    { key: "mood", label: "Mood", unit: "/5", color: METRIC_COLOR.mood, points: mood },
+    { key: "burn", label: "Burn", unit: "kcal", color: METRIC_COLOR.burn, points: burn },
+    { key: "sleep", label: "Sleep", unit: "/5", color: METRIC_COLOR.sleep, points: sleep },
   ];
   return { range, segments, metrics };
 }
@@ -1144,7 +1169,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             </Panel>
           </div>
 
-          {/* Mood + Symptoms */}
+          {/* Mood + Sleep — both "how you feel & rest", paired on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel>
               <PanelHead
@@ -1164,19 +1189,37 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             </Panel>
             <Panel>
               <PanelHead
-                Icon={Activity}
-                title="Symptoms by day"
-                hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
+                Icon={Moon}
+                title="Sleep over time"
+                hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
               />
-              <BarsChart
-                points={symptomPoints(h.symptoms.daily)}
-                unit="count"
-                color={BAR_C}
-                tapHint="Tap a day to see which symptoms you logged."
-                interpretation={h.patterns.symptoms}
+              <LineChart
+                points={sleepPoints(h.sleep.series)}
+                unit="score"
+                color={LINE_C}
+                yMin={1}
+                yMax={5}
+                tapHint="Tap a point to see that night's sleep."
+                interpretation={h.patterns.sleep}
               />
             </Panel>
           </div>
+
+          {/* Symptoms — full width */}
+          <Panel>
+            <PanelHead
+              Icon={Activity}
+              title="Symptoms by day"
+              hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
+            />
+            <BarsChart
+              points={symptomPoints(h.symptoms.daily)}
+              unit="count"
+              color={BAR_C}
+              tapHint="Tap a day to see which symptoms you logged."
+              interpretation={h.patterns.symptoms}
+            />
+          </Panel>
 
           {/* Nourishment */}
           <Panel>
