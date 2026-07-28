@@ -1,12 +1,19 @@
 /**
  * Your history — the Me-page panel that turns every REAL logged event into
- * lifetime insights + a doctor-shareable report. All data comes from
- * computeHealthHistory (which only reads canonical stores), so nothing here can
- * disagree with the rest of the app. Responsive per the Bloomzein directive:
- * mobile stacks single-column with two-up stat tiles; desktop uses multi-column
- * with the cycle-regularity insight leading.
+ * lifetime insights, interactive charts + a doctor-shareable report. All data
+ * comes from computeHealthHistory (which only reads canonical stores), so
+ * nothing here can disagree with the rest of the app.
+ *
+ * Charts are simple and interactive: tap any bar / point to reveal that day's
+ * details (kept out of the way until asked for), and each chart carries a
+ * one-line reading of its pattern. The printed report renders the same charts
+ * statically and lists every point in a table (see healthReport.ts), so the
+ * tap-to-reveal detail is never lost on paper.
+ *
+ * Responsive per the Bloomzein directive: mobile stacks single-column with
+ * two-up stat tiles; desktop uses multi-column.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Download,
   FileText,
@@ -27,9 +34,19 @@ import {
   computeHealthHistory,
   prettyDate,
   titleCase,
-  type HealthHistory,
+  type DayBurn,
+  type Cycle,
+  type MoodPoint,
+  type SymptomDay,
 } from "@/lib/healthHistory";
 import { downloadHealthReport, downloadHealthCSV } from "@/lib/healthReport";
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const shortDay = (iso: string) => {
+  const d = new Date(iso + "T00:00:00");
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+};
+const MAX_POINTS = 40; // keep charts legible; the report table carries the full history
 
 /* ---------- atoms ---------- */
 
@@ -81,86 +98,173 @@ function PanelHead({ Icon, title, hint }: { Icon: typeof Flame; title: string; h
   );
 }
 
-/** Horizontal magnitude bars — one series, direct-labelled (no legend needed). */
-function BarList({ rows, unit }: { rows: { label: string; count: number }[]; unit: string }) {
-  const max = Math.max(1, ...rows.map((r) => r.count));
+/* ---------- interactive chart point ---------- */
+
+export interface ChartPoint {
+  key: string;
+  label: string; // x context (e.g. "4 May")
+  value: number;
+  readout: string; // shown when tapped
+  faded?: boolean; // e.g. an ongoing cycle
+}
+
+/** The tap-to-reveal readout + the always-on pattern line. */
+function ChartFooter({
+  sel,
+  hint,
+  interpretation,
+}: {
+  sel: ChartPoint | null;
+  hint: string;
+  interpretation: string;
+}) {
   return (
-    <ul className="space-y-2">
-      {rows.map((r) => (
-        <li key={r.label} className="flex items-center gap-2.5">
-          <span className="w-20 shrink-0 truncate text-[12px] font-semibold text-[#831843]">
-            {r.label}
+    <>
+      <div className="mt-2.5 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
+        {sel ? (
+          <span className="text-[#831843]">
+            <b className="text-hotpink">{sel.label}</b> · {sel.readout}
           </span>
-          <div className="h-2.5 flex-1 rounded-full bg-blush/70 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-petal via-hotpink to-magenta transition-[width] duration-700"
-              style={{ width: `${(r.count / max) * 100}%` }}
-            />
-          </div>
-          <span className="w-14 shrink-0 text-right text-[11px] font-bold text-rose/70">
-            {r.count} {unit}
-          </span>
-        </li>
-      ))}
-    </ul>
+        ) : (
+          <span className="text-rose/50">{hint}</span>
+        )}
+      </div>
+      <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
+        <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
+        <span>{interpretation}</span>
+      </p>
+    </>
   );
 }
 
-/** Weekly burn — mini bar chart (one series, values labelled). */
-function WeeklyBurn({ weekly }: { weekly: HealthHistory["movement"]["weekly"] }) {
-  const max = Math.max(1, ...weekly.map((w) => w.kcal));
+/** Simple clickable bar chart (one series). */
+function BarsChart({
+  points,
+  tapHint,
+  interpretation,
+  accentFrom = "from-hotpink",
+  accentTo = "to-magenta",
+}: {
+  points: ChartPoint[];
+  tapHint: string;
+  interpretation: string;
+  accentFrom?: string;
+  accentTo?: string;
+}) {
+  const shown = points.slice(-MAX_POINTS);
+  const [sel, setSel] = useState<string | null>(null);
+  const max = Math.max(1, ...shown.map((p) => p.value));
+  const selPoint = shown.find((p) => p.key === sel) ?? null;
   return (
-    <div className="flex items-end gap-1.5 h-28">
-      {weekly.map((w) => (
-        <div key={w.weekStartISO} className="flex flex-1 flex-col items-center gap-1 min-w-0">
-          <span className="text-[9px] font-bold text-rose/60">{w.kcal > 0 ? w.kcal : ""}</span>
-          <div className="w-full flex items-end" style={{ height: "72px" }}>
-            <div
-              className="w-full rounded-t-md bg-gradient-to-t from-hotpink to-magenta transition-[height] duration-700"
-              style={{ height: `${Math.max(w.kcal > 0 ? 6 : 0, (w.kcal / max) * 100)}%` }}
-              title={`${w.label}: ${w.kcal} kcal · ${w.sessions} sessions`}
-            />
-          </div>
-          <span className="text-[8.5px] text-rose/45 truncate w-full text-center">{w.label}</span>
+    <div>
+      <div className="flex items-end gap-[3px] h-24 sm:h-28">
+        {shown.map((p) => {
+          const active = p.key === sel;
+          return (
+            <button
+              key={p.key}
+              onClick={() => setSel(active ? null : p.key)}
+              className="group flex h-full flex-1 min-w-0 items-end"
+              title={`${p.label} · ${p.readout}`}
+              aria-label={`${p.label} · ${p.readout}`}
+            >
+              <span
+                className={`w-full rounded-t-[4px] bg-gradient-to-t ${accentFrom} ${accentTo} transition-all duration-500 group-hover:brightness-110 ${active ? "ring-2 ring-hotpink ring-offset-1" : ""} ${p.faded ? "opacity-45" : ""}`}
+                style={{ height: `${Math.max(p.value > 0 ? 6 : 2, (p.value / max) * 100)}%` }}
+              />
+            </button>
+          );
+        })}
+      </div>
+      {shown.length > 0 && (
+        <div className="mt-1 flex justify-between text-[9px] font-semibold text-rose/40">
+          <span>{shown[0].label}</span>
+          {shown.length > 1 && <span>{shown[shown.length - 1].label}</span>}
         </div>
-      ))}
+      )}
+      <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
     </div>
   );
 }
 
-/** Weight trend sparkline (single series). */
-function WeightSpark({ series }: { series: { date: string; kg: number }[] }) {
-  if (series.length < 2) return null;
-  const w = 240,
-    h = 60,
-    pad = 6;
-  const xs = series.map((_, i) => pad + (i / (series.length - 1)) * (w - pad * 2));
-  const kgs = series.map((s) => s.kg);
-  const min = Math.min(...kgs),
-    max = Math.max(...kgs);
-  const span = max - min || 1;
-  const y = (kg: number) => pad + (1 - (kg - min) / span) * (h - pad * 2);
-  const d = series
-    .map((s, i) => `${i === 0 ? "M" : "L"} ${xs[i].toFixed(1)} ${y(s.kg).toFixed(1)}`)
+/** Simple clickable line chart (one series) with a chosen y-range. */
+function LineChart({
+  points,
+  yMin,
+  yMax,
+  tapHint,
+  interpretation,
+}: {
+  points: ChartPoint[];
+  yMin?: number;
+  yMax?: number;
+  tapHint: string;
+  interpretation: string;
+}) {
+  const shown = points.slice(-MAX_POINTS);
+  const [sel, setSel] = useState<string | null>(null);
+  const selPoint = shown.find((p) => p.key === sel) ?? null;
+  const W = 320,
+    H = 96,
+    pad = 8;
+  if (shown.length < 2) {
+    return (
+      <div>
+        <div className="grid h-24 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
+          Not enough points yet
+        </div>
+        <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
+      </div>
+    );
+  }
+  const vals = shown.map((p) => p.value);
+  const lo = yMin ?? Math.min(...vals);
+  const hi = yMax ?? Math.max(...vals);
+  const span = hi - lo || 1;
+  const x = (i: number) => pad + (i / (shown.length - 1)) * (W - pad * 2);
+  const y = (v: number) => pad + (1 - (v - lo) / span) * (H - pad * 2);
+  const d = shown
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`)
     .join(" ");
   return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      className="w-full h-auto"
-      preserveAspectRatio="none"
-      role="img"
-      aria-label="Weight trend"
-    >
-      <path
-        d={d}
-        fill="none"
-        stroke="oklch(0.62 0.24 0)"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx={xs[xs.length - 1]} cy={y(kgs[kgs.length - 1])} r={3} fill="oklch(0.5 0.26 0)" />
-    </svg>
+    <div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-24 sm:h-28"
+        role="img"
+        aria-label="Trend chart"
+      >
+        <path
+          d={d}
+          fill="none"
+          stroke="oklch(0.62 0.24 0)"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {shown.map((p, i) => {
+          const active = p.key === sel;
+          return (
+            <g
+              key={p.key}
+              onClick={() => setSel(active ? null : p.key)}
+              style={{ cursor: "pointer" }}
+            >
+              <circle cx={x(i)} cy={y(p.value)} r={11} fill="transparent" />
+              <circle
+                cx={x(i)}
+                cy={y(p.value)}
+                r={active ? 5 : 3}
+                fill={active ? "oklch(0.5 0.26 0)" : "oklch(0.62 0.24 0)"}
+                stroke="#fff"
+                strokeWidth={active ? 2 : 1}
+              />
+            </g>
+          );
+        })}
+      </svg>
+      <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
+    </div>
   );
 }
 
@@ -179,6 +283,47 @@ const REG_META = {
   },
 } as const;
 
+/* ---------- point builders ---------- */
+
+const burnPoints = (days: DayBurn[]): ChartPoint[] =>
+  days.map((d) => ({
+    key: d.date,
+    label: shortDay(d.date),
+    value: d.kcal,
+    readout: `${d.kcal} kcal · ${d.sessions} session${d.sessions === 1 ? "" : "s"}${
+      d.items[0]?.name
+        ? ` · ${d.items
+            .map((i) => i.name)
+            .slice(0, 2)
+            .join(", ")}`
+        : ""
+    }`,
+  }));
+const weightPoints = (series: { date: string; kg: number }[]): ChartPoint[] =>
+  series.map((w) => ({ key: w.date, label: shortDay(w.date), value: w.kg, readout: `${w.kg} kg` }));
+const moodPoints = (series: MoodPoint[]): ChartPoint[] =>
+  series.map((p) => ({
+    key: p.date,
+    label: shortDay(p.date),
+    value: p.score,
+    readout: `${titleCase(p.mood)} · ${p.score}/5`,
+  }));
+const symptomPoints = (daily: SymptomDay[]): ChartPoint[] =>
+  daily.map((d) => ({
+    key: d.date,
+    label: shortDay(d.date),
+    value: d.labels.length,
+    readout: d.labels.join(", "),
+  }));
+const cyclePoints = (cycles: Cycle[]): ChartPoint[] =>
+  cycles.map((c) => ({
+    key: c.startISO,
+    label: c.monthLabel,
+    value: c.lengthDays,
+    faded: c.ongoing,
+    readout: `${prettyDate(c.startISO)} → ${prettyDate(c.endISO)} · ${c.lengthDays} days${c.ongoing ? " (ongoing)" : ""}`,
+  }));
+
 /* ---------- main ---------- */
 
 export function HealthHistoryPanel({ userName }: { userName: string }) {
@@ -192,13 +337,12 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
     h.mood.days > 0 ||
     h.symptoms.days > 0;
 
-  const changeIcon =
+  const ChangeIcon =
     h.weight.changeKg == null || h.weight.changeKg === 0
       ? Minus
       : h.weight.changeKg < 0
         ? TrendingDown
         : TrendingUp;
-  const ChangeIcon = changeIcon;
 
   return (
     <section className="animate-card-pop-in" style={{ animationDelay: "40ms" }}>
@@ -209,8 +353,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             Your history
           </h2>
           <p className="mt-1 text-[12.5px] text-rose/70 leading-snug">
-            Everything you've really logged, from day one — kept for you, ready to share with your
-            doctor.
+            Everything you've really logged, from day one — tap any chart for the details, then
+            download it all as a report for your doctor.
           </p>
           <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose/55">
             <CalendarDays className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
@@ -274,14 +418,14 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             />
           </div>
 
-          {/* Cycle regularity — the doctor headline */}
+          {/* Cycle regularity verdict + the by-cycle histogram */}
           <Panel>
             <PanelHead
               Icon={HeartPulse}
-              title="Cycle rhythm"
+              title="Cycle by cycle"
               hint={h.cycle.count ? `${h.cycle.count} confirmed starts` : undefined}
             />
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
               <span
                 className={`inline-block rounded-full px-3 py-1 text-[12px] font-black uppercase tracking-wide ${reg.cls}`}
               >
@@ -293,174 +437,137 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 </span>
               )}
             </div>
-            <p className="mt-2 text-[12.5px] leading-snug text-[#831843]">{reg.text}</p>
-            {h.cycle.recentLengths.length > 0 && (
-              <div className="mt-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">
-                  Recent cycle lengths (days)
-                </p>
-                <div className="mt-1.5 flex flex-wrap items-end gap-1.5">
-                  {h.cycle.recentLengths.map((d, i) => (
-                    <span key={i} className="inline-flex flex-col items-center gap-1">
-                      <span className="grid h-7 min-w-[2rem] place-items-center rounded-lg bg-blush/70 px-2 text-[12px] font-black text-magenta">
-                        {d}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {h.cycle.lastStart && (
-              <p className="mt-3 text-[11.5px] text-rose/60">
-                Most recent confirmed start ·{" "}
-                <b className="text-hotpink">{prettyDate(h.cycle.lastStart)}</b>
-              </p>
-            )}
+            <BarsChart
+              points={cyclePoints(h.cycle.cycles)}
+              tapHint="Tap a cycle to see when it started, ended & how long it lasted."
+              interpretation={h.patterns.cycle}
+              accentFrom="from-magenta"
+              accentTo="to-hotpink"
+            />
           </Panel>
 
-          {/* Movement + burned calories */}
+          {/* Weight — line */}
           <Panel>
-            <PanelHead Icon={Flame} title="Movement & burn" hint="last 8 weeks" />
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="rounded-xl bg-blush/40 p-2.5 text-center">
-                <p className="text-lg font-black text-magenta leading-none">
-                  {h.movement.workouts}
-                </p>
-                <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  <Dumbbell className="h-3 w-3" strokeWidth={2} /> Workouts
-                </p>
+            <PanelHead Icon={Scale} title="Weight by day" hint={titleCase(h.weight.goal)} />
+            {h.weight.currentKg != null && (
+              <div className="mb-2 flex items-baseline gap-2">
+                <span className="text-2xl font-black text-magenta">
+                  {h.weight.currentKg}
+                  <span className="text-sm font-bold text-rose/60"> kg</span>
+                </span>
+                {h.weight.changeKg != null && (
+                  <span
+                    className={`inline-flex items-center gap-0.5 text-[12px] font-bold ${h.weight.changeKg < 0 ? "text-emerald-600" : h.weight.changeKg > 0 ? "text-hotpink" : "text-rose/50"}`}
+                  >
+                    <ChangeIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                    {h.weight.changeKg > 0 ? "+" : ""}
+                    {h.weight.changeKg} kg
+                  </span>
+                )}
               </div>
-              <div className="rounded-xl bg-blush/40 p-2.5 text-center">
-                <p className="text-lg font-black text-magenta leading-none">{h.movement.yoga}</p>
-                <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  <Sparkles className="h-3 w-3" strokeWidth={2} /> Yoga
-                </p>
-              </div>
-              <div className="rounded-xl bg-blush/40 p-2.5 text-center">
-                <p className="text-lg font-black text-magenta leading-none">
-                  {h.movement.activeDays}
-                </p>
-                <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  <CalendarDays className="h-3 w-3" strokeWidth={2} /> Active days
-                </p>
-              </div>
-            </div>
-            <WeeklyBurn weekly={h.movement.weekly} />
-            <p className="mt-2 text-[11px] text-rose/55 text-center">
-              Real calories burned in completed workouts &amp; yoga flows.
-            </p>
+            )}
+            <LineChart
+              points={weightPoints(h.weight.series)}
+              tapHint="Tap a point to see that day's weight."
+              interpretation={h.patterns.weight}
+            />
           </Panel>
 
-          {/* Symptoms + Mood side by side on desktop */}
+          {/* Burn — workout + yoga, side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel>
-              <PanelHead
-                Icon={Activity}
-                title="Symptoms"
-                hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
+              <PanelHead Icon={Dumbbell} title="Workout burn" hint="per day" />
+              <BarsChart
+                points={burnPoints(h.movement.workoutDaily)}
+                tapHint="Tap a day to see calories burned & sessions."
+                interpretation={h.patterns.workout}
               />
-              {h.symptoms.byLabel.length ? (
-                <BarList rows={h.symptoms.byLabel} unit="d" />
-              ) : (
-                <p className="text-[12.5px] text-rose/55">
-                  Nothing logged yet — tag how you feel on Today and it charts here.
-                </p>
-              )}
             </Panel>
+            <Panel>
+              <PanelHead Icon={Sparkles} title="Yoga burn" hint="per day" />
+              <BarsChart
+                points={burnPoints(h.movement.yogaDaily)}
+                tapHint="Tap a day to see calories burned & flows."
+                interpretation={h.patterns.yoga}
+                accentFrom="from-petal"
+                accentTo="to-hotpink"
+              />
+            </Panel>
+          </div>
+
+          {/* Mood + Symptoms */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel>
               <PanelHead
                 Icon={Smile}
-                title="Mood"
+                title="Mood over time"
                 hint={h.mood.avgScore != null ? `avg ${h.mood.avgScore}/5` : undefined}
               />
-              {h.mood.byMood.length ? (
-                <BarList
-                  rows={h.mood.byMood.map((m) => ({ label: titleCase(m.label), count: m.count }))}
-                  unit="d"
-                />
-              ) : (
-                <p className="text-[12.5px] text-rose/55">
-                  No mood logged yet — your mood over time will show here.
-                </p>
-              )}
+              <LineChart
+                points={moodPoints(h.mood.series)}
+                yMin={1}
+                yMax={5}
+                tapHint="Tap a point to see that day's mood."
+                interpretation={h.patterns.mood}
+              />
+            </Panel>
+            <Panel>
+              <PanelHead
+                Icon={Activity}
+                title="Symptoms by day"
+                hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
+              />
+              <BarsChart
+                points={symptomPoints(h.symptoms.daily)}
+                tapHint="Tap a day to see which symptoms you logged."
+                interpretation={h.patterns.symptoms}
+                accentFrom="from-petal"
+                accentTo="to-magenta"
+              />
             </Panel>
           </div>
 
-          {/* Weight + Nourishment */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel>
-              <PanelHead Icon={Scale} title="Weight" hint={titleCase(h.weight.goal)} />
-              {h.weight.currentKg != null ? (
-                <>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-magenta">
-                      {h.weight.currentKg}
-                      <span className="text-sm font-bold text-rose/60"> kg</span>
-                    </span>
-                    {h.weight.changeKg != null && (
-                      <span
-                        className={`inline-flex items-center gap-0.5 text-[12px] font-bold ${h.weight.changeKg < 0 ? "text-emerald-600" : h.weight.changeKg > 0 ? "text-hotpink" : "text-rose/50"}`}
-                      >
-                        <ChangeIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
-                        {h.weight.changeKg > 0 ? "+" : ""}
-                        {h.weight.changeKg} kg
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-rose/55">
-                    {h.weight.startKg != null ? `from ${h.weight.startKg} kg` : ""}
-                    {h.weight.targetKg != null ? ` · target ${h.weight.targetKg} kg` : ""}
-                  </p>
-                  <div className="mt-2">
-                    <WeightSpark series={h.weight.series} />
-                  </div>
-                </>
-              ) : (
-                <p className="text-[12.5px] text-rose/55">
-                  Log your weight in Diet and the trend appears here.
+          {/* Nourishment */}
+          <Panel>
+            <PanelHead Icon={FileText} title="Nourishment" hint="meals logged" />
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-blush/40 p-2.5 text-center">
+                <p className="text-lg font-black text-magenta leading-none">
+                  {h.nourish.daysLogged}
                 </p>
-              )}
-            </Panel>
-            <Panel>
-              <PanelHead Icon={FileText} title="Nourishment" hint="meals logged" />
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-blush/40 p-2.5 text-center">
-                  <p className="text-lg font-black text-magenta leading-none">
-                    {h.nourish.daysLogged}
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                    Days logged
-                  </p>
-                </div>
-                <div className="rounded-xl bg-blush/40 p-2.5 text-center">
-                  <p className="text-lg font-black text-magenta leading-none">
-                    {h.nourish.mealsLogged}
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                    Meals
-                  </p>
-                </div>
-                <div className="rounded-xl bg-blush/40 p-2.5 text-center">
-                  <p className="text-lg font-black text-magenta leading-none">
-                    {h.nourish.daysFullLogged}
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                    Full days
-                  </p>
-                </div>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
+                  Days logged
+                </p>
               </div>
-              <p className="mt-3 text-[11px] text-rose/55 leading-snug">
-                We track how consistently you log meals — real, not reconstructed.
-              </p>
-            </Panel>
-          </div>
+              <div className="rounded-xl bg-blush/40 p-2.5 text-center">
+                <p className="text-lg font-black text-magenta leading-none">
+                  {h.nourish.mealsLogged}
+                </p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
+                  Meals
+                </p>
+              </div>
+              <div className="rounded-xl bg-blush/40 p-2.5 text-center">
+                <p className="text-lg font-black text-magenta leading-none">
+                  {h.nourish.daysFullLogged}
+                </p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
+                  Full days
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-[11px] text-rose/55 leading-snug">
+              We track how consistently you log meals — real, not reconstructed.
+            </p>
+          </Panel>
 
           {/* Honest-data footnote */}
           <p className="flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-3.5 py-2.5 text-[11.5px] leading-snug text-rose/70">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
             <span>
               Every number here is something you confirmed or logged yourself — a personal wellness
-              summary, not a medical record. The downloadable report is yours to keep or share.
+              summary, not a medical record. Charts are interactive here; in the downloadable report
+              each one comes with a table of all its points, so nothing is lost on paper.
             </span>
           </p>
         </div>
