@@ -8,7 +8,7 @@
 // hidden seed button (to film on a real device) and from the capture script.
 // Everything it writes is plain localStorage, so `clearEmma()` fully undoes it.
 
-const DAYS = 45;
+const DAYS = 92; // ~3 months, so every history chart draws a full, pretty story
 
 function iso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -20,34 +20,91 @@ function daysAgo(n: number): Date {
   return d;
 }
 function set(key: string, val: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch {
+    /* ignore */
+  }
 }
 const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const weekdayOf = (d: Date) => WEEK[(d.getDay() + 6) % 7];
 
 // Mostly-bright mood arc with the odd mellow day — reads well as a rising curve.
-const MOOD_ARC = ["happy", "energetic", "calm", "happy", "sensitive", "energetic", "calm", "tired", "happy", "energetic"];
+const MOOD_ARC = [
+  "happy",
+  "energetic",
+  "calm",
+  "happy",
+  "sensitive",
+  "energetic",
+  "calm",
+  "tired",
+  "happy",
+  "energetic",
+];
 
 /** All the keys the seed touches — used by clearEmma() to fully reset. */
 const EMMA_KEYS = [
-  "bloom:cycle-settings", "bloom:diet-profile", "bloom:diet-setup-complete",
-  "bloom:mood-log-v2", "bloom:today-mood", "bloom:symptoms-log-v2",
-  "bloom:today-water", "bloom:today-water-goal", "bloom:daily-log", "bloom:diet-eaten",
-  "bloom:meals-plan", "bloom:meals-month", "bloom:meals-plan-goal", "bloom:workout-history", "bloom:workout-streak",
-  "bloom:workout-autoplan", "bloom:workout-program-phase", "bloom:workout-profile",
-  "bloom:yoga-history", "bloom:yoga-sessions", "bloom:yoga-streak", "bloom:yoga-schedule",
-  "bloom:diary", "bloom:streak-days",
-  "bp:onboarded", "bp:currency", "bp:incomes", "bp:selectedCats", "bp:budget", "bp:txns", "bp:goals",
+  "bloom:cycle-settings",
+  "bloom:period-starts",
+  "bloom:plan",
+  "bloom:diet-profile",
+  "bloom:diet-setup-complete",
+  "bloom:mood-log-v2",
+  "bloom:today-mood",
+  "bloom:symptoms-log-v2",
+  "bloom:today-water",
+  "bloom:today-water-goal",
+  "bloom:daily-log",
+  "bloom:diet-eaten",
+  "bloom:meals-plan",
+  "bloom:meals-month",
+  "bloom:meals-plan-goal",
+  "bloom:workout-history",
+  "bloom:workout-streak",
+  "bloom:workout-autoplan",
+  "bloom:workout-program-phase",
+  "bloom:workout-profile",
+  "bloom:yoga-history",
+  "bloom:yoga-sessions",
+  "bloom:yoga-streak",
+  "bloom:yoga-schedule",
+  "bloom:diary",
+  "bloom:streak-days",
+  "bp:onboarded",
+  "bp:currency",
+  "bp:incomes",
+  "bp:selectedCats",
+  "bp:budget",
+  "bp:txns",
+  "bp:goals",
 ];
 
 export function seedEmma(): void {
   const today = new Date();
 
-  // ── Cycle → Day 9, Follicular (rising energy) ──
+  // Premium, so the full Me · history experience is visible when demoing.
+  // NB: the entitlement is a RAW string (not JSON) — write it the way readPlan reads it.
+  try {
+    localStorage.setItem("bloom:plan", "plus");
+    window.dispatchEvent(new Event("bloom:plan-updated"));
+  } catch {
+    /* ignore */
+  }
+
+  // ── Cycle → Day 9, Follicular, with THREE confirmed period starts over the
+  //    3-month window (28-day rhythm) so cycle & phase charts draw richly. ──
+  const periodStarts = [iso(daysAgo(64)), iso(daysAgo(36)), iso(daysAgo(8))];
+  set("bloom:period-starts", periodStarts);
   set("bloom:cycle-settings", {
-    lastPeriodStart: iso(daysAgo(8)), periodLength: 5, cycleLength: 28,
-    trackerMode: "protection", contraceptiveReminder: true, contraceptiveMethod: "pill",
-    reminderHour: "21:00", deviceNotifications: true,
+    lastPeriodStart: iso(daysAgo(8)),
+    periodLength: 5,
+    cycleLength: 28,
+    trackerMode: "protection",
+    contraceptiveReminder: true,
+    contraceptiveMethod: "pill",
+    reminderHour: "21:00",
+    deviceNotifications: true,
   });
 
   // ── Diet profile → gentle loss 66 → 60 kg, currently ~62, on track ──
@@ -57,53 +114,137 @@ export function seedEmma(): void {
     weightHistory.push({ date: iso(daysAgo(n)), kg });
   }
   set("bloom:diet-profile", {
-    goal: "lose", dietType: "omnivore", regime: "mediterranean", allergies: [],
-    cookingFrequency: "normal", weightHistory, targetWeight: 60, weight: 62, heightCm: 168, age: 27,
+    goal: "lose",
+    dietType: "omnivore",
+    regime: "mediterranean",
+    allergies: [],
+    cookingFrequency: "normal",
+    weightHistory,
+    targetWeight: 60,
+    weight: 62,
+    heightCm: 168,
+    age: 27,
   });
   set("bloom:diet-setup-complete", true);
 
   // ── Mood log + today's mood ──
+  // Mood follows the cycle a little: brighter mid-cycle, mellower near the period.
   const moodLog: Record<string, string> = {};
-  for (let n = DAYS; n >= 0; n--) moodLog[iso(daysAgo(n))] = MOOD_ARC[(DAYS - n) % MOOD_ARC.length];
+  for (let n = DAYS; n >= 0; n -= 1) {
+    if (n % 2 === 1 && n > 3) continue; // log ~every other day (real-ish cadence)
+    const dayOfCycle = (((DAYS - n - 8) % 28) + 28) % 28;
+    const mood =
+      dayOfCycle < 4
+        ? n % 4 === 0
+          ? "tired"
+          : "sensitive"
+        : dayOfCycle < 14
+          ? MOOD_ARC[(DAYS - n) % MOOD_ARC.length]
+          : dayOfCycle < 18
+            ? "happy"
+            : n % 3 === 0
+              ? "calm"
+              : "sensitive";
+    moodLog[iso(daysAgo(n))] = mood;
+  }
   moodLog[iso(today)] = "happy";
   set("bloom:mood-log-v2", moodLog);
   set("bloom:today-mood", "happy");
+
+  // ── Symptoms: mostly around the period days of each cycle (cramps/fatigue) ──
+  const symptomsLog: Record<string, string[]> = {};
+  for (let n = DAYS; n >= 0; n--) {
+    const dayOfCycle = (((DAYS - n - 8) % 28) + 28) % 28;
+    if (dayOfCycle < 3)
+      symptomsLog[iso(daysAgo(n))] = dayOfCycle === 0 ? ["Cramps", "Fatigue"] : ["Cramps"];
+    else if (dayOfCycle >= 24 && n % 2 === 0) symptomsLog[iso(daysAgo(n))] = ["Bloating"];
+  }
+  set("bloom:symptoms-log-v2", symptomsLog);
 
   // ── Hydration: today 7/8, history mostly hitting goal ──
   set("bloom:today-water", { date: iso(today), count: 7 });
   set("bloom:today-water-goal", 8);
   const waterLog: Record<string, { water: number; goal: number }> = {};
-  for (let n = DAYS; n >= 0; n--) waterLog[iso(daysAgo(n))] = { water: 6 + ((DAYS - n) % 3), goal: 8 }; // 6–8
+  for (let n = DAYS; n >= 0; n--)
+    waterLog[iso(daysAgo(n))] = { water: 6 + ((DAYS - n) % 3), goal: 8 }; // 6–8
   set("bloom:daily-log", waterLog);
 
   // ── Meals: eaten log (3 meals most days) + a phase-matched weekly plan ──
   const eaten: Record<string, string[]> = {};
-  for (let n = DAYS; n >= 0; n--) eaten[iso(daysAgo(n))] = n % 6 === 0 ? ["breakfast", "lunch"] : ["breakfast", "lunch", "dinner"];
+  for (let n = DAYS; n >= 0; n--)
+    eaten[iso(daysAgo(n))] =
+      n % 6 === 0 ? ["breakfast", "lunch"] : ["breakfast", "lunch", "dinner"];
   set("bloom:diet-eaten", eaten);
   const plannedDay = { breakfast: "b01", lunch: "l02", dinner: "d13", snack: null, lunchbox: null };
   const mealsPlan: Record<string, typeof plannedDay> = {};
-  WEEK.forEach((d) => { mealsPlan[d] = { ...plannedDay }; });
+  WEEK.forEach((d) => {
+    mealsPlan[d] = { ...plannedDay };
+  });
   set("bloom:meals-plan", mealsPlan);
   set("bloom:meals-plan-goal", "lose");
 
-  // ── Workout: ~18 sessions, 6-day streak, plan auto-built for the phase ──
-  const workoutHist: { date: string; calories: number }[] = [];
-  for (let n = DAYS; n >= 0; n--) if (n % 2 === 0 && n <= 40) workoutHist.push({ date: iso(daysAgo(n)), calories: 210 + ((n % 3) * 20) });
+  // ── Workout: ~30 sessions across 3 months, varied burn, plan auto-built ──
+  const ZONES = ["glutes", "legs", "core", "arms", "full-body"] as const;
+  const workoutHist: {
+    date: string;
+    zone: string;
+    intention: string;
+    phase: string;
+    durationMin: number;
+    calories: number;
+    sessionName: string;
+  }[] = [];
+  for (let n = DAYS; n >= 0; n--) {
+    if (n % 3 !== 0) continue; // ~every 3rd day
+    const zone = ZONES[(DAYS - n) % ZONES.length];
+    const durationMin = 20 + ((DAYS - n) % 2) * 10; // 20 or 30
+    const calories = Math.round(180 + durationMin * 4 + (n % 4) * 22);
+    workoutHist.push({
+      date: iso(daysAgo(n)),
+      zone,
+      intention: "tone",
+      phase: "follicular",
+      durationMin,
+      calories,
+      sessionName: `${zone[0].toUpperCase() + zone.slice(1)} session`,
+    });
+  }
   set("bloom:workout-history", workoutHist);
   set("bloom:workout-streak", { count: 6, lastISO: iso(today) });
-  set("bloom:workout-profile", { level: "Intermediate", goal: "tone", equipment: "none", daysPerWeek: 4 });
+  set("bloom:workout-profile", {
+    level: "Intermediate",
+    goal: "tone",
+    equipment: "none",
+    daysPerWeek: 4,
+  });
   set("bloom:workout-autoplan", "1"); // Workout tool builds a phase-matched week on open
 
   // ── Yoga: ~15 flows, streak, phase-matched soft week ──
   const yogaHist: { date: string; calories: number; durationMin: number }[] = [];
-  for (let n = DAYS; n >= 0; n--) if (n % 3 === 0) yogaHist.push({ date: iso(daysAgo(n)), calories: 60, durationMin: 20 });
+  for (let n = DAYS; n >= 0; n--)
+    if (n % 4 === 1)
+      yogaHist.push({
+        date: iso(daysAgo(n)),
+        calories: 80 + ((DAYS - n) % 3) * 15,
+        durationMin: 20 + ((DAYS - n) % 2) * 10,
+      });
   set("bloom:yoga-history", yogaHist);
   set("bloom:yoga-sessions", yogaHist.length);
   set("bloom:yoga-streak", { count: 4, lastISO: iso(today) });
   // Follicular default plan (mirrors the Yoga tool's PHASE_DEFAULT_PLAN.follicular)
-  const yogaFollicular = ["Morning energy", "Strength", "Morning energy", null, "Strength", "Morning energy", null];
+  const yogaFollicular = [
+    "Morning energy",
+    "Strength",
+    "Morning energy",
+    null,
+    "Strength",
+    "Morning energy",
+    null,
+  ];
   const yogaSchedule: Record<string, string | null> = {};
-  WEEK.forEach((d, i) => { yogaSchedule[d] = yogaFollicular[i]; });
+  WEEK.forEach((d, i) => {
+    yogaSchedule[d] = yogaFollicular[i];
+  });
   set("bloom:yoga-schedule", yogaSchedule);
 
   // ── Diary: ~18 soft entries over the window ──
@@ -121,8 +262,13 @@ export function seedEmma(): void {
   for (let n = DAYS, k = 0; n >= 0; n -= Math.random() < 0.5 ? 2 : 3, k++) {
     const d = daysAgo(n);
     diary.unshift({
-      id: `emma-${n}`, date: iso(d), mood: moodLog[iso(d)] ?? "calm", title: "",
-      html: `<p>${prompts[k % prompts.length]}</p>`, theme: "sakura", font: "quicksand",
+      id: `emma-${n}`,
+      date: iso(d),
+      mood: moodLog[iso(d)] ?? "calm",
+      title: "",
+      html: `<p>${prompts[k % prompts.length]}</p>`,
+      theme: "sakura",
+      font: "quicksand",
       createdAt: d.toISOString(),
     });
   }
@@ -136,12 +282,60 @@ export function seedEmma(): void {
   set("bp:budget", { rent: 1100, food: 450, transp: 120, elec: 80, beauty: 120 });
   const month = iso(today).slice(0, 7);
   const txns = [
-    { id: "t1", date: `${month}-02`, catKey: "rent", amount: 1100, description: "Rent", mood: "planned", type: "expense" },
-    { id: "t2", date: `${month}-05`, catKey: "food", amount: 62, description: "Groceries", mood: "planned", type: "expense" },
-    { id: "t3", date: `${month}-08`, catKey: "beauty", amount: 34, description: "Skincare", mood: "impulse", type: "expense" },
-    { id: "t4", date: `${month}-09`, catKey: "food", amount: 5, description: "Oat latte ☕", mood: "planned", type: "expense" },
-    { id: "t5", date: `${month}-01`, catKey: "", amount: 3200, description: "Salary", mood: "planned", type: "income" },
-    { id: "t6", date: `${month}-06`, catKey: "transp", amount: 40, description: "Transit pass", mood: "planned", type: "expense" },
+    {
+      id: "t1",
+      date: `${month}-02`,
+      catKey: "rent",
+      amount: 1100,
+      description: "Rent",
+      mood: "planned",
+      type: "expense",
+    },
+    {
+      id: "t2",
+      date: `${month}-05`,
+      catKey: "food",
+      amount: 62,
+      description: "Groceries",
+      mood: "planned",
+      type: "expense",
+    },
+    {
+      id: "t3",
+      date: `${month}-08`,
+      catKey: "beauty",
+      amount: 34,
+      description: "Skincare",
+      mood: "impulse",
+      type: "expense",
+    },
+    {
+      id: "t4",
+      date: `${month}-09`,
+      catKey: "food",
+      amount: 5,
+      description: "Oat latte ☕",
+      mood: "planned",
+      type: "expense",
+    },
+    {
+      id: "t5",
+      date: `${month}-01`,
+      catKey: "",
+      amount: 3200,
+      description: "Salary",
+      mood: "planned",
+      type: "income",
+    },
+    {
+      id: "t6",
+      date: `${month}-06`,
+      catKey: "transp",
+      amount: 40,
+      description: "Transit pass",
+      mood: "planned",
+      type: "expense",
+    },
   ];
   set("bp:txns", txns);
   set("bp:goals", [
@@ -149,10 +343,21 @@ export function seedEmma(): void {
     { id: "g2", name: "Emergency fund", target: 3000, saved: 1600, monthly: 300 },
   ]);
 
-  try { window.dispatchEvent(new Event("storage")); window.dispatchEvent(new Event("bloom:workout-updated")); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
+  try {
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("bloom:workout-updated"));
+    window.dispatchEvent(new Event("bloom:yoga-updated"));
+  } catch {
+    /* ignore */
+  }
 }
 
 /** Fully removes everything seedEmma() wrote (leaves the rest of storage alone). */
 export function clearEmma(): void {
-  try { EMMA_KEYS.forEach((k) => localStorage.removeItem(k)); window.dispatchEvent(new Event("storage")); } catch {}
+  try {
+    EMMA_KEYS.forEach((k) => localStorage.removeItem(k));
+    window.dispatchEvent(new Event("storage"));
+  } catch {
+    /* ignore */
+  }
 }
