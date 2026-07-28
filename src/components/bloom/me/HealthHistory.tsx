@@ -123,12 +123,12 @@ function Panel({
             src={bg}
             alt=""
             loading="lazy"
-            className="h-full w-full object-cover opacity-[0.30]"
+            className="h-full w-full object-cover opacity-[0.55]"
           />
           {/* white veil — heavier on the left/top where the axis labels & title
-              sit (so numbers stay crisp), softer to the bottom-right so the photo
-              reads clearly there, like the reference design */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/58 to-white/40" />
+              sit (so numbers stay crisp), much softer to the bottom-right so the
+              photo reads clearly there, like the reference design */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/40 to-white/20" />
         </div>
       )}
       <div className="relative">{children}</div>
