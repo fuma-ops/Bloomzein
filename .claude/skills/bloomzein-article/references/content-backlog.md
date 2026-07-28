@@ -78,17 +78,22 @@ A reader gave the first draft of these a "0" and told us exactly why, and it's
 the most important guidance in this file. These aspirational/beauty pieces live
 or die on immersion, not information. Hold to this:
 
-- **Open with a vivid, sensory portrait, not a thesis.** Make her *long* to be
-  the girl in the article. Describe what she smells like, how her skin looks,
-  the calm she moves with — present, cinematic. The reader should want to step
-  into the scene. (CG001's opening is the reference standard.)
-- **Then switch from "she" to "you" at the hinge moment.** Build the aspiration
-  in third person, then find the best moment to turn and address the reader
-  directly — *"she isn't special… stop watching her, be her"* — and re-narrate
-  the rest in second person so she *lives* it ("You wake without a fight. You
-  step into the shower…"). Done right, this is the "waw, I can be her" moment
-  that makes the whole piece land. (CG001's "Stop Watching Her. Be Her." is the
-  reference for the pivot.)
+- **Every article must earn a "wow, I didn't know that."** This is the bar. A
+  list of things she already half-knows fails, however pretty. Teach the
+  *foundations* and the *why* behind the look — the surprising fact, the
+  mechanism, the step-before-the-step. (CG004: sleek styles look better on
+  *day-two* hair; shine is a flat cuticle; a cool rinse seals it. That's the
+  wow.) If nothing in the draft makes her sit up, it isn't done.
+- **Vary the opening — don't run the same template every time.** The immersive
+  third-person portrait and the she→you switch (CG001) are *one powerful tool,
+  not a formula*. A reader flagged that using it on every article feels
+  repetitive and over-general. Reach for it when it fits; otherwise open with a
+  sharp relatable problem ("You watched the same tutorial… yours looks flat and
+  hers looks like glass"), a surprising fact, or a myth to bust. Use "you"
+  naturally without always staging the full hypnotic switch.
+- **When you do use the portrait, keep it sensory and specific** — make her long
+  to be the girl in it — but earn it, and don't over-explain "the clean girl" in
+  every intro.
 - **Give a real secret.** Not "drink water, use SPF". A genuine insight she
   hasn't heard — e.g. *the effortless morning is built the night before.* If the
   article reveals nothing, it fails.

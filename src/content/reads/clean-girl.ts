@@ -308,53 +308,71 @@ The clean-girl scent was never a bottle you hadn't found.
 
 It's freshness, held by moisturised skin and a soft touch — and now it smells like you.
 `,
-  "CG004": `# The Hairstyles Every Clean Girl Loves
+  "CG004": `# Why Her Sleek Bun Looks Expensive (and Yours Doesn't)
 
-*Her hair is the quiet centre of the whole look — sleek, healthy, off her face, cut like it was made for her. It looks like talent you don't have. It isn't. It's a few simple styles and one habit, and you're about to own all of them.*
+*You watched the same tutorial. You used the gel, smoothed it back — and somehow yours looks flat and a little greasy while hers looks like polished glass. Here's the thing nobody tells you: the difference isn't the style. It's everything that happens to your hair before you ever touch it.*
 
-Notice her, and you notice the hair.
+Let's start with the frustrating truth.
 
-Not elaborate, not freshly blow-dried into submission — just smooth, shiny, pulled back with one soft piece left loose, looking polished without looking laboured. It ties the whole clean-girl aesthetic together, and it seems to sit somewhere between good genes and a skill you were never taught.
+The slicked bun, the sleek pony, the claw-clip twist — these take about ninety seconds, and they're genuinely easy. So if easy styles are all it takes, why does hers look effortlessly expensive and yours looks like you're having a bad day?
 
-Here's the reassuring truth: it's neither. It's a tiny set of easy, repeatable styles, each built on the same idea — smooth it, secure it, leave a little softness — resting on hair kept healthy enough to shine. Stop admiring her hair from a distance. From here, that's your hair; you just need her three styles and her one night-time habit.
+Because the style was never the hard part. What separates "glossy and rich" from "flat and greasy" is the *hair itself* — its health, its shine, and one piece of timing almost no one gets right. Fix those, and the same ninety-second bun suddenly looks like it cost money. Here's what's actually going on.
 
-## You Aim for Smooth, Not Stiff
+## Shine Is a Science — Meet Your Cuticle
 
-Before the styles, the principle they all share — and you keep it in mind for every one.
+Start with why some hair catches the light and some doesn't, because everything follows from this.
 
-Clean-girl hair is *sleek* but never crunchy or severe. You're going for smoothed-down and shiny with a face-framing piece or two left loose to keep it soft. A little product to tame flyaways, a brush to smooth, a secure hold — that's the formula under everything below. Get "smooth but soft," and each of these takes you two minutes.
+Every strand is wrapped in tiny overlapping scales called the cuticle, like tiles on a roof. When those scales lie flat and smooth, the surface is even and light bounces off it — that's shine. When they're raised and rough, light scatters instead, and hair looks dull and frizzy. That's the whole game: "expensive" hair is simply hair with a flat, smooth cuticle.
 
-## Your Slicked-Back Bun
+Almost everything below is really one thing — keeping those scales lying flat.
 
-This is your signature. Nothing says clean-girl faster.
+## The Secret Timing: Sleek Loves Day-Two Hair
 
-You brush your hair back off your face with a little gel or cream, gather it low, and twist it into a neat bun — then pull two soft pieces loose at the front to frame your face, so it reads elegant, not austere. It works on second-day hair, it flatters every face shape, and it looks purposely polished in about ninety seconds.
+Here's the fact that changes everything, and it feels backwards: freshly washed hair is the *worst* hair for a sleek style.
 
-## Your Sleek Low Pony
+Just-washed hair is soft, fluffy, and slippery — it won't grip, it won't hold a shape, and it throws flyaways everywhere. A day of your scalp's natural oils gives hair weight, control, and a built-in sheen. This is why hairdressers quietly love second-day hair for updos, and why your sleekest bun will always come the day *after* a wash, not the morning of it.
 
-The bun's easy sister, and even faster.
+So the next time a slicked style falls flat, the problem probably wasn't your technique. It was that your hair was too clean.
 
-Same smoothed-back base, gathered into a low ponytail at the nape instead of a bun. For the expensive-looking finish, you wrap a small section of hair around the elastic to hide it. Clean, long, elongating — it's the style that makes a plain outfit look considered. That one hidden-elastic trick is the whole difference between "tied back" and "done."
+## The Wash Routine That Makes Sleek Possible
 
-## Your Claw-Clip Half-Up
+When you do wash, how you wash decides how your hair behaves for two days. Most of us were never taught this.
 
-For the days you want effortless with a little more movement.
+Shampoo your *scalp*, not your lengths — the oil and buildup live at the roots, and the lengths get cleaned enough by the runoff. Scrubbing shampoo down the lengths just dries them out and roughs up that cuticle. Then condition only from the mid-lengths to the ends, never the scalp, so your roots don't go limp. And finish with the step almost everyone skips: a cool-water rinse at the end, which literally helps the cuticle scales lie flat and lock in shine.
 
-You twist the top half of your hair back and secure it with a claw clip, letting the rest fall. It's the five-second style that looks intentional, keeps hair off your face, and works whether your hair is straight, wavy, or somewhere between. The right clip does all the work — you just place it.
+One more: wash *less* than you think. Over-washing strips the oils that give sleek styles their grip and gloss, leaving hair dry, frizzy, and flat — the opposite of the look.
 
-@read CG005 | The other half of the finish: the quiet gold jewellery every clean girl reaches for →
+## Treat Wet Hair Like Wet Silk
 
-## Why Your Hair Can Actually Do This
+A quick warning that protects everything above: hair is at its most fragile when it's wet.
 
-Here's the part that makes all of it possible: sleek styles show off shine, and shine comes from hair that isn't fried or frizzed.
+Water temporarily weakens the internal bonds that give hair its strength, so raking a brush through soaking hair is where a huge amount of breakage and frizz actually comes from — and broken, frizzy little hairs are exactly what ruin a sleek finish. Use a wide-tooth comb, start gently from the ends and work up, or simply wait until it's damp rather than dripping.
 
-So you protect it. Sleeping on silk reduces the friction that causes breakage and morning frizz, so you wake with hair already halfway to sleek. You go easy on heat, and you don't drag it back so tightly that it snaps at the hairline. Healthy hair is what turns these three simple styles from "fine" into "effortless" — and that health is a night-time habit, not a salon bill.
+## Now — the Styles (the Easy Ninety Seconds)
 
-@read CG001 | Hair is one piece of the picture — here's the full clean-girl morning routine →
+With healthy, day-two hair, the styles almost do themselves.
+
+For the **slicked bun**, smooth everything back with a little gel or cream, twist low, and leave two soft pieces loose at the front so it reads elegant, not severe. For the **low pony**, do the same smooth base, then wrap a small section of hair around the elastic to hide it — that single move is what makes it look expensive. For the **claw-clip half-up**, twist the top section back and clip, letting the rest fall. That's genuinely all there is to the styling.
+
+## One Warning: Don't Slick Tight Every Single Day
+
+Because this look is so easy to repeat, here's the honest caution most beauty content leaves out.
+
+Pulling your hair tight at the same spot every day creates constant tension on the hairline — and over months and years, that tension can genuinely thin the hair there (it's called traction alopecia, and it's common and preventable). So alternate: a tight sleek day, then a soft loose day. Your hairline is worth protecting.
+
+## Protect the Shine While You Sleep
+
+The last piece happens overnight, for free.
+
+Sleeping on silk instead of cotton reduces the friction that roughens the cuticle and snaps hair, so you wake with smoother, shinier, less-frizzy hair that's already halfway to sleek. It's the laziest good habit in hair care.
+
+@read CG001 | Sleek hair is one piece of the picture — here's the full clean-girl morning routine →
+
+*(A full deep-dive on the wash-and-care routine — the ingredients that actually help, and how to have your healthiest hair ever — is coming in its own guide.)*
 
 ## The Edit
 
-Sleek hair is mostly technique, not tools — and the viral expensive versions rarely earn their price. So here's the honest word on the few things that help, and where a near-free swap does the same job. Tap "the honest word" on any card.
+Sleek hair is mostly technique and healthy strands, not tools — and the viral expensive versions rarely earn their price. Here's the honest word on the few things that genuinely help, and where a near-free swap does the same job. Tap "the honest word" on any card.
 
 @product clawClip
 
@@ -366,113 +384,125 @@ Sleek hair is mostly technique, not tools — and the viral expensive versions r
 
 ## Bloom Reflection
 
-It's easy to assume the polished-hair girl has something you don't — good hair genes, a stylist on call, a skill with heat tools you were never shown.
+It's easy to blame yourself when the style that looks so simple on her looks so wrong on you — to assume you're missing some skill, or that your hair just "isn't like that."
 
-But her hair was never about talent or luck. It was a handful of simple styles — a low bun, a sleek pony, a claw-clip twist — all built on the same easy idea of smooth-but-soft, resting on hair kept healthy enough to shine. Not a gift. A small, repeatable formula. And now it's your formula too.
+But your hair can absolutely be like that. The girls with glossy, expensive-looking sleek styles aren't more talented; they've just stumbled onto what really matters — a flat, healthy cuticle, day-two grip, gentle handling, and a cool rinse most people never bother with. It was never the bun. It was always the hair underneath it.
 
-You don't need to learn to style hair. You need three easy looks you can do half-asleep, and the quiet habit of protecting your hair so it's always ready for them. That's a look you get to keep for life.
+Look after the strand, and the styles you envied become the easiest thing you do all week.
 
 ## Bloom Tips
 
-- Aim for smooth-but-soft, never stiff — always leave a face-framing piece loose.
-- Master three: the slicked low bun, the sleek low pony, and the claw-clip half-up.
-- Hide the elastic on a low pony — that one move is what makes it look expensive.
-- Use a little product for flyaways; sleek hair is really just smoothed, shiny hair.
-- Protect shine at night on silk, because every style depends on healthy, unfrizzed hair.
+- Shine is a flat cuticle: cool rinse, gentle handling, and a little oil keep it smooth and light-catching.
+- Style sleek looks on day-two hair — freshly washed hair is too soft and slippery to hold them.
+- Shampoo the scalp, condition only the ends, and wash less often than you think.
+- Never rake a brush through soaking-wet hair; it's at its weakest and that's where breakage begins.
+- Alternate tight and loose styles to protect your hairline from long-term tension thinning.
 
 ## Today's Bloom
 
-Today, try just the claw-clip half-up: twist the top section back, secure it, and pull one soft piece loose at the front.
+Next wash, try just two changes: shampoo only your scalp, and finish with ten seconds of cool water.
 
-Five seconds, no skill, instantly pulled-together. That's her whole formula in a single style — and now it's in your hands.
+Then style the *following* day, not the same one. That one shift — day-two hair and a flat cuticle — is the whole difference between flat and glossy.
 
 ## Bloom Reminder
 
-Clean-girl hair was never talent or good genes.
+Her sleek bun never looked expensive because of the bun.
 
-It's three simple styles on repeat — smooth, soft, and healthy enough to shine — and all three are yours.
+It's the healthy, day-two hair underneath — and that's something you can build strand by strand.
 `,
   "CG005": `# The Jewelry Every Clean Girl Owns
 
-*Notice her jewellery and you notice how little of it there is — a few quiet, dainty pieces, mostly gold, that she wears with everything and rarely takes off. It reads expensive precisely because it's restrained. And that small, timeless edit is about to be yours.*
+*A few quiet, dainty pieces — mostly gold, rarely taken off — that read expensive precisely because they're restrained. Here's the small, timeless edit actually worth building: the everyday pieces, the watch, the ring, and the one signature piece that's entirely you.*
 
-Look closely at the effortlessly-adorned girl and you'll see the restraint.
+The tell is always how little of it there is.
 
-No stacks of statement pieces, no of-the-moment trends that will date in a season. Just a few fine, understated things — a pair of hoops, a delicate chain, maybe a thread of sparkle at the wrist — that catch the light softly and go with absolutely everything. It looks expensive because it's quiet.
+No stacks of statement pieces, no of-the-moment trends that date in a season — just a handful of fine, understated things that catch the light softly and go with everything. It reads expensive because it's quiet, and because each piece was chosen to last, not to trend.
 
-And here's the freeing part: that look isn't a bigger jewellery box than yours. It's a *smaller*, smarter one — a tiny permanent collection chosen for quality over quantity, worn every day. So stop assuming she owns more than you. From here, you're the one with the quietly perfect edit; you just need to know which few pieces to build it from.
+The whole philosophy is one line: **fewer, finer, forever.** A few fine pieces you love, worn every day, quietly outclass a drawer full of cheap trend jewellery. Build this small edit once and you'll reach for it for years. Here's exactly what belongs in it — and a couple of things that'll make it last far longer.
 
-## Your Rule: Fewer, Finer, Forever
+## The Everyday Hoops
 
-Before the pieces, the philosophy that chooses them for you.
+If you own one thing, own these.
 
-You follow one rule: a few fine pieces you love, worn consistently, beat a drawer of cheap trend pieces every time. You're building a tiny permanent collection — delicate, timeless, mostly gold-toned for that warm, expensive glow — not chasing whatever's viral this month. You choose things you could wear every day for a decade. With that lens, your edit almost picks itself.
+A pair of small-to-medium gold hoops is the workhorse of the whole collection — polished enough to lift a plain outfit, subtle enough for anything from the gym to dinner. Huggie hoops that sit close to the lobe are especially foolproof. You put them in and forget them, and they finish every look you wear.
 
-## Your Everyday Hoops
+## The Dainty Necklace
 
-You start here. If you own one thing, it's these.
+The piece that draws the eye softly upward.
 
-A pair of small-to-medium gold hoops is the workhorse of your whole collection — polished enough to elevate a plain outfit, subtle enough to wear everywhere, from the gym to dinner. Huggie hoops that sit close to the lobe are especially foolproof. You put them in and forget them; they quietly finish every look.
+A fine gold chain — worn alone for minimalism, or layered with one slightly longer piece for that effortless stacked look — elevates a bare neckline instantly. Keep it delicate; this aesthetic is a whisper of shine, not a bold statement.
 
-## Your Dainty Necklace
+## Your Two Wrists — the Watch and the Signature
 
-Next, the piece that draws the eye softly upward.
+Here's a detail most jewellery guides miss: your two wrists do different jobs.
 
-You add a fine gold chain — worn alone for minimalism, or layered with one slightly longer piece for that effortless stacked look. It elevates a bare neckline instantly. You keep it delicate, because the clean-girl aesthetic is a whisper of shine, not a bold statement. One or two thin chains is the whole idea.
+On one wrist, a slim, minimalist **watch**. A watch counts as jewellery — it anchors the wrist and reads instantly "put together" — and a delicate watch layered with one **fine bracelet** beside it is the quietly-expensive look you keep noticing on other women. On the other wrist goes something different: one **unique, signature bracelet** that's entirely you — a bezel-set stone, a small charm, an engraved bangle. Not matchy, not a set. The one piece with personality, worn where you'll see it all day.
 
-## Your Whisper of Sparkle
+That contrast — a considered, classic wrist and a personal, signature one — is what makes a small collection feel like *yours* instead of a starter kit.
 
-For your wrist, one refined piece is plenty.
+## The Ring That Finishes Your Hands
 
-A slim tennis bracelet or a fine chain adds a thread of light without shouting — the quiet sparkle that reads as understated luxury rather than costume. Worn alone or against a delicate watch, it's the small detail that makes your hands look considered and finished. One refined wrist piece, worn often, does more than a stack ever could.
+Hands are on show all day, and one fine ring quietly finishes them.
 
-@read CG004 | Jewellery finishes the look; sleek hair frames it — the clean-girl hairstyles worth knowing →
+A slim gold band or a small signet reads considered without shouting, and — worn daily — becomes a signature people associate with you. Start with one you love; you can always build a soft stack over time. Keep it to skin-safe metal so everyday wear never turns your finger.
 
-## Why You Can Wear It Every Day
+## Wow: Put Your Jewellery On *Last*
 
-Here's the practical truth that makes the whole edit work: "wear them every day" only holds if they never hurt or turn your skin.
+Here's the habit that makes fine pieces last for years instead of dulling in months.
 
-So you choose skin-safe metals — vermeil, gold-filled, or titanium — over cheap plating that irritates sensitive ears or leaves a green mark. Quality metal is what lets you sleep in your studs and shower in your chain without a second thought. The clean-girl look depends on *never taking your jewellery off*, and the metal is what makes that possible — which is exactly why it's worth choosing well, even at the budget end.
+Perfume, hairspray, lotion and makeup are full of alcohols and oils that slowly tarnish gold and cloud stones. So jewellery should be the very *last* thing you put on — after you're dressed, scented, and done — and among the first things you take off. "Last on, first off." It's a tiny change that keeps your gold bright and your sparkle clear, and almost nobody does it.
+
+## Myth-Buster: You're Allowed to Mix Metals
+
+One more, because the old rule holds a lot of women back.
+
+"Never mix gold and silver" is outdated — mixing them now reads intentional and modern, not mismatched. (If you want a starting point: gold tends to flatter warmer skin undertones and silver cooler ones — glance at the veins on your inner wrist, greenish leans warm/gold, bluish leans cool/silver — but the real rule is simply to wear what you love.) Restraint matters far more than metal-matching.
+
+@read CG004 | Jewellery finishes the look; sleek, healthy hair frames it — the hair guide worth reading →
 
 ## The Edit
 
-Jewellery is the one category where knowing the *materials* saves you the most money — cheap can mean tarnish, and expensive can mean overpaying for a name. So here's the honest word on what's actually worth it, including the cheaper metals that genuinely last. Tap "the honest word" on any card.
+Jewellery is the one category where knowing the *materials* saves you the most money — cheap can mean tarnish, expensive can mean overpaying for a name. Here's the honest word on what's genuinely worth it, including the cheaper metals that actually last longer. Tap "the honest word" on any card.
 
 @product goldHoops
 
 @product daintyNecklace
 
-@product tennisBracelet
+@product watch
+
+@product ring
+
+@product signatureBracelet
 
 @product hypoStuds
 
 ## Bloom Reflection
 
-It's easy to think the effortlessly-adorned girl simply has more — a bigger collection, finer things, an eye for jewellery you don't possess.
+It's tempting to think the effortlessly-adorned woman simply owns more — a bigger box, finer things, an eye you don't have.
 
-But her secret was always *less*. A few delicate, timeless, mostly-gold pieces, chosen for quality and worn every single day, quietly outclass any overflowing box of trends. She wasn't wearing more than you. She was wearing the *right* few, consistently — and consistency is what made them feel like part of her. Now you know exactly which few, and why.
+But her secret was always *less*, chosen well: a few delicate pieces worn every day, a classic wrist and a signature one, one ring that feels like her, all kept bright by a habit as small as putting them on last. She isn't wearing more than you. She's wearing the right few, consistently — and knowing exactly why each one earns its place.
 
-You don't need a jewellery collection. You need a tiny, considered edit — hoops, a fine chain, a whisper at the wrist — that you love enough to never take off. Build it once, and it finishes every look you'll wear for years.
+You don't need a collection. You need a small, considered edit you love enough to never take off — and now you know precisely what goes in it, and how to make it last.
 
 ## Bloom Tips
 
 - Follow one rule: fewer, finer, forever — a few loved pieces beat a drawer of trends.
-- Start with gold hoops; they're the workhorse that elevates absolutely everything.
-- Keep necklaces delicate — one fine chain, or two softly layered, never a statement.
-- Add just one refined wrist piece; a whisper of sparkle reads richer than a stack.
-- Choose skin-safe metals (vermeil, gold-filled, titanium) so you can wear your edit every day.
+- Give each wrist a job: a classic watch (plus a fine bracelet) on one, a signature piece on the other.
+- Add one fine everyday ring; keep it skin-safe so daily wear never marks your finger.
+- Put jewellery on *last* — after perfume and lotion — to keep gold bright and stones clear.
+- Mix metals freely; restraint and skin-safe materials matter far more than matching.
 
 ## Today's Bloom
 
-Today, look at your jewellery and pull out the two or three fine, timeless pieces you genuinely love — the ones that go with everything.
+Today, build the smallest version: pick your everyday hoops, one fine chain, and the one bracelet that feels most *you*.
 
-Wear just those for a week and let the rest rest. You'll feel how much more *finished* less can look — and how much of her ease was really just restraint.
+Wear just those for a week — put them on last, after you're ready — and notice how a tiny, considered edit reads richer than any overflowing box.
 
 ## Bloom Reminder
 
-She doesn't own more jewellery. She owns the right few.
+She doesn't own more jewellery. She owns the right few — and looks after them.
 
-Build a small edit you never take off — and it quietly finishes everything you wear.
+Build a small edit you never take off, and it quietly finishes everything you wear.
 `,
 };
 export default bodies;
