@@ -55,6 +55,19 @@ const shortDay = (iso: string) => {
 };
 const MAX_POINTS = 40; // keep charts legible; the report table carries the full history
 
+// Soft, themed background photo per chart (heavily faded behind a white veil in
+// Panel). Lightweight webp so eight of them barely cost anything on load.
+const CHART_BG = {
+  cycle: "/images/chart-bg-cycle.webp",
+  weight: "/images/chart-bg-weight.webp",
+  workout: "/images/chart-bg-workout.webp",
+  yoga: "/images/chart-bg-yoga.webp",
+  mood: "/images/chart-bg-mood.webp",
+  symptoms: "/images/chart-bg-symptoms.webp",
+  sleep: "/images/chart-bg-sleep.webp",
+  nourish: "/images/chart-bg-nourish.webp",
+} as const;
+
 /* ---------- atoms ---------- */
 
 function StatTile({
@@ -88,12 +101,37 @@ function StatTile({
 
 // A slightly richer pink edge (border + soft pink glow) so cards read defined,
 // not washed-out pale — without a loud/poppy fill.
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+// `bg` layers a soft, themed photo far in the background (heavily faded behind a
+// white veil) so each chart feels its subject — a scale behind Weight, blossoms
+// behind Cycle — while the plot stays perfectly legible on top.
+function Panel({
+  children,
+  className = "",
+  bg,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  bg?: string;
+}) {
   return (
     <div
-      className={`rounded-[1.4rem] border border-hotpink/20 bg-white/85 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)] ${className}`}
+      className={`relative overflow-hidden rounded-[1.4rem] border border-hotpink/20 bg-white/85 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)] ${className}`}
     >
-      {children}
+      {bg && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <img
+            src={bg}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover opacity-[0.30]"
+          />
+          {/* white veil — heavier on the left/top where the axis labels & title
+              sit (so numbers stay crisp), softer to the bottom-right so the photo
+              reads clearly there, like the reference design */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/58 to-white/40" />
+        </div>
+      )}
+      <div className="relative">{children}</div>
     </div>
   );
 }
@@ -1255,7 +1293,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
 
           {/* Cycle by cycle + Weight — paired side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel>
+            <Panel bg={CHART_BG.cycle}>
               <PanelHead
                 Icon={HeartPulse}
                 title="Cycle by cycle"
@@ -1284,7 +1322,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               />
             </Panel>
 
-            <Panel>
+            <Panel bg={CHART_BG.weight}>
               <PanelHead Icon={Scale} title="Weight by day" hint={titleCase(h.weight.goal)} />
               {h.weight.currentKg != null && (
                 <div className="mb-2 flex items-baseline gap-2">
@@ -1315,7 +1353,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
 
           {/* Burn — workout + yoga, side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel>
+            <Panel bg={CHART_BG.workout}>
               <PanelHead Icon={Dumbbell} title="Workout burn" hint="per day" />
               <BarsChart
                 points={burnPoints(h.movement.workoutDaily)}
@@ -1325,7 +1363,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 interpretation={h.patterns.workout}
               />
             </Panel>
-            <Panel>
+            <Panel bg={CHART_BG.yoga}>
               <PanelHead Icon={Sparkles} title="Yoga burn" hint="per day" />
               <BarsChart
                 points={burnPoints(h.movement.yogaDaily)}
@@ -1339,7 +1377,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
 
           {/* Mood + Symptoms — how you feel, paired side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel>
+            <Panel bg={CHART_BG.mood}>
               <PanelHead
                 Icon={Smile}
                 title="Mood over time"
@@ -1355,7 +1393,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 interpretation={h.patterns.mood}
               />
             </Panel>
-            <Panel>
+            <Panel bg={CHART_BG.symptoms}>
               <PanelHead
                 Icon={Activity}
                 title="Symptoms by day"
@@ -1372,7 +1410,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
           </div>
 
           {/* Nourishment */}
-          <Panel>
+          <Panel bg={CHART_BG.nourish}>
             <PanelHead Icon={FileText} title="Nourishment" hint="meals logged" />
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-xl bg-blush/40 p-2.5 text-center">
@@ -1408,7 +1446,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
           {/* Sleep + Planned-vs-logged calories — how you rest & fuel, paired
               right under Nourishment on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel>
+            <Panel bg={CHART_BG.sleep}>
               <PanelHead
                 Icon={Moon}
                 title="Sleep over time"
@@ -1424,7 +1462,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 interpretation={h.patterns.sleep}
               />
             </Panel>
-            <Panel>
+            <Panel bg={CHART_BG.nourish}>
               <PanelHead
                 Icon={UtensilsCrossed}
                 title="Planned vs eaten"
