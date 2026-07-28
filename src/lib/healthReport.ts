@@ -359,11 +359,30 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
 
 /** Download the printable HTML report (open it → "Save as PDF" to share). */
 export function downloadHealthReport(h: HealthHistory, userName: string): void {
-  const html = buildReportHTML(h, userName);
-  triggerDownload(
-    new Blob([html], { type: "text/html;charset=utf-8" }),
-    `bloomzein-wellness-summary-${stamp()}.html`,
-  );
+  let html = "";
+  try {
+    html = buildReportHTML(h, userName);
+  } catch {
+    // Never fail silently on the primary CTA — a minimal fallback still opens.
+    html = `<!doctype html><meta charset="utf-8"><title>Bloomzein — Wellness Summary</title><body style="font-family:sans-serif;padding:24px;color:#831843">Your wellness summary couldn't be built from the current data. Please try again after logging a little more.</body>`;
+  }
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const filename = `bloomzein-wellness-summary-${stamp()}.html`;
+  // Primary: open the self-contained report in a new tab so she can read it and
+  // "Save as PDF" — this works where a forced file download is blocked (installed
+  // PWA, iOS Safari). Fall back to a real download if the tab is blocked.
+  try {
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) {
+      URL.revokeObjectURL(url);
+      triggerDownload(blob, filename);
+    } else {
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    }
+  } catch {
+    triggerDownload(blob, filename);
+  }
 }
 
 /* ---------- CSV export (raw real events, long format) ---------- */
