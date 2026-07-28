@@ -23,7 +23,16 @@ import { CoachTodayCompact } from "@/components/bloom/coach/CoachCards";
 import { BuildBloomWorld } from "@/components/bloom/today/BuildBloomWorld";
 import { PersonalizedBloomPreview } from "@/components/bloom/today/PersonalizedBloomPreview";
 import { HydrationDashboard } from "@/components/bloom/today/HydrationDashboard";
-import { SleepCard } from "@/components/bloom/today/SleepCard";
+import { SleepCard, SleepGlyph } from "@/components/bloom/today/SleepCard";
+import {
+  readSleepForDay,
+  setSleepQuality,
+  setSleepHours,
+  sleepQualityLabel,
+  SLEEP_OPTIONS,
+  SLEEP_EVENT,
+  type SleepEntry,
+} from "@/lib/sleepLog";
 import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumKit";
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday, readYogaFocusForDay, YOGA_FOCUS } from "@/lib/crossToolData";
@@ -409,8 +418,12 @@ export default function TodayPage() {
   const [doneReminderIds,     setDoneReminderIds]     = useState<string[]>([]);
   const [todayMeals,          setTodayMeals]          = useState<Record<string, string | null>>({});
 
+  const [sleepEntry,          setSleepEntry]          = useState<SleepEntry | null>(null);
+  const [sleepPickerOpen,     setSleepPickerOpen]     = useState(false);
+
   const moodTileRef = useRef<HTMLButtonElement>(null);
   const symptomTileRef = useRef<HTMLButtonElement>(null);
+  const sleepTileRef = useRef<HTMLButtonElement>(null);
 
   // Iron recipe for period/luteal nudge (used in plan section)
   const ironRecipe = useMemo(() =>
@@ -429,6 +442,7 @@ export default function TodayPage() {
     } catch { try { setMood(localStorage.getItem(KEYS.mood)); } catch {} }
 
     try { setSymptomsToday(readSymptomsForDay(todayISO())); } catch {}
+    try { setSleepEntry(readSleepForDay()); } catch {}
     setStreak(computeBloomStreak());
 
 
@@ -507,6 +521,15 @@ export default function TodayPage() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Keep the sleep chip + card in lockstep — both read the ONE sleep log, so a
+  // tap in either place refreshes the other (and a new day resets the chip).
+  useEffect(() => {
+    const resync = () => { try { setSleepEntry(readSleepForDay()); } catch {} };
+    window.addEventListener(SLEEP_EVENT, resync);
+    window.addEventListener("storage", resync);
+    return () => { window.removeEventListener(SLEEP_EVENT, resync); window.removeEventListener("storage", resync); };
   }, []);
 
   // Stay in sync with My Cycle: if the pill is toggled there, reflect it here.
@@ -992,6 +1015,14 @@ export default function TodayPage() {
         triggerRef={symptomTileRef}
       />
 
+      {/* SleepPopover — quick "how did you sleep" tap, mirrors the mood popover */}
+      <SleepPopover
+        open={sleepPickerOpen}
+        onClose={() => setSleepPickerOpen(false)}
+        entry={sleepEntry}
+        triggerRef={sleepTileRef}
+      />
+
       {/* FINALE — the closing "your world is built" moment: a Barbie spotlight on
           Today's Plan for ~2s, matching every tool's setup step. */}
       {finaleOpen && (
@@ -1017,11 +1048,12 @@ export default function TodayPage() {
         onClose={() => setActivePlan(null)}
       />
 
-      {/* ── QUICK STATS — Mood · Symptom · Water — slim frosted chips (icon +
-             text on one line) so they stay out of the way and let the hero
-             photo show. Energy is NOT here — it reads on the phase hero. ── */}
+      {/* ── QUICK STATS — Mood · Symptom · Water · Sleep — slim frosted chips
+             (icon + text on one line) so they stay out of the way and let the
+             hero photo show. Two-up on phone, one flowing row on sm+. Energy is
+             NOT here — it reads on the phase hero. ── */}
       <div className="relative z-[1] mt-8 sm:mt-3">
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
+        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
             className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="clay-blob animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.8} /></span>
@@ -1064,6 +1096,20 @@ export default function TodayPage() {
               </button>
             );
           })()}
+
+          {/* Sleep — quick "how did you sleep" tap, sitting right beside water
+              so last night's rest is logged in one touch (the fuller card lives
+              in the smart panel, mirroring water's chip + dashboard pairing). */}
+          <button ref={sleepTileRef} onClick={() => setSleepPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={sleepPickerOpen}
+            className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
+              {sleepEntry ? <SleepGlyph q={sleepEntry.q} className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-hotpink" /> : <Moon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} />}
+            </span>
+            <span className="min-w-0 flex-1 sm:flex-none">
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Sleep</span>
+              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{sleepEntry ? sleepQualityLabel(sleepEntry.q) : "Tap in"}</span>
+            </span>
+          </button>
         </div>
       </div>
 
@@ -1996,6 +2042,91 @@ function SymptomPopover({
       <button
         onClick={onClose}
         className="mt-2.5 w-full rounded-full bg-hotpink py-1.5 text-[11px] font-bold text-white active:scale-95 transition"
+      >
+        Done ✿
+      </button>
+    </div>,
+    document.body
+  );
+}
+
+const SLEEP_POPOVER_SIZE = { width: 268, height: 236 };
+
+function SleepPopover({
+  open, onClose, entry, triggerRef,
+}: {
+  open: boolean;
+  onClose: () => void;
+  entry: SleepEntry | null;
+  triggerRef: React.RefObject<HTMLElement | null>;
+}) {
+  const style = useSmartPopoverPosition(triggerRef, open, SLEEP_POPOVER_SIZE);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (triggerRef.current?.contains(target as Node)) return;
+      if (target.closest?.("[data-sleep-popover]")) return;
+      onClose();
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open, onClose, triggerRef]);
+
+  if (!open) return null;
+
+  const iso = todayISO();
+  const q = entry?.q ?? null;
+  const hours = entry?.h ?? null;
+  const bumpHours = (delta: number) => {
+    const base = hours ?? 7.5;
+    const next = Math.min(12, Math.max(3, Math.round((base + delta) * 2) / 2));
+    setSleepHours(iso, next);
+  };
+
+  return createPortal(
+    <div
+      data-sleep-popover
+      style={{ ...style, width: 252 }}
+      className="rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
+    >
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">HOW DID YOU SLEEP? ✿</p>
+      <div className="grid grid-cols-5 gap-1">
+        {SLEEP_OPTIONS.map((o) => {
+          const on = q === o.q;
+          return (
+            <button
+              key={o.q}
+              onClick={() => setSleepQuality(iso, o.q)}
+              aria-pressed={on}
+              className={["flex flex-col items-center gap-1 rounded-2xl border px-0.5 py-1.5 transition active:scale-95",
+                on ? "border-hotpink bg-hotpink/10 shadow-sm" : "border-petal/50 bg-white/60 hover:bg-blush/50"].join(" ")}
+            >
+              <SleepGlyph q={o.q} className="h-4 w-4 text-hotpink" />
+              <span className={`text-[8.5px] font-bold leading-none ${on ? "text-hotpink" : "text-rose/55"}`}>{o.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* optional hours — same pink stepper as the fuller card */}
+      <div className="mt-2 flex items-center justify-between rounded-2xl border border-petal/50 bg-blush/40 px-3 py-1.5">
+        <span className="text-[11px] font-bold text-rose/70">Hours slept</span>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => bumpHours(-0.5)} className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink active:scale-90" aria-label="Fewer hours">
+            <Minus className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+          <span className="min-w-[2.6rem] text-center text-[13px] font-black text-magenta tabular-nums">{(hours ?? 7.5).toFixed(1)}h</span>
+          <button onClick={() => bumpHours(0.5)} className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink active:scale-90" aria-label="More hours">
+            <Plus className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+
+      <button
+        onClick={onClose}
+        className="mt-2 w-full rounded-full bg-hotpink py-1.5 text-[11px] font-bold text-white active:scale-95 transition"
       >
         Done ✿
       </button>

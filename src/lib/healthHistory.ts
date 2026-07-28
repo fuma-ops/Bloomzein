@@ -25,6 +25,8 @@ import {
 import { readCycleSettings } from "@/components/bloom/cyclePhase";
 import { readSleepLog } from "@/lib/sleepLog";
 import { moodValence } from "@/lib/meDashboard";
+import { readMealPlan, portionFor, type PlanSlot } from "@/lib/crossToolData";
+import { RECIPES } from "@/components/bloom/recipes/data";
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -100,6 +102,18 @@ export interface NourishInsight {
   daysFullLogged: number; // days with ≥3 meals
 }
 
+export interface NutritionDay {
+  date: string;
+  planned: number; // kcal her plan proposed for that weekday
+  logged: number; // kcal of the meals she actually ticked eaten
+}
+export interface NutritionInsight {
+  series: NutritionDay[]; // chronological, one point per logged day
+  avgPlanned: number | null;
+  avgLogged: number | null;
+  adherencePct: number | null; // logged ÷ planned, averaged (how close she ate to plan)
+}
+
 export interface SleepDay {
   date: string;
   quality: number; // 1..5
@@ -140,6 +154,7 @@ export interface Patterns {
   mood: string;
   symptoms: string;
   sleep: string;
+  nutrition: string;
   cycle: string;
   combined: string;
 }
@@ -181,6 +196,7 @@ export interface HealthHistory {
   mood: { days: number; series: MoodPoint[]; byMood: Counted[]; avgScore: number | null };
   weight: WeightInsight;
   nourish: NourishInsight;
+  nutrition: NutritionInsight;
   sleep: SleepInsight;
   phaseSegments: PhaseSegment[]; // cycle-phase bands across the tracking window
   byPhase: PhaseStat[]; // how she does in each phase
@@ -419,6 +435,56 @@ function buildByPhase(
   });
 }
 
+/** Planned-vs-logged calories, day by day. "Planned" is what her weekly plan
+ *  proposes for that weekday (the same source the Diet energy ring uses);
+ *  "logged" is the calories of the meals she actually ticked eaten that date.
+ *  Reads THROUGH the shared meal plan + eaten log — forks neither. */
+function buildNutrition(eaten: Record<string, string[]>): NutritionInsight {
+  const plan = readMealPlan(); // weekday (Mon..Sun) → slot → recipeId
+  const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const SLOTS: PlanSlot[] = ["breakfast", "lunch", "dinner", "snack", "lunchbox"];
+  const kcalOf = (id: string | null | undefined) =>
+    id ? (RECIPES.find((r) => r.id === id)?.macros.calories ?? 0) : 0;
+  const weekdayOf = (iso: string) => WEEKDAYS[new Date(iso + "T00:00:00").getDay()];
+
+  // Full planned kcal for a weekday (every slot the plan fills, plated portions).
+  const plannedFor = (wd: string): number => {
+    const day = plan[wd];
+    if (!day) return 0;
+    return SLOTS.reduce((s, slot) => s + kcalOf(day[slot]) * portionFor(wd, slot), 0);
+  };
+
+  const series: NutritionDay[] = Object.entries(eaten)
+    .filter(([, slots]) => Array.isArray(slots) && slots.length)
+    .map(([date, slots]) => {
+      const wd = weekdayOf(date);
+      const day = plan[wd] ?? {};
+      const planned = Math.round(plannedFor(wd));
+      const logged = Math.round(
+        (slots as string[]).reduce(
+          (s, slot) =>
+            SLOTS.includes(slot as PlanSlot)
+              ? s +
+                kcalOf((day as Record<string, string | null>)[slot]) *
+                  portionFor(wd, slot as PlanSlot)
+              : s,
+          0,
+        ),
+      );
+      return { date, planned, logged };
+    })
+    .filter((d) => d.planned > 0) // only meaningful once a plan exists
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+
+  if (!series.length) {
+    return { series: [], avgPlanned: null, avgLogged: null, adherencePct: null };
+  }
+  const avgPlanned = Math.round(series.reduce((s, d) => s + d.planned, 0) / series.length);
+  const avgLogged = Math.round(series.reduce((s, d) => s + d.logged, 0) / series.length);
+  const adherencePct = avgPlanned > 0 ? Math.round((avgLogged / avgPlanned) * 100) : null;
+  return { series, avgPlanned, avgLogged, adherencePct };
+}
+
 /* ---------- pattern interpretations (one honest sentence per chart) ---------- */
 
 function pctChange(a: number, b: number): number {
@@ -435,6 +501,7 @@ function buildPatterns(h: {
   symptomsDaily: SymptomDay[];
   symptomsTop: Counted | null;
   sleep: SleepInsight;
+  nutrition: NutritionInsight;
   cycles: Cycle[];
   avgCycle: number | null;
   regularity: CycleInsight["regularity"];
@@ -493,6 +560,19 @@ function buildPatterns(h: {
     sleep = `Averaging ${h.sleep.avgQuality}/5${h.sleep.avgHours ? ` (~${h.sleep.avgHours}h)` : ""} across ${h.sleep.days} night${h.sleep.days === 1 ? "" : "s"}${worst ? ` · lightest in your ${worst.label.toLowerCase()} phase` : ""}.`;
   }
 
+  // Nutrition (planned vs logged)
+  let nutrition = "Plan your meals and tick what you eat — your plan-vs-plate shows here.";
+  if (h.nutrition.series.length && h.nutrition.adherencePct != null) {
+    const pct = h.nutrition.adherencePct;
+    const feel =
+      pct >= 95 && pct <= 108
+        ? "right on plan"
+        : pct < 95
+          ? "a little under your plan"
+          : "a touch over your plan";
+    nutrition = `Across ${h.nutrition.series.length} logged day${h.nutrition.series.length === 1 ? "" : "s"} you ate ~${h.nutrition.avgLogged} kcal against a planned ~${h.nutrition.avgPlanned} kcal — ${feel} (${pct}%).`;
+  }
+
   // Cycle
   let cycle = "Confirm two period starts and your cycle lengths will chart here.";
   const done = h.cycles.filter((c) => !c.ongoing);
@@ -525,7 +605,7 @@ function buildPatterns(h: {
     combined = `Across your cycle, ${bits.join(" and ")} — the coloured bands show each phase over time.`;
   }
 
-  return { weight, workout, yoga, mood, symptoms, sleep, cycle, combined };
+  return { weight, workout, yoga, mood, symptoms, sleep, nutrition, cycle, combined };
 }
 
 /* ---------- the composed history ---------- */
@@ -643,6 +723,9 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     daysFullLogged: eatenEntries.filter(([, slots]) => slots.length >= 3).length,
   };
 
+  // ── Planned vs logged calories (real plan × real eaten ticks) ──
+  const nutrition = buildNutrition(eaten);
+
   // ── Sleep (only what she logged) ──
   const sleepLog = readSleepLog();
   const sleepSeries: SleepDay[] = Object.entries(sleepLog)
@@ -709,6 +792,7 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     symptomsDaily,
     symptomsTop: symptomsByLabel[0] ?? null,
     sleep,
+    nutrition,
     cycles,
     avgCycle: cycle.avgLength,
     regularity: cycle.regularity,
@@ -730,6 +814,7 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     mood: { days: moodSeries.length, series: moodSeries, byMood: moodByMood, avgScore },
     weight,
     nourish,
+    nutrition,
     sleep,
     phaseSegments,
     byPhase,
