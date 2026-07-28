@@ -4,7 +4,7 @@ import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2,
   HeartHandshake, NotebookPen, Compass, Star, PiggyBank, Droplets } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
-import { FILTERS, ARTICLES, articleById, relatedArticles, type Filter, type Article } from "@/lib/readsData";
+import { FILTERS, ARTICLES, IMG, articleById, relatedArticles, type Filter, type Article } from "@/lib/readsData";
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
 import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
@@ -201,9 +201,9 @@ export default function ReadPage() {
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        {/* Frame toward the glowing library scene on the right; the soft pink
-            left keeps the title crisp on every screen. */}
-        <img src="/images/page-bg-read.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[72%_45%] sm:object-[62%_42%]" referrerPolicy="no-referrer" />
+        {/* On phones, frame toward the face (right side) so her smile shows
+            instead of being cropped to the mouth. */}
+        <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[66%_26%] sm:object-[55%_32%]" referrerPolicy="no-referrer" />
         {/* left wash ONLY — a soft radial spotlight behind the title, fading to
             fully transparent so the rest of the photo shows clean & vivid. */}
         <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
