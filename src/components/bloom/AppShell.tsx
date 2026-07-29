@@ -84,8 +84,8 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
       <div className="phase-wash pointer-events-none fixed inset-0 z-0" aria-hidden />
       <BloomBackground />
 
-      {/* ── Desktop / Tablet sidebar ─────────────────────────────────────────── */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col justify-between border-r border-[#EC4899]/12 bg-white/55 p-4 backdrop-blur-xl md:flex md:w-20 lg:w-60 shadow-[8px_0_40px_-24px_oklch(0.6_0.2_350/0.5)]">
+      {/* ── Desktop sidebar (lg+ only) — tablets & phones use the bottom nav ──── */}
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col justify-between border-r border-[#EC4899]/12 bg-white/55 p-4 backdrop-blur-xl lg:flex lg:w-60 shadow-[8px_0_40px_-24px_oklch(0.6_0.2_350/0.5)]">
         <div>
           <div className="mb-6 px-1">
             <div className="lg:block hidden"><BloomLogo /></div>
@@ -142,8 +142,8 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
         <p className="hidden px-2 font-script text-sm text-[#831843] lg:block">stay soft, bloom on ✿</p>
       </aside>
 
-      {/* ── Mobile Top App Bar ───────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#EC4899]/10 bg-white/85 px-4 py-2 backdrop-blur-xl md:hidden">
+      {/* ── Phone + Tablet Top App Bar (below lg) ────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#EC4899]/10 bg-white/85 px-4 py-2 backdrop-blur-xl lg:hidden">
         <div className="scale-90 origin-left">
           <BloomLogo />
         </div>
@@ -151,7 +151,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
       </header>
 
       {/* ── Main container ───────────────────────────────────────────────────── */}
-      <main className="min-h-screen pt-14 pb-28 md:pt-0 md:ml-20 md:pb-10 lg:ml-60 overflow-x-hidden relative">
+      <main className="min-h-screen pt-14 pb-28 lg:pt-0 lg:ml-60 lg:pb-10 overflow-x-hidden relative">
         <div className="mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6 min-w-0">
           {children}
         </div>
@@ -160,8 +160,9 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
       {/* App-wide Bloom+ paywall — opened from any gated action */}
       <PaywallHost />
 
-      {/* ── Mobile bottom nav — floating frosted pill, 5 primary tabs ─────────── */}
-      <nav className="fixed inset-x-3 bottom-3 z-50 flex items-center justify-around rounded-[1.75rem] border border-white/60 bg-white/85 px-1.5 py-1.5 shadow-[0_18px_45px_-18px_oklch(0.55_0.2_350/0.6)] backdrop-blur-xl md:hidden">
+      {/* ── Phone + Tablet bottom nav — a premium centred floating frosted pill,
+             5 primary tabs (Shop lives in the desktop sidebar) ────────────────── */}
+      <nav className="fixed bottom-3 left-1/2 z-50 flex w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 items-center justify-around rounded-[1.9rem] border border-white/70 bg-white/80 px-1.5 py-1.5 shadow-[0_22px_55px_-18px_oklch(0.55_0.2_350/0.65)] ring-1 ring-hotpink/10 backdrop-blur-2xl lg:hidden">
         {MOBILE_NAV.map((item, i) => {
           const active = isActive(item.to);
           const Icon = item.icon;
