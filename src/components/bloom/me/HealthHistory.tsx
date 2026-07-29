@@ -1119,7 +1119,11 @@ function makePreview() {
     d.setDate(d.getDate() - n);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
+  const lbl = (n: number) => shortDay(iso(n));
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const N = 56;
+
+  // Combined phase overlay (range + bands + a few metric lines)
   const range = { startISO: iso(N), endISO: iso(0) };
   const pat: [PhaseKey, number][] = [
     ["menstrual", 5],
@@ -1136,25 +1140,65 @@ function makePreview() {
       if (day <= 0) break;
     }
   }
-  const mood: { date: string; value: number }[] = [];
-  const burn: { date: string; value: number }[] = [];
-  const sleep: { date: string; value: number }[] = [];
+  const moodLine: { date: string; value: number }[] = [];
+  const burnLine: { date: string; value: number }[] = [];
+  const sleepLine: { date: string; value: number }[] = [];
   for (let n = N; n >= 0; n -= 2)
-    mood.push({ date: iso(n), value: 3 + 1.4 * Math.sin(((N - n) / N) * 6.5) });
+    moodLine.push({ date: iso(n), value: 3 + 1.4 * Math.sin(((N - n) / N) * 6.5) });
   for (let n = N; n >= 0; n -= 3)
-    burn.push({ date: iso(n), value: 130 + 70 * Math.abs(Math.sin((N - n) / 6)) });
+    burnLine.push({ date: iso(n), value: 130 + 70 * Math.abs(Math.sin((N - n) / 6)) });
   for (let n = N; n >= 0; n -= 2)
-    sleep.push({ date: iso(n), value: 3.2 + 1.3 * Math.sin(((N - n) / N) * 6.5 + 1) });
+    sleepLine.push({ date: iso(n), value: 3.2 + 1.3 * Math.sin(((N - n) / N) * 6.5 + 1) });
   const metrics: Metric[] = [
-    { key: "mood", label: "Mood", unit: "/5", color: METRIC_COLOR.mood, points: mood },
-    { key: "burn", label: "Burn", unit: "kcal", color: METRIC_COLOR.burn, points: burn },
-    { key: "sleep", label: "Sleep", unit: "/5", color: METRIC_COLOR.sleep, points: sleep },
+    { key: "mood", label: "Mood", unit: "/5", color: METRIC_COLOR.mood, points: moodLine },
+    { key: "burn", label: "Burn", unit: "kcal", color: METRIC_COLOR.burn, points: burnLine },
+    { key: "sleep", label: "Sleep", unit: "/5", color: METRIC_COLOR.sleep, points: sleepLine },
   ];
-  return { range, segments, metrics };
+
+  // Per-chart example points
+  const cycles: ChartPoint[] = [
+    { key: "c1", label: "Apr", value: 28, readout: "28 days" },
+    { key: "c2", label: "May", value: 29, readout: "29 days" },
+    { key: "c3", label: "Jun", value: 27, readout: "27 days" },
+    { key: "c4", label: "now", value: 12, faded: true, readout: "12 days (ongoing)" },
+  ];
+  const weight: ChartPoint[] = [];
+  const workout: ChartPoint[] = [];
+  const yoga: ChartPoint[] = [];
+  const mood: ChartPoint[] = [];
+  const symptoms: ChartPoint[] = [];
+  const sleep: ChartPoint[] = [];
+  const nutrition: { date: string; planned: number; logged: number }[] = [];
+  for (let n = N; n >= 0; n -= 4) {
+    const kg = +(66 - ((N - n) / N) * 4).toFixed(1);
+    weight.push({ key: `w${n}`, label: lbl(n), value: kg, readout: `${kg} kg` });
+  }
+  for (let n = N; n >= 0; n -= 3) {
+    const k = Math.round(200 + 90 * Math.abs(Math.sin((N - n) / 5)));
+    workout.push({ key: `wo${n}`, label: lbl(n), value: k, readout: `${k} kcal · 1 session` });
+    const p = 1720;
+    const g = Math.round(p * (0.72 + 0.28 * Math.abs(Math.sin((N - n) / 4))));
+    nutrition.push({ date: iso(n), planned: p, logged: g });
+    const sx = Math.sin((N - n) / 5) > 0.55 ? 2 : Math.sin((N - n) / 5) > 0.1 ? 1 : 0;
+    symptoms.push({ key: `s${n}`, label: lbl(n), value: sx, readout: sx ? "Cramps" : "—" });
+  }
+  for (let n = N; n >= 0; n -= 4) {
+    const k = Math.round(70 + 30 * Math.abs(Math.sin((N - n) / 4)));
+    yoga.push({ key: `y${n}`, label: lbl(n), value: k, readout: `${k} kcal · 1 flow` });
+  }
+  for (let n = N; n >= 0; n -= 2) {
+    const m = clamp(Math.round(3 + 1.5 * Math.sin(((N - n) / N) * 6.5)), 1, 5);
+    mood.push({ key: `m${n}`, label: lbl(n), value: m, readout: `${m}/5` });
+    const sl = clamp(Math.round(3.2 + 1.5 * Math.sin(((N - n) / N) * 6.5 + 1)), 1, 5);
+    sleep.push({ key: `sl${n}`, label: lbl(n), value: sl, readout: `${sl}/5` });
+  }
+
+  return { range, segments, metrics, cycles, weight, workout, yoga, mood, symptoms, sleep, nutrition };
 }
 
 function EmptyPreview() {
   const p = useMemo(makePreview, []);
+  const faded = "pointer-events-none select-none";
   return (
     <div className="space-y-4">
       <Panel>
@@ -1167,8 +1211,8 @@ function EmptyPreview() {
           {[
             ["Confirm your period days", "your cycle rhythm & regularity"],
             ["Finish workouts & yoga flows", "your calories burned, day by day"],
-            ["Log mood & symptoms", "how you feel across your cycle"],
-            ["Weigh in now and then", "your weight trend over time"],
+            ["Log mood, sleep & symptoms", "how you feel across your cycle"],
+            ["Weigh in & tick your meals", "weight trend + planned-vs-eaten"],
           ].map(([a, b]) => (
             <li
               key={a}
@@ -1181,29 +1225,89 @@ function EmptyPreview() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-[12px] text-rose/70 leading-snug">
-          In a month or two it looks like this 👇 — your real story, in your colours.
+        {/* Reassurance: the charts don't wait a month — they start from week one */}
+        <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-hotpink/10 border border-hotpink/25 px-3 py-2 text-[12px] leading-snug text-[#831843]">
+          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2.2} />
+          <span>
+            <b>Most of these start drawing in your very first week</b> — log a little each day and
+            you'll watch them fill in fast. Here's a preview of every chart your report will hold 👇
+          </span>
         </p>
       </Panel>
 
-      {/* Faded example — non-interactive, clearly labelled as a preview */}
+      {/* Faded example of the FULL report — every chart, clearly a preview */}
       <div className="relative">
         <span className="absolute right-3 top-3 z-10 rounded-full bg-white/90 border border-petal/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink shadow-sm">
           Example preview
         </span>
-        <Panel className="border-hotpink/20 bg-gradient-to-br from-blush/40 via-white/70 to-petal/25">
-          <PanelHead Icon={Sparkles} title="Your cycle × your body" hint="example" />
-          <div className="pointer-events-none opacity-60 select-none" aria-hidden>
-            <CycleOverlayChart range={p.range} segments={p.segments} metrics={p.metrics} />
+        <div className={`space-y-4 opacity-[0.72] ${faded}`} aria-hidden>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel bg={CHART_BG.cycle}>
+              <PanelHead Icon={HeartPulse} title="Cycle by cycle" hint="example" />
+              <BarsChart points={p.cycles} unit="days" color={BAR_C} valueLabels perBarLabels tapHint="" interpretation="Each cycle's length, side by side." />
+            </Panel>
+            <Panel bg={CHART_BG.weight}>
+              <PanelHead Icon={Scale} title="Weight by day" hint="example" />
+              <LineChart points={p.weight} unit="kg" color={LINE_C} tapHint="" interpretation="Your weight trend over time." />
+            </Panel>
           </div>
-          <p className="mt-2 text-center text-[12px] font-semibold text-hotpink">
-            Start logging on{" "}
-            <a href="/app/today" className="pointer-events-auto underline">
-              Today
-            </a>{" "}
-            and watch this become yours ✿
-          </p>
-        </Panel>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel bg={CHART_BG.workout}>
+              <PanelHead Icon={Dumbbell} title="Workout burn" hint="example" />
+              <BarsChart points={p.workout} unit="kcal" color={BAR_C} tapHint="" interpretation="Calories burned per workout." />
+            </Panel>
+            <Panel bg={CHART_BG.yoga}>
+              <PanelHead Icon={Sparkles} title="Yoga burn" hint="example" />
+              <BarsChart points={p.yoga} unit="kcal" color={BAR_C} tapHint="" interpretation="Calories burned per flow." />
+            </Panel>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel bg={CHART_BG.mood}>
+              <PanelHead Icon={Smile} title="Mood over time" hint="example" />
+              <LineChart points={p.mood} unit="score" color={LINE_C} yMin={1} yMax={5} tapHint="" interpretation="How your mood moves day to day." />
+            </Panel>
+            <Panel bg={CHART_BG.symptoms}>
+              <PanelHead Icon={Activity} title="Symptoms by day" hint="example" />
+              <BarsChart points={p.symptoms} unit="count" color={BAR_C} tapHint="" interpretation="Which symptoms show, and when." />
+            </Panel>
+          </div>
+          <Panel bg={CHART_BG.nourish}>
+            <PanelHead Icon={FileText} title="Nourishment" hint="example" />
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                ["24", "Days logged"],
+                ["61", "Meals"],
+                ["18", "Full days"],
+              ].map(([v, l]) => (
+                <div key={l} className="rounded-xl bg-blush/40 p-2.5 text-center">
+                  <p className="text-lg font-black text-magenta leading-none">{v}</p>
+                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">{l}</p>
+                </div>
+              ))}
+            </div>
+          </Panel>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel bg={CHART_BG.nourish}>
+              <PanelHead Icon={UtensilsCrossed} title="Planned vs eaten" hint="example" />
+              <PlannedVsLoggedChart series={p.nutrition} tapHint="" interpretation="What you planned vs what you ate." />
+            </Panel>
+            <Panel bg={CHART_BG.sleep}>
+              <PanelHead Icon={Moon} title="Sleep over time" hint="example" />
+              <LineChart points={p.sleep} unit="score" color={LINE_C} yMin={1} yMax={5} tapHint="" interpretation="How rested you feel each night." />
+            </Panel>
+          </div>
+          <Panel className="border-hotpink/25 bg-gradient-to-br from-blush/40 via-white/70 to-petal/25">
+            <PanelHead Icon={Sparkles} title="Your cycle × your body" hint="example" />
+            <CycleOverlayChart range={p.range} segments={p.segments} metrics={p.metrics} />
+          </Panel>
+        </div>
+        <p className="mt-3 text-center text-[12px] font-semibold text-hotpink">
+          Start logging on{" "}
+          <a href="/app/today" className="underline">
+            Today
+          </a>{" "}
+          and watch these become yours ✿
+        </p>
       </div>
     </div>
   );
