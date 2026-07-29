@@ -8,7 +8,8 @@ import {
   Baby, PawPrint, Package, BookHeart, Target, Briefcase, Banknote,
   Building2, LineChart as LineIcon, Calendar, Download, Filter, ArrowUpRight,
   ArrowDownRight, ArrowRight, CheckCircle2, CircleDot, Coins, Receipt,
-  Flag, FileBarChart, AlertTriangle, XCircle, Sprout, Flower2, Bell, type LucideIcon,
+  Flag, FileBarChart, AlertTriangle, XCircle, Sprout, Flower2, Bell,
+  Settings, RotateCcw, type LucideIcon,
 } from "lucide-react";
 import { KawaiiBackground } from "./KawaiiBackground";
 import { BudgetBubbles } from "./BudgetBubbles";
@@ -227,7 +228,7 @@ function daysUntil(dateISO: string): number {
 function Card({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div
-      className={`rounded-2xl bg-white/85 backdrop-blur p-2.5 sm:p-4 lg:p-5 shadow-[0_8px_24px_-12px_rgba(236,72,153,0.25)] border-[0.5px] border-pink-300/30 transition-all duration-200 ${className}`}
+      className={`rounded-2xl bg-white/55 backdrop-blur-xl p-2.5 sm:p-4 lg:p-5 shadow-[0_10px_30px_-16px_rgba(180,120,150,0.35)] border-[0.5px] border-white/50 ring-1 ring-pink-200/25 transition-all duration-200 ${className}`}
       style={style}
     >
       {children}
@@ -602,19 +603,19 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
             <stop offset="100%" stopColor="#FEF2F2" stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="shLine" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#F9A8D4" />
-            <stop offset="100%" stopColor="#EC4899" />
+            <stop offset="0%" stopColor="#E4B6CE" />
+            <stop offset="100%" stopColor="#CE85A8" />
           </linearGradient>
-          {/* Vertical gradient for the spend curve: light pink at 0, pink at budget, red above */}
+          {/* Vertical gradient for the spend curve: light rose at 0, muted rose at budget, soft rose above */}
           <linearGradient id="spendLineGrad" x1="0" y1={pT} x2="0" y2={baseline} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#EF4444" />
-            <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#EC4899" />
+            <stop offset="0%" stopColor="#E11D48" />
+            <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#CE85A8" />
             <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0.7" />
           </linearGradient>
-          {/* Danger gradient for over-budget zone: pink-poppy → red */}
+          {/* Danger gradient for over-budget zone: soft rose → muted rose */}
           <linearGradient id="dangerFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#EC4899" stopOpacity="0.15" />
+            <stop offset="0%" stopColor="#E11D48" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#CE85A8" stopOpacity="0.15" />
           </linearGradient>
           {/* Clip path: only the region ABOVE the budget line */}
           <clipPath id="aboveBudgetClip">
@@ -641,7 +642,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
 
         {/* today vertical marker */}
         <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
-          stroke="#EC4899" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
+          stroke="#CE85A8" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
 
         {/* gradient fill under curve */}
         {realPtsArr.length >= 2 && (
@@ -668,9 +669,9 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {/* today dot — prominent */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={todayX} cy={todayY} r="9" fill="#EC4899" opacity="0.12" />
-            <circle cx={todayX} cy={todayY} r="5.5" fill="#EC4899" opacity="0.25" />
-            <circle cx={todayX} cy={todayY} r="4" fill="#EC4899" stroke="white" strokeWidth="2" />
+            <circle cx={todayX} cy={todayY} r="9" fill="#CE85A8" opacity="0.12" />
+            <circle cx={todayX} cy={todayY} r="5.5" fill="#CE85A8" opacity="0.25" />
+            <circle cx={todayX} cy={todayY} r="4" fill="#CE85A8" stroke="white" strokeWidth="2" />
           </>
         )}
 
@@ -687,11 +688,11 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
               {!isToday && (
                 <>
                   <line x1={cx} y1={dotY - 3} x2={cx} y2={labelY + 3}
-                    stroke="#EF4444" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.4" />
-                  <circle cx={cx} cy={dotY} r="2.5" fill="#EF4444" opacity="0.7" />
+                    stroke="#E11D48" strokeWidth="0.75" strokeDasharray="2 2" opacity="0.4" />
+                  <circle cx={cx} cy={dotY} r="2.5" fill="#E11D48" opacity="0.7" />
                 </>
               )}
-              <text x={cx} y={labelY} fontSize="6.5" fill="#EF4444"
+              <text x={cx} y={labelY} fontSize="6.5" fill="#E11D48"
                 textAnchor="middle" fontWeight="700">{labelText}</text>
             </g>
           );
@@ -701,7 +702,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {realPtsArr.length > 0 && (
           <>
             <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.95" />
-            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#EF4444" : "#EC4899"}
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#E11D48" : "#CE85A8"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -921,7 +922,7 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   currency: CurrencyKey;
   income: number;
 }) {
-  const R = 50, ri = 40, cx = 56, cy = 56;
+  const R = 50, ri = 43, cx = 56, cy = 56;
   const hasExtra = totalOverage > 0;
   const total = totalPlanned + totalOverage;
   const isOverIncome = income > 0 && total > income;
@@ -943,8 +944,8 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   // Stay in the pink family even when over income — the ring shouldn't turn into
   // a fire alarm. The over-income state reads as a gentle rose note in the
   // centre label instead of flooding the whole chart red.
-  const plannedColor = "#EC4899";
-  const extraColor   = "#F9A8D4";
+  const plannedColor = "#CE85A8";
+  const extraColor   = "#E4B6CE";
 
   return (
     <div className="flex items-center justify-center gap-6 sm:gap-9">
@@ -955,14 +956,14 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
           </div>
-          <p className="text-xl font-bold tabular-nums leading-none text-[#EC4899]">{fmt(totalPlanned, currency)}</p>
+          <p className="text-xl font-bold tabular-nums leading-none text-[#C77CA0]">{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
           </div>
-          <p className="text-xl font-bold tabular-nums leading-none text-[#F472B6]">
+          <p className="text-xl font-bold tabular-nums leading-none text-[#D98BA6]">
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -991,7 +992,7 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
           </>
         ) : hasExtra ? (
           <>
-            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#EC4899" fontWeight="700">
+            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#C77CA0" fontWeight="700">
               +{fmt(totalOverage, currency)}
             </text>
             <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">over budget</text>
@@ -1038,6 +1039,7 @@ export function BudgetPlanner() {
   const [months, setMonths] = useLocal<Record<string, MonthPlan>>("bp:months", {});
   const [showExtraSpend, setShowExtraSpend] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Month navigation (global — affects all tabs)
   const _now = new Date();
@@ -1210,6 +1212,24 @@ export function BudgetPlanner() {
     setTab("Dashboard");
   }
 
+  // Wipe everything tied to the currently selected month: its logged spends,
+  // its bills' paid status, and any saved plan override for that month. Global
+  // setup (incomes, budgets, savings goals) is left untouched — those aren't
+  // "this month's" data, they carry across every month.
+  function resetSelectedMonth() {
+    const label = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+    if (!window.confirm(`Reset all data for ${label}?\n\nThis clears logged spends and bill payments for that month. Your incomes, budgets and savings goals stay.`)) return;
+    setTxns(prev => prev.filter(t => (t.date ?? "").slice(0, 7) !== monthKey));
+    setBills(prev => prev.map(b => (b.due ?? "").slice(0, 7) === monthKey ? { ...b, paid: false } : b));
+    setMonths(prev => {
+      if (!prev[monthKey]) return prev;
+      const next = { ...prev };
+      delete next[monthKey];
+      return next;
+    });
+    setShowSettings(false);
+  }
+
   return (
     <div data-bp>
       {guideVisible && (
@@ -1221,6 +1241,73 @@ export function BudgetPlanner() {
           }))}
           onDone={() => { setOnboarded(true); setShowGuide(false); }}
         />
+      )}
+
+      {/* Settings sheet — houses the small tool controls + reset */}
+      {showSettings && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-[#831843]/10 backdrop-blur-[2px]"
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white/80 backdrop-blur-2xl border border-white/60 ring-1 ring-pink-200/40 shadow-2xl shadow-pink-300/25 overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100/70">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose">Settings</p>
+                <h3 className="font-script text-2xl text-[#831843] leading-tight">Budget settings ✿</h3>
+              </div>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="grid h-8 w-8 place-items-center rounded-full bg-pink-50/70 text-rose/50 hover:text-rose hover:bg-pink-100 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-3 py-3 space-y-1">
+              {[
+                { icon: Coins, label: "Currency", hint: `${currency} — ${CURRENCIES[currency].symbol}`, onClick: () => { setShowSettings(false); setShowCurrencyPicker(true); } },
+                { icon: Sparkles, label: "Guided tour", hint: "Replay the walkthrough", onClick: () => { setShowSettings(false); setShowGuide(true); } },
+                { icon: Sprout, label: "Load demo data", hint: "Fill with a sample budget", onClick: () => { setShowSettings(false); seedDemoData(); } },
+              ].map((row) => (
+                <button
+                  key={row.label}
+                  onClick={row.onClick}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition active:scale-[0.98] hover:bg-pink-50/70 border border-transparent"
+                >
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-pink-100/70 text-rose shrink-0">
+                    <row.icon className="h-4 w-4" strokeWidth={1.8} />
+                  </span>
+                  <span className="flex-1 text-left min-w-0">
+                    <span className="block text-sm font-semibold text-[#831843]">{row.label}</span>
+                    <span className="block text-[11px] text-[#9D5C7E] truncate">{row.hint}</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-rose/40 shrink-0" />
+                </button>
+              ))}
+            </div>
+            {/* Reset — soft destructive, kept apart from the everyday controls */}
+            <div className="px-3 pb-3 pt-1 border-t border-pink-100/70">
+              <button
+                onClick={resetSelectedMonth}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition active:scale-[0.98] hover:bg-rose-50/80 border border-transparent"
+              >
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100/70 text-rose-500 shrink-0">
+                  <RotateCcw className="h-4 w-4" strokeWidth={1.8} />
+                </span>
+                <span className="flex-1 text-left min-w-0">
+                  <span className="block text-sm font-semibold text-rose-600">
+                    Reset {new Date(month.y, month.m, 1).toLocaleString("default", { month: "long" })}
+                  </span>
+                  <span className="block text-[11px] text-rose-400/90 truncate">Clear this month's spends & bill payments</span>
+                </span>
+                <ChevronRight className="h-4 w-4 text-rose-300 shrink-0" />
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
 
       {/* Custom pink currency picker modal */}
@@ -1293,7 +1380,7 @@ export function BudgetPlanner() {
         const hc = HERO_CONFIG[tab] ?? HERO_CONFIG.Dashboard;
         const isDash = tab === "Dashboard";
         return (
-          <div className="relative isolate min-h-[120px] sm:min-h-[150px] -mt-3 sm:-mt-5 lg:-mt-6 mb-2 animate-card-pop-in">
+          <div className="relative isolate min-h-[84px] sm:min-h-[104px] -mt-3 sm:-mt-5 lg:-mt-6 mb-1 animate-card-pop-in">
             {/* base pink wash */}
             <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[500px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
             {/* photo — dissolves toward the bottom into the page, like the Today hero */}
@@ -1309,38 +1396,29 @@ export function BudgetPlanner() {
               <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
             </div>
 
-            <div className="relative z-[1] pt-1 pb-1">
+            <div className="relative z-[1] pt-0.5 pb-1">
               <div className="max-w-[72%]">
                 <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-                  {hc.title}
+                  {isDash ? "My budget" : hc.title}
                 </h2>
-                <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight">{hc.sub}</p>
+                {!isDash && <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight">{hc.sub}</p>}
                 <CyclePhasePill className="mt-1.5" hideWhenUnset />
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
                   {isDash && (
                     <button onClick={() => setShowMonthPicker(true)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/60 px-3 py-1.5 text-xs text-rose font-semibold transition hover:bg-white/80 active:scale-95 shadow-sm shadow-rose/10">
                       <Calendar className="h-3 w-3" />
                       {viewMode === "present"
                         ? "This month"
                         : new Date(month.y, month.m, 1).toLocaleString("default", { month: "short", year: "numeric" })}
-                      {viewMode === "future" && <span className="text-[9px] font-bold text-hotpink/70">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
+                      {viewMode === "future" && <span className="text-[9px] font-bold text-rose/70">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
                       <ChevronDown className="h-3 w-3 opacity-70" />
                     </button>
                   )}
-                  <button onClick={() => setShowCurrencyPicker(true)}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
-                    <Coins className="h-3 w-3" />
-                    {CURRENCIES[currency].symbol}
-                  </button>
-                  <button onClick={() => setShowGuide(true)}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
-                    <Sparkles className="h-3 w-3" />
-                    Guide
-                  </button>
-                  <button onClick={seedDemoData}
-                    className="inline-flex items-center gap-1 rounded-full bg-white/55 backdrop-blur border border-petal/50 px-3 py-1.5 text-xs text-rose/70 font-semibold transition hover:bg-white hover:text-hotpink active:scale-95">
-                    ✦ Demo
+                  <button onClick={() => setShowSettings(true)} aria-label="Settings"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/60 px-3 py-1.5 text-xs text-rose font-semibold transition hover:bg-white/80 active:scale-95 shadow-sm shadow-rose/10">
+                    <Settings className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    Settings
                   </button>
                 </div>
               </div>
@@ -1658,11 +1736,11 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
     <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-fr gap-2 sm:gap-3 animate-fade-in">
       {cards.map((it) => (
         <Card key={it.label}
-          className={`relative h-full overflow-hidden hover:-translate-y-1 bg-gradient-to-br from-pink-50 to-rose-50 ${it.glow ? GLOW[it.glow] : ""}`}
+          className={`relative h-full overflow-hidden hover:-translate-y-1 ${it.glow ? GLOW[it.glow] : ""}`}
           style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
         >
           <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#EC4899] flex items-center gap-1.5"
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#B0567E] flex items-center gap-1.5"
             style={it.numGlow ? { textShadow: TEXT_GLOW[it.numGlow] } : undefined}>
             <StatNumber value={it.v} currency={currency} />
             {it.growthIcon && (
@@ -2239,7 +2317,7 @@ function DashboardTab(props: {
             <div className="mt-5 flex items-center gap-3">
               <div className="flex-1 h-2.5 rounded-full bg-pink-100 overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
               </div>
               <span className="shrink-0 text-xs font-bold tracking-widest text-[#9D5C7E]">{completed}/{steps.length} done</span>
             </div>
@@ -2417,12 +2495,12 @@ function DashboardTab(props: {
                           const plannedPct = total > 0 ? (planned / total) * 100 : 100;
                           const extraPct   = total > 0 ? (actual  / total) * 100 : 0;
                           return (
-                            <div className="flex h-3.5 rounded-full overflow-hidden">
+                            <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/50">
                               <div className="h-full transition-all duration-700"
-                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
                               {actual > 0 && (
                                 <div className="h-full transition-all duration-700"
-                                  style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F43F5E)" }} />
+                                  style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#EEC6D6,#D98BA6)" }} />
                               )}
                             </div>
                           );
@@ -2456,8 +2534,8 @@ function DashboardTab(props: {
                               </div>
                               <span className="text-[11px] font-semibold text-[#9D5C7E] tabular-nums shrink-0 ml-2">{fmt(bl.amount, currency)}</span>
                             </div>
-                            <div className="flex h-3.5 rounded-full overflow-hidden">
-                              <div className="h-full w-full transition-all duration-700" style={{ background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                            <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/50">
+                              <div className="h-full w-full transition-all duration-700" style={{ background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
                             </div>
                           </div>
                         ))}
@@ -2483,9 +2561,9 @@ function DashboardTab(props: {
                                 </div>
                                 <span className="text-[11px] font-bold text-[#EC4899] tabular-nums shrink-0 ml-2">{fmt(amt, currency)}</span>
                               </div>
-                              <div className="relative h-3.5 rounded-full overflow-hidden bg-pink-200/60">
+                              <div className="relative h-1.5 rounded-full overflow-hidden bg-pink-200/40">
                                 <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F9A8D4,#EC4899)" }} />
+                                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#EEC0D2,#CE85A8)" }} />
                               </div>
                             </div>
                           );
@@ -2519,9 +2597,9 @@ function DashboardTab(props: {
                           <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
                         </div>
                       </div>
-                      <div className="relative h-3.5 rounded-full overflow-hidden bg-violet-100/50">
+                      <div className="relative h-1.5 rounded-full overflow-hidden bg-violet-100/50">
                         <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#8B5CF6)" }} />
+                          style={{ width: `${pct}%`, background: "linear-gradient(90deg,#CBB6E4,#A98BD9)" }} />
                       </div>
                     </div>
                   );
@@ -2575,7 +2653,7 @@ function DashboardTab(props: {
                       ? <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
                       : <>
                           <div className="h-full transition-all duration-700"
-                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
                           {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
                         </>}
                   </div>
@@ -2634,7 +2712,7 @@ function DashboardTab(props: {
                     cursor: isCenter ? "default" : "pointer",
                   }}>
                   <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
+                    style={{ background: "linear-gradient(135deg, rgba(150,58,102,0.86) 0%, rgba(176,86,126,0.72) 45%, rgba(150,110,168,0.66) 100%), url(/images/diary-bg-floral.webp)", backgroundSize: "cover", backgroundPosition: "center" }}>
                     <div className="flex items-center justify-between gap-3 p-4">
                       <div className="flex-1 min-w-0">
                         <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
@@ -2642,7 +2720,7 @@ function DashboardTab(props: {
                         </p>
                         <h3 className="font-script text-xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
                         <p className="text-xs text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
-                        <div className="mt-2 h-2 rounded-full bg-white/30 overflow-hidden max-w-[160px]">
+                        <div className="mt-2 h-1 rounded-full bg-white/25 overflow-hidden max-w-[160px]">
                           <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
                         </div>
                         <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}% completed</p>
@@ -2688,7 +2766,7 @@ function DashboardTab(props: {
                       </p>
                       <h3 className="font-script text-2xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
                       <p className="text-sm text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
-                      <div className="mt-2.5 h-2 rounded-full bg-white/30 overflow-hidden">
+                      <div className="mt-2.5 h-1 rounded-full bg-white/25 overflow-hidden">
                         <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
                       </div>
                       <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(pct)}% completed</p>
@@ -2701,7 +2779,7 @@ function DashboardTab(props: {
           </div>
         </>
       ) : (
-        <Card className="border-dashed border-pink-300/50 text-center py-5 bg-gradient-to-br from-pink-50 to-rose-50">
+        <Card className="border-dashed border-pink-300/50 text-center py-5">
           <p className="font-script text-2xl text-[#831843]">Add your first dream goal ✿</p>
           <p className="text-xs text-[#9D5C7E] mt-1">A vacation, an emergency fund — dream big</p>
           <PrimaryBtn onClick={() => setTab("Savings Goals")} className="mt-3">
@@ -2714,8 +2792,8 @@ function DashboardTab(props: {
       {/* ⑥ THIS MONTH'S STORY + INCOME VS EXPENSES */}
       {(() => {
         const storyOver = totalIncome > 0 && effectiveSpend > totalIncome;
-        const expenseBarColor = storyOver ? "#EF4444" : "#F9A8D4";
-        const ringTone = storyOver ? "#EF4444" : "#EC4899";
+        const expenseBarColor = storyOver ? "#E11D48" : "#E4B6CE";
+        const ringTone = storyOver ? "#E11D48" : "#CE85A8";
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
@@ -2740,7 +2818,7 @@ function DashboardTab(props: {
               <div className="flex items-center justify-between mb-3">
                 <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>Income vs Expenses</h3>
                 <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
-                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#EC4899] inline-block" /> Income</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full inline-block" style={{ background: "#CE85A8" }} /> Income</span>
                   <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full inline-block transition-colors duration-500" style={{ background: expenseBarColor }} /> Expenses
                   </span>
@@ -2755,7 +2833,7 @@ function DashboardTab(props: {
                       const val = type === "income" ? totalIncome : effectiveSpend;
                       const maxVal = Math.max(totalIncome, effectiveSpend, 1);
                       const barPx = Math.max(4, Math.round((val / maxVal) * 80));
-                      const barColor = type === "income" ? "#EC4899" : expenseBarColor;
+                      const barColor = type === "income" ? "#CE85A8" : expenseBarColor;
                       return (
                         <div key={type} className="flex-1 flex flex-col items-center gap-1">
                           <span className={`text-[10px] font-bold ${storyOver && type === "expenses" ? "text-red-700" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
@@ -2960,7 +3038,7 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
       )}
 
       {total > 0 && (
-        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
+        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
             <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">NICE WORK</p>
             <p className="font-script text-2xl text-[#831843] leading-tight">Income added — let's plan your budget.</p>
@@ -3044,7 +3122,7 @@ function BudgetSetupTab(props: {
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
 
       {mealEstimate && (
-        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
+        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
             <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">FROM YOUR MEAL PLAN</p>
             <p className="font-script text-2xl text-[#831843] leading-tight">
@@ -3135,7 +3213,7 @@ function BudgetSetupTab(props: {
       </Card>
 
       {hasAmounts && (
-        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
+        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
             <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">BUDGET SET</p>
             <p className="font-script text-2xl text-[#831843] leading-tight">Now set a sweet little savings goal.</p>
@@ -3242,7 +3320,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
                 <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
                 <div className="mt-3 relative h-3 rounded-full bg-pink-100 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%`, background: "linear-gradient(90deg,#C084FC,#EC4899)" }} />
+                    style={{ width: `${pct}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
                   <span className="absolute inset-0 text-center text-[10px] font-bold text-[#831843] leading-3 pt-0.5">{Math.round(pct)}%</span>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
@@ -3271,7 +3349,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
       )}
 
       {goals.length > 0 && (
-        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-br from-pink-50 to-rose-50 border-pink-300/40">
+        <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
             <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">DREAM LOCKED IN</p>
             <p className="font-script text-2xl text-[#831843] leading-tight">Final step — track your spending.</p>
@@ -3643,7 +3721,7 @@ function ReportsTab(props: {
       </Card>
 
       {/* All-set → send them to the Dashboard to see the whole setup come together */}
-      <Card className="text-center bg-gradient-to-br from-pink-50 to-rose-50">
+      <Card className="text-center">
         <p className="font-script text-2xl text-[#831843] leading-tight">That's your whole plan ✿</p>
         <p className="mt-1 text-sm text-[#9D5C7E] max-w-md mx-auto">See it all bloom together — income, budget, goals & spending — on your dashboard.</p>
         <div className="mt-3 flex justify-center">
