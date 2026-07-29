@@ -200,10 +200,12 @@ const LABEL = "oklch(0.5 0.1 350 / 0.55)";
 
 // ONE soft rose for every bar chart and ONE muted berry for every line — so the
 // page reads as a calm, single system instead of many strong colours competing.
-const BAR_TOP = "#d24d86"; // richer pink at the very top edge (soft, not poppy)
-const BAR_C = "#e685b0"; // soft rose body of the bar
-const LINE_C = "#c85d95"; // muted berry (lines + dots)
-const SEL_C = "#a23c72"; // deeper berry for the selected point/bar
+// The SAME cheerful pink as the app's buttons (hotpink #EC4899 → #DB2777),
+// not a muted berry — so the charts feel bright and on-brand.
+const BAR_TOP = "#DB2777"; // deeper top edge (matches the button gradient's dark stop)
+const BAR_C = "#EC4899"; // brand hotpink — the bar body
+const LINE_C = "#EC4899"; // brand hotpink (lines + dots)
+const SEL_C = "#BE185D"; // a clean deeper pink for the selected point/bar
 
 function niceMax(v: number): number {
   if (v <= 0) return 1;
