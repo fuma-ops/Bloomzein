@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, Wallet,
-  ChevronRight, Droplet,
+  ChevronRight,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
   Check, Inbox,
 } from "lucide-react";
@@ -14,34 +14,13 @@ import { DiscoverBloomPlus, PlanToggle, PlusLock } from "@/components/bloom/prem
 import { HealthHistoryPanel } from "@/components/bloom/me/HealthHistory";
 import { PhaseThemeControl } from "@/components/bloom/premium/PhaseThemeControl";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
-import { phaseForDay, readCycleSettings, hasCycleSettings, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { computeHealthHistory } from "@/lib/healthHistory";
+import { hasCycleSettings } from "@/components/bloom/cyclePhase";
+import { computeHealthHistory, type HealthHistory } from "@/lib/healthHistory";
 import { useAuth } from "@/contexts/AuthContext";
 import { RECIPES } from "@/components/bloom/recipes/data";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
-
-// A phase-derived "vibe" so the identity chip reads from her real cycle, not a
-// static label — Rising when energy climbs, Cozy in the luteal wind-down, etc.
-const PHASE_VIBE: Record<Exclude<CyclePhase, "any">, string> = {
-  period: "Resting Bloom",
-  follicular: "Rising Bloom",
-  fertile: "Radiant Bloom",
-  ovulation: "Radiant Bloom",
-  luteal: "Cozy Bloom",
-};
-
-/** Days until her next predicted period start (null if no cycle set up yet). */
-function daysToNextPeriod(): number | null {
-  if (!hasCycleSettings()) return null;
-  const s = readCycleSettings();
-  const ms = 86_400_000;
-  const diff = Math.floor((Date.now() - s.lastPeriodStart.getTime()) / ms);
-  const cyclesPassed = Math.floor(diff / s.cycleLength) + 1;
-  const next = s.lastPeriodStart.getTime() + cyclesPassed * s.cycleLength * ms;
-  return Math.max(0, Math.ceil((next - Date.now()) / ms));
-}
 
 // Time-of-day hero photo — the same blended scene as the Today page, so Me
 // opens on the same immersive surface.
@@ -51,27 +30,36 @@ function heroBgForNow(): string {
     : "/images/page-bg-today-evening.webp";
 }
 
+/**
+ * One honest "Overall wellness" score (0–100) from everything she's really
+ * logged — mood, sleep, how much she moves each week, and cycle regularity.
+ * Averaged so no single dimension dominates; mapped to a friendly tier.
+ */
+function wellnessScore(h: HealthHistory): { score: number; label: string; cls: string } {
+  const parts: number[] = [];
+  if (h.mood.avgScore != null) parts.push((h.mood.avgScore / 5) * 100);
+  if (h.sleep.avgQuality != null) parts.push((h.sleep.avgQuality / 5) * 100);
+  const wk = h.movement.weekly;
+  const wkAvg = wk.length ? wk.reduce((s, w) => s + w.sessions, 0) / wk.length : 0;
+  parts.push(Math.min(100, (wkAvg / 4) * 100)); // ~4 sessions/week reads as full
+  parts.push(h.cycle.regularity === "regular" ? 100 : h.cycle.regularity === "learning" ? 72 : 60);
+  const score = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : 0;
+  const t =
+    score >= 85
+      ? { label: "Excellent", cls: "bg-emerald-100 text-emerald-700" }
+      : score >= 70
+        ? { label: "Great", cls: "bg-emerald-100 text-emerald-700" }
+        : score >= 55
+          ? { label: "Good", cls: "bg-amber-100 text-amber-700" }
+          : score >= 40
+            ? { label: "Fair", cls: "bg-amber-100 text-amber-700" }
+            : { label: "Building", cls: "bg-blush text-hotpink" };
+  return { score, ...t };
+}
+
 // ── Real data helpers ─────────────────────────────────────────────────────────
 function readJSON<T>(key: string, fb: T): T {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fb; } catch { return fb; }
-}
-
-interface MeStats { level: number; pct: number }
-
-/** Level & progress grow with total real activity — honest, not decorative. */
-function computeMeStats(): MeStats {
-  const moodLog = readJSON<Record<string, string>>("bloom:mood-log-v2", {});
-  const workoutHist = readJSON<unknown[]>("bloom:workout-history", []);
-  const diary = readJSON<unknown[]>("bloom:diary", []);
-  const yoga = readJSON<{ count: number }>("bloom:yoga-streak", { count: 0 });
-
-  const total =
-    Object.keys(moodLog).length +
-    (Array.isArray(workoutHist) ? workoutHist.length : 0) +
-    (Array.isArray(diary) ? diary.length : 0) +
-    (yoga?.count || 0);
-
-  return { level: Math.floor(total / 12) + 1, pct: Math.round(((total % 12) / 12) * 100) };
 }
 
 function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
@@ -165,27 +153,19 @@ export default function MePage() {
     window.location.href = "/app/today";
   }
 
-  const [stats, setStats] = useState<MeStats | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [favs, setFavs] = useState<{ items: FavItem[]; isReal: boolean }>({ items: CURATED_READS, isReal: false });
   useEffect(() => {
     stampTodayWater(); // keep the hydration history current for the dashboard
-    setStats(computeMeStats());
     setFavs(readFavorites());
   }, []);
 
-  // Real hero indicators — same blended Today background, honest cycle read-outs.
+  // Real hero read-outs — same blended Today background; an honest phase pill and
+  // an "Overall wellness" score composed from everything she's logged.
   const heroBg = useMemo(heroBgForNow, []);
-  const nextPeriod = useMemo(daysToNextPeriod, []);
   const cycleReady = useMemo(hasCycleSettings, []);
-  const phaseVibe = useMemo(() => {
-    try {
-      return cycleReady ? PHASE_VIBE[phaseForDay(new Date(), readCycleSettings())] : "Soft Bloom";
-    } catch {
-      return "Soft Bloom";
-    }
-  }, [cycleReady]);
   const hist = useMemo(() => computeHealthHistory(8), []);
+  const wellness = useMemo(() => wellnessScore(hist), [hist]);
 
   const memberSince = (() => {
     const iso = profile?.created_at;
@@ -197,39 +177,28 @@ export default function MePage() {
     }
   })();
 
-  // The hero read-outs (vibe · phase · period · level) — rendered once here and
-  // placed differently per breakpoint: beside the flower on desktop, stacked
-  // full-width under the flower+greeting row on phone (so there's no dead corner).
+  // The hero read-outs — rendered once, placed beside the flower on desktop and
+  // stacked full-width under the flower+greeting row on phone.
   const heroDetail = (
     <>
-      <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60 shadow-sm">
-        <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2} /> {phaseVibe}
-      </span>
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-        <CyclePhasePill />
-        {nextPeriod != null && (
-          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-white/85 backdrop-blur text-hotpink border border-petal/60 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm">
-            <Droplet className="h-3 w-3" strokeWidth={2.2} />
-            {nextPeriod === 0 ? "Period due today" : `Period in ${nextPeriod} day${nextPeriod === 1 ? "" : "s"}`}
-          </span>
-        )}
-      </div>
+      {cycleReady && <CyclePhasePill />}
       {memberSince && (
-        <p className="mt-1.5 inline-block rounded-full bg-white/70 px-2 py-0.5 text-[10px] sm:text-xs text-rose/80">
+        <p className="mt-1.5 inline-block rounded-full bg-white/75 px-2 py-0.5 text-[10px] sm:text-xs text-rose/80">
           Blooming since {memberSince} ✿
         </p>
       )}
-      <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/75 backdrop-blur border border-petal/50 px-3 py-2 shadow-sm shadow-hotpink/10">
-        <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-hotpink">
-          <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" strokeWidth={2.2} /> Bloom level {stats?.level ?? 1}</span>
-          <span className="tabular-nums">{stats?.pct ?? 0}%</span>
+      {/* Overall wellness — one honest score in place of the old level bar */}
+      <div className="mt-2 sm:mt-3 flex max-w-xs items-center justify-between gap-3 rounded-2xl bg-white/85 backdrop-blur border border-petal/50 px-3.5 py-2.5 shadow-sm shadow-hotpink/10">
+        <div className="min-w-0">
+          <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-rose/60">Overall wellness</p>
+          <p className="mt-0.5 flex items-baseline gap-1 leading-none">
+            <span className="text-2xl sm:text-3xl font-black text-magenta tabular-nums">{wellness.score}</span>
+            <span className="text-[11px] font-bold text-rose/45">/100</span>
+          </p>
         </div>
-        <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/80 border border-petal/60 overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${stats?.pct ?? 0}%` }} />
-        </div>
-        <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70 leading-tight">
-          {100 - (stats?.pct ?? 0)}% to level {(stats?.level ?? 1) + 1} · grows as you log mood, movement &amp; journals ✿
-        </p>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${wellness.cls}`}>
+          {wellness.label}
+        </span>
       </div>
     </>
   );
@@ -290,7 +259,10 @@ export default function MePage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="font-script text-2xl sm:text-5xl text-hotpink leading-none flex items-center gap-1.5 drop-shadow-[0_1px_8px_oklch(1_0_0/0.85)]">
+            <h1
+              className="font-script text-2xl sm:text-5xl text-hotpink leading-none flex items-center gap-1.5"
+              style={{ textShadow: "0 1px 2px rgba(255,255,255,0.98), 0 2px 10px rgba(255,255,255,0.9), 0 0 22px rgba(255,255,255,0.75)" }}
+            >
               Hey, {displayName}! <Sparkles className="h-4 w-4 sm:h-7 sm:w-7" strokeWidth={1.8} />
             </h1>
             {/* Desktop: read-outs sit beside the flower */}
