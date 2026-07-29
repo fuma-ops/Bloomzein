@@ -1234,38 +1234,36 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
           summary cards stay perfectly readable over the hero photo behind them.
           The export actions are compact and sit beside the title. */}
       <div className="rounded-[1.4rem] border border-hotpink/20 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)]">
-        <div className="flex items-start justify-between gap-2.5">
-          <div className="min-w-0">
-            <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">
-              Your history
-            </h2>
-            <p className="mt-1 text-[12.5px] text-rose/70 leading-snug">
-              Everything you've really logged, from day one — tap any chart for the details, then
-              download it all as a report for your doctor.
-            </p>
-            <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose/55">
-              <CalendarDays className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
-              {h.trackingSince
-                ? `Tracking since ${prettyDate(h.trackingSince)} · ${h.daysTracked} day${h.daysTracked === 1 ? "" : "s"}`
-                : "No data logged yet"}
-            </p>
-          </div>
-          {/* Compact export actions, stacked beside the title */}
-          <div className="flex shrink-0 flex-col gap-2">
+        {/* Title + compact export actions on ONE line */}
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="min-w-0 font-script text-3xl sm:text-4xl text-hotpink leading-none">
+            Your history
+          </h2>
+          <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={() => downloadHealthReport(h, userName)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-magenta px-3 py-2 text-[11.5px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 animate-selected-glow"
+              className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-magenta px-2.5 py-1.5 text-[11px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 animate-selected-glow"
             >
               <Download className="h-3.5 w-3.5" strokeWidth={2.2} /> Report
             </button>
             <button
               onClick={() => downloadHealthCSV(h)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-hotpink/40 bg-white px-3 py-2 text-[11.5px] font-bold text-hotpink transition hover:bg-blush/50 active:scale-95"
+              className="inline-flex items-center gap-1 rounded-full border border-hotpink/40 bg-white px-2.5 py-1.5 text-[11px] font-bold text-hotpink transition hover:bg-blush/50 active:scale-95"
             >
               <FileText className="h-3.5 w-3.5" strokeWidth={2} /> CSV
             </button>
           </div>
         </div>
+        <p className="mt-1.5 text-[12.5px] text-rose/70 leading-snug">
+          Everything you've really logged, from day one — tap any chart for the details, then
+          download it all as a report for your doctor.
+        </p>
+        <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose/55">
+          <CalendarDays className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
+          {h.trackingSince
+            ? `Tracking since ${prettyDate(h.trackingSince)} · ${h.daysTracked} day${h.daysTracked === 1 ? "" : "s"}`
+            : "No data logged yet"}
+        </p>
 
         {/* Summary tiles — inside the same white section as the header text */}
         {hasAnything && (
