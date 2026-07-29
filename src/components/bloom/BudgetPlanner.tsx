@@ -201,7 +201,9 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 function fmt(n: number, c: CurrencyKey) {
   const sym = CURRENCIES[c].symbol;
   const rounded = Math.round(n * 100) / 100;
-  return `${sym} ${rounded.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  // Always render thousands separators (en-US) so every figure reads the same
+  // way across the app — "€ 41,342", never "€ 41342".
+  return `${sym} ${rounded.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function toMonthly(i: Income): number {
@@ -938,8 +940,11 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
     return `M ${f(ix1)} ${f(iy1)} L ${f(x1)} ${f(y1)} A ${R} ${R} 0 ${la} 1 ${f(x2)} ${f(y2)} L ${f(ix2)} ${f(iy2)} A ${ri} ${ri} 0 ${la} 0 ${f(ix1)} ${f(iy1)} Z`;
   };
 
-  const plannedColor = isOverIncome ? "#EF4444" : "#EC4899";
-  const extraColor   = isOverIncome ? "#F87171" : "#F9A8D4";
+  // Stay in the pink family even when over income — the ring shouldn't turn into
+  // a fire alarm. The over-income state reads as a gentle rose note in the
+  // centre label instead of flooding the whole chart red.
+  const plannedColor = "#EC4899";
+  const extraColor   = "#F9A8D4";
 
   return (
     <div className="flex items-center justify-center gap-6 sm:gap-9">
@@ -948,16 +953,16 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
         <div className="text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
-            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>PLANNED</span>
+            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
           </div>
-          <p className={`text-xl font-bold tabular-nums leading-none ${isOverIncome ? "text-red-600" : "text-[#EC4899]"}`}>{fmt(totalPlanned, currency)}</p>
+          <p className="text-xl font-bold tabular-nums leading-none text-[#EC4899]">{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
-            <span className={`text-[9px] font-bold tracking-widest ${isOverIncome ? "text-red-600" : "text-[#9D5C7E]"}`}>EXTRA</span>
+            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
           </div>
-          <p className={`text-xl font-bold tabular-nums leading-none ${isOverIncome ? "text-red-500" : "text-[#F472B6]"}`}>
+          <p className="text-xl font-bold tabular-nums leading-none text-[#F472B6]">
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -979,10 +984,10 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
         {/* center label */}
         {isOverIncome ? (
           <>
-            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#EF4444" fontWeight="700">
+            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#E11D48" fontWeight="700">
               −{fmt(Math.abs(income - total), currency)}
             </text>
-            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#EF4444">over income ⚠</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">over income</text>
           </>
         ) : hasExtra ? (
           <>
@@ -1310,14 +1315,14 @@ export function BudgetPlanner() {
                   {hc.title}
                 </h2>
                 <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight">{hc.sub}</p>
-                <CyclePhasePill className="mt-1.5" />
+                <CyclePhasePill className="mt-1.5" hideWhenUnset />
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
                   {isDash && (
                     <button onClick={() => setShowMonthPicker(true)}
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10">
                       <Calendar className="h-3 w-3" />
                       {viewMode === "present"
-                        ? "Ce mois"
+                        ? "This month"
                         : new Date(month.y, month.m, 1).toLocaleString("default", { month: "short", year: "numeric" })}
                       {viewMode === "future" && <span className="text-[9px] font-bold text-hotpink/70">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
                       <ChevronDown className="h-3 w-3 opacity-70" />
@@ -1598,9 +1603,9 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
 
   const cards = [
     {
-      label: "Income Garden",
+      label: "Income",
       v: income,
-      sub: "your monthly earnings",
+      sub: "monthly earnings",
       glow: null as Glow | null,          // no ring, no glow
       textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,
@@ -1612,7 +1617,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
         : null,
     },
     {
-      label: "Planned Budget",
+      label: "Budget",
       v: plannedBudget + goalsMonthly,
       sub: goalsMonthly > 0
         ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
@@ -1624,9 +1629,9 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       badge: null,
     },
     {
-      label: "Real Spending Petals",
+      label: "Spent",
       v: plannedBudget + goalsMonthly + realExpenses,
-      sub: "extra spends this month",
+      sub: "committed + extra this month",
       glow: null as Glow | null,
       // Kept visually simple like the other cards — the extra spend shows as a
       // small rose "€… extra" label, with no coloured glow behind the content.
@@ -1638,9 +1643,9 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
     },
     {
-      label: "Savings Bloom",
+      label: "Saved",
       v: goalsSaved,
-      sub: "across all goals · incl. this month",
+      sub: "across all goals",
       glow: null as Glow | null,
       textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,

@@ -23,7 +23,7 @@ function cycleDayNumber(): number {
  * heroes (Yoga, Workout…) so the cycle read-out looks and reads identically
  * everywhere. Solid pink so it pops on an image hero.
  */
-export function CyclePhasePill({ className = "" }: { className?: string }) {
+export function CyclePhasePill({ className = "", hideWhenUnset = false }: { className?: string; hideWhenUnset?: boolean }) {
   // Solid phase pill — pops on an image hero.
   const base = "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm";
   // Softer, pale-pink energy pill — same family as the phase, lighter weight
@@ -34,6 +34,10 @@ export function CyclePhasePill({ className = "" }: { className?: string }) {
   // date. Instead invite her to set it up, guiding straight into the Cycle Tracker
   // from whichever hero she's on.
   if (!hasCycleSettings()) {
+    // On heroes where a cycle-setup CTA would be out of place (e.g. the finance
+    // tool), suppress the pill entirely rather than nag — the phase still shows
+    // once she's set it up elsewhere.
+    if (hideWhenUnset) return null;
     return (
       <a href="/app/tools/cycle" className={[base, "transition hover:bg-hotpink active:scale-95", className].join(" ")}>
         <Sparkles className="h-3 w-3 animate-icon-breathe" strokeWidth={2.2} /> Set up your cycle
