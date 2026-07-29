@@ -189,23 +189,20 @@ export default function MePage() {
           Blooming since {memberSince} ✿
         </p>
       )}
-      {/* Overall wellness — one honest score, with a soft pink progress bar */}
-      <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/85 backdrop-blur border border-petal/50 px-3.5 py-2.5 shadow-sm shadow-hotpink/10">
+      {/* Overall wellness — compact: label · score · tier on one row, a slim
+          pink bar under. Frosted-glass so the photo glows through. */}
+      <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/45 backdrop-blur-md border border-white/60 px-3 py-1.5 shadow-sm shadow-hotpink/10">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-rose/60">Overall wellness</p>
-          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-black ${wellness.cls}`}>
-            {wellness.label}
-          </span>
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/60">Overall wellness</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] sm:text-base font-black text-magenta tabular-nums leading-none">
+              {wellness.score}<span className="text-[8px] font-bold text-rose/45">/100</span>
+            </span>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${wellness.cls}`}>{wellness.label}</span>
+          </div>
         </div>
-        <p className="mt-1 flex items-baseline gap-1 leading-none">
-          <span className="text-2xl sm:text-3xl font-black text-magenta tabular-nums">{wellness.score}</span>
-          <span className="text-[11px] font-bold text-rose/45">/100</span>
-        </p>
-        <div className="mt-1.5 h-2 sm:h-2.5 w-full rounded-full bg-white/80 border border-petal/60 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700"
-            style={{ width: `${wellness.score}%` }}
-          />
+        <div className="mt-1 h-1.5 w-full rounded-full bg-white/60 overflow-hidden">
+          <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${wellness.score}%` }} />
         </div>
       </div>
     </>
@@ -281,24 +278,6 @@ export default function MePage() {
         {/* Phone: read-outs stacked full-width UNDER the flower + greeting row,
             so the space beside the flower is filled and nothing is stranded. */}
         <div className="mt-3 sm:hidden">{heroDetail}</div>
-
-        {/* Real at-a-glance indicators — everything she's actually logged */}
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3 max-w-lg">
-          {[
-            { label: hist.daysTracked === 1 ? "Day blooming" : "Days blooming", value: hist.daysTracked },
-            { label: hist.movement.totalSessions === 1 ? "Session" : "Sessions", value: hist.movement.totalSessions },
-            { label: hist.cycle.cyclesMeasured === 1 ? "Cycle logged" : "Cycles logged", value: hist.cycle.cyclesMeasured },
-          ].map((s, i) => (
-            <div
-              key={s.label}
-              className="rounded-2xl border border-petal/60 bg-white/80 backdrop-blur px-3 py-2 text-center shadow-sm shadow-hotpink/10 animate-card-pop-in"
-              style={{ animationDelay: `${80 + i * 60}ms` }}
-            >
-              <p className="text-lg sm:text-2xl font-black text-magenta leading-none tabular-nums">{s.value}</p>
-              <p className="mt-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wide text-rose/55 leading-tight">{s.label}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* YOUR HISTORY — Bloom+ (every real logged event + doctor-shareable report) */}
