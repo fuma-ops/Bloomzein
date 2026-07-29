@@ -132,11 +132,11 @@ export function buildReportHTML(h: HealthHistory, userName: string): string {
     : "—";
 
   // ── chart points + full detail tables (the tap-only data, on paper) ──
-  // One calm rose for bars, one muted berry for lines — matches the in-app charts.
-  const C1 = "#e07aab",
-    C2 = "#c85d95",
-    C3 = "#e07aab",
-    C4 = "#e07aab";
+  // The same cheerful brand pink as the app buttons & in-app charts.
+  const C1 = "#EC4899",
+    C2 = "#DB2777",
+    C3 = "#EC4899",
+    C4 = "#EC4899";
 
   const cyclePts = h.cycle.cycles.map((c) => ({
     label: c.monthLabel,
