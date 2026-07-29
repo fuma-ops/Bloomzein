@@ -4,7 +4,7 @@ import { Search, Heart, Clock, ArrowLeft, BookOpen, ArrowRight, Flower2,
   HeartHandshake, NotebookPen, Compass, Star, PiggyBank, Droplets } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
-import { FILTERS, ARTICLES, IMG, articleById, relatedArticles, type Filter, type Article } from "@/lib/readsData";
+import { FILTERS, ARTICLES, articleById, relatedArticles, type Filter, type Article } from "@/lib/readsData";
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloom/read/ArticleBody";
 import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
@@ -201,9 +201,8 @@ export default function ReadPage() {
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        {/* On phones, frame toward the face (right side) so her smile shows
-            instead of being cropped to the mouth. */}
-        <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[66%_26%] sm:object-[55%_32%]" referrerPolicy="no-referrer" />
+        {/* Frame toward her face (upper-right) so it's never cropped on phone. */}
+        <img src="/images/read-hero-bloom.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%] sm:object-[70%_34%]" referrerPolicy="no-referrer" />
         {/* left wash ONLY — a soft radial spotlight behind the title, fading to
             fully transparent so the rest of the photo shows clean & vivid. */}
         <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
@@ -212,8 +211,8 @@ export default function ReadPage() {
       <BloomBubbles count={10} />
 
       {/* HERO — transparent; the photo lives in the blended background above. */}
-      <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-0 sm:min-h-[124px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-        <div className="relative z-[1] px-4 pt-2 pb-0 sm:px-8 sm:pt-7 sm:pb-4 max-w-[72%] sm:max-w-md">
+      <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-0 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+        <div className="relative z-[1] px-4 pt-2 pb-0 sm:px-8 sm:pt-7 sm:pb-0 max-w-[72%] sm:max-w-md">
           <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read <BookOpen className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} /></h1>
           <p className="animate-fade-in mt-1 hidden sm:block font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for <br className="sm:hidden" />your softest era ✿</p>
         </div>
@@ -221,7 +220,7 @@ export default function ReadPage() {
 
       {/* Cycle-phase badges sit right under the title (no empty gap on phone).
           A soft "reads" score sits under the energy pill. */}
-      <div className="relative z-[2] mt-1.5 sm:mt-4 px-1 flex flex-col items-start gap-1.5">
+      <div className="relative z-[2] mt-1.5 sm:mt-2 px-1 flex flex-col items-start gap-1.5">
         <CyclePhasePill />
         <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-petal/80 backdrop-blur text-hotpink border border-hotpink/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
           <BookOpen className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> {readCount} {readCount === 1 ? "read" : "reads"}
