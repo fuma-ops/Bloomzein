@@ -83,7 +83,7 @@ function StatTile({
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-2 rounded-2xl border border-hotpink/20 bg-white/85 px-3.5 py-2.5 shadow-[0_2px_12px_-6px_rgba(219,39,119,0.28)] animate-card-pop-in"
+      className="flex items-center justify-between gap-2 rounded-2xl border border-white/60 bg-white/45 backdrop-blur-md px-3.5 py-2.5 shadow-[0_4px_16px_-8px_rgba(219,39,119,0.3)] animate-card-pop-in"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="min-w-0">
@@ -1235,7 +1235,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
       {/* Report header — on its OWN white section so the title, intro and the four
           summary cards stay perfectly readable over the hero photo behind them.
           The export actions are compact and sit beside the title. */}
-      <div className="rounded-[1.4rem] border border-hotpink/20 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)]">
+      <div className="rounded-[1.4rem] border border-white/55 bg-white/55 backdrop-blur-xl p-4 sm:p-5 shadow-[0_8px_30px_-10px_rgba(219,39,119,0.30)]">
         {/* Title + compact export actions on ONE line */}
         <div className="flex items-center justify-between gap-2">
           <h2 className="min-w-0 font-script text-3xl sm:text-4xl text-hotpink leading-none">

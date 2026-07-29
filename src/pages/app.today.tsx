@@ -1060,25 +1060,25 @@ export default function TodayPage() {
         onClose={() => setActivePlan(null)}
       />
 
-      {/* ── QUICK STATS — Mood · Symptom · Water · Sleep — slim frosted chips
-             (icon + text on one line) so they stay out of the way and let the
-             hero photo show. Two-up on phone, one flowing row on sm+. Energy is
-             NOT here — it reads on the phase hero. ── */}
-      <div className="relative z-[1] mt-8 sm:mt-3">
-        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
+      {/* ── QUICK STATS — Mood · Symptom · Water · Sleep — slim frosted chips.
+             All four on ONE row on phone (icon stacked over the label), flowing
+             into a horizontal row on sm+. Energy is NOT here — it reads on the
+             phase hero. ── */}
+      <div className="relative z-[1] mt-4 sm:mt-3">
+        <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-            className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="clay-blob animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.8} /></span>
-            <span className="min-w-0 flex-1 sm:flex-none">
+            <span className="min-w-0 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
               <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
             </span>
           </button>
 
           <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-            className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} /></span>
-            <span className="min-w-0 flex-1 sm:flex-none">
+            <span className="min-w-0 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
               <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
             </span>
@@ -1089,7 +1089,7 @@ export default function TodayPage() {
             const C = 2 * Math.PI * 15; // ring circumference (r=15 in a 36-box)
             return (
               <button onClick={() => setWaterModalOpen(true)}
-                className="relative group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+                className="relative group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
                 {/* corner water drop — signals this chip is your water insight */}
                 <Droplet aria-hidden className="absolute right-1 top-1 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
                 {/* progress ring — fills with the % of your water goal reached */}
@@ -1101,7 +1101,7 @@ export default function TodayPage() {
                   </svg>
                   <span className="text-[7px] sm:text-[10px] font-black leading-none text-hotpink tabular-nums">{wp}%</span>
                 </span>
-                <span className="min-w-0 flex-1 sm:flex-none">
+                <span className="min-w-0 sm:flex-none">
                   <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
                   <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
                 </span>
@@ -1113,11 +1113,11 @@ export default function TodayPage() {
               so last night's rest is logged in one touch (the fuller card lives
               in the smart panel, mirroring water's chip + dashboard pairing). */}
           <button ref={sleepTileRef} onClick={() => setSleepPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={sleepPickerOpen}
-            className="group flex items-center gap-1.5 sm:gap-2.5 text-left rounded-full sm:rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1.5 py-1 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
               {sleepEntry ? <SleepGlyph q={sleepEntry.q} className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-hotpink" /> : <Moon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} />}
             </span>
-            <span className="min-w-0 flex-1 sm:flex-none">
+            <span className="min-w-0 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Sleep</span>
               <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{sleepEntry ? sleepQualityLabel(sleepEntry.q) : "Tap in"}</span>
             </span>
