@@ -1230,70 +1230,60 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
 
   return (
     <section className="animate-card-pop-in" style={{ animationDelay: "40ms" }}>
-      {/* Header + explanation + export actions */}
-      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">
-            Your history
-          </h2>
-          <p className="mt-1 text-[12.5px] text-rose/70 leading-snug">
-            Everything you've really logged, from day one — tap any chart for the details, then
-            download it all as a report for your doctor.
-          </p>
-          <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose/55">
-            <CalendarDays className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
-            {h.trackingSince
-              ? `Tracking since ${prettyDate(h.trackingSince)} · ${h.daysTracked} day${h.daysTracked === 1 ? "" : "s"}`
-              : "No data logged yet"}
-          </p>
+      {/* Report header — on its OWN white section so the title, intro and the four
+          summary cards stay perfectly readable over the hero photo behind them.
+          The export actions are compact and sit beside the title. */}
+      <div className="rounded-[1.4rem] border border-hotpink/20 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)]">
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="min-w-0">
+            <h2 className="font-script text-3xl sm:text-4xl text-hotpink leading-none">
+              Your history
+            </h2>
+            <p className="mt-1 text-[12.5px] text-rose/70 leading-snug">
+              Everything you've really logged, from day one — tap any chart for the details, then
+              download it all as a report for your doctor.
+            </p>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose/55">
+              <CalendarDays className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
+              {h.trackingSince
+                ? `Tracking since ${prettyDate(h.trackingSince)} · ${h.daysTracked} day${h.daysTracked === 1 ? "" : "s"}`
+                : "No data logged yet"}
+            </p>
+          </div>
+          {/* Compact export actions, stacked beside the title */}
+          <div className="flex shrink-0 flex-col gap-2">
+            <button
+              onClick={() => downloadHealthReport(h, userName)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-magenta px-3 py-2 text-[11.5px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 animate-selected-glow"
+            >
+              <Download className="h-3.5 w-3.5" strokeWidth={2.2} /> Report
+            </button>
+            <button
+              onClick={() => downloadHealthCSV(h)}
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-hotpink/40 bg-white px-3 py-2 text-[11.5px] font-bold text-hotpink transition hover:bg-blush/50 active:scale-95"
+            >
+              <FileText className="h-3.5 w-3.5" strokeWidth={2} /> CSV
+            </button>
+          </div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            onClick={() => downloadHealthReport(h, userName)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-magenta px-4 py-2.5 text-[13px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 animate-selected-glow"
-          >
-            <Download className="h-4 w-4" strokeWidth={2.2} /> Download report
-          </button>
-          <button
-            onClick={() => downloadHealthCSV(h)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-hotpink/40 bg-white px-3.5 py-2.5 text-[13px] font-bold text-hotpink transition hover:bg-blush/50 active:scale-95"
-          >
-            <FileText className="h-4 w-4" strokeWidth={2} /> CSV
-          </button>
-        </div>
+
+        {/* Summary tiles — inside the same white section as the header text */}
+        {hasAnything && (
+          <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            <StatTile Icon={CalendarDays} value={String(h.daysTracked)} label="Days tracked" delay={0} />
+            <StatTile Icon={Activity} value={String(h.movement.totalSessions)} label="Sessions done" delay={60} />
+            <StatTile Icon={Flame} value={h.movement.totalKcal.toLocaleString()} label="Calories burned" delay={120} />
+            <StatTile Icon={HeartPulse} value={String(h.cycle.cyclesMeasured)} label="Cycles measured" delay={180} />
+          </div>
+        )}
       </div>
 
       {!hasAnything ? (
-        <EmptyPreview />
+        <div className="mt-4">
+          <EmptyPreview />
+        </div>
       ) : (
-        <div className="space-y-4">
-          {/* Summary tiles */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-            <StatTile
-              Icon={CalendarDays}
-              value={String(h.daysTracked)}
-              label="Days tracked"
-              delay={0}
-            />
-            <StatTile
-              Icon={Activity}
-              value={String(h.movement.totalSessions)}
-              label="Sessions done"
-              delay={60}
-            />
-            <StatTile
-              Icon={Flame}
-              value={h.movement.totalKcal.toLocaleString()}
-              label="Calories burned"
-              delay={120}
-            />
-            <StatTile
-              Icon={HeartPulse}
-              value={String(h.cycle.cyclesMeasured)}
-              label="Cycles measured"
-              delay={180}
-            />
-          </div>
+        <div className="mt-4 space-y-4">
 
           {/* Cycle by cycle + Weight — paired side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1447,25 +1437,9 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             </p>
           </Panel>
 
-          {/* Sleep + Planned-vs-logged calories — how you rest & fuel, paired
-              right under Nourishment on desktop */}
+          {/* Planned-vs-eaten calories + Sleep — fuel & rest, paired right under
+              Nourishment on desktop; on phone Sleep stacks UNDER the calories chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel bg={CHART_BG.sleep}>
-              <PanelHead
-                Icon={Moon}
-                title="Sleep over time"
-                hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
-              />
-              <LineChart
-                points={sleepPoints(h.sleep.series)}
-                unit="score"
-                color={LINE_C}
-                yMin={1}
-                yMax={5}
-                tapHint="Tap a point to see that night's sleep."
-                interpretation={h.patterns.sleep}
-              />
-            </Panel>
             <Panel bg={CHART_BG.nourish}>
               <PanelHead
                 Icon={UtensilsCrossed}
@@ -1480,6 +1454,22 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 series={h.nutrition.series}
                 tapHint="Tap a day to see what you ate vs what you planned."
                 interpretation={h.patterns.nutrition}
+              />
+            </Panel>
+            <Panel bg={CHART_BG.sleep}>
+              <PanelHead
+                Icon={Moon}
+                title="Sleep over time"
+                hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
+              />
+              <LineChart
+                points={sleepPoints(h.sleep.series)}
+                unit="score"
+                color={LINE_C}
+                yMin={1}
+                yMax={5}
+                tapHint="Tap a point to see that night's sleep."
+                interpretation={h.patterns.sleep}
               />
             </Panel>
           </div>

@@ -228,7 +228,9 @@ export default function MePage() {
         }}
       >
         <img src={heroBg} alt="" className="animate-hero-breathe h-full w-full object-cover object-[88%_26%] sm:object-[84%_26%] lg:object-[78%_22%]" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
+        {/* Left wash — stronger & reaching further on phones so the greeting,
+            pills and level bar stay clearly readable over the vivid photo. */}
+        <div className="absolute inset-0 bg-[radial-gradient(145%_130%_at_0%_38%,rgba(255,237,246,0.98)_0%,rgba(255,231,244,0.82)_40%,rgba(255,231,244,0.35)_58%,transparent_72%)] sm:bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
       </div>
 
@@ -263,15 +265,17 @@ export default function MePage() {
             </div>
             {memberSince && <p className="mt-1.5 text-[10px] sm:text-xs text-rose/80 drop-shadow-[0_1px_3px_oklch(1_0_0/0.6)]">Blooming since {memberSince} ✿</p>}
 
-            <div className="mt-2 sm:mt-3 max-w-xs">
+            <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/70 backdrop-blur border border-petal/50 px-3 py-2 shadow-sm shadow-hotpink/10">
               <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-hotpink">
-                <span>Level {stats?.level ?? 1}</span>
-                <span>{stats?.pct ?? 0}%</span>
+                <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" strokeWidth={2.2} /> Bloom level {stats?.level ?? 1}</span>
+                <span className="tabular-nums">{stats?.pct ?? 0}%</span>
               </div>
-              <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/70 border border-petal/60 overflow-hidden">
+              <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/80 border border-petal/60 overflow-hidden">
                 <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${stats?.pct ?? 0}%` }} />
               </div>
-              <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70 drop-shadow-[0_1px_2px_oklch(1_0_0/0.5)]">{100 - (stats?.pct ?? 0)}% to next level</p>
+              <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70 leading-tight">
+                {100 - (stats?.pct ?? 0)}% to level {(stats?.level ?? 1) + 1} · grows as you log mood, movement &amp; journals ✿
+              </p>
             </div>
           </div>
         </div>
