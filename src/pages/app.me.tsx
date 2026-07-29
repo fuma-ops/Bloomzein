@@ -44,16 +44,18 @@ function wellnessScore(h: HealthHistory): { score: number; label: string; cls: s
   parts.push(Math.min(100, (wkAvg / 4) * 100)); // ~4 sessions/week reads as full
   parts.push(h.cycle.regularity === "regular" ? 100 : h.cycle.regularity === "learning" ? 72 : 60);
   const score = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : 0;
+  // All tiers stay on-brand pink — a bold hotpink chip at the top, soft blush
+  // below; no off-palette colours.
   const t =
     score >= 85
-      ? { label: "Excellent", cls: "bg-emerald-100 text-emerald-700" }
+      ? { label: "Excellent", cls: "bg-hotpink text-white shadow-sm shadow-hotpink/30" }
       : score >= 70
-        ? { label: "Great", cls: "bg-emerald-100 text-emerald-700" }
+        ? { label: "Great", cls: "bg-blush text-hotpink border border-hotpink/25" }
         : score >= 55
-          ? { label: "Good", cls: "bg-amber-100 text-amber-700" }
+          ? { label: "Good", cls: "bg-blush text-hotpink border border-petal/60" }
           : score >= 40
-            ? { label: "Fair", cls: "bg-amber-100 text-amber-700" }
-            : { label: "Building", cls: "bg-blush text-hotpink" };
+            ? { label: "Fair", cls: "bg-blush text-hotpink border border-petal/60" }
+            : { label: "Building", cls: "bg-blush text-hotpink border border-petal/60" };
   return { score, ...t };
 }
 
@@ -187,18 +189,24 @@ export default function MePage() {
           Blooming since {memberSince} ✿
         </p>
       )}
-      {/* Overall wellness — one honest score in place of the old level bar */}
-      <div className="mt-2 sm:mt-3 flex max-w-xs items-center justify-between gap-3 rounded-2xl bg-white/85 backdrop-blur border border-petal/50 px-3.5 py-2.5 shadow-sm shadow-hotpink/10">
-        <div className="min-w-0">
+      {/* Overall wellness — one honest score, with a soft pink progress bar */}
+      <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/85 backdrop-blur border border-petal/50 px-3.5 py-2.5 shadow-sm shadow-hotpink/10">
+        <div className="flex items-center justify-between gap-2">
           <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-rose/60">Overall wellness</p>
-          <p className="mt-0.5 flex items-baseline gap-1 leading-none">
-            <span className="text-2xl sm:text-3xl font-black text-magenta tabular-nums">{wellness.score}</span>
-            <span className="text-[11px] font-bold text-rose/45">/100</span>
-          </p>
+          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-black ${wellness.cls}`}>
+            {wellness.label}
+          </span>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${wellness.cls}`}>
-          {wellness.label}
-        </span>
+        <p className="mt-1 flex items-baseline gap-1 leading-none">
+          <span className="text-2xl sm:text-3xl font-black text-magenta tabular-nums">{wellness.score}</span>
+          <span className="text-[11px] font-bold text-rose/45">/100</span>
+        </p>
+        <div className="mt-1.5 h-2 sm:h-2.5 w-full rounded-full bg-white/80 border border-petal/60 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700"
+            style={{ width: `${wellness.score}%` }}
+          />
+        </div>
       </div>
     </>
   );
@@ -260,10 +268,10 @@ export default function MePage() {
 
           <div className="flex-1 min-w-0">
             <h1
-              className="font-script text-2xl sm:text-5xl text-hotpink leading-none flex items-center gap-1.5"
+              className="font-script text-[2.1rem] sm:text-6xl text-hotpink leading-none flex items-center gap-1.5"
               style={{ textShadow: "0 1px 2px rgba(255,255,255,0.98), 0 2px 10px rgba(255,255,255,0.9), 0 0 22px rgba(255,255,255,0.75)" }}
             >
-              Hey, {displayName}! <Sparkles className="h-4 w-4 sm:h-7 sm:w-7" strokeWidth={1.8} />
+              Hey, {displayName}! <Sparkles className="h-5 w-5 sm:h-8 sm:w-8" strokeWidth={1.8} />
             </h1>
             {/* Desktop: read-outs sit beside the flower */}
             <div className="mt-2 hidden sm:block">{heroDetail}</div>

@@ -548,13 +548,15 @@ interface Metric {
   points: { date: string; value: number }[];
 }
 
-// Distinct-but-soft line colours, one per metric (multi-line overlay).
+// Vibrant, well-separated line colours — a "Candy Pop" set anchored on the
+// app's strong brand pink, so the combined chart reads bright and on-brand
+// (each hue stays distinct over the pastel phase bands).
 const METRIC_COLOR: Record<string, string> = {
-  mood: "#d1568f", // rose
-  burn: "#4fa89d", // soft teal
-  weight: "#7b83cf", // periwinkle
-  symptoms: "#b06fc0", // soft orchid
-  sleep: "#6f76c4", // soft indigo
+  mood: "#EC4899", // strong brand pink
+  burn: "#12B5A6", // candy mint-teal
+  weight: "#A855F7", // candy purple
+  symptoms: "#F5A614", // warm candy amber
+  sleep: "#1FA2E0", // candy sky-blue
 };
 
 const toTime = (iso: string) => new Date(iso + "T00:00:00").getTime();
