@@ -101,9 +101,10 @@ function StatTile({
 
 // A slightly richer pink edge (border + soft pink glow) so cards read defined,
 // not washed-out pale — without a loud/poppy fill.
-// `bg` layers a soft, themed photo far in the background (heavily faded behind a
-// white veil) so each chart feels its subject — a scale behind Weight, blossoms
-// behind Cycle — while the plot stays perfectly legible on top.
+// `bg` tucks a soft, themed photo into the BOTTOM-RIGHT CORNER only — a small
+// decorative peek that fades into the white card toward the centre, so each chart
+// feels its subject (a scale for Weight, blossoms for Cycle) without the busy,
+// all-over pink wash. The card stays clean white; the plot reads perfectly.
 function Panel({
   children,
   className = "",
@@ -115,21 +116,24 @@ function Panel({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-[1.4rem] border border-hotpink/20 bg-white/85 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)] ${className}`}
+      className={`relative overflow-hidden rounded-[1.4rem] border border-hotpink/20 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-[0_4px_18px_-8px_rgba(219,39,119,0.25)] ${className}`}
     >
       {bg && (
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <img
-            src={bg}
-            alt=""
-            loading="lazy"
-            className="h-full w-full object-cover opacity-[0.55]"
-          />
-          {/* white veil — heavier on the left/top where the axis labels & title
-              sit (so numbers stay crisp), much softer to the bottom-right so the
-              photo reads clearly there, like the reference design */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/40 to-white/20" />
-        </div>
+        <img
+          src={bg}
+          alt=""
+          aria-hidden
+          loading="lazy"
+          className="pointer-events-none absolute bottom-0 right-0 h-[62%] w-[46%] object-cover opacity-45"
+          style={{
+            // Fade the corner peek out toward the top-left so it dissolves into
+            // the white card — only the very corner shows the design.
+            WebkitMaskImage:
+              "radial-gradient(130% 130% at 100% 100%, #000 0%, rgba(0,0,0,0.55) 38%, transparent 72%)",
+            maskImage:
+              "radial-gradient(130% 130% at 100% 100%, #000 0%, rgba(0,0,0,0.55) 38%, transparent 72%)",
+          }}
+        />
       )}
       <div className="relative">{children}</div>
     </div>
