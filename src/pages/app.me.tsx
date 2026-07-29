@@ -190,8 +190,49 @@ export default function MePage() {
   const memberSince = (() => {
     const iso = profile?.created_at;
     if (!iso) return null;
-    try { return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" }); } catch { return null; }
+    try {
+      return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    } catch {
+      return null;
+    }
   })();
+
+  // The hero read-outs (vibe · phase · period · level) — rendered once here and
+  // placed differently per breakpoint: beside the flower on desktop, stacked
+  // full-width under the flower+greeting row on phone (so there's no dead corner).
+  const heroDetail = (
+    <>
+      <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60 shadow-sm">
+        <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2} /> {phaseVibe}
+      </span>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <CyclePhasePill />
+        {nextPeriod != null && (
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-white/85 backdrop-blur text-hotpink border border-petal/60 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm">
+            <Droplet className="h-3 w-3" strokeWidth={2.2} />
+            {nextPeriod === 0 ? "Period due today" : `Period in ${nextPeriod} day${nextPeriod === 1 ? "" : "s"}`}
+          </span>
+        )}
+      </div>
+      {memberSince && (
+        <p className="mt-1.5 inline-block rounded-full bg-white/70 px-2 py-0.5 text-[10px] sm:text-xs text-rose/80">
+          Blooming since {memberSince} ✿
+        </p>
+      )}
+      <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/75 backdrop-blur border border-petal/50 px-3 py-2 shadow-sm shadow-hotpink/10">
+        <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-hotpink">
+          <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" strokeWidth={2.2} /> Bloom level {stats?.level ?? 1}</span>
+          <span className="tabular-nums">{stats?.pct ?? 0}%</span>
+        </div>
+        <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/80 border border-petal/60 overflow-hidden">
+          <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${stats?.pct ?? 0}%` }} />
+        </div>
+        <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70 leading-tight">
+          {100 - (stats?.pct ?? 0)}% to level {(stats?.level ?? 1) + 1} · grows as you log mood, movement &amp; journals ✿
+        </p>
+      </div>
+    </>
+  );
 
   // Marketing demo controls — only when the URL carries ?demo (invisible to
   // normal users). Load the "Emma" hero account to film the tour, or clear it.
@@ -221,23 +262,24 @@ export default function MePage() {
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[620px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[540px] overflow-hidden"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[460px] sm:h-[540px] overflow-hidden"
         style={{
           WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
         <img src={heroBg} alt="" className="animate-hero-breathe h-full w-full object-cover object-[88%_26%] sm:object-[84%_26%] lg:object-[78%_22%]" referrerPolicy="no-referrer" />
-        {/* Left wash — stronger & reaching further on phones so the greeting,
-            pills and level bar stay clearly readable over the vivid photo. */}
-        <div className="absolute inset-0 bg-[radial-gradient(145%_130%_at_0%_38%,rgba(255,237,246,0.98)_0%,rgba(255,231,244,0.82)_40%,rgba(255,231,244,0.35)_58%,transparent_72%)] sm:bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
+        {/* Light left wash only — just enough to soften the corner behind the
+            greeting; every read-out below carries its own frosted backing, so the
+            photo stays clearly visible instead of being washed flat. */}
+        <div className="absolute inset-0 bg-[radial-gradient(115%_110%_at_0%_30%,rgba(255,237,246,0.8)_0%,rgba(255,231,244,0.32)_34%,transparent_56%)] sm:bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.45)_28%,transparent_52%)]" />
         <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
       </div>
 
       <BloomBubbles count={10} />
 
       <section className="relative z-[1] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-        <div className="flex items-center gap-3 sm:gap-6">
+        <div className="flex items-center gap-3 sm:items-start sm:gap-6">
           {/* Logo flower medallion — strong pink, gently breathing (replaces the photo) */}
           <div className="relative shrink-0">
             <div className="absolute -inset-1 rounded-full bg-white/70 blur-md" />
@@ -248,37 +290,17 @@ export default function MePage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="font-script text-2xl sm:text-5xl text-hotpink leading-none flex items-center gap-1.5 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
+            <h1 className="font-script text-2xl sm:text-5xl text-hotpink leading-none flex items-center gap-1.5 drop-shadow-[0_1px_8px_oklch(1_0_0/0.85)]">
               Hey, {displayName}! <Sparkles className="h-4 w-4 sm:h-7 sm:w-7" strokeWidth={1.8} />
             </h1>
-            <span className="mt-1.5 sm:mt-2 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
-              <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2} /> {phaseVibe}
-            </span>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <CyclePhasePill />
-              {nextPeriod != null && (
-                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-white/80 backdrop-blur text-hotpink border border-petal/60 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm">
-                  <Droplet className="h-3 w-3" strokeWidth={2.2} />
-                  {nextPeriod === 0 ? "Period due today" : `Period in ${nextPeriod} day${nextPeriod === 1 ? "" : "s"}`}
-                </span>
-              )}
-            </div>
-            {memberSince && <p className="mt-1.5 text-[10px] sm:text-xs text-rose/80 drop-shadow-[0_1px_3px_oklch(1_0_0/0.6)]">Blooming since {memberSince} ✿</p>}
-
-            <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/70 backdrop-blur border border-petal/50 px-3 py-2 shadow-sm shadow-hotpink/10">
-              <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-hotpink">
-                <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3" strokeWidth={2.2} /> Bloom level {stats?.level ?? 1}</span>
-                <span className="tabular-nums">{stats?.pct ?? 0}%</span>
-              </div>
-              <div className="mt-1 h-2 sm:h-2.5 w-full rounded-full bg-white/80 border border-petal/60 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-magenta transition-all duration-700" style={{ width: `${stats?.pct ?? 0}%` }} />
-              </div>
-              <p className="mt-1 text-[9px] sm:text-[11px] text-rose/70 leading-tight">
-                {100 - (stats?.pct ?? 0)}% to level {(stats?.level ?? 1) + 1} · grows as you log mood, movement &amp; journals ✿
-              </p>
-            </div>
+            {/* Desktop: read-outs sit beside the flower */}
+            <div className="mt-2 hidden sm:block">{heroDetail}</div>
           </div>
         </div>
+
+        {/* Phone: read-outs stacked full-width UNDER the flower + greeting row,
+            so the space beside the flower is filled and nothing is stranded. */}
+        <div className="mt-3 sm:hidden">{heroDetail}</div>
 
         {/* Real at-a-glance indicators — everything she's actually logged */}
         <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3 max-w-lg">
