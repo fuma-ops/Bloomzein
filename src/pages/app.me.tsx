@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, Wallet,
-  ChevronRight,
+  ChevronRight, Camera, Trash2,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
   Check, Inbox,
 } from "lucide-react";
@@ -21,6 +21,7 @@ import { RECIPES } from "@/components/bloom/recipes/data";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
+import { readAvatar, setAvatar, fileToAvatarDataUrl, AVATAR_EVENT } from "@/lib/profileAvatar";
 
 // Time-of-day hero photo — the same blended scene as the Today page, so Me
 // opens on the same immersive surface.
@@ -157,10 +158,31 @@ export default function MePage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [favs, setFavs] = useState<{ items: FavItem[]; isReal: boolean }>({ items: CURATED_READS, isReal: false });
+  const [avatar, setAvatarState] = useState<string | null>(null);
   useEffect(() => {
     stampTodayWater(); // keep the hydration history current for the dashboard
     setFavs(readFavorites());
+    setAvatarState(readAvatar());
+    const r = () => setAvatarState(readAvatar());
+    window.addEventListener(AVATAR_EVENT, r);
+    window.addEventListener("storage", r);
+    return () => {
+      window.removeEventListener(AVATAR_EVENT, r);
+      window.removeEventListener("storage", r);
+    };
   }, []);
+
+  // Add / change the on-device profile photo from a picked file.
+  const onPickAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    try {
+      setAvatar(await fileToAvatarDataUrl(file));
+    } catch {
+      /* ignore an unreadable image */
+    }
+  };
 
   // Real hero read-outs — same blended Today background; an honest phase pill and
   // an "Overall wellness" score composed from everything she's logged.
@@ -254,14 +276,29 @@ export default function MePage() {
 
       <section className="relative z-[1] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="flex items-center gap-3 sm:items-start sm:gap-6">
-          {/* Logo flower medallion — strong pink, gently breathing (replaces the photo) */}
-          <div className="relative shrink-0">
+          {/* Medallion — her own photo if she's added one (kept on this device),
+              otherwise the brand flower. Tap to add / change it. */}
+          <label
+            className="group relative shrink-0 cursor-pointer"
+            title="Add a profile photo — saved on this device only"
+          >
             <div className="absolute -inset-1 rounded-full bg-white/70 blur-md" />
-            <div className="relative grid h-16 w-16 sm:h-28 sm:w-28 place-items-center rounded-full border-2 sm:border-4 border-white bg-gradient-to-br from-hotpink to-magenta shadow-xl shadow-hotpink/30 animate-icon-breathe">
-              <BloomFlower size={40} petal="#FFFFFF" center="#FFD9EC" className="sm:hidden" />
-              <BloomFlower size={68} petal="#FFFFFF" center="#FFD9EC" className="hidden sm:block" />
+            <div className="relative grid h-16 w-16 sm:h-28 sm:w-28 place-items-center overflow-hidden rounded-full border-2 sm:border-4 border-white bg-gradient-to-br from-hotpink to-magenta shadow-xl shadow-hotpink/30 animate-icon-breathe">
+              {avatar ? (
+                <img src={avatar} alt="Your profile" className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  <BloomFlower size={40} petal="#FFFFFF" center="#FFD9EC" className="sm:hidden" />
+                  <BloomFlower size={68} petal="#FFFFFF" center="#FFD9EC" className="hidden sm:block" />
+                </>
+              )}
             </div>
-          </div>
+            {/* camera badge — hints the medallion is tappable */}
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 sm:h-8 sm:w-8 place-items-center rounded-full border border-petal/60 bg-white text-hotpink shadow-md transition group-hover:scale-110 group-active:scale-95">
+              <Camera className="h-3 w-3 sm:h-4 sm:w-4" strokeWidth={2} />
+            </span>
+            <input type="file" accept="image/*" className="sr-only" onChange={onPickAvatar} />
+          </label>
 
           <div className="flex-1 min-w-0">
             <h1
@@ -388,8 +425,26 @@ function EditProfileModal({
   const [age, setAge] = useState(initialAge != null ? String(initialAge) : "");
   const [weight, setWeight] = useState(initialWeight != null ? String(initialWeight) : "");
   const [unit, setUnit] = useState<"kg" | "lbs">(initialUnit);
+  const [avatar, setAv] = useState<string | null>(() => readAvatar());
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  const pickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const url = await fileToAvatarDataUrl(file);
+      setAvatar(url);
+      setAv(url);
+    } catch {
+      /* ignore */
+    }
+  };
+  const removePhoto = () => {
+    setAvatar(null);
+    setAv(null);
+  };
 
   const save = async () => {
     setSaving(true); setErr(null);
@@ -410,6 +465,34 @@ function EditProfileModal({
           <h2 className="font-script text-3xl text-hotpink leading-none">Edit profile ✿</h2>
           <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-blush text-rose/70 active:scale-90"><ChevronRight className="h-4 w-4 rotate-90" /></button>
         </div>
+
+        {/* Profile photo — stored on this device only */}
+        <div className="mb-4 flex items-center gap-3">
+          <label className="group relative shrink-0 cursor-pointer" title="Change photo">
+            <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-hotpink to-magenta shadow-md shadow-hotpink/25">
+              {avatar ? <img src={avatar} alt="Your profile" className="h-full w-full object-cover" /> : <BloomFlower size={34} petal="#FFFFFF" center="#FFD9EC" />}
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full border border-petal/60 bg-white text-hotpink shadow group-hover:scale-110 transition">
+              <Camera className="h-3 w-3" strokeWidth={2} />
+            </span>
+            <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
+          </label>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-[11px] font-bold text-hotpink active:scale-95">
+                <Camera className="h-3.5 w-3.5" strokeWidth={2} /> {avatar ? "Change" : "Add photo"}
+                <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
+              </label>
+              {avatar && (
+                <button onClick={removePhoto} className="inline-flex items-center gap-1 rounded-full border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-rose/70 active:scale-95">
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} /> Remove
+                </button>
+              )}
+            </div>
+            <p className="mt-1 text-[10px] text-rose/55 leading-tight">Saved on this device only — never uploaded ✿</p>
+          </div>
+        </div>
+
         <label className="block mb-3">
           <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
