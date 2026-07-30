@@ -199,8 +199,14 @@ function useLocal<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => voi
 const uid = () => Math.random().toString(36).slice(2, 10);
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// Dream-goal card look: a soft, cheerful rose→lilac wash (not poppy) with a
+// faint floral motif from our library blended over it. White text stays legible.
+const DREAM_GRADIENT = "linear-gradient(135deg, #F27BB0 0%, #E884C2 52%, #CB9CE2 100%)";
+const DREAM_FLORAL = "/images/diary-bg-floral.webp";
+
 function fmt(n: number, c: CurrencyKey) {
   const sym = CURRENCIES[c].symbol;
+  if (!Number.isFinite(n)) n = 0; // never render "NaN"/"Infinity" to the user
   const rounded = Math.round(n * 100) / 100;
   // Always render thousands separators (en-US) so every figure reads the same
   // way across the app — "€ 41,342", never "€ 41342".
@@ -473,19 +479,20 @@ function LineChart({ points }: { points: number[] }) {
 }
 
 function HealthRing({ pct, label, tone, size = 150 }: { pct: number; label: string; tone: string; size?: number }) {
-  const r = size/2 - 12, c = 2 * Math.PI * r;
+  const sw = 8;
+  const r = size/2 - sw/2 - 3, c = 2 * Math.PI * r;
   const dash = `${(pct / 100) * c} ${c}`;
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#FCE7F3" strokeWidth="12" />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={tone} strokeWidth="12"
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#FCE7F3" strokeWidth={sw} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={tone} strokeWidth={sw}
           strokeDasharray={dash} strokeLinecap="round" className="transition-all duration-700" />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
-          <div className="text-3xl font-bold" style={{ color: tone }}>{Math.round(pct)}%</div>
-          {label && <div className="text-xs font-semibold text-[#9D5C7E]">{label}</div>}
+          <div className="text-2xl font-bold" style={{ color: tone }}>{Math.round(pct)}%</div>
+          {label && <div className="text-[11px] font-semibold text-[#9D5C7E]">{label}</div>}
         </div>
       </div>
     </div>
@@ -591,8 +598,8 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
 
 
   return (
-    <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 160 }} overflow="visible">
+    <div className="-mx-1 overflow-x-auto no-scrollbar">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 170, minWidth: 360 }} overflow="visible">
         <defs>
           <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FBCFE8" stopOpacity="0.65" />
@@ -603,19 +610,19 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
             <stop offset="100%" stopColor="#FEF2F2" stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="shLine" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#E4B6CE" />
-            <stop offset="100%" stopColor="#CE85A8" />
+            <stop offset="0%" stopColor="#F9A8D4" />
+            <stop offset="100%" stopColor="#F472B6" />
           </linearGradient>
           {/* Vertical gradient for the spend curve: light rose at 0, muted rose at budget, soft rose above */}
           <linearGradient id="spendLineGrad" x1="0" y1={pT} x2="0" y2={baseline} gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#E11D48" />
-            <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#CE85A8" />
+            <stop offset={`${((budgetY - pT) / plotH * 100).toFixed(1)}%`} stopColor="#F472B6" />
             <stop offset="100%" stopColor="#FBCFE8" stopOpacity="0.7" />
           </linearGradient>
           {/* Danger gradient for over-budget zone: soft rose → muted rose */}
           <linearGradient id="dangerFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#E11D48" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#CE85A8" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#F472B6" stopOpacity="0.15" />
           </linearGradient>
           {/* Clip path: only the region ABOVE the budget line */}
           <clipPath id="aboveBudgetClip">
@@ -642,7 +649,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
 
         {/* today vertical marker */}
         <line x1={todayX} y1={pT} x2={todayX} y2={baseline}
-          stroke="#CE85A8" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
+          stroke="#F472B6" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
 
         {/* gradient fill under curve */}
         {realPtsArr.length >= 2 && (
@@ -669,9 +676,9 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {/* today dot — prominent */}
         {realPtsArr.length > 0 && (
           <>
-            <circle cx={todayX} cy={todayY} r="9" fill="#CE85A8" opacity="0.12" />
-            <circle cx={todayX} cy={todayY} r="5.5" fill="#CE85A8" opacity="0.25" />
-            <circle cx={todayX} cy={todayY} r="4" fill="#CE85A8" stroke="white" strokeWidth="2" />
+            <circle cx={todayX} cy={todayY} r="9" fill="#F472B6" opacity="0.12" />
+            <circle cx={todayX} cy={todayY} r="5.5" fill="#F472B6" opacity="0.25" />
+            <circle cx={todayX} cy={todayY} r="4" fill="#F472B6" stroke="white" strokeWidth="2" />
           </>
         )}
 
@@ -702,7 +709,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         {realPtsArr.length > 0 && (
           <>
             <rect x={todayLabelX - 32} y={todayLabelY - 8.5} width={64} height={11} rx="3" fill="white" fillOpacity="0.95" />
-            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#E11D48" : "#CE85A8"}
+            <text x={todayLabelX} y={todayLabelY} fontSize="7.5" fill={isOverIncome ? "#E11D48" : "#F472B6"}
               textAnchor="middle" fontWeight="700">{fmt(todayVal, currency)}</text>
           </>
         )}
@@ -794,15 +801,15 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
   };
 
   return (
-    <div className="animate-fade-in">
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 145 }} overflow="visible">
+    <div className="animate-fade-in -mx-1 overflow-x-auto no-scrollbar">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: 160, minWidth: 360 }} overflow="visible">
         <defs>
           <linearGradient id="mpBarNorm" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#EC4899" stopOpacity="0.8" />
+            <stop offset="0%" stopColor="#F472B6" stopOpacity="0.8" />
             <stop offset="100%" stopColor="#F9A8D4" stopOpacity="0.35" />
           </linearGradient>
           <linearGradient id="mpBarOver" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
+            <stop offset="0%" stopColor="#E11D48" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#FCA5A5" stopOpacity="0.35" />
           </linearGradient>
           <filter id="mpGlow" x="-20%" y="-40%" width="140%" height="180%">
@@ -817,7 +824,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         {/* planned budget line */}
         {plannedY !== null && (
           <line x1={pL} y1={plannedY} x2={W - pR} y2={plannedY}
-            stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.35" />
+            stroke="#F472B6" strokeWidth="1" strokeDasharray="5 3" opacity="0.35" />
         )}
 
         {/* income line (line only — label drawn last) */}
@@ -843,7 +850,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         {/* smooth trend line */}
         {linePts.length >= 2 && (
           <path d={smoothLine(linePts)} fill="none"
-            stroke="#EC4899" strokeWidth="2" strokeLinecap="round" opacity="0.6"
+            stroke="#F472B6" strokeWidth="2" strokeLinecap="round" opacity="0.6"
             filter="url(#mpGlow)" />
         )}
 
@@ -853,7 +860,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
           if (!mo) return null;
           return (
             <circle key={i} cx={x} cy={y} r={mo?.isCurrent ? 4.5 : 3}
-              fill={mo?.isOver ? "#EF4444" : "#EC4899"}
+              fill={mo?.isOver ? "#E11D48" : "#F472B6"}
               stroke="white" strokeWidth="1.5" style={{ opacity: mo?.isCurrent ? 1 : 0.6 }} />
           );
         })}
@@ -879,13 +886,13 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
             <g key={i} style={{ opacity: mo.isCurrent ? 1 : 0.55 }}>
               {showLabel && mo.totalSpend > 0 && (
                 <>
-                  <rect x={labelCx - 30} y={labelY - 8.5} width={60} height={10.5} rx="3" fill="white" fillOpacity="0.95" />
-                  <text x={labelCx} y={labelY} fontSize="6.5" textAnchor="middle" fontWeight="700"
-                    fill={mo.isOver ? "#EF4444" : "#EC4899"}>{fmt(mo.totalSpend, currency)}</text>
+                  <rect x={labelCx - 32} y={labelY - 9} width={64} height={11.5} rx="3" fill="white" fillOpacity="0.95" />
+                  <text x={labelCx} y={labelY} fontSize="7.5" textAnchor="middle" fontWeight="700"
+                    fill={mo.isOver ? "#E11D48" : "#F472B6"}>{fmt(mo.totalSpend, currency)}</text>
                 </>
               )}
-              <text x={cx} y={H - 3} fontSize="7.5" textAnchor="middle"
-                fill={mo.isCurrent ? "#EC4899" : "#C4A0B8"}
+              <text x={cx} y={H - 3} fontSize="8.5" textAnchor="middle"
+                fill={mo.isCurrent ? "#F472B6" : "#C4A0B8"}
                 fontWeight={mo.isCurrent ? "700" : "400"}>{mo.label}</text>
             </g>
           );
@@ -895,7 +902,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
       {/* legend */}
       <div className="flex items-center gap-4 mt-1 px-1">
         <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-4 rounded-sm" style={{ background: "linear-gradient(to right, #EC4899, #F9A8D4)" }} />
+          <div className="h-2.5 w-4 rounded-sm" style={{ background: "linear-gradient(to right, #F472B6, #F9A8D4)" }} />
           <span className="text-[10px] font-semibold text-[#9D5C7E]">Total spend</span>
         </div>
         {income > 0 && (
@@ -906,7 +913,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         )}
         {plannedBudget > 0 && (
           <div className="flex items-center gap-1.5">
-            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#EC4899" strokeWidth="1" strokeDasharray="5 3" opacity="0.5" /></svg>
+            <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#F472B6" strokeWidth="1" strokeDasharray="5 3" opacity="0.5" /></svg>
             <span className="text-[10px] font-semibold text-[#9D5C7E]">Planned</span>
           </div>
         )}
@@ -944,8 +951,8 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
   // Stay in the pink family even when over income — the ring shouldn't turn into
   // a fire alarm. The over-income state reads as a gentle rose note in the
   // centre label instead of flooding the whole chart red.
-  const plannedColor = "#CE85A8";
-  const extraColor   = "#E4B6CE";
+  const plannedColor = "#F472B6";
+  const extraColor   = "#F9A8D4";
 
   return (
     <div className="flex items-center justify-center gap-6 sm:gap-9">
@@ -956,14 +963,14 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
           </div>
-          <p className="text-xl font-bold tabular-nums leading-none text-[#C77CA0]">{fmt(totalPlanned, currency)}</p>
+          <p className="text-xl font-bold tabular-nums leading-none text-[#EC5A9C]">{fmt(totalPlanned, currency)}</p>
         </div>
         <div className="text-left">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
             <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
           </div>
-          <p className="text-xl font-bold tabular-nums leading-none text-[#D98BA6]">
+          <p className="text-xl font-bold tabular-nums leading-none text-[#F472B6]">
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
           </p>
         </div>
@@ -992,7 +999,7 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
           </>
         ) : hasExtra ? (
           <>
-            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#C77CA0" fontWeight="700">
+            <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#EC5A9C" fontWeight="700">
               +{fmt(totalOverage, currency)}
             </text>
             <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">over budget</text>
@@ -1601,17 +1608,19 @@ export function BudgetPlanner() {
       {viewMode === "present" && hasSetup && <button
         data-tour="spend-fab"
         onClick={() => setShowExtraSpend(true)}
-        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full px-4 h-12 text-white active:scale-95 transition"
+        className="fixed right-4 z-40 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-6 flex items-center gap-2 rounded-full pl-2 pr-4 h-12 text-white active:scale-95 transition hover:-translate-y-0.5"
         style={{
-          background: 'linear-gradient(135deg,#F9A8D4,#F472B6)',
-          boxShadow: '0 8px 22px rgba(244,114,182,0.32)',
-          border: '1px solid rgba(255,255,255,0.55)',
+          background: 'linear-gradient(135deg,#F472B6 0%,#EC4899 100%)',
+          boxShadow: '0 10px 26px -6px rgba(236,72,153,0.5), inset 0 1px 0 rgba(255,255,255,0.4)',
+          border: '1px solid rgba(255,255,255,0.6)',
           animation: 'ctaBreathe 3.6s ease-in-out infinite',
         }}
         aria-label="Add spend"
       >
-        <Plus className="h-4 w-4" strokeWidth={2.2} />
-        <span className="text-sm font-semibold">Spend</span>
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-white/25 backdrop-blur-sm">
+          <Plus className="h-4 w-4" strokeWidth={2.6} />
+        </span>
+        <span className="text-sm font-bold tracking-wide">Spend</span>
       </button>}
 
       <ExtraSpendModal
@@ -1682,6 +1691,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
   const cards = [
     {
       label: "Income",
+      Icon: Wallet,
       v: income,
       sub: "monthly earnings",
       glow: null as Glow | null,          // no ring, no glow
@@ -1696,6 +1706,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
     },
     {
       label: "Budget",
+      Icon: PiggyBank,
       v: plannedBudget + goalsMonthly,
       sub: goalsMonthly > 0
         ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
@@ -1708,6 +1719,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
     },
     {
       label: "Spent",
+      Icon: Receipt,
       v: plannedBudget + goalsMonthly + realExpenses,
       sub: "committed + extra this month",
       glow: null as Glow | null,
@@ -1722,6 +1734,7 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
     },
     {
       label: "Saved",
+      Icon: Sprout,
       v: goalsSaved,
       sub: "across all goals",
       glow: null as Glow | null,
@@ -1739,8 +1752,12 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
           className={`relative h-full overflow-hidden hover:-translate-y-1 ${it.glow ? GLOW[it.glow] : ""}`}
           style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
         >
-          <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight">{it.label}</div>
-          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#B0567E] flex items-center gap-1.5"
+          {/* cute category icon, top-right */}
+          <span className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full bg-gradient-to-br from-pink-100/90 to-rose-100/80 ring-1 ring-white/70 shadow-sm">
+            <it.Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#EC5A9C]" strokeWidth={1.9} />
+          </span>
+          <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight pr-8">{it.label}</div>
+          <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#D6558F] flex items-center gap-1.5"
             style={it.numGlow ? { textShadow: TEXT_GLOW[it.numGlow] } : undefined}>
             <StatNumber value={it.v} currency={currency} />
             {it.growthIcon && (
@@ -2317,7 +2334,7 @@ function DashboardTab(props: {
             <div className="mt-5 flex items-center gap-3">
               <div className="flex-1 h-2.5 rounded-full bg-pink-100 overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
+                  style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
               </div>
               <span className="shrink-0 text-xs font-bold tracking-widest text-[#9D5C7E]">{completed}/{steps.length} done</span>
             </div>
@@ -2495,12 +2512,12 @@ function DashboardTab(props: {
                           const plannedPct = total > 0 ? (planned / total) * 100 : 100;
                           const extraPct   = total > 0 ? (actual  / total) * 100 : 0;
                           return (
-                            <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/50">
+                            <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/60">
                               <div className="h-full transition-all duration-700"
-                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
+                                style={{ width: `${plannedPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
                               {actual > 0 && (
                                 <div className="h-full transition-all duration-700"
-                                  style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#EEC6D6,#D98BA6)" }} />
+                                  style={{ width: `${extraPct}%`, background: "linear-gradient(90deg,#F8B4D4,#F26FB0)" }} />
                               )}
                             </div>
                           );
@@ -2534,8 +2551,8 @@ function DashboardTab(props: {
                               </div>
                               <span className="text-[11px] font-semibold text-[#9D5C7E] tabular-nums shrink-0 ml-2">{fmt(bl.amount, currency)}</span>
                             </div>
-                            <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/50">
-                              <div className="h-full w-full transition-all duration-700" style={{ background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
+                            <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/60">
+                              <div className="h-full w-full transition-all duration-700" style={{ background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
                             </div>
                           </div>
                         ))}
@@ -2563,7 +2580,7 @@ function DashboardTab(props: {
                               </div>
                               <div className="relative h-1.5 rounded-full overflow-hidden bg-pink-200/40">
                                 <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#EEC0D2,#CE85A8)" }} />
+                                  style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F8B4D4,#F472B6)" }} />
                               </div>
                             </div>
                           );
@@ -2653,7 +2670,7 @@ function DashboardTab(props: {
                       ? <div className="h-full w-full rounded-full" style={{ background: "linear-gradient(90deg,#FCD34D,#F59E0B)" }} />
                       : <>
                           <div className="h-full transition-all duration-700"
-                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
+                            style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
                           {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
                         </>}
                   </div>
@@ -2712,8 +2729,10 @@ function DashboardTab(props: {
                     cursor: isCenter ? "default" : "pointer",
                   }}>
                   <div className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                    style={{ background: "linear-gradient(135deg, rgba(150,58,102,0.86) 0%, rgba(176,86,126,0.72) 45%, rgba(150,110,168,0.66) 100%), url(/images/diary-bg-floral.webp)", backgroundSize: "cover", backgroundPosition: "center" }}>
-                    <div className="flex items-center justify-between gap-3 p-4">
+                    style={{ background: DREAM_GRADIENT }}>
+                    <div aria-hidden className="pointer-events-none absolute inset-0 opacity-25 mix-blend-soft-light"
+                      style={{ backgroundImage: `url(${DREAM_FLORAL})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                    <div className="relative flex items-center justify-between gap-3 p-4">
                       <div className="flex-1 min-w-0">
                         <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
                           <Sparkles className="h-2.5 w-2.5" /> Dream Goal
@@ -2758,8 +2777,10 @@ function DashboardTab(props: {
               const pct = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
               return (
                 <div key={goal.id} className="relative overflow-hidden rounded-[1.5rem] shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #BE185D 0%, #EC4899 35%, #F472B6 65%, #C084FC 100%)" }}>
-                  <div className="flex items-center justify-between gap-3 p-5">
+                  style={{ background: DREAM_GRADIENT }}>
+                  <div aria-hidden className="pointer-events-none absolute inset-0 opacity-25 mix-blend-soft-light"
+                    style={{ backgroundImage: `url(${DREAM_FLORAL})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                  <div className="relative flex items-center justify-between gap-3 p-5">
                     <div className="flex-1 min-w-0">
                       <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
                         <Sparkles className="h-3 w-3" /> Dream Goal
@@ -2792,11 +2813,11 @@ function DashboardTab(props: {
       {/* ⑥ THIS MONTH'S STORY + INCOME VS EXPENSES */}
       {(() => {
         const storyOver = totalIncome > 0 && effectiveSpend > totalIncome;
-        const expenseBarColor = storyOver ? "#E11D48" : "#E4B6CE";
-        const ringTone = storyOver ? "#E11D48" : "#CE85A8";
+        const expenseBarColor = storyOver ? "#E11D48" : "#F9A8D4";
+        const ringTone = storyOver ? "#E11D48" : "#F472B6";
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+            <Card className={storyOver ? "bg-rose-50/60 border-rose-200/60" : ""}>
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
                 <Sparkles className={`h-4 w-4 ${storyOver ? "text-red-500" : "text-[#EC4899]"}`} strokeWidth={1.6} />
                 {viewPeriod === "week" ? "This week's story" : "This month's story"}
@@ -2814,11 +2835,11 @@ function DashboardTab(props: {
               </ul>
             </Card>
 
-            <Card className={storyOver ? "bg-gradient-to-br from-red-50 to-rose-100 border-red-200" : ""}>
+            <Card className={storyOver ? "bg-rose-50/60 border-rose-200/60" : ""}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>Income vs Expenses</h3>
                 <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
-                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full inline-block" style={{ background: "#CE85A8" }} /> Income</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full inline-block" style={{ background: "#F472B6" }} /> Income</span>
                   <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full inline-block transition-colors duration-500" style={{ background: expenseBarColor }} /> Expenses
                   </span>
@@ -2827,21 +2848,23 @@ function DashboardTab(props: {
               {totalIncome === 0 && effectiveSpend === 0 ? (
                 <EmptyState Icon={TrendingUp} text="Add income and log expenses to see comparison." compact />
               ) : (
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 flex items-end gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 flex items-end justify-center gap-6">
                     {(["income", "expenses"] as const).map(type => {
                       const val = type === "income" ? totalIncome : effectiveSpend;
                       const maxVal = Math.max(totalIncome, effectiveSpend, 1);
-                      const barPx = Math.max(4, Math.round((val / maxVal) * 80));
-                      const barColor = type === "income" ? "#CE85A8" : expenseBarColor;
+                      const barPx = Math.max(4, Math.round((val / maxVal) * 72));
+                      const fill = type === "income"
+                        ? "linear-gradient(180deg,#F9A8D4,#F472B6)"
+                        : storyOver ? "linear-gradient(180deg,#F9A8D4,#E11D48)" : "linear-gradient(180deg,#FBCFE8,#F9A8D4)";
                       return (
-                        <div key={type} className="flex-1 flex flex-col items-center gap-1">
-                          <span className={`text-[10px] font-bold ${storyOver && type === "expenses" ? "text-red-700" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
-                          <div className="relative w-full" style={{ height: 80 }}>
-                            <div className="absolute bottom-0 left-0 right-0 rounded-t-xl transition-all duration-700"
-                              style={{ height: barPx, background: barColor }} />
+                        <div key={type} className="flex flex-col items-center gap-1">
+                          <span className={`text-[11px] font-bold tabular-nums ${storyOver && type === "expenses" ? "text-[#E11D48]" : "text-[#831843]"}`}>{fmt(val, currency)}</span>
+                          <div className="relative flex items-end" style={{ height: 72 }}>
+                            <div className="w-9 sm:w-11 rounded-t-xl transition-all duration-700 shadow-[0_2px_8px_-2px_rgba(244,114,182,0.4)]"
+                              style={{ height: barPx, background: fill }} />
                           </div>
-                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-red-500" : "text-[#9D5C7E]"}`}>{type}</span>
+                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-[#E11D48]" : "text-[#9D5C7E]"}`}>{type}</span>
                         </div>
                       );
                     })}
@@ -2852,9 +2875,9 @@ function DashboardTab(props: {
                         pct={Math.min(100, (effectiveSpend / totalIncome) * 100)}
                         label=""
                         tone={ringTone}
-                        size={120}
+                        size={104}
                       />
-                      <p className={`text-[10px] font-semibold -mt-2 ${storyOver ? "text-red-500" : "text-[#9D5C7E]"}`}>of income spent</p>
+                      <p className={`text-[10px] font-semibold -mt-1.5 ${storyOver ? "text-[#E11D48]" : "text-[#9D5C7E]"}`}>of income spent</p>
                     </div>
                   )}
                 </div>
@@ -3320,7 +3343,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
                 <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
                 <div className="mt-3 relative h-3 rounded-full bg-pink-100 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%`, background: "linear-gradient(90deg,#E4B6CE,#C77CA0)" }} />
+                    style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
                   <span className="absolute inset-0 text-center text-[10px] font-bold text-[#831843] leading-3 pt-0.5">{Math.round(pct)}%</span>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
