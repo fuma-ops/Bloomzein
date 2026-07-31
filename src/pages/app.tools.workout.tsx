@@ -276,10 +276,14 @@ function PlusTag() {
 
 // ===================== EXERCISE PHOTO (with graceful placeholder) =====================
 
-function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone?: Zone; className: string }) {
+function ExercisePhoto({ exercise, zone, className, staticOnly }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean }) {
   const [broken, setBroken] = useState(false);
   const vidRef = useRef<HTMLVideoElement | null>(null);
   const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
+  // Only the *active* move animates. Everywhere else (backdrop, Next up, Rest
+  // previews) passes staticOnly so a still shows — keeps attention on the move
+  // being performed and avoids extra video decodes.
+  const showVideo = !staticOnly && !!exercise.video;
 
   // Only the clips actually on screen play — a library grid can show 20+ moves,
   // so autoplaying them all at once would hammer the device. Pause when scrolled
@@ -296,7 +300,7 @@ function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone
     );
     io.observe(v);
     return () => io.disconnect();
-  }, [exercise.video, broken]);
+  }, [showVideo, broken]);
 
   if (broken) {
     if (fallbackImage) {
@@ -310,7 +314,7 @@ function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone
   }
   // A looping demo clip (silent, seamless) reads far more alive than a still —
   // show it when the move has one, and fall back to the image if it fails to load.
-  if (exercise.video) {
+  if (showVideo) {
     return (
       <video
         ref={vidRef}
@@ -2595,7 +2599,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90 shadow-sm"><X className="h-4 w-4" /></button>
         {/* Hero — full-height left column on desktop */}
         <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[32rem] overflow-hidden">
-          <ExercisePhoto exercise={first} zone={session.zone} className="absolute inset-0 h-full w-full object-cover" />
+          <ExercisePhoto exercise={first} zone={session.zone} staticOnly className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
           {phase !== "any" && session.phaseOptimal.includes(phase) && (
             <span className="absolute top-3 left-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {PHASE_LABEL[phase]} optimized</span>
@@ -2628,7 +2632,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
               {uniqueMoves.map((s, i) => (
                 <div key={`${s.exercise.slug}-${i}`} className="shrink-0 w-20 text-center">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-petal/50">
-                    <ExercisePhoto exercise={s.exercise} zone={session.zone} className="h-full w-full object-cover" />
+                    <ExercisePhoto exercise={s.exercise} zone={session.zone} staticOnly className="h-full w-full object-cover" />
                     {s.kind !== "work" && (
                       <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[7px] font-bold uppercase tracking-wide py-0.5">{s.kind === "warmup" ? "Warm-up" : "Cool-down"}</span>
                     )}
@@ -3029,7 +3033,7 @@ function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; 
       {/* Bigger preview — the whole move is shown (contain, never cropped), with
           the name below. */}
       <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-petal/60 shadow-sm bg-blush/40">
-        <ExercisePhoto exercise={next} zone={zone} className="w-full h-full object-contain" />
+        <ExercisePhoto exercise={next} zone={zone} staticOnly className="w-full h-full object-contain" />
       </div>
       <div className="mt-2 min-w-0">
         <p className="text-sm sm:text-base font-bold text-rose leading-tight truncate">{next.name}</p>
@@ -3076,7 +3080,7 @@ function SessionBackdrop({ exercise, zone, phase, paused, index }: {
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* the blurred, breathing pose photo */}
       <div key={index} className="absolute inset-0 animate-fade-in">
-        <ExercisePhoto exercise={exercise} zone={zone}
+        <ExercisePhoto exercise={exercise} zone={zone} staticOnly
           className={["absolute inset-0 w-full h-full object-cover blur-2xl", paused ? "scale-125" : "animate-wk-bg-breathe"].join(" ")} />
       </div>
       {/* brand scrim — tinted to the zone (cooler on rest) so the glass panels
@@ -3388,6 +3392,9 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
   // ── Dashboard content, derived from the current move ──────────────────────
   const isSwitch = step.kind === "switch";
+  // Mirror the demo horizontally on the second side of a one-sided move (and
+  // during the switch cue) so it genuinely reads as "now the other side".
+  const mirrored = isSwitch || step.side === "second";
   // While resting, the reading panels PREVIEW the upcoming move (what "Coming up"
   // shows) so she can prep during the rest; during the move itself they track the
   // live exercise. (Live phase is unchanged since infoExercise === exercise then.)
@@ -3527,13 +3534,18 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
-            <div className="relative w-full aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0 rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]">
+            <div className={["relative w-full rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]",
+              // Video moves get a big 16:9 stage so the clip fills it edge-to-edge
+              // with no crop; still-image moves keep the taller framed look.
+              exercise.video
+                ? "aspect-video max-h-[74vh] mx-auto"
+                : "aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
               <div key={`bleed-${index}`} aria-hidden className="absolute inset-0 animate-fade-in">
-                <ExercisePhoto exercise={exercise} zone={session.zone}
-                  className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", isSwitch ? "scale-x-[-1]" : ""].join(" ")} />
+                <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly
+                  className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", mirrored ? "scale-x-[-1]" : ""].join(" ")} />
                 <div className="absolute inset-0 bg-white/25" />
               </div>
               {/* Ambient pink aurora — breathing radial blooms all around */}
@@ -3541,10 +3553,14 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               {/* Ambient petals drifting up through the side-bands */}
               <StagePetals paused={paused} />
               {/* Inner box sized to the CONTAINED image so the glow + arrows line up. */}
+              {/* Video moves fill the whole stage (object-cover) so the demo is
+                  large and immersive; still-image moves keep the framed, contained
+                  look sized to the detected muscle-glow aspect. */}
               <div key={index} className="absolute inset-0 m-auto animate-fade-in z-[6]"
-                style={glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any}>
-                <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full object-contain",
-                  isSwitch ? "scale-x-[-1]" : (!paused ? "animate-wk-ken-burns" : "")].join(" ")} />
+                style={exercise.video ? { inset: 0 } : (glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any)}>
+                <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full transition-transform duration-500",
+                  exercise.video ? "object-cover" : "object-contain",
+                  mirrored ? "scale-x-[-1]" : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
 
                 {/* Switch-sides overlay */}
                 {isSwitch && (
@@ -3557,8 +3573,10 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   </div>
                 )}
 
-                {/* Muscle glow — pulses ONLY over the worked muscle */}
-                {glow && !paused && !isSwitch && (
+                {/* Muscle glow — pulses ONLY over the worked muscle. Skipped for
+                    video moves: its coords are measured from the still image and
+                    wouldn't line up with the cover-filled clip. */}
+                {glow && !exercise.video && !paused && !isSwitch && (
                   <>
                     <div aria-hidden className="pointer-events-none absolute animate-muscle-pulse rounded-full"
                       style={{ left: `${glow.cx * 100}%`, top: `${glow.cy * 100}%`, width: `${glow.r * 240}%`, aspectRatio: "1",
@@ -3615,7 +3633,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   <div className="w-full max-w-xs sm:max-w-sm">
                     <p className="text-center text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
                     <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                      <ExercisePhoto exercise={next} zone={session.zone} className="w-full h-full object-contain" />
+                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly className="w-full h-full object-contain" />
                     </div>
                     <p className="mt-2 text-center">
                       <span className="text-base font-bold text-rose">{next.name}</span>
@@ -3631,7 +3649,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
                     <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                      <ExercisePhoto exercise={next} zone={session.zone} className="absolute inset-0 w-full h-full object-contain" />
+                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly className="absolute inset-0 w-full h-full object-contain" />
                     </div>
                     <p className="shrink-0 mt-2">
                       <span className="text-lg font-bold text-rose">{next.name}</span>
