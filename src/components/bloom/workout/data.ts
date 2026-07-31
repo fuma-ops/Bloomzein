@@ -88,6 +88,7 @@ const VIDEO_SLUGS = new Set<string>([
   "romanian-deadlift", "step-ups", "jump-squat", "squat-jump", "kettlebell-swing",
   "pigeon-pose", "figure-four-stretch", "low-lunge-hip-flexor", "butterfly-seated",
   "supine-twist", "supine-spinal-twist", "hip-circles", "reclined-butterfly",
+  "childs-pose", "foam-roll-glutes",
 ]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({

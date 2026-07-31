@@ -276,7 +276,7 @@ function PlusTag() {
 
 // ===================== EXERCISE PHOTO (with graceful placeholder) =====================
 
-function ExercisePhoto({ exercise, zone, className, staticOnly }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean }) {
+function ExercisePhoto({ exercise, zone, className, staticOnly, hold }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean; hold?: boolean }) {
   const [broken, setBroken] = useState(false);
   const vidRef = useRef<HTMLVideoElement | null>(null);
   const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
@@ -321,7 +321,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly }: { exercise: Ex
         src={exercise.video}
         poster={exercise.image}
         className={className}
-        loop
+        loop={!hold}
         muted
         playsInline
         preload="metadata"
@@ -3395,6 +3395,10 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   // Mirror the demo horizontally on the second side of a one-sided move (and
   // during the switch cue) so it genuinely reads as "now the other side".
   const mirrored = isSwitch || step.side === "second";
+  // Stretch / recovery moves run as timed HOLDS (no rep count). For those the
+  // demo plays once and settles on the deep-stretch frame with a gentle breathing
+  // pulse — so she sinks in and holds, instead of the clip re-repping like a workout.
+  const isHold = phase === "exercise" && !isSwitch && stepReps === 0;
   // While resting, the reading panels PREVIEW the upcoming move (what "Coming up"
   // shows) so she can prep during the rest; during the move itself they track the
   // live exercise. (Live phase is unchanged since infoExercise === exercise then.)
@@ -3556,11 +3560,12 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               {/* Video moves fill the whole stage (object-cover) so the demo is
                   large and immersive; still-image moves keep the framed, contained
                   look sized to the detected muscle-glow aspect. */}
-              <div key={index} className="absolute inset-0 m-auto animate-fade-in z-[6]"
+              <div key={index} className={["absolute inset-0 m-auto animate-fade-in z-[6] transition-transform duration-500", mirrored ? "scale-x-[-1]" : ""].join(" ")}
                 style={exercise.video ? { inset: 0 } : (glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any)}>
-                <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full transition-transform duration-500",
+                <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} className={["absolute inset-0 w-full h-full",
                   exercise.video ? "object-cover" : "object-contain",
-                  mirrored ? "scale-x-[-1]" : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
+                  isHold && exercise.video && !paused ? "animate-wk-hold-breathe"
+                    : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
 
                 {/* Switch-sides overlay */}
                 {isSwitch && (

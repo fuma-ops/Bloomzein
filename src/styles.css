@@ -1317,6 +1317,21 @@
   animation: wk-bg-breathe 7s ease-in-out infinite;
   will-change: transform;
 }
+/* Gentle breathing for a held stretch — the clip settles on the deep-stretch
+   frame and softly swells, so it feels alive without re-repping the movement. */
+@keyframes wk-hold-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
+}
+@utility animate-wk-hold-breathe {
+  animation: wk-hold-breathe 6s ease-in-out infinite;
+  will-change: transform;
+}
 
 /* Logo flower breath — gentle swell, SAME 7s period as the backdrop so the
    brand mark breathes in sync with the room. */
