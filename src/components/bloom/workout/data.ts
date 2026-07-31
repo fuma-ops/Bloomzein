@@ -30,6 +30,14 @@ export interface Exercise {
   /** Looping demo clip for this move ("/videos/workout-{slug}.mp4"). Silent,
    *  seamless loop — when present the UI shows it in place of the still image. */
   video?: string;
+  /** A clean still frame grabbed from the demo clip. Used as the video poster and
+   *  wherever a *stopped* frame is wanted (Rest / Next up previews) instead of the
+   *  older composite library illustration. */
+  poster?: string;
+  /** A held stretch/pose (not a rep or continuous mobility move). Its clip is a
+   *  play-once file that settles on the deep-stretch frame, so the player holds
+   *  there and breathes instead of looping. */
+  hold?: boolean;
   /** Spoken coaching clip for this move ("/audio/workout-{slug}.mp3"). Optional
    *  — the player just stays silent if a move has no recording yet. */
   audio?: string;
@@ -91,9 +99,20 @@ const VIDEO_SLUGS = new Set<string>([
   "childs-pose", "foam-roll-glutes",
 ]);
 
+/** Held stretches/poses — their clip is a play-once file that ends on the deep
+ *  stretch, so the player settles and breathes there rather than looping. Kept
+ *  in sync with how those clips were encoded (play-once, not crossfade-loop).
+ *  Continuous mobility moves (e.g. hip circles) are deliberately NOT here — they
+ *  loop even though they're timed. */
+const HOLD_SLUGS = new Set<string>([
+  "figure-four-stretch", "pigeon-pose", "low-lunge-hip-flexor", "butterfly-seated",
+  "reclined-butterfly", "supine-twist", "supine-spinal-twist", "childs-pose",
+]);
+
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
-  ...(VIDEO_SLUGS.has(slug) ? { video: `/videos/workout-${slug}.mp4` } : {}),
+  ...(VIDEO_SLUGS.has(slug) ? { video: `/videos/workout-${slug}.mp4`, poster: `/images/workout-${slug}-still.webp` } : {}),
+  ...(HOLD_SLUGS.has(slug) ? { hold: true } : {}),
   ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
   ...(opts?.uni ? { unilateral: true } : {}),
 });

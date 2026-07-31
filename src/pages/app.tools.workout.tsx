@@ -17,6 +17,7 @@ import { PlusLock, LockChip } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
+import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
@@ -276,7 +277,7 @@ function PlusTag() {
 
 // ===================== EXERCISE PHOTO (with graceful placeholder) =====================
 
-function ExercisePhoto({ exercise, zone, className, staticOnly, hold }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean; hold?: boolean }) {
+function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImage }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean; hold?: boolean; preferImage?: boolean }) {
   const [broken, setBroken] = useState(false);
   const vidRef = useRef<HTMLVideoElement | null>(null);
   const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
@@ -319,7 +320,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold }: { exerci
       <video
         ref={vidRef}
         src={exercise.video}
-        poster={exercise.image}
+        poster={exercise.poster ?? exercise.image}
         className={className}
         loop={!hold}
         muted
@@ -330,9 +331,13 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold }: { exerci
       />
     );
   }
+  // For a still: previews of a move with a clip show its clean stopped frame
+  // (poster); the library deliberately keeps the previous illustration via
+  // preferImage. Non-video moves just use their image.
+  const stillSrc = !preferImage && exercise.poster ? exercise.poster : exercise.image;
   return (
     <img
-      src={exercise.image}
+      src={stillSrc}
       alt={exercise.name}
       className={className}
       onError={() => setBroken(true)}
@@ -2532,7 +2537,7 @@ function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zo
       <button onClick={() => setOpen((v) => !v)} className="block w-full text-left active:scale-[0.99] transition">
         <div className={open ? "flex items-stretch gap-3" : ""}>
           <div className={open ? "w-32 sm:w-44 shrink-0" : ""}>
-            <ExercisePhoto exercise={exercise} zone={zone} className="aspect-square w-full object-cover" />
+            <ExercisePhoto exercise={exercise} zone={zone} staticOnly preferImage className="aspect-square w-full object-cover" />
           </div>
           <div className={open ? "flex-1 min-w-0 py-3 pr-3 flex flex-col justify-center" : "p-2.5"}>
             <div className="flex items-start justify-between gap-2">
@@ -3395,10 +3400,11 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   // Mirror the demo horizontally on the second side of a one-sided move (and
   // during the switch cue) so it genuinely reads as "now the other side".
   const mirrored = isSwitch || step.side === "second";
-  // Stretch / recovery moves run as timed HOLDS (no rep count). For those the
-  // demo plays once and settles on the deep-stretch frame with a gentle breathing
-  // pulse — so she sinks in and holds, instead of the clip re-repping like a workout.
-  const isHold = phase === "exercise" && !isSwitch && stepReps === 0;
+  // Held stretches settle on the deep-stretch frame with a gentle breathing pulse
+  // instead of looping. Driven by the exercise's explicit hold flag (kept in sync
+  // with the play-once clips) — NOT "no reps", so continuous mobility moves like
+  // Hip Circles keep looping even though they're timed.
+  const isHold = phase === "exercise" && !isSwitch && !!exercise.hold;
   // While resting, the reading panels PREVIEW the upcoming move (what "Coming up"
   // shows) so she can prep during the rest; during the move itself they track the
   // live exercise. (Live phase is unchanged since infoExercise === exercise then.)
@@ -3560,12 +3566,27 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               {/* Video moves fill the whole stage (object-cover) so the demo is
                   large and immersive; still-image moves keep the framed, contained
                   look sized to the detected muscle-glow aspect. */}
-              <div key={index} className={["absolute inset-0 m-auto animate-fade-in z-[6] transition-transform duration-500", mirrored ? "scale-x-[-1]" : ""].join(" ")}
+              <div key={index} className="absolute inset-0 m-auto animate-fade-in z-[6]"
                 style={exercise.video ? { inset: 0 } : (glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any)}>
-                <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} className={["absolute inset-0 w-full h-full",
-                  exercise.video ? "object-cover" : "object-contain",
-                  isHold && exercise.video && !paused ? "animate-wk-hold-breathe"
-                    : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
+                {/* Mirror ONLY the media on the second side — text overlays (switch
+                    cue, GO, rep ring) live outside this wrapper so they stay legible. */}
+                <div className={["absolute inset-0 transition-transform duration-500", mirrored ? "scale-x-[-1]" : ""].join(" ")}>
+                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} className={["absolute inset-0 w-full h-full",
+                    exercise.video ? "object-cover" : "object-contain",
+                    isHold && exercise.video && !paused ? "animate-wk-hold-breathe"
+                      : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
+                </div>
+
+                {/* Hold cue — on a held stretch, a soft "Hold & breathe" pill
+                    breathes at the bottom so it's clear she settles in, not reps. */}
+                {isHold && !isSwitch && (
+                  <div className="pointer-events-none absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-[22] animate-fade-in">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/70 px-3.5 py-1.5 shadow-[0_8px_24px_rgba(236,72,153,0.22)] animate-card-breathe">
+                      <span className="inline-block animate-icon-breathe"><BloomFlower size={14} /></span>
+                      <AnimatedWords key={index} text="Hold & breathe" stagger={140} className="text-xs sm:text-sm font-bold text-hotpink tracking-wide" />
+                    </span>
+                  </div>
+                )}
 
                 {/* Switch-sides overlay */}
                 {isSwitch && (
