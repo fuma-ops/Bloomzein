@@ -3392,6 +3392,9 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
   // ── Dashboard content, derived from the current move ──────────────────────
   const isSwitch = step.kind === "switch";
+  // Mirror the demo horizontally on the second side of a one-sided move (and
+  // during the switch cue) so it genuinely reads as "now the other side".
+  const mirrored = isSwitch || step.side === "second";
   // While resting, the reading panels PREVIEW the upcoming move (what "Coming up"
   // shows) so she can prep during the rest; during the move itself they track the
   // live exercise. (Live phase is unchanged since infoExercise === exercise then.)
@@ -3542,7 +3545,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   no empty pink margins. */}
               <div key={`bleed-${index}`} aria-hidden className="absolute inset-0 animate-fade-in">
                 <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly
-                  className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", isSwitch ? "scale-x-[-1]" : ""].join(" ")} />
+                  className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", mirrored ? "scale-x-[-1]" : ""].join(" ")} />
                 <div className="absolute inset-0 bg-white/25" />
               </div>
               {/* Ambient pink aurora — breathing radial blooms all around */}
@@ -3555,9 +3558,9 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   look sized to the detected muscle-glow aspect. */}
               <div key={index} className="absolute inset-0 m-auto animate-fade-in z-[6]"
                 style={exercise.video ? { inset: 0 } : (glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any)}>
-                <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full",
+                <ExercisePhoto exercise={exercise} zone={session.zone} className={["absolute inset-0 w-full h-full transition-transform duration-500",
                   exercise.video ? "object-cover" : "object-contain",
-                  isSwitch ? "scale-x-[-1]" : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
+                  mirrored ? "scale-x-[-1]" : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
 
                 {/* Switch-sides overlay */}
                 {isSwitch && (
