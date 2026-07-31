@@ -105,7 +105,7 @@ const VIDEO_SLUGS = new Set<string>([
  *  Continuous mobility moves (e.g. hip circles) are deliberately NOT here — they
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
-  "figure-four-stretch", "pigeon-pose", "low-lunge-hip-flexor", "butterfly-seated",
+  "figure-four-stretch", "pigeon-pose",
   "reclined-butterfly", "supine-twist", "supine-spinal-twist", "childs-pose",
 ]);
 
