@@ -105,13 +105,19 @@ const VIDEO_SLUGS = new Set<string>([
  *  Continuous mobility moves (e.g. hip circles) are deliberately NOT here — they
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
-  "figure-four-stretch", "pigeon-pose", "low-lunge-hip-flexor", "butterfly-seated",
+  "figure-four-stretch", "pigeon-pose",
   "reclined-butterfly", "supine-twist", "supine-spinal-twist", "childs-pose",
 ]);
 
+/** Explosive moves whose single frame always looks awkward (mid-air, blurred),
+ *  so previews use the previous library illustration instead of a video poster. */
+const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump"]);
+
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
-  ...(VIDEO_SLUGS.has(slug) ? { video: `/videos/workout-${slug}.mp4`, poster: `/images/workout-${slug}-still.webp` } : {}),
+  ...(VIDEO_SLUGS.has(slug)
+    ? { video: `/videos/workout-${slug}.mp4`, ...(NO_POSTER_SLUGS.has(slug) ? {} : { poster: `/images/workout-${slug}-still.webp` }) }
+    : {}),
   ...(HOLD_SLUGS.has(slug) ? { hold: true } : {}),
   ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
   ...(opts?.uni ? { unilateral: true } : {}),
