@@ -319,7 +319,15 @@ function BloomCard({ block, index }: { block: Extract<Block, { kind: "bloom" }>;
   );
 }
 
-export function ArticleBody({ parsed }: { parsed: ParsedArticle }) {
+export function ArticleBody({
+  parsed,
+  readHref = (id) => `/app/read?a=${id}`,
+}: {
+  parsed: ParsedArticle;
+  /** Where an @read cross-link points. Defaults to the in-app reader; the
+   *  public blog passes a resolver to `/blog/<slug>` for crawlable internal links. */
+  readHref?: (id: string) => string;
+}) {
   let firstParaSeen = false;
   return (
     <div>
@@ -384,7 +392,7 @@ export function ArticleBody({ parsed }: { parsed: ParsedArticle }) {
             return (
               <a
                 key={k}
-                href={`/app/read?a=${b.id}`}
+                href={readHref(b.id)}
                 className="group my-5 flex items-center gap-2.5 rounded-2xl border border-petal/70 bg-white/80 backdrop-blur px-3.5 py-3 transition hover:bg-white hover:-translate-y-0.5 shadow-[0_8px_22px_-16px_oklch(0.6_0.22_350/0.4)]"
               >
                 <BookOpen className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={2} />
