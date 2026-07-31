@@ -44,6 +44,25 @@ const FILTER_ICONS: Record<Filter, typeof Sparkles> = {
 
 const RECOMMENDED_IDS = ["SP010", "BE002", "NU002", "CY008", "HW001"];
 
+/* Editorial review mode. The in-app review panel (comment + Validate) is a
+ * private authoring tool, not for end users, so it's OFF by default. A reviewer
+ * turns it on by opening the site once with `?review=1` (persisted); `?review=0`
+ * clears it. Launch visitors never see it. */
+const REVIEW_MODE = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search).get("review");
+    if (p === "1") { localStorage.setItem("bloom:reviewMode", "1"); return true; }
+    if (p === "0") { localStorage.removeItem("bloom:reviewMode"); return false; }
+    return localStorage.getItem("bloom:reviewMode") === "1";
+  } catch { return false; }
+})();
+
+/* Only surface category filters that actually have articles — an empty filter
+ * lands the reader on a "no reads here yet" dead end. */
+const VISIBLE_FILTERS = FILTERS.filter(
+  (f) => f === "All" || ARTICLES.some((a) => a.category === f),
+);
+
 /* ---------- atoms ---------- */
 function TopicBadge({ topic }: { topic: string }) {
   return (
@@ -244,7 +263,7 @@ export default function ReadPage() {
 
         <div className="relative mt-2.5">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            {FILTERS.map((t) => {
+            {VISIBLE_FILTERS.map((t) => {
               const active = topic === t;
               const Icon = FILTER_ICONS[t];
               const pinned = t === "All";
@@ -452,8 +471,8 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
         </div>
       </header>
 
-      {/* Editorial review panel — only while this article is awaiting approval. */}
-      {article.status === "review" && <ReviewPanel article={article} />}
+      {/* Editorial review panel — authoring tool, gated to review mode (?review=1). */}
+      {REVIEW_MODE && article.status === "review" && <ReviewPanel article={article} />}
 
       {/* On small screens the TOC sits on top, above the article. */}
       {parsed ? <ArticleTOC sections={parsed.sections} collapsible className="relative z-[1] lg:hidden mt-3 mb-4" /> : null}
@@ -546,7 +565,7 @@ function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: A
         <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.category} /></div>
         <div className="absolute top-2 right-2 sm:top-3 sm:right-3"><HeartBtn saved={saved} onClick={onSave} /></div>
-        {article.status === "review" && (
+        {REVIEW_MODE && article.status === "review" && (
           <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 inline-flex items-center gap-1 rounded-full bg-hotpink/90 backdrop-blur px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm animate-selected-glow">
             ✎ Review
           </span>
