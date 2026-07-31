@@ -17,7 +17,6 @@ import { PlusLock, LockChip } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
-import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO, isYesterday } from "@/lib/localDate";
 import { readDietProfile } from "@/components/bloom/recipes/data";
@@ -3577,14 +3576,16 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                       : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
                 </div>
 
-                {/* Hold cue — on a held stretch, a soft "Hold & breathe" pill
-                    breathes at the bottom so it's clear she settles in, not reps. */}
+                {/* Hold cue — on a held stretch, a soft pink wash settles over the
+                    clip and a big "Hold & breathe" breathes (zoom in/out) in the
+                    centre, mirroring the "The End" screen, so she sinks in and holds. */}
                 {isHold && !isSwitch && (
-                  <div className="pointer-events-none absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-[22] animate-fade-in">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/70 px-3.5 py-1.5 shadow-[0_8px_24px_rgba(236,72,153,0.22)] animate-card-breathe">
-                      <span className="inline-block animate-icon-breathe"><BloomFlower size={14} /></span>
-                      <AnimatedWords key={index} text="Hold & breathe" stagger={140} className="text-xs sm:text-sm font-bold text-hotpink tracking-wide" />
-                    </span>
+                  <div className="pointer-events-none absolute inset-0 z-[22] grid place-items-center animate-fade-in">
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, oklch(0.88 0.1 350 / 0.14), oklch(0.82 0.13 345 / 0.2))" }} />
+                    <p className="relative animate-wk-hold-breathe font-script text-white/95 leading-tight text-center px-6 drop-shadow-[0_3px_14px_oklch(0.55_0.26_350/0.7)]"
+                      style={{ fontSize: "clamp(1.5rem, 5.5vw, 3.25rem)" }}>
+                      Hold &amp; breathe&nbsp;✿
+                    </p>
                   </div>
                 )}
 
