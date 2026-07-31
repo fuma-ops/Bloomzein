@@ -27,6 +27,9 @@ export interface Exercise {
   /** Placeholder path — image to be supplied later by FZ and attached by filename. */
   image: string;
   muscles: string;
+  /** Looping demo clip for this move ("/videos/workout-{slug}.mp4"). Silent,
+   *  seamless loop — when present the UI shows it in place of the still image. */
+  video?: string;
   /** Spoken coaching clip for this move ("/audio/workout-{slug}.mp3"). Optional
    *  — the player just stays silent if a move has no recording yet. */
   audio?: string;
@@ -76,8 +79,20 @@ export const WORKOUT_INTENTIONS: { key: WorkoutIntention; label: string; desc: s
    Image naming convention: /images/workout-{slug}.webp
    Real photography, clean & bright, works cropped to 16:9 and square. */
 
+/** Slugs that have a looping demo video attached ("/videos/workout-{slug}.mp4").
+ *  These play (silent, looped) in place of the still image everywhere the move
+ *  is shown. Add a slug here once its clip lands in /public/videos. */
+const VIDEO_SLUGS = new Set<string>([
+  "sumo-squat", "hip-thrust", "weighted-hip-thrust", "donkey-kicks", "glute-bridge",
+  "clamshells", "fire-hydrants", "side-lying-leg-raises", "bulgarian-split-squat",
+  "romanian-deadlift", "step-ups", "jump-squat", "squat-jump", "kettlebell-swing",
+  "pigeon-pose", "figure-four-stretch", "low-lunge-hip-flexor", "butterfly-seated",
+  "supine-twist", "supine-spinal-twist", "hip-circles", "reclined-butterfly",
+]);
+
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
+  ...(VIDEO_SLUGS.has(slug) ? { video: `/videos/workout-${slug}.mp4` } : {}),
   ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
   ...(opts?.uni ? { unilateral: true } : {}),
 });

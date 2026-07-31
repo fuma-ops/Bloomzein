@@ -278,7 +278,25 @@ function PlusTag() {
 
 function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone?: Zone; className: string }) {
   const [broken, setBroken] = useState(false);
+  const vidRef = useRef<HTMLVideoElement | null>(null);
   const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
+
+  // Only the clips actually on screen play — a library grid can show 20+ moves,
+  // so autoplaying them all at once would hammer the device. Pause when scrolled
+  // away, resume when back in view.
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      },
+      { threshold: 0.2 },
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, [exercise.video, broken]);
 
   if (broken) {
     if (fallbackImage) {
@@ -288,6 +306,24 @@ function ExercisePhoto({ exercise, zone, className }: { exercise: Exercise; zone
       <div className={`${className} grid place-items-center bg-gradient-to-br from-blush/70 to-petal/50`}>
         <Sparkles className="h-10 w-10 text-hotpink/50" strokeWidth={1.5} />
       </div>
+    );
+  }
+  // A looping demo clip (silent, seamless) reads far more alive than a still —
+  // show it when the move has one, and fall back to the image if it fails to load.
+  if (exercise.video) {
+    return (
+      <video
+        ref={vidRef}
+        src={exercise.video}
+        poster={exercise.image}
+        className={className}
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        aria-label={exercise.name}
+        onError={() => setBroken(true)}
+      />
     );
   }
   return (
