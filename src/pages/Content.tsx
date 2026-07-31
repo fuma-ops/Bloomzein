@@ -4,9 +4,17 @@ import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart,
   PersonStanding, Feather, Brain, Moon, Leaf, HeartHandshake, NotebookPen, Compass, Star } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { supabase } from "@/lib/supabase";
-import { ARTICLES, FILTERS, IMG, articlesByCategory, type Filter, type Article } from "@/lib/readsData";
+import { ARTICLES, FILTERS, IMG, articlesByCategory, articleById, type Filter, type Article } from "@/lib/readsData";
 import { articleSlug, articleBySlug } from "@/lib/blog";
 import { loadArticleBody } from "@/content/reads/registry";
+import { ArticleBody, parseArticle } from "@/components/bloom/read/ArticleBody";
+
+/** @read cross-links on the public blog resolve to /blog/<slug> (crawlable),
+ *  not the in-app reader. */
+const blogReadHref = (id: string) => {
+  const a = articleById(id);
+  return a ? `/blog/${articleSlug(a)}` : "/blog";
+};
 
 /* ------------------------------------------------------------------ *
  * Public, indexable content pages — Help Center, Guides, FAQ.
@@ -960,7 +968,7 @@ export function BlogArticlePage({ slug }: { slug: string }) {
                 </div>
               </div>
             ) : (
-              <BlogArticleBody md={md} />
+              <ArticleBody parsed={parseArticle(md)} readHref={blogReadHref} />
             )}
           </div>
 

@@ -164,7 +164,7 @@ export default function Landing() {
                   { href: "/", label: "Home" },
                   { href: "#universes", label: "Features" },
                   { href: "#features", label: "About" },
-                  { href: "/app/read", label: "Blog" },
+                  { href: "/blog", label: "Blog" },
                   { href: "#contact", label: "Contact" },
                 ].map((l) => (
                   <a
