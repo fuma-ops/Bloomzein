@@ -6,7 +6,7 @@ import {
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
-  Trash2, CircleCheck, Circle, Tv, Wind, Waves, type LucideIcon,
+  Trash2, CircleCheck, Circle, Tv, Wind, Waves, Gauge, type LucideIcon,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
@@ -2568,6 +2568,9 @@ function Chip({ active, onClick, children, disabled }: { active: boolean; onClic
 type DayPart = "dawn" | "day" | "dusk" | "night";
 type SkinPref = "auto" | "day" | "night";
 const YOGA_SKIN_KEY = "bloom:yoga-skin";
+const YOGA_SPEED_KEY = "bloom:yoga-speed";
+const YOGA_VOICE_KEY = "bloom:yoga-voice-vol";
+const YOGA_MUSIC_KEY = "bloom:yoga-music-vol";
 function clockDayPart(d = new Date()): DayPart {
   const h = d.getHours();
   if (h >= 5 && h < 9) return "dawn";
@@ -2712,18 +2715,40 @@ function SessionPlayer({
   const [peek, setPeek] = useState(false);
   const [breathOpen, setBreathOpen] = useState(false); // centered breath-guide overlay (from the "Breath" control)
   const [tvHint, setTvHint] = useState(false); // brief "cast your tab" guide after going full-screen
+  // Playback speed for the pose clip — yoga wants a calm, slow pace. 0.7× default.
+  const [speed, setSpeed] = useState<number>(() => { try { return Number(localStorage.getItem(YOGA_SPEED_KEY)) || 0.7; } catch { return 0.7; } });
+  const [showSpeed, setShowSpeed] = useState(false);
+  // Independent voice + music levels, adjustable from a little sound panel.
+  const [voiceVol, setVoiceVol] = useState<number>(() => { try { const v = localStorage.getItem(YOGA_VOICE_KEY); return v == null ? 0.8 : Number(v); } catch { return 0.8; } });
+  const [musicVol, setMusicVol] = useState<number>(() => { try { const v = localStorage.getItem(YOGA_MUSIC_KEY); return v == null ? 0.72 : Number(v); } catch { return 0.72; } });
+  const [showVolume, setShowVolume] = useState(false);
   // Pose photo load state — show a soft placeholder until it's ready (and if a
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
   useEffect(() => { setImgReady(false); }, [idx]);
+  const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
+  const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
+  const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip
+  // Keep the pose clip playing at the chosen calm speed (re-applied per pose,
+  // since a fresh <video> resets to 1×). Persist the choice.
+  useEffect(() => {
+    try { localStorage.setItem(YOGA_SPEED_KEY, String(speed)); } catch {}
+    const v = flowVideoRef.current; if (v) try { v.playbackRate = speed; } catch {}
+  }, [speed, idx, imgReady]);
+  // Live-apply + persist the two volumes as the sliders move (honour mute).
+  useEffect(() => {
+    try { localStorage.setItem(YOGA_MUSIC_KEY, String(musicVol)); } catch {}
+    const m = musicRef.current; if (m) try { m.volume = muted ? 0 : musicVol; } catch {}
+  }, [musicVol, muted]);
+  useEffect(() => {
+    try { localStorage.setItem(YOGA_VOICE_KEY, String(voiceVol)); } catch {}
+    const nrt = narrationRef.current; if (nrt) try { nrt.volume = muted ? 0 : voiceVol; } catch {}
+  }, [voiceVol, muted]);
   const { stop } = useSpeaker();
   const langBcp = LANGS.find((l) => l.id === lang)?.bcp || "en-US";
   // Breath cue is VISUAL only (the ring + label) — no spoken voice.
   const { phase: breathPhase, phaseProgress: breathProgress } = useBreathPacer(running, muted, idx);
   const wakeLockRef = useRef<any>(null);
-  const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
-  const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
-  const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip
 
   // "TV": go full-screen so the flow fills the whole screen cleanly, then show a
   // short guide reminding her to cast/mirror the tab (Chromecast / AirPlay) — that
@@ -2756,10 +2781,16 @@ function SessionPlayer({
     let a = musicRef.current;
     if (!a) {
       a = new Audio(MUSIC[sound] || MUSIC[DEFAULT_SOUND]);
-      a.loop = true; a.volume = 0.72; a.preload = "auto";
+      a.loop = true; a.volume = musicVol; a.preload = "auto";
       musicRef.current = a;
     }
     return a;
+  };
+  // Mute/unmute that also pauses or gently resumes the music bed.
+  const setMuteState = (n: boolean) => {
+    setMuted(n);
+    if (n) stopAllAudio();
+    else if (running) { try { const m = ensureMusic(); m.volume = 0; m.play().then(() => fadeAudioTo(m, musicVol, 1000)).catch(() => {}); } catch {} }
   };
   const togglePlay = () => {
     const next = !running;
@@ -2769,7 +2800,7 @@ function SessionPlayer({
           // Fade the music in gently at the start of a flow (no abrupt cut-in).
           const m = ensureMusic();
           m.volume = 0;
-          m.play().then(() => fadeAudioTo(m, 0.72, 1600)).catch(() => {});
+          m.play().then(() => fadeAudioTo(m, musicVol, 1600)).catch(() => {});
         } catch {}
       }
     }
@@ -2810,7 +2841,7 @@ function SessionPlayer({
     const url = poseAudioFor(pose);
     if (!url) return;
     const a = new Audio(url);
-    a.volume = 0.8; // softer voice so the background music still breathes underneath
+    a.volume = voiceVol; // her chosen voice level (music still breathes underneath)
     narrationRef.current = a;
     // First pose of the session: hold the narration ~5s so she can settle in and
     // notice the background music before the voice begins.
@@ -2921,6 +2952,10 @@ function SessionPlayer({
   return createPortal(
     <div className="fixed inset-0 z-[60] overflow-hidden transition-[background] duration-1000"
       style={{ background: skin.frame }}>
+      <style>{`.yoga-vol-slider{-webkit-appearance:none;appearance:none;height:7px;border-radius:9999px;accent-color:#EC4899;background:rgba(236,72,153,0.18);outline:none;cursor:pointer}
+        .yoga-vol-slider::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:18px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer;transition:transform .12s}
+        .yoga-vol-slider::-webkit-slider-thumb:active{transform:scale(1.18)}
+        .yoga-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3086,12 +3121,70 @@ function SessionPlayer({
             {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             {skinPref === "auto" && <span className="opacity-70">auto</span>}
           </button>
-          <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { const m = ensureMusic(); m.volume = 0; m.play().then(() => fadeAudioTo(m, 0.72, 1200)).catch(() => {}); } catch {} } }}
-            className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
-            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          <button onClick={() => { setShowSpeed((s) => !s); setShowVolume(false); }} title="Playback speed"
+            className={["inline-flex items-center gap-1 rounded-full px-2.5 h-9 text-[11px] font-bold tabular-nums", showSpeed ? "ring-2 ring-hotpink/50 " : "", glassBtn].join(" ")}>
+            <Gauge className="h-4 w-4" />{speed}×
+          </button>
+          <button onClick={() => { setShowVolume((s) => !s); setShowSpeed(false); }} title="Sound levels"
+            className={["grid h-9 w-9 place-items-center rounded-full", showVolume ? "ring-2 ring-hotpink/50 " : "", glassBtn].join(" ")}>
+            {muted || (voiceVol === 0 && musicVol === 0) ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
         </div>
       </div>
+
+      {/* Tap-away catcher for the top-right popovers */}
+      {(showSpeed || showVolume) && (
+        <div className="fixed inset-0 z-30" onClick={() => { setShowSpeed(false); setShowVolume(false); }} />
+      )}
+
+      {/* ===================== SPEED SELECTOR (popover) ===================== */}
+      {showSpeed && (
+        <div className={["absolute right-4 sm:right-5 top-16 sm:top-20 z-40 w-44 rounded-2xl p-3 animate-scale-in", glass].join(" ")}>
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: skin.inkSoft }}>
+            <Gauge className="h-3.5 w-3.5" /> Pace
+          </p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[0.5, 0.7, 1].map((s) => (
+              <button key={s} onClick={() => { setSpeed(s); }}
+                className={["rounded-xl py-2 text-sm font-bold tabular-nums transition active:scale-95",
+                  speed === s ? "bg-gradient-to-br from-petal to-hotpink text-white shadow-md shadow-hotpink/25" : glassBtn].join(" ")}>
+                {s}×
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] leading-snug text-center" style={{ color: skin.inkSoft }}>Slower = calmer, breath-paced</p>
+        </div>
+      )}
+
+      {/* ===================== SOUND LEVELS (popover) ===================== */}
+      {showVolume && (
+        <div className={["absolute right-4 sm:right-5 top-16 sm:top-20 z-40 w-64 rounded-2xl p-4 animate-scale-in", glass].join(" ")}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
+              <Music className="h-3.5 w-3.5" /> Sound
+            </p>
+            <button onClick={() => setMuteState(!muted)}
+              className={["inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide", glassBtn].join(" ")}>
+              {muted ? <><VolumeX className="h-3 w-3" /> Muted</> : <><Volume2 className="h-3 w-3" /> On</>}
+            </button>
+          </div>
+          {([
+            { label: "Voice", Icon: Headphones, val: voiceVol, set: setVoiceVol },
+            { label: "Music", Icon: Music, val: musicVol, set: setMusicVol },
+          ] as const).map(({ label, Icon, val, set }) => (
+            <div key={label} className="mb-3 last:mb-0">
+              <div className="flex items-center justify-between text-[11px] font-semibold mb-1" style={{ color: skin.ink }}>
+                <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" style={{ color: "#EC4899" }} /> {label}</span>
+                <span className="tabular-nums" style={{ color: skin.inkSoft }}>{Math.round(val * 100)}%</span>
+              </div>
+              <input type="range" min={0} max={1} step={0.01} value={val}
+                onChange={(e) => { if (muted) setMuteState(false); set(Number(e.target.value)); }}
+                className="yoga-vol-slider w-full"
+                style={{ accentColor: "#EC4899", opacity: muted ? 0.5 : 1 }} />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ===================== LEFT RAIL (desktop) ===================== */}
       {!dim && (
