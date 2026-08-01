@@ -61,7 +61,7 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "frog", "knees-to-chest", "seated-wide-leg-fold", "head-to-knee", "seated-forward-fold",
   "bridge", "cobra", "chair", "downward-dog", "forward-fold",
   "mountain", "butterfly", "low-lunge", "seated-twist", "childs-pose",
-  "easy-seat",
+  "easy-seat", "supported-savasana",
 ]);
 
 const P = (p: Pose): Pose => ({
@@ -792,18 +792,22 @@ function fadeAudioTo(el: HTMLAudioElement, target: number, ms: number, done?: ()
 }
 /** Play the outro for this intention — fades in, and gently fades itself out after
  *  a short window so a long track never hijacks the next screen. */
-function playEndOutro(intention: Intention) {
+function playEndOutro(intention: Intention, onEnded?: () => void) {
   stopEndOutro();
+  let fired = false;
+  const fire = () => { if (!fired) { fired = true; onEnded?.(); } };
   try {
     const a = new Audio(endOutroUrl(intention));
     a.volume = 0; a.preload = "auto";
     endOutroEl = a;
-    a.play().then(() => fadeAudioTo(a, 0.85, 1400)).catch(() => {});
-    a.addEventListener("ended", () => { if (endOutroEl === a) endOutroEl = null; });
+    a.play().then(() => fadeAudioTo(a, 0.85, 1400)).catch(() => fire());
+    a.addEventListener("ended", () => { if (endOutroEl === a) endOutroEl = null; fire(); });
+    // Long tracks fade + stop after a window; treat that as the outro's end too.
     window.setTimeout(() => {
-      if (endOutroEl === a) fadeAudioTo(a, 0, 1600, () => { if (endOutroEl === a) stopEndOutro(); });
+      if (endOutroEl === a) fadeAudioTo(a, 0, 1600, () => { if (endOutroEl === a) stopEndOutro(); fire(); });
+      else fire();
     }, 15000);
-  } catch {}
+  } catch { fire(); }
 }
 
 // ── Background music (a continuous, looping bed). "Windsong" is the fullest
@@ -2764,7 +2768,13 @@ function SessionPlayer({
     stop();
     const music = musicRef.current;
     if (music) fadeAudioTo(music, 0, 1300, () => { try { music.pause(); } catch {} });
-    if (!muted) playEndOutro(intention);
+    // Hold the soft "The End" over the last pose until the outro audio finishes,
+    // THEN reveal the celebration/summary. Fallbacks guard against a missing clip.
+    let handed = false;
+    const hand = () => { if (!handed) { handed = true; onDone(); } };
+    if (!muted) playEndOutro(intention, hand);
+    else window.setTimeout(hand, 6000);
+    window.setTimeout(hand, 22000); // safety net so she's never stuck on The End
     // streak
     try {
       const raw = localStorage.getItem(STREAK_KEY);
@@ -2781,9 +2791,6 @@ function SessionPlayer({
     // Log the flow's calories so yoga counts toward the daily energy balance.
     const practiceMin = Math.max(5, Math.round(flowTotalSeconds(flow) / 60));
     logYogaSession(practiceMin, readDietProfile().weight);
-    // Stay on the last pose with the soft "The End" while the outro plays over
-    // it, then hand off to the summary.
-    window.setTimeout(() => onDone(), 7000);
   }
 
   if (!pose) return null;
@@ -3069,6 +3076,7 @@ function Summary({
   // The exact time she just practiced (sum of every step incl. both sides).
   const realMin = Math.max(1, Math.round(flowTotalSeconds(flow) / 60));
   const realPoses = flow.filter((p) => !p.switchStep).length;
+  const kcal = yogaSessionKcal(realMin, readDietProfile().weight);
 
   let streakCount = 0;
   try { streakCount = (JSON.parse(localStorage.getItem(STREAK_KEY) || "{}")?.count) || 0; } catch {}
@@ -3082,7 +3090,7 @@ function Summary({
         </span>
         <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-3 animate-text-pop">You bloomed.</h2>
         <p className="text-xs text-rose/60 italic mt-1">Your breath, your body, your quiet hour.</p>
-        <div className="mt-4 grid grid-cols-3 gap-2.5">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
             <p className="font-script text-2xl text-hotpink leading-none">{realMin}</p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">min</p>
@@ -3090,6 +3098,10 @@ function Summary({
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
             <p className="font-script text-2xl text-hotpink leading-none">{realPoses}</p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">poses</p>
+          </div>
+          <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
+            <p className="font-script text-2xl text-hotpink leading-none">{kcal}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">kcal</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-hotpink/15 to-petal/40 border border-petal/60 p-2.5 animate-selected-glow">
             <p className="font-script text-2xl text-hotpink leading-none">{streakCount}</p>
