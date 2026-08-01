@@ -6,7 +6,7 @@ import {
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
-  Trash2, CircleCheck, Circle,
+  Trash2, CircleCheck, Circle, Tv,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
@@ -777,6 +777,19 @@ const END_OUTRO: Record<Intention, string> = {
 const endOutroUrl = (i: Intention) => `/audio/yoga/end/${END_OUTRO[i]}.mp3`;
 let endOutroEl: HTMLAudioElement | null = null;
 function stopEndOutro() { try { endOutroEl?.pause(); } catch {} endOutroEl = null; }
+/** Immersive full-screen so the flow fills the TV cleanly when the screen/tab is
+ *  cast or mirrored (Chromecast / AirPlay). Toggles on/off. */
+function toggleFullscreen() {
+  const d = document as any;
+  try {
+    if (!d.fullscreenElement && !d.webkitFullscreenElement) {
+      const el = d.documentElement as any;
+      (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    } else {
+      (d.exitFullscreen || d.webkitExitFullscreen)?.call(d);
+    }
+  } catch {}
+}
 /** Linearly ramp an audio element's volume to a target over `ms`. */
 function fadeAudioTo(el: HTMLAudioElement, target: number, ms: number, done?: () => void) {
   const steps = 24;
@@ -2833,6 +2846,10 @@ function SessionPlayer({
           <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-1.5">
+          <button onClick={toggleFullscreen} title="Watch on TV — full screen, then cast or mirror your screen"
+            className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
+            <Tv className="h-3.5 w-3.5" /><span className="hidden sm:inline">TV</span>
+          </button>
           <button onClick={cycleSkin}
             title={`Theme: ${skinPref === "auto" ? `auto (${dayPart})` : skinPref}`}
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
