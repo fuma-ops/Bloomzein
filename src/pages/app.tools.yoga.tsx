@@ -801,12 +801,9 @@ function playEndOutro(intention: Intention, onEnded?: () => void) {
     a.volume = 0; a.preload = "auto";
     endOutroEl = a;
     a.play().then(() => fadeAudioTo(a, 0.85, 1400)).catch(() => fire());
+    // Let the outro play to its natural end — never cropped mid-sentence.
     a.addEventListener("ended", () => { if (endOutroEl === a) endOutroEl = null; fire(); });
-    // Long tracks fade + stop after a window; treat that as the outro's end too.
-    window.setTimeout(() => {
-      if (endOutroEl === a) fadeAudioTo(a, 0, 1600, () => { if (endOutroEl === a) stopEndOutro(); fire(); });
-      else fire();
-    }, 15000);
+    a.addEventListener("error", () => fire());
   } catch { fire(); }
 }
 
@@ -2766,15 +2763,16 @@ function SessionPlayer({
     setFinished(true); // keep the last pose on screen with a soft "The End"
     try { narrationRef.current?.pause(); } catch {}
     stop();
-    const music = musicRef.current;
-    if (music) fadeAudioTo(music, 0, 1300, () => { try { music.pause(); } catch {} });
-    // Hold the soft "The End" over the last pose until the outro audio finishes,
-    // THEN reveal the celebration/summary. Fallbacks guard against a missing clip.
+    // Keep the background music playing at the SAME flow volume under the outro —
+    // no fade-down — so the close feels continuous, not cut short. The music only
+    // stops when the player unmounts (on hand-off to the summary).
+    // Hold the soft "The End" over the last pose until the outro finishes fully
+    // (never cropped), THEN reveal the celebration/summary.
     let handed = false;
     const hand = () => { if (!handed) { handed = true; onDone(); } };
     if (!muted) playEndOutro(intention, hand);
     else window.setTimeout(hand, 6000);
-    window.setTimeout(hand, 22000); // safety net so she's never stuck on The End
+    window.setTimeout(hand, 90000); // last-resort safety net, long enough to never cut the outro
     // streak
     try {
       const raw = localStorage.getItem(STREAK_KEY);
