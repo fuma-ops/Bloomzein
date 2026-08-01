@@ -2650,6 +2650,18 @@ function SessionPlayer({
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
+  const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip (for casting to a TV)
+
+  // "TV": open the native cast/AirPlay picker on the pose clip so it plays on the
+  // TV (Remote Playback API). If casting isn't available, fall back to full-screen
+  // so the tab/screen can be mirrored instead.
+  const shareToTV = () => {
+    const v = flowVideoRef.current as any;
+    try {
+      if (v?.remote && typeof v.remote.prompt === "function") { v.remote.prompt().catch(() => toggleFullscreen()); return; }
+    } catch {}
+    toggleFullscreen();
+  };
   const lastPlayedIdx = useRef<number>(-1);
   const introShownRef = useRef(false); // 5s music-only intro before the first pose's voice
   const midIdx = Math.floor(flow.length / 2);
@@ -2846,7 +2858,7 @@ function SessionPlayer({
           <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={toggleFullscreen} title="Watch on TV — full screen, then cast or mirror your screen"
+          <button onClick={shareToTV} title="Cast to TV (Chromecast / AirPlay) — or full screen to mirror"
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             <Tv className="h-3.5 w-3.5" /><span className="hidden sm:inline">TV</span>
           </button>
@@ -2938,7 +2950,7 @@ function SessionPlayer({
               )}
               {pose.video ? (
                 <video
-                  key={idx}
+                  ref={flowVideoRef}
                   src={pose.video}
                   poster={pose.poster ?? pose.image}
                   autoPlay
