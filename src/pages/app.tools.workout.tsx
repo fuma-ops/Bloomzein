@@ -290,9 +290,12 @@ function toggleFullscreen() {
 
 // ===================== EXERCISE PHOTO (with graceful placeholder) =====================
 
-function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImage }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean; hold?: boolean; preferImage?: boolean }) {
+function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImage, videoRef }: { exercise: Exercise; zone?: Zone; className: string; staticOnly?: boolean; hold?: boolean; preferImage?: boolean; videoRef?: (el: HTMLVideoElement | null) => void }) {
   const [broken, setBroken] = useState(false);
   const vidRef = useRef<HTMLVideoElement | null>(null);
+  // Assign both the internal ref (for the on-screen play/pause observer) and any
+  // external ref (used to cast this clip to a TV).
+  const setVid = (el: HTMLVideoElement | null) => { vidRef.current = el; videoRef?.(el); };
   const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
   // Only the *active* move animates. Everywhere else (backdrop, Next up, Rest
   // previews) passes staticOnly so a still shows — keeps attention on the move
@@ -331,7 +334,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
   if (showVideo) {
     return (
       <video
-        ref={vidRef}
+        ref={setVid}
         src={exercise.video}
         poster={exercise.poster ?? exercise.image}
         className={className}
@@ -3142,6 +3145,16 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   const [celebrateReady, setCelebrateReady] = useState(false); // after the "END" intro + 5s music fade
   const [finalElapsed, setFinalElapsed] = useState(0);
   const finishedRef = useRef(false);
+  const sessionVideoRef = useRef<HTMLVideoElement | null>(null); // active clip, for casting to a TV
+  // "TV": cast the current move clip to a TV (Chromecast / AirPlay); if casting
+  // isn't available, go full-screen so the tab/screen can be mirrored instead.
+  const shareToTV = () => {
+    const v = sessionVideoRef.current as any;
+    try {
+      if (v?.remote && typeof v.remote.prompt === "function") { v.remote.prompt().catch(() => toggleFullscreen()); return; }
+    } catch {}
+    toggleFullscreen();
+  };
   const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
   const [intro, setIntro] = useState<number | "go" | null>(null); // countdown digit
   const [goRing, setGoRing] = useState(0);                    // "GO" burst key (from the ring)
@@ -3499,7 +3512,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             <span className="text-xs sm:text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
         </div>
-        <button onClick={toggleFullscreen} aria-label="Watch on TV" title="Watch on TV — full screen, then cast or mirror your screen" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+        <button onClick={shareToTV} aria-label="Cast to TV" title="Cast to TV (Chromecast / AirPlay) — or full screen to mirror" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           <Tv className="h-5 w-5" />
         </button>
         <button onClick={() => setSound((s) => !s)} aria-label="Sound" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
@@ -3587,7 +3600,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                 {/* Mirror ONLY the media on the second side — text overlays (switch
                     cue, GO, rep ring) live outside this wrapper so they stay legible. */}
                 <div className={["absolute inset-0 transition-transform duration-500", mirrored ? "scale-x-[-1]" : ""].join(" ")}>
-                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} className={["absolute inset-0 w-full h-full",
+                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} videoRef={(el) => { sessionVideoRef.current = el; }} className={["absolute inset-0 w-full h-full",
                     exercise.video ? "object-cover" : "object-contain",
                     isHold && exercise.video && !paused ? "animate-wk-hold-breathe"
                       : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
