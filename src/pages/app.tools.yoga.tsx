@@ -61,7 +61,7 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "frog", "knees-to-chest", "seated-wide-leg-fold", "head-to-knee", "seated-forward-fold",
   "bridge", "cobra", "chair", "downward-dog", "forward-fold",
   "mountain", "butterfly", "low-lunge", "seated-twist", "childs-pose",
-  "easy-seat", "supported-savasana",
+  "easy-seat",
 ]);
 
 const P = (p: Pose): Pose => ({
@@ -2622,6 +2622,7 @@ function SessionPlayer({
   const realTotal = flow.filter((p) => !p.switchStep).length;
   const stepNum = flow.slice(0, idx + 1).filter((p) => !p.switchStep).length;
   const [remaining, setRemaining] = useState(() => (flow[0] ? poseHoldSec(flow[0]) : hold));
+  const [finished, setFinished] = useState(false); // holds the last pose with a soft "The End" while the outro plays
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
   // Pose photo load state — show a soft placeholder until it's ready (and if a
@@ -2758,6 +2759,7 @@ function SessionPlayer({
     // and play a soft end-of-flow outro that continues over the summary screen so
     // she's always told the flow has ended.
     setRunning(false);
+    setFinished(true); // keep the last pose on screen with a soft "The End"
     try { narrationRef.current?.pause(); } catch {}
     stop();
     const music = musicRef.current;
@@ -2779,9 +2781,9 @@ function SessionPlayer({
     // Log the flow's calories so yoga counts toward the daily energy balance.
     const practiceMin = Math.max(5, Math.round(flowTotalSeconds(flow) / 60));
     logYogaSession(practiceMin, readDietProfile().weight);
-    // Hold the summary a beat so the music fade-out is audible before the player
-    // unmounts; the outro then carries over the summary screen.
-    window.setTimeout(() => onDone(), 1200);
+    // Stay on the last pose with the soft "The End" while the outro plays over
+    // it, then hand off to the summary.
+    window.setTimeout(() => onDone(), 7000);
   }
 
   if (!pose) return null;
@@ -2795,6 +2797,20 @@ function SessionPlayer({
   return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col p-3 sm:p-4 transition-[background] duration-1000"
       style={{ background: skin.frame, paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+      {/* Soft "The End" — a faded wash over the last (still-looping) pose while the
+          outro plays; tap to continue to the summary. Animated gently, not abrupt. */}
+      {finished && (
+        <div
+          onClick={onDone}
+          className="absolute inset-0 z-[70] grid place-items-center animate-fade-in cursor-pointer"
+          style={{ background: "linear-gradient(160deg, oklch(0.9 0.07 350 / 0.5), oklch(0.82 0.11 345 / 0.46))", backdropFilter: "blur(1.5px)" }}
+        >
+          <div className="text-center animate-scale-in px-6">
+            <p className="animate-wk-end-breathe font-script text-white leading-none drop-shadow-[0_6px_30px_oklch(0.5_0.28_350/0.8)]" style={{ fontSize: "clamp(3rem, 14vw, 8rem)" }}>The&nbsp;End&nbsp;✿</p>
+            <p className="mt-3 font-semibold uppercase tracking-[0.34em] text-white/85 text-xs sm:text-sm">Namaste</p>
+          </div>
+        </div>
+      )}
       {/* TOP BAR */}
       <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
         <button onClick={() => { stopAllAudio(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
@@ -2903,7 +2919,7 @@ function SessionPlayer({
                   aria-label={pose.name}
                   onLoadedData={() => setImgReady(true)}
                   onError={() => setImgReady(false)}
-                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
                   style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
                 />
               ) : (
@@ -2913,9 +2929,20 @@ function SessionPlayer({
                   alt={pose.name}
                   onLoad={() => setImgReady(true)}
                   onError={() => setImgReady(false)}
-                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
                   style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
                 />
+              )}
+              {/* Gentle "other side" cue at the start of a second-side step —
+                  soft, brief, then it fades to just the mirrored pose. */}
+              {pose.switchStep && (poseHoldSec(pose) - remaining) < 2.6 && (
+                <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center animate-fade-in">
+                  <div className="text-center px-5 py-3 rounded-[1.5rem] bg-white/70 backdrop-blur-md border border-white/70 shadow-lg animate-scale-in">
+                    <div className="text-3xl sm:text-4xl text-hotpink animate-spin" style={{ animationDuration: "1.8s" }}>↺</div>
+                    <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">Other side</p>
+                    <p className="text-[11px] font-semibold text-rose/70">ease gently over ✿</p>
+                  </div>
+                </div>
               )}
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
