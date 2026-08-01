@@ -3152,9 +3152,9 @@ function SessionPlayer({
         </div>
       )}
 
-      {/* ===================== CENTRE QUOTE (tablet+) ===================== */}
+      {/* ===================== FLOW QUOTE (bottom-right, tablet+) ========== */}
       {!dim && (
-        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-[30%] z-10 w-64 px-2 pointer-events-none">
+        <div className="hidden md:block absolute right-4 lg:right-5 bottom-3 z-10 w-60 lg:w-64 pointer-events-none">
           <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
             <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
           </div>
@@ -3174,8 +3174,8 @@ function SessionPlayer({
         </div>
       )}
 
-      {/* ===================== BOTTOM: controls + mantra ===================== */}
-      <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3"
+      {/* ===================== CONTROLS + MANTRA (bottom-left on desktop) === */}
+      <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:left-5 z-20 flex flex-col items-center lg:items-start gap-2 px-3"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <div className={["flex items-center gap-1.5 sm:gap-2 rounded-full p-1.5 animate-fade-in", glass].join(" ")}>
           <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
@@ -3203,8 +3203,8 @@ function SessionPlayer({
             </button>
           )}
         </div>
-        <div className={["w-full max-w-lg rounded-full px-4 py-2 text-center animate-fade-in", glass].join(" ")}>
-          <p className="flex items-center justify-center gap-2 text-sm font-medium" style={{ color: skin.ink }}>
+        <div className={["w-full max-w-lg lg:w-[26rem] rounded-full px-4 py-2 text-center lg:text-left animate-fade-in", glass].join(" ")}>
+          <p className="flex items-center justify-center lg:justify-start gap-2 text-sm font-medium" style={{ color: skin.ink }}>
             <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {mantra}
           </p>
         </div>
