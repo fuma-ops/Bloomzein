@@ -61,7 +61,7 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "frog", "knees-to-chest", "seated-wide-leg-fold", "head-to-knee", "seated-forward-fold",
   "bridge", "cobra", "chair", "downward-dog", "forward-fold",
   "mountain", "butterfly", "low-lunge", "seated-twist", "childs-pose",
-  "upward-dog", "easy-seat",
+  "easy-seat", "supported-savasana",
 ]);
 
 const P = (p: Pose): Pose => ({
