@@ -40,13 +40,36 @@ interface Pose {
   group: "Breathing" | "Warm-up" | "Hips" | "Standing" | "Balance" | "Backbends" | "Forward folds" | "Restorative" | "Strength";
   level: Level;
   image: string;
+  /** Silent, seamless-loop demo clip shown during a FLOW only ("/videos/pose-{slug}.mp4").
+   *  The library and all previews keep the still `image`. */
+  video?: string;
+  /** Clean still frame from the clip — used as the video poster. */
+  poster?: string;
   cues: Record<Lang, string>;
   audioUrl?: string; // future custom voice — left empty; TTS reads cue
   floorOnly?: boolean; // safe for beginner audio sessions
   switchStep?: boolean; // synthetic "other side" step for a one-sided pose
 }
 
-const P = (p: Pose) => p;
+/** Poses with a looping demo clip attached. Video plays only inside a flow;
+ *  the library and previews keep the still image. */
+const YOGA_VIDEO_SLUGS = new Set<string>([
+  "box-breathing", "alternate-nostril", "reclined-bound-angle", "supported-bridge", "gate-pose",
+  "pyramid", "side-plank", "dead-bug", "reclined-figure-four", "happy-baby",
+  "sphinx", "wide-legged-forward-fold", "goddess", "standing-side-stretch", "bird-dog",
+  "thread-the-needle", "cat-cow", "neck-shoulder-rolls", "savasana", "legs-up-wall",
+  "frog", "knees-to-chest", "seated-wide-leg-fold", "head-to-knee", "seated-forward-fold",
+  "bridge", "cobra", "chair", "downward-dog", "forward-fold",
+  "mountain", "butterfly", "low-lunge", "seated-twist", "childs-pose",
+  "upward-dog", "easy-seat",
+]);
+
+const P = (p: Pose): Pose => ({
+  ...p,
+  ...(YOGA_VIDEO_SLUGS.has(p.slug)
+    ? { video: `/videos/pose-${p.slug}.mp4`, poster: `/images/pose-${p.slug}-still.webp` }
+    : {}),
+});
 
 export const POSES: Pose[] = [
   P({ slug: "easy-seat", name: "Easy Seat", sanskrit: "Sukhasana", group: "Breathing", level: "Beginner", image: "/images/pose-easy-seat.webp", floorOnly: true,
@@ -2867,15 +2890,33 @@ function SessionPlayer({
                   ))}
                 </div>
               )}
-              <img
-                key={idx}
-                src={pose.image}
-                alt={pose.name}
-                onLoad={() => setImgReady(true)}
-                onError={() => setImgReady(false)}
-                className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
-                style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
-              />
+              {pose.video ? (
+                <video
+                  key={idx}
+                  src={pose.video}
+                  poster={pose.poster ?? pose.image}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  aria-label={pose.name}
+                  onLoadedData={() => setImgReady(true)}
+                  onError={() => setImgReady(false)}
+                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                  style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+                />
+              ) : (
+                <img
+                  key={idx}
+                  src={pose.image}
+                  alt={pose.name}
+                  onLoad={() => setImgReady(true)}
+                  onError={() => setImgReady(false)}
+                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                  style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+                />
+              )}
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
               <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
