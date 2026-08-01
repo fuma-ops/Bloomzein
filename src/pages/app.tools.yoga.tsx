@@ -6,12 +6,13 @@ import {
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
-  Trash2, CircleCheck, Circle, Tv,
+  Trash2, CircleCheck, Circle, Tv, Wind, Waves, type LucideIcon,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
 import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
+import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, yogaSessionKcal, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel, yogaFocusImage } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
@@ -2613,6 +2614,76 @@ const SESSION_SKINS: Record<DayPart, SessionSkin> = {
   },
 };
 
+// ── Session copy — the floating glass panels read from these (one source each) ──
+const FLOW_META: Record<Intention, { title: string; tagline: string; focus: string[]; feel: { icon: LucideIcon; label: string }[] }> = {
+  morning:  { title: "Morning Energy Flow", tagline: "Awaken. Stretch. Bloom.", focus: ["Full Body", "Flexibility", "Energy"], feel: [{ icon: Flame, label: "More energized" }, { icon: Sparkles, label: "Better focus" }, { icon: Flower, label: "Less stiffness" }, { icon: Heart, label: "Calmer mind" }] },
+  stress:   { title: "Stress Relief Flow", tagline: "Soften. Slow. Let go.", focus: ["Breath", "Release", "Calm"], feel: [{ icon: Wind, label: "Slower breath" }, { icon: Flower, label: "Less tension" }, { icon: Heart, label: "Calmer mind" }, { icon: Sparkles, label: "More at ease" }] },
+  sleep:    { title: "Wind-Down Flow", tagline: "Unwind. Settle. Rest.", focus: ["Gentle", "Restore", "Sleep"], feel: [{ icon: Moon, label: "Sleepy & soft" }, { icon: Wind, label: "Slower mind" }, { icon: Flower, label: "Less tension" }, { icon: Heart, label: "Ready to rest" }] },
+  release:  { title: "Deep Release Flow", tagline: "Open. Breathe. Release.", focus: ["Hips", "Tension", "Space"], feel: [{ icon: Waves, label: "Looser body" }, { icon: Flower, label: "Less tension" }, { icon: Wind, label: "More space" }, { icon: Sparkles, label: "Lighter" }] },
+  cycle:    { title: "Cycle-Sync Flow", tagline: "Honour your phase today.", focus: ["Gentle", "Hormone-kind", "Balance"], feel: [{ icon: Heart, label: "More balanced" }, { icon: Flower, label: "Less cramping" }, { icon: Wind, label: "Softer mood" }, { icon: Sparkles, label: "Cared for" }] },
+  strength: { title: "Strength Flow", tagline: "Build heat. Grow steady.", focus: ["Full Body", "Strength", "Stamina"], feel: [{ icon: Flame, label: "Stronger" }, { icon: Activity, label: "More toned" }, { icon: Sparkles, label: "Energized" }, { icon: Heart, label: "Empowered" }] },
+  core:     { title: "Core Flow", tagline: "Centre. Steady. Strong.", focus: ["Core", "Stability", "Control"], feel: [{ icon: Flame, label: "Stronger core" }, { icon: Activity, label: "Steadier" }, { icon: Sparkles, label: "Energized" }, { icon: Heart, label: "Grounded" }] },
+  balance:  { title: "Balance Flow", tagline: "Focus. Ground. Rise.", focus: ["Balance", "Focus", "Grace"], feel: [{ icon: Sparkles, label: "Sharper focus" }, { icon: Activity, label: "Steadier" }, { icon: Flower, label: "More graceful" }, { icon: Heart, label: "Calmer mind" }] },
+  backcare: { title: "Back-Care Flow", tagline: "Ease. Lengthen. Relieve.", focus: ["Spine", "Relief", "Mobility"], feel: [{ icon: Waves, label: "Looser back" }, { icon: Flower, label: "Less ache" }, { icon: Wind, label: "More mobile" }, { icon: Heart, label: "Relieved" }] },
+  fullbody: { title: "Full-Body Flow", tagline: "Move. Stretch. Glow.", focus: ["Full Body", "Flexibility", "Flow"], feel: [{ icon: Activity, label: "More mobile" }, { icon: Sparkles, label: "Energized" }, { icon: Flower, label: "Less stiffness" }, { icon: Heart, label: "Calmer mind" }] },
+};
+
+/** A short, warm benefit line per pose family — for the right-side POSE panel. */
+const GROUP_BENEFIT: Record<Pose["group"], string> = {
+  Breathing: "Calms the nervous system and steadies the breath.",
+  "Warm-up": "Wakes the spine and gently eases the body in.",
+  Hips: "Opens tight hips and releases held tension.",
+  Standing: "Builds strength, balance and steady energy.",
+  Balance: "Sharpens focus and steadies the mind.",
+  Backbends: "Opens the chest and energizes the spine.",
+  "Forward folds": "Lengthens the back and calms the mind.",
+  Restorative: "Deep rest — lets the body fully soften.",
+  Strength: "Builds heat and full-body strength.",
+};
+
+const FLOW_QUOTES = [
+  "Movement is medicine. You're choosing you today.",
+  "Breath by breath, you soften into strength.",
+  "This is your time — nothing else to be.",
+  "Every pose is a small act of self-love.",
+  "You are allowed to slow all the way down.",
+  "Come home to your body.",
+];
+const FLOW_MANTRAS = [
+  "Inhale confidence. Exhale doubt.",
+  "Inhale calm. Exhale tension.",
+  "I am exactly where I need to be.",
+  "Softer. Slower. Deeper.",
+  "I breathe, I bloom.",
+  "Grounded, open, at ease.",
+];
+
+/** Circular HOLD timer — the arc fills as the pose's hold elapses. */
+function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total: number; ink: string; inkSoft: string }) {
+  const R = 46;
+  const C = 2 * Math.PI * R;
+  const elapsed = total > 0 ? Math.min(1, Math.max(0, (total - remaining) / total)) : 0;
+  return (
+    <div className="relative grid place-items-center h-[104px] w-[104px] sm:h-[128px] sm:w-[128px]">
+      <svg viewBox="0 0 108 108" className="absolute inset-0 h-full w-full -rotate-90">
+        <circle cx="54" cy="54" r={R} fill="none" stroke="currentColor" strokeWidth="7" className="text-white/35" />
+        <circle cx="54" cy="54" r={R} fill="none" stroke="url(#holdgrad)" strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={C * (1 - elapsed)} className="transition-[stroke-dashoffset] duration-1000 ease-linear" />
+        <defs>
+          <linearGradient id="holdgrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#F9A8D4" /><stop offset="100%" stopColor="#EC4899" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="text-center leading-none" style={{ color: ink }}>
+        <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: inkSoft }}>Hold</p>
+        <p className="text-2xl sm:text-3xl font-bold tabular-nums">{remaining}s</p>
+        <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider" style={{ color: inkSoft }}>of {total}s</p>
+      </div>
+    </div>
+  );
+}
+
 function SessionPlayer({
   flow, lang, mode, hold, sound, intention, onExit, onDone,
 }: {
@@ -2639,6 +2710,7 @@ function SessionPlayer({
   const [finished, setFinished] = useState(false); // holds the last pose with a soft "The End" while the outro plays
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
+  const [breathOpen, setBreathOpen] = useState(false); // centered breath-guide overlay (from the "Breath" control)
   const [tvHint, setTvHint] = useState(false); // brief "cast your tab" guide after going full-screen
   // Pose photo load state — show a soft placeholder until it's ready (and if a
   // slow/failed mobile load never arrives) so the frame is never a blank box.
@@ -2832,11 +2904,136 @@ function SessionPlayer({
   const skin = SESSION_SKINS[dayPart];
   const isDark = dayPart === "night" || dayPart === "dusk";
 
+  const meta = FLOW_META[intention] ?? FLOW_META.morning;
+  const quote = FLOW_QUOTES[stepNum % FLOW_QUOTES.length];
+  const mantra = FLOW_MANTRAS[stepNum % FLOW_MANTRAS.length];
+  const benefit = GROUP_BENEFIT[pose.group];
+  const nextPose = flow[idx + 1];
+  // Frosted glass — tinted to the current skin so every panel melts into the
+  // scene (blended, premium) instead of sitting on top of it as a hard card.
+  const glass = isDark
+    ? "bg-white/10 backdrop-blur-xl border border-white/15 shadow-lg shadow-black/25"
+    : "bg-white/40 backdrop-blur-xl border border-white/60 shadow-lg shadow-rose/10";
+  const glassBtn = isDark
+    ? "bg-white/15 backdrop-blur-md border border-white/25 text-white active:scale-95 transition"
+    : "bg-white/55 backdrop-blur-md border border-white/70 text-rose active:scale-95 transition";
+
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex flex-col p-3 sm:p-4 transition-[background] duration-1000"
-      style={{ background: skin.frame, paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
-      {/* Soft "The End" — a faded wash over the last (still-looping) pose while the
-          outro plays; tap to continue to the summary. Animated gently, not abrupt. */}
+    <div className="fixed inset-0 z-[60] overflow-hidden transition-[background] duration-1000"
+      style={{ background: skin.frame }}>
+
+      {/* ===================== FULL-BLEED STAGE — the pose fills the whole
+          screen; every panel floats over it, blended. ===================== */}
+      <div className="absolute inset-0" style={{ background: skin.stage }}>
+        {/* Soft placeholder while the media loads — never a blank box. */}
+        <div aria-hidden className={["absolute inset-0 grid place-items-center bg-[oklch(0.96_0.04_350)] animate-card-breathe transition-opacity duration-700", imgReady ? "opacity-0" : "opacity-100"].join(" ")}>
+          <Flower className="h-16 w-16 text-hotpink/25" strokeWidth={1.5} />
+        </div>
+        {/* Hypnotic ripples underneath the blurred photo — soft ambient motion. */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <span
+            key={i}
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 w-[46%] aspect-square rounded-full animate-ripple"
+            style={{
+              animationDelay: `${-i * 2.4}s`,
+              background:
+                `radial-gradient(circle, transparent 42%, rgba(${skin.ripple},0.30) 62%, rgba(${skin.ripple},0.40) 74%, rgba(${skin.ripple},0.26) 84%, transparent 97%)`,
+            }}
+          />
+        ))}
+        {/* Blurred cover fill of the same photo — softly breathing, bleeds to every
+            edge so the sharp pose blends seamlessly into the scene. */}
+        <img
+          key={idx + "-bg"}
+          src={pose.image}
+          alt=""
+          aria-hidden
+          onLoad={() => setImgReady(true)}
+          className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-90" : "opacity-0"].join(" ")}
+          style={{ filter: `blur(26px) saturate(1.2) ${skin.imgFilter === "none" ? "" : skin.imgFilter}` }}
+        />
+        {/* Skin-tinted veil + time-of-day mood wash. */}
+        <div aria-hidden className="absolute inset-0 transition-colors duration-1000" style={{ background: skin.veil }} />
+        <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: skin.overlay }} />
+        {/* Night sky — soft drifting stars behind the pose. */}
+        {dayPart === "night" && (
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            {([[6,18,2.5,0,8],[10,72,2,2.5,9.5],[14,45,2,5,8.5],[8,88,1.5,1.2,10],[20,10,2,3.8,9],[16,60,2.5,6.2,8],[24,80,1.5,0.6,10.5],[12,32,1.5,4.5,9],[26,52,2,7,8.5],[5,55,1.5,2,11],[80,20,2,1.5,9],[86,68,2.5,4,8],[78,42,1.5,6.5,10],[90,85,2,0.3,9.5],[83,12,1.5,3,10.5],[88,55,2,5.5,8.5]] as const).map(([t, l, s, d, dur], i) => (
+              <span
+                key={i}
+                className="absolute rounded-full animate-twinkle"
+                style={{
+                  top: `${t}%`, left: `${l}%`, width: `${s}px`, height: `${s}px`,
+                  background: "rgba(255,255,255,0.95)",
+                  boxShadow: "0 0 6px 1.5px rgba(200,212,255,0.85)",
+                  animationDelay: `${d}s`, animationDuration: `${dur}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+        {/* The sharp pose — big, whole, centred. Video in a flow, else the still. */}
+        {pose.video ? (
+          <video
+            ref={flowVideoRef}
+            src={pose.video}
+            poster={pose.poster ?? pose.image}
+            autoPlay loop muted playsInline preload="metadata"
+            aria-label={pose.name}
+            onLoadedData={() => setImgReady(true)}
+            onError={() => setImgReady(false)}
+            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+            style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+          />
+        ) : (
+          <img
+            key={idx}
+            src={pose.image}
+            alt={pose.name}
+            onLoad={() => setImgReady(true)}
+            onError={() => setImgReady(false)}
+            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+            style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+          />
+        )}
+        {/* Gentle "other side" cue at the start of a second-side step. */}
+        {pose.switchStep && (poseHoldSec(pose) - remaining) < 2.6 && (
+          <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center animate-fade-in">
+            <div className="text-center px-5 py-3 rounded-[1.5rem] bg-white/70 backdrop-blur-md border border-white/70 shadow-lg animate-scale-in">
+              <div className="text-3xl sm:text-4xl text-hotpink animate-spin" style={{ animationDuration: "1.8s" }}>↺</div>
+              <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">Other side</p>
+              <p className="text-[11px] font-semibold text-rose/70">ease gently over ✿</p>
+            </div>
+          </div>
+        )}
+        {/* Preload the next pose so transitions stay instant. */}
+        {nextPose && <img src={nextPose.image} alt="" aria-hidden className="hidden" />}
+      </div>
+
+      {/* Soft focus vignette so floating text always stays legible over bright poses. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0"
+        style={{ background: isDark
+          ? "radial-gradient(130% 90% at 50% 42%, transparent 52%, rgba(0,0,0,0.32))"
+          : "radial-gradient(130% 90% at 50% 42%, transparent 58%, rgba(120,40,80,0.12))" }} />
+
+      {/* Audio eyes-closed mode — pose fades back, breath pacer front & centre. */}
+      {dim && (
+        <div className="absolute inset-0 z-30 grid place-items-center" style={{ background: "rgba(120,30,70,0.82)" }}>
+          <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={true} />
+        </div>
+      )}
+
+      {/* Breath-guide overlay — opened from the "Breath" control. */}
+      {breathOpen && !dim && (
+        <div onClick={() => setBreathOpen(false)}
+          className="absolute inset-0 z-40 grid place-items-center animate-fade-in cursor-pointer"
+          style={{ background: isDark ? "rgba(18,14,40,0.55)" : "rgba(255,241,246,0.55)", backdropFilter: "blur(4px)" }}>
+          <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={isDark} />
+        </div>
+      )}
+
+      {/* Soft "The End" — a faded wash over the last pose while the outro plays. */}
       {finished && (
         <div
           onClick={() => { stopAllAudio(); onDone(); }}
@@ -2849,7 +3046,8 @@ function SessionPlayer({
           </div>
         </div>
       )}
-      {/* TV guide — after full-screen, remind her to cast/mirror the whole tab */}
+
+      {/* TV guide — after full-screen, remind her to cast/mirror the whole tab. */}
       {tvHint && (
         <div className="fixed inset-x-0 top-4 z-[80] flex justify-center px-4 animate-fade-in pointer-events-none">
           <div onClick={() => setTvHint(false)}
@@ -2863,220 +3061,158 @@ function SessionPlayer({
           </div>
         </div>
       )}
-      {/* TOP BAR */}
-      <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
-        <button onClick={() => { stopAllAudio(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
+
+      {/* ===================== TOP BAR ===================== */}
+      <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 sm:gap-3 px-3 sm:px-5 pb-2"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+        <button onClick={() => { stopAllAudio(); onExit(); }}
+          className={["inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold", glassBtn].join(" ")}>
           <X className="h-3.5 w-3.5" /> End
         </button>
-        <div className="flex-1 max-w-md mx-auto h-1.5 bg-petal/40 rounded-full overflow-hidden">
-          <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
+        <div className="flex-1 max-w-md mx-auto mt-1">
+          <p className="text-center text-[9px] font-bold uppercase tracking-[0.28em] mb-1" style={{ color: skin.inkSoft }}>Flow progress</p>
+          <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)" }}>
+            <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
         </div>
         <div className="flex items-center gap-1.5">
+          <span className="hidden sm:block text-[11px] font-bold tabular-nums self-center mr-1" style={{ color: skin.ink }}>{stepNum} / {realTotal}</span>
           <button onClick={shareToTV} title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)"
-            className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
-            <Tv className="h-3.5 w-3.5" /><span className="hidden sm:inline">TV</span>
+            className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
+            <Tv className="h-4 w-4" />
           </button>
-          <button onClick={cycleSkin}
-            title={`Theme: ${skinPref === "auto" ? `auto (${dayPart})` : skinPref}`}
-            className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
-            {isDark ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
-            {skinPref === "auto" && <span className="text-[9px] font-bold uppercase tracking-wide opacity-70">auto</span>}
+          <button onClick={cycleSkin} title={`Theme: ${skinPref === "auto" ? `auto (${dayPart})` : skinPref}`}
+            className={["inline-flex items-center gap-1 rounded-full px-2.5 h-9 text-[10px] font-bold uppercase tracking-wide", glassBtn].join(" ")}>
+            {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            {skinPref === "auto" && <span className="opacity-70">auto</span>}
           </button>
           <button onClick={() => { const n = !muted; setMuted(n); if (n) stopAllAudio(); else if (running) { try { const m = ensureMusic(); m.volume = 0; m.play().then(() => fadeAudioTo(m, 0.72, 1200)).catch(() => {}); } catch {} } }}
-            className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
-            {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+            className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
+            {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
-      <div className={["flex-1 min-h-0 flex flex-col rounded-3xl border overflow-hidden shadow-xl shadow-rose/10 transition-[background,border-color] duration-1000",
-        dim ? "bg-rose/95 text-white border-petal/60" : ""].join(" ")}
-        style={dim ? undefined : { background: skin.card, borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(244,194,214,0.6)" }}>
-        {/* IMAGE / PACER — flexes to fill the free space */}
-        <div className={["relative flex-1 min-h-0", dim ? "bg-rose/95" : ""].join(" ")}
-          style={dim ? undefined : { background: skin.stage }}>
-          {!dim ? (
-            <>
-              {/* Soft placeholder — visible while the photo loads, or if a slow
-                  mobile connection never delivers it. Never a blank box. */}
-              <div aria-hidden className={["absolute inset-0 grid place-items-center bg-[oklch(0.96_0.04_350)] animate-card-breathe transition-opacity duration-700", imgReady ? "opacity-0" : "opacity-100"].join(" ")}>
-                <Flower className="h-16 w-16 text-hotpink/25" strokeWidth={1.5} />
-              </div>
-              {/* Hypnotic ripples — a continuous field of concentric waves born
-                  at centre, rolling outward like drops in still water. They sit
-                  BEHIND the blurred photo so they read as soft ambient motion
-                  underneath, never a sharp overlay that could distract. */}
-              {Array.from({ length: 8 }).map((_, i) => (
-                <span
-                  key={i}
-                  aria-hidden
-                  className="pointer-events-none absolute left-1/2 top-1/2 w-[46%] aspect-square rounded-full animate-ripple"
-                  style={{
-                    // 8 rings evenly spread across the ~19.2s cycle (a fresh wave
-                    // born every ~2.4s, all pre-seeded). Each wave still travels
-                    // slowly, but a new one is ALWAYS emerging at centre — so the
-                    // stream is continuous, never a wait for the next wave.
-                    animationDelay: `${-i * 2.4}s`,
-                    // A thick, soft radial band (not a thin outline) so each wave
-                    // reads as a big, broad swell. Softness comes from the gradient
-                    // stops themselves — no blur() filter, which broke/janked on
-                    // mobile when combined with the large scale.
-                    background:
-                      `radial-gradient(circle, transparent 42%, rgba(${skin.ripple},0.30) 62%, rgba(${skin.ripple},0.40) 74%, rgba(${skin.ripple},0.26) 84%, transparent 97%)`,
-                  }}
-                />
+      {/* ===================== LEFT RAIL (desktop) ===================== */}
+      {!dim && (
+        <div className="hidden lg:flex flex-col gap-3 absolute left-5 top-28 w-64 z-20">
+          <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
+              <Flower className="h-3.5 w-3.5" /> Today's Flow
+            </p>
+            <div style={{ color: skin.ink }}>
+              <AnimatedWords text={meta.title} stagger={90} className="font-script text-3xl leading-tight mt-1 block" />
+            </div>
+            <p className="text-sm mt-1" style={{ color: skin.inkSoft }}>{meta.tagline}</p>
+            <div className="my-3 h-px" style={{ background: isDark ? "rgba(255,255,255,0.14)" : "rgba(190,24,93,0.14)" }} />
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Focus</p>
+            <p className="text-sm font-semibold" style={{ color: skin.ink }}>{meta.focus.join(" · ")}</p>
+          </div>
+          <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")} style={{ animationDelay: "80ms" }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>How you may feel</p>
+            <p className="text-sm font-semibold mb-2" style={{ color: skin.ink }}>After this flow</p>
+            <ul className="space-y-1.5">
+              {meta.feel.map(({ icon: Icon, label }, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm animate-fade-in" style={{ color: skin.ink, animationDelay: `${150 + i * 70}ms` }}>
+                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {label}
+                </li>
               ))}
-              {/* Calm dynamic backdrop: a soft, slowly-breathing blurred fill of
-                  the same photo. Kept semi-transparent so the ripples drift
-                  softly underneath it instead of over everything. */}
-              <img
-                key={idx + "-bg"}
-                src={pose.image}
-                alt=""
-                aria-hidden
-                onLoad={() => setImgReady(true)}
-                className={["absolute inset-0 w-full h-full object-cover animate-ambient-breathe transition-opacity ease-in-out duration-[1600ms] will-change-transform", imgReady ? "opacity-[0.72]" : "opacity-0"].join(" ")}
-                style={{ filter: `blur(22px) saturate(1.2) ${skin.imgFilter === "none" ? "" : skin.imgFilter}` }}
-              />
-              {/* Light veil so the sharp pose stays the clear focus (skin-tinted) */}
-              <div aria-hidden className="absolute inset-0 transition-colors duration-1000" style={{ background: skin.veil }} />
-              {/* Time-of-day mood wash over the sky (transparent in day). Sits
-                  BEHIND the pose so the pose stays clear. */}
-              <div aria-hidden className="pointer-events-none absolute inset-0 transition-opacity duration-1000" style={{ background: skin.overlay }} />
-              {/* Night sky — soft stars drifting in from far away. Placed BEHIND
-                  the pose, so the photo occludes any over its body: stars only
-                  ever show in the empty sky around it. */}
-              {dayPart === "night" && (
-                <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                  {([[6,18,2.5,0,8],[10,72,2,2.5,9.5],[14,45,2,5,8.5],[8,88,1.5,1.2,10],[20,10,2,3.8,9],[16,60,2.5,6.2,8],[24,80,1.5,0.6,10.5],[12,32,1.5,4.5,9],[26,52,2,7,8.5],[5,55,1.5,2,11],[80,20,2,1.5,9],[86,68,2.5,4,8],[78,42,1.5,6.5,10],[90,85,2,0.3,9.5],[83,12,1.5,3,10.5],[88,55,2,5.5,8.5]] as const).map(([t, l, s, d, dur], i) => (
-                    <span
-                      key={i}
-                      className="absolute rounded-full animate-twinkle"
-                      style={{
-                        top: `${t}%`, left: `${l}%`, width: `${s}px`, height: `${s}px`,
-                        background: "rgba(255,255,255,0.95)",
-                        boxShadow: "0 0 6px 1.5px rgba(200,212,255,0.85)",
-                        animationDelay: `${d}s`, animationDuration: `${dur}s`,
-                      }}
-                    />
-                  ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== RIGHT RAIL (ring always; cards desktop) ============ */}
+      {!dim && (
+        <div className="absolute right-3 sm:right-5 top-24 sm:top-28 z-20 flex flex-col items-end gap-3">
+          <div className={["hidden lg:block w-64 rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
+              <Activity className="h-3.5 w-3.5" /> Pose
+            </p>
+            <h3 className="font-script text-2xl leading-tight mt-0.5" style={{ color: skin.ink }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
+            {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{pose.sanskrit}</p>}
+            <div className="my-2.5 h-px" style={{ background: isDark ? "rgba(255,255,255,0.14)" : "rgba(190,24,93,0.14)" }} />
+            <p className="text-sm leading-snug" style={{ color: skin.inkSoft }}>{benefit}</p>
+          </div>
+          <div className={["rounded-full p-1.5 animate-scale-in", glass].join(" ")}>
+            <HoldRing remaining={remaining} total={poseHold} ink={skin.ink} inkSoft={skin.inkSoft} />
+          </div>
+          {nextPose && (
+            <div className={["hidden lg:block w-64 rounded-3xl p-3 animate-fade-in", glass].join(" ")}>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: skin.inkSoft }}>Up next</p>
+              <div className="flex items-center gap-3">
+                <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-20 rounded-xl object-cover shrink-0 border border-white/50" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
+                  <p className="text-xs" style={{ color: skin.inkSoft }}>{poseHoldSec(nextPose)}s</p>
                 </div>
-              )}
-              {pose.video ? (
-                <video
-                  ref={flowVideoRef}
-                  src={pose.video}
-                  poster={pose.poster ?? pose.image}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  aria-label={pose.name}
-                  onLoadedData={() => setImgReady(true)}
-                  onError={() => setImgReady(false)}
-                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
-                  style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
-                />
-              ) : (
-                <img
-                  key={idx}
-                  src={pose.image}
-                  alt={pose.name}
-                  onLoad={() => setImgReady(true)}
-                  onError={() => setImgReady(false)}
-                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
-                  style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
-                />
-              )}
-              {/* Gentle "other side" cue at the start of a second-side step —
-                  soft, brief, then it fades to just the mirrored pose. */}
-              {pose.switchStep && (poseHoldSec(pose) - remaining) < 2.6 && (
-                <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center animate-fade-in">
-                  <div className="text-center px-5 py-3 rounded-[1.5rem] bg-white/70 backdrop-blur-md border border-white/70 shadow-lg animate-scale-in">
-                    <div className="text-3xl sm:text-4xl text-hotpink animate-spin" style={{ animationDuration: "1.8s" }}>↺</div>
-                    <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">Other side</p>
-                    <p className="text-[11px] font-semibold text-rose/70">ease gently over ✿</p>
-                  </div>
-                </div>
-              )}
-              {/* Preload the next pose so transitions stay instant on mobile. */}
-              {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
-              <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3">
-                <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={false} />
-              </div>
-            </>
-          ) : (
-            // Eyes-closed: pose faintly visible behind, pacer front and center
-            <div className="relative w-full h-full grid place-items-center">
-              <img
-                src={pose.image}
-                alt=""
-                aria-hidden
-                className="absolute inset-0 w-full h-full object-contain"
-                style={{ opacity: 0.12, filter: "blur(2px) saturate(0.5)" }}
-              />
-              <div className="absolute inset-0 bg-rose/80" />
-              <div className="relative z-10">
-                <BreathPacer phase={breathPhase} phaseProgress={breathProgress} lang={lang} dim={true} />
               </div>
             </div>
           )}
         </div>
+      )}
 
-        {/* TEXT */}
-        <div className={["shrink-0 p-3 sm:p-5 transition-colors duration-1000", dim ? "text-white" : ""].join(" ")}
-          style={dim ? undefined : { background: skin.panel }}>
-          <div className="flex items-end justify-between gap-3 flex-wrap">
-            <div key={idx} className="animate-pose-in">
-              <p className={["text-[10px] font-bold uppercase tracking-wider", dim ? "text-white/60" : ""].join(" ")}
-                style={dim ? undefined : { color: skin.inkSoft }}>
-                Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
-              </p>
-              <h3 className={["font-script text-3xl sm:text-5xl leading-none", dim ? "text-white" : ""].join(" ")}
-                style={dim ? undefined : { color: skin.ink }}>
-                {pose.name}{pose.switchStep ? " ↺" : ""}
-              </h3>
-              {pose.sanskrit && <p className={["text-xs italic", dim ? "text-white/70" : ""].join(" ")} style={dim ? undefined : { color: skin.inkSoft }}>{pose.sanskrit}</p>}
-            </div>
-            <div className={["text-right", dim ? "text-white/90" : ""].join(" ")} style={dim ? undefined : { color: skin.ink }}>
-              <p className="text-xs font-bold uppercase tracking-wider opacity-75">hold</p>
-              <p className="text-3xl font-bold tabular-nums">{remaining}s</p>
-            </div>
+      {/* ===================== CENTRE QUOTE (tablet+) ===================== */}
+      {!dim && (
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-[30%] z-10 w-64 px-2 pointer-events-none">
+          <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
+            <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
           </div>
+        </div>
+      )}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button onClick={togglePlay}
-              className="bloom-luxury-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white">
-              {running ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" />{idx === 0 && remaining === poseHold ? "Start" : "Resume"}</>}
-            </button>
-            <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
-              className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-rose border border-petal/60">
-              <ChevronLeft className="h-3.5 w-3.5" /> Prev
-            </button>
-            <button onClick={() => {
-              if (idx + 1 >= flow.length) finishSession();
-              else setIdx((i) => i + 1);
-            }}
-              className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-rose border border-petal/60">
-              Next <SkipForward className="h-3.5 w-3.5" />
-            </button>
-            {mode === "audio" && (
-              <button onClick={() => setPeek((p) => !p)}
-                className="ml-auto inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-rose border border-petal/60">
-                {peek ? <><EyeOff className="h-3.5 w-3.5" /> Hide</> : <><Eye className="h-3.5 w-3.5" /> Peek</>}
-              </button>
-            )}
-            <button onClick={() => { playBell(); }}
-              className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-rose border border-petal/60">
-              <Bell className="h-3.5 w-3.5" /> Bell
-            </button>
+      {/* ===================== POSE NAME (mobile) ===================== */}
+      {!dim && (
+        <div className="lg:hidden absolute left-4 right-4 bottom-36 z-20 pointer-events-none">
+          <div key={idx} className="animate-pose-in">
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
+              Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
+            </p>
+            <h3 className="font-script text-4xl leading-none" style={{ color: skin.ink }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
+            {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{pose.sanskrit}</p>}
           </div>
+        </div>
+      )}
+
+      {/* ===================== BOTTOM: controls + mantra ===================== */}
+      <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <div className={["flex items-center gap-1.5 sm:gap-2 rounded-full p-1.5 animate-fade-in", glass].join(" ")}>
+          <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
+            className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
+            <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Previous</span>
+          </button>
+          <button onClick={togglePlay}
+            className="relative grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-lg shadow-hotpink/30 animate-selected-glow active:scale-95 transition">
+            {running ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
+            <span className="absolute -bottom-4 text-[9px] font-bold uppercase tracking-wide" style={{ color: skin.inkSoft }}>{running ? "Pause" : (idx === 0 && remaining === poseHold ? "Start" : "Resume")}</span>
+          </button>
+          <button onClick={() => { if (idx + 1 >= flow.length) finishSession(); else setIdx((i) => i + 1); }}
+            className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
+            <span className="hidden sm:inline">Next</span> <SkipForward className="h-3.5 w-3.5" />
+          </button>
+          {mode === "audio" ? (
+            <button onClick={() => setPeek((p) => !p)}
+              className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
+              {peek ? <><EyeOff className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Hide</span></> : <><Eye className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Peek</span></>}
+            </button>
+          ) : (
+            <button onClick={() => setBreathOpen((b) => !b)}
+              className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
+              <Waves className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Breath</span>
+            </button>
+          )}
+        </div>
+        <div className={["w-full max-w-lg rounded-full px-4 py-2 text-center animate-fade-in", glass].join(" ")}>
+          <p className="flex items-center justify-center gap-2 text-sm font-medium" style={{ color: skin.ink }}>
+            <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {mantra}
+          </p>
         </div>
       </div>
     </div>,
     document.body
   );
+
 }
 
 // ===================== SUMMARY =====================
