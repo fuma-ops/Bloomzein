@@ -2727,7 +2727,15 @@ function SessionPlayer({
   // One looping music element for the whole session (created lazily in the Start
   // gesture via ensureMusic). It plays continuously and repeats seamlessly; here
   // we only stop it when the player unmounts.
-  useEffect(() => () => { try { musicRef.current?.pause(); } catch {} musicRef.current = null; }, []);
+  useEffect(() => () => {
+    // Leaving the player must silence EVERYTHING — music, narration, the end
+    // outro (module-level) and any speech — so no audio ever lingers behind.
+    try { musicRef.current?.pause(); } catch {}
+    musicRef.current = null;
+    try { narrationRef.current?.pause(); } catch {}
+    stopEndOutro();
+    try { window.speechSynthesis?.cancel(); } catch {}
+  }, []);
 
   // Timer — counts down THIS pose's own hold (its narration length rounded up).
   useEffect(() => {
@@ -2806,7 +2814,7 @@ function SessionPlayer({
           outro plays; tap to continue to the summary. Animated gently, not abrupt. */}
       {finished && (
         <div
-          onClick={onDone}
+          onClick={() => { stopAllAudio(); onDone(); }}
           className="absolute inset-0 z-[70] grid place-items-center animate-fade-in cursor-pointer"
           style={{ background: "linear-gradient(160deg, oklch(0.9 0.07 350 / 0.5), oklch(0.82 0.11 345 / 0.46))", backdropFilter: "blur(1.5px)" }}
         >
@@ -3079,8 +3087,26 @@ function Summary({
   let streakCount = 0;
   try { streakCount = (JSON.parse(localStorage.getItem(STREAK_KEY) || "{}")?.count) || 0; } catch {}
 
+  // Match the celebration to the mode she practiced in (night → calm & dim,
+  // day → soft & bright), reading the same saved skin preference as the flow.
+  let skinPref: SkinPref = "auto";
+  try { const s = localStorage.getItem(YOGA_SKIN_KEY); if (s === "day" || s === "night" || s === "auto") skinPref = s; } catch {}
+  const dayPart = resolveDayPart(intention, skinPref);
+  const skin = SESSION_SKINS[dayPart];
+  const isDark = dayPart === "night" || dayPart === "dusk";
+
   return (
-    <div className="relative space-y-4 yoga-fade">
+    <div className={["relative space-y-4 yoga-fade", isDark ? "yoga-sum-dark" : ""].join(" ")}>
+      {/* Themed backdrop so the celebration carries the same day/night feel. */}
+      <div aria-hidden className="fixed inset-0 -z-10 transition-[background] duration-700" style={{ background: skin.frame }} />
+      {isDark && (
+        <style>{`
+          .yoga-sum-dark .text-hotpink { color: ${skin.ink} !important; }
+          .yoga-sum-dark .text-rose, .yoga-sum-dark .text-rose\\/60, .yoga-sum-dark .text-rose\\/70 { color: ${skin.inkSoft} !important; }
+          .yoga-sum-dark section, .yoga-sum-dark .sum-hero { background: ${skin.card} !important; border-color: rgba(255,255,255,0.16) !important; }
+          .yoga-sum-dark .bg-blush\\/60, .yoga-sum-dark .bg-blush\\/70, .yoga-sum-dark .bg-white, .yoga-sum-dark .bg-white\\/85, .yoga-sum-dark .bg-white\\/95 { background: rgba(255,255,255,0.10) !important; }
+        `}</style>
+      )}
       <BloomBubbles count={14} />
       <div className="relative rounded-3xl bg-white/95 backdrop-blur border border-petal/60 p-5 sm:p-7 text-center shadow-md animate-scale-in">
         <span className="clay-blob animate-selected-glow mx-auto grid place-items-center rounded-full text-white" style={{ width: "4.5rem", height: "4.5rem" }}>
