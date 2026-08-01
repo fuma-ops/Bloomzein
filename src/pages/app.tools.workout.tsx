@@ -4,7 +4,7 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, SkipBack, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, ChevronUp, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
-  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock,
+  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv,
 } from "lucide-react";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -272,6 +272,20 @@ function PlusTag() {
       <Lock className="h-2 w-2" strokeWidth={3} /> Bloom+
     </span>
   );
+}
+
+/** Immersive full-screen so the session fills the TV cleanly when the screen/tab
+ *  is cast or mirrored (Chromecast / AirPlay). Toggles on/off. */
+function toggleFullscreen() {
+  const d = document as any;
+  try {
+    if (!d.fullscreenElement && !d.webkitFullscreenElement) {
+      const el = d.documentElement as any;
+      (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    } else {
+      (d.exitFullscreen || d.webkitExitFullscreen)?.call(d);
+    }
+  } catch {}
 }
 
 // ===================== EXERCISE PHOTO (with graceful placeholder) =====================
@@ -3485,6 +3499,9 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             <span className="text-xs sm:text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
         </div>
+        <button onClick={toggleFullscreen} aria-label="Watch on TV" title="Watch on TV — full screen, then cast or mirror your screen" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+          <Tv className="h-5 w-5" />
+        </button>
         <button onClick={() => setSound((s) => !s)} aria-label="Sound" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
         </button>
