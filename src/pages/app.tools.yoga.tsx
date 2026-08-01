@@ -2903,7 +2903,7 @@ function SessionPlayer({
                   aria-label={pose.name}
                   onLoadedData={() => setImgReady(true)}
                   onError={() => setImgReady(false)}
-                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
                   style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
                 />
               ) : (
@@ -2913,9 +2913,20 @@ function SessionPlayer({
                   alt={pose.name}
                   onLoad={() => setImgReady(true)}
                   onError={() => setImgReady(false)}
-                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0"].join(" ")}
+                  className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_8px_30px_rgba(236,72,153,0.18)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
                   style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
                 />
+              )}
+              {/* Gentle "other side" cue at the start of a second-side step —
+                  soft, brief, then it fades to just the mirrored pose. */}
+              {pose.switchStep && (poseHoldSec(pose) - remaining) < 2.6 && (
+                <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center animate-fade-in">
+                  <div className="text-center px-5 py-3 rounded-[1.5rem] bg-white/70 backdrop-blur-md border border-white/70 shadow-lg animate-scale-in">
+                    <div className="text-3xl sm:text-4xl text-hotpink animate-spin" style={{ animationDuration: "1.8s" }}>↺</div>
+                    <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">Other side</p>
+                    <p className="text-[11px] font-semibold text-rose/70">ease gently over ✿</p>
+                  </div>
+                </div>
               )}
               {/* Preload the next pose so transitions stay instant on mobile. */}
               {flow[idx + 1] && <img src={flow[idx + 1].image} alt="" aria-hidden className="hidden" />}
