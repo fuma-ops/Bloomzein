@@ -2639,6 +2639,7 @@ function SessionPlayer({
   const [finished, setFinished] = useState(false); // holds the last pose with a soft "The End" while the outro plays
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
+  const [tvHint, setTvHint] = useState(false); // brief "cast your tab" guide after going full-screen
   // Pose photo load state — show a soft placeholder until it's ready (and if a
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
@@ -2650,17 +2651,16 @@ function SessionPlayer({
   const wakeLockRef = useRef<any>(null);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
-  const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip (for casting to a TV)
+  const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip
 
-  // "TV": open the native cast/AirPlay picker on the pose clip so it plays on the
-  // TV (Remote Playback API). If casting isn't available, fall back to full-screen
-  // so the tab/screen can be mirrored instead.
+  // "TV": go full-screen so the flow fills the whole screen cleanly, then show a
+  // short guide reminding her to cast/mirror the tab (Chromecast / AirPlay) — that
+  // mirrors the entire app *and its sound* to the TV, which works everywhere (no
+  // in-app cast receiver needed). The hint auto-dismisses.
   const shareToTV = () => {
-    const v = flowVideoRef.current as any;
-    try {
-      if (v?.remote && typeof v.remote.prompt === "function") { v.remote.prompt().catch(() => toggleFullscreen()); return; }
-    } catch {}
     toggleFullscreen();
+    setTvHint(true);
+    window.setTimeout(() => setTvHint(false), 6500);
   };
   const lastPlayedIdx = useRef<number>(-1);
   const introShownRef = useRef(false); // 5s music-only intro before the first pose's voice
@@ -2849,6 +2849,20 @@ function SessionPlayer({
           </div>
         </div>
       )}
+      {/* TV guide — after full-screen, remind her to cast/mirror the whole tab */}
+      {tvHint && (
+        <div className="fixed inset-x-0 top-4 z-[80] flex justify-center px-4 animate-fade-in pointer-events-none">
+          <div onClick={() => setTvHint(false)}
+            className="pointer-events-auto max-w-sm rounded-2xl bg-white/95 backdrop-blur-md px-4 py-3 shadow-lg border border-petal/60 text-center cursor-pointer">
+            <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-rose">
+              <Tv className="h-4 w-4" /> Sur la TV
+            </p>
+            <p className="mt-1 text-xs leading-snug text-rose/70">
+              Recopie l'onglet / l'écran (Chromecast · AirPlay) — tout le flow <em>et le son</em> passent sur ta TV.
+            </p>
+          </div>
+        </div>
+      )}
       {/* TOP BAR */}
       <div className="flex items-center justify-between gap-3 mb-2 shrink-0">
         <button onClick={() => { stopAllAudio(); onExit(); }} className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">
@@ -2858,7 +2872,7 @@ function SessionPlayer({
           <div className="h-full bg-hotpink transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={shareToTV} title="Cast to TV (Chromecast / AirPlay) — or full screen to mirror"
+          <button onClick={shareToTV} title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)"
             className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-semibold text-rose border border-petal/60">
             <Tv className="h-3.5 w-3.5" /><span className="hidden sm:inline">TV</span>
           </button>

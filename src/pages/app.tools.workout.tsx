@@ -3145,15 +3145,16 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   const [celebrateReady, setCelebrateReady] = useState(false); // after the "END" intro + 5s music fade
   const [finalElapsed, setFinalElapsed] = useState(0);
   const finishedRef = useRef(false);
-  const sessionVideoRef = useRef<HTMLVideoElement | null>(null); // active clip, for casting to a TV
-  // "TV": cast the current move clip to a TV (Chromecast / AirPlay); if casting
-  // isn't available, go full-screen so the tab/screen can be mirrored instead.
+  const sessionVideoRef = useRef<HTMLVideoElement | null>(null); // active clip
+  const [tvHint, setTvHint] = useState(false); // brief "cast your tab" guide after going full-screen
+  // "TV": go full-screen so the session fills the whole screen, then show a short
+  // guide reminding her to cast/mirror the tab (Chromecast / AirPlay) — that
+  // mirrors the whole app *and its sound* to the TV, which works everywhere (no
+  // in-app cast receiver needed). The hint auto-dismisses.
   const shareToTV = () => {
-    const v = sessionVideoRef.current as any;
-    try {
-      if (v?.remote && typeof v.remote.prompt === "function") { v.remote.prompt().catch(() => toggleFullscreen()); return; }
-    } catch {}
     toggleFullscreen();
+    setTvHint(true);
+    window.setTimeout(() => setTvHint(false), 6500);
   };
   const [starting, setStarting] = useState(true);             // cute intro / 3·2·1
   const [intro, setIntro] = useState<number | "go" | null>(null); // countdown digit
@@ -3512,13 +3513,28 @@ function SessionActive({ session, programRef, onExit, onDone }: {
             <span className="text-xs sm:text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
         </div>
-        <button onClick={shareToTV} aria-label="Cast to TV" title="Cast to TV (Chromecast / AirPlay) — or full screen to mirror" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+        <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           <Tv className="h-5 w-5" />
         </button>
         <button onClick={() => setSound((s) => !s)} aria-label="Sound" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
         </button>
       </header>
+
+      {/* TV guide — after full-screen, remind her to cast/mirror the whole tab */}
+      {tvHint && (
+        <div className="fixed inset-x-0 top-4 z-[80] flex justify-center px-4 animate-fade-in pointer-events-none">
+          <div onClick={() => setTvHint(false)}
+            className="pointer-events-auto max-w-sm rounded-2xl bg-white/95 backdrop-blur-md px-4 py-3 shadow-lg border border-white/70 text-center cursor-pointer">
+            <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-rose">
+              <Tv className="h-4 w-4" /> Sur la TV
+            </p>
+            <p className="mt-1 text-xs leading-snug text-rose/70">
+              Recopie l'onglet / l'écran (Chromecast · AirPlay) — toute la séance <em>et le son</em> passent sur ta TV.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Smart-responsive dashboard ──────────────────────────────────────
           phone: single scrolling column · tablet: centre + right rail ·
