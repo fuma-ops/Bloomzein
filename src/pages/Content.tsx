@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart,
   Search, Clock, ArrowRight, Flower2, Sparkles, Salad, CookingPot, Gem,
-  PersonStanding, Feather, Brain, Moon, Leaf, HeartHandshake, NotebookPen, Compass, Star } from "lucide-react";
+  PersonStanding, Feather, Brain, Moon, Leaf, HeartHandshake, NotebookPen, Compass, Star,
+  PiggyBank, Droplets } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { supabase } from "@/lib/supabase";
 import { ARTICLES, FILTERS, IMG, articlesByCategory, articleById, type Filter, type Article } from "@/lib/readsData";
@@ -535,6 +536,8 @@ const FILTER_ICONS: Record<Filter, typeof Sparkles> = {
   "Herbal Wellness": Leaf,
   Relationships: HeartHandshake,
   Journaling: NotebookPen,
+  Money: PiggyBank,
+  "Clean Girl": Droplets,
   Lifestyle: Compass,
   "Bloomzein Originals": Star,
 };
@@ -690,9 +693,9 @@ export function BlogIndexPage() {
             />
           </div>
           <div className="mt-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            {FILTERS.map((t) => {
+            {FILTERS.filter((f) => f === "All" || ARTICLES.some((a) => a.category === f)).map((t) => {
               const active = topic === t;
-              const Icon = FILTER_ICONS[t];
+              const Icon = FILTER_ICONS[t] ?? Sparkles;
               return (
                 <button
                   key={t}
