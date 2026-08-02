@@ -25,6 +25,10 @@ const blogReadHref = (id: string) => {
  * ------------------------------------------------------------------ */
 
 const SITE = "https://www.bloomzein.com";
+/* Article publish/modified dates for structured data. Bloomzein reads are
+ * evergreen wellness content; these give Google a stable date signal. */
+const BLOG_PUBLISHED = "2026-01-15T00:00:00Z";
+const BLOG_MODIFIED = "2026-08-01T00:00:00Z";
 
 /* ---------- SEO helpers ---------- */
 
@@ -39,7 +43,9 @@ function setMeta(key: string, value: string, property = false) {
   el.setAttribute("content", value);
 }
 
-function useSeo(title: string, description: string, path: string) {
+const DEFAULT_OG_IMAGE = SITE + "/images/landing-hero.webp";
+
+function useSeo(title: string, description: string, path: string, image = DEFAULT_OG_IMAGE) {
   useEffect(() => {
     const prevTitle = document.title;
     document.title = title;
@@ -47,6 +53,12 @@ function useSeo(title: string, description: string, path: string) {
     setMeta("og:title", title, true);
     setMeta("og:description", description, true);
     setMeta("og:url", SITE + path, true);
+    setMeta("og:image", image, true);
+    setMeta("og:type", path.startsWith("/blog/") ? "article" : "website", true);
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", title);
+    setMeta("twitter:description", description);
+    setMeta("twitter:image", image);
     let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     const prevCanonical = canonical?.getAttribute("href") ?? null;
     if (!canonical) {
@@ -621,7 +633,7 @@ function BlogCard({ article, index = 0 }: { article: Article; index?: number }) 
       className="group relative block text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] animate-card-pop-in"
     >
       <div className="relative h-28 sm:h-44 overflow-hidden">
-        <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
+        <img src={article.image} alt={article.title} className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
         <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.category} /></div>
       </div>
       <div className="p-3 sm:p-5">
@@ -866,6 +878,7 @@ export function BlogArticlePage({ slug }: { slug: string }) {
     article ? `${article.title} | Bloomzein` : "Article not found — Bloomzein",
     article?.excerpt ?? "Read soft, cycle-aware wellness articles on Bloomzein.",
     `/blog/${slug}`,
+    article ? SITE + article.image : undefined,
   );
 
   const [md, setMd] = useState<string | null>(null);
@@ -913,9 +926,16 @@ export function BlogArticlePage({ slug }: { slug: string }) {
     "@type": "Article",
     headline: article.title,
     description: article.excerpt,
+    image: SITE + article.image,
     articleSection: article.category,
-    author: { "@type": "Organization", name: "Bloomzein" },
-    publisher: { "@type": "Organization", name: "Bloomzein" },
+    datePublished: BLOG_PUBLISHED,
+    dateModified: BLOG_MODIFIED,
+    author: { "@type": "Organization", name: "Bloomzein", url: SITE },
+    publisher: {
+      "@type": "Organization",
+      name: "Bloomzein",
+      logo: { "@type": "ImageObject", url: SITE + "/images/landing-hero.webp" },
+    },
     mainEntityOfPage: `${SITE}/blog/${slug}`,
   };
 
@@ -931,7 +951,7 @@ export function BlogArticlePage({ slug }: { slug: string }) {
           className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[26rem] w-screen -translate-x-1/2 overflow-hidden sm:h-[30rem] lg:h-[34rem]"
           style={{ WebkitMaskImage: heroFade, maskImage: heroFade }}
         >
-          <img src={article.image} alt="" className="animate-hero-breathe h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
+          <img src={article.image} alt={article.title} className="animate-hero-breathe h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
           <div className="absolute inset-0 sm:hidden" style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.93) 42%, rgba(226,46,134,0.55) 62%, rgba(226,46,134,0) 80%)" }} />
           <div className="absolute inset-0 hidden sm:block" style={{ background: "linear-gradient(to right, rgba(226,46,134,0.97) 0%, rgba(226,46,134,0.9) 26%, rgba(226,46,134,0.5) 41%, rgba(226,46,134,0) 58%)" }} />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]/70" />
