@@ -35,6 +35,7 @@ import {
   type Program, type ProgramSession,
 } from "@/components/bloom/workout/programs";
 import { getCoaching } from "@/components/bloom/workout/coaching";
+import { BloomzeinIntro } from "@/components/bloom/BloomzeinIntro";
 
 // ===================== STORAGE =====================
 
@@ -676,7 +677,7 @@ export default function WorkoutPage() {
   }
   if (view.kind === "session-active") {
     return (
-      <SessionActive
+      <SessionActiveWithIntro
         session={view.session}
         programRef={view.programRef}
         onExit={() => setView({ kind: view.returnTo ?? tab })}
@@ -3128,6 +3129,23 @@ function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
       <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{label}</span>
     </button>
   );
+}
+
+/** Plays the cinematic Bloomzein intro (title + duration) once, then the session. */
+function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: ProgramRef; onExit: () => void; onDone: () => void }) {
+  const [introDone, setIntroDone] = useState(false);
+  if (!introDone) {
+    return (
+      <BloomzeinIntro
+        channel="Workout"
+        sessionTitle={props.session.name}
+        sessionMeta={`${props.session.durationMin} Minutes`}
+        pillars={["Warm up", "Burn", "Bloom"]}
+        onDone={() => setIntroDone(true)}
+      />
+    );
+  }
+  return <SessionActive {...props} />;
 }
 
 function SessionActive({ session, programRef, onExit, onDone }: {

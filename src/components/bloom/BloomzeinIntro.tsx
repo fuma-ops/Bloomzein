@@ -1,220 +1,240 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Flower, Sparkle } from "lucide-react";
 
 /**
- * BloomzeinIntro — a short (~4-5s) branded opener that plays full-screen at the
- * very start of a session. It renders through a portal on top of everything so
- * a screen-recording captures it cleanly, then calls `onDone` to reveal the
- * session underneath. Three interchangeable "models" (looks) so we can compare
- * and keep one. Tap anywhere to skip.
+ * BloomzeinIntro — a ~5s cinematic, luxury-editorial opener that plays full-screen
+ * at the start of a session (portal, so a screen-recording captures it), then
+ * calls `onDone` to reveal the session underneath.
  *
- * Audio: pass `audioUrl` (the ElevenLabs sting) and it plays in sync. Until we
- * have the files it's silent — the visuals stand alone. The chosen model is
- * remembered per app in `bloom:intro-model`.
+ * Layers, back → front:
+ *   1. the woman yoga clip, drifting softly (`videoSrc`);
+ *   2. the sakura-petals / light-rays clip blended over it (`petalsSrc`, screen);
+ *   3. a translucent rose wash so the two read as one coherent, premium scene;
+ *   4. the glassmorphism sakura that blooms open + the handwritten wordmark that
+ *      writes itself with the tagline;
+ *   5. the session title + duration card, which then dissolves into the flow.
+ *
+ * The petals come from the video, so there are no CSS petals. Motion is a GSAP
+ * timeline; pointer parallax adds depth. Palette lives in CSS variables.
  */
 
-export type IntroModel = 1 | 2 | 3;
-export const INTRO_MODEL_KEY = "bloom:intro-model";
+export const INTRO_MODEL_KEY = "bloom:intro-model"; // back-compat
 
-/** On-brand collage cut-outs (existing library imagery). */
-const COLLAGE = [
-  "/images/pose-warrior-2.webp",
-  "/images/pose-goddess.webp",
-  "/images/pose-cobra.webp",
-  "/images/pose-butterfly.webp",
-  "/images/pose-mountain.webp",
-  "/images/pose-tree.webp",
-];
+// The brand's own footage (committed to /public/videos).
+const WOMAN_VIDEO = "/videos/Woman_enjoying_cobra_pose_yoga_202608031603.mp4";
+const PETALS_VIDEO = "/videos/animate_softly_1080p_202608031558.mp4";
 
-const KEYFRAMES = `
-@keyframes bzIntroOut{to{opacity:0;transform:scale(1.06);filter:blur(8px)}}
-@keyframes bzLogoPop{0%{opacity:0;transform:scale(.35) rotate(-10deg)}55%{opacity:1;transform:scale(1.14) rotate(4deg)}74%{transform:scale(.96)}100%{opacity:1;transform:scale(1) rotate(0)}}
-@keyframes bzGleam{0%{transform:translateX(-150%) skewX(-18deg)}100%{transform:translateX(170%) skewX(-18deg)}}
-@keyframes bzUp{0%{opacity:0;transform:translateY(24px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes bzCardIn{0%{opacity:0;transform:translateY(46px) scale(.78) rotate(var(--r,0deg))}100%{opacity:var(--o,.9);transform:translateY(0) scale(1) rotate(var(--r,0deg))}}
-@keyframes bzRing{0%{opacity:.55;transform:scale(.35)}100%{opacity:0;transform:scale(2.7)}}
-@keyframes bzTwinkle{0%,100%{opacity:.15;transform:scale(.5) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(25deg)}}
-@keyframes bzDrift{0%{transform:translate(0,0) rotate(var(--r,0deg))}100%{transform:translate(var(--dx,0px),var(--dy,-14px)) rotate(var(--r,0deg))}}
-@keyframes bzPetal{0%{opacity:0;transform:scale(0) rotate(0)}60%{opacity:1}100%{opacity:1;transform:scale(1) rotate(var(--pr,0deg))}}
-`;
-
-function Sparkles({ n = 10, color = "#fff" }: { n?: number; color?: string }) {
-  const seed = [[8,14],[18,72],[26,40],[12,86],[32,22],[70,16],[84,66],[76,44],[90,80],[64,88],[46,10],[54,92]];
-  return (
-    <>
-      {seed.slice(0, n).map(([t, l], i) => (
-        <Sparkle key={i} className="absolute" strokeWidth={1.5}
-          style={{ top: `${t}%`, left: `${l}%`, width: 10 + (i % 3) * 6, height: 10 + (i % 3) * 6, color,
-            filter: "drop-shadow(0 0 6px rgba(255,255,255,.8))",
-            animation: `bzTwinkle ${1.6 + (i % 4) * 0.4}s ease-in-out ${i * 0.18}s infinite` }} />
-      ))}
-    </>
-  );
+export interface BloomzeinIntroProps {
+  videoSrc?: string;      // the woman yoga clip (background)
+  petalsSrc?: string;     // the sakura-petals / light clip (foreground, blended)
+  channel?: string;       // "Yoga" | "Workout"
+  sessionTitle?: string;  // e.g. "Morning Energy Flow"
+  sessionMeta?: string;   // e.g. "15 Minutes"
+  pillars?: string[];     // e.g. ["Awaken", "Stretch", "Bloom"]
+  tagline?: string;       // e.g. "stay soft, bloom on"
+  audioUrl?: string;      // ElevenLabs sting (optional)
+  durationMs?: number;
+  onDone: () => void;
 }
 
+const CSS = `
+.bz-root{--bz-hot:#EC4899;--bz-deep:#B21E6F;--bz-rose:#F56DB0;--bz-gold:#F6C77A;
+  position:fixed;inset:0;z-index:90;overflow:hidden;cursor:pointer;user-select:none;background:#2a0a1c;
+  font-synthesis:none;-webkit-font-smoothing:antialiased;}
+.bz-layer{position:absolute;inset:0;will-change:transform,opacity;}
+.bz-vid{width:100%;height:100%;object-fit:cover;}
+@keyframes bzCoreGlow{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+.bz-glass-petal{position:absolute;left:50%;top:50%;border-radius:64% 64% 58% 58%/ 78% 78% 42% 42%;
+  background:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,120,180,.42) 55%,rgba(210,40,110,.5));
+  border:1.5px solid rgba(246,199,122,.9);
+  box-shadow:inset 0 8px 20px rgba(255,255,255,.55),inset 0 -10px 22px rgba(160,20,80,.4),0 8px 26px rgba(180,20,90,.35);
+  backdrop-filter:blur(3px);}
+.bz-glass-petal::after{content:"";position:absolute;top:8%;left:22%;width:34%;height:38%;border-radius:9999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.85),transparent);filter:blur(1px);}
+.bz-pen{position:absolute;top:-2%;width:14px;height:14px;border-radius:9999px;background:#fff;
+  box-shadow:0 0 16px 6px rgba(255,220,240,.95),0 0 34px 12px rgba(236,72,153,.6);}
+.bz-wordmark{font-family:"Satisfy","Dancing Script","Caveat",cursive;color:#fff;line-height:.9;
+  text-shadow:0 3px 30px rgba(236,72,153,.55),0 1px 0 rgba(255,255,255,.4);}
+.bz-title{font-family:"Satisfy","Dancing Script",cursive;color:#fff;line-height:.92;
+  text-shadow:0 4px 34px rgba(236,72,153,.6);}
+`;
+
+const GLASS = Array.from({ length: 8 }).map((_, i) => ({ rot: i * 45, i }));
+
 export function BloomzeinIntro({
-  model = 1, channel, audioUrl, onDone, durationMs,
-}: { model?: IntroModel; channel?: string; audioUrl?: string; onDone: () => void; durationMs?: number }) {
-  const dur = durationMs ?? (model === 2 ? 5200 : model === 3 ? 4200 : 5000);
-  const [closing, setClosing] = useState(false);
+  videoSrc = WOMAN_VIDEO,
+  petalsSrc = PETALS_VIDEO,
+  channel,
+  sessionTitle = "Morning Energy Flow",
+  sessionMeta = "15 Minutes",
+  pillars = ["Awaken", "Stretch", "Bloom"],
+  tagline = "stay soft, bloom on",
+  audioUrl,
+  durationMs = 5200,
+  onDone,
+}: BloomzeinIntroProps) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const doneRef = useRef(false);
+
   const finish = () => {
     if (doneRef.current) return; doneRef.current = true;
     try { audioRef.current?.pause(); } catch {}
     onDone();
   };
+
   useEffect(() => {
     if (audioUrl) { try { const a = new Audio(audioUrl); a.volume = 0.95; audioRef.current = a; a.play().catch(() => {}); } catch {} }
-    const t1 = window.setTimeout(() => setClosing(true), Math.max(0, dur - 700));
-    const t2 = window.setTimeout(finish, dur);
-    return () => { window.clearTimeout(t1); window.clearTimeout(t2); try { audioRef.current?.pause(); } catch {} };
+    const root = rootRef.current;
+    if (!root) return;
+
+    let tl: any; let killed = false;
+    let onMove: ((e: PointerEvent) => void) | null = null;
+    const safety = window.setTimeout(finish, durationMs + 900);
+
+    (async () => {
+      const mod = await import("gsap");
+      if (killed) return;
+      const gsap = (mod as any).gsap || (mod as any).default;
+      const D = durationMs / 5200;
+
+      gsap.set(root, { opacity: 1 });
+      tl = gsap.timeline({ defaults: { ease: "power3.out" }, onComplete: finish });
+
+      // Scene 1 · 0.0–0.8 — the scene fades up, petals-clip breathes in
+      tl.from(".bz-womanlayer", { opacity: 0, scale: 1.14, duration: 1.0 * D }, 0)
+        .from(".bz-petalslayer", { opacity: 0, duration: 1.0 * D }, 0)
+        .from(".bz-wash", { opacity: 0, duration: 0.9 * D }, 0)
+        .from(".bz-glow", { opacity: 0, scale: 1.25, duration: 0.8 * D }, 0);
+
+      // Scene 2 · 0.8–1.8 — the glass sakura blooms open
+      tl.from(".bz-core", { scale: 0, opacity: 0, duration: 0.5 * D, ease: "back.out(1.9)" }, 0.85 * D)
+        .from(".bz-glass-petal", { scale: 0, opacity: 0, transformOrigin: "50% 92%", duration: 0.72 * D, stagger: 0.055, ease: "back.out(1.6)" }, 0.92 * D)
+        .from(".bz-flowerglow", { opacity: 0, scale: 0.4, duration: 0.7 * D }, 1.0 * D)
+        .fromTo(".bz-flower-sheen", { xPercent: -160 }, { xPercent: 160, duration: 0.9 * D, ease: "power2.inOut" }, 1.25 * D);
+
+      // Scene 3 · 1.8–2.8 — the flower floats up to make room for the wordmark
+      tl.to(".bz-flowerwrap", { yPercent: -26, scale: 0.7, duration: 1.0 * D, ease: "power2.inOut" }, 2.55 * D);
+
+      // Scene 4 · 2.8–3.8 — the wordmark writes itself; tagline fades in
+      tl.set(".bz-wordwrap", { opacity: 1 }, 2.85 * D)
+        .fromTo(".bz-wordmark", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.95 * D, ease: "power1.inOut" }, 2.9 * D)
+        .fromTo(".bz-pen", { left: "-2%", opacity: 1 }, { left: "102%", duration: 0.95 * D, ease: "power1.inOut" }, 2.9 * D)
+        .to(".bz-pen", { opacity: 0, duration: 0.2 * D }, 3.85 * D)
+        .from(".bz-tagline", { opacity: 0, y: 14, duration: 0.5 * D }, 3.5 * D);
+
+      // Scene 5 · 3.8–5.2 — the session title + duration, then dissolve into the flow
+      tl.to(".bz-brand", { opacity: 0, y: -22, duration: 0.55 * D, ease: "power2.in" }, 3.95 * D)
+        .from(".bz-titlecard", { opacity: 0, scale: 0.92, y: 26, duration: 0.7 * D, ease: "power3.out" }, 4.15 * D)
+        .from(".bz-title-line", { opacity: 0, y: 16, duration: 0.5 * D, stagger: 0.12 }, 4.25 * D)
+        .from(".bz-pillar", { opacity: 0, y: 10, duration: 0.4 * D, stagger: 0.1 }, 4.55 * D)
+        .to(root, { opacity: 0, duration: 0.55 * D, ease: "power2.inOut" }, (durationMs / 1000) - 0.55);
+
+      // Pointer parallax — layered depth following the cursor
+      const mk = (sel: string, d: number) => ({ x: gsap.quickTo(sel, "xPercent", { duration: d, ease: "power3" }), y: gsap.quickTo(sel, "yPercent", { duration: d, ease: "power3" }) });
+      const p2 = mk(".bz-p2", 1.1), p3 = mk(".bz-p3", 1.3);
+      onMove = (e: PointerEvent) => {
+        const dx = e.clientX / window.innerWidth - 0.5, dy = e.clientY / window.innerHeight - 0.5;
+        p2.x(dx * 3); p2.y(dy * 3); p3.x(dx * 6); p3.y(dy * 6);
+      };
+      window.addEventListener("pointermove", onMove);
+    })();
+
+    return () => {
+      killed = true;
+      window.clearTimeout(safety);
+      try { tl?.kill(); } catch {}
+      if (onMove) window.removeEventListener("pointermove", onMove);
+      try { audioRef.current?.pause(); } catch {}
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const bg =
-    model === 2
-      ? "radial-gradient(120% 100% at 50% 30%, #FFF1F6 0%, #FFE3EE 45%, #FBD0E4 100%)"
-      : model === 3
-      ? "radial-gradient(120% 120% at 50% 40%, #FF9CC9 0%, #FF6FB0 45%, #E84E9C 100%)"
-      : "radial-gradient(120% 120% at 50% 35%, #FFD9EC 0%, #FDA9D3 45%, #F56DB0 100%)";
+  return createPortal(
+    <div ref={rootRef} className="bz-root" onClick={finish}>
+      <style>{CSS}</style>
 
-  const logo = (size: number, glow = true) => (
-    <div className="grid place-items-center rounded-[28%] bg-gradient-to-br from-white to-[#FFE3F1] shadow-2xl"
-      style={{ height: size, width: size, boxShadow: glow ? "0 10px 50px rgba(236,72,153,.55), inset 0 0 0 3px rgba(255,255,255,.7)" : undefined }}>
-      <Flower className="text-hotpink" strokeWidth={2} style={{ height: size * 0.56, width: size * 0.56 }} />
-    </div>
-  );
-
-  const Title = ({ size, dark }: { size: string; dark?: boolean }) => (
-    <div className="relative inline-block overflow-hidden">
-      <h1 className="font-script leading-none tracking-tight" style={{ fontSize: size }}>
-        {"Bloomzein".split("").map((c, i) => (
-          <span key={i} className="inline-block"
-            style={{
-              color: dark ? "#B21E6F" : "#fff",
-              textShadow: dark ? "0 2px 18px rgba(236,72,153,.35)" : "0 4px 26px rgba(236,72,153,.6)",
-              animation: `bzUp .55s cubic-bezier(.2,.8,.2,1) ${1.0 + i * 0.06}s both`,
-            }}>{c}</span>
-        ))}
-      </h1>
-      {/* gleam sweep across the wordmark */}
-      <span aria-hidden className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3"
-        style={{ background: "linear-gradient(100deg, transparent, rgba(255,255,255,.85), transparent)", animation: "bzGleam 1.3s ease-in-out 1.7s both" }} />
-    </div>
-  );
-
-  const channelChip = channel && (
-    <div className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-md border border-white/40 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.25em] text-white"
-      style={{ animation: "bzUp .5s ease .35s both" }}>
-      <Flower className="h-3 w-3" /> {channel}
-    </div>
-  );
-
-  let inner: React.ReactNode;
-
-  if (model === 2) {
-    // ── Model 2 · "Soft Bloom" — calm, airy, spa; petals bloom open, serif-soft.
-    inner = (
-      <div className="relative h-full w-full grid place-items-center px-6 text-center">
-        <Sparkles n={6} color="#EC4899" />
-        {/* petals blooming behind the logo */}
-        <div className="absolute" style={{ animation: "bzUp .8s ease .1s both" }}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span key={i} className="absolute left-1/2 top-1/2 h-24 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ background: "linear-gradient(180deg, rgba(255,255,255,.9), rgba(249,168,212,.55))",
-                transformOrigin: "50% 100%",
-                ["--pr" as any]: `${i * 45}deg`,
-                transform: `rotate(${i * 45}deg) translateY(-40px)`,
-                animation: `bzPetal .9s cubic-bezier(.2,.8,.2,1) ${0.15 + i * 0.07}s both`,
-                filter: "blur(.3px)" }} />
-          ))}
-        </div>
-        <div className="relative flex flex-col items-center gap-5">
-          <div style={{ animation: "bzLogoPop 1.1s cubic-bezier(.2,.9,.25,1.2) .2s both" }}>{logo(96, false)}</div>
-          <Title size="clamp(2.6rem,11vw,5.5rem)" dark />
-          <p className="text-[#9D3B72] text-sm sm:text-base tracking-[0.28em] uppercase font-semibold"
-            style={{ animation: "bzUp .7s ease 1.9s both" }}>bloom your softest era</p>
-          {channelChip && <div className="mt-1"><div className="inline-flex items-center gap-1.5 rounded-full bg-white/60 border border-hotpink/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.25em] text-hotpink" style={{ animation: "bzUp .5s ease 2.2s both" }}><Flower className="h-3 w-3" /> {channel}</div></div>}
-        </div>
+      {/* 1 · the woman, drifting softly behind */}
+      <div className="bz-layer bz-womanlayer">
+        <video className="bz-vid" src={videoSrc} autoPlay loop muted playsInline
+          style={{ filter: "saturate(1.05) brightness(.92)" }} />
       </div>
-    );
-  } else if (model === 3) {
-    // ── Model 3 · "Glam Pop" — punchy, saturated, collage snaps in with bounce.
-    inner = (
-      <div className="relative h-full w-full grid place-items-center overflow-hidden">
-        <Sparkles n={12} />
-        {/* pulsing rings behind */}
-        {[0, 0.5, 1].map((d, i) => (
-          <span key={i} className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/50"
-            style={{ animation: `bzRing 1.7s ease-out ${d}s infinite` }} />
-        ))}
-        {/* collage cards snapping in around center */}
-        {[
-          { src: COLLAGE[0], s: "top-[8%] left-[6%] w-28 sm:w-40", r: -9, d: 0.15 },
-          { src: COLLAGE[1], s: "top-[10%] right-[6%] w-28 sm:w-40", r: 8, d: 0.28 },
-          { src: COLLAGE[2], s: "bottom-[9%] left-[9%] w-28 sm:w-40", r: 7, d: 0.4 },
-          { src: COLLAGE[3], s: "bottom-[8%] right-[8%] w-28 sm:w-40", r: -8, d: 0.52 },
-        ].map((c, i) => (
-          <div key={i} className={["absolute rounded-2xl overflow-hidden ring-4 ring-white shadow-2xl", c.s].join(" ")}
-            style={{ ["--r" as any]: `${c.r}deg`, ["--o" as any]: 1, animation: `bzCardIn .5s cubic-bezier(.2,1.3,.4,1) ${c.d}s both` }}>
-            <img src={c.src} alt="" className="w-full aspect-[3/4] object-cover" />
-          </div>
-        ))}
-        <div className="relative z-10 flex flex-col items-center gap-4 px-4">
-          {channelChip}
-          <div style={{ animation: "bzLogoPop 1s cubic-bezier(.2,.9,.25,1.2) .5s both" }}>{logo(104)}</div>
-          <Title size="clamp(2.8rem,13vw,6.5rem)" />
-          <p className="text-white text-sm sm:text-lg font-bold tracking-[0.3em] uppercase drop-shadow"
-            style={{ animation: "bzUp .6s ease 1.9s both" }}>bloom your softest era</p>
-        </div>
+      {/* 2 · sakura petals + light rays, blended over her (screen) */}
+      <div className="bz-layer bz-petalslayer bz-p2" style={{ mixBlendMode: "screen", opacity: 0.72 }}>
+        <video className="bz-vid" src={petalsSrc} autoPlay loop muted playsInline />
       </div>
-    );
-  } else {
-    // ── Model 1 · "Sparkle Dream" — glam floral collage + wordmark + sparkle.
-    inner = (
-      <div className="relative h-full w-full grid place-items-center overflow-hidden">
-        <Sparkles n={11} />
-        {/* soft drifting floral collage */}
-        {[
-          { src: COLLAGE[4], s: "top-[6%] left-[8%] w-24 sm:w-36", r: -8, o: 0.85, d: 0.1, dx: "8px", dy: "-16px" },
-          { src: COLLAGE[1], s: "top-[12%] right-[7%] w-24 sm:w-36", r: 9, o: 0.85, d: 0.25, dx: "-8px", dy: "-12px" },
-          { src: COLLAGE[0], s: "bottom-[10%] left-[6%] w-24 sm:w-36", r: 7, o: 0.85, d: 0.4, dx: "10px", dy: "12px" },
-          { src: COLLAGE[3], s: "bottom-[8%] right-[9%] w-24 sm:w-36", r: -9, o: 0.85, d: 0.55, dx: "-10px", dy: "10px" },
-          { src: COLLAGE[5], s: "top-[42%] left-[2%] w-20 sm:w-28", r: 5, o: 0.7, d: 0.7, dx: "12px", dy: "0px" },
-        ].map((c, i) => (
-          <div key={i} className={["absolute rounded-2xl overflow-hidden ring-2 ring-white/70 shadow-xl", c.s].join(" ")}
-            style={{ ["--r" as any]: `${c.r}deg`, ["--o" as any]: c.o, animation: `bzCardIn .7s cubic-bezier(.2,.8,.2,1) ${c.d}s both` }}>
-            <div style={{ ["--dx" as any]: c.dx, ["--dy" as any]: c.dy, ["--r" as any]: `${c.r}deg`, animation: `bzDrift 6s ease-in-out ${c.d}s infinite alternate` }}>
-              <img src={c.src} alt="" className="w-full aspect-[3/4] object-cover" />
+      {/* 3 · translucent rose wash — unifies the two clips + keeps text legible */}
+      <div className="bz-layer bz-wash" style={{ background: "linear-gradient(180deg, rgba(214,30,110,.34), rgba(120,10,55,.5)), radial-gradient(120% 85% at 50% 12%, rgba(255,190,225,.28), transparent 55%)" }} />
+      {/* soft top bloom light */}
+      <div className="bz-layer bz-glow" style={{ background: "radial-gradient(58% 42% at 50% 2%, rgba(255,255,255,.42), rgba(255,190,225,.16) 45%, transparent 70%)" }} />
+
+      {/* 4 · hero glass sakura + brand lockup */}
+      <div className="bz-layer bz-p3" style={{ display: "grid", placeItems: "center" }}>
+        <div className="bz-flowerwrap" style={{ position: "relative", display: "grid", placeItems: "center" }}>
+          <div className="bz-flowerglow" style={{ position: "absolute", width: "46vmin", height: "46vmin", borderRadius: "9999px",
+            background: "radial-gradient(circle, rgba(255,220,240,.85), rgba(255,120,190,.35) 45%, transparent 70%)",
+            animation: "bzCoreGlow 3.2s ease-in-out infinite" }} />
+          <div style={{ position: "relative", width: "34vmin", height: "34vmin" }}>
+            {GLASS.map(({ rot, i }) => (
+              <div key={i} className="bz-glass-petal"
+                style={{ width: "9vmin", height: "16vmin", transform: `translate(-50%,-92%) rotate(${rot}deg)`, transformOrigin: "50% 92%" }} />
+            ))}
+            <div className="bz-flower-sheen" style={{ position: "absolute", inset: "-10%", pointerEvents: "none",
+              background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%)" }} />
+            <div className="bz-core" style={{ position: "absolute", left: "50%", top: "50%", width: "11vmin", height: "11vmin",
+              transform: "translate(-50%,-50%)", borderRadius: "9999px",
+              background: "radial-gradient(circle at 50% 42%, #fff 0%, #FFE3F1 55%, #F9A8D4 100%)",
+              boxShadow: "0 6px 24px rgba(180,20,90,.4), inset 0 -6px 14px rgba(236,72,153,.35)" }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} style={{ position: "absolute", left: "50%", top: "50%", width: "3.4vmin", height: "4.4vmin",
+                  background: "linear-gradient(180deg,#fff,#FBC2E0)", borderRadius: "50% 50% 50% 50% / 62% 62% 38% 38%",
+                  transform: `translate(-50%,-86%) rotate(${i * 72}deg)`, transformOrigin: "50% 86%",
+                  boxShadow: "inset 0 -3px 6px rgba(236,72,153,.4)" }} />
+              ))}
+              <span style={{ position: "absolute", left: "50%", top: "50%", width: "2.4vmin", height: "2.4vmin", transform: "translate(-50%,-50%)",
+                borderRadius: "9999px", background: "radial-gradient(circle,#F6C77A,#EC9F4A)" }} />
             </div>
           </div>
-        ))}
-        {/* centre lockup */}
-        <div className="relative z-10 flex flex-col items-center gap-4 px-4 text-center">
-          {channelChip}
-          <div style={{ animation: "bzLogoPop 1.1s cubic-bezier(.2,.9,.25,1.2) .3s both" }}>{logo(112)}</div>
-          <Title size="clamp(2.8rem,12vw,6.5rem)" />
-          <p className="text-white/95 text-sm sm:text-lg font-semibold tracking-[0.3em] uppercase"
-            style={{ textShadow: "0 2px 16px rgba(236,72,153,.5)", animation: "bzUp .7s ease 1.9s both" }}>
-            bloom your softest era
-          </p>
+
+          <div className="bz-brand" style={{ position: "absolute", top: "calc(50% + 20vmin)", left: "50%", transform: "translateX(-50%)", textAlign: "center", width: "90vw" }}>
+            <div className="bz-wordwrap" style={{ position: "relative", display: "inline-block", opacity: 0 }}>
+              <div className="bz-wordmark" style={{ fontSize: "clamp(3rem,11vw,8rem)" }}>Bloomzein</div>
+              <span className="bz-pen" />
+            </div>
+            <div className="bz-tagline" style={{ marginTop: "1.4vh", color: "#fff", fontWeight: 600,
+              letterSpacing: "0.34em", textTransform: "uppercase", fontSize: "clamp(.7rem,1.8vw,1.05rem)",
+              textShadow: "0 2px 16px rgba(236,72,153,.5)" }}>— {tagline} ✿</div>
+          </div>
         </div>
       </div>
-    );
-  }
 
-  return createPortal(
-    <div onClick={finish}
-      className="fixed inset-0 z-[110] overflow-hidden cursor-pointer select-none"
-      style={{ background: bg, animation: closing ? "bzIntroOut .7s ease-in forwards" : undefined }}>
-      <style>{KEYFRAMES}</style>
-      {/* glossy top sheen */}
-      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(80% 50% at 50% 0%, rgba(255,255,255,.35), transparent 60%)" }} />
-      {inner}
-      <div className="absolute inset-x-0 bottom-5 text-center text-[11px] font-semibold tracking-wide text-white/70"
-        style={{ animation: "bzUp .6s ease 2.6s both" }}>tap to skip</div>
+      {/* 5 · session title + duration card */}
+      <div className="bz-titlecard bz-layer" style={{ display: "grid", placeItems: "center", pointerEvents: "none" }}>
+        <div style={{ textAlign: "center", padding: "0 6vw" }}>
+          {channel && (
+            <div className="bz-title-line" style={{ color: "#fff", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase",
+              fontSize: "clamp(.7rem,1.6vw,1rem)", opacity: 0.85, marginBottom: "1.2vh" }}>{channel}</div>
+          )}
+          <div className="bz-title bz-title-line" style={{ fontSize: "clamp(2.6rem,9vw,6.5rem)" }}>{sessionTitle}</div>
+          {sessionMeta && (
+            <div className="bz-title-line" style={{ display: "inline-block", marginTop: "2.2vh", padding: ".5em 1.4em", borderRadius: "9999px",
+              background: "rgba(255,255,255,.16)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,.35)",
+              color: "#fff", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", fontSize: "clamp(.85rem,2.4vw,1.4rem)" }}>{sessionMeta}</div>
+          )}
+          {pillars?.length > 0 && (
+            <div style={{ marginTop: "3vh", display: "flex", gap: "2.2vw", justifyContent: "center", alignItems: "center" }}>
+              {pillars.map((p, i) => (
+                <span key={p} className="bz-pillar" style={{ display: "flex", alignItems: "center", gap: "2.2vw",
+                  color: "#fff", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", fontSize: "clamp(.6rem,1.5vw,.9rem)" }}>
+                  {p}{i < pillars.length - 1 && <span style={{ opacity: 0.5 }}>·</span>}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ position: "absolute", inset: "auto 0 3vh 0", textAlign: "center", color: "rgba(255,255,255,.6)", fontSize: 12, fontWeight: 600, letterSpacing: ".08em" }}>tap to skip</div>
     </div>,
     document.body,
   );
