@@ -41,6 +41,7 @@ const YogaPage = lazyRetry(() => import("./pages/app.tools.yoga"));
 const MealsPage = lazyRetry(() => import("./pages/app.tools.meals"));
 const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
 const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
+const IntroPreviewPage = lazyRetry(() => import("./pages/app.intro-preview"));
 const TodayPage = lazyRetry(() => import("./pages/app.today"));
 const ReadPage = lazyRetry(() => import("./pages/app.read"));
 const ShopPage = lazyRetry(() => import("./pages/app.shop"));
@@ -197,6 +198,8 @@ function AppContent() {
     content = <DietPage />;
   } else if (path === "/app/tools/workout") {
     content = <WorkoutPage />;
+  } else if (path === "/app/tools/intro") {
+    content = <IntroPreviewPage />;
   } else if (path === "/app/tools/notes") {
     content = <NotesPage />;
   } else if (path === "/app/tools/diary") {
