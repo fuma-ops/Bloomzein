@@ -13,6 +13,7 @@ import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type Sch
 import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
+import { BloomzeinIntro } from "@/components/bloom/BloomzeinIntro";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, yogaSessionKcal, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel, yogaFocusImage } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
@@ -1396,13 +1397,14 @@ export default function YogaPage() {
       )}
 
       {view.kind === "session" && (
-        <SessionPlayer
+        <SessionWithIntro
           flow={view.flow}
           lang={view.lang}
           mode={view.mode}
           hold={view.hold}
           sound={view.sound}
           intention={view.intention}
+          durationMin={view.durationMin}
           onExit={() => setView({ kind: "home" })}
           onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin })}
         />
@@ -2688,6 +2690,27 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
       </div>
     </div>
   );
+}
+
+/** Plays the cinematic Bloomzein intro (title + duration) once, then hands off
+ *  to the live session — so every recorded flow opens on the brand. */
+function SessionWithIntro({ durationMin, ...player }: {
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; onExit: () => void; onDone: () => void;
+}) {
+  const [introDone, setIntroDone] = useState(false);
+  const meta = FLOW_META[player.intention] ?? FLOW_META.morning;
+  if (!introDone) {
+    return (
+      <BloomzeinIntro
+        channel="Yoga"
+        sessionTitle={meta.title}
+        sessionMeta={`${durationMin} Minutes`}
+        pillars={meta.focus}
+        onDone={() => setIntroDone(true)}
+      />
+    );
+  }
+  return <SessionPlayer {...player} />;
 }
 
 function SessionPlayer({
