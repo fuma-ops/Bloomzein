@@ -23,6 +23,10 @@ dist-ssr
 # Claude Code
 .claude/
 
+# Agent skills (installed locally via `skills add`, kept out of VCS)
+.agents/
+skills-lock.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
