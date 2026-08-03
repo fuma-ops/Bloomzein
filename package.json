@@ -12,7 +12,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "videos:upscale": "node upscale-videos.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -74,6 +75,8 @@
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "ffmpeg-static": "^5.3.0",
+    "ffprobe-static": "^3.1.0",
     "globals": "^15.15.0",
     "prettier": "^3.7.3",
     "tailwindcss": "^4.2.1",
