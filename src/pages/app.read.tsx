@@ -221,7 +221,7 @@ export default function ReadPage() {
         }}
       >
         {/* Frame toward her face (upper-right) so it's never cropped on phone. */}
-        <img src="/images/read-hero-bloom.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%] sm:object-[70%_34%]" referrerPolicy="no-referrer" />
+        <img src="/images/read-hero-bloom.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_45%] sm:object-[70%_34%]" referrerPolicy="no-referrer" />
         {/* left wash ONLY — a soft radial spotlight behind the title, fading to
             fully transparent so the rest of the photo shows clean & vivid. */}
         <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
