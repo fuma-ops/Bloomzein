@@ -929,37 +929,6 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* BANNERS — the desktop-nudge prompt. (The lockscreen/PWA prompt lives
-          lower, just above the "Welcome back" card.) */}
-      {promptNotif && (
-        <div className="flex flex-col gap-3 mb-4">
-          <div className="relative overflow-hidden rounded-[1.25rem] border border-pink-200/50 bg-[#FCE7F3] p-4 shadow-[0_10px_20px_-10px_rgba(236,72,153,0.15)] animate-fade-in">
-            <div className="flex items-start gap-3.5">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#EC4899] shadow-sm">
-                <Bell className="h-4 w-4" />
-              </span>
-              <div className="flex-1 text-left">
-                <h4 className="text-xs font-bold text-[#831843]">Enable lovely desktop notification nudges? 💕</h4>
-                <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
-                  Allow Bloomzein to send gentle reminders while the tab is open.
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={handleRequestNotifPermission} className="bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white">
-                    Enable Nudges ✿
-                  </button>
-                  <button onClick={handleDismissNotifPrompt} className="px-3 py-1.5 bg-white/75 text-rose text-[10px] font-bold rounded-full hover:bg-white transition">
-                    Later
-                  </button>
-                </div>
-              </div>
-              <button onClick={handleDismissNotifPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* HERO — full-bleed blended photo background, same technique as Today/Tools */}
       <div className="relative isolate min-h-[150px] sm:min-h-[196px] mb-3 animate-card-pop-in">
         {/* base pink wash */}
@@ -1047,6 +1016,34 @@ export default function NotesPage() {
               </span>
             )}
           </div>
+
+          {/* NOTIFICATION NUDGE — moved below the search bar so no prompt ever sits above the hero */}
+          {promptNotif && (
+            <div className="relative overflow-hidden rounded-[1.25rem] border border-pink-200/50 bg-[#FCE7F3] p-4 shadow-[0_10px_20px_-10px_rgba(236,72,153,0.15)] animate-fade-in">
+              <div className="flex items-start gap-3.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#EC4899] shadow-sm">
+                  <Bell className="h-4 w-4" />
+                </span>
+                <div className="flex-1 text-left">
+                  <h4 className="text-xs font-bold text-[#831843]">Enable lovely desktop notification nudges? 💕</h4>
+                  <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
+                    Allow Bloomzein to send gentle reminders while the tab is open.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={handleRequestNotifPermission} className="bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white">
+                      Enable Nudges ✿
+                    </button>
+                    <button onClick={handleDismissNotifPrompt} className="px-3 py-1.5 bg-white/75 text-rose text-[10px] font-bold rounded-full hover:bg-white transition">
+                      Later
+                    </button>
+                  </div>
+                </div>
+                <button onClick={handleDismissNotifPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* LOCKSCREEN / PWA PROMPT — sits right above the welcome card */}
           {promptPwa && (
