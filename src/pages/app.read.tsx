@@ -211,7 +211,7 @@ export default function ReadPage() {
           search + filters below — no card seam/border. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-[120px] sm:-top-8 -z-10 h-[640px] overflow-hidden"
         style={{
           // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
           // so it melts into the real page background with no hard seam — same tall,
