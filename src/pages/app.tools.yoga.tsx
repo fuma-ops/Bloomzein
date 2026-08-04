@@ -3427,9 +3427,8 @@ function Summary({
   const isDark = dayPart === "night" || dayPart === "dusk";
 
   return (
-    <div className={["relative space-y-4 yoga-fade", isDark ? "yoga-sum-dark" : ""].join(" ")}>
-      {/* Themed backdrop so the celebration carries the same day/night feel. */}
-      <div aria-hidden className="fixed inset-0 -z-10 transition-[background] duration-700" style={{ background: skin.frame }} />
+    <div className={["relative yoga-fade rounded-[2rem] overflow-hidden p-4 sm:p-6 shadow-lg shadow-rose/10 transition-[background] duration-700", isDark ? "yoga-sum-dark" : ""].join(" ")}
+      style={{ background: skin.frame }}>
       {isDark && (
         <style>{`
           .yoga-sum-dark .text-hotpink { color: ${skin.ink} !important; }
@@ -3439,6 +3438,7 @@ function Summary({
         `}</style>
       )}
       <BloomBubbles count={14} />
+      <div className="relative z-10 space-y-4">
       <div className="relative rounded-3xl bg-white/95 backdrop-blur border border-petal/60 p-5 sm:p-7 text-center shadow-md animate-scale-in">
         <span className="clay-blob animate-selected-glow mx-auto grid place-items-center rounded-full text-white" style={{ width: "4.5rem", height: "4.5rem" }}>
           <Flower className="h-9 w-9 animate-icon-breathe" strokeWidth={1.5} />
@@ -3516,9 +3516,13 @@ function Summary({
         </div>
       </section>
 
-      <div className="flex flex-wrap gap-2 justify-end">
-        <button onClick={onHome} className="rounded-full bg-white/85 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Home</button>
-        <button onClick={onAgain} className="bloom-luxury-btn px-4 py-2 text-xs font-semibold text-white">Practice again</button>
+      {/* Inline styles so the day/night recolor rules never wash these out. */}
+      <div className="flex items-center justify-center gap-3 pt-1">
+        <button onClick={onHome}
+          style={{ background: isDark ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.92)", color: isDark ? "#fff" : "#db2777", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(244,194,214,0.7)"}` }}
+          className="rounded-full px-6 py-2.5 text-sm font-bold active:scale-95 transition shadow-sm">Home</button>
+        <button onClick={onAgain} className="bloom-luxury-btn px-6 py-2.5 text-sm font-bold text-white">Practice again</button>
+      </div>
       </div>
     </div>
   );
