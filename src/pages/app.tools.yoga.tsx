@@ -67,9 +67,6 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "boat", "eagle", "extended-side-angle", "fish", "forearm-plank",
   "high-lunge", "hollow-hold", "lizard", "locust", "plank",
   "reverse-plank", "standing-figure-four", "tree", "upward-dog", "warrior-2",
-  "banana-pose", "bow", "camel", "chaturanga", "cow-face",
-  "crescent-twist", "dancer", "garland", "half-moon", "pigeon",
-  "revolved-triangle", "triangle", "warrior-3",
 ]);
 
 const P = (p: Pose): Pose => ({
@@ -3133,7 +3130,8 @@ function SessionPlayer({
           className={["inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold", glassBtn].join(" ")}>
           <X className="h-3.5 w-3.5" /> End
         </button>
-        <div className="flex-1 max-w-md mx-auto mt-1">
+        {/* Desktop keeps the progress in the bar; mobile moves it below (see mobile block). */}
+        <div className="hidden lg:block flex-1 max-w-md mx-auto mt-1">
           <p className="text-center text-[9px] font-bold uppercase tracking-[0.28em] mb-1" style={{ color: skin.inkSoft }}>Flow progress</p>
           <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)" }}>
             <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -3244,9 +3242,9 @@ function SessionPlayer({
         </div>
       )}
 
-      {/* ===================== RIGHT RAIL (ring always; cards desktop) ============ */}
+      {/* ===================== RIGHT RAIL (desktop only) ============ */}
       {!dim && (
-        <div className="absolute right-3 sm:right-5 top-24 sm:top-28 z-20 flex flex-col items-end gap-3">
+        <div className="hidden lg:flex absolute right-3 sm:right-5 top-24 sm:top-28 z-20 flex-col items-end gap-3">
           <div className={["hidden lg:block w-64 rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
               <Activity className="h-3.5 w-3.5" /> Pose
@@ -3271,6 +3269,35 @@ function SessionPlayer({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ===================== MOBILE: Up-next + ring row, then a slim progress bar ===================== */}
+      {!dim && (
+        <div className="lg:hidden absolute inset-x-3 z-20 flex flex-col gap-2"
+          style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 2.9rem)" }}>
+          <div className="flex items-center gap-2.5">
+            {nextPose ? (
+              <div className={["flex-1 min-w-0 rounded-2xl p-2 flex items-center gap-2.5 animate-fade-in", glass].join(" ")}>
+                <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-16 rounded-xl object-cover shrink-0 border border-white/50" />
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Up next</p>
+                  <p className="font-semibold text-sm leading-tight truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
+                  <p className="text-[11px]" style={{ color: skin.inkSoft }}>{poseHoldSec(nextPose)}s</p>
+                </div>
+              </div>
+            ) : <div className="flex-1" />}
+            <div className={["rounded-full p-1 shrink-0 animate-scale-in", glass].join(" ")}>
+              <HoldRing remaining={remaining} total={poseHold} ink={skin.ink} inkSoft={skin.inkSoft} />
+            </div>
+          </div>
+          <div className={["flex items-center gap-2 rounded-full px-3 py-1.5 animate-fade-in", glass].join(" ")}>
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] shrink-0" style={{ color: skin.inkSoft }}>Flow</span>
+            <div className="relative h-1 flex-1 rounded-full overflow-hidden" style={{ background: isDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)" }}>
+              <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
+            </div>
+            <span className="text-[10px] font-bold tabular-nums shrink-0" style={{ color: skin.ink }}>{stepNum}/{realTotal}</span>
+          </div>
         </div>
       )}
 
