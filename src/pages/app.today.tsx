@@ -984,7 +984,7 @@ export default function TodayPage() {
                 <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Set up your cycle
               </a>
 
-              <p className="mt-1 sm:mt-1.5 font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
+              <p className="mt-1 sm:mt-1.5 hidden sm:block font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
                 Welcome to your Bloom ✿ Let's set up your world — start below.
               </p>
             </>
@@ -1067,7 +1067,7 @@ export default function TodayPage() {
       <div className="relative z-[1] mt-2 sm:mt-3">
         <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
             <span className="clay-blob animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.8} /></span>
             <span className="min-w-0 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
@@ -1076,7 +1076,7 @@ export default function TodayPage() {
           </button>
 
           <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} /></span>
             <span className="min-w-0 sm:flex-none">
               <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
@@ -1089,7 +1089,7 @@ export default function TodayPage() {
             const C = 2 * Math.PI * 15; // ring circumference (r=15 in a 36-box)
             return (
               <button onClick={() => setWaterModalOpen(true)}
-                className="relative group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+                className="relative group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
                 {/* corner water drop — signals this chip is your water insight */}
                 <Droplet aria-hidden className="absolute right-1 top-1 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
                 {/* progress ring — fills with the % of your water goal reached */}
@@ -1113,7 +1113,7 @@ export default function TodayPage() {
               so last night's rest is logged in one touch (the fuller card lives
               in the smart panel, mirroring water's chip + dashboard pairing). */}
           <button ref={sleepTileRef} onClick={() => setSleepPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={sleepPickerOpen}
-            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-md shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/85 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
               {sleepEntry ? <SleepGlyph q={sleepEntry.q} className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-hotpink" /> : <Moon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} />}
             </span>
