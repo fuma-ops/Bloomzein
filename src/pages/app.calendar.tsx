@@ -460,25 +460,25 @@ export default function CalendarPage() {
         </div>
       </section>
 
-      <div className="flex items-center justify-between mb-3 px-1">
-        {/* Month label with its prev / next arrows; tap the label to jump to today. */}
-        <div className="inline-flex items-center gap-1.5">
-          <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+      <div className="flex items-center justify-between gap-2 mb-3 px-1">
+        {/* Month label with its prev / next arrows hugging it; tap the label for today. */}
+        <div className="inline-flex items-center gap-1.5 shrink-0">
+          <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
-          <button onClick={goToday} className="text-sm font-bold text-hotpink px-1 transition hover:opacity-80 active:scale-95" title="Jump to today">
+          <button onClick={goToday} className="whitespace-nowrap shrink-0 text-sm font-bold text-hotpink px-0.5 transition hover:opacity-80 active:scale-95" title="Jump to today">
             {rangeLabel}
           </button>
-          <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+          <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
-        <div className="inline-flex rounded-full bg-white/80 border border-petal/60 p-1 shadow-sm">
+        <div className="inline-flex shrink-0 rounded-full bg-white/80 border border-petal/60 p-0.5 shadow-sm">
           {(["month", "week", "today"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={["px-3 py-1 rounded-full text-[11px] font-bold capitalize transition",
+              className={["px-2.5 py-1 rounded-full text-[10px] font-bold capitalize transition",
                 view === v ? "bg-hotpink text-white shadow shadow-hotpink/30" : "text-rose hover:bg-blush/60"].join(" ")}
             >
               {v}
