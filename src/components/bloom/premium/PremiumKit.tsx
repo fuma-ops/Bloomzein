@@ -213,12 +213,15 @@ export function PlusLock({
   if (premium) return <>{children}</>;
   return (
     <div className={["relative overflow-hidden rounded-[1.5rem]", minH, className].join(" ")}>
+      {/* Cap the blurred teaser so a tall locked section (e.g. the health history)
+          doesn't push the "why is this locked" CTA far below the fold — it stays a
+          short preview with the unlock message centred in view. */}
       {children
-        ? <div className="pointer-events-none select-none blur-[3px] opacity-60">{children}</div>
+        ? <div className="pointer-events-none select-none blur-[3px] opacity-60 max-h-[340px] overflow-hidden">{children}</div>
         : <div className={["w-full", minH || "min-h-[150px]"].join(" ")} style={{ background: "linear-gradient(160deg,#FFF1F6,#FCE7F3)" }} />}
       <button
         onClick={() => openPaywall(feature)}
-        className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px] transition active:scale-[0.99]"
+        className="absolute inset-0 grid place-items-center bg-white/55 backdrop-blur-[2px] transition active:scale-[0.99]"
       >
         <div className="text-center px-5">
           <span className="mx-auto grid h-11 w-11 place-items-center rounded-2xl text-white shadow-md animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
