@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
@@ -2671,14 +2671,17 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
   const R = 46;
   const C = 2 * Math.PI * R;
   const elapsed = total > 0 ? Math.min(1, Math.max(0, (total - remaining) / total)) : 0;
+  // Unique gradient id per instance — the desktop + mobile rings both mount, and a
+  // shared id would make `url(#…)` resolve to the wrong (hidden) one, dropping the pink.
+  const gid = useId().replace(/:/g, "") + "-hold";
   return (
     <div className="relative grid place-items-center h-[104px] w-[104px] sm:h-[128px] sm:w-[128px]">
       <svg viewBox="0 0 108 108" className="absolute inset-0 h-full w-full -rotate-90">
         <circle cx="54" cy="54" r={R} fill="none" stroke="currentColor" strokeWidth="7" className="text-white/35" />
-        <circle cx="54" cy="54" r={R} fill="none" stroke="url(#holdgrad)" strokeWidth="7" strokeLinecap="round"
+        <circle cx="54" cy="54" r={R} fill="none" stroke={`url(#${gid})`} strokeWidth="7" strokeLinecap="round"
           strokeDasharray={C} strokeDashoffset={C * (1 - elapsed)} className="transition-[stroke-dashoffset] duration-1000 ease-linear" />
         <defs>
-          <linearGradient id="holdgrad" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#F9A8D4" /><stop offset="100%" stopColor="#EC4899" />
           </linearGradient>
         </defs>
