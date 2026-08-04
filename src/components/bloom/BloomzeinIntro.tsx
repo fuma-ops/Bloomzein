@@ -103,7 +103,6 @@ export function BloomzeinIntro({
       const dissolveAt = secs - 0.6;
       const titleDone = dissolveAt - HOLD;  // title fully shown ~3s before the end
 
-      gsap.set(root, { opacity: 1 });
       tl = gsap.timeline({ defaults: { ease: "power3.out" }, onComplete: finish });
 
       tl.from(".bz-womanlayer, .bz-petalslayer, .bz-wash", { opacity: 0, duration: 1.0 }, 0);
@@ -119,7 +118,11 @@ export function BloomzeinIntro({
         .from(".bz-title-line", { opacity: 0, y: 26, duration: 0.9, stagger: 0.4, ease: "power2.out" }, infoStart + 0.4)
         .from(".bz-pillar", { opacity: 0, y: 14, duration: 0.6, stagger: 0.14 }, titleDone - 0.4)
         .to(root, { opacity: 0, duration: 0.6, ease: "power2.inOut" }, dissolveAt);
-    })();
+
+      // Every element's start state is now applied — reveal the (until-now hidden)
+      // root so nothing ever flashes at full opacity while GSAP was loading.
+      gsap.set(root, { opacity: 1 });
+    })().catch(() => { try { root.style.opacity = "1"; } catch {} });
 
     return () => {
       killed = true;
@@ -131,7 +134,7 @@ export function BloomzeinIntro({
   }, []);
 
   return createPortal(
-    <div ref={rootRef} className="bz-root" onClick={finish}>
+    <div ref={rootRef} className="bz-root" onClick={finish} style={{ opacity: 0 }}>
       <style>{CSS}</style>
 
       {/* the woman, faded behind */}
