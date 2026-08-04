@@ -80,8 +80,8 @@ export default function ToolsIndex() {
       </div>
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
-      <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-[140px] sm:min-h-[180px] animate-card-pop-in">
-        <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[70%] sm:max-w-md">
+      <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[180px] animate-card-pop-in">
+        <div className="relative z-[1] px-4 pt-3 pb-2 sm:px-8 sm:pt-7 sm:pb-4 max-w-[70%] sm:max-w-md">
           <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
             Tools <Sparkles className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} />
           </h1>
