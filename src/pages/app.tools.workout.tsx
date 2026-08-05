@@ -4,7 +4,7 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, SkipBack, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, ChevronUp, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
-  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv,
+  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv, Clapperboard, Copy,
 } from "lucide-react";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -55,6 +55,10 @@ const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
 const BADGES_KEY = "bloom:workout-badges";
+// TEMP (clip-review authoring aid): review mode + per-move change notes. Remove
+// this and the Library review UI once the clips are all finalised.
+const REVIEW_MODE_KEY = "bloom:clip-review-mode";
+const REVIEW_COMMENTS_KEY = "bloom:clip-review-comments";
 export const PROGRAM_KEY = "bloom:workout-program";
 export const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
 export const WORKOUT_PLAN_GOAL_KEY = "bloom:workout-plan-goal";
@@ -2508,6 +2512,45 @@ function Library() {
   const exercises = ZONE_EXERCISES[zone];
   const zoneMeta = ZONES.find((z) => z.key === zone);
 
+  // TEMP clip-review authoring mode: plays each move's attached clip and lets
+  // notes be written per move, then copied out as one report.
+  const [reviewMode, setReviewMode] = useLS<boolean>(REVIEW_MODE_KEY, false);
+  const [comments, setComments] = useLS<Record<string, string>>(REVIEW_COMMENTS_KEY, {});
+  const setComment = (slug: string, text: string) =>
+    setComments((prev) => ({ ...prev, [slug]: text }));
+
+  const commentCount = Object.values(comments).filter((v) => v && v.trim()).length;
+
+  const buildReport = () => {
+    // Walk every zone once, dedupe shared moves by slug, keep only moves with a note.
+    const seen = new Set<string>();
+    const lines: string[] = [];
+    for (const z of ZONES) {
+      for (const ex of ZONE_EXERCISES[z.key]) {
+        if (seen.has(ex.slug)) continue;
+        seen.add(ex.slug);
+        const note = comments[ex.slug]?.trim();
+        if (note) lines.push(`[${z.key}] ${ex.name} (${ex.slug}) — ${note}`);
+      }
+    }
+    return `Clip review — ${lines.length} note${lines.length === 1 ? "" : "s"}\n${"=".repeat(28)}\n${lines.join("\n")}`;
+  };
+
+  const [copied, setCopied] = useState(false);
+  const copyReport = async () => {
+    const text = buildReport();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch {}
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+
   return (
     <div className="space-y-4">
 
@@ -2516,9 +2559,51 @@ function Library() {
         <div className="flex items-end justify-between gap-3 mb-3">
           <div>
             <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Move Library ✿</h2>
-            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">Tap any move for a how-to, form cues & the mistake to avoid.</p>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
+              {reviewMode ? "Review mode — watch each clip, note what to change, then Copy report." : "Tap any move for a how-to, form cues & the mistake to avoid."}
+            </p>
           </div>
           <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{exercises.length} moves</span>
+        </div>
+
+        {/* TEMP clip-review toolbar */}
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-hotpink/25 bg-hotpink/[0.06] px-3 py-2">
+          <button
+            onClick={() => setReviewMode(!reviewMode)}
+            className={[
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
+              reviewMode ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-hotpink border-hotpink/40 hover:shadow-md",
+            ].join(" ")}
+          >
+            <Clapperboard className="h-3.5 w-3.5" strokeWidth={2.2} />
+            {reviewMode ? "Reviewing clips" : "Review clips"}
+          </button>
+          {reviewMode && (
+            <>
+              <button
+                onClick={copyReport}
+                disabled={commentCount === 0}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
+                  commentCount === 0 ? "bg-white/60 text-rose/40 border-petal/50 cursor-not-allowed" : "bg-white text-hotpink border-hotpink/40 hover:shadow-md",
+                ].join(" ")}
+              >
+                {copied ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" strokeWidth={2.2} />}
+                {copied ? "Copied!" : `Copy report${commentCount ? ` (${commentCount})` : ""}`}
+              </button>
+              {commentCount > 0 && (
+                <button
+                  onClick={() => { if (confirm("Clear all clip-review notes?")) setComments({}); }}
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-rose/60 hover:text-hotpink transition active:scale-95"
+                >
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} /> Clear
+                </button>
+              )}
+              <span className="ml-auto text-[11px] font-semibold text-rose/60">
+                {commentCount} note{commentCount === 1 ? "" : "s"} saved
+              </span>
+            </>
+          )}
         </div>
 
         {/* Zone chips with icons */}
@@ -2526,7 +2611,8 @@ function Library() {
           {ZONES.map((z) => {
             const Icon = z.icon;
             const active = zone === z.key;
-            const locked = !premium && z.key !== "glutes"; // free = Glutes only
+            // In review mode every zone is open so all clips can be checked.
+            const locked = !reviewMode && !premium && z.key !== "glutes"; // free = Glutes only
             return (
               <button
                 key={z.key}
@@ -2547,9 +2633,17 @@ function Library() {
 
         <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-hotpink/60">{zoneMeta?.label}</p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className={reviewMode ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"}>
           {exercises.map((ex, i) => (
-            <ExerciseLibraryCard key={ex.slug} exercise={ex} zone={zone} index={i} />
+            <ExerciseLibraryCard
+              key={ex.slug}
+              exercise={ex}
+              zone={zone}
+              index={i}
+              reviewMode={reviewMode}
+              comment={comments[ex.slug] ?? ""}
+              onComment={(t) => setComment(ex.slug, t)}
+            />
           ))}
         </div>
       </section>
@@ -2557,9 +2651,44 @@ function Library() {
   );
 }
 
-function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zone: Zone; index: number }) {
+function ExerciseLibraryCard({ exercise, zone, index, reviewMode = false, comment = "", onComment }: { exercise: Exercise; zone: Zone; index: number; reviewMode?: boolean; comment?: string; onComment?: (t: string) => void }) {
   const [open, setOpen] = useState(false);
   const coaching = getCoaching(exercise.slug);
+
+  // TEMP clip-review card: the attached clip plays big (contained, whole move
+  // visible) with a note box underneath for change requests.
+  if (reviewMode) {
+    const hasVideo = !!exercise.video;
+    return (
+      <div className="rounded-2xl bg-white/92 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 flex flex-col animate-card-pop-in"
+        style={{ animationDelay: `${index * 0.04}s` }}>
+        <div className="relative w-full aspect-video bg-[oklch(0.96_0.04_350)]">
+          <ExercisePhoto exercise={exercise} zone={zone} className="absolute inset-0 w-full h-full object-contain" />
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/45 text-white text-[9px] font-mono px-1.5 py-0.5 backdrop-blur-sm">{exercise.slug}</span>
+          {!hasVideo && (
+            <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-500/80 text-white text-[9px] font-bold px-1.5 py-0.5">no clip · image</span>
+          )}
+          {comment.trim() && (
+            <span className="absolute bottom-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white shadow"><Check className="h-3 w-3" strokeWidth={3} /></span>
+          )}
+        </div>
+        <div className="p-2.5 flex flex-col gap-1.5">
+          <div>
+            <p className="text-sm font-bold text-rose leading-tight">{exercise.name}</p>
+            <p className="text-[10px] text-rose/60 leading-snug">{exercise.muscles}</p>
+          </div>
+          <textarea
+            value={comment}
+            onChange={(e) => onComment?.(e.target.value)}
+            rows={2}
+            placeholder="What to change? (model, framing, motion, speed…)"
+            className="w-full resize-y rounded-xl border border-petal/60 bg-white/80 px-2.5 py-1.5 text-xs text-rose leading-snug placeholder:text-rose/35 focus:border-hotpink/50 focus:outline-none focus:ring-2 focus:ring-hotpink/20"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={[
