@@ -298,6 +298,22 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
   // external ref (used to cast this clip to a TV).
   const setVid = (el: HTMLVideoElement | null) => { vidRef.current = el; videoRef?.(el); };
   const fallbackImage = zone ? ZONES.find((z) => z.key === zone)?.image : undefined;
+
+  // Our looping demo clips have their seamless dissolve baked into the FIRST
+  // ~1.5s. That reads great on each loop (a soft repetition transition) but is
+  // jarring the very first time a new movement appears. So on the first play of
+  // a clip we start it PAST that intro dissolve; the native `loop` still
+  // restarts at 0, so the dissolve only ever shows on the repetition — never at
+  // the start of a new movement. Guarded to `currentTime < 0.1` so resuming
+  // after a pause (or a loop) never re-skips.
+  const skipIntroDissolve = () => {
+    const v = vidRef.current;
+    if (!v || hold) return;
+    const d = v.duration;
+    if (d && isFinite(d) && v.currentTime < 0.1) {
+      try { v.currentTime = Math.min(1.6, d * 0.25); } catch {}
+    }
+  };
   // Only the *active* move animates. Everywhere else (backdrop, Next up, Rest
   // previews) passes staticOnly so a still shows — keeps attention on the move
   // being performed and avoids extra video decodes.
@@ -311,7 +327,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
     if (!v) return;
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) v.play().catch(() => {});
+        if (entry.isIntersecting) { skipIntroDissolve(); v.play().catch(() => {}); }
         else v.pause();
       },
       { threshold: 0.2 },
@@ -344,6 +360,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
         playsInline
         preload="metadata"
         aria-label={exercise.name}
+        onLoadedMetadata={skipIntroDissolve}
         onError={() => setBroken(true)}
       />
     );
