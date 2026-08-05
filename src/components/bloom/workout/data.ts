@@ -107,6 +107,9 @@ const VIDEO_SLUGS = new Set<string>([
   "pull-up", "renegade-row", "foam-roll-thoracic", "lat-pulldown-band", "banded-row",
   "banded-bicep-curl", "cat-cow", "curtsy-lunge", "deadlift", "front-raises",
   "overhead-press", "seated-forward-fold", "squat", "tricep-overhead-extension", "walking-lunge",
+  "mountain-climbers", "russian-twist", "crunch", "hollow-body-hold", "hanging-knee-raise",
+  "leg-raises", "pelvic-floor-release", "pilates-hundred", "scissor-kicks", "seated-side-bend",
+  "side-plank", "cobra-pose", "bird-dog", "dead-bug", "shoulder-rolls",
 ]);
 
 /** Held stretches/poses — their clip is a play-once file that ends on the deep
