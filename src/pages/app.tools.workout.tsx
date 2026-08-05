@@ -2922,11 +2922,11 @@ function GlassCard({ icon: Icon, title, children, className = "", delay = 0, ico
 }) {
   return (
     <div
-      className={["rounded-[1.5rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.13)] p-3.5 sm:p-4 animate-fade-in", className].join(" ")}
+      className={["rounded-[1.35rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.13)] p-3 animate-fade-in", className].join(" ")}
       style={{ animationDelay: `${delay}ms` }}
     >
       {title && (
-        <p className={["flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70 mb-3", titleAttn ? "w-fit animate-wk-attn" : ""].join(" ")}>
+        <p className={["flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70 mb-2", titleAttn ? "w-fit animate-wk-attn" : ""].join(" ")}>
           {Icon && (
             <span
               className={["grid h-6 w-6 place-items-center rounded-full bg-hotpink/12 text-hotpink", iconVibe ? "animate-wk-icon-glow" : ""].join(" ")}
@@ -3008,11 +3008,11 @@ function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, go
 function FocusCard({ primary, zone, delay }: { primary: string; zone?: Zone; delay?: number }) {
   return (
     <GlassCard icon={Target} title="Today's focus" delay={delay} iconVibe iconVibeDelay={0}>
-      <div className="flex items-center gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-petal to-hotpink/70 text-white shadow-sm"><Flame className="h-5 w-5" /></span>
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-petal to-hotpink/70 text-white shadow-sm"><Flame className="h-4 w-4" /></span>
         <div className="min-w-0">
-          <p className="font-script text-2xl text-hotpink leading-none truncate">{cap(primary)}</p>
-          <p className="text-[11px] font-semibold text-rose/60">Primary muscles</p>
+          <p className="font-script text-xl text-hotpink leading-none truncate">{cap(primary)}</p>
+          <p className="text-[10px] font-semibold text-rose/60">Primary muscles</p>
         </div>
       </div>
     </GlassCard>
@@ -3022,7 +3022,7 @@ function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: numbe
   const list = (muscles.length ? muscles : ["Full body"]).slice(0, 4);
   return (
     <GlassCard icon={Activity} title="Muscle target" delay={delay} iconVibe iconVibeDelay={0.5}>
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {list.map((m, i) => (
           <div key={m + i}>
             <div className="flex items-center justify-between text-[11px] font-bold text-rose mb-1">
@@ -3557,7 +3557,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
       {/* ── Smart-responsive dashboard ──────────────────────────────────────
           phone: single scrolling column · tablet: centre + right rail ·
           desktop: left rail + centre + right rail (the reference layout). */}
-      <main className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_15rem] lg:grid-cols-[13.5rem_1fr_16.5rem] gap-3 px-3 sm:px-5 pb-2 overflow-y-auto md:overflow-hidden">
+      <main className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden">
 
         {/* LEFT RAIL — desktop only */}
         <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
@@ -3608,15 +3608,16 @@ function SessionActive({ session, programRef, onExit, onDone }: {
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
             <div className={["relative w-full rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]",
-              // Video moves get a big 16:9 stage so the clip fills it edge-to-edge
-              // with no crop; still-image moves keep the taller framed look.
+              // Video moves get a big 16:9 stage; the clip is CONTAINED (never
+              // cropped) and its own blurred copy fills any side/letterbox band.
+              // Still-image moves keep the taller framed look.
               exercise.video
-                ? "aspect-video max-h-[74vh] mx-auto"
+                ? "aspect-video max-h-[78vh] mx-auto"
                 : "aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
-              <div key={`bleed-${index}`} aria-hidden className="absolute inset-0 animate-fade-in">
+              <div key={`bleed-${index}`} aria-hidden className="absolute inset-0">
                 <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly
                   className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", mirrored ? "scale-x-[-1]" : ""].join(" ")} />
                 <div className="absolute inset-0 bg-white/25" />
@@ -3626,16 +3627,15 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               {/* Ambient petals drifting up through the side-bands */}
               <StagePetals paused={paused} />
               {/* Inner box sized to the CONTAINED image so the glow + arrows line up. */}
-              {/* Video moves fill the whole stage (object-cover) so the demo is
-                  large and immersive; still-image moves keep the framed, contained
-                  look sized to the detected muscle-glow aspect. */}
-              <div key={index} className="absolute inset-0 m-auto animate-fade-in z-[6]"
+              {/* Video moves fill the whole stage box (contained, no crop) so the
+                  demo is large and immersive; still-image moves keep the framed,
+                  contained look sized to the detected muscle-glow aspect. */}
+              <div key={index} className="absolute inset-0 m-auto z-[6]"
                 style={exercise.video ? { inset: 0 } : (glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any)}>
                 {/* Mirror ONLY the media on the second side — text overlays (switch
                     cue, GO, rep ring) live outside this wrapper so they stay legible. */}
                 <div className={["absolute inset-0 transition-transform duration-500", mirrored ? "scale-x-[-1]" : ""].join(" ")}>
-                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} videoRef={(el) => { sessionVideoRef.current = el; }} className={["absolute inset-0 w-full h-full",
-                    exercise.video ? "object-cover" : "object-contain",
+                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} videoRef={(el) => { sessionVideoRef.current = el; }} className={["absolute inset-0 w-full h-full object-contain",
                     isHold && exercise.video && !paused ? "animate-wk-hold-breathe"
                       : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
                 </div>
@@ -3777,8 +3777,8 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
         {/* RIGHT RAIL — tablet + desktop */}
         <aside className="hidden md:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
-          <GlassCard className="!py-4" delay={40}>
-            <RepRing size={168} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
+          <GlassCard className="!py-3.5" delay={40}>
+            <RepRing size={150} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
               rep={stepReps > 0 && !isSwitch && phase === "exercise" ? currentRep : undefined}
               total={stepReps > 0 && !isSwitch && phase === "exercise" ? stepReps : undefined}
               seconds={remaining} />
