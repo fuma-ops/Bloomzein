@@ -2655,27 +2655,36 @@ function ExerciseLibraryCard({ exercise, zone, index, reviewMode = false, commen
   const [open, setOpen] = useState(false);
   const coaching = getCoaching(exercise.slug);
 
-  // TEMP clip-review card: the attached clip plays big (contained, whole move
-  // visible) with a note box underneath for change requests.
+  // TEMP clip-review card: the library STILL and its animated CLIP sit side by
+  // side (image left/top, clip right/bottom) so both are visible at once — no
+  // switching — with a note box underneath for change requests.
   if (reviewMode) {
     const hasVideo = !!exercise.video;
     return (
       <div className="rounded-2xl bg-white/92 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 flex flex-col animate-card-pop-in"
         style={{ animationDelay: `${index * 0.04}s` }}>
+        {/* Library still on top, its animated clip directly UNDER it — both
+            visible at once so you analyse without switching. */}
+        <div className="relative w-full aspect-video bg-blush/40 border-b-2 border-white/80">
+          <ExercisePhoto exercise={exercise} zone={zone} staticOnly preferImage className="absolute inset-0 w-full h-full object-contain" />
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/40 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 backdrop-blur-sm">Image</span>
+        </div>
         <div className="relative w-full aspect-video bg-[oklch(0.96_0.04_350)]">
           <ExercisePhoto exercise={exercise} zone={zone} className="absolute inset-0 w-full h-full object-contain" />
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/45 text-white text-[9px] font-mono px-1.5 py-0.5 backdrop-blur-sm">{exercise.slug}</span>
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-hotpink/85 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 backdrop-blur-sm">Clip</span>
           {!hasVideo && (
-            <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-500/80 text-white text-[9px] font-bold px-1.5 py-0.5">no clip · image</span>
-          )}
-          {comment.trim() && (
-            <span className="absolute bottom-1.5 right-1.5 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white shadow"><Check className="h-3 w-3" strokeWidth={3} /></span>
+            <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-500/85 text-white text-[9px] font-bold px-1.5 py-0.5">no clip yet</span>
           )}
         </div>
         <div className="p-2.5 flex flex-col gap-1.5">
-          <div>
-            <p className="text-sm font-bold text-rose leading-tight">{exercise.name}</p>
-            <p className="text-[10px] text-rose/60 leading-snug">{exercise.muscles}</p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-rose leading-tight">{exercise.name}</p>
+              <p className="text-[10px] text-rose/55 font-mono leading-snug">{exercise.slug}</p>
+            </div>
+            {comment.trim() && (
+              <span className="shrink-0 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white shadow"><Check className="h-3 w-3" strokeWidth={3} /></span>
+            )}
           </div>
           <textarea
             value={comment}
