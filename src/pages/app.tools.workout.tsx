@@ -3607,10 +3607,13 @@ function SessionActive({ session, programRef, onExit, onDone }: {
 
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
-            <div className={["relative w-full rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]",
-              // Video moves get a big 16:9 stage; the clip is CONTAINED (never
-              // cropped) and its own blurred copy fills any side/letterbox band.
-              // Still-image moves keep the taller framed look.
+            <div
+              style={exercise.video ? { maxWidth: "min(100%, calc(78vh * 16 / 9))" } : undefined}
+              className={["relative w-full rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.96_0.04_350)]",
+              // Video moves get a TRUE 16:9 stage: capping the width to
+              // (max-height · 16/9) keeps the box locked at 16:9 even when the
+              // height clamps, so the 16:9 clip fills it edge-to-edge (cover) with
+              // no crop and no letterbox bands. Still-image moves stay taller.
               exercise.video
                 ? "aspect-video max-h-[78vh] mx-auto"
                 : "aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
@@ -3627,15 +3630,17 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               {/* Ambient petals drifting up through the side-bands */}
               <StagePetals paused={paused} />
               {/* Inner box sized to the CONTAINED image so the glow + arrows line up. */}
-              {/* Video moves fill the whole stage box (contained, no crop) so the
-                  demo is large and immersive; still-image moves keep the framed,
-                  contained look sized to the detected muscle-glow aspect. */}
+              {/* Video moves fill the whole 16:9 stage box (cover, edge-to-edge,
+                  no crop since box + clip are both 16:9) so the demo is large and
+                  immersive; still-image moves keep the framed, contained look
+                  sized to the detected muscle-glow aspect. */}
               <div key={index} className="absolute inset-0 m-auto z-[6]"
                 style={exercise.video ? { inset: 0 } : (glow ? { aspectRatio: String(glow.aspect), maxWidth: "100%", maxHeight: "100%" } : { inset: 0 } as any)}>
                 {/* Mirror ONLY the media on the second side — text overlays (switch
                     cue, GO, rep ring) live outside this wrapper so they stay legible. */}
                 <div className={["absolute inset-0 transition-transform duration-500", mirrored ? "scale-x-[-1]" : ""].join(" ")}>
-                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} videoRef={(el) => { sessionVideoRef.current = el; }} className={["absolute inset-0 w-full h-full object-contain",
+                  <ExercisePhoto exercise={exercise} zone={session.zone} hold={isHold} videoRef={(el) => { sessionVideoRef.current = el; }} className={["absolute inset-0 w-full h-full",
+                    exercise.video ? "object-cover" : "object-contain",
                     isHold && exercise.video && !paused ? "animate-wk-hold-breathe"
                       : (!paused && !exercise.video ? "animate-wk-ken-burns" : "")].join(" ")} />
                 </div>
