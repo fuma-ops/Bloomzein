@@ -132,7 +132,7 @@ const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump"]);
 
 /** Moves whose clip is baked as a boomerang (forward+reverse) so the rep motion
  *  ping-pong loops perfectly smoothly — no cut and no dissolve on repeat. */
-const BOOMERANG_SLUGS = new Set<string>(["dead-bug"]);
+const BOOMERANG_SLUGS = new Set<string>(["dead-bug", "bird-dog"]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
