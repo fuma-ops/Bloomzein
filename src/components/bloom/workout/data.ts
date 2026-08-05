@@ -100,6 +100,13 @@ const VIDEO_SLUGS = new Set<string>([
   "seated-hamstring-stretch", "reclined-hamstring-stretch", "legs-up-wall", "lizard-lunge",
   "standing-quad-stretch", "chest-opener", "overhead-tricep-stretch", "single-leg-deadlift",
   "it-band-stretch", "side-lunge",
+  "back-extension", "diamond-push-up", "doorway-stretch", "supported-fish-pose", "hammer-curl",
+  "push-up-knees", "neck-rolls", "push-up", "shoulder-circles", "cross-body-shoulder-stretch",
+  "reverse-snow-angel", "standing-leg-circles", "thoracic-rotation", "arnold-press", "wall-angels",
+  "wall-sit", "wrist-circles", "lateral-raises", "tricep-dips", "inner-thigh-squeeze",
+  "pull-up", "renegade-row", "foam-roll-thoracic", "lat-pulldown-band", "banded-row",
+  "banded-bicep-curl", "cat-cow", "curtsy-lunge", "deadlift", "front-raises",
+  "overhead-press", "seated-forward-fold", "squat", "tricep-overhead-extension", "walking-lunge",
 ]);
 
 /** Held stretches/poses — their clip is a play-once file that ends on the deep
