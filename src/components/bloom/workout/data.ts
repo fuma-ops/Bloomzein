@@ -97,6 +97,9 @@ const VIDEO_SLUGS = new Set<string>([
   "pigeon-pose", "figure-four-stretch", "low-lunge-hip-flexor", "butterfly-seated",
   "supine-twist", "supine-spinal-twist", "hip-circles", "reclined-butterfly",
   "childs-pose", "foam-roll-glutes",
+  "seated-hamstring-stretch", "reclined-hamstring-stretch", "legs-up-wall", "lizard-lunge",
+  "standing-quad-stretch", "chest-opener", "overhead-tricep-stretch", "single-leg-deadlift",
+  "it-band-stretch", "side-lunge",
 ]);
 
 /** Held stretches/poses — their clip is a play-once file that ends on the deep
