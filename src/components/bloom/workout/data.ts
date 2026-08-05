@@ -38,6 +38,10 @@ export interface Exercise {
    *  play-once file that settles on the deep-stretch frame, so the player holds
    *  there and breathes instead of looping. */
   hold?: boolean;
+  /** The clip is a boomerang (forward then reverse baked in), so it ping-pong
+   *  loops perfectly smoothly — no cut, no dissolve. Such clips must NOT skip an
+   *  intro (there is none) and just loop. */
+  boomerang?: boolean;
   /** Spoken coaching clip for this move ("/audio/workout-{slug}.mp3"). Optional
    *  — the player just stays silent if a move has no recording yet. */
   audio?: string;
@@ -126,12 +130,17 @@ const HOLD_SLUGS = new Set<string>([
  *  so previews use the previous library illustration instead of a video poster. */
 const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump"]);
 
+/** Moves whose clip is baked as a boomerang (forward+reverse) so the rep motion
+ *  ping-pong loops perfectly smoothly — no cut and no dissolve on repeat. */
+const BOOMERANG_SLUGS = new Set<string>(["dead-bug"]);
+
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
   ...(VIDEO_SLUGS.has(slug)
     ? { video: `/videos/workout-${slug}.mp4`, ...(NO_POSTER_SLUGS.has(slug) ? {} : { poster: `/images/workout-${slug}-still.webp` }) }
     : {}),
   ...(HOLD_SLUGS.has(slug) ? { hold: true } : {}),
+  ...(BOOMERANG_SLUGS.has(slug) ? { boomerang: true } : {}),
   ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
   ...(opts?.uni ? { unilateral: true } : {}),
 });

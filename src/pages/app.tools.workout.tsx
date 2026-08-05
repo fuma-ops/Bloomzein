@@ -312,7 +312,9 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
   // after a pause (or a loop) never re-skips.
   const skipIntroDissolve = () => {
     const v = vidRef.current;
-    if (!v || hold) return;
+    // Boomerang clips have no intro dissolve — they ping-pong loop cleanly — so
+    // never skip into them; hold clips play once and freeze, also no skip.
+    if (!v || hold || exercise.boomerang) return;
     const d = v.duration;
     if (d && isFinite(d) && v.currentTime < 0.1) {
       try { v.currentTime = Math.min(1.6, d * 0.25); } catch {}
