@@ -116,6 +116,7 @@ const VIDEO_SLUGS = new Set<string>([
   "side-plank", "cobra-pose", "bird-dog", "dead-bug", "shoulder-rolls",
   "bicycle-crunch", "diaphragmatic-breathing", "thread-the-needle",
   "gentle-calf-raises", "plank-hold",
+  "gentle-arm-swings", "bent-over-row", "superman-hold",
 ]);
 
 /** Held stretches/poses — their clip is a play-once file that ends on the deep
@@ -124,11 +125,11 @@ const VIDEO_SLUGS = new Set<string>([
  *  Continuous mobility moves (e.g. hip circles) are deliberately NOT here — they
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
-  "figure-four-stretch", "pigeon-pose",
-  "reclined-butterfly", "supine-twist",
-  // Reclassified to hold — these settle on their deep stretch/pose, not a rep.
+  "figure-four-stretch", "pigeon-pose", "reclined-butterfly",
+  // Settle on their deep stretch/pose, not a rep. supine-twist is intentionally
+  // NOT here — it plays its complete two-sided move as a plain loop.
   "supine-spinal-twist", "reclined-hamstring-stretch", "supported-fish-pose",
-  "plank-hold",
+  "plank-hold", "thread-the-needle", "superman-hold",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
@@ -155,14 +156,15 @@ const BOOMERANG_SLUGS = new Set<string>([
   // Back
   "reverse-snow-angel", "banded-row", "wall-angels", "back-extension", "thoracic-rotation",
   "deadlift", "lat-pulldown-band", "pull-up", "renegade-row", "seated-forward-fold",
-  "foam-roll-thoracic", "thread-the-needle",
+  "foam-roll-thoracic", "bent-over-row",
   // Legs
   "inner-thigh-squeeze", "curtsy-lunge", "side-lunge", "squat", "walking-lunge",
   "jump-squat", "single-leg-deadlift", "lizard-lunge", "gentle-calf-raises",
   "wall-sit", "seated-hamstring-stretch", "it-band-stretch", "legs-up-wall",
-  // Newly attached glute reps + breathing
+  "standing-leg-circles",
+  // Newly attached glute reps + breathing + arm swings
   "hip-thrust", "weighted-hip-thrust", "donkey-kicks", "clamshells", "fire-hydrants",
-  "hip-circles", "diaphragmatic-breathing",
+  "hip-circles", "diaphragmatic-breathing", "glute-bridge", "gentle-arm-swings",
 ]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
