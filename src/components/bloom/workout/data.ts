@@ -126,10 +126,11 @@ const VIDEO_SLUGS = new Set<string>([
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
   "figure-four-stretch", "pigeon-pose", "reclined-butterfly",
-  // Settle on their deep stretch/pose, not a rep. supine-twist is intentionally
-  // NOT here — it plays its complete two-sided move as a plain loop.
-  "supine-spinal-twist", "reclined-hamstring-stretch", "supported-fish-pose",
-  "plank-hold", "thread-the-needle", "superman-hold",
+  // Play once and settle on their deep pose. supine-twist, thread-the-needle
+  // and reclined-hamstring-stretch are NOT here — their clips bake a ~5s hold at
+  // the pose and then play back (boomerang), so they loop. superman-hold plays
+  // back too (see BOOMERANG_SLUGS).
+  "supine-spinal-twist", "supported-fish-pose", "plank-hold",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
@@ -165,6 +166,8 @@ const BOOMERANG_SLUGS = new Set<string>([
   // Newly attached glute reps + breathing + arm swings
   "hip-thrust", "weighted-hip-thrust", "donkey-kicks", "clamshells", "fire-hydrants",
   "hip-circles", "diaphragmatic-breathing", "glute-bridge", "gentle-arm-swings",
+  // Hold-boomerangs (bake a ~5s hold at the pose, then play back) + superman play-back
+  "supine-twist", "thread-the-needle", "reclined-hamstring-stretch", "superman-hold",
 ]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
