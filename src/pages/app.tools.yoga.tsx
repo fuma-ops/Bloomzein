@@ -47,6 +47,13 @@ interface Pose {
   video?: string;
   /** Clean still frame from the clip — used as the video poster. */
   poster?: string;
+  /** A held pose: its clip plays once and settles on the last (pose) frame
+   *  instead of looping — same treatment as a workout "hold". */
+  hold?: boolean;
+  /** The clip is baked as a boomerang (forward+reverse) so it ping-pong loops
+   *  smoothly with no cut — same as a workout "boomerang". Such clips have no
+   *  intro dissolve, so the player must not skip into them. */
+  boomerang?: boolean;
   cues: Record<Lang, string>;
   audioUrl?: string; // future custom voice — left empty; TTS reads cue
   floorOnly?: boolean; // safe for beginner audio sessions
@@ -72,11 +79,23 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "revolved-triangle", "triangle", "warrior-3",
 ]);
 
+/** Poses whose clip should play once and settle on the last (pose) frame,
+ *  instead of looping — the yoga equivalent of a workout "hold". Filled in as
+ *  poses are validated; empty means every clip keeps its gentle loop for now. */
+const YOGA_HOLD_SLUGS = new Set<string>([]);
+
+/** Poses whose clip is baked as a boomerang (forward+reverse) so it ping-pong
+ *  loops with no cut — the yoga equivalent of a workout "boomerang". Filled in
+ *  as flows are validated. */
+const YOGA_BOOMERANG_SLUGS = new Set<string>([]);
+
 const P = (p: Pose): Pose => ({
   ...p,
   ...(YOGA_VIDEO_SLUGS.has(p.slug)
     ? { video: `/videos/pose-${p.slug}.mp4`, poster: `/images/pose-${p.slug}-still.webp` }
     : {}),
+  ...(YOGA_HOLD_SLUGS.has(p.slug) ? { hold: true } : {}),
+  ...(YOGA_BOOMERANG_SLUGS.has(p.slug) ? { boomerang: true } : {}),
 });
 
 export const POSES: Pose[] = [
@@ -3046,7 +3065,7 @@ function SessionPlayer({
             ref={flowVideoRef}
             src={pose.video}
             poster={pose.poster ?? pose.image}
-            autoPlay loop muted playsInline preload="metadata"
+            autoPlay loop={!pose.hold} muted playsInline preload="metadata"
             aria-label={pose.name}
             onLoadedData={() => setImgReady(true)}
             onError={() => setImgReady(false)}
