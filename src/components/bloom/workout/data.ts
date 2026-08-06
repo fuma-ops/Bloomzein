@@ -114,6 +114,8 @@ const VIDEO_SLUGS = new Set<string>([
   "mountain-climbers", "russian-twist", "crunch", "hollow-body-hold", "hanging-knee-raise",
   "leg-raises", "pelvic-floor-release", "pilates-hundred", "scissor-kicks", "seated-side-bend",
   "side-plank", "cobra-pose", "bird-dog", "dead-bug", "shoulder-rolls",
+  "bicycle-crunch", "diaphragmatic-breathing", "thread-the-needle",
+  "gentle-calf-raises", "plank-hold",
 ]);
 
 /** Held stretches/poses — their clip is a play-once file that ends on the deep
@@ -123,7 +125,10 @@ const VIDEO_SLUGS = new Set<string>([
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
   "figure-four-stretch", "pigeon-pose",
-  "reclined-butterfly", "supine-twist", "overhead-tricep-stretch",
+  "reclined-butterfly", "supine-twist",
+  // Reclassified to hold — these settle on their deep stretch/pose, not a rep.
+  "supine-spinal-twist", "reclined-hamstring-stretch", "supported-fish-pose",
+  "plank-hold",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
@@ -141,20 +146,23 @@ const BOOMERANG_SLUGS = new Set<string>([
   // Core
   "pilates-hundred", "leg-raises", "scissor-kicks", "side-plank", "crunch",
   "mountain-climbers", "hollow-body-hold", "russian-twist", "hanging-knee-raise",
-  "cat-cow", "cobra-pose", "seated-side-bend", "supine-spinal-twist", "pelvic-floor-release",
+  "cat-cow", "cobra-pose", "seated-side-bend", "pelvic-floor-release", "bicycle-crunch",
   // Arms
   "tricep-dips", "lateral-raises", "front-raises", "banded-bicep-curl", "shoulder-circles",
   "overhead-press", "tricep-overhead-extension", "hammer-curl", "diamond-push-up",
   "cross-body-shoulder-stretch", "chest-opener", "neck-rolls", "shoulder-rolls",
-  "push-up", "doorway-stretch",
+  "push-up", "doorway-stretch", "overhead-tricep-stretch", "arnold-press",
   // Back
   "reverse-snow-angel", "banded-row", "wall-angels", "back-extension", "thoracic-rotation",
   "deadlift", "lat-pulldown-band", "pull-up", "renegade-row", "seated-forward-fold",
-  "foam-roll-thoracic", "supported-fish-pose",
+  "foam-roll-thoracic", "thread-the-needle",
   // Legs
   "inner-thigh-squeeze", "curtsy-lunge", "side-lunge", "squat", "walking-lunge",
-  "jump-squat", "single-leg-deadlift", "lizard-lunge", "reclined-hamstring-stretch",
+  "jump-squat", "single-leg-deadlift", "lizard-lunge", "gentle-calf-raises",
   "wall-sit", "seated-hamstring-stretch", "it-band-stretch", "legs-up-wall",
+  // Newly attached glute reps + breathing
+  "hip-thrust", "weighted-hip-thrust", "donkey-kicks", "clamshells", "fire-hydrants",
+  "hip-circles", "diaphragmatic-breathing",
 ]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
