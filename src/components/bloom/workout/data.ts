@@ -130,7 +130,7 @@ const HOLD_SLUGS = new Set<string>([
   // and reclined-hamstring-stretch are NOT here — their clips bake a ~5s hold at
   // the pose and then play back (boomerang), so they loop. superman-hold plays
   // back too (see BOOMERANG_SLUGS).
-  "supine-spinal-twist", "supported-fish-pose", "plank-hold",
+  "supported-fish-pose", "plank-hold", "reclined-hamstring-stretch",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
@@ -160,14 +160,15 @@ const BOOMERANG_SLUGS = new Set<string>([
   "foam-roll-thoracic", "bent-over-row",
   // Legs
   "inner-thigh-squeeze", "curtsy-lunge", "side-lunge", "squat", "walking-lunge",
-  "jump-squat", "single-leg-deadlift", "lizard-lunge", "gentle-calf-raises",
+  "lizard-lunge", "gentle-calf-raises",
   "wall-sit", "seated-hamstring-stretch", "it-band-stretch", "legs-up-wall",
   "standing-leg-circles",
   // Newly attached glute reps + breathing + arm swings
   "hip-thrust", "weighted-hip-thrust", "donkey-kicks", "clamshells", "fire-hydrants",
   "hip-circles", "diaphragmatic-breathing", "glute-bridge", "gentle-arm-swings",
-  // Hold-boomerangs (bake a ~5s hold at the pose, then play back) + superman play-back
-  "supine-twist", "thread-the-needle", "reclined-hamstring-stretch", "superman-hold",
+  // Hold-boomerangs (bake a ~5s hold at the pose, then play back) + superman play-back.
+  // jump-squat & single-leg-deadlift are NOT here — they plain-loop their complete clip.
+  "supine-twist", "supine-spinal-twist", "thread-the-needle", "superman-hold",
 ]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
