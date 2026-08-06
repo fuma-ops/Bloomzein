@@ -314,7 +314,9 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
     const v = vidRef.current;
     // Boomerang clips have no intro dissolve — they ping-pong loop cleanly — so
     // never skip into them; hold clips play once and freeze, also no skip.
-    if (!v || hold || exercise.boomerang) return;
+    // `exercise.hold` (not just the session-only `hold` prop) is honored so a
+    // held stretch never skips into its motion in the library/preview either.
+    if (!v || hold || exercise.hold || exercise.boomerang) return;
     const d = v.duration;
     if (d && isFinite(d) && v.currentTime < 0.1) {
       try { v.currentTime = Math.min(1.6, d * 0.25); } catch {}
@@ -361,7 +363,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
         src={exercise.video}
         poster={exercise.poster ?? exercise.image}
         className={className}
-        loop={!hold}
+        loop={!(hold || exercise.hold)}
         muted
         playsInline
         preload="metadata"

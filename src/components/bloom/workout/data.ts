@@ -123,7 +123,7 @@ const VIDEO_SLUGS = new Set<string>([
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
   "figure-four-stretch", "pigeon-pose",
-  "reclined-butterfly", "supine-twist", "supine-spinal-twist", "childs-pose",
+  "reclined-butterfly", "supine-twist", "overhead-tricep-stretch",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
@@ -136,6 +136,25 @@ const BOOMERANG_SLUGS = new Set<string>([
   "dead-bug", "bird-dog",
   "sumo-squat", "romanian-deadlift", "step-ups", "kettlebell-swing",
   "low-lunge-hip-flexor", "butterfly-seated",
+  // Glutes
+  "side-lying-leg-raises", "bulgarian-split-squat", "foam-roll-glutes", "childs-pose",
+  // Core
+  "pilates-hundred", "leg-raises", "scissor-kicks", "side-plank", "crunch",
+  "mountain-climbers", "hollow-body-hold", "russian-twist", "hanging-knee-raise",
+  "cat-cow", "cobra-pose", "seated-side-bend", "supine-spinal-twist", "pelvic-floor-release",
+  // Arms
+  "tricep-dips", "lateral-raises", "front-raises", "banded-bicep-curl", "shoulder-circles",
+  "overhead-press", "tricep-overhead-extension", "hammer-curl", "diamond-push-up",
+  "cross-body-shoulder-stretch", "chest-opener", "neck-rolls", "shoulder-rolls",
+  "push-up", "doorway-stretch",
+  // Back
+  "reverse-snow-angel", "banded-row", "wall-angels", "back-extension", "thoracic-rotation",
+  "deadlift", "lat-pulldown-band", "pull-up", "renegade-row", "seated-forward-fold",
+  "foam-roll-thoracic", "supported-fish-pose",
+  // Legs
+  "inner-thigh-squeeze", "curtsy-lunge", "side-lunge", "squat", "walking-lunge",
+  "jump-squat", "single-leg-deadlift", "lizard-lunge", "reclined-hamstring-stretch",
+  "wall-sit", "seated-hamstring-stretch", "it-band-stretch", "legs-up-wall",
 ]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
