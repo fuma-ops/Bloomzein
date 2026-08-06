@@ -126,11 +126,12 @@ const VIDEO_SLUGS = new Set<string>([
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
   "figure-four-stretch", "pigeon-pose", "reclined-butterfly",
-  // Play once and settle on their deep pose. supine-twist, thread-the-needle
-  // and reclined-hamstring-stretch are NOT here — their clips bake a ~5s hold at
-  // the pose and then play back (boomerang), so they loop. superman-hold plays
-  // back too (see BOOMERANG_SLUGS).
+  // Play once and settle on their deep pose. supine-twist and
+  // reclined-hamstring-stretch are NOT here — they play back (boomerang / full
+  // clip); superman-hold plays back too (see BOOMERANG_SLUGS).
   "supported-fish-pose", "plank-hold",
+  // Thread the Needle settles on the hands-on-ground threaded pose (per image).
+  "thread-the-needle",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
@@ -168,7 +169,7 @@ const BOOMERANG_SLUGS = new Set<string>([
   "hip-circles", "diaphragmatic-breathing", "glute-bridge", "gentle-arm-swings",
   // Hold-boomerangs (bake a ~5s hold at the pose, then play back) + superman play-back.
   // jump-squat plain-loops its complete clip.
-  "supine-twist", "supine-spinal-twist", "thread-the-needle", "superman-hold",
+  "supine-twist", "supine-spinal-twist", "superman-hold",
   // Complete-clip play-back (no sub-trim)
   "single-leg-deadlift", "reclined-hamstring-stretch",
 ]);

@@ -2921,7 +2921,8 @@ function SessionPlayer({
   // Pose photo load state — show a soft placeholder until it's ready (and if a
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
-  useEffect(() => { setImgReady(false); }, [idx]);
+  const [videoBroken, setVideoBroken] = useState(false);
+  useEffect(() => { setImgReady(false); setVideoBroken(false); }, [idx]);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
   const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip
@@ -3204,27 +3205,28 @@ function SessionPlayer({
             ))}
           </div>
         )}
-        {/* The sharp pose — big, whole, centred. Video in a flow, else the still. */}
-        {pose.video ? (
+        {/* The sharp pose — big, whole, centred. The still is ALWAYS the base
+            layer (so the pose appears instantly and never blanks if the clip is
+            slow or fails to load); the flow clip plays on top when it's ready. */}
+        <img
+          key={idx + "-sharp"}
+          src={pose.image}
+          alt={pose.name}
+          onLoad={() => setImgReady(true)}
+          onError={() => setImgReady(false)}
+          className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+          style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+        />
+        {pose.video && !videoBroken && (
           <video
+            key={idx + "-clip"}
             ref={flowVideoRef}
             src={pose.video}
             poster={pose.poster ?? pose.image}
-            autoPlay loop={!pose.hold} muted playsInline preload="metadata"
+            autoPlay loop={!pose.hold} muted playsInline preload="auto"
             aria-label={pose.name}
-            onLoadedData={() => setImgReady(true)}
-            onError={() => setImgReady(false)}
-            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
-            style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
-          />
-        ) : (
-          <img
-            key={idx}
-            src={pose.image}
-            alt={pose.name}
-            onLoad={() => setImgReady(true)}
-            onError={() => setImgReady(false)}
-            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+            onError={() => setVideoBroken(true)}
+            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
             style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
           />
         )}
