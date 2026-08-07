@@ -4,7 +4,7 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, SkipBack, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, ChevronUp, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
-  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv,
+  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv, Music, Mic,
 } from "lucide-react";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -63,6 +63,8 @@ const CHALLENGE_KEY = "bloom:workout-challenge";
 const SOUND_KEY = "bloom:workout-sound";  // master: all sound on/off
 const VOICE_KEY = "bloom:workout-voice";  // spoken move cues on/off
 const MUSIC_KEY = "bloom:workout-music";  // background track index (into WORKOUT_MUSIC)
+const MUSIC_VOL_KEY = "bloom:workout-music-vol"; // background-music level 0..1
+const VOICE_VOL_KEY = "bloom:workout-voice-vol"; // voice cues + beeps level 0..1
 const MUSIC_LABELS = ["Power Session", "Aetherium Pulse", "Sands of Time", "Sleek Alignment"];
 export const WORKOUT_LOG_KEY = "bloom:workout-history";
 
@@ -110,14 +112,20 @@ function audioCtx(): AudioContext | null {
     return _actx;
   } catch { return null; }
 }
+// Live voice/beeps level (0..1), driven by the in-session Voice slider. Scales
+// both the timer beeps (tone) and the spoken cues (playCue) so the user can set
+// how loud the coaching sits over the music.
+let _voiceGain = 0.8;
 function tone(freq: number, peak: number, dur: number, type: OscillatorType = "sine") {
   const ctx = audioCtx(); if (!ctx) return;
+  const p = peak * _voiceGain;
+  if (p < 0.001) return; // effectively muted — skip (exponential ramp can't hit 0)
   try {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type; o.frequency.value = freq;
     const t = ctx.currentTime;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(p, t + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g); g.connect(ctx.destination);
     o.start(t); o.stop(t + dur + 0.05);
@@ -157,7 +165,6 @@ const WORKOUT_MUSIC = [
 ];
 const MUSIC_VOL = 0.44;  // steady bed, always audible
 const MUSIC_FADE_MS = 2600; // gentle fade-in when the session (and its music) starts
-const CUE_VOL = 0.32;    // spoken cue sits well UNDER the music (quieter for recording)
 
 // The calm clip shown during REST — a woman breathing / resting slowly, played
 // under a soft pink veil + breathing ring so she follows her breath. Silent,
@@ -182,7 +189,7 @@ function playCue(src: string | undefined, cueEl: HTMLAudioElement | null) {
   try {
     cueEl.src = src;
     cueEl.currentTime = 0;
-    cueEl.volume = CUE_VOL;
+    cueEl.volume = _voiceGain; // the user's chosen voice level (music not ducked)
     cueEl.play().catch(() => {});
   } catch {}
 }
@@ -3234,6 +3241,7 @@ function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: P
   const [introDone, setIntroDone] = useState(false);
   const [sound] = useLS<boolean>(SOUND_KEY, true);
   const [musicTrack] = useLS<number>(MUSIC_KEY, 0);
+  const [musicVol] = useLS<number>(MUSIC_VOL_KEY, MUSIC_VOL);
   const musicRef = useRef<HTMLAudioElement>(null);
   const musicSrc = WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0];
 
@@ -3257,10 +3265,11 @@ function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: P
     if (!a || !sound) return;
     a.volume = 0;
     a.play().then(() => {
-      const steps = 40, stepUp = MUSIC_VOL / steps;
+      const target = musicVol;
+      const steps = 40, stepUp = target / steps;
       const iv = window.setInterval(() => {
-        a.volume = Math.min(MUSIC_VOL, a.volume + stepUp);
-        if (a.volume >= MUSIC_VOL - 0.001) { a.volume = MUSIC_VOL; window.clearInterval(iv); }
+        a.volume = Math.min(target, a.volume + stepUp);
+        if (a.volume >= target - 0.001) { a.volume = target; window.clearInterval(iv); }
       }, MUSIC_FADE_MS / steps);
     }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3321,8 +3330,18 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   const [celebrate, setCelebrate] = useState(false);         // petal burst on milestones
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);   // master mute
   const [voice, setVoice] = useLS<boolean>(VOICE_KEY, true);   // spoken cues on/off
+  const [musicVol, setMusicVol] = useLS<number>(MUSIC_VOL_KEY, MUSIC_VOL); // music level
+  const [voiceVol, setVoiceVol] = useLS<number>(VOICE_VOL_KEY, 0.8);       // voice + beeps level
+  const [showVolume, setShowVolume] = useState(false);        // sound-levels popover
   const [favs, setFavs] = useLS<string[]>(WK_FAV_KEY, []);    // saved moves (heart)
   const elapsedRef = useRef(0);
+  // Voice/beeps level → shared with the module-level sound helpers (tone/playCue).
+  useEffect(() => { _voiceGain = voiceVol; }, [voiceVol]);
+  // Live-apply the music level to the shared music element (honour mute/pause).
+  useEffect(() => {
+    const a = musicRef.current; if (!a) return;
+    if (sound && !paused) a.volume = musicVol;
+  }, [musicVol, sound, paused, musicRef]);
   // The background-music element is owned by SessionActiveWithIntro so it starts
   // (faded-in) with the intro and never restarts on the hand-off; we just drive
   // it here (pause on pause/mute, fade-out on finish).
@@ -3342,7 +3361,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
     if (cue) { try { cue.pause(); } catch {} }
     const a = audioRef.current;
     if (a) {
-      const start = a.volume || MUSIC_VOL;
+      const start = a.volume || musicVol;
       const stepDown = start / 50;     // 50 steps × 100ms = 5s fade
       const iv = window.setInterval(() => {
         a.volume = Math.max(0, a.volume - stepDown);
@@ -3405,10 +3424,10 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    a.volume = MUSIC_VOL;
+    a.volume = musicVol;
     if (sound && !paused) a.play().catch(() => {});
     else a.pause();
-  }, [sound, paused]);
+  }, [sound, paused, musicVol]);
 
   // Cute Bloomzein entry: the flower blooms in, then 3 · 2 · 1 — the "GO" itself
   // now bursts from the ring once the coach has introduced the first move.
@@ -3677,10 +3696,48 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
         <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           <Tv className="h-5 w-5" />
         </button>
-        <button onClick={() => setSound((s) => !s)} aria-label="Sound" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
-          {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
+          className={["grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border shadow-sm active:scale-90 transition",
+            showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/70"].join(" ")}>
+          {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </button>
       </header>
+
+      {/* Sound-levels popover — mute toggle + Music & Voice sliders, like yoga. */}
+      {showVolume && (
+        <>
+          <style>{`.wk-vol-slider{-webkit-appearance:none;appearance:none;height:7px;border-radius:9999px;background:rgba(236,72,153,0.18);outline:none;cursor:pointer}
+            .wk-vol-slider::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:18px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer;transition:transform .12s}
+            .wk-vol-slider::-webkit-slider-thumb:active{transform:scale(1.18)}
+            .wk-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}`}</style>
+          <div className="fixed inset-0 z-40" onClick={() => setShowVolume(false)} />
+          <div className="absolute right-3 sm:right-5 top-16 sm:top-20 z-50 w-64 rounded-2xl p-4 bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_16px_44px_rgba(236,72,153,0.22)] animate-scale-in">
+            <div className="flex items-center justify-between mb-3">
+              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-hotpink/70">
+                <Music className="h-3.5 w-3.5" /> Sound
+              </p>
+              <button onClick={() => setSound((s) => !s)}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide bg-white/70 border border-white/70 text-rose active:scale-95 transition">
+                {sound ? <><Volume2 className="h-3 w-3" /> On</> : <><VolumeX className="h-3 w-3" /> Muted</>}
+              </button>
+            </div>
+            {([
+              { label: "Music", Icon: Music, val: musicVol, set: setMusicVol },
+              { label: "Voice", Icon: Mic, val: voiceVol, set: setVoiceVol },
+            ] as const).map(({ label, Icon, val, set }) => (
+              <div key={label} className="mb-3 last:mb-0">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-rose mb-1">
+                  <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5 text-hotpink" /> {label}</span>
+                  <span className="tabular-nums text-rose/60">{Math.round(val * 100)}%</span>
+                </div>
+                <input type="range" min={0} max={1} step={0.01} value={val}
+                  onChange={(e) => { if (!sound) setSound(true); set(Number(e.target.value)); }}
+                  className="wk-vol-slider w-full" style={{ accentColor: "#EC4899", opacity: sound ? 1 : 0.5 }} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* TV guide — after full-screen, remind her to cast/mirror the whole tab */}
       {tvHint && (
@@ -3942,6 +3999,7 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
   const [unlockedNew, setUnlockedNew] = useState<string[]>([]);
   const [sound] = useLS<boolean>(SOUND_KEY, true);
   const [musicTrack] = useLS<number>(MUSIC_KEY, 0);
+  const [voiceVol] = useLS<number>(VOICE_VOL_KEY, 0.8);
   const [celebrating, setCelebrating] = useState(true);
   const calories = sessionCalories(session.intention, elapsedSec);
   const minutes = Math.floor(elapsedSec / 60);
@@ -3978,7 +4036,7 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
       } catch {}
       try {
         voice = new Audio(CONGRATS_AUDIO[Math.floor(Math.random() * CONGRATS_AUDIO.length)]);
-        voice.volume = 0.95;
+        voice.volume = Math.max(0, Math.min(1, 0.95 * (voiceVol / 0.8)));
         voice.onended = stop;
         voice.play().catch(() => { fallback = window.setTimeout(stop, 6000); });
       } catch { fallback = window.setTimeout(stop, 6000); }
