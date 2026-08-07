@@ -78,21 +78,41 @@ Deno.serve(async (req) => {
     // to the end of the current billing period.
     const endsAt: string | null =
       data?.scheduled_change?.effective_at ?? data?.current_billing_period?.ends_at ?? null;
-
-    const row = {
-      user_id: userId,
-      status,
-      paddle_subscription_id: data?.id?.toString() ?? null,
-      price_id: priceId,
-      renews_at: data?.current_billing_period?.ends_at ?? null,
-      ends_at: endsAt,
-      updated_at: new Date().toISOString(),
-    };
+    const occurredAt: string | null = body?.occurred_at ?? null;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Out-of-order guard: Paddle delivers at-least-once and unordered. If we've
+    // already stored a newer (or equal) event for this user, keep it and ack.
+    if (occurredAt) {
+      const { data: existing } = await supabase
+        .from("subscriptions")
+        .select("occurred_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (existing?.occurred_at && new Date(existing.occurred_at) >= new Date(occurredAt)) {
+        return new Response(JSON.stringify({ ok: true, stale: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+    }
+
+    const row = {
+      user_id: userId,
+      status,
+      paddle_subscription_id: data?.id?.toString() ?? null,
+      paddle_customer_id: data?.customer_id?.toString() ?? null,
+      price_id: priceId,
+      renews_at: data?.current_billing_period?.ends_at ?? null,
+      ends_at: endsAt,
+      occurred_at: occurredAt,
+      updated_at: new Date().toISOString(),
+    };
+
     const { error } = await supabase.from("subscriptions").upsert(row, { onConflict: "user_id" });
     if (error) return new Response(`db error: ${error.message}`, { status: 500 });
 

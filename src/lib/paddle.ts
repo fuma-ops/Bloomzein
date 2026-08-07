@@ -132,6 +132,23 @@ export async function openCheckout(
   });
 }
 
+/**
+ * Open the Paddle-hosted customer portal for the signed-in user (update card,
+ * view invoices, cancel). The `paddle-portal` Edge Function resolves her Paddle
+ * customer id from her verified session server-side and mints the session — the
+ * client never handles the API key or a customer id. Redirects on success.
+ */
+export async function openCustomerPortal(): Promise<void> {
+  const { data, error } = await supabase.functions.invoke<{ url?: string; error?: string }>(
+    "paddle-portal",
+    { method: "POST" },
+  );
+  if (error || !data?.url) {
+    throw new Error(data?.error || error?.message || "Billing portal unavailable");
+  }
+  window.location.href = data.url;
+}
+
 /** Plan → the price string Paddle formats for the visitor's own currency. */
 export type LocalizedPrices = { monthly: string | null; annual: string | null };
 
