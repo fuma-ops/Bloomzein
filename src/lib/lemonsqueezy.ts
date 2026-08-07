@@ -16,16 +16,14 @@
 import { supabase } from "./supabase";
 import { setPlan } from "./entitlements";
 
-/** Store slug — from the checkout URL https://2061py.lemonsqueezy.com/… */
-export const LS_STORE = "2061py";
+/** Store slug — from the checkout URL https://bloomzein.lemonsqueezy.com/… */
+export const LS_STORE = "bloomzein";
 
 /** The checkout "buy" id per plan — the UUID in the LS checkout link
- *  (https://2061py.lemonsqueezy.com/checkout/buy/<this>). Both plans currently
- *  share one product-level checkout where the buyer picks monthly vs annual;
- *  swap in a distinct annual UUID if you want the toggle to pre-select. */
+ *  (https://bloomzein.lemonsqueezy.com/checkout/buy/<this>). */
 export const LS_VARIANTS = {
-  monthly: "a494c3f7-2c5e-427f-80ef-82fc81176662",
-  annual: "a494c3f7-2c5e-427f-80ef-82fc81176662",
+  monthly: "700b6b2e-6132-4abd-8441-9e894d31ca7f",
+  annual: "96d1c6ae-83f9-4f3a-86d1-f789c540d92d",
 } as const;
 
 /** True once you've filled the store + variant ids above. Until then the paywall
