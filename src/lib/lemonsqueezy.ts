@@ -16,13 +16,16 @@
 import { supabase } from "./supabase";
 import { setPlan } from "./entitlements";
 
-/** e.g. store URL is https://bloomzein.lemonsqueezy.com → slug is "bloomzein". */
-export const LS_STORE = "YOUR_STORE_SLUG";
+/** Store slug — from the checkout URL https://2061py.lemonsqueezy.com/… */
+export const LS_STORE = "2061py";
 
-/** The variant id of each plan (Lemon Squeezy → Product → Variant → its id). */
+/** The checkout "buy" id per plan — the UUID in the LS checkout link
+ *  (https://2061py.lemonsqueezy.com/checkout/buy/<this>). Both plans currently
+ *  share one product-level checkout where the buyer picks monthly vs annual;
+ *  swap in a distinct annual UUID if you want the toggle to pre-select. */
 export const LS_VARIANTS = {
-  monthly: "YOUR_MONTHLY_VARIANT_ID",
-  annual: "YOUR_ANNUAL_VARIANT_ID",
+  monthly: "a494c3f7-2c5e-427f-80ef-82fc81176662",
+  annual: "a494c3f7-2c5e-427f-80ef-82fc81176662",
 } as const;
 
 /** True once you've filled the store + variant ids above. Until then the paywall
