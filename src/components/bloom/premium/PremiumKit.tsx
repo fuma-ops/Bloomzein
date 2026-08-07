@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
+import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2, CreditCard, Loader2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
-import { PADDLE_CONFIGURED, openCheckout, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
+import { PADDLE_CONFIGURED, openCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
@@ -262,6 +262,46 @@ export function DiscoverBloomPlus({ feature = "general" }: { feature?: PaywallFe
       </div>
       <ChevronRight className="h-5 w-5 shrink-0 text-hotpink" />
     </button>
+  );
+}
+
+/* ─── Manage subscription — opens the Paddle-hosted customer portal ───
+   Shown only to Bloom+ members. Update card, view invoices, or cancel. */
+export function ManageSubscription() {
+  const premium = usePremium();
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(false);
+  if (!premium) return null;
+
+  const open = async () => {
+    setLoading(true);
+    setErr(false);
+    try {
+      await openCustomerPortal();
+    } catch {
+      setErr(true);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-3xl border p-4" style={{ borderColor: `${GOLD}44`, background: "linear-gradient(160deg,#FFF7FA,#FFFFFF)" }}>
+      <button
+        onClick={open}
+        disabled={loading}
+        className="group flex w-full items-center gap-3 text-left transition active:scale-[0.99] disabled:opacity-70"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2} /> : <CreditCard className="h-5 w-5" strokeWidth={1.8} />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-hotpink">Manage subscription</p>
+          <p className="text-[11.5px] text-rose/70 leading-snug">Update your card, view invoices, or cancel — anytime.</p>
+        </div>
+        <ChevronRight className="h-5 w-5 shrink-0 text-hotpink transition group-hover:translate-x-0.5" />
+      </button>
+      {err && <p className="mt-2 text-[11px] text-rose/70">Couldn't open the billing portal just now — please try again.</p>}
+    </div>
   );
 }
 
