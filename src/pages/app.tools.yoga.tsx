@@ -3072,7 +3072,7 @@ function SessionPlayer({
           alt={pose.name}
           onLoad={() => setImgReady(true)}
           onError={() => setImgReady(false)}
-          className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+          className={["absolute inset-0 w-full h-full object-cover object-center drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
           style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
         />
         {pose.video && !videoBroken && (
@@ -3084,7 +3084,7 @@ function SessionPlayer({
             autoPlay loop={!pose.hold} muted playsInline preload="auto"
             aria-label={pose.name}
             onError={() => setVideoBroken(true)}
-            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+            className={["absolute inset-0 w-full h-full object-cover object-center drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
             style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
           />
         )}
