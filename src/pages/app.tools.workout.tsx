@@ -163,8 +163,9 @@ const CUE_VOL = 0.32;    // spoken cue sits well UNDER the music (quieter for re
 // under a soft pink veil + breathing ring so she follows her breath. Silent,
 // baked as a boomerang so it ping-pong loops smoothly, cover-filled.
 const REST_VIDEO = "/videos/workout-rest-breathe.mp4";
-// A calm workout clip used as the cinematic-intro backdrop (Workout channel).
-// Yoga keeps its own yoga clip — this keeps "yoga only for yoga".
+// Fallback backdrop for the Workout cinematic intro if a session somehow has no
+// move clips. Normally the intro picks a RANDOM move clip from the session (see
+// SessionActiveWithIntro). Yoga keeps its own yoga clip ("yoga only for yoga").
 const WORKOUT_INTRO_VIDEO = "/videos/workout-rest-breathe.mp4";
 
 // Congratulation voice-overs — one plays (at random) on the finish screen while
@@ -3236,6 +3237,17 @@ function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: P
   const musicRef = useRef<HTMLAudioElement>(null);
   const musicSrc = WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0];
 
+  // Intro backdrop = a RANDOM move clip from THIS session (a different one each
+  // time), never the rest clip. Picked once per mount so it's stable through the
+  // intro. Falls back to a calm workout clip if no move in the session has one.
+  const introVideo = useMemo(() => {
+    const clips = Array.from(new Set(
+      props.session.steps.map((s) => s.exercise.video).filter((v): v is string => !!v),
+    ));
+    return clips.length ? clips[Math.floor(Math.random() * clips.length)] : WORKOUT_INTRO_VIDEO;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // The background music starts the instant the session starts (this mounts on
   // the "Start session" tap, so play() is allowed) and FADES IN gently under
   // the cinematic intro, then keeps playing straight into the flow. The audio
@@ -3260,7 +3272,7 @@ function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: P
       {!introDone ? (
         <BloomzeinIntro
           channel="Workout"
-          videoSrc={WORKOUT_INTRO_VIDEO}
+          videoSrc={introVideo}
           sessionTitle={props.session.name}
           sessionMeta={`${props.session.durationMin} Minutes`}
           pillars={["Warm up", "Burn", "Bloom"]}
