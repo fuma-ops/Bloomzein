@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js"
 import { supabase, type Profile } from "@/lib/supabase"
 import { initCloudSync, startCloudSync, stopCloudSync } from "@/lib/cloudSync"
 import { trackEvent } from "@/lib/analytics"
-import { refreshEntitlement } from "@/lib/lemonsqueezy"
+import { refreshEntitlement } from "@/lib/paddle"
 
 type AuthContextValue = {
   user: User | null

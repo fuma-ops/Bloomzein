@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
-import { LS_CONFIGURED, checkoutUrl } from "@/lib/lemonsqueezy";
+import { PADDLE_CONFIGURED, openCheckout } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
@@ -39,15 +39,15 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
     const plan = annual ? "annual" : "monthly";
     trackEvent("begin_checkout", { plan, value: annual ? 59 : 9.99, currency: "USD" });
 
-    // Real billing: send her to Lemon Squeezy hosted checkout with her user_id
-    // attached, so the webhook can flip her to Bloom+ after payment.
-    if (LS_CONFIGURED) {
-      window.location.href = checkoutUrl(plan, { userId: user?.id, email: user?.email });
+    // Real billing: open Paddle's overlay checkout with her user_id attached,
+    // so the webhook can flip her to Bloom+ after payment.
+    if (PADDLE_CONFIGURED) {
+      void openCheckout(plan, { userId: user?.id, email: user?.email });
       return;
     }
 
-    // Not configured yet (before the LS product is live): instant unlock so the
-    // app stays fully testable. The webhook replaces this once billing is set up.
+    // Not configured yet (before the Paddle product is live): instant unlock so
+    // the app stays fully testable. The webhook replaces this once billing is set up.
     setPlan("plus");
     setDone(true);
     setTimeout(onClose, 1400);
