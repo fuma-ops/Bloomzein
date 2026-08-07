@@ -1333,6 +1333,55 @@
   will-change: transform;
 }
 
+/* Rest breathing circle — a soft, cute cue that swells on the inhale, holds,
+   then settles on the exhale over ~9s, so she follows her breath naturally
+   while a calm clip plays underneath a pink veil during rest. */
+@keyframes wk-rest-breathe {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  44% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  56% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+}
+@utility animate-wk-rest-breathe {
+  animation: wk-rest-breathe 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+/* the soft outer halo breathes in counter-phase, a touch slower feel */
+@keyframes wk-rest-breathe-halo {
+  0% {
+    transform: scale(0.82);
+    opacity: 0.28;
+  }
+  44% {
+    transform: scale(1.28);
+    opacity: 0.5;
+  }
+  56% {
+    transform: scale(1.28);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.82);
+    opacity: 0.28;
+  }
+}
+@utility animate-wk-rest-breathe-halo {
+  animation: wk-rest-breathe-halo 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
 /* Logo flower breath — gentle swell, SAME 7s period as the backdrop so the
    brand mark breathes in sync with the room. */
 @keyframes wk-logo-breathe {
