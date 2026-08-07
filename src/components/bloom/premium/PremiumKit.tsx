@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
-import { LS_CONFIGURED, checkoutUrl, refreshEntitlement } from "@/lib/lemonsqueezy";
+import { PADDLE_CONFIGURED, openCheckout, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
@@ -33,21 +33,34 @@ const BENEFITS = [
 export function PaywallSheet({ feature = "general", onClose }: { feature?: PaywallFeature; onClose: () => void }) {
   const [annual, setAnnual] = useState(true);
   const [done, setDone] = useState(false);
+  const [prices, setPrices] = useState<LocalizedPrices>({ monthly: null, annual: null });
   const { user } = useAuth();
+
+  // Localized prices from Paddle (auto-detected currency). Falls back to the
+  // static copy below until they resolve, so the sheet is never blank.
+  useEffect(() => {
+    let alive = true;
+    fetchLocalizedPrices()
+      .then((p) => alive && setPrices(p))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const startTrial = () => {
     const plan = annual ? "annual" : "monthly";
     trackEvent("begin_checkout", { plan, value: annual ? 59 : 9.99, currency: "USD" });
 
-    // Real billing: send her to Lemon Squeezy hosted checkout with her user_id
-    // attached, so the webhook can flip her to Bloom+ after payment.
-    if (LS_CONFIGURED) {
-      window.location.href = checkoutUrl(plan, { userId: user?.id, email: user?.email });
+    // Real billing: open Paddle's overlay checkout with her user_id attached,
+    // so the webhook can flip her to Bloom+ after payment.
+    if (PADDLE_CONFIGURED) {
+      void openCheckout(plan, { userId: user?.id, email: user?.email });
       return;
     }
 
-    // Not configured yet (before the LS product is live): instant unlock so the
-    // app stays fully testable. The webhook replaces this once billing is set up.
+    // Not configured yet (before the Paddle product is live): instant unlock so
+    // the app stays fully testable. The webhook replaces this once billing is set up.
     setPlan("plus");
     setDone(true);
     setTimeout(onClose, 1400);
@@ -94,19 +107,19 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setAnnual(false)} className={["rounded-2xl border p-2.5 text-center transition active:scale-95", !annual ? "border-hotpink bg-hotpink/5" : "border-petal/60 bg-white"].join(" ")}>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">Monthly</p>
-                <p className="font-black text-hotpink leading-none mt-0.5">$9.99<span className="text-[10px] font-bold text-rose/50">/mo</span></p>
+                <p className="font-black text-hotpink leading-none mt-0.5">{prices.monthly ?? "$9.99"}<span className="text-[10px] font-bold text-rose/50">/mo</span></p>
               </button>
               <button onClick={() => setAnnual(true)} className={["relative rounded-2xl border p-2.5 text-center transition active:scale-95", annual ? "border-hotpink bg-hotpink/5" : "border-petal/60 bg-white"].join(" ")}>
                 <span className="absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: GOLD }}>Save 51%</span>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">Yearly</p>
-                <p className="font-black text-hotpink leading-none mt-0.5">$59<span className="text-[10px] font-bold text-rose/50">/yr</span></p>
+                <p className="font-black text-hotpink leading-none mt-0.5">{prices.annual ?? "$59"}<span className="text-[10px] font-bold text-rose/50">/yr</span></p>
               </button>
             </div>
 
             <button onClick={startTrial} className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
               <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
             </button>
-            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? "$59/year · founder price $39 for early bloomers" : "$9.99/month"} · cancel anytime</p>
+            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$59"}/year` : `${prices.monthly ?? "$9.99"}/month`} · cancel anytime</p>
             <button onClick={onClose} className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/45 transition hover:text-hotpink">Maybe later</button>
           </div>
         )}
@@ -129,8 +142,9 @@ export function PaywallHost() {
 }
 
 /* ─── Post-checkout return ────────────────────────────────────────────────
- * Lemon Squeezy redirects the buyer back to the app with ?welcome=plus after
- * payment. The webhook flips her to Bloom+ server-side, but it can land a
+ * Paddle returns the buyer to the app (?checkout=success) after payment; the
+ * old ?welcome=plus link still works too. The webhook flips her to Bloom+
+ * server-side, but it can land a
  * moment later — so here we poll the entitlement for a few seconds, then show
  * a warm "welcome to Bloom+" celebration once it's active. Mount once (AppShell).
  */
