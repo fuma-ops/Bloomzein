@@ -3582,7 +3582,11 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   const isSwitch = step.kind === "switch";
   // Mirror the demo horizontally on the second side of a one-sided move (and
   // during the switch cue) so it genuinely reads as "now the other side".
-  const mirrored = isSwitch || step.side === "second";
+  // NOT for video clips: flipping a clip reverses any baked-in text/branding on
+  // the wall (the "Bloomzein" mark reads backwards) — and these clips already
+  // show the movement alternating both sides, so a mirror adds nothing but
+  // chaos. Still-image moves keep the flip.
+  const mirrored = (isSwitch || step.side === "second") && !exercise.video;
   // Held stretches settle on the deep-stretch frame with a gentle breathing pulse
   // instead of looping. Driven by the exercise's explicit hold flag (kept in sync
   // with the play-once clips) — NOT "no reps", so continuous mobility moves like
