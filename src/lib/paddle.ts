@@ -12,29 +12,34 @@
  *     the (webhook-written) `subscriptions` table and reflect it into the plan.
  *
  * ── SET-UP ──────────────────────────────────────────────────────────────────
- * In your Paddle dashboard (https://vendors.paddle.com — use Sandbox first):
- *   1. Catalog → create the "Bloom+" product with a MONTHLY and a YEARLY price
- *      (set the 7-day free trial on each price). Copy the two `pri_…` ids below.
- *   2. Developer Tools → Authentication → copy your **client-side token**
- *      (starts `test_…` in sandbox, `live_…` in production) into PADDLE_TOKEN.
- *   3. Set PADDLE_ENV to "sandbox" while testing, "production" when you go live.
- * These three values are public (they ship in the checkout), so it's safe to
- * commit them — exactly like the Lemon Squeezy variant ids were.
+ * Sandbox is wired below. The token + price ids are PUBLIC (they ship in the
+ * browser), so committing them is safe — like the Lemon Squeezy ids were. To
+ * point at another environment, set these in .env / Vercel (see .env.example);
+ * each falls back to the committed sandbox value when its var is unset:
+ *   VITE_PADDLE_ENV            "sandbox" | "production"
+ *   VITE_PADDLE_TOKEN          Developer Tools → Authentication → client-side token
+ *   VITE_PADDLE_PRICE_MONTHLY  Catalog → your monthly price (pri_…)
+ *   VITE_PADDLE_PRICE_ANNUAL   Catalog → your annual price (pri_…)
+ * The SERVER API key (…_apikey_…) and the webhook secret (pdl_ntfset_…) are
+ * SECRET — never put them here or in any VITE_ var; they live only in the
+ * webhook's Supabase env.
  */
 import { supabase } from "./supabase";
 import { setPlan } from "./entitlements";
 
 /** "sandbox" while testing, "production" once your Paddle account is live. */
-export const PADDLE_ENV: "sandbox" | "production" = "sandbox";
+export const PADDLE_ENV: "sandbox" | "production" =
+  import.meta.env.VITE_PADDLE_ENV === "production" ? "production" : "sandbox";
 
-/** Client-side token from Paddle → Developer Tools → Authentication. */
-export const PADDLE_TOKEN = "YOUR_PADDLE_CLIENT_TOKEN";
+/** Client-side token (public) — Paddle → Developer Tools → Authentication. */
+export const PADDLE_TOKEN: string =
+  import.meta.env.VITE_PADDLE_TOKEN || "test_3c951d19edeb44f501ceaf9b084";
 
 /** The `pri_…` price ids for each Bloom+ plan (Paddle → Catalog → Prices). */
-export const PADDLE_PRICES = {
-  monthly: "YOUR_PRICE_ID_MONTHLY",
-  annual: "YOUR_PRICE_ID_ANNUAL",
-} as const;
+export const PADDLE_PRICES: { monthly: string; annual: string } = {
+  monthly: import.meta.env.VITE_PADDLE_PRICE_MONTHLY || "pri_01kze6nptp9cb2vw8fvap8dys5",
+  annual: import.meta.env.VITE_PADDLE_PRICE_ANNUAL || "pri_01kze6m3cktcdbmz1196j2e7ce",
+};
 
 /** Which plan a webhook `price_id` corresponds to (or null if unknown). */
 export function planForPriceId(id: string | null | undefined): "monthly" | "annual" | null {
@@ -52,12 +57,17 @@ export const PADDLE_CONFIGURED =
 
 /* ── Paddle.js loader ─────────────────────────────────────────────────────── */
 
+/** Minimal shape of what we read back from Paddle.PricePreview. */
+type PricePreviewLineItem = { price?: { id?: string }; formattedTotals?: { total?: string } };
+type PricePreviewResult = { data?: { details?: { lineItems?: PricePreviewLineItem[] } } };
+
 declare global {
   interface Window {
     Paddle?: {
       Environment: { set: (env: "sandbox" | "production") => void };
       Initialize: (opts: { token: string; eventCallback?: (e: unknown) => void }) => void;
       Checkout: { open: (opts: Record<string, unknown>) => void };
+      PricePreview: (opts: Record<string, unknown>) => Promise<PricePreviewResult>;
     };
   }
 }
@@ -115,10 +125,38 @@ export async function openCheckout(
     ...(opts.userId ? { customData: { user_id: opts.userId } } : {}),
     settings: {
       displayMode: "overlay",
+      variant: "one-page",
       theme: "light",
       successUrl: `${window.location.origin}/app?checkout=success`,
     },
   });
+}
+
+/** Plan → the price string Paddle formats for the visitor's own currency. */
+export type LocalizedPrices = { monthly: string | null; annual: string | null };
+
+/**
+ * Localized, tax-inclusive prices straight from Paddle. Location is auto-detected
+ * from the visitor's IP — we never pass a country code ourselves. We only ever
+ * DISPLAY `formattedTotals` verbatim: no price math or reformatting on the
+ * frontend. Returns nulls when billing isn't configured yet (or on error), so
+ * the paywall can fall back to its static copy.
+ */
+export async function fetchLocalizedPrices(): Promise<LocalizedPrices> {
+  const out: LocalizedPrices = { monthly: null, annual: null };
+  if (!PADDLE_CONFIGURED) return out;
+  await initPaddle();
+  const res = await window.Paddle!.PricePreview({
+    items: [
+      { priceId: PADDLE_PRICES.monthly, quantity: 1 },
+      { priceId: PADDLE_PRICES.annual, quantity: 1 },
+    ],
+  });
+  for (const li of res?.data?.details?.lineItems ?? []) {
+    const plan = planForPriceId(li?.price?.id);
+    if (plan) out[plan] = li?.formattedTotals?.total ?? null;
+  }
+  return out;
 }
 
 /**
