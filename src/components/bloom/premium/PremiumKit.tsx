@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
-import { PADDLE_CONFIGURED, openCheckout, fetchLocalizedPrices, type LocalizedPrices } from "@/lib/paddle";
+import { PADDLE_CONFIGURED, openCheckout, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
@@ -139,6 +139,77 @@ export function PaywallHost() {
   }, []);
   if (!feature) return null;
   return <PaywallSheet feature={feature} onClose={() => setFeature(null)} />;
+}
+
+/* ─── Post-checkout return ────────────────────────────────────────────────
+ * Paddle returns the buyer to the app (?checkout=success) after payment; the
+ * old ?welcome=plus link still works too. The webhook flips her to Bloom+
+ * server-side, but it can land a
+ * moment later — so here we poll the entitlement for a few seconds, then show
+ * a warm "welcome to Bloom+" celebration once it's active. Mount once (AppShell).
+ */
+export function PlusReturn() {
+  const { user } = useAuth();
+  const premium = usePremium();
+  const [phase, setPhase] = useState<"idle" | "activating" | "done" | "slow">("idle");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("welcome") !== "plus" && params.get("checkout") !== "success") return;
+    // clean the URL so a refresh doesn't re-trigger it
+    params.delete("welcome"); params.delete("checkout");
+    const clean = window.location.pathname + (params.toString() ? `?${params}` : "");
+    window.history.replaceState({}, "", clean);
+
+    if (isPremium()) { setPhase("done"); return; }
+    setPhase("activating");
+    let tries = 0;
+    const tick = async () => {
+      if (user?.id) await refreshEntitlement(user.id);
+      if (isPremium()) { setPhase("done"); return; }
+      if (++tries >= 12) { setPhase("slow"); return; }   // ~30s of polling
+      timer = window.setTimeout(tick, 2500);
+    };
+    let timer = window.setTimeout(tick, 1500);
+    return () => window.clearTimeout(timer);
+  }, [user?.id]);
+
+  // once premium arrives during the "activating"/"slow" wait, celebrate
+  useEffect(() => { if (premium && (phase === "activating" || phase === "slow")) setPhase("done"); }, [premium, phase]);
+
+  if (phase === "idle") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" onClick={() => phase !== "activating" && setPhase("idle")}>
+      <div className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in" />
+      <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-white p-7 text-center shadow-2xl shadow-hotpink/30 animate-scale-in">
+        <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
+          {phase === "done" ? <Crown className="h-8 w-8" strokeWidth={1.8} /> : <Sparkles className="h-8 w-8 animate-spin" strokeWidth={1.8} />}
+        </span>
+        {phase === "done" ? (
+          <>
+            <h2 className="font-script text-3xl text-hotpink">Welcome to Bloom+ ✿</h2>
+            <p className="mt-2 text-sm text-rose/80">Your payment went through and everything's unlocked. Enjoy your softest era 🌸</p>
+            <button onClick={() => setPhase("idle")} className="bloom-luxury-btn hover-scale mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
+              <Sparkles className="h-4 w-4" strokeWidth={2} /> Start blooming
+            </button>
+          </>
+        ) : phase === "slow" ? (
+          <>
+            <h2 className="font-script text-2xl text-hotpink">Almost there…</h2>
+            <p className="mt-2 text-sm text-rose/80">Your payment was received 💛 Bloom+ is activating — it can take a minute. Pull to refresh if it's not on yet.</p>
+            <button onClick={() => setPhase("idle")} className="mt-5 inline-flex w-full items-center justify-center rounded-full border border-petal/60 py-3 text-sm font-semibold text-rose">Got it</button>
+          </>
+        ) : (
+          <>
+            <h2 className="font-script text-2xl text-hotpink">Activating Bloom+…</h2>
+            <p className="mt-2 text-sm text-rose/80">Thank you 💛 We're unlocking everything for you now.</p>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
 }
 
 /* ─── A small "Bloom+" chip to mark a locked/premium feature (curiosity) ─── */
