@@ -6,7 +6,7 @@ import {
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
-  Trash2, CircleCheck, Circle, Tv, Wind, Waves, Gauge, Clapperboard, Copy, Check, type LucideIcon,
+  Trash2, CircleCheck, Circle, Tv, Wind, Waves, Gauge, type LucideIcon,
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { subscribeToPush, syncScheduledNotifications, getCurrentUserId, type ScheduledNotificationInput } from "@/lib/push";
@@ -98,21 +98,6 @@ const P = (p: Pose): Pose => ({
   ...(YOGA_HOLD_SLUGS.has(p.slug) ? { hold: true } : {}),
   ...(YOGA_BOOMERANG_SLUGS.has(p.slug) ? { boomerang: true } : {}),
 });
-
-/* ── TEMP clip-review authoring aid (mirrors the workout Library review mode):
-   watch each pose's image + its attached clip side by side, note what to change,
-   then Copy report. Remove once the yoga clips are all finalised. ── */
-const YOGA_REVIEW_MODE_KEY = "bloom:yoga-clip-review-mode";
-const YOGA_REVIEW_COMMENTS_KEY = "bloom:yoga-clip-review-comments";
-
-function useLS<T>(key: string, initial: T): [T, (v: T | ((p: T) => T)) => void] {
-  const [value, setValue] = useState<T>(() => {
-    try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : initial; }
-    catch { return initial; }
-  });
-  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }, [key, value]);
-  return [value, setValue];
-}
 
 export const POSES: Pose[] = [
   P({ slug: "easy-seat", name: "Easy Seat", sanskrit: "Sukhasana", group: "Breathing", level: "Beginner", image: "/images/pose-easy-seat.webp", floorOnly: true,
@@ -2341,37 +2326,6 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
   const [active, setActive] = useState<Level>("Beginner");
   const filtered = useMemo(() => POSES.filter((p) => p.level === active), [active]);
 
-  // TEMP clip-review mode: watch each pose's image + clip together, note what to
-  // change, then Copy report — same tool as the workout Library.
-  const [reviewMode, setReviewMode] = useLS<boolean>(YOGA_REVIEW_MODE_KEY, false);
-  const [comments, setComments] = useLS<Record<string, string>>(YOGA_REVIEW_COMMENTS_KEY, {});
-  const setComment = (slug: string, text: string) => setComments((prev) => ({ ...prev, [slug]: text }));
-  const commentCount = Object.values(comments).filter((v) => v && v.trim()).length;
-  const reviewPoses = useMemo(() => POSES.filter((p) => p.video), []);
-
-  const buildReport = () => {
-    const lines: string[] = [];
-    for (const p of reviewPoses) {
-      const note = comments[p.slug]?.trim();
-      if (note) lines.push(`[${p.group.toLowerCase()}] ${p.name} (${p.slug}) — ${note}`);
-    }
-    return `Clip review — ${lines.length} note${lines.length === 1 ? "" : "s"}\n${"=".repeat(28)}\n${lines.join("\n")}`;
-  };
-
-  const [copied, setCopied] = useState(false);
-  const copyReport = async () => {
-    const text = buildReport();
-    try { await navigator.clipboard.writeText(text); }
-    catch {
-      const ta = document.createElement("textarea");
-      ta.value = text; document.body.appendChild(ta); ta.select();
-      try { document.execCommand("copy"); } catch {}
-      document.body.removeChild(ta);
-    }
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
-  };
-
   return (
     <div className="relative space-y-4 yoga-fade">
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
@@ -2379,146 +2333,36 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
           <div>
             <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Pose Library ✿</h2>
             <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
-              {reviewMode ? "Review mode — watch each clip, note what to change, then Copy report." : "Tap any pose to learn how to enter it and find your breath."}
+              Tap any pose to learn how to enter it and find your breath.
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{reviewMode ? `${reviewPoses.length} clips` : `${filtered.length} poses`}</span>
+          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{filtered.length} poses</span>
         </div>
 
-        {/* TEMP clip-review toolbar */}
-        <div className="mb-1 flex flex-wrap items-center gap-2 rounded-2xl border border-hotpink/25 bg-hotpink/[0.06] px-3 py-2">
-          <button
-            onClick={() => setReviewMode(!reviewMode)}
-            className={[
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
-              reviewMode ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-hotpink border-hotpink/40 hover:shadow-md",
-            ].join(" ")}
-          >
-            <Clapperboard className="h-3.5 w-3.5" strokeWidth={2.2} />
-            {reviewMode ? "Reviewing clips" : "Review clips"}
-          </button>
-          {reviewMode && (
-            <>
-              <button
-                onClick={copyReport}
-                disabled={commentCount === 0}
-                className={[
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
-                  commentCount === 0 ? "bg-white/60 text-rose/40 border-petal/50 cursor-not-allowed" : "bg-white text-hotpink border-hotpink/40 hover:shadow-md",
-                ].join(" ")}
-              >
-                {copied ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" strokeWidth={2.2} />}
-                {copied ? "Copied!" : `Copy report${commentCount ? ` (${commentCount})` : ""}`}
-              </button>
-              {commentCount > 0 && (
-                <button
-                  onClick={() => { if (confirm("Clear all clip-review notes?")) setComments({}); }}
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-rose/60 hover:text-hotpink transition active:scale-95"
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} /> Clear
-                </button>
-              )}
-              <span className="ml-auto text-[11px] font-semibold text-rose/60">{commentCount} note{commentCount === 1 ? "" : "s"} saved</span>
-            </>
-          )}
-        </div>
-
-        {!reviewMode && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
-            {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
-              <button key={lv} onClick={() => setActive(lv)}
-                className={[
-                  "shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition active:scale-95",
-                  active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
-                ].join(" ")}>
-                {lv}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {reviewMode ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {reviewPoses.map((p, i) => (
-            <PoseReviewCard key={p.slug} pose={p} index={i} comment={comments[p.slug] ?? ""} onComment={(t) => setComment(p.slug, t)} />
+        <div className="mt-1 flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+          {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
+            <button key={lv} onClick={() => setActive(lv)}
+              className={[
+                "shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition active:scale-95",
+                active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
+              ].join(" ")}>
+              {lv}
+            </button>
           ))}
         </div>
-      ) : (
-        <div key={active} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {filtered.map((p, i) => <PoseCard key={p.slug} pose={p} index={i} />)}
-        </div>
-      )}
+      </section>
+
+      <div key={active} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {filtered.map((p, i) => <PoseCard key={p.slug} pose={p} index={i} />)}
+      </div>
 
       {/* Floating "Try a flow" FAB — bottom-right, soft pink glow */}
-      {!reviewMode && (
-        <button
-          onClick={onTryFlow}
-          className="hover-scale animate-selected-glow fixed bottom-20 right-4 z-40 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-hotpink/40 transition active:scale-95"
-        >
-          <Sparkle className="h-3.5 w-3.5" /> Try a flow
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* TEMP clip-review card: pose STILL on top, its animated CLIP directly under it
-   — both visible at once so the clip can be analysed without switching — with a
-   note box for change requests. Mirrors the workout ExerciseLibraryCard. */
-function PoseReviewCard({ pose, index, comment, onComment }: { pose: Pose; index: number; comment: string; onComment: (t: string) => void }) {
-  const hasVideo = !!pose.video;
-  // Only play the clips actually on screen — a grid of 60+ autoplaying 1080p
-  // videos is refused/throttled by the browser (that's why "clips don't play").
-  // Pause when scrolled away, play when back in view. Mirrors the workout card.
-  const vidRef = useRef<HTMLVideoElement | null>(null);
-  useEffect(() => {
-    const v = vidRef.current; if (!v) return;
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
-    }, { threshold: 0.25 });
-    io.observe(v);
-    return () => io.disconnect();
-  }, [hasVideo]);
-  return (
-    <div className="rounded-2xl bg-white/92 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 flex flex-col animate-scale-in"
-      style={{ animationDelay: `${(index % 12) * 0.04}s` }}>
-      <div className="relative w-full aspect-video bg-blush/40 border-b-2 border-white/80">
-        <img src={pose.image} alt={pose.name} loading="lazy" className="absolute inset-0 w-full h-full object-contain" />
-        <span className="absolute top-1.5 left-1.5 rounded-full bg-black/40 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 backdrop-blur-sm">Image</span>
-      </div>
-      <div className="relative w-full aspect-video bg-[oklch(0.96_0.04_350)]">
-        {hasVideo ? (
-          <video
-            ref={vidRef}
-            src={pose.video}
-            poster={pose.poster ?? pose.image}
-            loop={!pose.hold} muted playsInline preload="metadata"
-            aria-label={pose.name}
-            className="absolute inset-0 w-full h-full object-contain"
-          />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center text-rose/40"><Sparkles className="h-8 w-8" strokeWidth={1.5} /></div>
-        )}
-        <span className="absolute top-1.5 left-1.5 rounded-full bg-hotpink/85 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 backdrop-blur-sm">Clip</span>
-        {!hasVideo && <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-500/85 text-white text-[9px] font-bold px-1.5 py-0.5">no clip yet</span>}
-      </div>
-      <div className="p-2.5 flex flex-col gap-1.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-rose leading-tight">{pose.name}</p>
-            <p className="text-[10px] text-rose/55 font-mono leading-snug">{pose.slug} · {pose.group}</p>
-          </div>
-          {comment.trim() && <span className="shrink-0 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white shadow"><Check className="h-3 w-3" strokeWidth={3} /></span>}
-        </div>
-        <textarea
-          value={comment}
-          onChange={(e) => onComment(e.target.value)}
-          rows={2}
-          placeholder="What to change? (hold / play back / trim, pose, speed…)"
-          className="w-full resize-y rounded-xl border border-petal/60 bg-white/80 px-2.5 py-1.5 text-xs text-rose leading-snug placeholder:text-rose/35 focus:border-hotpink/50 focus:outline-none focus:ring-2 focus:ring-hotpink/20"
-        />
-      </div>
+      <button
+        onClick={onTryFlow}
+        className="hover-scale animate-selected-glow fixed bottom-20 right-4 z-40 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-hotpink/40 transition active:scale-95"
+      >
+        <Sparkle className="h-3.5 w-3.5" /> Try a flow
+      </button>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, SkipForward, SkipBack, X, Trophy, CalendarHeart,
   Share2, BookHeart, Volume2, VolumeX, Sparkles, ChevronRight, ChevronLeft, ChevronUp, Check, Wand2,
   Dumbbell, Clock, Timer, Flame, ShieldCheck, Gauge, ChevronDown, Utensils, Pencil, Trash2,
-  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv, Clapperboard, Copy,
+  CircleCheck, Circle, Heart, Lightbulb, Target, Activity, Lock, Tv,
 } from "lucide-react";
 import { type CyclePhase, PHASE_LABEL, readCyclePhase, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -55,10 +55,6 @@ const PROFILE_KEY = "bloom:workout-profile";
 const ENERGY_KEY = "bloom:workout-energy";
 const STREAK_KEY = "bloom:workout-streak";
 const BADGES_KEY = "bloom:workout-badges";
-// TEMP (clip-review authoring aid): review mode + per-move change notes. Remove
-// this and the Library review UI once the clips are all finalised.
-const REVIEW_MODE_KEY = "bloom:clip-review-mode";
-const REVIEW_COMMENTS_KEY = "bloom:clip-review-comments";
 export const PROGRAM_KEY = "bloom:workout-program";
 export const PROGRAM_PHASE_KEY = "bloom:workout-program-phase";
 export const WORKOUT_PLAN_GOAL_KEY = "bloom:workout-plan-goal";
@@ -2516,45 +2512,6 @@ function Library() {
   const exercises = ZONE_EXERCISES[zone];
   const zoneMeta = ZONES.find((z) => z.key === zone);
 
-  // TEMP clip-review authoring mode: plays each move's attached clip and lets
-  // notes be written per move, then copied out as one report.
-  const [reviewMode, setReviewMode] = useLS<boolean>(REVIEW_MODE_KEY, false);
-  const [comments, setComments] = useLS<Record<string, string>>(REVIEW_COMMENTS_KEY, {});
-  const setComment = (slug: string, text: string) =>
-    setComments((prev) => ({ ...prev, [slug]: text }));
-
-  const commentCount = Object.values(comments).filter((v) => v && v.trim()).length;
-
-  const buildReport = () => {
-    // Walk every zone once, dedupe shared moves by slug, keep only moves with a note.
-    const seen = new Set<string>();
-    const lines: string[] = [];
-    for (const z of ZONES) {
-      for (const ex of ZONE_EXERCISES[z.key]) {
-        if (seen.has(ex.slug)) continue;
-        seen.add(ex.slug);
-        const note = comments[ex.slug]?.trim();
-        if (note) lines.push(`[${z.key}] ${ex.name} (${ex.slug}) — ${note}`);
-      }
-    }
-    return `Clip review — ${lines.length} note${lines.length === 1 ? "" : "s"}\n${"=".repeat(28)}\n${lines.join("\n")}`;
-  };
-
-  const [copied, setCopied] = useState(false);
-  const copyReport = async () => {
-    const text = buildReport();
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text; document.body.appendChild(ta); ta.select();
-      try { document.execCommand("copy"); } catch {}
-      document.body.removeChild(ta);
-    }
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
-  };
-
   return (
     <div className="space-y-4">
 
@@ -2564,50 +2521,10 @@ function Library() {
           <div>
             <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Move Library ✿</h2>
             <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
-              {reviewMode ? "Review mode — watch each clip, note what to change, then Copy report." : "Tap any move for a how-to, form cues & the mistake to avoid."}
+              Tap any move for a how-to, form cues &amp; the mistake to avoid.
             </p>
           </div>
           <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{exercises.length} moves</span>
-        </div>
-
-        {/* TEMP clip-review toolbar */}
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-hotpink/25 bg-hotpink/[0.06] px-3 py-2">
-          <button
-            onClick={() => setReviewMode(!reviewMode)}
-            className={[
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
-              reviewMode ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-hotpink border-hotpink/40 hover:shadow-md",
-            ].join(" ")}
-          >
-            <Clapperboard className="h-3.5 w-3.5" strokeWidth={2.2} />
-            {reviewMode ? "Reviewing clips" : "Review clips"}
-          </button>
-          {reviewMode && (
-            <>
-              <button
-                onClick={copyReport}
-                disabled={commentCount === 0}
-                className={[
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold border shadow-sm transition active:scale-95",
-                  commentCount === 0 ? "bg-white/60 text-rose/40 border-petal/50 cursor-not-allowed" : "bg-white text-hotpink border-hotpink/40 hover:shadow-md",
-                ].join(" ")}
-              >
-                {copied ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" strokeWidth={2.2} />}
-                {copied ? "Copied!" : `Copy report${commentCount ? ` (${commentCount})` : ""}`}
-              </button>
-              {commentCount > 0 && (
-                <button
-                  onClick={() => { if (confirm("Clear all clip-review notes?")) setComments({}); }}
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-rose/60 hover:text-hotpink transition active:scale-95"
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} /> Clear
-                </button>
-              )}
-              <span className="ml-auto text-[11px] font-semibold text-rose/60">
-                {commentCount} note{commentCount === 1 ? "" : "s"} saved
-              </span>
-            </>
-          )}
         </div>
 
         {/* Zone chips with icons */}
@@ -2615,8 +2532,7 @@ function Library() {
           {ZONES.map((z) => {
             const Icon = z.icon;
             const active = zone === z.key;
-            // In review mode every zone is open so all clips can be checked.
-            const locked = !reviewMode && !premium && z.key !== "glutes"; // free = Glutes only
+            const locked = !premium && z.key !== "glutes"; // free = Glutes only
             return (
               <button
                 key={z.key}
@@ -2637,16 +2553,13 @@ function Library() {
 
         <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-hotpink/60">{zoneMeta?.label}</p>
 
-        <div className={reviewMode ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
             <ExerciseLibraryCard
               key={ex.slug}
               exercise={ex}
               zone={zone}
               index={i}
-              reviewMode={reviewMode}
-              comment={comments[ex.slug] ?? ""}
-              onComment={(t) => setComment(ex.slug, t)}
             />
           ))}
         </div>
@@ -2655,52 +2568,9 @@ function Library() {
   );
 }
 
-function ExerciseLibraryCard({ exercise, zone, index, reviewMode = false, comment = "", onComment }: { exercise: Exercise; zone: Zone; index: number; reviewMode?: boolean; comment?: string; onComment?: (t: string) => void }) {
+function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zone: Zone; index: number }) {
   const [open, setOpen] = useState(false);
   const coaching = getCoaching(exercise.slug);
-
-  // TEMP clip-review card: the library STILL and its animated CLIP sit side by
-  // side (image left/top, clip right/bottom) so both are visible at once — no
-  // switching — with a note box underneath for change requests.
-  if (reviewMode) {
-    const hasVideo = !!exercise.video;
-    return (
-      <div className="rounded-2xl bg-white/92 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 flex flex-col animate-card-pop-in"
-        style={{ animationDelay: `${index * 0.04}s` }}>
-        {/* Library still on top, its animated clip directly UNDER it — both
-            visible at once so you analyse without switching. */}
-        <div className="relative w-full aspect-video bg-blush/40 border-b-2 border-white/80">
-          <ExercisePhoto exercise={exercise} zone={zone} staticOnly preferImage className="absolute inset-0 w-full h-full object-contain" />
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/40 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 backdrop-blur-sm">Image</span>
-        </div>
-        <div className="relative w-full aspect-video bg-[oklch(0.96_0.04_350)]">
-          <ExercisePhoto exercise={exercise} zone={zone} className="absolute inset-0 w-full h-full object-contain" />
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-hotpink/85 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 backdrop-blur-sm">Clip</span>
-          {!hasVideo && (
-            <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-500/85 text-white text-[9px] font-bold px-1.5 py-0.5">no clip yet</span>
-          )}
-        </div>
-        <div className="p-2.5 flex flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-rose leading-tight">{exercise.name}</p>
-              <p className="text-[10px] text-rose/55 font-mono leading-snug">{exercise.slug}</p>
-            </div>
-            {comment.trim() && (
-              <span className="shrink-0 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white shadow"><Check className="h-3 w-3" strokeWidth={3} /></span>
-            )}
-          </div>
-          <textarea
-            value={comment}
-            onChange={(e) => onComment?.(e.target.value)}
-            rows={2}
-            placeholder="What to change? (model, framing, motion, speed…)"
-            className="w-full resize-y rounded-xl border border-petal/60 bg-white/80 px-2.5 py-1.5 text-xs text-rose leading-snug placeholder:text-rose/35 focus:border-hotpink/50 focus:outline-none focus:ring-2 focus:ring-hotpink/20"
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -2780,7 +2650,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90 shadow-sm"><X className="h-4 w-4" /></button>
         {/* Hero — full-height left column on desktop */}
         <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[32rem] overflow-hidden">
-          <ExercisePhoto exercise={first} zone={session.zone} staticOnly className="absolute inset-0 h-full w-full object-cover" />
+          <ExercisePhoto exercise={first} zone={session.zone} staticOnly preferImage className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
           {phase !== "any" && session.phaseOptimal.includes(phase) && (
             <span className="absolute top-3 left-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {PHASE_LABEL[phase]} optimized</span>
@@ -2813,7 +2683,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
               {uniqueMoves.map((s, i) => (
                 <div key={`${s.exercise.slug}-${i}`} className="shrink-0 w-20 text-center">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-petal/50">
-                    <ExercisePhoto exercise={s.exercise} zone={session.zone} staticOnly className="h-full w-full object-cover" />
+                    <ExercisePhoto exercise={s.exercise} zone={session.zone} staticOnly preferImage className="h-full w-full object-cover" />
                     {s.kind !== "work" && (
                       <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[7px] font-bold uppercase tracking-wide py-0.5">{s.kind === "warmup" ? "Warm-up" : "Cool-down"}</span>
                     )}
@@ -3214,7 +3084,7 @@ function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; 
       {/* Bigger preview — the whole move is shown (contain, never cropped), with
           the name below. */}
       <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-petal/60 shadow-sm bg-blush/40">
-        <ExercisePhoto exercise={next} zone={zone} staticOnly className="w-full h-full object-contain" />
+        <ExercisePhoto exercise={next} zone={zone} staticOnly preferImage className="w-full h-full object-contain" />
       </div>
       <div className="mt-2 min-w-0">
         <p className="text-sm sm:text-base font-bold text-rose leading-tight truncate">{next.name}</p>
@@ -3261,7 +3131,7 @@ function SessionBackdrop({ exercise, zone, phase, paused, index }: {
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* the blurred, breathing pose photo */}
       <div key={index} className="absolute inset-0 animate-fade-in">
-        <ExercisePhoto exercise={exercise} zone={zone} staticOnly
+        <ExercisePhoto exercise={exercise} zone={zone} staticOnly preferImage
           className={["absolute inset-0 w-full h-full object-cover blur-2xl", paused ? "scale-125" : "animate-wk-bg-breathe"].join(" ")} />
       </div>
       {/* brand scrim — tinted to the zone (cooler on rest) so the glass panels
@@ -3780,7 +3650,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
               <div key={`bleed-${index}`} aria-hidden className="absolute inset-0">
-                <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly
+                <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly preferImage
                   className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", mirrored ? "scale-x-[-1]" : ""].join(" ")} />
                 <div className="absolute inset-0 bg-white/25" />
               </div>
@@ -3888,7 +3758,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   <div className="w-full max-w-xs sm:max-w-sm">
                     <p className="text-center text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
                     <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly className="w-full h-full object-contain" />
+                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="w-full h-full object-contain" />
                     </div>
                     <p className="mt-2 text-center">
                       <span className="text-base font-bold text-rose">{next.name}</span>
@@ -3904,7 +3774,7 @@ function SessionActive({ session, programRef, onExit, onDone }: {
                   <div className="flex-1 min-w-0 flex flex-col">
                     <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
                     <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly className="absolute inset-0 w-full h-full object-contain" />
+                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="absolute inset-0 w-full h-full object-contain" />
                     </div>
                     <p className="shrink-0 mt-2">
                       <span className="text-lg font-bold text-rose">{next.name}</span>
