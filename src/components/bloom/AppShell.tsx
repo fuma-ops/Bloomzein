@@ -3,7 +3,7 @@ import { Flower2, CalendarDays, LayoutGrid, BookOpen, ShoppingBag, User, Sparkle
 import { BloomLogo } from "./BloomLogo";
 import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
-import { PaywallHost } from "./premium/PremiumKit";
+import { PaywallHost, PlusReturn } from "./premium/PremiumKit";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
 import { PLAN_UPDATED, usePremium } from "@/lib/entitlements";
 
@@ -159,6 +159,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
 
       {/* App-wide Bloom+ paywall — opened from any gated action */}
       <PaywallHost />
+      <PlusReturn />
 
       {/* ── Phone + Tablet bottom nav — a premium centred floating frosted pill,
              5 primary tabs (Shop lives in the desktop sidebar) ────────────────── */}
