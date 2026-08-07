@@ -156,7 +156,20 @@ const WORKOUT_MUSIC = [
   "/audio/workout-music-4.mp3", // Sleek Alignment
 ];
 const MUSIC_VOL = 0.44;  // steady bed, always audible
+const MUSIC_FADE_MS = 2600; // gentle fade-in when the session (and its music) starts
 const CUE_VOL = 0.32;    // spoken cue sits well UNDER the music (quieter for recording)
+
+// Calming clips shown during REST — a woman breathing / resting slowly. One is
+// picked per rest (rotating) and plays under a soft pink veil + breathing ring
+// so she follows her breath. Silent, looped, cover-filled like the move clips.
+const REST_VIDEOS = [
+  "/videos/workout-rest-breathe.mp4",
+  "/videos/workout-dead-bug.mp4",
+  "/videos/workout-bird-dog.mp4",
+];
+// A calm workout clip used as the cinematic-intro backdrop (Workout channel).
+// Yoga keeps its own yoga clip — this keeps "yoga only for yoga".
+const WORKOUT_INTRO_VIDEO = "/videos/workout-rest-breathe.mp4";
 
 // Congratulation voice-overs — one plays (at random) on the finish screen while
 // the music keeps going, ducked low underneath. (Spaces pre-encoded for the URL.)
@@ -3160,28 +3173,116 @@ function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
   );
 }
 
+/** REST stage — a soft, cute breathing moment. A calm clip of a woman resting
+ *  plays cover-filled under a pink veil, with a breathing circle that swells on
+ *  the inhale and settles on the exhale so she follows her breath naturally. The
+ *  rest timer sits top-right on phones (tablet/desktop use the right-rail ring);
+ *  a "coming up" chip keeps the next move visible. */
+function RestBreatheStage({ videoSrc, paused, remaining, ringPct, next, nextReps, nextLabel }: {
+  videoSrc: string;
+  paused: boolean;
+  remaining: number;
+  ringPct: number;
+  next?: Exercise;
+  nextReps?: string;
+  nextLabel?: string;
+}) {
+  const vidRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const v = vidRef.current; if (!v) return;
+    if (paused) v.pause(); else v.play().catch(() => {});
+  }, [paused]);
+  return (
+    <div className="relative w-full aspect-video max-h-[78vh] mx-auto rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.9_0.06_350)]"
+      style={{ maxWidth: "min(100%, calc(78vh * 16 / 9))" }}>
+      {/* calm rest clip, cover-filled like the move stage */}
+      <video ref={vidRef} key={videoSrc} src={videoSrc} autoPlay loop muted playsInline
+        className="absolute inset-0 w-full h-full object-cover" />
+      {/* soft pink veil so the moment reads calm + on-brand */}
+      <div aria-hidden className="absolute inset-0"
+        style={{ background: "linear-gradient(160deg, oklch(0.9 0.08 350 / 0.34), oklch(0.8 0.14 345 / 0.46))" }} />
+      {/* breathing circle — halo + glassy core with a soft label inside */}
+      <div className="pointer-events-none absolute inset-0 grid place-items-center">
+        <div className="relative grid place-items-center" style={{ width: "min(48%, 44vh)", aspectRatio: "1" }}>
+          <div className={["absolute inset-0 rounded-full", paused ? "" : "animate-wk-rest-breathe-halo"].join(" ")}
+            style={{ background: "radial-gradient(circle, oklch(0.96 0.05 350 / 0.6), transparent 70%)" }} />
+          <div className={["absolute inset-[16%] rounded-full border-2 border-white/70 backdrop-blur-[2px]", paused ? "" : "animate-wk-rest-breathe"].join(" ")}
+            style={{ background: "radial-gradient(circle at 50% 40%, oklch(1 0 0 / 0.3), oklch(0.86 0.12 345 / 0.18))",
+              boxShadow: "0 0 44px oklch(0.8 0.16 345 / 0.5), inset 0 0 34px oklch(1 0 0 / 0.32)" }} />
+          <div className="relative text-center px-4">
+            <p className="font-script text-white leading-none drop-shadow-[0_2px_14px_oklch(0.5_0.26_350/0.75)]" style={{ fontSize: "clamp(2rem, 6vw, 3.75rem)" }}>Rest</p>
+            <p className="mt-1 font-semibold tracking-wide text-white/90 drop-shadow" style={{ fontSize: "clamp(0.7rem, 1.7vw, 0.95rem)" }}>Breathe in… and out ✿</p>
+          </div>
+        </div>
+      </div>
+      {/* rest timer — phones only (tablet/desktop use the right-rail ring) */}
+      <div className="md:hidden absolute top-2.5 right-2.5 z-[25] rounded-full bg-white/75 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1">
+        <RepRing size={104} percent={ringPct} seconds={remaining} label="Rest" />
+      </div>
+      {/* coming-up chip so the next move stays visible */}
+      {next && (
+        <div className="absolute bottom-2.5 left-2.5 z-[25] max-w-[70%] rounded-2xl bg-white/80 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] px-3 py-1.5">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-hotpink/60">Coming up{nextLabel ? ` · ${nextLabel}` : ""}</p>
+          <p className="text-sm font-bold text-rose leading-tight truncate">
+            {next.name}{nextReps ? <span className="ml-1.5 text-xs font-semibold text-hotpink">{nextReps}</span> : null}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Plays the cinematic Bloomzein intro (title + duration) once, then the session. */
 function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: ProgramRef; onExit: () => void; onDone: () => void }) {
   const [introDone, setIntroDone] = useState(false);
-  if (!introDone) {
-    return (
-      <BloomzeinIntro
-        channel="Workout"
-        sessionTitle={props.session.name}
-        sessionMeta={`${props.session.durationMin} Minutes`}
-        pillars={["Warm up", "Burn", "Bloom"]}
-        onDone={() => setIntroDone(true)}
-      />
-    );
-  }
-  return <SessionActive {...props} />;
+  const [sound] = useLS<boolean>(SOUND_KEY, true);
+  const [musicTrack] = useLS<number>(MUSIC_KEY, 0);
+  const musicRef = useRef<HTMLAudioElement>(null);
+  const musicSrc = WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0];
+
+  // The background music starts the instant the session starts (this mounts on
+  // the "Start session" tap, so play() is allowed) and FADES IN gently under
+  // the cinematic intro, then keeps playing straight into the flow. The audio
+  // element lives here — above the intro/session swap — so it never restarts.
+  useEffect(() => {
+    const a = musicRef.current;
+    if (!a || !sound) return;
+    a.volume = 0;
+    a.play().then(() => {
+      const steps = 40, stepUp = MUSIC_VOL / steps;
+      const iv = window.setInterval(() => {
+        a.volume = Math.min(MUSIC_VOL, a.volume + stepUp);
+        if (a.volume >= MUSIC_VOL - 0.001) { a.volume = MUSIC_VOL; window.clearInterval(iv); }
+      }, MUSIC_FADE_MS / steps);
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      <audio ref={musicRef} src={musicSrc} loop preload="auto" />
+      {!introDone ? (
+        <BloomzeinIntro
+          channel="Workout"
+          videoSrc={WORKOUT_INTRO_VIDEO}
+          sessionTitle={props.session.name}
+          sessionMeta={`${props.session.durationMin} Minutes`}
+          pillars={["Warm up", "Burn", "Bloom"]}
+          onDone={() => setIntroDone(true)}
+        />
+      ) : (
+        <SessionActive {...props} musicRef={musicRef} />
+      )}
+    </>
+  );
 }
 
-function SessionActive({ session, programRef, onExit, onDone }: {
+function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   session: WorkoutSession;
   programRef?: ProgramRef;
   onExit: () => void;
   onDone: (elapsedSec: number) => void;
+  musicRef: React.RefObject<HTMLAudioElement | null>;
 }) {
   const steps = session.steps;
   const [index, setIndex] = useState(0);
@@ -3212,13 +3313,13 @@ function SessionActive({ session, programRef, onExit, onDone }: {
   const [celebrate, setCelebrate] = useState(false);         // petal burst on milestones
   const [sound, setSound] = useLS<boolean>(SOUND_KEY, true);   // master mute
   const [voice, setVoice] = useLS<boolean>(VOICE_KEY, true);   // spoken cues on/off
-  const [musicTrack] = useLS<number>(MUSIC_KEY, 0);           // chosen background track
   const [favs, setFavs] = useLS<string[]>(WK_FAV_KEY, []);    // saved moves (heart)
   const elapsedRef = useRef(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  // The background-music element is owned by SessionActiveWithIntro so it starts
+  // (faded-in) with the intro and never restarts on the hand-off; we just drive
+  // it here (pause on pause/mute, fade-out on finish).
+  const audioRef = musicRef;
   const cueRef = useRef<HTMLAudioElement>(null); // spoken per-move / rest cues
-  // The user's chosen background track — one coherent bed for the whole session.
-  const musicSrc = WORKOUT_MUSIC[musicTrack] ?? WORKOUT_MUSIC[0];
 
   // Session complete → don't jump to a separate page. Freeze the player where it
   // is, duck the music (keep it playing), and let the celebration bloom over it.
@@ -3524,8 +3625,9 @@ function SessionActive({ session, programRef, onExit, onDone }: {
           tinted to the trained zone (cooler on rest), stills when paused. */}
       <SessionBackdrop exercise={exercise} zone={session.zone} phase={phase} paused={paused} index={index} />
 
-      {/* Background music loop (controlled by the sound toggle) */}
-      <audio ref={audioRef} src={musicSrc} loop preload="auto" />
+      {/* Background music lives in SessionActiveWithIntro (starts + fades in with
+          the intro, never restarts); here we only drive pause/mute + the end
+          fade-out via the shared musicRef. */}
       {/* Spoken cue channel — per-move / rest / switch recordings. When a move's
           briefing cue ends, release the hold and burst "GO" from the ring. */}
       <audio ref={cueRef} preload="none" onEnded={onCueEnded} />
@@ -3745,52 +3847,18 @@ function SessionActive({ session, programRef, onExit, onDone }: {
               </div>
             </div>
           ) : (
-            <>
-              {/* PHONE + TABLET — stacked (section under section): ring on top, then
-                  a BIGGER coming-up image that uses the space (shown in full). */}
-              <div className="lg:hidden relative w-full flex flex-col items-center gap-3 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-5 md:p-6">
-                <div className="text-center">
-                  <p className="text-sm sm:text-base font-bold uppercase tracking-wide text-hotpink/70">Rest</p>
-                  <p className="text-[11px] sm:text-xs text-rose/55">Breathe in… and out. ✿</p>
-                </div>
-                <RepRing size={120} percent={ringPct} seconds={remaining} label="Rest" />
-                {next && (
-                  <div className="w-full max-w-xs sm:max-w-sm">
-                    <p className="text-center text-[10px] font-bold uppercase tracking-wider text-hotpink/60 mb-1.5">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                    <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="w-full h-full object-contain" />
-                    </div>
-                    <p className="mt-2 text-center">
-                      <span className="text-base font-bold text-rose">{next.name}</span>
-                      {nextReps && <span className="ml-2 text-xs font-semibold text-hotpink">{nextReps}</span>}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* DESKTOP only — two columns: big coming-up image LEFT, ring RIGHT. */}
-              <div className="hidden lg:flex lg:flex-1 lg:min-h-0 gap-4 rounded-[1.75rem] border border-white/60 shadow-lg bg-white/55 backdrop-blur-md p-4 overflow-hidden">
-                {next && (
-                  <div className="flex-1 min-w-0 flex flex-col">
-                    <p className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-hotpink/60 mb-2">Coming up{nextStepObj?.label ? ` · ${nextStepObj.label}` : ""}</p>
-                    <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-white/70 shadow-md bg-blush/40">
-                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="absolute inset-0 w-full h-full object-contain" />
-                    </div>
-                    <p className="shrink-0 mt-2">
-                      <span className="text-lg font-bold text-rose">{next.name}</span>
-                      {nextReps && <span className="ml-2 text-sm font-semibold text-hotpink">{nextReps}</span>}
-                    </p>
-                  </div>
-                )}
-                <div className="w-52 lg:w-60 shrink-0 flex flex-col items-center justify-center gap-4 text-center border-l border-white/50 pl-4">
-                  <div>
-                    <p className="text-xl font-bold uppercase tracking-wide text-hotpink/75 leading-none">Rest</p>
-                    <p className="text-sm text-rose/55 mt-1">Breathe in… and out. ✿</p>
-                  </div>
-                  <RepRing size={150} percent={ringPct} seconds={remaining} label="Rest" />
-                </div>
-              </div>
-            </>
+            /* REST — a calm woman-breathing clip fills the same immersive stage,
+               under a soft pink veil with a slow breathing circle she can follow.
+               The clip rotates through REST_VIDEOS across the session's rests. */
+            <RestBreatheStage
+              videoSrc={REST_VIDEOS[index % REST_VIDEOS.length]}
+              paused={paused}
+              remaining={remaining}
+              ringPct={ringPct}
+              next={next}
+              nextReps={nextReps}
+              nextLabel={nextStepObj?.label}
+            />
           )}
 
           {/* Phone: the only card kept is Bloom Coach, filling the space under the
