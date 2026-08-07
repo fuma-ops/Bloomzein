@@ -119,7 +119,7 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
             <button onClick={startTrial} className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
               <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
             </button>
-            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$59"}/year` : `${prices.monthly ?? "$9.99"}/month`} · cancel anytime</p>
+            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$59"}/year` : `${prices.monthly ?? "$9.99"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
             <button onClick={onClose} className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/45 transition hover:text-hotpink">Maybe later</button>
           </div>
         )}

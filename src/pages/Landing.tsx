@@ -587,6 +587,7 @@ export default function Landing() {
                   { label: "Guides", href: "/guides" },
                   { label: "Privacy Policy", href: "/privacy" },
                   { label: "Terms of Service", href: "/terms" },
+                  { label: "Refund & Cancellation", href: "/refund" },
                 ].map(({ label, href }) => (
                   <li key={label}><a href={href} className="hover:text-hotpink transition">{label}</a></li>
                 ))}
