@@ -47,6 +47,13 @@ interface Pose {
   video?: string;
   /** Clean still frame from the clip — used as the video poster. */
   poster?: string;
+  /** A held pose: its clip plays once and settles on the last (pose) frame
+   *  instead of looping — same treatment as a workout "hold". */
+  hold?: boolean;
+  /** The clip is baked as a boomerang (forward+reverse) so it ping-pong loops
+   *  smoothly with no cut — same as a workout "boomerang". Such clips have no
+   *  intro dissolve, so the player must not skip into them. */
+  boomerang?: boolean;
   cues: Record<Lang, string>;
   audioUrl?: string; // future custom voice — left empty; TTS reads cue
   floorOnly?: boolean; // safe for beginner audio sessions
@@ -72,11 +79,24 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "revolved-triangle", "triangle", "warrior-3",
 ]);
 
+/** Poses whose clip should play once and settle on the last (pose) frame,
+ *  instead of looping — the yoga equivalent of a workout "hold". Filled in as
+ *  poses are validated; empty means every clip keeps its gentle loop for now. */
+const YOGA_HOLD_SLUGS = new Set<string>([]);
+
+/** Poses whose clip is baked as a boomerang (forward+reverse) so it ping-pong
+ *  loops with no cut — the yoga equivalent of a workout "boomerang". For the
+ *  review pass every pose clip is a boomerang (play back) so each can be
+ *  verified; individual poses get re-classified (hold / trim) from there. */
+const YOGA_BOOMERANG_SLUGS = new Set<string>(YOGA_VIDEO_SLUGS);
+
 const P = (p: Pose): Pose => ({
   ...p,
   ...(YOGA_VIDEO_SLUGS.has(p.slug)
     ? { video: `/videos/pose-${p.slug}.mp4`, poster: `/images/pose-${p.slug}-still.webp` }
     : {}),
+  ...(YOGA_HOLD_SLUGS.has(p.slug) ? { hold: true } : {}),
+  ...(YOGA_BOOMERANG_SLUGS.has(p.slug) ? { boomerang: true } : {}),
 });
 
 export const POSES: Pose[] = [
@@ -2312,12 +2332,14 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
         <div className="flex items-end justify-between gap-3 mb-3">
           <div>
             <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Pose Library ✿</h2>
-            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">Tap any pose to learn how to enter it and find your breath.</p>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
+              Tap any pose to learn how to enter it and find your breath.
+            </p>
           </div>
           <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{filtered.length} poses</span>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+        <div className="mt-1 flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
           {(["Beginner","Intermediate","Advanced"] as Level[]).map((lv) => (
             <button key={lv} onClick={() => setActive(lv)}
               className={[
@@ -2757,7 +2779,8 @@ function SessionPlayer({
   // Pose photo load state — show a soft placeholder until it's ready (and if a
   // slow/failed mobile load never arrives) so the frame is never a blank box.
   const [imgReady, setImgReady] = useState(false);
-  useEffect(() => { setImgReady(false); }, [idx]);
+  const [videoBroken, setVideoBroken] = useState(false);
+  useEffect(() => { setImgReady(false); setVideoBroken(false); }, [idx]);
   const narrationRef = useRef<HTMLAudioElement | null>(null); // current pose voice
   const musicRef = useRef<HTMLAudioElement | null>(null);     // looping background bed
   const flowVideoRef = useRef<HTMLVideoElement | null>(null); // the pose clip
@@ -3040,27 +3063,28 @@ function SessionPlayer({
             ))}
           </div>
         )}
-        {/* The sharp pose — big, whole, centred. Video in a flow, else the still. */}
-        {pose.video ? (
+        {/* The sharp pose — big, whole, centred. The still is ALWAYS the base
+            layer (so the pose appears instantly and never blanks if the clip is
+            slow or fails to load); the flow clip plays on top when it's ready. */}
+        <img
+          key={idx + "-sharp"}
+          src={pose.image}
+          alt={pose.name}
+          onLoad={() => setImgReady(true)}
+          onError={() => setImgReady(false)}
+          className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+          style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
+        />
+        {pose.video && !videoBroken && (
           <video
+            key={idx + "-clip"}
             ref={flowVideoRef}
             src={pose.video}
             poster={pose.poster ?? pose.image}
-            autoPlay loop muted playsInline preload="metadata"
+            autoPlay loop={!pose.hold} muted playsInline preload="auto"
             aria-label={pose.name}
-            onLoadedData={() => setImgReady(true)}
-            onError={() => setImgReady(false)}
-            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
-            style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
-          />
-        ) : (
-          <img
-            key={idx}
-            src={pose.image}
-            alt={pose.name}
-            onLoad={() => setImgReady(true)}
-            onError={() => setImgReady(false)}
-            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+            onError={() => setVideoBroken(true)}
+            className={["absolute inset-0 w-full h-full object-contain drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
             style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
           />
         )}

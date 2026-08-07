@@ -38,6 +38,10 @@ export interface Exercise {
    *  play-once file that settles on the deep-stretch frame, so the player holds
    *  there and breathes instead of looping. */
   hold?: boolean;
+  /** The clip is a boomerang (forward then reverse baked in), so it ping-pong
+   *  loops perfectly smoothly — no cut, no dissolve. Such clips must NOT skip an
+   *  intro (there is none) and just loop. */
+  boomerang?: boolean;
   /** Spoken coaching clip for this move ("/audio/workout-{slug}.mp3"). Optional
    *  — the player just stays silent if a move has no recording yet. */
   audio?: string;
@@ -110,6 +114,9 @@ const VIDEO_SLUGS = new Set<string>([
   "mountain-climbers", "russian-twist", "crunch", "hollow-body-hold", "hanging-knee-raise",
   "leg-raises", "pelvic-floor-release", "pilates-hundred", "scissor-kicks", "seated-side-bend",
   "side-plank", "cobra-pose", "bird-dog", "dead-bug", "shoulder-rolls",
+  "bicycle-crunch", "diaphragmatic-breathing", "thread-the-needle",
+  "gentle-calf-raises", "plank-hold",
+  "gentle-arm-swings", "bent-over-row", "superman-hold",
 ]);
 
 /** Held stretches/poses — their clip is a play-once file that ends on the deep
@@ -118,13 +125,54 @@ const VIDEO_SLUGS = new Set<string>([
  *  Continuous mobility moves (e.g. hip circles) are deliberately NOT here — they
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
-  "figure-four-stretch", "pigeon-pose",
-  "reclined-butterfly", "supine-twist", "supine-spinal-twist", "childs-pose",
+  "figure-four-stretch", "pigeon-pose", "reclined-butterfly",
+  // Play once and settle on their deep pose. supine-twist and
+  // reclined-hamstring-stretch are NOT here — they play back (boomerang / full
+  // clip); superman-hold plays back too (see BOOMERANG_SLUGS).
+  "supported-fish-pose", "plank-hold",
+  // Thread the Needle settles on the hands-on-ground threaded pose (per image).
+  "thread-the-needle",
 ]);
 
 /** Explosive moves whose single frame always looks awkward (mid-air, blurred),
  *  so previews use the previous library illustration instead of a video poster. */
 const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump"]);
+
+/** Moves whose clip is baked as a boomerang (forward+reverse) so the rep motion
+ *  ping-pong loops perfectly smoothly — no cut and no dissolve on repeat. */
+const BOOMERANG_SLUGS = new Set<string>([
+  "dead-bug", "bird-dog",
+  "sumo-squat", "romanian-deadlift", "step-ups", "kettlebell-swing",
+  "low-lunge-hip-flexor", "butterfly-seated",
+  // Glutes
+  "side-lying-leg-raises", "bulgarian-split-squat", "foam-roll-glutes", "childs-pose",
+  // Core
+  "pilates-hundred", "leg-raises", "scissor-kicks", "side-plank", "crunch",
+  "mountain-climbers", "hollow-body-hold", "russian-twist", "hanging-knee-raise",
+  "cat-cow", "cobra-pose", "seated-side-bend", "pelvic-floor-release", "bicycle-crunch",
+  // Arms
+  "tricep-dips", "lateral-raises", "front-raises", "banded-bicep-curl", "shoulder-circles",
+  "overhead-press", "tricep-overhead-extension", "hammer-curl", "diamond-push-up",
+  "cross-body-shoulder-stretch", "chest-opener", "neck-rolls", "shoulder-rolls",
+  "push-up", "doorway-stretch", "overhead-tricep-stretch", "arnold-press",
+  // Back
+  "reverse-snow-angel", "banded-row", "wall-angels", "back-extension", "thoracic-rotation",
+  "deadlift", "lat-pulldown-band", "pull-up", "renegade-row", "seated-forward-fold",
+  "foam-roll-thoracic", "bent-over-row",
+  // Legs
+  "inner-thigh-squeeze", "curtsy-lunge", "side-lunge", "squat", "walking-lunge",
+  "lizard-lunge", "gentle-calf-raises",
+  "wall-sit", "seated-hamstring-stretch", "it-band-stretch", "legs-up-wall",
+  "standing-leg-circles",
+  // Newly attached glute reps + breathing + arm swings
+  "hip-thrust", "weighted-hip-thrust", "donkey-kicks", "clamshells", "fire-hydrants",
+  "hip-circles", "diaphragmatic-breathing", "glute-bridge", "gentle-arm-swings",
+  // Hold-boomerangs (bake a ~5s hold at the pose, then play back) + superman play-back.
+  // jump-squat plain-loops its complete clip.
+  "supine-twist", "supine-spinal-twist", "superman-hold",
+  // Complete-clip play-back (no sub-trim)
+  "single-leg-deadlift", "reclined-hamstring-stretch",
+]);
 
 const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean; uni?: boolean }): Exercise => ({
   slug, name, muscles, image: `/images/workout-${slug}.webp`,
@@ -132,6 +180,7 @@ const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean
     ? { video: `/videos/workout-${slug}.mp4`, ...(NO_POSTER_SLUGS.has(slug) ? {} : { poster: `/images/workout-${slug}-still.webp` }) }
     : {}),
   ...(HOLD_SLUGS.has(slug) ? { hold: true } : {}),
+  ...(BOOMERANG_SLUGS.has(slug) ? { boomerang: true } : {}),
   ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
   ...(opts?.uni ? { unilateral: true } : {}),
 });

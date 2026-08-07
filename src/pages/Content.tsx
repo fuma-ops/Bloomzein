@@ -138,6 +138,7 @@ function ContentFooter() {
         <a href="/faq" className="font-semibold hover:text-[#EC4899]">FAQ</a>
         <a href="/privacy" className="hover:text-[#EC4899]">Privacy</a>
         <a href="/terms" className="hover:text-[#EC4899]">Terms</a>
+        <a href="/refund" className="hover:text-[#EC4899]">Refund</a>
       </div>
       <p className="mt-3">© {new Date().getFullYear()} Bloomzein ✿</p>
     </footer>

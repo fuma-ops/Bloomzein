@@ -10,7 +10,7 @@ import {
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
-import { DiscoverBloomPlus, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
+import { DiscoverBloomPlus, ManageSubscription, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
 import { HealthHistoryPanel } from "@/components/bloom/me/HealthHistory";
 import { PhaseThemeControl } from "@/components/bloom/premium/PhaseThemeControl";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
@@ -329,6 +329,7 @@ export default function MePage() {
         <SectionTitle hint="your plan">Bloom+</SectionTitle>
         <div className="space-y-3">
           <DiscoverBloomPlus />
+          <ManageSubscription />
           <PhaseThemeControl />
           <PlanToggle />
         </div>

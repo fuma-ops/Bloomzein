@@ -28,6 +28,8 @@ function lazyRetry<T extends ComponentType<any>>(factory: () => Promise<{ defaul
 // bundle; each tool's code + heavy libs (charts, recipe data) load on demand.
 const PrivacyPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.PrivacyPage })));
 const TermsPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
+const RefundPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.RefundPage })));
+const PricingPage = lazyRetry(() => import("./pages/Pricing").then((m) => ({ default: m.PricingPage })));
 const HelpPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
 const FaqPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
 const GuidesIndexPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.GuidesIndexPage })));
@@ -148,6 +150,12 @@ function AppContent() {
   }
   if (path === "/terms") {
     return <Suspense fallback={<PageLoader />}><TermsPage /></Suspense>;
+  }
+  if (path === "/refund") {
+    return <Suspense fallback={<PageLoader />}><RefundPage /></Suspense>;
+  }
+  if (path === "/pricing") {
+    return <Suspense fallback={<PageLoader />}><PricingPage /></Suspense>;
   }
 
   // Public SEO content pages — indexable, no auth

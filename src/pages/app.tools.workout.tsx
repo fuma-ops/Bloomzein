@@ -321,7 +321,11 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
   // after a pause (or a loop) never re-skips.
   const skipIntroDissolve = () => {
     const v = vidRef.current;
-    if (!v || hold) return;
+    // Boomerang clips have no intro dissolve — they ping-pong loop cleanly — so
+    // never skip into them; hold clips play once and freeze, also no skip.
+    // `exercise.hold` (not just the session-only `hold` prop) is honored so a
+    // held stretch never skips into its motion in the library/preview either.
+    if (!v || hold || exercise.hold || exercise.boomerang) return;
     const d = v.duration;
     if (d && isFinite(d) && v.currentTime < 0.1) {
       try { v.currentTime = Math.min(1.6, d * 0.25); } catch {}
@@ -368,7 +372,7 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
         src={exercise.video}
         poster={exercise.poster ?? exercise.image}
         className={className}
-        loop={!hold}
+        loop={!(hold || exercise.hold)}
         muted
         playsInline
         preload="metadata"
@@ -2529,7 +2533,9 @@ function Library() {
         <div className="flex items-end justify-between gap-3 mb-3">
           <div>
             <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Move Library ✿</h2>
-            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">Tap any move for a how-to, form cues & the mistake to avoid.</p>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
+              Tap any move for a how-to, form cues &amp; the mistake to avoid.
+            </p>
           </div>
           <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{exercises.length} moves</span>
         </div>
@@ -2562,7 +2568,12 @@ function Library() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
-            <ExerciseLibraryCard key={ex.slug} exercise={ex} zone={zone} index={i} />
+            <ExerciseLibraryCard
+              key={ex.slug}
+              exercise={ex}
+              zone={zone}
+              index={i}
+            />
           ))}
         </div>
       </section>
@@ -2573,6 +2584,7 @@ function Library() {
 function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zone: Zone; index: number }) {
   const [open, setOpen] = useState(false);
   const coaching = getCoaching(exercise.slug);
+
   return (
     <div
       className={[
@@ -2651,7 +2663,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
         <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90 shadow-sm"><X className="h-4 w-4" /></button>
         {/* Hero — full-height left column on desktop */}
         <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[32rem] overflow-hidden">
-          <ExercisePhoto exercise={first} zone={session.zone} staticOnly className="absolute inset-0 h-full w-full object-cover" />
+          <ExercisePhoto exercise={first} zone={session.zone} staticOnly preferImage className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
           {phase !== "any" && session.phaseOptimal.includes(phase) && (
             <span className="absolute top-3 left-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {PHASE_LABEL[phase]} optimized</span>
@@ -2684,7 +2696,7 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
               {uniqueMoves.map((s, i) => (
                 <div key={`${s.exercise.slug}-${i}`} className="shrink-0 w-20 text-center">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-petal/50">
-                    <ExercisePhoto exercise={s.exercise} zone={session.zone} staticOnly className="h-full w-full object-cover" />
+                    <ExercisePhoto exercise={s.exercise} zone={session.zone} staticOnly preferImage className="h-full w-full object-cover" />
                     {s.kind !== "work" && (
                       <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[7px] font-bold uppercase tracking-wide py-0.5">{s.kind === "warmup" ? "Warm-up" : "Cool-down"}</span>
                     )}
@@ -3085,7 +3097,7 @@ function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; 
       {/* Bigger preview — the whole move is shown (contain, never cropped), with
           the name below. */}
       <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-petal/60 shadow-sm bg-blush/40">
-        <ExercisePhoto exercise={next} zone={zone} staticOnly className="w-full h-full object-contain" />
+        <ExercisePhoto exercise={next} zone={zone} staticOnly preferImage className="w-full h-full object-contain" />
       </div>
       <div className="mt-2 min-w-0">
         <p className="text-sm sm:text-base font-bold text-rose leading-tight truncate">{next.name}</p>
@@ -3132,7 +3144,7 @@ function SessionBackdrop({ exercise, zone, phase, paused, index }: {
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* the blurred, breathing pose photo */}
       <div key={index} className="absolute inset-0 animate-fade-in">
-        <ExercisePhoto exercise={exercise} zone={zone} staticOnly
+        <ExercisePhoto exercise={exercise} zone={zone} staticOnly preferImage
           className={["absolute inset-0 w-full h-full object-cover blur-2xl", paused ? "scale-125" : "animate-wk-bg-breathe"].join(" ")} />
       </div>
       {/* brand scrim — tinted to the zone (cooler on rest) so the glass panels
@@ -3740,7 +3752,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
               <div key={`bleed-${index}`} aria-hidden className="absolute inset-0">
-                <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly
+                <ExercisePhoto exercise={exercise} zone={session.zone} staticOnly preferImage
                   className={["absolute inset-0 w-full h-full object-cover blur-2xl scale-110", mirrored ? "scale-x-[-1]" : ""].join(" ")} />
                 <div className="absolute inset-0 bg-white/25" />
               </div>

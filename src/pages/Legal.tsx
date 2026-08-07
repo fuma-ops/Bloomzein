@@ -38,6 +38,7 @@ function LegalShell({ title, subtitle, children }: { title: string; subtitle: st
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <a href="/privacy" className="font-semibold hover:text-[#EC4899]">Privacy Policy</a>
             <a href="/terms" className="font-semibold hover:text-[#EC4899]">Terms of Service</a>
+            <a href="/refund" className="font-semibold hover:text-[#EC4899]">Refund &amp; Cancellation</a>
             <a href="/" className="hover:text-[#EC4899]">Home</a>
           </div>
           <p className="mt-3">© {new Date().getFullYear()} {ENTITY}. Made with care for your softest era. ✿</p>
@@ -262,6 +263,98 @@ export function TermsPage() {
       <section>
         <H>Contact</H>
         <P>Questions about these Terms? Message us through <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a>.</P>
+      </section>
+    </LegalShell>
+  );
+}
+
+export function RefundPage() {
+  return (
+    <LegalShell title="Refund &amp; Cancellation Policy" subtitle="Trials, cancellations and refunds — plainly.">
+      <section>
+        <P>
+          This policy covers <b>Bloom+</b>, our optional paid subscription that unlocks the premium
+          features of Bloomzein. It sits alongside our{" "}
+          <a className="font-semibold text-[#EC4899]" href="/terms">Terms of Service</a> and{" "}
+          <a className="font-semibold text-[#EC4899]" href="/privacy">Privacy Policy</a>.
+        </P>
+        <P>
+          Payments for Bloom+ are processed by our authorised reseller and Merchant of Record,{" "}
+          <b>Paddle.com</b>. Paddle handles billing, taxes and receipts, and may appear as
+          “Paddle.net” or “PADDLE.COM” on your bank statement.
+        </P>
+      </section>
+
+      <section>
+        <H>7-day free trial</H>
+        <P>
+          Bloom+ starts with a <b>7-day free trial</b>. You won’t be charged during the trial. If you
+          cancel before the trial ends, you pay nothing. If you don’t cancel, your chosen plan
+          (monthly or yearly) begins automatically when the trial finishes, at the price shown at
+          checkout.
+        </P>
+      </section>
+
+      <section>
+        <H>Billing &amp; renewal</H>
+        <Ul>
+          <li>Bloom+ is a recurring subscription that <b>renews automatically</b> — monthly or yearly, depending on the plan you chose — until you cancel.</li>
+          <li>You’re charged at the start of each billing period at the price shown when you subscribed.</li>
+          <li>Paddle emails you a receipt for every payment.</li>
+        </Ul>
+      </section>
+
+      <section>
+        <H>Cancel any time</H>
+        <P>
+          You can cancel Bloom+ whenever you like — there’s no cancellation fee and no lock-in. To
+          cancel, use the manage-subscription link in your Paddle receipt email, or message us through{" "}
+          <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a> and we’ll help.
+        </P>
+        <P>
+          When you cancel, you keep Bloom+ access until the <b>end of the period you’ve already paid
+          for</b>, then it simply stops renewing. We don’t charge you again after that.
+        </P>
+      </section>
+
+      <section>
+        <H>Refunds</H>
+        <Ul>
+          <li>
+            <b>14-day cooling-off (EU/UK consumers):</b> if you’re a consumer in the EU or UK, you may
+            request a full refund within 14 days of a purchase, in line with your statutory withdrawal
+            right — unless you asked to start using the paid service immediately and it has been fully
+            provided.
+          </li>
+          <li>
+            <b>Goodwill refunds:</b> outside that window, refunds are at our discretion. If something
+            went wrong — you were charged in error, double-billed, or couldn’t use what you paid for —
+            contact us and we’ll make it right.
+          </li>
+          <li>
+            <b>Renewals:</b> because you’re reminded and can cancel any time before a renewal, we
+            generally don’t refund a renewal charge once the new period has started — but reach out if
+            your situation is unusual and we’ll look at it fairly.
+          </li>
+        </Ul>
+      </section>
+
+      <section>
+        <H>How to request a refund</H>
+        <P>
+          Message us through <a className="font-semibold text-[#EC4899]" href="/help">our contact
+          form</a> with the email you used and the approximate date of the charge, or reply to your
+          Paddle receipt. Approved refunds are issued by Paddle to your original payment method,
+          usually within 5–10 business days depending on your bank.
+        </P>
+      </section>
+
+      <section>
+        <H>Contact</H>
+        <P>
+          Questions about billing, cancellation or a refund? Reach us any time through{" "}
+          <a className="font-semibold text-[#EC4899]" href="/help">our contact form</a>. We’re happy to help.
+        </P>
       </section>
     </LegalShell>
   );
