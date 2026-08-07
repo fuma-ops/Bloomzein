@@ -26,6 +26,21 @@ export const LS_VARIANTS = {
   annual: "96d1c6ae-83f9-4f3a-86d1-f789c540d92d",
 } as const;
 
+/** Numeric variant ids as they arrive in the webhook payload (`variant_id`).
+ *  Reference only — lets us tell which plan a subscriber is on from server data. */
+export const LS_VARIANT_IDS = {
+  monthly: "1274380",
+  annual: "1274382",
+} as const;
+
+/** Which plan a webhook variant_id corresponds to (or null if unknown). */
+export function planForVariantId(id: string | number | null | undefined): "monthly" | "annual" | null {
+  const s = String(id ?? "");
+  if (s === LS_VARIANT_IDS.monthly) return "monthly";
+  if (s === LS_VARIANT_IDS.annual) return "annual";
+  return null;
+}
+
 /** True once you've filled the store + variant ids above. Until then the paywall
  *  keeps the instant-unlock dev behaviour so the app stays testable. */
 export const LS_CONFIGURED =
