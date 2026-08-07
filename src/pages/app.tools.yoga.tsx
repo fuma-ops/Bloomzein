@@ -85,9 +85,10 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
 const YOGA_HOLD_SLUGS = new Set<string>([]);
 
 /** Poses whose clip is baked as a boomerang (forward+reverse) so it ping-pong
- *  loops with no cut — the yoga equivalent of a workout "boomerang". Filled in
- *  as flows are validated. */
-const YOGA_BOOMERANG_SLUGS = new Set<string>([]);
+ *  loops with no cut — the yoga equivalent of a workout "boomerang". For the
+ *  review pass every pose clip is a boomerang (play back) so each can be
+ *  verified; individual poses get re-classified (hold / trim) from there. */
+const YOGA_BOOMERANG_SLUGS = new Set<string>(YOGA_VIDEO_SLUGS);
 
 const P = (p: Pose): Pose => ({
   ...p,
@@ -2467,6 +2468,18 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
    note box for change requests. Mirrors the workout ExerciseLibraryCard. */
 function PoseReviewCard({ pose, index, comment, onComment }: { pose: Pose; index: number; comment: string; onComment: (t: string) => void }) {
   const hasVideo = !!pose.video;
+  // Only play the clips actually on screen — a grid of 60+ autoplaying 1080p
+  // videos is refused/throttled by the browser (that's why "clips don't play").
+  // Pause when scrolled away, play when back in view. Mirrors the workout card.
+  const vidRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const v = vidRef.current; if (!v) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
+    }, { threshold: 0.25 });
+    io.observe(v);
+    return () => io.disconnect();
+  }, [hasVideo]);
   return (
     <div className="rounded-2xl bg-white/92 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 flex flex-col animate-scale-in"
       style={{ animationDelay: `${(index % 12) * 0.04}s` }}>
@@ -2477,9 +2490,10 @@ function PoseReviewCard({ pose, index, comment, onComment }: { pose: Pose; index
       <div className="relative w-full aspect-video bg-[oklch(0.96_0.04_350)]">
         {hasVideo ? (
           <video
+            ref={vidRef}
             src={pose.video}
             poster={pose.poster ?? pose.image}
-            autoPlay loop={!pose.hold} muted playsInline preload="metadata"
+            loop={!pose.hold} muted playsInline preload="metadata"
             aria-label={pose.name}
             className="absolute inset-0 w-full h-full object-contain"
           />
