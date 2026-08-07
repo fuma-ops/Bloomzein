@@ -159,14 +159,10 @@ const MUSIC_VOL = 0.44;  // steady bed, always audible
 const MUSIC_FADE_MS = 2600; // gentle fade-in when the session (and its music) starts
 const CUE_VOL = 0.32;    // spoken cue sits well UNDER the music (quieter for recording)
 
-// Calming clips shown during REST — a woman breathing / resting slowly. One is
-// picked per rest (rotating) and plays under a soft pink veil + breathing ring
-// so she follows her breath. Silent, looped, cover-filled like the move clips.
-const REST_VIDEOS = [
-  "/videos/workout-rest-breathe.mp4",
-  "/videos/workout-dead-bug.mp4",
-  "/videos/workout-bird-dog.mp4",
-];
+// The calm clip shown during REST — a woman breathing / resting slowly, played
+// under a soft pink veil + breathing ring so she follows her breath. Silent,
+// baked as a boomerang so it ping-pong loops smoothly, cover-filled.
+const REST_VIDEO = "/videos/workout-rest-breathe.mp4";
 // A calm workout clip used as the cinematic-intro backdrop (Workout channel).
 // Yoga keeps its own yoga clip — this keeps "yoga only for yoga".
 const WORKOUT_INTRO_VIDEO = "/videos/workout-rest-breathe.mp4";
@@ -3849,9 +3845,9 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
           ) : (
             /* REST — a calm woman-breathing clip fills the same immersive stage,
                under a soft pink veil with a slow breathing circle she can follow.
-               The clip rotates through REST_VIDEOS across the session's rests. */
+               (Boomerang-baked, so it ping-pong loops smoothly.) */
             <RestBreatheStage
-              videoSrc={REST_VIDEOS[index % REST_VIDEOS.length]}
+              videoSrc={REST_VIDEO}
               paused={paused}
               remaining={remaining}
               ringPct={ringPct}
