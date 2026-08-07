@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js"
 import { supabase, type Profile } from "@/lib/supabase"
 import { initCloudSync, startCloudSync, stopCloudSync } from "@/lib/cloudSync"
 import { trackEvent } from "@/lib/analytics"
+import { refreshEntitlement } from "@/lib/lemonsqueezy"
 
 type AuthContextValue = {
   user: User | null
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadProfile(session.user.id)
         syncedUserId = session.user.id
         void startCloudSync(session.user.id)
+        void refreshEntitlement(session.user.id) // sync Bloom+ status from billing
       }
       setLoading(false)
     })
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (syncedUserId !== session.user.id) {
           syncedUserId = session.user.id
           void startCloudSync(session.user.id)
+          void refreshEntitlement(session.user.id)
         }
       } else {
         setProfile(null)

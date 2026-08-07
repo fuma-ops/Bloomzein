@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
+import { LS_CONFIGURED, checkoutUrl } from "@/lib/lemonsqueezy";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
 const GOLD = "#B76E79";
@@ -31,16 +33,22 @@ const BENEFITS = [
 export function PaywallSheet({ feature = "general", onClose }: { feature?: PaywallFeature; onClose: () => void }) {
   const [annual, setAnnual] = useState(true);
   const [done, setDone] = useState(false);
+  const { user } = useAuth();
 
   const startTrial = () => {
-    // Trial-start intent. When real billing is wired this maps 1:1 to the
-    // checkout redirect; for now it measures how many users begin the trial.
-    trackEvent("begin_checkout", {
-      plan: annual ? "annual" : "monthly",
-      value: annual ? 59 : 9.99,
-      currency: "USD",
-    });
-    setPlan("plus"); // testing: unlocks instantly. (Billing webhook writes this later.)
+    const plan = annual ? "annual" : "monthly";
+    trackEvent("begin_checkout", { plan, value: annual ? 59 : 9.99, currency: "USD" });
+
+    // Real billing: send her to Lemon Squeezy hosted checkout with her user_id
+    // attached, so the webhook can flip her to Bloom+ after payment.
+    if (LS_CONFIGURED) {
+      window.location.href = checkoutUrl(plan, { userId: user?.id, email: user?.email });
+      return;
+    }
+
+    // Not configured yet (before the LS product is live): instant unlock so the
+    // app stays fully testable. The webhook replaces this once billing is set up.
+    setPlan("plus");
     setDone(true);
     setTimeout(onClose, 1400);
   };
