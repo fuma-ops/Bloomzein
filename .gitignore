@@ -22,6 +22,10 @@ dist-ssr
 
 # Claude Code
 .claude/
+# but track shared project settings (marketplaces, enabled plugins)
+!.claude/
+.claude/*
+!.claude/settings.json
 
 # Agent skills (installed locally via `skills add`, kept out of VCS)
 .agents/
