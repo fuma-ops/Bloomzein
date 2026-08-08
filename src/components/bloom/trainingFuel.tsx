@@ -10,7 +10,7 @@ import {
   type CyclePhase,
   type MealType,
 } from "@/components/bloom/recipes/data";
-import { addRecipeToMealPlan, addIngredientsToShopping, ownsIngredient } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, addIngredientsToShopping, ownsIngredient, readPlannedDay } from "@/lib/crossToolData";
 import { toContentPhase } from "@/components/bloom/cyclePhase";
 
 /* ============================================================
@@ -91,8 +91,13 @@ function scoreFuel(r: Recipe, ctx: FuelCtx, owned?: Set<string>): number {
   return s;
 }
 
-/** Up to `count` recovery meals matched to the planned session, phase & goal. */
-export function pickFuelRecipes(ctx: FuelCtx, owned?: Set<string>, count = 2): Recipe[] {
+/** Up to `count` recovery meals for a given weekday. Coherent with the Meals
+ *  planner: if that day already has meals planned, we surface THOSE (dinner →
+ *  lunch → snack → breakfast) so the recovery card matches the week she built.
+ *  Any remaining slots are filled from the recovery pool, rotated by weekday so
+ *  different days don't all show the same suggestion. */
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export function pickFuelRecipes(ctx: FuelCtx, owned?: Set<string>, count = 2, day?: string): Recipe[] {
   const profile = readDietProfile();
   let pool = RECIPES.filter((r) => passesMyRules(r, profile) && RECOVERY_TYPES.includes(r.mealType));
 
@@ -114,7 +119,39 @@ export function pickFuelRecipes(ctx: FuelCtx, owned?: Set<string>, count = 2): R
     if (hits.length >= count) pool = hits;
   }
 
-  return [...pool].sort((a, b) => scoreFuel(b, ctx, owned) - scoreFuel(a, ctx, owned)).slice(0, count);
+  const result: Recipe[] = [];
+  const usedIds = new Set<string>();
+
+  // 1) Coherence with the Meals planner — pull this weekday's actual planned
+  //    meals first (post-session order: dinner → lunch → snack → breakfast).
+  if (day) {
+    const planned = readPlannedDay(day);
+    for (const slot of ["dinner", "lunch", "snack", "breakfast"] as const) {
+      if (result.length >= count) break;
+      const id = planned[slot];
+      if (!id || usedIds.has(id)) continue;
+      const r = RECIPES.find((x) => x.id === id);
+      if (r) { result.push(r); usedIds.add(id); }
+    }
+  }
+
+  // 2) Fill the rest from the scored recovery pool, rotated by weekday so the
+  //    suggestion varies day to day instead of repeating the same top picks.
+  const ranked = [...pool]
+    .filter((r) => !usedIds.has(r.id))
+    .sort((a, b) => scoreFuel(b, ctx, owned) - scoreFuel(a, ctx, owned));
+  if (ranked.length && result.length < count) {
+    const need = count - result.length;
+    // A high-quality band we rotate through, so days differ but stay relevant.
+    const band = ranked.slice(0, Math.max(need * 3, 6));
+    const offset = day ? (WEEKDAYS.indexOf(day) + 7) % Math.max(1, band.length) : 0;
+    for (let i = 0; i < band.length && result.length < count; i++) {
+      const r = band[(offset + i) % band.length];
+      if (!usedIds.has(r.id)) { result.push(r); usedIds.add(r.id); }
+    }
+  }
+
+  return result.slice(0, count);
 }
 
 /* ---------- The comment — the part that makes her feel *seen* ---------- */
@@ -314,7 +351,7 @@ export function FuelCard({
   className?: string;
   onOpenRecipe?: (id: string) => void;
 }) {
-  const recipes = useMemo(() => pickFuelRecipes(ctx, owned, count), [ctx, owned, count]);
+  const recipes = useMemo(() => pickFuelRecipes(ctx, owned, count, day), [ctx, owned, count, day]);
   if (!recipes.length) return null;
 
   const shell = embedded
