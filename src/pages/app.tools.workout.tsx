@@ -935,9 +935,13 @@ function programToTimerSession(program: Program, week: number, sessionIndex: num
   const seen = new Set<string>();
   steps.forEach((s) => { if (s.kind === "work" && !seen.has(s.exercise.slug)) { seen.add(s.exercise.slug); distinct.push(s.exercise); } });
 
+  // Map the program session's intensity to a MET intention so its live burn
+  // (sessionCalories) matches the estimate shown on the card and the mark-complete
+  // log — one engine, no drift between "gentle" and "strong" sessions.
+  const timerIntention = MET_INTENTION_FOR_INTENSITY[workoutIntensity(ps.title, ps.focus)];
   return {
     id: `prog-${program.id}-w${week}-s${sessionIndex}`,
-    zone: "full-body", intention: "strengthen",
+    zone: "full-body", intention: timerIntention,
     name: `${program.title} — ${ps.title}`,
     level: program.level, durationMin: ps.estMinutes,
     steps, rounds: 1, exercises: distinct,
@@ -1246,17 +1250,21 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
       prog[program.id] = [...list];
       localStorage.setItem(PROGRAM_PROGRESS_KEY, JSON.stringify(prog));
     } catch {}
-    // 2. log to shared workout history (feeds Today/Me streaks & snapshots)
+    // 2. log to shared workout history (feeds Today/Me streaks & snapshots).
+    //    Burn uses the ONE MET engine (plannedCalories), mapped from the
+    //    session's intensity — so the logged kcal matches the estimate shown on
+    //    the card and never forks into a second formula.
     try {
       const raw = localStorage.getItem(WORKOUT_LOG_KEY);
       const history = raw ? JSON.parse(raw) : [];
+      const burnIntention = MET_INTENTION_FOR_INTENSITY[workoutIntensity(session.title, session.focus)];
       history.push({
         date: todayISO(),
         zone: "full-body",
-        intention: "strengthen",
+        intention: burnIntention,
         phase,
         durationMin: session.estMinutes,
-        calories: Math.round(session.estMinutes * 6),
+        calories: plannedCalories(burnIntention, session.estMinutes),
         sessionName: `${program.title} — ${session.title}`,
       });
       localStorage.setItem(WORKOUT_LOG_KEY, JSON.stringify(history));

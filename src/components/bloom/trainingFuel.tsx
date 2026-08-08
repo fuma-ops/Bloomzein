@@ -104,8 +104,10 @@ export function pickFuelRecipes(ctx: FuelCtx, owned?: Set<string>, count = 2): R
   const goalHits = pool.filter((r) => r.goal.includes(ctx.goal));
   if (goalHits.length >= count) pool = goalHits;
 
-  // Strong / moderate sessions want real protein for recovery.
-  const minProtein = ctx.intensity === "strong" ? 20 : ctx.intensity === "moderate" ? 12 : 0;
+  // Strong / moderate WORKOUTS want real protein for repair. Yoga recovery is
+  // deliberately light, hydrating & anti-inflammatory — never protein-loaded —
+  // so we don't force a protein floor on yoga days (cross-tool data contract).
+  const minProtein = ctx.kind === "yoga" ? 0 : ctx.intensity === "strong" ? 20 : ctx.intensity === "moderate" ? 12 : 0;
   if (minProtein > 0) {
     const hits = pool.filter((r) => r.macros.protein >= minProtein);
     if (hits.length >= count) pool = hits;
@@ -123,9 +125,10 @@ const PHASE_LABEL: Record<CyclePhase, string> = {
 
 function leadLine(ctx: FuelCtx): string {
   if (ctx.kind === "yoga") {
+    // Yoga recovery is light, hydrating & anti-inflammatory — never protein-loaded.
     if (ctx.intensity === "gentle")
-      return "After your flow, keep it light and nourishing — gentle fuel for a calm, unwound body.";
-    return "After your yoga, a protein-forward, easy-to-digest plate helps you settle and recover.";
+      return "After your flow, keep it light and hydrating — anti-inflammatory fuel for a calm, unwound body.";
+    return "After your yoga, a light, hydrating plate — fresh produce and anti-inflammatory foods to help you settle.";
   }
   // workout
   if (ctx.intensity === "strong") {
