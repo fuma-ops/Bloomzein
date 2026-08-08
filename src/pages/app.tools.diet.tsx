@@ -27,6 +27,7 @@ import {
   Minus,
   Info,
   BarChart3,
+  Heart,
 } from "lucide-react";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
@@ -1372,6 +1373,41 @@ function StepHeader({ step, title, sub }: { step: number; title: string; sub: st
   );
 }
 
+/** Warm, honest feedback on the latest logged weight vs her goal — shown in
+ *  pink under the chart so every log gets a little coach's note. Returns null
+ *  only when there's nothing logged yet. */
+type WeightTone = "excellent" | "ontrack" | "effort";
+function weightFeedback(
+  history: { date: string; kg: number }[],
+  target: number | undefined,
+  goal: DietGoal,
+): { tone: WeightTone; msg: string } | null {
+  if (!history.length) return null;
+  const latest = history[history.length - 1].kg;
+  const prev = history.length >= 2 ? history[history.length - 2].kg : null;
+  const d = prev != null ? +(latest - prev).toFixed(1) : 0; // change since last log
+  const flat = prev != null && Math.abs(d) < 0.05;
+
+  // Maintain (or no goal weight set): reward staying steady.
+  if (goal === "maintain" || target == null) {
+    if (prev == null) return { tone: "ontrack", msg: "First weigh-in saved — this is your baseline. Log daily to see your trend ✿" };
+    if (Math.abs(d) <= 0.3) return { tone: "excellent", msg: "Beautifully steady — right where you want to be ✿" };
+    return { tone: "ontrack", msg: d > 0 ? `Up ${Math.abs(d)} kg since last time — keep your plate balanced and it'll settle ✿` : `Down ${Math.abs(d)} kg — nothing to worry about, stay steady ✿` };
+  }
+
+  const wantDown = goal === "lose";
+  const reached = wantDown ? latest <= target + 0.05 : latest >= target - 0.05;
+  if (reached) return { tone: "excellent", msg: "You've reached your goal weight — incredible work! 🌸" };
+  if (prev == null) return { tone: "ontrack", msg: "Baseline saved — log daily and watch your trend move toward your goal ✿" };
+
+  const movingRight = wantDown ? d < 0 : d > 0;
+  if (movingRight && Math.abs(d) >= 0.1)
+    return { tone: "excellent", msg: `Excellent — ${Math.abs(d)} kg ${wantDown ? "down" : "up"} since your last log, right toward your goal ✿` };
+  if (flat)
+    return { tone: "effort", msg: "Holding steady — a little more effort this week and the trend will start to move 💪" };
+  return { tone: "effort", msg: `${wantDown ? "Up" : "Down"} ${Math.abs(d)} kg since last time — stay with your plan, tomorrow is a fresh start 💪` };
+}
+
 /** Weight over time: real logged points + a dashed projection that follows the
  *  user's ACTUAL planned pace (from her calorie deficit/surplus), drawn on a
  *  proper time axis so the trend — and a realistic timeline — is easy to read. */
@@ -1931,6 +1967,31 @@ function ProfileTab({
             Set your goal weight from <b className="text-hotpink">your goal path</b> above.
           </p>
           <WeightChart history={history} target={target} projection={weightProjection} />
+          {/* Pink coach note — feedback on the latest logged weight vs her goal,
+              refreshed every time she logs. */}
+          {(() => {
+            const wf = weightFeedback(history, target, profile.goal);
+            if (!wf) return null;
+            const Icon = wf.tone === "effort" ? Flame : wf.tone === "excellent" ? Sparkles : Heart;
+            return (
+              <div
+                key={`${latest}-${history.length}`}
+                className={[
+                  "mt-2 flex items-start gap-2 rounded-2xl border px-3 py-2 animate-fade-in",
+                  wf.tone === "excellent"
+                    ? "border-hotpink/40 bg-gradient-to-r from-hotpink/15 to-blush/40"
+                    : wf.tone === "effort"
+                      ? "border-hotpink/30 bg-blush/40"
+                      : "border-petal/60 bg-gradient-to-r from-blush/50 to-petal/25",
+                ].join(" ")}
+              >
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/70 text-hotpink animate-icon-breathe">
+                  <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                </span>
+                <p className="text-[11.5px] font-semibold leading-snug text-hotpink">{wf.msg}</p>
+              </div>
+            );
+          })()}
           <div className="mt-3 flex items-center gap-2">
             <div className="flex-1 flex items-center rounded-full bg-white border border-petal/60 overflow-hidden">
               <button
