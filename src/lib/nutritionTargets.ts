@@ -18,7 +18,7 @@
  *     the loop quantitatively, not just with a nice sentence.
  */
 
-import { readDietProfile, RECIPES, type DietGoal } from "@/components/bloom/recipes/data";
+import { readDietProfile, RECIPES, type DietGoal, type DietPace } from "@/components/bloom/recipes/data";
 import {
   readWorkoutPlanDays,
   readYogaPlanDays,
@@ -80,10 +80,12 @@ export function trainingDaySet(): Set<string> {
   return new Set([...readWorkoutPlanDays(), ...readYogaPlanDays()]);
 }
 
-const GOAL_DELTA: Record<DietGoal, number> = {
-  lose: 0.82,     // ~‑18 %
-  maintain: 1.0,
-  gain: 1.08,     // ~+8 %
+// Goal delta by PACE. "steady" is the gentle, sustainable default; "faster"
+// uses a bigger daily deficit/surplus. Maintain is 1.0 either way. Kept modest
+// and safe — the MIN_CALORIES floor still guards the deficit.
+const GOAL_DELTA_BY_PACE: Record<DietPace, Record<DietGoal, number>> = {
+  steady: { lose: 0.82, maintain: 1.0, gain: 1.08 }, // ~‑18 % / +8 %
+  faster: { lose: 0.75, maintain: 1.0, gain: 1.13 }, // ~‑25 % / +13 %
 };
 
 /** Goal-calibrated protein, grams per kg bodyweight (evidence-based band). */
@@ -121,7 +123,9 @@ export function computeTargets(forToday = false): TargetBreakdown {
 
   // Base goal target from diet alone (deficit / surplus + luteal bump), floored
   // to a safe minimum BEFORE any eat-back so the floor guards the real deficit.
-  let base = tdee * GOAL_DELTA[goal];
+  // The pace (steady / faster) sets how big that deficit or surplus is.
+  const pace: DietPace = p.pace ?? "steady";
+  let base = tdee * GOAL_DELTA_BY_PACE[pace][goal];
   if (lutealBump) base *= 1.05;
   base = Math.max(MIN_CALORIES, Math.round(base / 10) * 10);
 
@@ -346,7 +350,8 @@ export function weekSnapshot(): WeekSnapshot {
  *  today's eat-back) — so a weekly view can vary the "needed" line by phase. */
 export function neededForPhase(phase: CyclePhase | null): number {
   const t = computeTargets(false);
-  const base = t.tdee * GOAL_DELTA[t.goal];
+  const pace: DietPace = readDietProfile().pace ?? "steady";
+  const base = t.tdee * GOAL_DELTA_BY_PACE[pace][t.goal];
   const cal = phase === "luteal" ? base * 1.05 : base;
   return Math.max(MIN_CALORIES, Math.round(cal / 10) * 10);
 }

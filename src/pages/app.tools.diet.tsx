@@ -98,6 +98,7 @@ import {
   type DietProfile,
   type DietPhase,
   type DietGoal,
+  type DietPace,
   type MealType,
   type DietType,
   type Allergy,
@@ -753,13 +754,16 @@ function BodyGoalEditModal({
 }: {
   profile: DietProfile & { weight: number };
   onClose: () => void;
-  onSave: (v: { weight?: number; heightCm?: number; targetWeight?: number }) => void;
+  onSave: (v: { weight?: number; heightCm?: number; targetWeight?: number; pace?: DietPace }) => void;
 }) {
   const [weight, setWeight] = useState(profile.weight ? String(profile.weight) : "");
   const [height, setHeight] = useState(profile.heightCm != null ? String(profile.heightCm) : "");
   const [target, setTarget] = useState(
     profile.targetWeight != null ? String(profile.targetWeight) : "",
   );
+  const [pace, setPace] = useState<DietPace>(profile.pace ?? "steady");
+  const showPace = profile.goal !== "maintain";
+  const paceVerb = profile.goal === "gain" ? "build" : "lose";
   return createPortal(
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4"
@@ -806,6 +810,37 @@ function BodyGoalEditModal({
             onChange={setTarget}
             placeholder="60"
           />
+          {showPace && (
+            <div>
+              <p className="text-xs font-bold text-rose/80 mb-1.5">Pace</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { key: "steady", label: "Steady", sub: "Gentle & sustainable" },
+                  { key: "faster", label: "Faster", sub: `A bigger deficit to ${paceVerb} sooner` },
+                ] as { key: DietPace; label: string; sub: string }[]).map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => setPace(o.key)}
+                    className={[
+                      "rounded-2xl border px-3 py-2 text-left transition active:scale-95",
+                      pace === o.key
+                        ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30"
+                        : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
+                    ].join(" ")}
+                  >
+                    <span className="block text-sm font-bold leading-none">{o.label}</span>
+                    <span className={["block text-[10px] leading-snug mt-1", pace === o.key ? "text-white/85" : "text-rose/55"].join(" ")}>{o.sub}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[10px] text-rose/50 leading-snug">
+                {profile.goal === "gain"
+                  ? "You'll still eat back every calorie you train off — pace only sets your surplus."
+                  : "You'll still eat back every calorie you burn training — pace only sets your deficit."}
+              </p>
+            </div>
+          )}
         </div>
         <div className="mt-5 flex items-center gap-2">
           <button
@@ -821,6 +856,7 @@ function BodyGoalEditModal({
                 weight: parseFloat(weight) > 0 ? parseFloat(weight) : undefined,
                 heightCm: parseFloat(height) > 0 ? parseFloat(height) : undefined,
                 targetWeight: parseFloat(target) > 0 ? parseFloat(target) : undefined,
+                pace,
               })
             }
           >
@@ -1812,9 +1848,9 @@ function ProfileTab({
         <BodyGoalEditModal
           profile={profile}
           onClose={() => setBodyEditOpen(false)}
-          onSave={({ weight, heightCm, targetWeight }) => {
+          onSave={({ weight, heightCm, targetWeight, pace }) => {
             setProfile((p) => {
-              const next = { ...p, heightCm, targetWeight };
+              const next = { ...p, heightCm, targetWeight, pace };
               if (weight && weight > 0 && weight !== p.weight) {
                 next.weight = weight;
                 const hist = (p.weightHistory ?? []).filter((e) => e.date !== todayISO());
