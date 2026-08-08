@@ -9,7 +9,7 @@ import {
   type CyclePhase,
   type MealType,
 } from "@/components/bloom/recipes/data";
-import { addRecipeToMealPlan, addIngredientsToShopping } from "@/lib/crossToolData";
+import { addRecipeToMealPlan, addIngredientsToShopping, ownsIngredient } from "@/lib/crossToolData";
 import { toContentPhase } from "@/components/bloom/cyclePhase";
 
 /* ============================================================
@@ -84,7 +84,7 @@ function scoreFuel(r: Recipe, ctx: FuelCtx, owned?: Set<string>): number {
   if (ctx.phase !== "any" && r.cyclePhase.includes(ctx.phase)) s += 0.4;
   // prefer what she already owns → fewer groceries
   if (owned && owned.size) {
-    const have = r.ingredients.filter((i) => owned.has(i.item.toLowerCase())).length;
+    const have = r.ingredients.filter((i) => ownsIngredient(owned, i.item)).length;
     s += (have / Math.max(1, r.ingredients.length)) * 0.8;
   }
   return s;
