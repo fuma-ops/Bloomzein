@@ -4,6 +4,7 @@ import {
   RECIPES,
   passesMyRules,
   readDietProfile,
+  recipeImageSrc,
   type Recipe,
   type DietGoal,
   type CyclePhase,
@@ -189,7 +190,7 @@ export function trainingAwarenessComment(opts: {
   return s;
 }
 
-/* ---------- Photo helper (mirrors the Meals week grid) ---------- */
+/* ---------- Photo helper ---------- */
 
 const MEAL_FALLBACK: Record<string, string> = {
   breakfast: "/images/meal-oats.webp",
@@ -199,9 +200,10 @@ const MEAL_FALLBACK: Record<string, string> = {
   lunchbox: "/images/meal-lunchbox.webp",
 };
 function recipePhoto(r: Recipe): string {
-  if (r.image) return r.image;
-  if (r.photo) return `/images/recipes/${r.photo}`;
-  return MEAL_FALLBACK[r.mealType] ?? "/images/meal-buddha.webp";
+  // Use the SAME canonical resolver as the Meals week grid so recovery cards
+  // show the real per-recipe photo (deterministic /images/recipes/<slug>.webp),
+  // not a generic bowl. MEAL_FALLBACK is only the onError safety net.
+  return recipeImageSrc(r);
 }
 
 /* ---------- Mini meal card — image + macro chips + actions (Diet-style) ---------- */
