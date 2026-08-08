@@ -22,7 +22,6 @@ import { readDietProfile, RECIPES, type DietGoal } from "@/components/bloom/reci
 import {
   readWorkoutPlanDays,
   readYogaPlanDays,
-  readWorkoutCaloriesToday,
   readTrainingCaloriesToday,
   readSessionsThisWeek,
   readTodayPlannedDay,
@@ -53,7 +52,16 @@ export interface TargetBreakdown extends MacroTargets {
   eatBack: number;        // calories added back from today's logged workouts
 }
 
-const SEDENTARY_FACTOR = 1.35; // baseline when nothing is planned
+// Maintenance from DAILY LIFE only (non-exercise activity). Training is NOT
+// folded in here — it's added back per day from what she ACTUALLY burns
+// (eat-back model), so a workout can never be counted twice.
+const LIFESTYLE_FACTOR = 1.35;
+
+// How much of a day's training burn is added back to the target, per goal.
+// 100 % everywhere: on a cut this keeps training calorie-neutral (the deficit
+// comes from diet, not from under-eating on training days — safer for energy,
+// muscle and cycle health); maintain/gain always fuel fully.
+const EATBACK_FRACTION: Record<DietGoal, number> = { lose: 1, maintain: 1, gain: 1 };
 
 /** Sensible fallbacks for the two body inputs we don't always collect. */
 const DEFAULT_HEIGHT_CM = 165;
@@ -70,15 +78,6 @@ export function plannedTrainingDays(): number {
 /** Weekday labels (Mon..Sun) she has any training planned — for meal alignment. */
 export function trainingDaySet(): Set<string> {
   return new Set([...readWorkoutPlanDays(), ...readYogaPlanDays()]);
-}
-
-/**
- * Activity multiplier from real training load. 0 planned days → lightly
- * sedentary (1.35); each planned training day nudges it up, capped at
- * "moderately active" (1.60) so the maths stays honest.
- */
-function activityFactor(trainingDays: number): number {
-  return Math.min(1.6, SEDENTARY_FACTOR + trainingDays * 0.045);
 }
 
 const GOAL_DELTA: Record<DietGoal, number> = {
@@ -111,22 +110,26 @@ export function computeTargets(forToday = false): TargetBreakdown {
   const workoutDays = readWorkoutPlanDays().length;
   const yogaDays = readYogaPlanDays().length;
   const trainingDays = plannedTrainingDays();
-  const factor = activityFactor(trainingDays);
+
+  // Maintenance from daily life ONLY — training is not baked in here (see
+  // LIFESTYLE_FACTOR); it is added back per day as real burn below.
+  const factor = LIFESTYLE_FACTOR;
   const tdee = Math.round(bmr * factor);
-  // How many kcal/day the planned movement adds vs a sedentary baseline —
-  // so the yoga/workout ↔ food link is a real, visible number.
-  const trainingKcal = Math.round(bmr * (factor - SEDENTARY_FACTOR));
 
   const phase = readCyclePhase();
   const lutealBump = phase === "luteal";
 
-  let calories = tdee * GOAL_DELTA[goal];
-  if (lutealBump) calories *= 1.05;
+  // Base goal target from diet alone (deficit / surplus + luteal bump), floored
+  // to a safe minimum BEFORE any eat-back so the floor guards the real deficit.
+  let base = tdee * GOAL_DELTA[goal];
+  if (lutealBump) base *= 1.05;
+  base = Math.max(MIN_CALORIES, Math.round(base / 10) * 10);
 
-  const eatBack = forToday ? Math.round(readWorkoutCaloriesToday()) : 0;
-  calories += eatBack;
-
-  calories = Math.max(MIN_CALORIES, Math.round(calories / 10) * 10);
+  // Eat-back: today's ACTUAL training burn (workout + yoga alike), scaled by the
+  // per-goal fraction, added back so training days aren't under-eaten. This is
+  // the ONLY place training touches the target — no double count.
+  const eatBack = forToday ? Math.round(readTrainingCaloriesToday() * EATBACK_FRACTION[goal]) : 0;
+  const calories = Math.max(MIN_CALORIES, Math.round((base + eatBack) / 10) * 10);
 
   // Protein from bodyweight; fat at 27 % of calories; carbs fill the rest.
   const protein = Math.round(weight * PROTEIN_PER_KG[goal]);
@@ -135,7 +138,8 @@ export function computeTargets(forToday = false): TargetBreakdown {
 
   return {
     calories, protein, carbs, fat,
-    bmr, tdee, trainingDays, workoutDays, yogaDays, trainingKcal,
+    bmr, tdee, trainingDays, workoutDays, yogaDays,
+    trainingKcal: eatBack, // today's eat-back (kept for back-compat consumers)
     activityFactor: factor, goal, lutealBump, eatBack,
   };
 }
@@ -148,20 +152,20 @@ export function targetRationale(t: TargetBreakdown): string {
     : t.goal === "gain" ? "slight surplus to build"
     : "balanced to maintain",
   );
-  if (t.trainingDays > 0) parts.push(`${t.trainingDays} training day${t.trainingDays > 1 ? "s" : ""} this week`);
   if (t.lutealBump) parts.push("+5% luteal");
   if (t.eatBack > 0) parts.push(`+${t.eatBack} kcal you burned today`);
   return parts.join(" · ");
 }
 
-/** A plain sentence spelling out the movement → food link, e.g.
- *  "2 workouts + 3 yoga planned this week → +180 kcal/day to eat." */
+/** A plain sentence spelling out the movement → food link. Under the eat-back
+ *  model the plan doesn't inflate the resting target; instead you eat back what
+ *  you actually burn on each training day — so that's what we say. */
 export function movementFoodLine(t: TargetBreakdown): string | null {
-  if (t.trainingKcal <= 0 || (t.workoutDays === 0 && t.yogaDays === 0)) return null;
+  if (t.workoutDays === 0 && t.yogaDays === 0) return null;
   const bits: string[] = [];
   if (t.workoutDays) bits.push(`${t.workoutDays} workout${t.workoutDays > 1 ? "s" : ""}`);
   if (t.yogaDays) bits.push(`${t.yogaDays} yoga`);
-  return `${bits.join(" + ")} planned this week → +${t.trainingKcal} kcal/day to eat`;
+  return `${bits.join(" + ")} planned this week — you'll eat back what you burn on each training day`;
 }
 
 /* ---------- Day totals (sum a day's chosen recipes) ---------- */
@@ -256,11 +260,14 @@ export interface EnergyBalance {
   verdict: "start" | "ontrack" | "close" | "over";
 }
 
-/** Today's full energy picture — target vs eaten vs burned. */
+/** Today's full energy picture — target vs eaten vs burned. The allowance is
+ *  the SAME number the Meals planner shows (computeTargets(true)), so Today,
+ *  Diet and Meals can never disagree. */
 export function energyBalance(): EnergyBalance {
-  const t = computeTargets(false);            // base goal, no eat-back
-  const burned = Math.round(readTrainingCaloriesToday());
-  const allowance = t.calories + burned;
+  const t = computeTargets(false);            // resting goal, no eat-back
+  const withBurn = computeTargets(true);      // resting goal + today's eat-back
+  const burned = withBurn.eatBack;            // workout + yoga burned today
+  const allowance = withBurn.calories;        // == what Meals shows as the target
   const e = eatenToday();
   const eaten = Math.round(e.calories);
   const remaining = allowance - eaten;
