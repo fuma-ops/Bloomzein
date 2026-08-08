@@ -43,8 +43,15 @@ export type Difficulty = "quick" | "easy" | "elaborate" | "medium" | "hard";
 
 export interface WeightEntry { date: string; kg: number }
 
+/** How aggressively to chase a lose/gain goal. "steady" is the gentler,
+ *  sustainable default; "faster" uses a bigger daily deficit/surplus. Ignored
+ *  for the maintain goal. */
+export type DietPace = "steady" | "faster";
+
 export interface DietProfile {
   goal: DietGoal;
+  /** Deficit/surplus aggressiveness for a lose/gain goal (default "steady"). */
+  pace?: DietPace;
   dietType: DietType;
   /** The chosen eating plan — drives which recipes are shown. */
   regime: DietRegime;
