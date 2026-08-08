@@ -64,7 +64,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, resetToolState, readMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, removeShoppingExtra, resetToolState, readMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase, PHASE_LABEL } from "@/components/bloom/cyclePhase";
@@ -124,6 +124,52 @@ function pantrySet(pantry: Record<string, string[]>): Set<string> {
   const s = new Set<string>();
   Object.values(pantry || {}).forEach((arr) => arr.forEach((i) => s.add(i.toLowerCase())));
   return s;
+}
+
+/** Parse a free-form quantity like "2", "1.5 cup", "1/2 tsp", "1 1/2 cups" into
+ *  a number + a (lowercased) unit, so quantities for the same ingredient can be
+ *  summed. Returns null when there's no leading number (e.g. "to taste"). */
+function parseQty(q: string): { num: number; unit: string } | null {
+  const m = q.trim().match(/^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s*(.*)$/);
+  if (!m) return null;
+  const tok = m[1];
+  let num: number;
+  if (tok.includes("/")) {
+    const parts = tok.split(/\s+/);
+    if (parts.length === 2) {
+      const [b, c] = parts[1].split("/").map(Number);
+      num = Number(parts[0]) + (c ? b / c : 0);
+    } else {
+      const [b, c] = tok.split("/").map(Number);
+      num = c ? b / c : 0;
+    }
+  } else {
+    num = parseFloat(tok);
+  }
+  if (!isFinite(num)) return null;
+  return { num, unit: m[2].trim().toLowerCase() };
+}
+
+/** Combine every quantity an ingredient needs across the week into one shopping
+ *  figure: numbers with the same unit are summed ("2 eggs" ×3 → "6 eggs";
+ *  "1 cup" + "½ cup" → "1.5 cup"); anything without a number is kept as-is. */
+function combineQtys(qtys: string[]): string {
+  const byUnit = new Map<string, number>();
+  const freeform: string[] = [];
+  for (const q of qtys) {
+    if (!q || !q.trim()) continue;
+    const p = parseQty(q);
+    if (p) byUnit.set(p.unit, (byUnit.get(p.unit) ?? 0) + p.num);
+    else freeform.push(q.trim());
+  }
+  const parts: string[] = [];
+  for (const [unit, num] of byUnit) {
+    const n = Math.round(num * 100) / 100;
+    parts.push(unit ? `${n} ${unit}` : `${n}`);
+  }
+  const seen = new Set(parts.map((p) => p.toLowerCase()));
+  for (const f of freeform) if (!seen.has(f.toLowerCase())) { parts.push(f); seen.add(f.toLowerCase()); }
+  return parts.join(" + ");
 }
 
 function scoreRecipe(r: Recipe, owned: Set<string>): number {
@@ -1615,8 +1661,20 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
 /* ---------- Shopping ---------- */
 
 function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
-  // Ingredients pushed here from the cross-tool Recovery Fuel cards.
-  const extras = useMemo(() => readShoppingExtras(), []);
+  // Ingredients pushed here from the cross-tool Recovery Fuel cards. Kept in
+  // state and refreshed on the storage event so a fuel card added while this
+  // tab is open shows up live (and removals reflect immediately).
+  const [extras, setExtras] = useState<string[]>(() => readShoppingExtras());
+  useEffect(() => {
+    const refresh = () => setExtras(readShoppingExtras());
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
+  const removeExtra = (item: string) => {
+    removeShoppingExtra(item);
+    setExtras(readShoppingExtras());
+    setChecked((c: string[]) => c.filter((x) => x !== item));
+  };
   // The user's own added products (persisted, distinct from the auto-built list).
   const [custom, setCustom] = useLS<string[]>(LS.shopCustom, []);
   const [query, setQuery] = useState("");
@@ -1635,24 +1693,33 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
   }, [plan]);
 
   const items = useMemo(() => {
-    const map = new Map<string, { item: string; qty: string; section: string; missing: boolean }>();
+    const map = new Map<string, { item: string; qty: string; section: string; missing: boolean; removable?: boolean }>();
+    // First pass: collect EVERY quantity each missing ingredient needs across the
+    // whole planned week, so the shopping figure is the real total (not the first
+    // recipe's amount).
+    const qtyMap = new Map<string, string[]>();
+    const sectionOf = new Map<string, string>();
     Object.values(plan as Record<string, Record<MealType, string | null>>).forEach((day) => {
       Object.values(day).forEach((id) => {
         if (!id) return;
         const r = RECIPES.find((x) => x.id === id);
         r?.ingredients.forEach((ing) => {
-          const section = PANTRY.find((c) => c.key === ing.category)?.storeSection || "Pantry";
-          const has = owned.has(ing.item.toLowerCase());
-          if (!has && !map.has(ing.item)) {
-            map.set(ing.item, { item: ing.item, qty: ing.qty, section, missing: true });
+          if (owned.has(ing.item.toLowerCase())) return; // pantry covers it
+          if (!qtyMap.has(ing.item)) {
+            qtyMap.set(ing.item, []);
+            sectionOf.set(ing.item, PANTRY.find((c) => c.key === ing.category)?.storeSection || "Pantry");
           }
+          if (ing.qty) qtyMap.get(ing.item)!.push(ing.qty);
         });
       });
     });
-    // Recovery add-ons — ingredients sent from Workout/Yoga fuel cards.
+    for (const [item, qtys] of qtyMap) {
+      map.set(item, { item, qty: combineQtys(qtys), section: sectionOf.get(item)!, missing: true });
+    }
+    // Recovery add-ons — ingredients sent from Workout/Yoga fuel cards (removable).
     extras.forEach((it: string) => {
       if (!owned.has(it.toLowerCase()) && !map.has(it)) {
-        map.set(it, { item: it, qty: "", section: "Recovery add-ons", missing: true });
+        map.set(it, { item: it, qty: "", section: "Recovery add-ons", missing: true, removable: true });
       }
     });
     // staples checklist (home needs + key categories)
@@ -1834,9 +1901,9 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
                   <label key={i.item + i.section} className={`group flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm cursor-pointer ${on ? "bg-blush line-through text-rose/50" : "hover:bg-blush/50 text-rose"}`}>
                     <input type="checkbox" checked={on} onChange={() => toggle(i.item)} className="accent-hotpink h-4 w-4" />
                     <span className="flex-1">{i.item} {i.qty && <span className="text-xs text-rose/60">({i.qty})</span>}</span>
-                    {i.missing && <span className="text-[10px] uppercase font-bold text-hotpink">recipe</span>}
-                    {isCustom && (
-                      <button onClick={(e) => { e.preventDefault(); removeCustom(i.item); }} aria-label={`Remove ${i.item}`}
+                    {i.missing && <span className="text-[10px] uppercase font-bold text-hotpink">{i.removable ? "add-on" : "recipe"}</span>}
+                    {(isCustom || i.removable) && (
+                      <button onClick={(e) => { e.preventDefault(); (i.removable ? removeExtra : removeCustom)(i.item); }} aria-label={`Remove ${i.item}`}
                         className="shrink-0 text-rose/35 hover:text-hotpink opacity-0 group-hover:opacity-100 transition no-underline">
                         <X className="h-3.5 w-3.5" strokeWidth={2.4} />
                       </button>
