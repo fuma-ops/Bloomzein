@@ -64,7 +64,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, removeShoppingExtra, resetToolState, readMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, removeShoppingExtra, ownsIngredient, resetToolState, readMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase, PHASE_LABEL } from "@/components/bloom/cyclePhase";
@@ -174,7 +174,7 @@ function combineQtys(qtys: string[]): string {
 
 function scoreRecipe(r: Recipe, owned: Set<string>): number {
   const total = r.ingredients.length;
-  const have = r.ingredients.filter((i) => owned.has(i.item.toLowerCase())).length;
+  const have = r.ingredients.filter((i) => ownsIngredient(owned, i.item)).length;
   return have / Math.max(1, total);
 }
 
@@ -571,6 +571,39 @@ export default function MealsPage() {
     });
   };
 
+  // Close the loop: move bought (checked) shopping items INTO the pantry, filed
+  // under their best-known category so they immediately count as "owned" and
+  // drop off future lists. Resolves each name's category from the planned
+  // recipes, then the staples catalogue, else a sensible fallback.
+  const stockItems = (names: string[]) => {
+    if (!names.length) return;
+    const catByItem = new Map<string, PantryCategoryKey>();
+    Object.values(plan).forEach((day) =>
+      Object.values(day).forEach((id) => {
+        if (!id) return;
+        RECIPES.find((x) => x.id === id)?.ingredients.forEach((ing) => {
+          const k = ing.item.toLowerCase();
+          if (!catByItem.has(k)) catByItem.set(k, ing.category as PantryCategoryKey);
+        });
+      }),
+    );
+    PANTRY.forEach((c) => c.items.forEach((it) => {
+      const k = it.toLowerCase();
+      if (!catByItem.has(k)) catByItem.set(k, c.key);
+    }));
+    const fallback = (PANTRY[PANTRY.length - 1]?.key ?? "other") as PantryCategoryKey;
+    setPantry((p) => {
+      const next = { ...p };
+      names.forEach((n) => {
+        const cat = catByItem.get(n.toLowerCase()) ?? fallback;
+        const set = new Set(next[cat] ?? []);
+        set.add(n);
+        next[cat] = [...set];
+      });
+      return next;
+    });
+  };
+
   const swapMeal = (day: string, type: MealType) => {
     const used = new Set<string>(
       Object.values(plan).flatMap((d) => Object.values(d).filter(Boolean) as string[]),
@@ -777,6 +810,7 @@ export default function MealsPage() {
             checked={shopChecked} setChecked={setShopChecked}
             planEmpty={planEmpty}
             goWeek={() => setTab("week")}
+            onStock={stockItems}
           />
         )}
 
@@ -1660,7 +1694,7 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
 
 /* ---------- Shopping ---------- */
 
-function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
+function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock }: any) {
   // Ingredients pushed here from the cross-tool Recovery Fuel cards. Kept in
   // state and refreshed on the storage event so a fuel card added while this
   // tab is open shows up live (and removals reflect immediately).
@@ -1704,7 +1738,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
         if (!id) return;
         const r = RECIPES.find((x) => x.id === id);
         r?.ingredients.forEach((ing) => {
-          if (owned.has(ing.item.toLowerCase())) return; // pantry covers it
+          if (ownsIngredient(owned, ing.item)) return; // pantry covers it (fuzzy)
           if (!qtyMap.has(ing.item)) {
             qtyMap.set(ing.item, []);
             sectionOf.set(ing.item, PANTRY.find((c) => c.key === ing.category)?.storeSection || "Pantry");
@@ -1718,7 +1752,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
     }
     // Recovery add-ons — ingredients sent from Workout/Yoga fuel cards (removable).
     extras.forEach((it: string) => {
-      if (!owned.has(it.toLowerCase()) && !map.has(it)) {
+      if (!ownsIngredient(owned, it) && !map.has(it)) {
         map.set(it, { item: it, qty: "", section: "Recovery add-ons", missing: true, removable: true });
       }
     });
@@ -1726,7 +1760,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
     PANTRY.forEach((cat) => {
       cat.items.forEach((it) => {
         const key = `staple:${it}`;
-        if (!map.has(key) && !owned.has(it.toLowerCase())) {
+        if (!map.has(key) && !ownsIngredient(owned, it)) {
           map.set(key, { item: it, qty: "", section: cat.storeSection, missing: false });
         }
       });
@@ -1746,6 +1780,19 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
 
   const toggle = (item: string) => {
     setChecked((c: string[]) => (c.includes(item) ? c.filter((x) => x !== item) : [...c, item]));
+  };
+
+  // Move ticked (bought) items into the pantry, then clear them from the list
+  // and from the extras/custom buckets so they don't linger — they now read as
+  // "owned" and drop off automatically.
+  const stockChecked = () => {
+    const moved = [...checked];
+    if (!moved.length) return;
+    onStock?.(moved);
+    setCustom((c) => c.filter((x) => !moved.includes(x)));
+    moved.forEach((m) => { if (extras.includes(m)) removeShoppingExtra(m); });
+    setExtras(readShoppingExtras());
+    setChecked([]);
   };
 
   // ── Smart select ──────────────────────────────────────────────────────────
@@ -1842,6 +1889,17 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek }: any) {
         >
           {allSelected ? "Clear all" : "Select all"}
         </button>
+        {/* Close the loop: bought items go into the pantry, so they drop off the
+            list and bias next week's plan toward what she now has. */}
+        {checked.length > 0 && (
+          <button
+            onClick={stockChecked}
+            title="Move the ticked items into My Pantry"
+            className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 hover:brightness-105 transition active:scale-95"
+          >
+            <Apple className="h-3.5 w-3.5" strokeWidth={2.4} /> Add {checked.length} to pantry
+          </button>
+        )}
       </div>
 
       {/* ADD A PRODUCT — type your own; existing matches show as suggestions so

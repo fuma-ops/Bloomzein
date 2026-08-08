@@ -398,6 +398,54 @@ export function toggleEatenToday(slot: PlanSlot): PlanSlot[] {
   return next;
 }
 
+/* ── Fuzzy ingredient matching ────────────────────────────────────────────────
+   Pantry "tomatoes" should cover a recipe's "cherry tomatoes"; "oil" should
+   cover "olive oil". We compare word-token SETS (descriptors dropped, words
+   singularised) and treat an ingredient as owned when one token set is a subset
+   of the other — so "egg" never matches "eggplant" (different token), but
+   "tomato" ⊆ "cherry tomato" does. Conservative on purpose: a false "owned"
+   would drop something she actually needs to buy. */
+const INGREDIENT_DESCRIPTORS = new Set([
+  "fresh", "dried", "chopped", "sliced", "minced", "diced", "ground", "raw", "cooked",
+  "organic", "ripe", "large", "small", "medium", "baby", "cherry", "extra", "virgin",
+  "boneless", "skinless", "frozen", "canned", "tinned", "whole", "reduced", "unsalted",
+  "salted", "roasted", "toasted", "of", "a", "the",
+]);
+function singularise(w: string): string {
+  if (w.length <= 3) return w;
+  if (w.endsWith("ies")) return w.slice(0, -3) + "y";
+  if (w.endsWith("oes") || w.endsWith("ches") || w.endsWith("shes") || w.endsWith("ses") || w.endsWith("xes") || w.endsWith("zes")) return w.slice(0, -2);
+  if (w.endsWith("s") && !w.endsWith("ss")) return w.slice(0, -1);
+  return w;
+}
+/** Normalised, descriptor-free, singularised word tokens for an ingredient. */
+export function ingredientTokens(name: string): string[] {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(singularise)
+    .filter((w) => w && !INGREDIENT_DESCRIPTORS.has(w));
+}
+// Cache the token sets per owned-Set reference (owned is a stable useMemo value).
+const _ownedTokenCache = new WeakMap<Set<string>, string[][]>();
+/** True if `item` is covered by the pantry `owned` set, using fuzzy token
+ *  matching (see above). Falls back to exact when tokens are empty. */
+export function ownsIngredient(owned: Set<string>, item: string): boolean {
+  if (!owned || owned.size === 0) return false;
+  if (owned.has(item.trim().toLowerCase())) return true; // fast exact path
+  let sets = _ownedTokenCache.get(owned);
+  if (!sets) {
+    sets = [...owned].map(ingredientTokens).filter((t) => t.length > 0);
+    _ownedTokenCache.set(owned, sets);
+  }
+  const T = ingredientTokens(item);
+  if (!T.length) return false;
+  const Tset = new Set(T);
+  return sets.some((O) => O.every((w) => Tset.has(w)) || T.every((w) => O.includes(w)));
+}
+
 /** Merge a recipe's ingredients into the Meals shopping list "extras" bucket. */
 export function addIngredientsToShopping(items: string[]): void {
   try {
