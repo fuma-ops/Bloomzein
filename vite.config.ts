@@ -5,6 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import { VitePWA } from "vite-plugin-pwa"
 import { writeFileSync } from "node:fs"
 import { blogPaths } from "./src/lib/blog"
+import { prerenderPlugin } from "./prerender"
 
 // Regenerate public/sitemap.xml from the live content on every build so new
 // blog articles are always discoverable by Google without hand-editing.
@@ -68,6 +69,10 @@ export default defineConfig({
         ],
       },
     }),
+    // Emit static, per-route HTML (correct title/canonical + real article text)
+    // AFTER the SPA + PWA build so crawlers get fully-formed indexable pages.
+    // Must be last so its closeBundle runs against the final dist/index.html.
+    prerenderPlugin(),
   ],
   build: {
     rollupOptions: {
