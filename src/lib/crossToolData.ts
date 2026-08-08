@@ -418,6 +418,25 @@ export function readShoppingExtras(): string[] {
   return readJSON<string[]>(MEALS_SHOP_EXTRA_KEY, []);
 }
 
+/** Remove ONE recovery add-on from the shopping "extras" bucket (case-insensitive)
+ *  — e.g. when the user ticks it off or dismisses it, so it doesn't linger. */
+export function removeShoppingExtra(item: string): void {
+  try {
+    const key = item.trim().toLowerCase();
+    const next = readJSON<string[]>(MEALS_SHOP_EXTRA_KEY, []).filter((s) => s.trim().toLowerCase() !== key);
+    localStorage.setItem(MEALS_SHOP_EXTRA_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
+/** Clear every recovery add-on from the shopping "extras" bucket. */
+export function clearShoppingExtras(): void {
+  try {
+    localStorage.setItem(MEALS_SHOP_EXTRA_KEY, JSON.stringify([]));
+    window.dispatchEvent(new Event("storage"));
+  } catch {}
+}
+
 // ── "Show recovery meals inside the plan" preference (shared Workout/Yoga) ────
 
 export const FUEL_IN_PLAN_KEY = "bloom:fuel-in-plan";
