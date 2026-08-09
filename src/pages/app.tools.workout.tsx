@@ -3227,10 +3227,9 @@ function RestBreatheStage({ videoSrc, paused, remaining, ringPct, next, nextReps
           </div>
         </div>
       </div>
-      {/* rest timer — phones only (tablet/desktop use the right-rail ring) */}
-      <div className="md:hidden absolute top-2.5 right-2.5 z-[25] rounded-full bg-white/75 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] p-1">
-        <RepRing size={104} percent={ringPct} seconds={remaining} label="Rest" />
-      </div>
+      {/* On phones the rest timer is shown BIG in the open space below the stage
+          (see the section's phone ring), not floating over the clip. Tablet/
+          desktop use the right-rail ring. */}
       {/* coming-up chip so the next move stays visible */}
       {next && (
         <div className="absolute bottom-2.5 left-2.5 z-[25] max-w-[70%] rounded-2xl bg-white/80 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] px-3 py-1.5">
@@ -3931,14 +3930,15 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
           )}
 
           {/* Phone: the rep/timer ring lives BIG and centred in the open space
-              under the photo (no longer floating over the image), so the empty
-              area is put to work. Grows to fill, so the coach card sits at the
-              bottom, just above the controls. */}
-          {!isSwitch && phase === "exercise" && (
+              under the photo (no longer floating over the image), for BOTH the
+              exercise and the rest phase — so the empty band is put to work. */}
+          {!isSwitch && (
             <div className="md:hidden flex-1 min-h-0 grid place-items-center py-1">
-              <RepRing size={172} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
-                rep={stepReps > 0 ? currentRep : undefined}
-                total={stepReps > 0 ? stepReps : undefined}
+              <RepRing size={172} percent={ringPct}
+                label={phase === "rest" ? "Rest" : ringLabel}
+                speaking={phase === "exercise" && briefing} goKey={goRing}
+                rep={phase === "exercise" && stepReps > 0 ? currentRep : undefined}
+                total={phase === "exercise" && stepReps > 0 ? stepReps : undefined}
                 seconds={remaining} />
             </div>
           )}
