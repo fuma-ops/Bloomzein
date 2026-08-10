@@ -243,6 +243,11 @@ const BAR_TOP = "#DB2777"; // deeper top edge (matches the button gradient's dar
 const BAR_C = "#EC4899"; // brand hotpink — the bar body
 const LINE_C = "#EC4899"; // brand hotpink (lines + dots)
 const SEL_C = "#BE185D"; // a clean deeper pink for the selected point/bar
+// ONE dashed rose for EVERY forecast/reference line (weight on-plan path, mood by
+// phase, planned calories) — so a dashed rose line always means "predicted", and
+// the solid hotpink always means "what you really logged". One system, no
+// off-brand purples or teals sneaking into the prediction language.
+const PRED_C = "#E7A6C6"; // soft rose — the forecast, sits quietly under the real line
 
 function niceMax(v: number): number {
   if (v <= 0) return 1;
@@ -314,7 +319,7 @@ function BarsChart({
             <stop offset="100%" stopColor={color} stopOpacity="0.3" />
           </linearGradient>
         </defs>
-        <text x="2" y={mT + 2} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+        <text x={x1} y={mT + 2} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
           {unit}
         </text>
         {ticks.map((t) => (
@@ -465,7 +470,7 @@ function LineChart({
             <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+        <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
           {unit}
         </text>
         {ticks.map((t, i) => (
@@ -548,6 +553,7 @@ function ForecastLineChart({
   tapHint,
   interpretation,
   note,
+  actualDots = false,
 }: {
   actual: ForecastActual[];
   predicted: DatedValue[];
@@ -560,6 +566,7 @@ function ForecastLineChart({
   tapHint: string;
   interpretation: string;
   note: React.ReactNode;
+  actualDots?: boolean; // render the logged series as scatter dots (no plunging line)
 }) {
   const shownActual = actual.slice(-MAX_POINTS);
   const [sel, setSel] = useState<string | null>(null);
@@ -570,8 +577,18 @@ function ForecastLineChart({
     y0 = mT,
     y1 = H - mB;
 
+  // Keep the two series on the SAME window: the reference is clipped to start
+  // where the (capped) logged data starts, so it never spills wider than the real
+  // line and squishes it — while still reaching a little into the future.
+  const clipFromT = shownActual.length
+    ? toTime(shownActual[0].date)
+    : predicted.length
+      ? toTime(predicted[0].date)
+      : 0;
+  const shownPred = predicted.filter((p) => toTime(p.date) >= clipFromT - DAY);
+
   const hasA = shownActual.length > 0;
-  const hasP = predicted.length >= 2;
+  const hasP = shownPred.length >= 2;
   if (!hasA && !hasP) {
     return (
       <div>
@@ -585,13 +602,13 @@ function ForecastLineChart({
   }
 
   // Shared time axis across BOTH series so the forecast can extend the range.
-  const allT = [...shownActual.map((p) => toTime(p.date)), ...predicted.map((p) => toTime(p.date))];
+  const allT = [...shownActual.map((p) => toTime(p.date)), ...shownPred.map((p) => toTime(p.date))];
   const tMin = Math.min(...allT);
   const tMax = Math.max(...allT);
   const tSpan = tMax - tMin || DAY;
   const xAt = (iso: string) => x0 + ((toTime(iso) - tMin) / tSpan) * (x1 - x0);
 
-  const allV = [...shownActual.map((p) => p.value), ...predicted.map((p) => p.value)];
+  const allV = [...shownActual.map((p) => p.value), ...shownPred.map((p) => p.value)];
   let lo = yMin ?? Math.min(...allV);
   let hi = yMax ?? Math.max(...allV);
   if (yMin == null && yMax == null) {
@@ -608,10 +625,11 @@ function ForecastLineChart({
       .map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(p.date).toFixed(1)} ${yAt(p.value).toFixed(1)}`)
       .join(" ");
   const actualPath = linePath(shownActual);
-  const predPath = linePath(predicted);
-  const actualArea = hasA
-    ? `${actualPath} L ${xAt(shownActual[shownActual.length - 1].date).toFixed(1)} ${y1} L ${xAt(shownActual[0].date).toFixed(1)} ${y1} Z`
-    : "";
+  const predPath = linePath(shownPred);
+  const actualArea =
+    hasA && !actualDots
+      ? `${actualPath} L ${xAt(shownActual[shownActual.length - 1].date).toFixed(1)} ${y1} L ${xAt(shownActual[0].date).toFixed(1)} ${y1} Z`
+      : "";
 
   // date labels: first / middle / last across the shared axis
   const labelISOs = [...new Set([tMin, (tMin + tMax) / 2, tMax])].map((t) => localFromT(t));
@@ -637,7 +655,7 @@ function ForecastLineChart({
             <stop offset="100%" stopColor={LINE_C} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+        <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
           {unit}
         </text>
         {ticks.map((t, i) => (
@@ -663,9 +681,9 @@ function ForecastLineChart({
           />
         )}
 
-        {/* logged — soft fill + solid line + tappable dots */}
+        {/* logged — soft fill + solid line (skipped in dots mode) + tappable dots */}
         {hasA && actualArea && <path d={actualArea} fill={`url(#${gid})`} stroke="none" />}
-        {hasA && shownActual.length >= 2 && (
+        {hasA && !actualDots && shownActual.length >= 2 && (
           <path
             d={actualPath}
             fill="none"
@@ -684,7 +702,7 @@ function ForecastLineChart({
                 <circle
                   cx={xAt(p.date)}
                   cy={yAt(p.value)}
-                  r={active ? 4.5 : 2.6}
+                  r={active ? 4.5 : actualDots ? 3 : 2.6}
                   fill={active ? SEL_C : LINE_C}
                   stroke="#fff"
                   strokeWidth={active ? 1.8 : 1}
@@ -1273,7 +1291,7 @@ function PlannedVsLoggedChart({
             <stop offset="100%" stopColor={LOG_C} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+        <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
           kcal
         </text>
         {ticks.map((t) => (
@@ -1757,7 +1775,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 unit="kg"
                 actualLabel="Weighed in"
                 predictedLabel="On-plan path"
-                predictedColor="#A855F7"
+                predictedColor={PRED_C}
                 tapHint="Tap a point to see that day's weight. Dashed = your on-plan path."
                 interpretation={h.patterns.weight}
                 note={
@@ -1818,7 +1836,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 unit="score"
                 actualLabel="Logged"
                 predictedLabel="By phase"
-                predictedColor="#EC4899"
+                predictedColor={PRED_C}
                 yMin={1}
                 yMax={5}
                 tapHint="Tap a point to see that day's mood. Dashed = expected by phase."
@@ -1902,7 +1920,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 unit="kcal"
                 actualLabel="Eaten"
                 predictedLabel="Planned"
-                predictedColor={PLAN_C}
+                predictedColor={PRED_C}
+                actualDots
                 yMin={0}
                 tapHint="Tap a day to see what you ate vs what you planned."
                 interpretation={h.patterns.nutrition}
