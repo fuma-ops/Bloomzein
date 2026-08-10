@@ -143,9 +143,22 @@ export async function openCustomerPortal(): Promise<void> {
     "paddle-portal",
     { method: "POST" },
   );
-  if (error || !data?.url) {
-    throw new Error(data?.error || error?.message || "Billing portal unavailable");
+  if (error) {
+    // supabase-js hides the response body on a non-2xx status behind a generic
+    // message — dig the real error out of the Response it stashes in `context`.
+    let detail = error.message;
+    try {
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === "function") {
+        const body = await ctx.json();
+        if (body?.error) detail = body.error;
+      }
+    } catch {
+      /* keep the generic message */
+    }
+    throw new Error(detail);
   }
+  if (!data?.url) throw new Error(data?.error || "Billing portal unavailable");
   window.location.href = data.url;
 }
 
