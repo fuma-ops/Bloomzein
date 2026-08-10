@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2, CreditCard, Loader2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
-import { PADDLE_CONFIGURED, PADDLE_ENV, openCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
+import { PADDLE_CONFIGURED, PADDLE_ENV, openCheckout, openInlineCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, INLINE_FRAME_CLASS, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
@@ -29,10 +29,66 @@ const BENEFITS = [
   { Icon: Sparkles, text: "Everything synced to your cycle & goal — one living plan" },
 ];
 
+/* ─── Inline checkout — Paddle's payment form inside a Bloomzein-styled modal.
+   Falls back to Paddle's overlay if the inline frame can't load, so a sale is
+   never lost. On completion Paddle redirects to successUrl (PlusReturn unlocks). */
+function InlineCheckout({
+  plan, userId, email, onClose,
+}: {
+  plan: "monthly" | "annual";
+  userId: string | null;
+  email: string | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    let alive = true;
+    // The frame container is rendered below, so it's in the DOM when this runs.
+    openInlineCheckout(plan, { userId, email }).catch(() => {
+      if (!alive) return;
+      void openCheckout(plan, { userId, email }); // overlay fallback
+      onClose();
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in" />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-hotpink/30 animate-scale-in"
+      >
+        <div className="relative px-6 pt-6 pb-4 text-center" style={{ background: "linear-gradient(160deg, #FFF1F6, #FCE7F3)" }}>
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
+            <X className="h-4 w-4" />
+          </button>
+          <span className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
+            <Crown className="h-6 w-6" strokeWidth={1.8} />
+          </span>
+          <h2 className="font-script text-2xl text-hotpink leading-none">Complete your Bloom+</h2>
+          <p className="mt-1 text-[12px] text-rose/70">{plan === "annual" ? "Yearly plan" : "Monthly plan"} · 7-day free trial</p>
+        </div>
+        <div className="px-4 pb-4 pt-3">
+          {/* Paddle injects the payment form into this container. */}
+          <div className={`${INLINE_FRAME_CLASS} min-h-[420px] rounded-2xl bg-white`} />
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-rose/50">
+            <Lock className="h-3 w-3" strokeWidth={2.4} /> Secure payment · powered by Paddle
+          </p>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 /* ─────────────────────────── The paywall sheet ─────────────────────────── */
 export function PaywallSheet({ feature = "general", onClose }: { feature?: PaywallFeature; onClose: () => void }) {
   const [annual, setAnnual] = useState(true);
   const [done, setDone] = useState(false);
+  const [checkout, setCheckout] = useState<"monthly" | "annual" | null>(null);
   const [prices, setPrices] = useState<LocalizedPrices>({ monthly: null, annual: null });
   const { user } = useAuth();
 
@@ -52,10 +108,10 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
     const plan = annual ? "annual" : "monthly";
     trackEvent("begin_checkout", { plan, value: annual ? 59 : 9.99, currency: "USD" });
 
-    // Real billing: open Paddle's overlay checkout with her user_id attached,
-    // so the webhook can flip her to Bloom+ after payment.
+    // Real billing: open the inline checkout inside our own Bloomzein-styled
+    // modal (falls back to Paddle's overlay if the inline frame can't load).
     if (PADDLE_CONFIGURED) {
-      void openCheckout(plan, { userId: user?.id, email: user?.email });
+      setCheckout(plan);
       return;
     }
 
@@ -65,6 +121,19 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
     setDone(true);
     setTimeout(onClose, 1400);
   };
+
+  // While checking out, swap the plan sheet for the Bloomzein-styled inline
+  // checkout modal (Cancel returns to plan selection).
+  if (checkout) {
+    return (
+      <InlineCheckout
+        plan={checkout}
+        userId={user?.id ?? null}
+        email={user?.email ?? null}
+        onClose={() => setCheckout(null)}
+      />
+    );
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={onClose}>
