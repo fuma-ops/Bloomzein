@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2, CreditCard, Loader2 } from "lucide-react";
 import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
-import { PADDLE_CONFIGURED, openCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
+import { PADDLE_CONFIGURED, PADDLE_ENV, openCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
@@ -305,9 +305,11 @@ export function ManageSubscription() {
   );
 }
 
-/* ─── Dev/testing switch: flip Free ↔ Bloom+ to feel both experiences ─── */
+/* ─── Dev/testing switch: flip Free ↔ Bloom+ to feel both experiences.
+   Hidden in production (live) — it must never let real users self-grant Bloom+. */
 export function PlanToggle() {
   const premium = usePremium();
+  if (PADDLE_ENV === "production") return null;
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-white/60 p-3">
       <Flower2 className="h-4 w-4 shrink-0 text-hotpink" />

@@ -12,7 +12,6 @@ import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { DiscoverBloomPlus, ManageSubscription, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
 import { HealthHistoryPanel } from "@/components/bloom/me/HealthHistory";
-import { PhaseThemeControl } from "@/components/bloom/premium/PhaseThemeControl";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { computeHealthHistory, type HealthHistory } from "@/lib/healthHistory";
@@ -324,13 +323,11 @@ export default function MePage() {
         </PlusLock>
       </div>
 
-      {/* BLOOM+ — discover premium, and a dev switch to feel both experiences */}
+      {/* BLOOM+ — premium status (+ a dev-only plan switch, hidden in production) */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
         <SectionTitle hint="your plan">Bloom+</SectionTitle>
         <div className="space-y-3">
           <DiscoverBloomPlus />
-          <ManageSubscription />
-          <PhaseThemeControl />
           <PlanToggle />
         </div>
       </section>
@@ -364,6 +361,7 @@ export default function MePage() {
       <section className="mt-5 sm:mt-8 mb-4 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
         <SectionTitle>Settings</SectionTitle>
         <div className="space-y-3">
+          <ManageSubscription />
           {groups.map((group, gi) => (
             <div
               key={gi}
