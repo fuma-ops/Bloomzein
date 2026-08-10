@@ -132,6 +132,36 @@ export async function openCheckout(
   });
 }
 
+/** Class of the container Paddle injects the inline checkout frame into. */
+export const INLINE_FRAME_CLASS = "bloom-checkout-frame";
+
+/**
+ * Open the checkout INLINE — Paddle renders the payment form inside a container
+ * we style (a Bloomzein modal), instead of Paddle's own overlay. The card fields
+ * stay in Paddle's frame (PCI), but everything around them is ours. Same linkage
+ * + successUrl as the overlay, so the webhook + PlusReturn flow is unchanged.
+ * The `.INLINE_FRAME_CLASS` element must already be in the DOM when this runs.
+ */
+export async function openInlineCheckout(
+  plan: "monthly" | "annual",
+  opts: { userId?: string | null; email?: string | null } = {},
+): Promise<void> {
+  await initPaddle();
+  window.Paddle!.Checkout.open({
+    items: [{ priceId: PADDLE_PRICES[plan], quantity: 1 }],
+    ...(opts.email ? { customer: { email: opts.email } } : {}),
+    ...(opts.userId ? { customData: { user_id: opts.userId } } : {}),
+    settings: {
+      displayMode: "inline",
+      frameTarget: INLINE_FRAME_CLASS,
+      frameInitialHeight: 450,
+      frameStyle: "width:100%; min-width:312px; background-color: transparent; border: none;",
+      theme: "light",
+      successUrl: `${window.location.origin}/app?checkout=success`,
+    },
+  });
+}
+
 /**
  * Open the Paddle-hosted customer portal for the signed-in user (update card,
  * view invoices, cancel). The `paddle-portal` Edge Function resolves her Paddle
