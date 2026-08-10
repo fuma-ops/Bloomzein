@@ -6,13 +6,16 @@
 // Supabase session — the client never supplies a customer id.
 //
 // Required Function secrets (Supabase → Edge Functions → Secrets):
-//   PADDLE_API_KEY = a Paddle SERVER API key (sandbox: "pdl_sdbx_apikey_…",
-//                    live: "pdl_live_apikey_…"). SECRET — server-side only.
+//   PADDLE_API_KEY = a Paddle SERVER API key from the SAME environment as below
+//                    (live account key when PADDLE_ENV=production). SECRET.
 //   PADDLE_ENV     = "sandbox" (default) | "production" — picks the API host.
 // (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 //
 // Deploy:  supabase functions deploy paddle-portal --no-verify-jwt
 //   (we authenticate the caller ourselves via auth.getUser on their token.)
+//
+// This function is called from the BROWSER, so it must answer the CORS preflight
+// and send CORS headers on every response — otherwise the browser blocks it.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -21,14 +24,23 @@ const PADDLE_API =
     ? "https://api.paddle.com"
     : "https://sandbox-api.paddle.com";
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 function json(obj: unknown, status: number): Response {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { "content-type": "application/json" },
+    headers: { ...CORS, "content-type": "application/json" },
   });
 }
 
 Deno.serve(async (req) => {
+  // CORS preflight — the browser sends this before the real POST.
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+
   try {
     if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
