@@ -270,16 +270,16 @@ export function DiscoverBloomPlus({ feature = "general" }: { feature?: PaywallFe
 export function ManageSubscription() {
   const premium = usePremium();
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   if (!premium) return null;
 
   const open = async () => {
     setLoading(true);
-    setErr(false);
+    setErr(null);
     try {
       await openCustomerPortal();
-    } catch {
-      setErr(true);
+    } catch (e) {
+      setErr(e instanceof Error && e.message ? e.message : "Couldn't open the billing portal.");
       setLoading(false);
     }
   };
@@ -300,7 +300,7 @@ export function ManageSubscription() {
         </div>
         <ChevronRight className="h-5 w-5 shrink-0 text-hotpink transition group-hover:translate-x-0.5" />
       </button>
-      {err && <p className="mt-2 text-[11px] text-rose/70">Couldn't open the billing portal just now — please try again.</p>}
+      {err && <p className="mt-2 text-[11px] text-rose/70">Couldn't open the billing portal — {err}. Please try again.</p>}
     </div>
   );
 }
