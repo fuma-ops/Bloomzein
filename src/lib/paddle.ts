@@ -191,7 +191,13 @@ export async function refreshEntitlement(userId: string): Promise<void> {
       .select("status")
       .eq("user_id", userId)
       .maybeSingle();
-    if (!data) return; // no subscription row yet — don't override local state
+    if (!data) {
+      // No subscription on file. In PRODUCTION premium is strictly server-driven,
+      // so no subscription = free (this also clears any stale locally-set "plus").
+      // In sandbox/dev we leave local state untouched so the dev plan toggle works.
+      if (PADDLE_ENV === "production") setPlan("free");
+      return;
+    }
     // Paddle: "active" | "trialing" mean Bloom+ is on. (We also accept the old
     // Lemon Squeezy "on_trial" so any pre-migration rows still resolve.)
     const active =
