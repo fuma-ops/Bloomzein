@@ -44,7 +44,9 @@ Deno.serve(async (req) => {
   try {
     if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
-    const apiKey = Deno.env.get("PADDLE_API_KEY");
+    // Trim so a stray space/newline pasted into the secret can't malform the
+    // Authorization header Paddle sees.
+    const apiKey = Deno.env.get("PADDLE_API_KEY")?.trim();
     if (!apiKey) return json({ error: "missing PADDLE_API_KEY" }, 500);
 
     // Authenticate the caller from their Supabase access token.
