@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Crown, Sparkles, Utensils, Flame, Dumbbell, Flower2 } from "lucide-react";
+import { ArrowLeft, Check, Crown, Sparkles, Utensils, Flame, Dumbbell, Flower2, CalendarDays, Wallet, NotebookPen, Bell } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 
 /* ------------------------------------------------------------------ *
@@ -11,11 +11,15 @@ import { AppIcon } from "@/components/bloom/AppIcon";
 const GOLD = "#B76E79";
 
 const FEATURES = [
+  { Icon: Flower2, text: "Cycle tracking that syncs every tool to your current phase" },
   { Icon: Utensils, text: "Your whole week of meals, auto-planned & shoppable" },
-  { Icon: Flame, text: "Energy engine — daily target, macros, eat-back & goal timeline" },
   { Icon: Dumbbell, text: "Full workout & yoga programs, matched to your cycle phase" },
-  { Icon: Flower2, text: "Long-term cycle, mood & progress insights from day one" },
-  { Icon: Sparkles, text: "Everything synced to your cycle & goal — one living plan" },
+  { Icon: Flame, text: "Energy engine — daily target, macros, eat-back & goal timeline" },
+  { Icon: CalendarDays, text: "A big calendar & life organizer for your whole month" },
+  { Icon: Wallet, text: "Budget planner to keep your money picture in one place" },
+  { Icon: NotebookPen, text: "Notes & a daily diary for reflections and tracking" },
+  { Icon: Bell, text: "Smart reminders for your cycle, meds, water & habits" },
+  { Icon: Sparkles, text: "Long-term mood, health & progress insights from day one" },
 ];
 
 function PlanCard({
@@ -71,8 +75,9 @@ export function PricingPage() {
           <p className="mt-3 text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: GOLD }}>Bloom+ Premium</p>
           <h1 className="mt-1 font-script text-4xl sm:text-5xl text-[#831843] leading-none">Simple, honest pricing</h1>
           <p className="mx-auto mt-3 max-w-md text-[14px] text-rose/75 leading-relaxed">
-            Bloomzein is free to use. <b>Bloom+</b> unlocks the full experience — meals, movement and
-            energy, all synced to your cycle. Start with a <b>7-day free trial</b>, cancel anytime.
+            Bloomzein is your all-in-one wellness companion &amp; life organizer — cycle, meals,
+            movement, budget, calendar, notes and reminders in one place. <b>Bloom+</b> unlocks the
+            full experience. Start with a <b>7-day free trial</b>, cancel anytime.
           </p>
         </header>
 
@@ -82,7 +87,7 @@ export function PricingPage() {
         </div>
 
         <section className="mt-10">
-          <h2 className="text-center font-script text-2xl text-[#EC4899]">Everything in Bloom+</h2>
+          <h2 className="text-center font-script text-2xl text-[#EC4899]">Everything Bloomzein brings together</h2>
           <ul className="mx-auto mt-4 max-w-md space-y-2.5">
             {FEATURES.map(({ Icon, text }) => (
               <li key={text} className="flex items-start gap-3 text-[14px] leading-snug text-[#5b3247]">
