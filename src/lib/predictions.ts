@@ -310,6 +310,13 @@ export function computeWheel(): WheelData {
   };
 }
 
+/** Her learned mood-per-phase map (personalised once she has ≥2 logs in a phase,
+ *  else the typical curve). Exported so the Me-page prediction charts read from
+ *  the SAME engine — never a private second copy. */
+export function moodByPhaseMap(): Record<Phase, number> {
+  return moodByPhase(readCycleSettings());
+}
+
 /** Mood log positioned by day-in-cycle (for the hormone×mood overlay scatter). */
 export function moodScatter(): { day: number; score: number }[] {
   const s = readCycleSettings();
