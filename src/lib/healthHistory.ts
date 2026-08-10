@@ -22,7 +22,7 @@ import {
   recentCycleLengths,
   cycleRegularity,
 } from "@/lib/periodLog";
-import { readCycleSettings } from "@/components/bloom/cyclePhase";
+import { readCycleSettings, hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { readSleepLog } from "@/lib/sleepLog";
 import { moodValence } from "@/lib/meDashboard";
 import { readMealPlan, portionFor, type PlanSlot } from "@/lib/crossToolData";
@@ -109,6 +109,7 @@ export interface NutritionDay {
 }
 export interface NutritionInsight {
   series: NutritionDay[]; // chronological, one point per logged day
+  plannedSeries: { date: string; planned: number }[]; // planned kcal for EVERY day in range (the reference)
   avgPlanned: number | null;
   avgLogged: number | null;
   adherencePct: number | null; // logged ÷ planned, averaged (how close she ate to plan)
@@ -365,6 +366,24 @@ function buildPhaseSegments(fromISO: string, toISO: string, starts: string[]): P
   return segs;
 }
 
+/** Predicted period-start dates covering a window, anchored on her cycle setup —
+ *  used to draw the phase bands when she hasn't confirmed real starts yet, so the
+ *  "cycle × your body" overlay still appears (as a forecast). These bands
+ *  self-correct to real ones the moment she confirms period starts. */
+function syntheticStarts(fromISO: string, toISO: string): string[] {
+  if (!hasCycleSettings()) return [];
+  const s = readCycleSettings();
+  const len = Math.max(18, s.cycleLength || 28);
+  const lp = s.lastPeriodStart;
+  let t = new Date(lp.getFullYear(), lp.getMonth(), lp.getDate()).getTime();
+  const startBound = toTime(fromISO) - len * MS_DAY;
+  const endBound = toTime(toISO);
+  while (t > startBound) t -= len * MS_DAY;
+  const out: string[] = [];
+  for (; t <= endBound; t += len * MS_DAY) out.push(localDateISO(new Date(t)));
+  return out;
+}
+
 /** How she does in each phase — avg mood, burn, sessions, symptom-days. */
 function buildByPhase(
   starts: string[],
@@ -439,7 +458,11 @@ function buildByPhase(
  *  proposes for that weekday (the same source the Diet energy ring uses);
  *  "logged" is the calories of the meals she actually ticked eaten that date.
  *  Reads THROUGH the shared meal plan + eaten log — forks neither. */
-function buildNutrition(eaten: Record<string, string[]>): NutritionInsight {
+function buildNutrition(
+  eaten: Record<string, string[]>,
+  rangeStartISO: string | null,
+  rangeEndISO: string | null,
+): NutritionInsight {
   const plan = readMealPlan(); // weekday (Mon..Sun) → slot → recipeId
   const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const SLOTS: PlanSlot[] = ["breakfast", "lunch", "dinner", "snack", "lunchbox"];
@@ -453,6 +476,20 @@ function buildNutrition(eaten: Record<string, string[]>): NutritionInsight {
     if (!day) return 0;
     return SLOTS.reduce((s, slot) => s + kcalOf(day[slot]) * portionFor(wd, slot), 0);
   };
+
+  // The PLANNED reference — what her plan proposes for EVERY day across the
+  // tracking window (a repeating weekly template), so the chart can draw the plan
+  // as a continuous line and overlay only the days she actually ate. Extends a
+  // week into the future so "what's planned next" is visible too.
+  const plannedSeries: { date: string; planned: number }[] = [];
+  if (rangeStartISO && rangeEndISO) {
+    const endMs = toTime(rangeEndISO) + 7 * MS_DAY;
+    for (let t = toTime(rangeStartISO); t <= endMs; t += MS_DAY) {
+      const iso = localDateISO(new Date(t));
+      const planned = Math.round(plannedFor(weekdayOf(iso)));
+      if (planned > 0) plannedSeries.push({ date: iso, planned });
+    }
+  }
 
   const series: NutritionDay[] = Object.entries(eaten)
     .filter(([, slots]) => Array.isArray(slots) && slots.length)
@@ -477,12 +514,12 @@ function buildNutrition(eaten: Record<string, string[]>): NutritionInsight {
     .sort((a, b) => (a.date < b.date ? -1 : 1));
 
   if (!series.length) {
-    return { series: [], avgPlanned: null, avgLogged: null, adherencePct: null };
+    return { series: [], plannedSeries, avgPlanned: null, avgLogged: null, adherencePct: null };
   }
   const avgPlanned = Math.round(series.reduce((s, d) => s + d.planned, 0) / series.length);
   const avgLogged = Math.round(series.reduce((s, d) => s + d.logged, 0) / series.length);
   const adherencePct = avgPlanned > 0 ? Math.round((avgLogged / avgPlanned) * 100) : null;
-  return { series, avgPlanned, avgLogged, adherencePct };
+  return { series, plannedSeries, avgPlanned, avgLogged, adherencePct };
 }
 
 /* ---------- pattern interpretations (one honest sentence per chart) ---------- */
@@ -723,9 +760,6 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
     daysFullLogged: eatenEntries.filter(([, slots]) => slots.length >= 3).length,
   };
 
-  // ── Planned vs logged calories (real plan × real eaten ticks) ──
-  const nutrition = buildNutrition(eaten);
-
   // ── Sleep (only what she logged) ──
   const sleepLog = readSleepLog();
   const sleepSeries: SleepDay[] = Object.entries(sleepLog)
@@ -771,10 +805,20 @@ export function computeHealthHistory(weeks = 8): HealthHistory {
   const cycles = buildCycles(periodStarts);
 
   // ── Phase timeline + by-phase summary (drives the combined chart) ──
+  // Phase BANDS are derived cycle-math, so when she hasn't confirmed real starts
+  // yet we anchor them on her cycle setup (predicted) — this keeps the "cycle ×
+  // your body" overlay present, and it snaps to her real starts once confirmed.
+  // (Cycle COUNT stats stay honest — only the bands fall back.)
   const range = trackingSince ? { startISO: trackingSince, endISO: todayISO() } : null;
-  const phaseSegments = range ? buildPhaseSegments(range.startISO, range.endISO, periodStarts) : [];
+  const segStarts =
+    periodStarts.length || !range ? periodStarts : syntheticStarts(range.startISO, range.endISO);
+  const phaseSegments = range ? buildPhaseSegments(range.startISO, range.endISO, segStarts) : [];
+
+  // ── Planned vs logged calories (real plan × real eaten ticks); the planned
+  //    reference now spans the whole tracking window, not just logged days. ──
+  const nutrition = buildNutrition(eaten, range?.startISO ?? null, range?.endISO ?? null);
   const byPhase = buildByPhase(
-    periodStarts,
+    segStarts,
     moodSeries,
     workoutDaily,
     yogaDaily,

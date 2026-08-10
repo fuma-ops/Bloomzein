@@ -31,7 +31,17 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  ChevronDown,
 } from "lucide-react";
+import {
+  predictedCycleBars,
+  predictedWeightSeries,
+  predictedMoodSeries,
+  predictedCycleLength,
+  futureISO,
+  type DatedValue,
+} from "@/lib/mePredictions";
+import { goalProjection } from "@/lib/nutritionTargets";
 import {
   computeHealthHistory,
   prettyDate,
@@ -159,6 +169,7 @@ export interface ChartPoint {
   value: number;
   readout: string; // shown when tapped
   faded?: boolean; // e.g. an ongoing cycle
+  predicted?: boolean; // a forecast bar — drawn hollow & dashed, not a logged fact
 }
 
 /** The tap-to-reveal readout + the always-on pattern line. */
@@ -187,6 +198,32 @@ function ChartFooter({
         <span>{interpretation}</span>
       </p>
     </>
+  );
+}
+
+/** A small "How this prediction works" toggle — every forecast on this page
+ *  carries one, so a dashed reference line is never a black box. Collapsed by
+ *  default so it never crowds the chart. */
+function PredictionNote({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-hotpink/70 transition hover:text-hotpink"
+      >
+        How this prediction works
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} strokeWidth={2.4} />
+      </button>
+      {open && (
+        <p
+          className="mt-1.5 text-[11px] leading-relaxed text-rose/70 animate-fade-in"
+          style={{ borderLeft: "2px solid rgba(236,72,153,0.35)", paddingLeft: "9px" }}
+        >
+          {children}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -251,7 +288,12 @@ function BarsChart({
   const max = niceMax(Math.max(1, ...shown.map((p) => p.value)));
   const yv = (v: number) => y1 - (v / max) * (y1 - y0);
   const n = shown.length || 1;
-  const bw = (x1 - x0) / n;
+  // Cap the slot width so a handful of days don't stretch into huge ugly slabs
+  // across the whole axis — bars stay compact and evenly sized whether there are
+  // 3 days or 30, sitting left-aligned from the y-axis.
+  const MAX_SLOT = 40;
+  const bw = Math.min(MAX_SLOT, (x1 - x0) / n);
+  const usedW = bw * n;
   const gap = n > 40 ? 0.5 : Math.min(3, bw * 0.28);
   const ticks = [0, max / 2, max];
   const labelIdx = perBarLabels ? shown.map((_, i) => i) : xLabelIdx(shown.length);
@@ -277,16 +319,17 @@ function BarsChart({
         </text>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={x0} x2={x1} y1={yv(t)} y2={yv(t)} stroke={GRID} strokeWidth={1} />
+            <line x1={x0} x2={x0 + usedW} y1={yv(t)} y2={yv(t)} stroke={GRID} strokeWidth={1} />
             <text x={x0 - 4} y={yv(t) + 3} textAnchor="end" style={{ fontSize: 8, fill: LABEL }}>
               {fmtNum(Math.round(t))}
             </text>
           </g>
         ))}
-        <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+        <line x1={x0} x2={x0 + usedW} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
         {shown.map((p, i) => {
           const active = p.key === sel;
           const bx = x0 + i * bw;
+          const bodyW = Math.max(0.6, bw - gap);
           return (
             <g
               key={p.key}
@@ -294,17 +337,34 @@ function BarsChart({
               style={{ cursor: "pointer" }}
             >
               <rect x={bx} y={y0} width={bw} height={y1 - y0} fill="transparent" />
-              <rect
-                x={bx + gap / 2}
-                y={yv(p.value)}
-                width={Math.max(0.6, bw - gap)}
-                height={Math.max(p.value > 0 ? 1.5 : 0, y1 - yv(p.value))}
-                rx={1.5}
-                fill={`url(#${gid})`}
-                opacity={p.faded ? 0.45 : 1}
-                stroke={active ? SEL_C : "none"}
-                strokeWidth={active ? 1.5 : 0}
-              />
+              {p.predicted ? (
+                // A forecast bar — hollow with a dashed brand outline, so it reads
+                // clearly as "predicted", not a logged fact.
+                <rect
+                  x={bx + gap / 2}
+                  y={yv(p.value)}
+                  width={bodyW}
+                  height={Math.max(p.value > 0 ? 1.5 : 0, y1 - yv(p.value))}
+                  rx={1.5}
+                  fill={color}
+                  fillOpacity={0.12}
+                  stroke={active ? SEL_C : color}
+                  strokeWidth={1.2}
+                  strokeDasharray="2.5 2"
+                />
+              ) : (
+                <rect
+                  x={bx + gap / 2}
+                  y={yv(p.value)}
+                  width={bodyW}
+                  height={Math.max(p.value > 0 ? 1.5 : 0, y1 - yv(p.value))}
+                  rx={1.5}
+                  fill={`url(#${gid})`}
+                  opacity={p.faded ? 0.45 : 1}
+                  stroke={active ? SEL_C : "none"}
+                  strokeWidth={active ? 1.5 : 0}
+                />
+              )}
               {valueLabels && (
                 <text
                   x={bx + bw / 2}
@@ -466,6 +526,204 @@ function LineChart({
   );
 }
 
+/** A forecast line chart: a dashed PREDICTED reference (the plan / what your
+ *  phase suggests) laid under the solid LOGGED line (what really happened), on a
+ *  shared time axis so the forecast can reach into next week and the truth can
+ *  correct it. Tappable dots on the logged line; a "how this works" note below. */
+interface ForecastActual {
+  key: string;
+  date: string;
+  value: number;
+  readout: string;
+}
+function ForecastLineChart({
+  actual,
+  predicted,
+  unit,
+  actualLabel,
+  predictedLabel,
+  predictedColor,
+  yMin,
+  yMax,
+  tapHint,
+  interpretation,
+  note,
+}: {
+  actual: ForecastActual[];
+  predicted: DatedValue[];
+  unit: string;
+  actualLabel: string;
+  predictedLabel: string;
+  predictedColor: string;
+  yMin?: number;
+  yMax?: number;
+  tapHint: string;
+  interpretation: string;
+  note: React.ReactNode;
+}) {
+  const shownActual = actual.slice(-MAX_POINTS);
+  const [sel, setSel] = useState<string | null>(null);
+  const gid = "f" + useId().replace(/[^a-zA-Z0-9]/g, "");
+  const { W, H, mL, mR, mT, mB } = AX;
+  const x0 = mL,
+    x1 = W - mR,
+    y0 = mT,
+    y1 = H - mB;
+
+  const hasA = shownActual.length > 0;
+  const hasP = predicted.length >= 2;
+  if (!hasA && !hasP) {
+    return (
+      <div>
+        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
+          Not enough logged yet
+        </div>
+        <ChartFooter sel={null} hint={tapHint} interpretation={interpretation} />
+        <PredictionNote>{note}</PredictionNote>
+      </div>
+    );
+  }
+
+  // Shared time axis across BOTH series so the forecast can extend the range.
+  const allT = [...shownActual.map((p) => toTime(p.date)), ...predicted.map((p) => toTime(p.date))];
+  const tMin = Math.min(...allT);
+  const tMax = Math.max(...allT);
+  const tSpan = tMax - tMin || DAY;
+  const xAt = (iso: string) => x0 + ((toTime(iso) - tMin) / tSpan) * (x1 - x0);
+
+  const allV = [...shownActual.map((p) => p.value), ...predicted.map((p) => p.value)];
+  let lo = yMin ?? Math.min(...allV);
+  let hi = yMax ?? Math.max(...allV);
+  if (yMin == null && yMax == null) {
+    const pad = (hi - lo || 1) * 0.15;
+    lo -= pad;
+    hi += pad;
+  }
+  const span = hi - lo || 1;
+  const yAt = (v: number) => y0 + (1 - (v - lo) / span) * (y1 - y0);
+  const ticks = [lo, (lo + hi) / 2, hi];
+
+  const linePath = (pts: { date: string; value: number }[]) =>
+    pts
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(p.date).toFixed(1)} ${yAt(p.value).toFixed(1)}`)
+      .join(" ");
+  const actualPath = linePath(shownActual);
+  const predPath = linePath(predicted);
+  const actualArea = hasA
+    ? `${actualPath} L ${xAt(shownActual[shownActual.length - 1].date).toFixed(1)} ${y1} L ${xAt(shownActual[0].date).toFixed(1)} ${y1} Z`
+    : "";
+
+  // date labels: first / middle / last across the shared axis
+  const labelISOs = [...new Set([tMin, (tMin + tMax) / 2, tMax])].map((t) => localFromT(t));
+  const selDay = shownActual.find((p) => p.key === sel) ?? null;
+
+  return (
+    <div>
+      <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1">
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose/70">
+          <span className="h-0 w-3 border-t-2 border-dashed" style={{ borderColor: predictedColor }} />
+          {predictedLabel}
+        </span>
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose/70">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: LINE_C }} />
+          {actualLabel}
+        </span>
+      </div>
+
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Forecast vs logged">
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={LINE_C} stopOpacity="0.22" />
+            <stop offset="100%" stopColor={LINE_C} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <text x="2" y={y0 - 3} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
+          {unit}
+        </text>
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={x0} x2={x1} y1={yAt(t)} y2={yAt(t)} stroke={GRID} strokeWidth={1} />
+            <text x={x0 - 4} y={yAt(t) + 3} textAnchor="end" style={{ fontSize: 8, fill: LABEL }}>
+              {fmtNum(Math.round(t * 10) / 10)}
+            </text>
+          </g>
+        ))}
+        <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+
+        {/* predicted reference — dashed, no dots */}
+        {hasP && (
+          <path
+            d={predPath}
+            fill="none"
+            stroke={predictedColor}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+
+        {/* logged — soft fill + solid line + tappable dots */}
+        {hasA && actualArea && <path d={actualArea} fill={`url(#${gid})`} stroke="none" />}
+        {hasA && shownActual.length >= 2 && (
+          <path
+            d={actualPath}
+            fill="none"
+            stroke={LINE_C}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+        {hasA &&
+          shownActual.map((p) => {
+            const active = p.key === sel;
+            return (
+              <g key={p.key} onClick={() => setSel(active ? null : p.key)} style={{ cursor: "pointer" }}>
+                <circle cx={xAt(p.date)} cy={yAt(p.value)} r={10} fill="transparent" />
+                <circle
+                  cx={xAt(p.date)}
+                  cy={yAt(p.value)}
+                  r={active ? 4.5 : 2.6}
+                  fill={active ? SEL_C : LINE_C}
+                  stroke="#fff"
+                  strokeWidth={active ? 1.8 : 1}
+                />
+              </g>
+            );
+          })}
+
+        {labelISOs.map((iso, i) => (
+          <text
+            key={iso}
+            x={xAt(iso)}
+            y={y1 + 12}
+            textAnchor={i === 0 ? "start" : i === labelISOs.length - 1 ? "end" : "middle"}
+            style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
+          >
+            {shortDay(iso)}
+          </text>
+        ))}
+      </svg>
+
+      <div className="mt-2.5 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
+        {selDay ? (
+          <span className="text-[#831843]">
+            <b className="text-hotpink">{shortDay(selDay.date)}</b> · {selDay.readout}
+          </span>
+        ) : (
+          <span className="text-rose/50">{tapHint}</span>
+        )}
+      </div>
+      <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
+        <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
+        <span>{interpretation}</span>
+      </p>
+      <PredictionNote>{note}</PredictionNote>
+    </div>
+  );
+}
+
 const REG_META = {
   regular: {
     cls: "bg-emerald-100 text-emerald-700",
@@ -496,15 +754,6 @@ const burnPoints = (days: DayBurn[]): ChartPoint[] =>
             .join(", ")}`
         : ""
     }`,
-  }));
-const weightPoints = (series: { date: string; kg: number }[]): ChartPoint[] =>
-  series.map((w) => ({ key: w.date, label: shortDay(w.date), value: w.kg, readout: `${w.kg} kg` }));
-const moodPoints = (series: MoodPoint[]): ChartPoint[] =>
-  series.map((p) => ({
-    key: p.date,
-    label: shortDay(p.date),
-    value: p.score,
-    readout: `${titleCase(p.mood)} · ${p.score}/5`,
   }));
 const symptomPoints = (daily: SymptomDay[]): ChartPoint[] =>
   daily.map((d) => ({
@@ -1322,6 +1571,61 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
   const metrics = useMemo(() => buildMetrics(h), [h]);
   const reg = REG_META[h.cycle.regularity];
 
+  // ── Forecast layers (dashed reference lines the real logs correct) ──
+  const proj = useMemo(() => goalProjection(), []);
+  const cyclePred = useMemo(() => predictedCycleBars(3), []);
+  const cyclePredLen = useMemo(() => predictedCycleLength(), []);
+  const weightPred = useMemo(() => {
+    const s = h.weight.series;
+    return predictedWeightSeries(s.length ? s[s.length - 1] : null);
+  }, [h]);
+  const moodPred = useMemo<DatedValue[]>(
+    () => (h.range ? predictedMoodSeries(h.range.startISO, futureISO(7), 1) : []),
+    [h],
+  );
+
+  // Cycle bars = her real cycles + a few faded predicted ones, so it's never empty.
+  const cycleAllPoints: ChartPoint[] = [
+    ...cyclePoints(h.cycle.cycles),
+    ...cyclePred.map((c) => ({
+      key: c.key,
+      label: c.label,
+      value: c.value,
+      predicted: true,
+      readout: `~${c.value} days predicted`,
+    })),
+  ];
+
+  // Weight: solid weigh-ins + a dashed path toward her goal.
+  const weightActual: ForecastActual[] = h.weight.series.map((w) => ({
+    key: w.date,
+    date: w.date,
+    value: w.kg,
+    readout: `${w.kg} kg`,
+  }));
+
+  // Mood: solid logged moods + a dashed phase-shaped forecast.
+  const moodActual: ForecastActual[] = h.mood.series.map((m) => ({
+    key: m.date,
+    date: m.date,
+    value: m.score,
+    readout: `${titleCase(m.mood)} · ${m.score}/5`,
+  }));
+
+  // Planned-vs-eaten: dashed plan across the month + solid eaten line.
+  const nutriPlanned: DatedValue[] = h.nutrition.plannedSeries.map((d) => ({
+    date: d.date,
+    value: d.planned,
+  }));
+  const nutriActual: ForecastActual[] = h.nutrition.series.map((d) => ({
+    key: d.date,
+    date: d.date,
+    value: d.logged,
+    readout: `ate ${d.logged.toLocaleString()} of ${d.planned.toLocaleString()} planned kcal${
+      d.planned > 0 ? ` · ${Math.round((d.logged / d.planned) * 100)}%` : ""
+    }`,
+  }));
+
   const hasAnything =
     h.trackingSince !== null ||
     h.movement.totalSessions > 0 ||
@@ -1412,14 +1716,20 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 )}
               </div>
               <BarsChart
-                points={cyclePoints(h.cycle.cycles)}
+                points={cycleAllPoints}
                 unit="days"
                 color={BAR_C}
                 valueLabels
                 perBarLabels
-                tapHint="Tap a cycle to see when it started, ended & how long it lasted."
+                tapHint="Tap a cycle to see its dates & length. Dashed bars are predicted."
                 interpretation={h.patterns.cycle}
               />
+              <PredictionNote>
+                The dashed bars are your next cycles, predicted from your average length
+                (~{cyclePredLen} days) and your most recent confirmed start. Each time you confirm a
+                new period start, that average — and this forecast — re-tunes to you, so it grows
+                more accurate the more you log.
+              </PredictionNote>
             </Panel>
 
             <Panel bg={CHART_BG.weight}>
@@ -1441,12 +1751,31 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                   )}
                 </div>
               )}
-              <LineChart
-                points={weightPoints(h.weight.series)}
+              <ForecastLineChart
+                actual={weightActual}
+                predicted={weightPred ?? []}
                 unit="kg"
-                color={LINE_C}
-                tapHint="Tap a point to see that day's weight."
+                actualLabel="Weighed in"
+                predictedLabel="On-plan path"
+                predictedColor="#A855F7"
+                tapHint="Tap a point to see that day's weight. Dashed = your on-plan path."
                 interpretation={h.patterns.weight}
+                note={
+                  proj && weightPred ? (
+                    <>
+                      The dashed line is where your weight should track if you stick to your plan —
+                      about {Math.abs(proj.weeklyRateKg)} kg/week toward your {proj.target} kg goal,
+                      worked out from your calorie plan
+                      {proj.etaWeeks ? ` (~${proj.etaWeeks} weeks to go)` : ""}. It re-draws from your
+                      latest weigh-in, so every time you log, the path corrects to reality.
+                    </>
+                  ) : (
+                    <>
+                      Set a goal weight and pace in your Diet plan and a dashed target path will
+                      appear here — showing where you'd track week by week if you stay on plan.
+                    </>
+                  )
+                }
               />
             </Panel>
           </div>
@@ -1483,14 +1812,25 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 title="Mood over time"
                 hint={h.mood.avgScore != null ? `avg ${h.mood.avgScore}/5` : undefined}
               />
-              <LineChart
-                points={moodPoints(h.mood.series)}
+              <ForecastLineChart
+                actual={moodActual}
+                predicted={moodPred}
                 unit="score"
-                color={LINE_C}
+                actualLabel="Logged"
+                predictedLabel="By phase"
+                predictedColor="#EC4899"
                 yMin={1}
                 yMax={5}
-                tapHint="Tap a point to see that day's mood."
+                tapHint="Tap a point to see that day's mood. Dashed = expected by phase."
                 interpretation={h.patterns.mood}
+                note={
+                  <>
+                    The dashed line is how each day tends to feel across your cycle — brighter around
+                    ovulation, softer in the days before your period. It starts from the typical
+                    hormonal curve and, once you've logged a few moods in each phase, shifts toward{" "}
+                    <b>your</b> real pattern.
+                  </>
+                }
               />
             </Panel>
             <Panel bg={CHART_BG.symptoms}>
@@ -1556,10 +1896,23 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                     : "calories"
                 }
               />
-              <PlannedVsLoggedChart
-                series={h.nutrition.series}
+              <ForecastLineChart
+                actual={nutriActual}
+                predicted={nutriPlanned}
+                unit="kcal"
+                actualLabel="Eaten"
+                predictedLabel="Planned"
+                predictedColor={PLAN_C}
+                yMin={0}
                 tapHint="Tap a day to see what you ate vs what you planned."
                 interpretation={h.patterns.nutrition}
+                note={
+                  <>
+                    The dashed line is what your meal plan proposes for every day this month — your
+                    weekly template, repeated. The solid line is only the days you actually ticked
+                    meals eaten, so the gap between plan and plate is the real, honest story.
+                  </>
+                }
               />
             </Panel>
             <Panel bg={CHART_BG.sleep}>
@@ -1602,6 +1955,12 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
                 <span>{h.patterns.combined}</span>
               </p>
+              <PredictionNote>
+                The coloured phase bands are worked out from your cycle — your confirmed period
+                starts when you have them, or your cycle setup as a forecast until then. Your logged
+                metrics are laid over the real timeline, so you can see how each phase tends to shape
+                how you feel and move — and it sharpens every time you confirm a start.
+              </PredictionNote>
             </Panel>
           )}
 
