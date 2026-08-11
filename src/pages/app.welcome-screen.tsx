@@ -9,17 +9,20 @@
  *   3. "Your life doesn't need to be perfect."      — entry-3.mp4
  *
  * Motion vocabulary shared across all three:
- *   • Headlines TYPE themselves in (a soft typewriter with a blinking caret);
- *     only once the title finishes do the supporting elements fade/rise in.
+ *   • Headlines rise in word-by-word (soft float-up), with a one-time sheen
+ *     sweeping across the script line — gentle, never mechanical.
  *   • The sakura on the brand mark turns slowly.
- *   • Films loop and play behind a readability scrim/overlay.
+ *   • Moving between screens is a soft sakura "bloom-wipe" cross-dissolve.
  *
- * Screen 1 has NO button — its film plays once and, when it ends (or after its
- * measured duration), the sequence glides to screen 2. Screens 2 and 3 keep a
- * living CTA; the final one enters the app at /app/today.
+ * Screen 1 has NO button — its film plays its FULL length and, when it ends
+ * (or after its measured duration as a fallback), the sequence glides on.
+ * Screens 2 and 3 keep a living CTA; the final one enters the app.
  *
- * The centre of every film stays clear: that is where she is on camera. The
- * foreground (headline, cards, CTA) is composed around her.
+ * Screen 2 presents the eight app pillars as a CONSTELLATION: the app's own
+ * icons sit around her and soft light-threads draw inward to a glowing central
+ * bloom — literally "everything beautifully connected".
+ *
+ * The centre of every film stays clear: that is where she is on camera.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -29,7 +32,7 @@ const prefersReducedMotion = () =>
   window.matchMedia &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ── icons: white/ink hairline glyphs, drawn to match the mockup badges ───── */
+/* ── icons: white hairline glyphs, the same family the app uses ────────────── */
 const ico = {
   lotus: (
     <>
@@ -160,72 +163,21 @@ function Cta({ label, onClick, delay = 0 }: { label: string; onClick: () => void
   );
 }
 
-/* ── word-by-word headline (typography is alive) ──────────────────────────── */
-function Typed({
-  text,
-  className,
-  speed = 46,
-  startDelay = 0,
-  showCaret = true,
-  onDone,
-}: {
-  text: string;
-  className?: string;
-  speed?: number;
-  startDelay?: number;
-  showCaret?: boolean;
-  onDone?: () => void;
-}) {
-  const [n, setN] = useState(0);
-  const doneRef = useRef(false);
-
-  useEffect(() => {
-    setN(0);
-    doneRef.current = false;
-    const finish = () => {
-      if (!doneRef.current) {
-        doneRef.current = true;
-        onDone?.();
-      }
-    };
-    if (prefersReducedMotion()) {
-      setN(text.length);
-      finish();
-      return;
-    }
-    let i = 0;
-    let timer: ReturnType<typeof setTimeout>;
-    const start = setTimeout(function tick() {
-      i += 1;
-      setN(i);
-      if (i < text.length) timer = setTimeout(tick, speed);
-      else finish();
-    }, startDelay);
-    return () => {
-      clearTimeout(start);
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
-
-  const typing = n < text.length;
-  return (
-    <span className={className}>
-      {text.slice(0, n)}
-      {showCaret && typing && <span className="wz-caret" aria-hidden />}
-    </span>
-  );
-}
-
+/* ── word-by-word float-up headline; wrap the script line in a one-time sheen ── */
 function Words({ text, className, base = 0, step = 0.085 }: { text: string; className?: string; base?: number; step?: number }) {
+  const words = text.split(" ");
   return (
     <span className={className}>
-      {text.split(" ").map((w, i) => (
-        <span key={i} className="wz-word" style={{ animationDelay: `${base + i * step}s` }}>
-          {w}
-          {i < text.split(" ").length - 1 ? " " : ""}
-        </span>
-      ))}
+      {words.flatMap((w, i) => {
+        const el = (
+          <span key={i} className="wz-word" style={{ animationDelay: `${base + i * step}s` }}>
+            {w}
+          </span>
+        );
+        // A fixed-width inline-block space between words — a plain trailing space
+        // gets collapsed by the words' own inline-block boxes.
+        return i < words.length - 1 ? [el, <span key={`s${i}`} className="wz-sp" />] : [el];
+      })}
     </span>
   );
 }
@@ -244,9 +196,9 @@ function Film({
 }) {
   const ref = useRef<HTMLVideoElement>(null);
 
-  // When the caller advances on the film's end (screen 1), back the native
-  // `ended` event with a duration-based fallback: if autoplay never fires
-  // `ended` (blocked/decoding), we still glide on once the clip's length is up.
+  // Screen 1 advances on the film's own end. Back the native `ended` event with
+  // a fallback keyed to the clip's REAL duration, so the film always plays in
+  // full (never cut short) and we still glide on if `ended` never fires.
   useEffect(() => {
     const v = ref.current;
     if (!v || !onEnded) return;
@@ -254,7 +206,7 @@ function Film({
     const arm = () => {
       if (isFinite(v.duration) && v.duration > 0) {
         clearTimeout(fb);
-        fb = setTimeout(onEnded, v.duration * 1000 + 500);
+        fb = setTimeout(onEnded, v.duration * 1000 + 600);
       }
     };
     if (v.readyState >= 1) arm();
@@ -279,15 +231,14 @@ function Film({
    SCREEN 1 — "Welcome to your Bloom."
    ════════════════════════════════════════════════════════════════════════════ */
 function ScreenIntro({ onNext }: { onNext: () => void }) {
-  // No button here: the title types itself in, the subtitle follows, and the
-  // film plays once — when it ends (or after its own length), we glide on.
+  // No button: the title floats in, the subtitle follows, and the film plays in
+  // full — when it ends (or after its length) we glide on. Tap also continues.
   const done = useRef(false);
   const go = () => {
     if (done.current) return;
     done.current = true;
     onNext();
   };
-  const [phase, setPhase] = useState(0); // 0 serif · 1 script · 2 rest
 
   return (
     <div className="wz-stage s1-stage" onClick={go} title="Continue">
@@ -300,34 +251,21 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
 
         <div className="s1-body">
           <h1 className="s1-h">
-            <Typed
-              text="Welcome to"
-              className="s1-serif"
-              speed={72}
-              startDelay={260}
-              showCaret={phase === 0}
-              onDone={() => setPhase(1)}
-            />
-            {phase >= 1 && (
-              <span className="s1-script">
-                <Typed text="your Bloom." speed={82} showCaret={phase === 1} onDone={() => setPhase(2)} />
-                {phase >= 2 && <em className="wz-heart">♡</em>}
-              </span>
-            )}
+            <Words text="Welcome to" className="s1-serif" base={0.2} step={0.09} />
+            <span className="s1-script wz-sheen" style={{ ["--sheen-delay" as string]: "0.95s" }}>
+              <Words text="your Bloom." base={0.5} step={0.1} />
+              <em className="wz-heart">♡</em>
+            </span>
           </h1>
 
-          {phase >= 2 && (
-            <>
-              <div className="wz-divider wz-fade" aria-hidden>
-                <span /> <Sakura className="wz-divider-flower" /> <span />
-              </div>
-              <p className="s1-sub wz-fade">
-                A little space for the woman
-                <br />
-                you're becoming.
-              </p>
-            </>
-          )}
+          <div className="wz-divider wz-fade" style={{ animationDelay: "1.15s" }} aria-hidden>
+            <span /> <Sakura className="wz-divider-flower" /> <span />
+          </div>
+          <p className="s1-sub wz-fade" style={{ animationDelay: "1.3s" }}>
+            A little space for the woman
+            <br />
+            you're becoming.
+          </p>
         </div>
       </div>
     </div>
@@ -336,50 +274,69 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
 
 /* ════════════════════════════════════════════════════════════════════════════
    SCREEN 2 — "Everything in your life, beautifully connected."
-   (foreground composition per docs/welcome-screen-design.md)
+   The eight app pillars as a constellation, linked by light-threads to a hub.
    ════════════════════════════════════════════════════════════════════════════ */
-/* Badges are small photographic thumbnails pulled from the live Today / Read
-   library (same art the app uses elsewhere), cropped into the circular badge.
-   `pos` steers object-position to the most recognisable part of each image. */
-type Card = { img: string; pos?: string; a: string; b: string };
-const LEFT: Card[] = [
-  { img: "/images/read-cycle.webp", pos: "50% 48%", a: "Understand", b: "your rhythm" },
-  { img: "/images/read-movement.webp", pos: "60% 40%", a: "Move", b: "your body" },
-  { img: "/images/read-recipes.webp", pos: "70% 58%", a: "Nourish", b: "yourself" },
-  { img: "/images/goal-path-bloom.webp", pos: "50% 42%", a: "Build better", b: "habits" },
-];
-const RIGHT: Card[] = [
-  { img: "/images/read-mindset.webp", pos: "50% 24%", a: "Clear", b: "your mind" },
-  { img: "/images/read-money.webp", pos: "44% 44%", a: "Feel more", b: "in control" },
-  { img: "/images/cycle-journal-hero.webp", pos: "50% 40%", a: "Remember", b: "what matters" },
-  { img: "/images/read-selfcare.webp", pos: "64% 30%", a: "Take care", b: "of yourself" },
+type Node = { icon: keyof typeof ico; a: string; b: string; x: number; y: number; side: "l" | "r" };
+const HUB = { x: 50, y: 53 };
+const NODES: Node[] = [
+  { icon: "lotus", a: "Understand", b: "your rhythm", x: 25, y: 29, side: "l" },
+  { icon: "meditate", a: "Move", b: "your body", x: 20, y: 45, side: "l" },
+  { icon: "bowl", a: "Nourish", b: "yourself", x: 22, y: 61, side: "l" },
+  { icon: "check", a: "Build better", b: "habits", x: 27, y: 76, side: "l" },
+  { icon: "brain", a: "Clear", b: "your mind", x: 75, y: 29, side: "r" },
+  { icon: "wallet", a: "Feel more", b: "in control", x: 80, y: 45, side: "r" },
+  { icon: "calheart", a: "Remember", b: "what matters", x: 78, y: 61, side: "r" },
+  { icon: "droplet", a: "Take care", b: "of yourself", x: 73, y: 76, side: "r" },
 ];
 
-function BenefitCard({ card, delay }: { card: Card; delay: number }) {
+function FeatureIcon({ icon }: { icon: keyof typeof ico }) {
   return (
-    <div className="wz-card" style={{ animationDelay: `${delay}s` }}>
-      <span className="wz-badge wz-badge--img" style={{ animationDelay: `${delay + 0.12}s` }}>
-        <img src={card.img} alt="" loading="lazy" style={{ objectPosition: card.pos }} referrerPolicy="no-referrer" />
-      </span>
-      <span className="wz-label">
-        {card.a}
-        <br />
-        {card.b}
-        <i className="wz-underline" />
-      </span>
-    </div>
+    <span className="wz-feat-ico">
+      <svg viewBox="0 0 24 24" aria-hidden>
+        {ico[icon]}
+      </svg>
+    </span>
   );
 }
 
 function ScreenConnected({ onNext }: { onNext: () => void }) {
-  // The title types itself in first; only when it finishes do the supporting
-  // elements (subtitle, feature cards, footer, CTA) fade/rise in.
-  const [line2, setLine2] = useState(false);
-  const [ready, setReady] = useState(false);
-
   return (
     <div className="wz-stage">
       <Film src="/videos/entry-2.mp4" scrim="wz-scrim--soft" />
+
+      {/* threads + hub sit above the film but below the text/CTA */}
+      <svg className="wz-threads" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+        {NODES.map((n, i) => (
+          <path
+            key={n.a + n.b}
+            pathLength={1}
+            d={`M ${n.x} ${n.y} Q ${(n.x + HUB.x) / 2} ${(n.y + HUB.y) / 2 - 5} ${HUB.x} ${HUB.y}`}
+            style={{ animationDelay: `${0.6 + i * 0.16}s` }}
+          />
+        ))}
+      </svg>
+      <div className="wz-hub" style={{ left: `${HUB.x}%`, top: `${HUB.y}%` }} aria-hidden>
+        <Sakura className="wz-hub-flower" />
+      </div>
+
+      {/* desktop constellation */}
+      <div className="wz-constellation" aria-hidden>
+        {NODES.map((n, i) => (
+          <div
+            key={n.a + n.b}
+            className={`wz-feat ${n.side === "l" ? "is-l" : "is-r"}`}
+            style={{ left: `${n.x}%`, top: `${n.y}%`, animationDelay: `${0.65 + i * 0.16}s` }}
+          >
+            <FeatureIcon icon={n.icon} />
+            <span className="wz-feat-lbl">
+              {n.a}
+              <br />
+              {n.b}
+            </span>
+          </div>
+        ))}
+      </div>
+
       <div className="wz-content s2">
         <div className="wz-topbar wz-topbar--center">
           <Progress step={2} />
@@ -387,57 +344,37 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
 
         <header className="wz-head">
           <h1 className="wz-h">
-            <Typed
-              text="Everything in your life,"
-              className="wz-h-serif"
-              speed={40}
-              startDelay={220}
-              showCaret={!line2}
-              onDone={() => setLine2(true)}
-            />
-            {line2 && (
-              <span className="wz-h-script">
-                <Typed text="beautifully connected." speed={48} showCaret={!ready} onDone={() => setReady(true)} />
-                {ready && <em className="wz-heart">♡</em>}
-              </span>
-            )}
+            <Words text="Everything in your life," className="wz-h-serif" base={0.15} step={0.07} />
+            <span className="wz-h-script wz-sheen" style={{ ["--sheen-delay" as string]: "0.85s" }}>
+              <Words text="beautifully connected." base={0.5} step={0.075} />
+              <em className="wz-heart">♡</em>
+            </span>
           </h1>
-          {ready && (
-            <>
-              <p className="wz-sub wz-fade">
-                Your mood. Your movement. Your meals.
-                <br />
-                Your plans. Your little everyday moments.
-              </p>
-              <Sakura className="wz-flower wz-fade" />
-            </>
-          )}
+          <p className="wz-sub wz-fade" style={{ animationDelay: "1s" }}>
+            Your mood. Your movement. Your meals.
+            <br />
+            Your plans. Your little everyday moments.
+          </p>
         </header>
 
-        {ready && (
-          <div className="wz-cols">
-            <div className="wz-col wz-col-l">
-              {LEFT.map((c, i) => (
-                <BenefitCard key={c.a + c.b} card={c} delay={0.15 + i * 0.18} />
-              ))}
+        {/* mobile fallback: a tidy two-column list (constellation is desktop art) */}
+        <div className="wz-feat-grid" aria-hidden>
+          {NODES.map((n, i) => (
+            <div key={n.a + n.b} className="wz-feat-row" style={{ animationDelay: `${0.4 + i * 0.09}s` }}>
+              <FeatureIcon icon={n.icon} />
+              <span className="wz-feat-lbl">
+                {n.a} {n.b}
+              </span>
             </div>
-            <div className="wz-center" aria-hidden />
-            <div className="wz-col wz-col-r">
-              {RIGHT.map((c, i) => (
-                <BenefitCard key={c.a + c.b} card={c} delay={0.24 + i * 0.18} />
-              ))}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {ready && (
-          <div className="wz-foot-row">
-            <p className="wz-foot">
-              One beautiful space. Everything that matters to you. <em className="wz-heart">♡</em>
-            </p>
-            <Cta label="Show me my Bloom" onClick={onNext} delay={1} />
-          </div>
-        )}
+        <div className="wz-foot-row">
+          <p className="wz-foot">
+            One beautiful space. Everything that matters to you. <em className="wz-heart">♡</em>
+          </p>
+          <Cta label="Show me my Bloom" onClick={onNext} delay={1} />
+        </div>
       </div>
     </div>
   );
@@ -445,7 +382,8 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
 
 /* ════════════════════════════════════════════════════════════════════════════
    SCREEN 3 — "Your life doesn't need to be perfect."
-   Floating glass cards drawn from the live Today set-up (real yoga + meal art).
+   Floating glass cards from the live Today set-up, kept OUT of the face zone
+   (the upper-centre band stays clear; cards hug the edges & the lower body).
    ════════════════════════════════════════════════════════════════════════════ */
 function MiniBadge({ icon }: { icon: keyof typeof ico }) {
   return (
@@ -470,9 +408,9 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
         {/* ── left: the promise + CTA ── */}
         <div className="s3-body">
           <h1 className="s3-h">
-            <Words text="Your life doesn't need to be perfect." className="s3-serif" base={0.15} />
-            <span className="s3-script">
-              <Words text="It just needs to feel like yours." base={0.5} step={0.07} />
+            <Words text="Your life doesn't need to be perfect." className="s3-serif" base={0.15} step={0.055} />
+            <span className="s3-script wz-sheen" style={{ ["--sheen-delay" as string]: "0.9s" }}>
+              <Words text="It just needs to feel like yours." base={0.5} step={0.06} />
               <em className="wz-heart">♡</em>
             </span>
           </h1>
@@ -498,10 +436,10 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           <Cta label="Start my Bloomzein journey" onClick={onEnter} delay={1.2} />
         </div>
 
-        {/* ── right: floating life cards ── */}
+        {/* ── floating life cards — arranged around a clear centre-top face zone ── */}
         <div className="s3-cards" aria-hidden>
-          {/* Morning Yoga — real pose art from the Today plan */}
-          <article className="s3-card s3-photo" style={{ left: "42%", top: "5%", animationDelay: ".15s" }}>
+          {/* Morning Yoga — beside her, below the face line */}
+          <article className="s3-card s3-photo" style={{ left: "41%", top: "40%", animationDelay: ".15s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="meditate" />
               <div className="s3-card-heads">
@@ -519,8 +457,8 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             </div>
           </article>
 
-          {/* Nourishing Meal — real recipe art from the Today plan */}
-          <article className="s3-card s3-photo" style={{ left: "40%", top: "36%", animationDelay: ".45s" }}>
+          {/* Nourishing Meal — lower-left of body */}
+          <article className="s3-card s3-photo" style={{ left: "41%", top: "67%", animationDelay: ".45s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="bowl" />
               <div className="s3-card-heads">
@@ -533,8 +471,8 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             </div>
           </article>
 
-          {/* Journal */}
-          <article className="s3-card" style={{ left: "40%", top: "66%", animationDelay: ".75s" }}>
+          {/* Journal — bottom centre, clear of the face */}
+          <article className="s3-card" style={{ left: "58%", top: "76%", animationDelay: ".75s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="book" />
               <div className="s3-card-heads">
@@ -547,7 +485,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Mood */}
-          <article className="s3-card s3-right" style={{ right: "6.5%", top: "5%", animationDelay: ".3s" }}>
+          <article className="s3-card s3-right" style={{ right: "6.5%", top: "6%", animationDelay: ".3s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="smile" />
               <div className="s3-card-heads">
@@ -574,7 +512,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Habits */}
-          <article className="s3-card s3-right" style={{ right: "5.5%", top: "45%", animationDelay: ".9s" }}>
+          <article className="s3-card s3-right" style={{ right: "5.5%", top: "46%", animationDelay: ".9s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="check" />
               <div className="s3-card-heads">
@@ -598,7 +536,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Reminders */}
-          <article className="s3-card s3-right" style={{ right: "5.5%", top: "63%", animationDelay: "1.05s" }}>
+          <article className="s3-card s3-right" style={{ right: "5.5%", top: "65%", animationDelay: "1.05s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="bell" />
               <div className="s3-card-heads">
@@ -610,7 +548,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Plan your day */}
-          <article className="s3-card s3-right" style={{ right: "6.5%", top: "80%", animationDelay: "1.2s" }}>
+          <article className="s3-card s3-right" style={{ right: "6.5%", top: "83%", animationDelay: "1.2s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="cal" />
               <div className="s3-card-heads">
@@ -636,27 +574,52 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   Controller — sequences the three screens.
+   Controller — sequences the three screens with a soft bloom-wipe transition.
    ════════════════════════════════════════════════════════════════════════════ */
 export default function WelcomeScreen() {
   const [step, setStep] = useState(1);
+  const [veiling, setVeiling] = useState(false);
 
-  const goApp = () => {
-    try {
-      window.history.pushState({}, "", "/app/today");
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    } catch {
-      window.location.assign("/app/today");
+  // Soft cross-dissolve: a sakura "bloom" veil blooms over the screen, the step
+  // swaps underneath while it's opaque, then the veil clears.
+  const swap = (fn: () => void) => {
+    if (prefersReducedMotion()) {
+      fn();
+      return;
     }
+    setVeiling(true);
+    window.setTimeout(fn, 300);
+    window.setTimeout(() => setVeiling(false), 760);
   };
+
+  const goApp = () =>
+    swap(() => {
+      try {
+        window.history.pushState({}, "", "/app/today");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      } catch {
+        window.location.assign("/app/today");
+      }
+    });
 
   return (
     <div className="wz-root">
       <Styles />
       <div className="wz-seq" key={step}>
-        {step === 1 && <ScreenIntro onNext={() => setStep(2)} />}
-        {step === 2 && <ScreenConnected onNext={() => setStep(3)} />}
+        {step === 1 && <ScreenIntro onNext={() => swap(() => setStep(2))} />}
+        {step === 2 && <ScreenConnected onNext={() => swap(() => setStep(3))} />}
         {step === 3 && <ScreenLife onEnter={goApp} />}
+      </div>
+
+      <div className={`wz-veil${veiling ? " on" : ""}`} aria-hidden>
+        <span className="wz-veil-bloom" />
+        {Array.from({ length: 7 }).map((_, i) => (
+          <span
+            key={i}
+            className="wz-petal"
+            style={{ left: `${8 + i * 13}%`, animationDelay: `${i * 0.05}s`, ["--r" as string]: `${(i % 3) - 1}` }}
+          />
+        ))}
       </div>
     </div>
   );
@@ -678,8 +641,8 @@ function Styles() {
       background:radial-gradient(85% 65% at 50% 0%,#FFF6EE 0%,#FDE9F1 46%,#F8D3E4 100%)}
 
     .wz-seq{width:100%;height:100%;display:grid;place-items:center;
-      animation:wz-seq-in .5s cubic-bezier(.16,.7,.2,1) both}
-    @keyframes wz-seq-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+      animation:wz-seq-in .6s cubic-bezier(.16,.7,.2,1) both}
+    @keyframes wz-seq-in{from{opacity:0;transform:scale(1.035)}to{opacity:1;transform:none}}
 
     /* Stage keeps the film's 16:9 shape on big screens so nothing is ever cropped */
     .wz-stage{position:relative;overflow:hidden;width:100%;height:100dvh;isolation:isolate}
@@ -696,25 +659,20 @@ function Styles() {
       background:radial-gradient(60% 48% at 50% 26%,#FFFDFC 0%,#FFF1F7 44%,#FBDCEA 76%,#F6C9DF 100%)}
     .wz-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
     .wz-scrim{position:absolute;inset:0;pointer-events:none}
-    /* left-weighted: lifts the copy that sits on the left third */
     .wz-scrim--left{background:
       linear-gradient(90deg,rgba(255,245,250,.9) 0%,rgba(255,245,250,.66) 26%,rgba(255,245,250,.16) 48%,rgba(255,245,250,0) 62%),
       linear-gradient(180deg,rgba(255,247,241,.42) 0%,rgba(255,240,246,0) 26%,rgba(255,240,246,0) 72%,rgba(255,244,237,.5) 100%)}
-    /* vertical: clear through the middle (she stands there) */
     .wz-scrim--vert{background:
       linear-gradient(180deg,rgba(255,247,241,.6) 0%,rgba(255,242,247,.18) 20%,rgba(255,240,246,0) 42%,
         rgba(255,240,246,0) 62%,rgba(255,244,237,.36) 86%,rgba(255,242,234,.64) 100%)}
-    /* soft: a gentle all-over veil + stronger top & bottom so the centred title
-       and subtitle read clearly over the film, without hiding her */
     .wz-scrim--soft{background:
       linear-gradient(180deg,rgba(255,247,251,.74) 0%,rgba(255,244,250,.42) 15%,rgba(255,242,248,.12) 30%,
         rgba(255,240,246,0) 45%,rgba(255,240,246,0) 60%,rgba(255,244,238,.34) 84%,rgba(255,242,234,.64) 100%),
       linear-gradient(0deg,rgba(255,249,252,.16),rgba(255,249,252,.16))}
 
     /* ── shared content shell ── */
-    .wz-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+    .wz-content{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;
       padding:clamp(16px,3vh,32px) clamp(16px,3vw,46px) clamp(14px,2.8vh,30px)}
-
     .wz-topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:0 0 auto}
     .wz-topbar--center{justify-content:center}
 
@@ -725,13 +683,6 @@ function Styles() {
       transform-origin:50% 50%;animation:wz-spin 9s linear infinite}
     @keyframes wz-spin{to{transform:rotate(360deg)}}
     .wz-flower-core{fill:#FFF0F6}
-
-    /* ── typewriter caret + gentle reveal ── */
-    .wz-caret{display:inline-block;width:.07em;min-width:2px;height:.92em;margin-left:.05em;
-      background:currentColor;border-radius:2px;vertical-align:-.06em;
-      animation:wz-blink 1s steps(1,end) infinite}
-    @keyframes wz-blink{50%{opacity:0}}
-    .wz-fade{animation:wz-in .7s cubic-bezier(.16,.7,.2,1) both}
     .wz-wordmark{font-family:var(--script);font-weight:700;color:var(--hot);
       font-size:clamp(24px,2.5vw,40px);line-height:.9}
     .wz-tagline{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--ink);
@@ -769,21 +720,30 @@ function Styles() {
     .wz-cta:active{transform:scale(.96)}
     .wz-cta-arrow{width:1.15em;height:1.15em;color:#fff;flex:0 0 auto}
 
-    /* ── word-by-word headline ── */
-    .wz-word{display:inline-block;opacity:0;transform:translateY(9px);
-      animation:wz-word .62s cubic-bezier(.16,.7,.2,1) forwards}
+    /* ── word float-up + one-time sheen sweep on the script line ── */
+    .wz-word{display:inline-block;opacity:0;transform:translateY(12px);
+      animation:wz-word .7s cubic-bezier(.16,.7,.2,1) forwards}
     @keyframes wz-word{to{opacity:1;transform:none}}
+    .wz-sp{display:inline-block;width:.26em}
+    .wz-sheen{position:relative;display:inline-block;overflow:hidden}
+    .wz-sheen::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
+      background:linear-gradient(105deg,transparent 34%,rgba(255,255,255,.85) 50%,transparent 66%);
+      transform:translateX(-120%);
+      animation:wz-sheen 1.5s ease-in-out var(--sheen-delay,1s) 1 forwards}
+    @keyframes wz-sheen{to{transform:translateX(120%)}}
+    .wz-fade{animation:wz-in .7s cubic-bezier(.16,.7,.2,1) both}
+    @keyframes wz-in{to{opacity:1;transform:none}}
 
-    /* ── shared divider (flower between two hairlines) ── */
+    /* ── shared divider ── */
     .wz-divider{display:flex;align-items:center;gap:10px}
     .wz-divider span{height:1.5px;width:clamp(24px,3vw,52px);border-radius:2px;
       background:linear-gradient(90deg,rgba(249,168,212,0),var(--petal))}
     .wz-divider span:last-child{background:linear-gradient(90deg,var(--petal),rgba(249,168,212,0))}
     .wz-divider-flower{width:clamp(12px,1.1vw,16px);height:auto;fill:var(--pink)}
-
     .wz-heart{font-style:normal;color:var(--pink);font-size:.72em;vertical-align:.12em}
 
     /* ══════════ SCREEN 1 ══════════ */
+    .s1-stage{cursor:pointer}
     .s1-body{flex:1;min-height:0;display:flex;flex-direction:column;align-items:flex-start;
       justify-content:center;max-width:min(52%,640px);gap:clamp(10px,2vh,22px);
       padding-left:clamp(0px,1vw,20px)}
@@ -793,10 +753,11 @@ function Styles() {
     .s1-script{font-family:var(--script);font-weight:700;color:var(--hot);
       font-size:clamp(42px,6vw,92px);line-height:.96}
     .s1-sub{margin:0;color:var(--ink);font-weight:600;
-      font-size:clamp(14px,1.35vw,21px);line-height:1.5}
+      font-size:clamp(14px,1.35vw,21px);line-height:1.5;opacity:0;transform:translateY(8px)}
 
     /* ══════════ SCREEN 2 ══════════ */
-    .wz-content.s2{padding-top:clamp(12px,2.2vh,22px)}
+    .wz-content.s2{padding-top:clamp(12px,2.2vh,22px);pointer-events:none}
+    .wz-content.s2 .wz-cta{pointer-events:auto}
     .wz-head{text-align:center;flex:0 0 auto;margin-top:clamp(4px,1vh,10px)}
     .wz-h{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px}
     .wz-h-serif{font-family:var(--serif);font-weight:700;color:var(--plum);
@@ -804,64 +765,54 @@ function Styles() {
     .wz-h-script{font-family:var(--script);font-weight:700;color:var(--hot);
       font-size:clamp(28px,3.5vw,50px);line-height:1.06;margin-top:-2px}
     .wz-sub{margin:clamp(6px,1.1vh,12px) auto 0;color:var(--muted);font-weight:600;
-      font-size:clamp(11px,1.02vw,15px);line-height:1.55}
-    .wz-flower{display:block;width:clamp(13px,1.15vw,17px);height:auto;margin:clamp(5px,.9vh,10px) auto 0;
-      fill:var(--petal);opacity:.95}
+      font-size:clamp(11px,1.02vw,15px);line-height:1.55;opacity:0;transform:translateY(8px)}
 
-    .wz-cols{flex:1;min-height:0;display:grid;align-content:start;
-      padding-top:clamp(6px,2vh,26px);
-      grid-template-columns:minmax(0,1fr) 24% minmax(0,1fr);
-      gap:0 clamp(8px,1.6vw,26px);margin-top:clamp(4px,1vh,12px)}
-    .wz-col{display:flex;flex-direction:column;justify-content:center;gap:clamp(9px,2.5vh,28px)}
-    .wz-col-l{align-items:flex-end}
-    .wz-col-r{align-items:flex-start}
-    .wz-col-l .wz-card:nth-child(1){margin-right:clamp(10px,1.9vw,32px)}
-    .wz-col-l .wz-card:nth-child(3){margin-right:clamp(12px,2.2vw,38px)}
-    .wz-col-r .wz-card:nth-child(2){margin-left:clamp(10px,1.9vw,32px)}
-    .wz-col-r .wz-card:nth-child(4){margin-left:clamp(8px,1.5vw,26px)}
+    /* threads + hub */
+    .wz-threads{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:visible}
+    .wz-threads path{fill:none;stroke:rgba(233,30,132,.3);stroke-width:1.3;stroke-linecap:round;
+      vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 3px rgba(233,30,132,.4));
+      opacity:0;animation:wz-thread-in 1s ease forwards}
+    @keyframes wz-thread-in{to{opacity:1}}
+    .wz-hub{position:absolute;z-index:1;transform:translate(-50%,-50%);
+      width:clamp(30px,3.2vw,52px);height:clamp(30px,3.2vw,52px);display:grid;place-items:center;
+      border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(255,222,240,.5) 60%,transparent 72%);
+      opacity:0;animation:wz-hub-in .8s .5s cubic-bezier(.2,1.2,.4,1) forwards}
+    @keyframes wz-hub-in{to{opacity:1}}
+    .wz-hub::before{content:"";position:absolute;inset:-40%;border-radius:50%;
+      background:radial-gradient(circle,rgba(233,30,132,.28),transparent 66%);
+      animation:wz-hub-pulse 3.2s ease-in-out infinite}
+    @keyframes wz-hub-pulse{0%,100%{transform:scale(.86);opacity:.6}50%{transform:scale(1.12);opacity:1}}
+    .wz-hub-flower{position:relative;width:64%;height:64%;fill:var(--hot);
+      filter:drop-shadow(0 2px 6px rgba(219,39,119,.5))}
 
-    .wz-card{display:flex;align-items:center;gap:clamp(7px,.75vw,12px);
-      padding:clamp(6px,.75vh,11px) clamp(12px,1.3vw,22px) clamp(6px,.75vh,11px) clamp(6px,.6vw,10px);
-      border-radius:clamp(13px,1.15vw,19px);background:var(--card);
-      backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);
-      border:1px solid var(--card-line);
-      box-shadow:0 10px 26px -12px rgba(190,24,93,.42),inset 0 1px 0 rgba(255,255,255,.7);
-      opacity:0;transform:translateY(10px) scale(.985);
-      animation:wz-in .9s cubic-bezier(.16,.7,.2,1) forwards}
-    @keyframes wz-in{to{opacity:1;transform:none}}
-    .wz-badge{flex:0 0 auto;display:grid;place-items:center;
-      width:clamp(34px,3.1vw,52px);height:clamp(34px,3.1vw,52px);border-radius:50%;
+    /* constellation features (desktop) — icon anchored at (x,y), label to the side */
+    .wz-constellation{position:absolute;inset:0;z-index:2;pointer-events:none;display:block}
+    .wz-feat{position:absolute;transform:translate(-50%,-50%);
+      opacity:0;animation:wz-feat-in .7s cubic-bezier(.2,1.15,.4,1) forwards}
+    @keyframes wz-feat-in{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+    .wz-feat-ico{display:grid;place-items:center;
+      width:clamp(38px,3.4vw,58px);height:clamp(38px,3.4vw,58px);border-radius:50%;
       background:linear-gradient(160deg,#F871B0 0%,var(--pink) 46%,var(--deep) 100%);
-      box-shadow:0 6px 14px -5px rgba(219,39,119,.72),inset 0 1px 0 rgba(255,255,255,.55);
-      transform-origin:50% 50%;animation:wz-badge-breathe 4.5s ease-in-out infinite}
-    @keyframes wz-badge-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.055)}}
-    .wz-badge svg{width:56%;height:56%;fill:none;stroke:#fff;stroke-width:1.7;
+      box-shadow:0 8px 18px -6px rgba(219,39,119,.7),0 0 0 5px rgba(255,255,255,.35),
+        inset 0 1px 0 rgba(255,255,255,.55);
+      animation:wz-badge-breathe 4.6s ease-in-out infinite}
+    @keyframes wz-badge-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+    .wz-feat-ico svg{width:54%;height:54%;fill:none;stroke:#fff;stroke-width:1.7;
       stroke-linecap:round;stroke-linejoin:round}
-    /* photographic badge — a small Today/Read thumbnail cropped into the circle,
-       ringed in white + pink so it reads as one unit and pops from the film */
-    .wz-badge--img{overflow:hidden;padding:0;position:relative;
-      border:2px solid rgba(255,255,255,.92);
-      box-shadow:0 7px 16px -6px rgba(219,39,119,.75),0 0 0 1px rgba(219,39,119,.25),
-        inset 0 1px 0 rgba(255,255,255,.4);
-      opacity:0;transform:scale(.55) rotate(-10deg);
-      animation:wz-badge-in .7s cubic-bezier(.2,1.25,.4,1) forwards,
-        wz-badge-breathe 4.8s ease-in-out 1s infinite}
-    @keyframes wz-badge-in{to{opacity:1;transform:none}}
-    .wz-badge--img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-      object-position:center;border-radius:50%}
-    /* a soft inner vignette unifies the varied photos tonally */
-    .wz-badge--img::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
-      box-shadow:inset 0 0 10px rgba(190,24,93,.35),inset 0 1px 0 rgba(255,255,255,.4)}
-    .wz-label{font-weight:700;color:var(--ink);line-height:1.26;
-      font-size:clamp(10.5px,1.03vw,15.5px)}
-    .wz-underline{display:block;width:clamp(14px,1.4vw,22px);height:2px;border-radius:2px;
-      background:var(--petal);margin-top:clamp(3px,.45vh,6px);opacity:.95}
+    .wz-feat-lbl{position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;
+      font-weight:700;color:var(--ink);line-height:1.24;font-size:clamp(11px,1.03vw,16px);
+      text-shadow:0 1px 10px rgba(255,244,250,.9),0 1px 2px rgba(255,255,255,.9)}
+    .wz-feat.is-l .wz-feat-lbl{right:calc(100% + clamp(8px,.7vw,13px));text-align:right}
+    .wz-feat.is-r .wz-feat-lbl{left:calc(100% + clamp(8px,.7vw,13px));text-align:left}
+
+    /* mobile fallback list (hidden on desktop) */
+    .wz-feat-grid{display:none}
 
     .wz-foot-row{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
-      gap:clamp(8px,1.4vh,16px)}
+      gap:clamp(8px,1.4vh,16px);margin-top:auto}
     .wz-foot{margin:0;text-align:center;font-family:var(--serif);font-weight:500;
       color:var(--ink);font-size:clamp(11px,1.05vw,16px);
-      opacity:0;animation:wz-in .9s .95s cubic-bezier(.16,.7,.2,1) forwards}
+      opacity:0;animation:wz-in .9s 1.9s cubic-bezier(.16,.7,.2,1) forwards;transform:translateY(6px)}
 
     /* ══════════ SCREEN 3 ══════════ */
     .wz-content.s3{padding-bottom:clamp(16px,3vh,30px)}
@@ -875,17 +826,14 @@ function Styles() {
       font-size:clamp(26px,3.5vw,54px);line-height:1}
     .s3-body-copy{margin:0;color:var(--ink);font-weight:600;
       font-size:clamp(12px,1.05vw,16.5px);line-height:1.55;max-width:26em;opacity:.94;
-      animation:wz-in .9s .7s cubic-bezier(.16,.7,.2,1) both}
+      animation:wz-in .9s .7s cubic-bezier(.16,.7,.2,1) both;transform:translateY(8px)}
     .s3-divider{animation:wz-in .9s .8s both}
     .s3-space{margin:0;color:var(--ink);font-weight:600;line-height:1.5;
-      font-size:clamp(12px,1.08vw,17px);animation:wz-in .9s .9s cubic-bezier(.16,.7,.2,1) both}
-    .s3-space-strong{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:var(--plum);
-      font-size:1.06em}
+      font-size:clamp(12px,1.08vw,17px);animation:wz-in .9s .9s cubic-bezier(.16,.7,.2,1) both;transform:translateY(8px)}
+    .s3-space-strong{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:var(--plum);font-size:1.06em}
     .s3-space-flower{width:1.05em;height:1.05em;fill:var(--pink)}
-    .s3-space-script{font-style:normal;font-family:var(--script);color:var(--hot);
-      font-size:1.35em;font-weight:700}
+    .s3-space-script{font-style:normal;font-family:var(--script);color:var(--hot);font-size:1.35em;font-weight:700}
 
-    /* floating cards layer */
     .s3-cards{position:absolute;inset:0;z-index:2;pointer-events:none}
     .s3-card{position:absolute;width:clamp(104px,11vw,176px);
       padding:clamp(6px,.7vw,11px) clamp(8px,.85vw,13px);border-radius:clamp(11px,1vw,16px);
@@ -897,78 +845,83 @@ function Styles() {
     @keyframes wz-card-pop{to{opacity:1;transform:none}}
     .s3-card-top{display:flex;align-items:center;gap:clamp(6px,.6vw,9px)}
     .s3-card-heads{display:flex;flex-direction:column;min-width:0;flex:1}
-    .s3-card-heads b{font-weight:800;color:var(--ink);line-height:1.15;
-      font-size:clamp(11px,.92vw,15px)}
+    .s3-card-heads b{font-weight:800;color:var(--ink);line-height:1.15;font-size:clamp(11px,.92vw,15px)}
     .s3-card-heads small{color:var(--muted);font-weight:600;font-size:clamp(9px,.72vw,11.5px)}
     .s3-badge{flex:0 0 auto;display:grid;place-items:center;
       width:clamp(22px,2vw,34px);height:clamp(22px,2vw,34px);border-radius:50%;
       background:linear-gradient(160deg,#F871B0 0%,var(--pink) 46%,var(--deep) 100%);
       box-shadow:0 5px 12px -5px rgba(219,39,119,.7),inset 0 1px 0 rgba(255,255,255,.5)}
-    .s3-badge svg{width:56%;height:56%;fill:none;stroke:#fff;stroke-width:1.8;
-      stroke-linecap:round;stroke-linejoin:round}
+    .s3-badge svg{width:56%;height:56%;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
     .s3-mini-heart{font-style:normal;color:var(--pink);font-size:clamp(11px,1vw,15px);align-self:flex-start}
     .s3-emoji{font-size:clamp(15px,1.5vw,22px);line-height:1}
-
     .s3-thumb{position:relative;margin-top:clamp(6px,.7vw,9px);border-radius:clamp(9px,.85vw,14px);
       overflow:hidden;aspect-ratio:16/10;background:#FBE3EF}
     .s3-thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .s3-thumb-check{position:absolute;right:6px;bottom:6px;display:grid;place-items:center;
       width:clamp(18px,1.5vw,24px);height:clamp(18px,1.5vw,24px);border-radius:50%;
-      background:linear-gradient(160deg,var(--pink),var(--deep));
-      box-shadow:0 3px 8px -2px rgba(219,39,119,.7)}
+      background:linear-gradient(160deg,var(--pink),var(--deep));box-shadow:0 3px 8px -2px rgba(219,39,119,.7)}
     .s3-thumb-check svg{width:64%;height:64%}
-
-    .s3-note{margin:clamp(4px,.5vw,7px) 0 0;color:var(--ink);font-weight:600;line-height:1.35;
-      font-size:clamp(10px,.82vw,13px)}
+    .s3-note{margin:clamp(4px,.5vw,7px) 0 0;color:var(--ink);font-weight:600;line-height:1.35;font-size:clamp(10px,.82vw,13px)}
     .s3-note-dim{color:var(--muted);font-weight:600;margin-top:2px}
     .s3-note-strong{font-weight:800;color:var(--plum);margin-top:clamp(4px,.5vw,7px)}
     .s3-water-n{color:var(--hot);font-weight:800;font-size:1.25em}
     .s3-bar{margin-top:clamp(5px,.55vw,8px);height:clamp(6px,.6vw,9px);border-radius:999px;
       background:rgba(236,72,153,.16);overflow:hidden}
-    .s3-bar span{display:block;height:100%;border-radius:999px;
-      background:linear-gradient(90deg,#F871B0,var(--deep))}
+    .s3-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#F871B0,var(--deep))}
     .s3-week{display:flex;gap:clamp(3px,.35vw,5px);margin-top:clamp(5px,.55vw,8px)}
     .s3-week span{flex:1;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;
       font-size:clamp(7px,.62vw,9.5px);font-weight:800;color:var(--muted);
       background:rgba(236,72,153,.12);border:1.5px dashed rgba(236,72,153,.28)}
-    .s3-week span.on{color:#fff;background:linear-gradient(160deg,var(--pink),var(--deep));
-      border:none}
+    .s3-week span.on{color:#fff;background:linear-gradient(160deg,var(--pink),var(--deep));border:none}
     .s3-week span svg{width:64%;height:64%}
     .s3-plan-row{display:flex;align-items:center;gap:clamp(5px,.5vw,8px);margin:clamp(4px,.45vw,6px) 0 0;
       font-size:clamp(9px,.78vw,12.5px);font-weight:600;color:var(--ink)}
-    .s3-plan-row i{flex:0 0 auto;width:clamp(5px,.5vw,7px);height:clamp(5px,.5vw,7px);border-radius:50%;
-      background:var(--pink)}
+    .s3-plan-row i{flex:0 0 auto;width:clamp(5px,.5vw,7px);height:clamp(5px,.5vw,7px);border-radius:50%;background:var(--pink)}
     .s3-plan-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .s3-plan-row small{color:var(--muted);font-weight:700;font-size:.86em;flex:0 0 auto}
 
-    /* ── tablet: keep cards but tighten ── */
-    @media (max-width:1100px){
-      .s3-card{width:clamp(108px,17vw,168px)}
-    }
+    /* ── soft bloom-wipe transition veil ── */
+    .wz-veil{position:absolute;inset:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .3s ease}
+    .wz-veil.on{opacity:1}
+    .wz-veil-bloom{position:absolute;inset:0;transform:scale(.5);opacity:0;
+      background:radial-gradient(circle at 50% 54%,rgba(255,244,250,.97) 0%,rgba(251,209,232,.82) 38%,
+        rgba(246,201,223,.42) 68%,rgba(246,201,223,0) 100%)}
+    .wz-veil.on .wz-veil-bloom{animation:wz-bloom .76s ease both}
+    @keyframes wz-bloom{0%{transform:scale(.5);opacity:0}38%{opacity:1}100%{transform:scale(1.5);opacity:0}}
+    .wz-petal{position:absolute;top:-6%;width:14px;height:14px;border-radius:60% 40% 60% 40%;
+      background:radial-gradient(circle at 34% 30%,#fff,var(--petal) 70%);opacity:0}
+    .wz-veil.on .wz-petal{animation:wz-petal-fall .8s ease-in both}
+    @keyframes wz-petal-fall{0%{opacity:0;transform:translateY(0) rotate(0)}30%{opacity:.9}
+      100%{opacity:0;transform:translateY(70dvh) rotate(calc(var(--r) * 120deg))}}
 
-    /* ── mobile: cinematic — anchor copy over a strong bottom scrim ── */
+    /* ── mobile ── */
     @media (max-width:767px){
       .wz-scrim--left{background:
         linear-gradient(180deg,rgba(255,245,250,.5) 0%,rgba(255,245,250,.05) 24%,
           rgba(255,245,250,0) 48%,rgba(255,244,249,.72) 82%,rgba(255,243,248,.94) 100%)}
       .wz-content{padding:clamp(14px,3vh,26px) 20px clamp(20px,4vh,34px)}
 
-      /* screen 1 */
       .s1-body{max-width:100%;align-items:center;justify-content:flex-end;text-align:center;
         padding-bottom:clamp(6px,2vh,18px)}
       .s1-serif{font-size:clamp(28px,9vw,40px)}
       .s1-script{font-size:clamp(40px,13vw,60px)}
       .s1-sub{font-size:15px}
 
-      /* screen 2 */
-      .wz-cols{grid-template-columns:minmax(0,1fr) 13% minmax(0,1fr);gap:0 6px}
-      .wz-card{gap:7px;padding:6px 9px 6px 6px}
-      .wz-col-l .wz-card,.wz-col-r .wz-card{margin:0}
-      .wz-label{font-size:10.5px}
-      .wz-badge{width:29px;height:29px}
+      /* screen 2: hide the constellation + threads; show a tidy two-col list */
+      .wz-threads,.wz-hub,.wz-constellation{display:none}
+      .wz-content.s2{pointer-events:auto}
+      .wz-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px clamp(8px,3vw,16px);
+        margin:clamp(14px,3vh,26px) 0 auto;padding-top:clamp(8px,2vh,18px)}
+      .wz-feat-row{display:flex;align-items:center;gap:9px;
+        background:rgba(255,255,255,.66);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+        border:1px solid rgba(255,255,255,.85);border-radius:14px;padding:7px 10px 7px 7px;
+        box-shadow:0 8px 20px -12px rgba(190,24,93,.42);
+        opacity:0;transform:translateY(10px);animation:wz-word .7s cubic-bezier(.16,.7,.2,1) forwards}
+      .wz-feat-row .wz-feat-ico{width:30px;height:30px;flex:0 0 auto;position:static;animation:none}
+      .wz-feat-row .wz-feat-lbl{position:static;transform:none;white-space:normal;
+        font-size:12px;line-height:1.2;text-shadow:none}
 
-      /* screen 3 — the floating cluster is desktop art; on phones we lead with
-         the promise + CTA over the film, and show a compact proof strip */
+      /* screen 3 — floating cluster is desktop art; lead with promise + CTA */
       .s3-cards{display:none}
       .s3-body{max-width:100%;align-items:center;text-align:center;justify-content:flex-end;
         padding-bottom:clamp(4px,1.5vh,14px)}
@@ -980,16 +933,17 @@ function Styles() {
     }
     @media (max-height:520px) and (min-width:768px){
       .wz-sub{display:none}
-      .wz-col{gap:6px}
     }
 
     @media (prefers-reduced-motion:reduce){
-      .wz-seq,.wz-word,.wz-card,.wz-foot,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space,
-      .wz-fade,.wz-badge,.wz-badge--img{
+      .wz-seq,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space,
+      .wz-feat,.wz-feat-ico,.wz-hub,.wz-foot,.wz-feat-row{
         animation-duration:.01s !important;animation-delay:0s !important}
       .wz-cta{animation:wz-cta-in .01s forwards}
-      .wz-brand-mark{animation:none}
-      .wz-caret{display:none}
+      .wz-brand-mark,.wz-hub::before{animation:none}
+      .wz-sheen::after{display:none}
+      .wz-threads path{opacity:1;animation:none}
+      .s1-sub,.wz-sub,.s3-body-copy,.s3-space,.wz-foot{opacity:1 !important;transform:none !important}
     }
     `}</style>
   );
