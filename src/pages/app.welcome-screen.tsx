@@ -291,12 +291,12 @@ type Node = {
 };
 const NODES: Node[] = [
   { icon: "lotus", a: "Understand", b: "your rhythm", img: "/images/setup-cycle.webp", side: "left", top: "11%" },
-  { icon: "meditate", a: "Move", b: "your body", img: "/images/setup-movement.webp", side: "left", top: "33%" },
+  { icon: "meditate", a: "Move", b: "your body", img: "/images/workout-hero-session.webp", side: "left", top: "33%" },
   { icon: "bowl", a: "Nourish", b: "yourself", img: "/images/setup-meals.webp", side: "left", top: "55%" },
   { icon: "check", a: "Build better", b: "habits", img: "/images/setup-goal.webp", side: "left", top: "77%" },
-  { icon: "brain", a: "Clear", b: "your mind", img: "/images/read-mindset.webp", side: "right", top: "11%" },
+  { icon: "brain", a: "Clear", b: "your mind", img: "/images/welcome-mind.webp", side: "right", top: "11%" },
   { icon: "wallet", a: "Feel more", b: "in control", img: "/images/read-money.webp", side: "right", top: "33%" },
-  { icon: "calheart", a: "Remember", b: "what matters", img: "/images/cycle-journal-hero.webp", side: "right", top: "55%" },
+  { icon: "calheart", a: "Remember", b: "what matters", img: "/images/welcome-remember.webp", side: "right", top: "55%" },
   { icon: "droplet", a: "Take care", b: "of yourself", img: "/images/read-selfcare.webp", side: "right", top: "77%" },
 ];
 
@@ -837,14 +837,15 @@ function Styles() {
       .s1-script{font-size:clamp(40px,13vw,60px)}
       .s1-sub{font-size:15px}
 
-      /* screen 2: the flanking cards become a tidy two-column list on phones
-         (thumbnails dropped so all eight fit); she stays visible behind */
+      /* screen 2: the same picture-cards, compacted into a two-column grid on
+         phones (flatter thumbnails so all eight fit) */
       .wz-content.s2{pointer-events:auto}
       .s2-flank{position:static;z-index:auto;display:grid;grid-template-columns:1fr 1fr;
-        gap:9px clamp(8px,3vw,14px);margin:clamp(12px,3vh,24px) 0 auto;padding-top:clamp(8px,2vh,16px)}
-      .s2-flank .s3-card{position:static;width:auto;padding:8px 10px 8px 7px}
-      .s2-flank .s3-thumb{display:none}
-      .s2-flank .s3-card-heads b{font-size:12px}
+        gap:8px clamp(7px,2.5vw,12px);margin:clamp(8px,2vh,18px) 0 auto;padding-top:clamp(6px,1.5vh,12px)}
+      .s2-flank .s3-card{position:static;width:auto;padding:6px 8px 6px 6px}
+      .s2-flank .s3-card-heads b{font-size:11.5px}
+      .s2-flank .s3-thumb{aspect-ratio:16/8;margin-top:5px}
+      .s2-flank .s3-badge{width:26px;height:26px}
 
       /* screen 3 — floating cluster is desktop art; lead with promise + CTA */
       .s3-cards{display:none}
