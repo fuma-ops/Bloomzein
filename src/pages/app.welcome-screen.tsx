@@ -239,10 +239,13 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
     done.current = true;
     onNext();
   };
+  // When the (short) film ends, let its final frame settle for a beat before
+  // the transition, so it reads as a gentle pause — not a cut mid-movement.
+  const settleThenGo = () => window.setTimeout(go, 1100);
 
   return (
     <div className="wz-stage s1-stage" onClick={go} title="Continue">
-      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" loop={false} onEnded={go} />
+      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" loop={false} onEnded={settleThenGo} />
       <div className="wz-content s1">
         <div className="wz-topbar">
           <BrandLockup />
@@ -279,14 +282,14 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
 type Node = { icon: keyof typeof ico; a: string; b: string; x: number; y: number; side: "l" | "r" };
 const HUB = { x: 51, y: 45 };
 const NODES: Node[] = [
-  { icon: "lotus", a: "Understand", b: "your rhythm", x: 25, y: 29, side: "l" },
-  { icon: "meditate", a: "Move", b: "your body", x: 20, y: 45, side: "l" },
-  { icon: "bowl", a: "Nourish", b: "yourself", x: 22, y: 61, side: "l" },
-  { icon: "check", a: "Build better", b: "habits", x: 27, y: 76, side: "l" },
-  { icon: "brain", a: "Clear", b: "your mind", x: 75, y: 29, side: "r" },
-  { icon: "wallet", a: "Feel more", b: "in control", x: 80, y: 45, side: "r" },
-  { icon: "calheart", a: "Remember", b: "what matters", x: 78, y: 61, side: "r" },
-  { icon: "droplet", a: "Take care", b: "of yourself", x: 73, y: 76, side: "r" },
+  { icon: "lotus", a: "Understand", b: "your rhythm", x: 23, y: 27, side: "l" },
+  { icon: "meditate", a: "Move", b: "your body", x: 20, y: 44, side: "l" },
+  { icon: "bowl", a: "Nourish", b: "yourself", x: 21, y: 61, side: "l" },
+  { icon: "check", a: "Build better", b: "habits", x: 25, y: 78, side: "l" },
+  { icon: "brain", a: "Clear", b: "your mind", x: 77, y: 27, side: "r" },
+  { icon: "wallet", a: "Feel more", b: "in control", x: 80, y: 44, side: "r" },
+  { icon: "calheart", a: "Remember", b: "what matters", x: 79, y: 61, side: "r" },
+  { icon: "droplet", a: "Take care", b: "of yourself", x: 75, y: 78, side: "r" },
 ];
 
 function FeatureIcon({ icon }: { icon: keyof typeof ico }) {
@@ -350,11 +353,6 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
               <em className="wz-heart">♡</em>
             </span>
           </h1>
-          <p className="wz-sub wz-fade" style={{ animationDelay: "1s" }}>
-            Your mood. Your movement. Your meals.
-            <br />
-            Your plans. Your little everyday moments.
-          </p>
         </header>
 
         {/* mobile fallback: a tidy two-column list (constellation is desktop art) */}
@@ -370,9 +368,6 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
         </div>
 
         <div className="wz-foot-row">
-          <p className="wz-foot">
-            One beautiful space. Everything that matters to you. <em className="wz-heart">♡</em>
-          </p>
           <Cta label="Show me my Bloom" onClick={onNext} delay={1} />
         </div>
       </div>
@@ -785,25 +780,28 @@ function Styles() {
     .wz-hub-flower{position:relative;width:64%;height:64%;fill:var(--hot);
       filter:drop-shadow(0 2px 6px rgba(219,39,119,.5))}
 
-    /* constellation features (desktop) — icon anchored at (x,y), label to the side */
+    /* constellation features (desktop) — each is a small frosted chip so the
+       label stays crisp over the film; the chip is anchored at (x,y) */
     .wz-constellation{position:absolute;inset:0;z-index:2;pointer-events:none;display:block}
     .wz-feat{position:absolute;transform:translate(-50%,-50%);
+      display:flex;align-items:center;gap:clamp(7px,.7vw,11px);
+      padding:clamp(5px,.55vw,9px) clamp(11px,1vw,17px) clamp(5px,.55vw,9px) clamp(5px,.45vw,8px);
+      border-radius:clamp(13px,1.2vw,20px);
+      background:rgba(255,255,255,.74);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,.92);
+      box-shadow:0 14px 32px -14px rgba(190,24,93,.5),inset 0 1px 0 rgba(255,255,255,.8);
       opacity:0;animation:wz-feat-in .7s cubic-bezier(.2,1.15,.4,1) forwards}
-    @keyframes wz-feat-in{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-    .wz-feat-ico{display:grid;place-items:center;
-      width:clamp(38px,3.4vw,58px);height:clamp(38px,3.4vw,58px);border-radius:50%;
+    @keyframes wz-feat-in{from{opacity:0;transform:translate(-50%,-50%) translateY(10px) scale(.9)}
+      to{opacity:1;transform:translate(-50%,-50%)}}
+    .wz-feat-ico{flex:0 0 auto;display:grid;place-items:center;
+      width:clamp(32px,2.9vw,48px);height:clamp(32px,2.9vw,48px);border-radius:50%;
       background:linear-gradient(160deg,#F871B0 0%,var(--pink) 46%,var(--deep) 100%);
-      box-shadow:0 8px 18px -6px rgba(219,39,119,.7),0 0 0 5px rgba(255,255,255,.35),
-        inset 0 1px 0 rgba(255,255,255,.55);
+      box-shadow:0 6px 14px -5px rgba(219,39,119,.72),inset 0 1px 0 rgba(255,255,255,.55);
       animation:wz-badge-breathe 4.6s ease-in-out infinite}
-    @keyframes wz-badge-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+    @keyframes wz-badge-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
     .wz-feat-ico svg{width:54%;height:54%;fill:none;stroke:#fff;stroke-width:1.7;
       stroke-linecap:round;stroke-linejoin:round}
-    .wz-feat-lbl{position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;
-      font-weight:700;color:var(--ink);line-height:1.24;font-size:clamp(11px,1.03vw,16px);
-      text-shadow:0 1px 10px rgba(255,244,250,.9),0 1px 2px rgba(255,255,255,.9)}
-    .wz-feat.is-l .wz-feat-lbl{right:calc(100% + clamp(8px,.7vw,13px));text-align:right}
-    .wz-feat.is-r .wz-feat-lbl{left:calc(100% + clamp(8px,.7vw,13px));text-align:left}
+    .wz-feat-lbl{font-weight:700;color:var(--ink);line-height:1.24;font-size:clamp(11px,1.02vw,16px)}
 
     /* mobile fallback list (hidden on desktop) */
     .wz-feat-grid{display:none}
