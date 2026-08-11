@@ -277,68 +277,29 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
 
 /* ════════════════════════════════════════════════════════════════════════════
    SCREEN 2 — "Everything in your life, beautifully connected."
-   The eight app pillars as a constellation, linked by light-threads to a hub.
+   A centred vertical list: each pillar reveals one at a time — the icon glides
+   in from the left into a big circle, its label glides in from the right — the
+   rows stacking down a single centred connector line.
    ════════════════════════════════════════════════════════════════════════════ */
-type Node = { icon: keyof typeof ico; a: string; b: string; x: number; y: number; side: "l" | "r" };
-const HUB = { x: 51, y: 45 };
+type Node = { icon: keyof typeof ico; a: string; b: string };
 const NODES: Node[] = [
-  { icon: "lotus", a: "Understand", b: "your rhythm", x: 23, y: 27, side: "l" },
-  { icon: "meditate", a: "Move", b: "your body", x: 20, y: 44, side: "l" },
-  { icon: "bowl", a: "Nourish", b: "yourself", x: 21, y: 61, side: "l" },
-  { icon: "check", a: "Build better", b: "habits", x: 25, y: 78, side: "l" },
-  { icon: "brain", a: "Clear", b: "your mind", x: 77, y: 27, side: "r" },
-  { icon: "wallet", a: "Feel more", b: "in control", x: 80, y: 44, side: "r" },
-  { icon: "calheart", a: "Remember", b: "what matters", x: 79, y: 61, side: "r" },
-  { icon: "droplet", a: "Take care", b: "of yourself", x: 75, y: 78, side: "r" },
+  { icon: "lotus", a: "Understand", b: "your rhythm" },
+  { icon: "meditate", a: "Move", b: "your body" },
+  { icon: "bowl", a: "Nourish", b: "yourself" },
+  { icon: "check", a: "Build better", b: "habits" },
+  { icon: "brain", a: "Clear", b: "your mind" },
+  { icon: "wallet", a: "Feel more", b: "in control" },
+  { icon: "calheart", a: "Remember", b: "what matters" },
+  { icon: "droplet", a: "Take care", b: "of yourself" },
 ];
-
-function FeatureIcon({ icon }: { icon: keyof typeof ico }) {
-  return (
-    <span className="wz-feat-ico">
-      <svg viewBox="0 0 24 24" aria-hidden>
-        {ico[icon]}
-      </svg>
-    </span>
-  );
-}
+const REVEAL_BASE = 0.35; // s before the first row
+const REVEAL_STEP = 0.5; // s between rows — paced so each can be read
 
 function ScreenConnected({ onNext }: { onNext: () => void }) {
+  const total = REVEAL_BASE + NODES.length * REVEAL_STEP;
   return (
     <div className="wz-stage">
       <Film src="/videos/entry-2.mp4" scrim="wz-scrim--soft" />
-
-      {/* threads + hub sit above the film but below the text/CTA */}
-      <svg className="wz-threads" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-        {NODES.map((n, i) => (
-          <path
-            key={n.a + n.b}
-            pathLength={1}
-            d={`M ${n.x} ${n.y} Q ${(n.x + HUB.x) / 2} ${(n.y + HUB.y) / 2 - 5} ${HUB.x} ${HUB.y}`}
-            style={{ animationDelay: `${0.6 + i * 0.16}s` }}
-          />
-        ))}
-      </svg>
-      <div className="wz-hub" style={{ left: `${HUB.x}%`, top: `${HUB.y}%` }} aria-hidden>
-        <Sakura className="wz-hub-flower" />
-      </div>
-
-      {/* desktop constellation */}
-      <div className="wz-constellation" aria-hidden>
-        {NODES.map((n, i) => (
-          <div
-            key={n.a + n.b}
-            className={`wz-feat ${n.side === "l" ? "is-l" : "is-r"}`}
-            style={{ left: `${n.x}%`, top: `${n.y}%`, animationDelay: `${0.65 + i * 0.16}s` }}
-          >
-            <FeatureIcon icon={n.icon} />
-            <span className="wz-feat-lbl">
-              {n.a}
-              <br />
-              {n.b}
-            </span>
-          </div>
-        ))}
-      </div>
 
       <div className="wz-content s2">
         <div className="wz-topbar wz-topbar--center">
@@ -355,20 +316,29 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
           </h1>
         </header>
 
-        {/* mobile fallback: a tidy two-column list (constellation is desktop art) */}
-        <div className="wz-feat-grid" aria-hidden>
-          {NODES.map((n, i) => (
-            <div key={n.a + n.b} className="wz-feat-row" style={{ animationDelay: `${0.4 + i * 0.09}s` }}>
-              <FeatureIcon icon={n.icon} />
-              <span className="wz-feat-lbl">
-                {n.a} {n.b}
-              </span>
-            </div>
-          ))}
+        {/* the sequential list — a single centred connector line runs through
+            every icon, so the rows read as one connected column */}
+        <div className="wz-list">
+          <span className="wz-list-spine" style={{ animationDuration: `${total}s` }} aria-hidden />
+          {NODES.map((n, i) => {
+            const d = `${REVEAL_BASE + i * REVEAL_STEP}s`;
+            return (
+              <div className="wz-row" key={n.a + n.b}>
+                <span className="wz-row-ico" style={{ animationDelay: d }}>
+                  <svg viewBox="0 0 24 24" aria-hidden>
+                    {ico[n.icon]}
+                  </svg>
+                </span>
+                <span className="wz-row-txt" style={{ animationDelay: d }}>
+                  <b>{n.a}</b> {n.b}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="wz-foot-row">
-          <Cta label="Show me my Bloom" onClick={onNext} delay={1} />
+          <Cta label="Show me my Bloom" onClick={onNext} delay={0.5} />
         </div>
       </div>
     </div>
@@ -759,58 +729,39 @@ function Styles() {
       font-size:clamp(19px,2.35vw,34px);line-height:1.14}
     .wz-h-script{font-family:var(--script);font-weight:700;color:var(--hot);
       font-size:clamp(28px,3.5vw,50px);line-height:1.06;margin-top:-2px}
-    .wz-sub{margin:clamp(6px,1.1vh,12px) auto 0;color:var(--muted);font-weight:600;
-      font-size:clamp(11px,1.02vw,15px);line-height:1.55;opacity:0;transform:translateY(8px)}
 
-    /* threads + hub */
-    .wz-threads{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:visible}
-    .wz-threads path{fill:none;stroke:rgba(233,30,132,.3);stroke-width:1.3;stroke-linecap:round;
-      vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 3px rgba(233,30,132,.4));
-      opacity:0;animation:wz-thread-in 1s ease forwards}
-    @keyframes wz-thread-in{to{opacity:1}}
-    .wz-hub{position:absolute;z-index:1;transform:translate(-50%,-50%);
-      width:clamp(30px,3.2vw,52px);height:clamp(30px,3.2vw,52px);display:grid;place-items:center;
-      border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(255,222,240,.5) 60%,transparent 72%);
-      opacity:0;animation:wz-hub-in .8s .5s cubic-bezier(.2,1.2,.4,1) forwards}
-    @keyframes wz-hub-in{to{opacity:1}}
-    .wz-hub::before{content:"";position:absolute;inset:-40%;border-radius:50%;
-      background:radial-gradient(circle,rgba(233,30,132,.28),transparent 66%);
-      animation:wz-hub-pulse 3.2s ease-in-out infinite}
-    @keyframes wz-hub-pulse{0%,100%{transform:scale(.86);opacity:.6}50%{transform:scale(1.12);opacity:1}}
-    .wz-hub-flower{position:relative;width:64%;height:64%;fill:var(--hot);
-      filter:drop-shadow(0 2px 6px rgba(219,39,119,.5))}
-
-    /* constellation features (desktop) — each is a small frosted chip so the
-       label stays crisp over the film; the chip is anchored at (x,y) */
-    .wz-constellation{position:absolute;inset:0;z-index:2;pointer-events:none;display:block}
-    .wz-feat{position:absolute;transform:translate(-50%,-50%);
-      display:flex;align-items:center;gap:clamp(7px,.7vw,11px);
-      padding:clamp(5px,.55vw,9px) clamp(11px,1vw,17px) clamp(5px,.55vw,9px) clamp(5px,.45vw,8px);
-      border-radius:clamp(13px,1.2vw,20px);
-      background:rgba(255,255,255,.74);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-      border:1px solid rgba(255,255,255,.92);
-      box-shadow:0 14px 32px -14px rgba(190,24,93,.5),inset 0 1px 0 rgba(255,255,255,.8);
-      opacity:0;animation:wz-feat-in .7s cubic-bezier(.2,1.15,.4,1) forwards}
-    @keyframes wz-feat-in{from{opacity:0;transform:translate(-50%,-50%) translateY(10px) scale(.9)}
-      to{opacity:1;transform:translate(-50%,-50%)}}
-    .wz-feat-ico{flex:0 0 auto;display:grid;place-items:center;
-      width:clamp(32px,2.9vw,48px);height:clamp(32px,2.9vw,48px);border-radius:50%;
+    /* sequential centred list with a single connector spine through the icons */
+    .wz-list{position:relative;flex:0 1 auto;min-height:0;margin:auto 0;width:min(540px,86%);align-self:center;
+      display:flex;flex-direction:column;gap:clamp(5px,.95vh,12px);
+      --ico:clamp(40px,3.7vw,64px)}
+    .wz-list-spine{position:absolute;left:calc(var(--ico) / 2);top:calc(var(--ico) / 2);
+      bottom:calc(var(--ico) / 2);width:2px;border-radius:2px;transform:translateX(-50%);
+      transform-origin:top;background:linear-gradient(180deg,rgba(233,30,132,.55),rgba(233,30,132,.22));
+      box-shadow:0 0 6px rgba(233,30,132,.35);
+      animation:wz-spine 4s ease forwards}
+    @keyframes wz-spine{from{transform:translateX(-50%) scaleY(0)}to{transform:translateX(-50%) scaleY(1)}}
+    .wz-row{display:flex;align-items:center;gap:clamp(11px,1.3vw,22px)}
+    .wz-row-ico{position:relative;z-index:1;flex:0 0 auto;display:grid;place-items:center;
+      width:var(--ico);height:var(--ico);border-radius:50%;
       background:linear-gradient(160deg,#F871B0 0%,var(--pink) 46%,var(--deep) 100%);
-      box-shadow:0 6px 14px -5px rgba(219,39,119,.72),inset 0 1px 0 rgba(255,255,255,.55);
-      animation:wz-badge-breathe 4.6s ease-in-out infinite}
-    @keyframes wz-badge-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-    .wz-feat-ico svg{width:54%;height:54%;fill:none;stroke:#fff;stroke-width:1.7;
+      box-shadow:0 11px 22px -8px rgba(219,39,119,.75),0 0 0 clamp(3px,.38vw,5px) rgba(255,255,255,.42),
+        inset 0 1px 0 rgba(255,255,255,.55);
+      opacity:0;animation:wz-in-left .7s cubic-bezier(.2,1.1,.4,1) forwards}
+    .wz-row-ico svg{width:52%;height:52%;fill:none;stroke:#fff;stroke-width:1.7;
       stroke-linecap:round;stroke-linejoin:round}
-    .wz-feat-lbl{font-weight:700;color:var(--ink);line-height:1.24;font-size:clamp(11px,1.02vw,16px)}
-
-    /* mobile fallback list (hidden on desktop) */
-    .wz-feat-grid{display:none}
+    .wz-row-txt{flex:1;min-width:0;
+      background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,.9);border-radius:clamp(12px,1.2vw,18px);
+      padding:clamp(7px,1vh,14px) clamp(14px,1.5vw,26px);
+      box-shadow:0 14px 30px -16px rgba(190,24,93,.5),inset 0 1px 0 rgba(255,255,255,.8);
+      font-weight:600;color:var(--ink);line-height:1.2;font-size:clamp(13px,1.3vw,22px);
+      opacity:0;animation:wz-in-right .7s cubic-bezier(.2,1.1,.4,1) forwards}
+    .wz-row-txt b{font-weight:800;color:var(--plum)}
+    @keyframes wz-in-left{from{opacity:0;transform:translateX(-46px) scale(.8)}to{opacity:1;transform:none}}
+    @keyframes wz-in-right{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
 
     .wz-foot-row{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
-      gap:clamp(8px,1.4vh,16px);margin-top:auto}
-    .wz-foot{margin:0;text-align:center;font-family:var(--serif);font-weight:500;
-      color:var(--ink);font-size:clamp(11px,1.05vw,16px);
-      opacity:0;animation:wz-in .9s 1.9s cubic-bezier(.16,.7,.2,1) forwards;transform:translateY(6px)}
+      gap:clamp(8px,1.4vh,16px)}
 
     /* ══════════ SCREEN 3 ══════════ */
     .wz-content.s3{padding-bottom:clamp(16px,3vh,30px)}
@@ -905,19 +856,10 @@ function Styles() {
       .s1-script{font-size:clamp(40px,13vw,60px)}
       .s1-sub{font-size:15px}
 
-      /* screen 2: hide the constellation + threads; show a tidy two-col list */
-      .wz-threads,.wz-hub,.wz-constellation{display:none}
+      /* screen 2: the sequential list carries straight down on phones too */
       .wz-content.s2{pointer-events:auto}
-      .wz-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px clamp(8px,3vw,16px);
-        margin:clamp(14px,3vh,26px) 0 auto;padding-top:clamp(8px,2vh,18px)}
-      .wz-feat-row{display:flex;align-items:center;gap:9px;
-        background:rgba(255,255,255,.66);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-        border:1px solid rgba(255,255,255,.85);border-radius:14px;padding:7px 10px 7px 7px;
-        box-shadow:0 8px 20px -12px rgba(190,24,93,.42);
-        opacity:0;transform:translateY(10px);animation:wz-word .7s cubic-bezier(.16,.7,.2,1) forwards}
-      .wz-feat-row .wz-feat-ico{width:30px;height:30px;flex:0 0 auto;position:static;animation:none}
-      .wz-feat-row .wz-feat-lbl{position:static;transform:none;white-space:normal;
-        font-size:12px;line-height:1.2;text-shadow:none}
+      .wz-list{width:100%;--ico:clamp(40px,12vw,56px);gap:clamp(9px,1.6vh,16px)}
+      .wz-row-txt{font-size:clamp(13px,4vw,17px)}
 
       /* screen 3 — floating cluster is desktop art; lead with promise + CTA */
       .s3-cards{display:none}
@@ -929,19 +871,15 @@ function Styles() {
       .s3-divider,.s3-space{align-self:center}
       .s3-space{text-align:center}
     }
-    @media (max-height:520px) and (min-width:768px){
-      .wz-sub{display:none}
-    }
-
     @media (prefers-reduced-motion:reduce){
       .wz-seq,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space,
-      .wz-feat,.wz-feat-ico,.wz-hub,.wz-foot,.wz-feat-row{
+      .wz-row-ico,.wz-row-txt,.wz-list-spine{
         animation-duration:.01s !important;animation-delay:0s !important}
       .wz-cta{animation:wz-cta-in .01s forwards}
-      .wz-brand-mark,.wz-hub::before{animation:none}
+      .wz-brand-mark{animation:none}
       .wz-sheen::after{display:none}
-      .wz-threads path{opacity:1;animation:none}
-      .s1-sub,.wz-sub,.s3-body-copy,.s3-space,.wz-foot{opacity:1 !important;transform:none !important}
+      .wz-list-spine{transform:translateX(-50%) scaleY(1)}
+      .s1-sub,.s3-body-copy,.s3-space,.wz-row-ico,.wz-row-txt{opacity:1 !important;transform:none !important}
     }
     `}</style>
   );
