@@ -180,8 +180,8 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
         {/* ── Steps — each a distinct bordered card so on phone they clearly
                read as separate setup steps (not one long paragraph). ── */}
         <div className="space-y-3 bg-white/50 p-3 sm:p-4">
-          {STEPS.map((s, i) => {
-            const isNext = i === nextIdx;
+          {STEPS.filter((st) => !st.done).map((s) => {
+            const isNext = s.key === STEPS[nextIdx]?.key;
             const locked = s.sync && !allCore;
             const NodeIcon = s.Icon;
             const ctaCls = (kind: "primary" | "ghost" | "locked") =>

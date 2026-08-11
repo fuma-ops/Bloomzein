@@ -1195,7 +1195,7 @@ function WeekTab({
              a fresh setup goes straight to "Let's set up your week" without clutter. */}
       {dietSetup ? (
         <DailyTargetCard t={targets} />
-      ) : (!planEmpty && !targetDismissed) ? (
+      ) : (!isGuided() && !planEmpty && !targetDismissed) ? (
         <NotifCard
           icon={<Sparkles className="h-5 w-5" />}
           title="Want a daily calorie target?"
@@ -1381,7 +1381,7 @@ function WeekTab({
         </PlusLock>
       )}
 
-      {weekDone && (
+      {weekDone && !isGuided() && (
         <SpotlightCoach
           targetId="meals-week-plan"
           step={2} total={5}

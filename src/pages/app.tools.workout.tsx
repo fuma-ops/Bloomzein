@@ -768,7 +768,7 @@ export default function WorkoutPage() {
   return (
     <div className="relative animate-fade-in">
 
-      {guidedDone && (
+      {guidedDone && !guided && (
         <SpotlightCoach
           targetId="workout-week-plan"
           step={4} total={5}
