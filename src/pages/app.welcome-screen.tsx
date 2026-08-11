@@ -2,22 +2,32 @@
  * WelcomeScreen — the cinematic 3-step onboarding sequence.
  *
  * Route: /welcome. Three full-bleed film screens, each with its own
- * background video, a living pink CTA, and a shared progress indicator:
+ * background video and a shared progress indicator:
  *
  *   1. "Welcome to your Bloom."                     — entry-1.mp4
  *   2. "Everything in your life, beautifully connected." — entry-2.mp4
  *   3. "Your life doesn't need to be perfect."      — entry-3.mp4
  *
- * The CTA on each step advances the sequence; the final CTA enters the app.
- * All three share one design system (tokens in <Styles/>) so the look is
- * identical across screens. See docs/welcome-screen-design.md for screen 2's
- * measured spec — the other two are built to the same vocabulary.
+ * Motion vocabulary shared across all three:
+ *   • Headlines TYPE themselves in (a soft typewriter with a blinking caret);
+ *     only once the title finishes do the supporting elements fade/rise in.
+ *   • The sakura on the brand mark turns slowly.
+ *   • Films loop and play behind a readability scrim/overlay.
+ *
+ * Screen 1 has NO button — its film plays once and, when it ends (or after its
+ * measured duration), the sequence glides to screen 2. Screens 2 and 3 keep a
+ * living CTA; the final one enters the app at /app/today.
  *
  * The centre of every film stays clear: that is where she is on camera. The
  * foreground (headline, cards, CTA) is composed around her.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ── icons: white/ink hairline glyphs, drawn to match the mockup badges ───── */
 const ico = {
@@ -151,6 +161,62 @@ function Cta({ label, onClick, delay = 0 }: { label: string; onClick: () => void
 }
 
 /* ── word-by-word headline (typography is alive) ──────────────────────────── */
+function Typed({
+  text,
+  className,
+  speed = 46,
+  startDelay = 0,
+  showCaret = true,
+  onDone,
+}: {
+  text: string;
+  className?: string;
+  speed?: number;
+  startDelay?: number;
+  showCaret?: boolean;
+  onDone?: () => void;
+}) {
+  const [n, setN] = useState(0);
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    setN(0);
+    doneRef.current = false;
+    const finish = () => {
+      if (!doneRef.current) {
+        doneRef.current = true;
+        onDone?.();
+      }
+    };
+    if (prefersReducedMotion()) {
+      setN(text.length);
+      finish();
+      return;
+    }
+    let i = 0;
+    let timer: ReturnType<typeof setTimeout>;
+    const start = setTimeout(function tick() {
+      i += 1;
+      setN(i);
+      if (i < text.length) timer = setTimeout(tick, speed);
+      else finish();
+    }, startDelay);
+    return () => {
+      clearTimeout(start);
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+
+  const typing = n < text.length;
+  return (
+    <span className={className}>
+      {text.slice(0, n)}
+      {showCaret && typing && <span className="wz-caret" aria-hidden />}
+    </span>
+  );
+}
+
 function Words({ text, className, base = 0, step = 0.085 }: { text: string; className?: string; base?: number; step?: number }) {
   return (
     <span className={className}>
@@ -165,10 +231,43 @@ function Words({ text, className, base = 0, step = 0.085 }: { text: string; clas
 }
 
 /* ── film background + readability scrim ──────────────────────────────────── */
-function Film({ src, scrim }: { src: string; scrim: string }) {
+function Film({
+  src,
+  scrim,
+  loop = true,
+  onEnded,
+}: {
+  src: string;
+  scrim: string;
+  loop?: boolean;
+  onEnded?: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  // When the caller advances on the film's end (screen 1), back the native
+  // `ended` event with a duration-based fallback: if autoplay never fires
+  // `ended` (blocked/decoding), we still glide on once the clip's length is up.
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || !onEnded) return;
+    let fb: ReturnType<typeof setTimeout>;
+    const arm = () => {
+      if (isFinite(v.duration) && v.duration > 0) {
+        clearTimeout(fb);
+        fb = setTimeout(onEnded, v.duration * 1000 + 500);
+      }
+    };
+    if (v.readyState >= 1) arm();
+    v.addEventListener("loadedmetadata", arm);
+    return () => {
+      v.removeEventListener("loadedmetadata", arm);
+      clearTimeout(fb);
+    };
+  }, [onEnded]);
+
   return (
     <div className="wz-bg" aria-hidden>
-      <video className="wz-video" autoPlay muted loop playsInline preload="auto">
+      <video ref={ref} className="wz-video" autoPlay muted loop={loop} playsInline preload="auto" onEnded={onEnded}>
         <source src={src} type="video/mp4" />
       </video>
       <div className={`wz-scrim ${scrim}`} />
@@ -180,9 +279,19 @@ function Film({ src, scrim }: { src: string; scrim: string }) {
    SCREEN 1 — "Welcome to your Bloom."
    ════════════════════════════════════════════════════════════════════════════ */
 function ScreenIntro({ onNext }: { onNext: () => void }) {
+  // No button here: the title types itself in, the subtitle follows, and the
+  // film plays once — when it ends (or after its own length), we glide on.
+  const done = useRef(false);
+  const go = () => {
+    if (done.current) return;
+    done.current = true;
+    onNext();
+  };
+  const [phase, setPhase] = useState(0); // 0 serif · 1 script · 2 rest
+
   return (
-    <div className="wz-stage">
-      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" />
+    <div className="wz-stage s1-stage" onClick={go} title="Continue">
+      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" loop={false} onEnded={go} />
       <div className="wz-content s1">
         <div className="wz-topbar">
           <BrandLockup />
@@ -191,24 +300,34 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
 
         <div className="s1-body">
           <h1 className="s1-h">
-            <Words text="Welcome to" className="s1-serif" base={0.15} />
-            <span className="s1-script">
-              <Words text="your Bloom." base={0.42} step={0.1} />
-              <em className="wz-heart">♡</em>
-            </span>
+            <Typed
+              text="Welcome to"
+              className="s1-serif"
+              speed={72}
+              startDelay={260}
+              showCaret={phase === 0}
+              onDone={() => setPhase(1)}
+            />
+            {phase >= 1 && (
+              <span className="s1-script">
+                <Typed text="your Bloom." speed={82} showCaret={phase === 1} onDone={() => setPhase(2)} />
+                {phase >= 2 && <em className="wz-heart">♡</em>}
+              </span>
+            )}
           </h1>
 
-          <div className="wz-divider" aria-hidden>
-            <span /> <Sakura className="wz-divider-flower" /> <span />
-          </div>
-
-          <p className="s1-sub">
-            A little space for the woman
-            <br />
-            you're becoming.
-          </p>
-
-          <Cta label="Begin my journey" onClick={onNext} delay={1} />
+          {phase >= 2 && (
+            <>
+              <div className="wz-divider wz-fade" aria-hidden>
+                <span /> <Sakura className="wz-divider-flower" /> <span />
+              </div>
+              <p className="s1-sub wz-fade">
+                A little space for the woman
+                <br />
+                you're becoming.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -219,27 +338,28 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
    SCREEN 2 — "Everything in your life, beautifully connected."
    (foreground composition per docs/welcome-screen-design.md)
    ════════════════════════════════════════════════════════════════════════════ */
-type Card = { icon: keyof typeof ico; a: string; b: string };
+/* Badges are small photographic thumbnails pulled from the live Today / Read
+   library (same art the app uses elsewhere), cropped into the circular badge.
+   `pos` steers object-position to the most recognisable part of each image. */
+type Card = { img: string; pos?: string; a: string; b: string };
 const LEFT: Card[] = [
-  { icon: "lotus", a: "Understand", b: "your rhythm" },
-  { icon: "meditate", a: "Move", b: "your body" },
-  { icon: "bowl", a: "Nourish", b: "yourself" },
-  { icon: "check", a: "Build better", b: "habits" },
+  { img: "/images/read-cycle.webp", pos: "50% 48%", a: "Understand", b: "your rhythm" },
+  { img: "/images/read-movement.webp", pos: "60% 40%", a: "Move", b: "your body" },
+  { img: "/images/read-recipes.webp", pos: "70% 58%", a: "Nourish", b: "yourself" },
+  { img: "/images/goal-path-bloom.webp", pos: "50% 42%", a: "Build better", b: "habits" },
 ];
 const RIGHT: Card[] = [
-  { icon: "brain", a: "Clear", b: "your mind" },
-  { icon: "wallet", a: "Feel more", b: "in control" },
-  { icon: "calheart", a: "Remember", b: "what matters" },
-  { icon: "droplet", a: "Take care", b: "of yourself" },
+  { img: "/images/read-mindset.webp", pos: "50% 24%", a: "Clear", b: "your mind" },
+  { img: "/images/read-money.webp", pos: "44% 44%", a: "Feel more", b: "in control" },
+  { img: "/images/cycle-journal-hero.webp", pos: "50% 40%", a: "Remember", b: "what matters" },
+  { img: "/images/read-selfcare.webp", pos: "64% 30%", a: "Take care", b: "of yourself" },
 ];
 
 function BenefitCard({ card, delay }: { card: Card; delay: number }) {
   return (
     <div className="wz-card" style={{ animationDelay: `${delay}s` }}>
-      <span className="wz-badge">
-        <svg viewBox="0 0 24 24" aria-hidden>
-          {ico[card.icon]}
-        </svg>
+      <span className="wz-badge wz-badge--img" style={{ animationDelay: `${delay + 0.12}s` }}>
+        <img src={card.img} alt="" loading="lazy" style={{ objectPosition: card.pos }} referrerPolicy="no-referrer" />
       </span>
       <span className="wz-label">
         {card.a}
@@ -252,9 +372,14 @@ function BenefitCard({ card, delay }: { card: Card; delay: number }) {
 }
 
 function ScreenConnected({ onNext }: { onNext: () => void }) {
+  // The title types itself in first; only when it finishes do the supporting
+  // elements (subtitle, feature cards, footer, CTA) fade/rise in.
+  const [line2, setLine2] = useState(false);
+  const [ready, setReady] = useState(false);
+
   return (
     <div className="wz-stage">
-      <Film src="/videos/entry-2.mp4" scrim="wz-scrim--vert" />
+      <Film src="/videos/entry-2.mp4" scrim="wz-scrim--soft" />
       <div className="wz-content s2">
         <div className="wz-topbar wz-topbar--center">
           <Progress step={2} />
@@ -262,39 +387,57 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
 
         <header className="wz-head">
           <h1 className="wz-h">
-            <span className="wz-h-serif">Everything in your life,</span>
-            <span className="wz-h-script">
-              beautifully connected. <em className="wz-heart">♡</em>
-            </span>
+            <Typed
+              text="Everything in your life,"
+              className="wz-h-serif"
+              speed={40}
+              startDelay={220}
+              showCaret={!line2}
+              onDone={() => setLine2(true)}
+            />
+            {line2 && (
+              <span className="wz-h-script">
+                <Typed text="beautifully connected." speed={48} showCaret={!ready} onDone={() => setReady(true)} />
+                {ready && <em className="wz-heart">♡</em>}
+              </span>
+            )}
           </h1>
-          <p className="wz-sub">
-            Your mood. Your movement. Your meals.
-            <br />
-            Your plans. Your little everyday moments.
-          </p>
-          <Sakura className="wz-flower" />
+          {ready && (
+            <>
+              <p className="wz-sub wz-fade">
+                Your mood. Your movement. Your meals.
+                <br />
+                Your plans. Your little everyday moments.
+              </p>
+              <Sakura className="wz-flower wz-fade" />
+            </>
+          )}
         </header>
 
-        <div className="wz-cols">
-          <div className="wz-col wz-col-l">
-            {LEFT.map((c, i) => (
-              <BenefitCard key={c.a + c.b} card={c} delay={0.35 + i * 0.14} />
-            ))}
+        {ready && (
+          <div className="wz-cols">
+            <div className="wz-col wz-col-l">
+              {LEFT.map((c, i) => (
+                <BenefitCard key={c.a + c.b} card={c} delay={0.15 + i * 0.18} />
+              ))}
+            </div>
+            <div className="wz-center" aria-hidden />
+            <div className="wz-col wz-col-r">
+              {RIGHT.map((c, i) => (
+                <BenefitCard key={c.a + c.b} card={c} delay={0.24 + i * 0.18} />
+              ))}
+            </div>
           </div>
-          <div className="wz-center" aria-hidden />
-          <div className="wz-col wz-col-r">
-            {RIGHT.map((c, i) => (
-              <BenefitCard key={c.a + c.b} card={c} delay={0.42 + i * 0.14} />
-            ))}
-          </div>
-        </div>
+        )}
 
-        <div className="wz-foot-row">
-          <p className="wz-foot">
-            One beautiful space. Everything that matters to you. <em className="wz-heart">♡</em>
-          </p>
-          <Cta label="Show me my Bloom" onClick={onNext} delay={1.1} />
-        </div>
+        {ready && (
+          <div className="wz-foot-row">
+            <p className="wz-foot">
+              One beautiful space. Everything that matters to you. <em className="wz-heart">♡</em>
+            </p>
+            <Cta label="Show me my Bloom" onClick={onNext} delay={1} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -358,7 +501,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
         {/* ── right: floating life cards ── */}
         <div className="s3-cards" aria-hidden>
           {/* Morning Yoga — real pose art from the Today plan */}
-          <article className="s3-card s3-photo" style={{ left: "35%", top: "6%", animationDelay: ".35s" }}>
+          <article className="s3-card s3-photo" style={{ left: "42%", top: "5%", animationDelay: ".15s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="meditate" />
               <div className="s3-card-heads">
@@ -377,7 +520,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Nourishing Meal — real recipe art from the Today plan */}
-          <article className="s3-card s3-photo" style={{ left: "31%", top: "35%", animationDelay: ".5s" }}>
+          <article className="s3-card s3-photo" style={{ left: "40%", top: "36%", animationDelay: ".45s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="bowl" />
               <div className="s3-card-heads">
@@ -391,7 +534,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Journal */}
-          <article className="s3-card" style={{ left: "30%", top: "63%", animationDelay: ".65s" }}>
+          <article className="s3-card" style={{ left: "40%", top: "66%", animationDelay: ".75s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="book" />
               <div className="s3-card-heads">
@@ -404,7 +547,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Mood */}
-          <article className="s3-card s3-right" style={{ right: "7%", top: "6%", animationDelay: ".42s" }}>
+          <article className="s3-card s3-right" style={{ right: "6.5%", top: "5%", animationDelay: ".3s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="smile" />
               <div className="s3-card-heads">
@@ -417,7 +560,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Water */}
-          <article className="s3-card s3-right" style={{ right: "5%", top: "26%", animationDelay: ".56s" }}>
+          <article className="s3-card s3-right" style={{ right: "5%", top: "27%", animationDelay: ".6s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="droplet" />
               <div className="s3-card-heads">
@@ -431,7 +574,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Habits */}
-          <article className="s3-card s3-right" style={{ right: "6%", top: "44%", animationDelay: ".7s" }}>
+          <article className="s3-card s3-right" style={{ right: "5.5%", top: "45%", animationDelay: ".9s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="check" />
               <div className="s3-card-heads">
@@ -455,7 +598,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Reminders */}
-          <article className="s3-card s3-right" style={{ right: "6%", top: "62%", animationDelay: ".82s" }}>
+          <article className="s3-card s3-right" style={{ right: "5.5%", top: "63%", animationDelay: "1.05s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="bell" />
               <div className="s3-card-heads">
@@ -467,7 +610,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Plan your day */}
-          <article className="s3-card s3-right" style={{ right: "7%", top: "79%", animationDelay: ".94s" }}>
+          <article className="s3-card s3-right" style={{ right: "6.5%", top: "80%", animationDelay: "1.2s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="cal" />
               <div className="s3-card-heads">
@@ -561,6 +704,12 @@ function Styles() {
     .wz-scrim--vert{background:
       linear-gradient(180deg,rgba(255,247,241,.6) 0%,rgba(255,242,247,.18) 20%,rgba(255,240,246,0) 42%,
         rgba(255,240,246,0) 62%,rgba(255,244,237,.36) 86%,rgba(255,242,234,.64) 100%)}
+    /* soft: a gentle all-over veil + stronger top & bottom so the centred title
+       and subtitle read clearly over the film, without hiding her */
+    .wz-scrim--soft{background:
+      linear-gradient(180deg,rgba(255,247,251,.74) 0%,rgba(255,244,250,.42) 15%,rgba(255,242,248,.12) 30%,
+        rgba(255,240,246,0) 45%,rgba(255,240,246,0) 60%,rgba(255,244,238,.34) 84%,rgba(255,242,234,.64) 100%),
+      linear-gradient(0deg,rgba(255,249,252,.16),rgba(255,249,252,.16))}
 
     /* ── shared content shell ── */
     .wz-content{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
@@ -572,8 +721,17 @@ function Styles() {
     /* ── brand lockup ── */
     .wz-brand{line-height:1}
     .wz-brand-mark{display:block;width:clamp(20px,1.9vw,30px);height:auto;fill:var(--hot);
-      margin:0 0 2px 2px;filter:drop-shadow(0 2px 5px rgba(219,39,119,.3))}
+      margin:0 0 2px 2px;filter:drop-shadow(0 2px 5px rgba(219,39,119,.3));
+      transform-origin:50% 50%;animation:wz-spin 9s linear infinite}
+    @keyframes wz-spin{to{transform:rotate(360deg)}}
     .wz-flower-core{fill:#FFF0F6}
+
+    /* ── typewriter caret + gentle reveal ── */
+    .wz-caret{display:inline-block;width:.07em;min-width:2px;height:.92em;margin-left:.05em;
+      background:currentColor;border-radius:2px;vertical-align:-.06em;
+      animation:wz-blink 1s steps(1,end) infinite}
+    @keyframes wz-blink{50%{opacity:0}}
+    .wz-fade{animation:wz-in .7s cubic-bezier(.16,.7,.2,1) both}
     .wz-wordmark{font-family:var(--script);font-weight:700;color:var(--hot);
       font-size:clamp(24px,2.5vw,40px);line-height:.9}
     .wz-tagline{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--ink);
@@ -672,11 +830,28 @@ function Styles() {
       animation:wz-in .9s cubic-bezier(.16,.7,.2,1) forwards}
     @keyframes wz-in{to{opacity:1;transform:none}}
     .wz-badge{flex:0 0 auto;display:grid;place-items:center;
-      width:clamp(30px,2.9vw,48px);height:clamp(30px,2.9vw,48px);border-radius:50%;
+      width:clamp(34px,3.1vw,52px);height:clamp(34px,3.1vw,52px);border-radius:50%;
       background:linear-gradient(160deg,#F871B0 0%,var(--pink) 46%,var(--deep) 100%);
-      box-shadow:0 6px 14px -5px rgba(219,39,119,.72),inset 0 1px 0 rgba(255,255,255,.55)}
+      box-shadow:0 6px 14px -5px rgba(219,39,119,.72),inset 0 1px 0 rgba(255,255,255,.55);
+      transform-origin:50% 50%;animation:wz-badge-breathe 4.5s ease-in-out infinite}
+    @keyframes wz-badge-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.055)}}
     .wz-badge svg{width:56%;height:56%;fill:none;stroke:#fff;stroke-width:1.7;
       stroke-linecap:round;stroke-linejoin:round}
+    /* photographic badge — a small Today/Read thumbnail cropped into the circle,
+       ringed in white + pink so it reads as one unit and pops from the film */
+    .wz-badge--img{overflow:hidden;padding:0;position:relative;
+      border:2px solid rgba(255,255,255,.92);
+      box-shadow:0 7px 16px -6px rgba(219,39,119,.75),0 0 0 1px rgba(219,39,119,.25),
+        inset 0 1px 0 rgba(255,255,255,.4);
+      opacity:0;transform:scale(.55) rotate(-10deg);
+      animation:wz-badge-in .7s cubic-bezier(.2,1.25,.4,1) forwards,
+        wz-badge-breathe 4.8s ease-in-out 1s infinite}
+    @keyframes wz-badge-in{to{opacity:1;transform:none}}
+    .wz-badge--img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+      object-position:center;border-radius:50%}
+    /* a soft inner vignette unifies the varied photos tonally */
+    .wz-badge--img::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+      box-shadow:inset 0 0 10px rgba(190,24,93,.35),inset 0 1px 0 rgba(255,255,255,.4)}
     .wz-label{font-weight:700;color:var(--ink);line-height:1.26;
       font-size:clamp(10.5px,1.03vw,15.5px)}
     .wz-underline{display:block;width:clamp(14px,1.4vw,22px);height:2px;border-radius:2px;
@@ -691,7 +866,7 @@ function Styles() {
     /* ══════════ SCREEN 3 ══════════ */
     .wz-content.s3{padding-bottom:clamp(16px,3vh,30px)}
     .s3-body{position:relative;z-index:3;flex:1;min-height:0;display:flex;flex-direction:column;
-      align-items:flex-start;justify-content:center;max-width:min(42%,520px);
+      align-items:flex-start;justify-content:center;max-width:min(39%,470px);
       gap:clamp(8px,1.5vh,16px);padding-left:clamp(0px,1vw,18px)}
     .s3-h{margin:0;display:flex;flex-direction:column;gap:clamp(2px,.6vh,8px)}
     .s3-serif{font-family:var(--serif);font-weight:700;color:var(--plum);
@@ -712,13 +887,14 @@ function Styles() {
 
     /* floating cards layer */
     .s3-cards{position:absolute;inset:0;z-index:2;pointer-events:none}
-    .s3-card{position:absolute;width:clamp(120px,13vw,208px);
-      padding:clamp(7px,.8vw,13px) clamp(9px,1vw,15px);border-radius:clamp(12px,1.1vw,18px);
+    .s3-card{position:absolute;width:clamp(104px,11vw,176px);
+      padding:clamp(6px,.7vw,11px) clamp(8px,.85vw,13px);border-radius:clamp(11px,1vw,16px);
       background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
       border:1px solid rgba(255,255,255,.9);
       box-shadow:0 14px 34px -16px rgba(190,24,93,.5),inset 0 1px 0 rgba(255,255,255,.75);
-      opacity:0;transform:translateY(12px) scale(.96);
-      animation:wz-in .9s cubic-bezier(.16,.7,.2,1) forwards}
+      opacity:0;transform:translateY(14px) scale(.94);
+      animation:wz-card-pop .8s cubic-bezier(.2,1.2,.35,1) forwards}
+    @keyframes wz-card-pop{to{opacity:1;transform:none}}
     .s3-card-top{display:flex;align-items:center;gap:clamp(6px,.6vw,9px)}
     .s3-card-heads{display:flex;flex-direction:column;min-width:0;flex:1}
     .s3-card-heads b{font-weight:800;color:var(--ink);line-height:1.15;
@@ -808,9 +984,12 @@ function Styles() {
     }
 
     @media (prefers-reduced-motion:reduce){
-      .wz-seq,.wz-word,.wz-card,.wz-foot,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space{
+      .wz-seq,.wz-word,.wz-card,.wz-foot,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space,
+      .wz-fade,.wz-badge,.wz-badge--img{
         animation-duration:.01s !important;animation-delay:0s !important}
       .wz-cta{animation:wz-cta-in .01s forwards}
+      .wz-brand-mark{animation:none}
+      .wz-caret{display:none}
     }
     `}</style>
   );
