@@ -277,7 +277,7 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
    The eight app pillars as a constellation, linked by light-threads to a hub.
    ════════════════════════════════════════════════════════════════════════════ */
 type Node = { icon: keyof typeof ico; a: string; b: string; x: number; y: number; side: "l" | "r" };
-const HUB = { x: 50, y: 53 };
+const HUB = { x: 51, y: 45 };
 const NODES: Node[] = [
   { icon: "lotus", a: "Understand", b: "your rhythm", x: 25, y: 29, side: "l" },
   { icon: "meditate", a: "Move", b: "your body", x: 20, y: 45, side: "l" },
@@ -439,7 +439,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
         {/* ── floating life cards — arranged around a clear centre-top face zone ── */}
         <div className="s3-cards" aria-hidden>
           {/* Morning Yoga — beside her, below the face line */}
-          <article className="s3-card s3-photo" style={{ left: "41%", top: "40%", animationDelay: ".15s" }}>
+          <article className="s3-card s3-photo" style={{ left: "34%", top: "33%", animationDelay: ".15s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="meditate" />
               <div className="s3-card-heads">
@@ -458,7 +458,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Nourishing Meal — lower-left of body */}
-          <article className="s3-card s3-photo" style={{ left: "41%", top: "67%", animationDelay: ".45s" }}>
+          <article className="s3-card s3-photo" style={{ left: "34%", top: "60%", animationDelay: ".45s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="bowl" />
               <div className="s3-card-heads">
@@ -472,7 +472,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Journal — bottom centre, clear of the face */}
-          <article className="s3-card" style={{ left: "58%", top: "76%", animationDelay: ".75s" }}>
+          <article className="s3-card" style={{ left: "34%", top: "84%", animationDelay: ".75s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="book" />
               <div className="s3-card-heads">
@@ -666,8 +666,8 @@ function Styles() {
       linear-gradient(180deg,rgba(255,247,241,.6) 0%,rgba(255,242,247,.18) 20%,rgba(255,240,246,0) 42%,
         rgba(255,240,246,0) 62%,rgba(255,244,237,.36) 86%,rgba(255,242,234,.64) 100%)}
     .wz-scrim--soft{background:
-      linear-gradient(180deg,rgba(255,247,251,.74) 0%,rgba(255,244,250,.42) 15%,rgba(255,242,248,.12) 30%,
-        rgba(255,240,246,0) 45%,rgba(255,240,246,0) 60%,rgba(255,244,238,.34) 84%,rgba(255,242,234,.64) 100%),
+      linear-gradient(180deg,rgba(255,247,251,.82) 0%,rgba(255,245,250,.6) 16%,rgba(255,242,248,.3) 30%,
+        rgba(255,240,246,.06) 44%,rgba(255,240,246,0) 58%,rgba(255,244,238,.34) 84%,rgba(255,242,234,.64) 100%),
       linear-gradient(0deg,rgba(255,249,252,.16),rgba(255,249,252,.16))}
 
     /* ── shared content shell ── */
@@ -817,7 +817,7 @@ function Styles() {
     /* ══════════ SCREEN 3 ══════════ */
     .wz-content.s3{padding-bottom:clamp(16px,3vh,30px)}
     .s3-body{position:relative;z-index:3;flex:1;min-height:0;display:flex;flex-direction:column;
-      align-items:flex-start;justify-content:center;max-width:min(39%,470px);
+      align-items:flex-start;justify-content:center;max-width:min(34%,420px);
       gap:clamp(8px,1.5vh,16px);padding-left:clamp(0px,1vw,18px)}
     .s3-h{margin:0;display:flex;flex-direction:column;gap:clamp(2px,.6vh,8px)}
     .s3-serif{font-family:var(--serif);font-weight:700;color:var(--plum);
