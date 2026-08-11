@@ -444,8 +444,8 @@ export default function CalendarPage() {
       </div>
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
-      <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[180px] mb-1 sm:mb-3 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
-        <div className="relative z-[1] px-4 pt-3 pb-2 sm:px-8 sm:pt-7 sm:pb-4">
+      <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[140px] mb-0 sm:mb-1 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
+        <div className="relative z-[1] px-4 pt-3 pb-2 sm:px-8 sm:pt-6 sm:pb-2">
           {/* Title + subtitle + phase pill. Month navigation lives on the month
               label row below. */}
           <div className="min-w-0 sm:max-w-md">
