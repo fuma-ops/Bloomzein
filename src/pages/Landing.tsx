@@ -99,7 +99,7 @@ export default function Landing() {
             <a href="#features" className="hover:text-hotpink transition">About</a>
             <a href="#contact" className="hover:text-hotpink transition">Contact</a>
             {/* Start Blooming CTA */}
-            <a href="/app/today" onClick={() => trackEvent("get_started_click", { location: "header" })} className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-hotpink px-4 py-1.5 text-sm font-bold text-hotpink transition hover:bg-hotpink hover:text-white">
+            <a href="/welcome" onClick={() => trackEvent("get_started_click", { location: "header" })} className="hover-scale inline-flex items-center gap-2 rounded-full border-2 border-hotpink px-4 py-1.5 text-sm font-bold text-hotpink transition hover:bg-hotpink hover:text-white">
               Start Blooming <ArrowRight className="h-3.5 w-3.5" />
             </a>
             {/* Download App with QR popover */}
@@ -123,7 +123,7 @@ export default function Landing() {
             </div>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
-            <a href="/app/today" onClick={() => trackEvent("get_started_click", { location: "header_mobile" })} className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-3 py-1.5 text-xs font-bold text-white">
+            <a href="/welcome" onClick={() => trackEvent("get_started_click", { location: "header_mobile" })} className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-3 py-1.5 text-xs font-bold text-white">
               Start <ArrowRight className="h-3 w-3" />
             </a>
             <button
@@ -180,7 +180,7 @@ export default function Landing() {
             </div>
             <div className="flex flex-col gap-4 border-t border-petal/30 pt-6">
               <a
-                href="/app/today"
+                href="/welcome"
                 onClick={() => { trackEvent("get_started_click", { location: "mobile_menu" }); setMobileMenuOpen(false); }}
                 className="bloom-luxury-btn w-full py-3 sm:py-3.5 font-bold text-white text-center"
               >
@@ -238,7 +238,7 @@ export default function Landing() {
               </p>
               <div className="mt-4 flex flex-row items-center gap-2 sm:mt-8 sm:gap-3 lg:mt-10">
                 <a
-                  href="/app/today"
+                  href="/welcome"
                   onClick={() => trackEvent("get_started_click", { location: "hero" })}
                   className="bloom-luxury-btn hover-scale animate-float-soft inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition sm:gap-2 sm:px-6 sm:py-3 sm:text-base"
                 >
