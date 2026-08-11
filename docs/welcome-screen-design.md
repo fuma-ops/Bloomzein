@@ -1,11 +1,42 @@
 # Welcome screen — design spec
 
-The onboarding screen **"Everything in your life, beautifully connected."**
+The **3-step cinematic onboarding sequence**, all in one file:
+
+1. **"Welcome to your Bloom."** — `entry-1.mp4`
+2. **"Everything in your life, beautifully connected."** — `entry-2.mp4`
+3. **"Your life doesn't need to be perfect."** — `entry-3.mp4`
 
 - **Component:** `src/pages/app.welcome-screen.tsx`
-- **Route:** `/welcome` (preview only — nothing links to it yet)
-- **Status:** foreground composition is final and approved against the mockup.
-  The background is a **placeholder** (drifting bubbles) waiting for the film.
+- **Route:** `/welcome` — a controller holds a `step` state (1→2→3); each screen's
+  CTA advances the sequence, and the final CTA (**Start my Bloomzein journey**)
+  enters the app at `/app/today`.
+- **Status:** all three screens are **live with their background films + living
+  CTAs**. Every step shares one design system (tokens in `<Styles/>`) so the look
+  is identical; a progress indicator (dots + connectors) shows the step.
+
+The spec below documents **screen 2** in detail (measured against its mockup);
+screens 1 and 3 are built to the same vocabulary — same tokens, same fonts, same
+motion, same living CTA and brand lockup.
+
+## Screen 1 & 3 at a glance
+
+- **Screen 1:** brand lockup top-left, progress dots top-right, a left-anchored
+  serif+script headline (**Welcome to / your Bloom. ♡**), flower divider,
+  subtitle, and the **Begin my journey** CTA. The film's subject sits right.
+- **Screen 3:** brand lockup top-left, progress dots top-right, a left promise
+  column (**Your life doesn't need to be perfect. / It just needs to feel like
+  yours. ♡** + body + *This is your space…*) with the **Start my Bloomzein
+  journey** CTA, and a cluster of floating glass "life" cards around the centred
+  subject — **Morning Yoga** and **Nourishing Meal** use the real Today-plan art
+  (`/images/pose-warrior-2.webp`, `/images/meal-buddha.webp`), plus Journal,
+  Mood, Water, Habits, Reminders and Plan-your-day. On phones the cluster is
+  desktop art: it's hidden and the promise + CTA lead over the film.
+
+## The living CTA (shared)
+
+Pink gradient pill (`#FF57AC→#EC0F86→#D30D78`), white bold label + arrow, a white
+ring and a continuous soft outer-glow pulse (`wz-cta-glow`, per app rule §5).
+Hover lifts + scales; tap is `active:scale(.96)`.
 
 Everything below is what the mockup was measured against. Change these numbers
 only on purpose — they are the design, not incidental values.
@@ -112,27 +143,26 @@ One vocabulary only — fade + rise + settle, `0.9s cubic-bezier(.16,.7,.2,1)`.
 - bubbles drift up on an 18–38s loop, never fast
 - all of it collapses under `prefers-reduced-motion`
 
-## 8. Swapping in the film
+## 8. The film (now wired in)
 
-Replace `<BackgroundPlaceholder/>` in the component with:
+Each screen renders `<Film src scrim/>` — an `autoPlay muted loop playsInline`
+`<video>` with a matching `.wz-scrim` over it. Two scrim variants:
 
-```tsx
-<video className="wz-video" autoPlay muted loop playsInline
-       poster="/videos/welcome.webp">
-  <source src="/videos/welcome.mp4" type="video/mp4" />
-</video>
-```
+- `wz-scrim--vert` (screen 2): light top & bottom, **clear through the middle**
+  so the centred subject is never veiled.
+- `wz-scrim--left` (screens 1 & 3): light on the left third to lift the copy,
+  clear on the right where the subject is; a soft bottom lift on mobile.
 
-**Keep `.wz-scrim`** — it is the gradient that keeps type readable over
-footage (light at top and bottom, fully clear through the middle so she is
-never veiled). Nothing else needs to change: the composition already reserves
-the centre channel for her.
+Films live in `public/videos/entry-1.mp4`, `entry-2.mp4`, `entry-3.mp4`
+(renamed to URL-safe names). Requirements: **16:9**, subject composed per the
+mockup (right for screen 1, centre for screens 2 & 3), exported **without any
+watermark or logo badge**. A gradient fallback paints behind the video so a slow
+first frame is never a blank screen.
 
-Film requirements: **16:9**, subject centred, and exported **without any
-watermark or logo badge** burned into the corners.
+## 9. Done in this pass
 
-## 9. Still open
-
-- CTA button(s) are **not** in this screen yet — to be added on top of the film.
-- Connector lines between cards and centre (faint strings in the mockup) were
-  deliberately left out; they clutter over live footage.
+- ✅ Background films wired into all three screens.
+- ✅ Living CTA on every step (advances 1→2→3, final one enters `/app/today`).
+- ✅ Screen 1 and screen 3 built to the same design system.
+- Connector lines between cards and centre (faint strings in the mockup) are
+  still deliberately left out — they clutter over live footage.
