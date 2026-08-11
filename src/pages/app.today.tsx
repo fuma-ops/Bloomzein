@@ -936,7 +936,7 @@ export default function TodayPage() {
 
       {/* ── 1. HERO — transparent; the photo lives in the page background above. ── */}
       <section
-        className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[250px] animate-card-pop-in"
+        className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[196px] animate-card-pop-in"
         style={{ animationDelay: "0ms" }}
       >
         <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[74%] sm:max-w-md">
