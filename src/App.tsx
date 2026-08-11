@@ -44,6 +44,7 @@ const MealsPage = lazyRetry(() => import("./pages/app.tools.meals"));
 const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
 const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
 const IntroPreviewPage = lazyRetry(() => import("./pages/app.intro-preview"));
+const WelcomeScreen = lazyRetry(() => import("./pages/app.welcome-screen"));
 const TodayPage = lazyRetry(() => import("./pages/app.today"));
 const ReadPage = lazyRetry(() => import("./pages/app.read"));
 const ShopPage = lazyRetry(() => import("./pages/app.shop"));
@@ -142,6 +143,12 @@ function AppContent() {
   // Landing page remains standalone (no AppShell layout)
   if (path === "/" || path === "/index.html") {
     return <Landing />;
+  }
+
+  // Welcome screen — standalone preview of the onboarding composition.
+  // Nothing links here yet; the background is a placeholder for the film.
+  if (path === "/welcome") {
+    return <Suspense fallback={<PageLoader />}><WelcomeScreen /></Suspense>;
   }
 
   // Legal pages — public, standalone, no auth (needed before collecting data)
