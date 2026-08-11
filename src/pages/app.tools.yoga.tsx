@@ -1328,7 +1328,7 @@ export default function YogaPage() {
     <div className="relative animate-fade-in">
       <BloomBubbles count={10} />
 
-      {guidedDone && (
+      {guidedDone && !guided && (
         <SpotlightCoach
           targetId="yoga-week-plan"
           step={4} total={5}
