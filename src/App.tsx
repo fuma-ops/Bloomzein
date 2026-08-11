@@ -44,6 +44,7 @@ const MealsPage = lazyRetry(() => import("./pages/app.tools.meals"));
 const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
 const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
 const IntroPreviewPage = lazyRetry(() => import("./pages/app.intro-preview"));
+const WelcomeIntro = lazyRetry(() => import("./pages/app.welcome"));
 const TodayPage = lazyRetry(() => import("./pages/app.today"));
 const ReadPage = lazyRetry(() => import("./pages/app.read"));
 const ShopPage = lazyRetry(() => import("./pages/app.shop"));
@@ -142,6 +143,12 @@ function AppContent() {
   // Landing page remains standalone (no AppShell layout)
   if (path === "/" || path === "/index.html") {
     return <Landing />;
+  }
+
+  // Welcome intro — the dreamy full-screen entry shown after "Start Blooming",
+  // before Today. Standalone (no AppShell), public (auth happens on Today).
+  if (path === "/welcome") {
+    return <Suspense fallback={<PageLoader />}><WelcomeIntro /></Suspense>;
   }
 
   // Legal pages — public, standalone, no auth (needed before collecting data)
