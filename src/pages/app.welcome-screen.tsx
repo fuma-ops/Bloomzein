@@ -838,14 +838,14 @@ function Styles() {
       .s1-sub{font-size:15px}
 
       /* screen 2: the same picture-cards, compacted into a two-column grid on
-         phones (flatter thumbnails so all eight fit) */
+         phones and nudged down so her face stays clear above them */
       .wz-content.s2{pointer-events:auto}
       .s2-flank{position:static;z-index:auto;display:grid;grid-template-columns:1fr 1fr;
-        gap:8px clamp(7px,2.5vw,12px);margin:clamp(8px,2vh,18px) 0 auto;padding-top:clamp(6px,1.5vh,12px)}
-      .s2-flank .s3-card{position:static;width:auto;padding:6px 8px 6px 6px}
-      .s2-flank .s3-card-heads b{font-size:11.5px}
-      .s2-flank .s3-thumb{aspect-ratio:16/8;margin-top:5px}
-      .s2-flank .s3-badge{width:26px;height:26px}
+        gap:7px clamp(6px,2.2vw,11px);margin:clamp(66px,16vh,150px) 0 auto;padding-top:0}
+      .s2-flank .s3-card{position:static;width:auto;padding:5px 7px 5px 5px}
+      .s2-flank .s3-card-heads b{font-size:11px}
+      .s2-flank .s3-thumb{aspect-ratio:16/7;margin-top:4px}
+      .s2-flank .s3-badge{width:24px;height:24px}
 
       /* screen 3 — floating cluster is desktop art; lead with promise + CTA */
       .s3-cards{display:none}
