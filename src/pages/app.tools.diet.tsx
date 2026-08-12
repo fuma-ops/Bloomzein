@@ -59,6 +59,7 @@ import {
 } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
+import { GuidedFocusHero } from "@/components/bloom/GuidedFocus";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { todayISO } from "@/lib/localDate";
 import {
@@ -3316,6 +3317,56 @@ export default function DietPage() {
   }
 
   const showTour = tab === "profile" && (!onboarded || replayTour);
+
+  // Guided setup — once her goal is set, show a CLEAN focused page (tool header +
+  // her energy target + one Continue-on-Today CTA) instead of the full tool behind
+  // a floating coach popup. Mirrors the Meals / Movement guided views.
+  if (isGuided() && guidedGoalKcal !== null) {
+    return (
+      <div className="relative animate-fade-in">
+        <GuidedFocusHero label="Diet" image="/images/meal-oats.webp" />
+
+        <div id="diet-energy" className="rounded-2xl border border-petal/60 bg-white p-6 text-center shadow-sm animate-scale-in">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-hotpink text-white shadow-md shadow-hotpink/30 animate-icon-breathe">
+            <Sparkles className="h-6 w-6" strokeWidth={1.8} />
+          </span>
+          <h2 className="mt-3 font-script text-3xl leading-tight text-hotpink">Your goal is set ✿</h2>
+          <p className="mt-1 text-[13px] text-rose/70">Your daily energy target</p>
+          <p className="mt-1 text-4xl font-black tabular-nums text-rose">
+            {guidedGoalKcal.toLocaleString()} <span className="text-lg font-bold text-rose/55">kcal</span>
+          </p>
+          <p className="mt-2 text-[12px] leading-snug text-rose/70">
+            Everything — meals, movement, insights — tunes to it now.
+          </p>
+
+          {hasMealPlan() && (
+            <button
+              onClick={() => { if (!guidedSynced) { planMealsImplicit(); setGuidedSynced(true); } }}
+              className={[
+                "mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-bold transition active:scale-95",
+                guidedSynced
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-white text-hotpink ring-2 ring-hotpink/60 animate-selected-glow",
+              ].join(" ")}
+            >
+              {guidedSynced ? (
+                <><Check className="h-4 w-4" strokeWidth={3} /> Meals synced to your goal</>
+              ) : (
+                <><Sparkles className="h-4 w-4" strokeWidth={2} /> Sync my meals to this goal</>
+              )}
+            </button>
+          )}
+        </div>
+
+        <button
+          onClick={() => { window.location.href = "/app/today"; }}
+          className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white"
+        >
+          <Sparkles className="h-4 w-4" strokeWidth={2} /> Continue on Today →
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative animate-fade-in">
