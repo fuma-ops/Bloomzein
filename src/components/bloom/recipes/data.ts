@@ -125,16 +125,10 @@ export function hasDietSetup(): boolean {
    "1 1/2 tsp"). Non-numeric quantities ("a pinch", "to taste") are untouched. */
 // A whole and a fraction are separated by a space so "1 1/4 cup" can never be
 // misread as "1/4 cup".
-const NICE_FRACTIONS: [number, string][] = [
-  [0, ""], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"],
-];
-function niceFraction(n: number): string {
-  const whole = Math.floor(n + 1e-9);
-  const frac = n - whole;
-  let best = "", bestD = 1;
-  for (const [v, s] of NICE_FRACTIONS) { const d = Math.abs(frac - v); if (d < bestD) { bestD = d; best = s; } }
-  if (!best) return String(whole);              // whole number, no fraction
-  return whole > 0 ? `${whole}${best}` : best; // "1¼"  or  "¾" — one glyph, never "11/2"
+/** Compact decimal — "1.5", "0.5", "2" (no trailing ".0"). Magnitude is obvious
+ *  to a non-cook: "1.5 tablespoons" can't be misread as a half (unlike 1½). */
+function decimalStr(n: number): string {
+  return String(Math.round(n * 100) / 100);
 }
 // Attach the scaled number to its trailing text. A remainder that starts with
 // punctuation ("1, diced") is glued so we never print "2 , diced", and a lone
@@ -145,7 +139,7 @@ function joinQty(num: string, rest: string): string {
   return /^[,.;:)]/.test(rest) ? `${num}${rest}` : `${num} ${rest}`;
 }
 export function scaleQuantity(qty: string, factor: number): string {
-  if (!qty || !factor || factor === 1) return qty;
+  if (!qty || !factor) return qty;
   const m = String(qty).match(/^\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.?\d+)\s*(.*)$/);
   if (!m) return qty;
   const numStr = m[1];
@@ -160,13 +154,22 @@ export function scaleQuantity(qty: string, factor: number): string {
   // Metric mass/volume — glue the unit and round to tidy amounts ("280g").
   if (/^(g|ml)\b/.test(unit)) return `${scaled >= 20 ? Math.round(scaled / 5) * 5 : Math.round(scaled)}${rest}`;
   if (/^(kg|l)\b/.test(unit)) return `${Math.round(scaled * 100) / 100}${rest}`;
-  // Spoons — keep to readable 1/2 steps ("1 1/2 tsp", never "1 3/4 tsp").
-  if (/^(tsp|tbsp|teaspoon|tablespoon)s?\b/.test(unit))
-    return joinQty(niceFraction(Math.max(0.5, Math.round(scaled * 2) / 2)), rest);
-  // Cups — quarter fractions read naturally ("3/4 cup", "2 3/4 cups").
-  if (/^cups?\b/.test(unit)) return joinQty(niceFraction(Math.round(scaled * 4) / 4), rest);
-  // Everything else is a countable item (onion, clove, slice, egg, wedge…):
-  // whole numbers only — nobody buys "1 3/4 onion" or peels "3 1/2 cloves".
+  // Spoons — half steps, spelled out as a plain decimal ("1.5 tablespoons").
+  if (/^(tsp|tbsp|teaspoon|tablespoon)s?\b/.test(unit)) {
+    const v = Math.max(0.5, Math.round(scaled * 2) / 2);
+    const base = /^(tbsp|tablespoon)/.test(unit) ? "tablespoon" : "teaspoon";
+    const trailing = rest.replace(/^(tbsp|tsp|tablespoons?|teaspoons?)\b\.?/i, "").trim();
+    return `${decimalStr(v)} ${v > 1 ? base + "s" : base}${trailing ? " " + trailing : ""}`;
+  }
+  // Cups — quarter steps, plain decimal ("1.25 cups").
+  if (/^cups?\b/.test(unit)) {
+    const v = Math.round(scaled * 4) / 4;
+    const trailing = rest.replace(/^cups?\b\.?/i, "").trim();
+    return `${decimalStr(v)} ${v > 1 ? "cups" : "cup"}${trailing ? " " + trailing : ""}`;
+  }
+  // Countable item (onion, clove, slice, egg…): whole numbers when scaling; left
+  // exactly as the author wrote it when not scaling (never round "1/2 onion" up).
+  if (factor === 1) return qty;
   return joinQty(String(Math.max(1, Math.round(scaled))), rest);
 }
 
