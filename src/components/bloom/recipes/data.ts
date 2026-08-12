@@ -561,7 +561,7 @@ type MicroKey = keyof Recipe["micros"];
 const INGREDIENT_MICROS: { match: RegExp; micros: Partial<Record<MicroKey, number>> }[] = [
   // Vitamin C (mg)
   { match: /broccoli/i,                              micros: { vitaminC: 65, fibre: 3 } },
-  { match: /bell pepper|red pepper|capsicum/i,       micros: { vitaminC: 60 } },
+  { match: /bell pepper|red pepper|green pepper|roasted pepper|capsicum/i, micros: { vitaminC: 60 } },
   { match: /\bkale\b/i,                              micros: { vitaminC: 50, iron: 1 } },
   { match: /brussels sprout/i,                       micros: { vitaminC: 50 } },
   { match: /cauliflower/i,                           micros: { vitaminC: 40 } },
@@ -601,6 +601,39 @@ const INGREDIENT_MICROS: { match: RegExp; micros: Partial<Record<MicroKey, numbe
   // B6 / other
   { match: /chicken|turkey/i,                        micros: { vitaminB6: 0.5 } },
   { match: /\boats?\b|oatmeal|porridge|rolled oat/i, micros: { fibre: 4, magnesium: 40 } },
+  // --- extended coverage from a full audit of the real ingredient list ---
+  // Vitamin C
+  { match: /cabbage/i,                               micros: { vitaminC: 30, fibre: 2 } },
+  { match: /pineapple/i,                             micros: { vitaminC: 40, fibre: 2 } },
+  { match: /papaya/i,                                micros: { vitaminC: 30 } },
+  { match: /\bpotato/i,                              micros: { vitaminC: 15, vitaminB6: 0.4, fibre: 2 } },
+  // Iron / seeds / dried fruit / shellfish
+  { match: /\beggs?\b/i,                             micros: { iron: 1, vitaminB6: 0.1 } },
+  { match: /tahini/i,                                micros: { iron: 1.5, magnesium: 30, calcium: 60 } },
+  { match: /sesame seed/i,                           micros: { iron: 1, magnesium: 25 } },
+  { match: /shrimp|prawn/i,                          micros: { iron: 1.5, omega3: 0.3, vitaminB6: 0.1 } },
+  { match: /dried apricot/i,                         micros: { iron: 1, fibre: 3 } },
+  { match: /raisin|sultana/i,                        micros: { iron: 1, fibre: 2 } },
+  { match: /cranberr/i,                              micros: { fibre: 2, vitaminC: 5 } },
+  { match: /medjool|\bdates?\b/i,                    micros: { iron: 1, magnesium: 15, fibre: 3 } },
+  { match: /\bfigs?\b/i,                             micros: { iron: 1, magnesium: 20, calcium: 60, fibre: 3 } },
+  { match: /pistachio/i,                             micros: { iron: 1, magnesium: 30, vitaminB6: 0.4, fibre: 3 } },
+  // Omega-3 (plant + other fish)
+  { match: /nori|wakame|seaweed/i,                   micros: { omega3: 0.3, iron: 1 } },
+  { match: /\bwalnut/i,                              micros: { omega3: 1.0 } },
+  { match: /trout|herring|anchov/i,                  micros: { omega3: 1.4 } },
+  { match: /salmon|\btuna\b|sardine|mackerel/i,      micros: { vitaminB6: 0.4 } },
+  // Magnesium / whole grains / legumes
+  { match: /peanut/i,                                micros: { magnesium: 50, fibre: 2, iron: 1, vitaminB6: 0.2 } },
+  { match: /brown rice/i,                            micros: { magnesium: 40, fibre: 2 } },
+  { match: /buckwheat/i,                             micros: { magnesium: 40, fibre: 3 } },
+  { match: /bulgur/i,                                micros: { magnesium: 30, fibre: 4 } },
+  { match: /whole ?-?wheat|wholegrain|whole grain/i, micros: { magnesium: 30, fibre: 4 } },
+  { match: /\brye\b/i,                               micros: { magnesium: 30, fibre: 4 } },
+  // Fibre / fruit / coconut (flesh only — not oil/milk/water/sugar)
+  { match: /\bapple\b/i,                             micros: { fibre: 3, vitaminC: 5 } },
+  { match: /\bpears?\b/i,                            micros: { fibre: 4, vitaminC: 5 } },
+  { match: /shredded coconut|coconut flake|desiccated coconut|toasted coconut/i, micros: { fibre: 3, magnesium: 15 } },
 ];
 
 const MICRO_CAP: Record<MicroKey, number> = {
