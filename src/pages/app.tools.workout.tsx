@@ -663,12 +663,16 @@ export default function WorkoutPage() {
   const guidedShownRef = useRef(false);
   // Once a plan exists the guided SETUP is done — from then on show the full tool
   // (hero + tabs + features), keeping only a slim "Finish on Today" bar.
-  const [hasPlan, setHasPlan] = useState(() => readWorkoutPlanDays().length > 0);
+  // "A plan exists" = a freestyle week OR an enrolled flagship program (which
+  // saves to a different key). Both must count, or choosing a program during
+  // guided setup looks like nothing happened.
+  const planExists = () => readWorkoutPlanDays().length > 0 || loadActiveProgram() != null;
+  const [hasPlan, setHasPlan] = useState(planExists);
   useEffect(() => {
     const onUpdate = () => {
-      setHasPlan(readWorkoutPlanDays().length > 0);
+      setHasPlan(planExists());
       if (guidedShownRef.current) return;
-      if (isGuided() && readWorkoutPlanDays().length > 0) { guidedShownRef.current = true; setGuidedDone(true); }
+      if (isGuided() && planExists()) { guidedShownRef.current = true; setGuidedDone(true); }
     };
     window.addEventListener("bloom:workout-updated", onUpdate);
     return () => window.removeEventListener("bloom:workout-updated", onUpdate);

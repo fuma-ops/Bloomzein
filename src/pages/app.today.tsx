@@ -850,12 +850,12 @@ export default function TodayPage() {
   // a "your Today plan is ready" celebration, then a soft pink outline sweeps
   // over Today's Plan. endGuide() first so it can only ever fire once.
   useEffect(() => {
-    const allDone = cycleReady && mealPlanned && dietSetup && movementPlanned && !!mood;
-    if (isGuided() && allDone) {
+    const allCoreDone = cycleReady && mealPlanned && dietSetup && movementPlanned;
+    if (isGuided() && allCoreDone) {
       endGuide();
       setFinaleOpen(true);
     }
-  }, [cycleReady, mealPlanned, dietSetup, movementPlanned, mood]);
+  }, [cycleReady, mealPlanned, dietSetup, movementPlanned]);
 
   // Compact daily affirmation — tucked under the "Today's Plan" title. Shows
   // immediately on the first-ever Today, then only on scroll (affirmReveal),
@@ -1039,10 +1039,13 @@ export default function TodayPage() {
           Today's Plan for ~2s, matching every tool's setup step. */}
       {finaleOpen && (
         <SpotlightCoach
-          targetId="todays-plan"
-          title="Your Bloom day is ready ✿"
-          message="Everything you set up — your cycle, meals, movement and mood — flows into this one plan. This is your Bloom."
-          autoDismissMs={2000}
+          targetId="daily-checkin"
+          title="Your Bloom is all set ✿"
+          message="Congratulations! Your cycle, energy, meals, movement and goals are all planned and in sync — one connected plan, tuned to you. One soft last touch: check in each day here — your mood, sleep, symptoms and water."
+          primaryLabel="Start my day ✿"
+          onPrimary={() => setFinaleOpen(false)}
+          secondaryLabel="Later"
+          noCollapse
           onClose={() => setFinaleOpen(false)}
         />
       )}
@@ -1064,7 +1067,7 @@ export default function TodayPage() {
              All four on ONE row on phone (icon stacked over the label), flowing
              into a horizontal row on sm+. Energy is NOT here — it reads on the
              phase hero. ── */}
-      <div className="relative z-[1] mt-2 sm:mt-3">
+      <div id="daily-checkin" className="relative z-[1] mt-2 sm:mt-3">
         <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
             className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
