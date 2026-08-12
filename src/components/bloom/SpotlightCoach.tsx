@@ -32,6 +32,7 @@ export function SpotlightCoach({
   autoDismissMs,
   step,
   total,
+  noCollapse = false,
 }: {
   targetId: string;
   title: string;
@@ -49,12 +50,15 @@ export function SpotlightCoach({
   /** Guided-setup progress — show a "Step n of N" row + dots when both are set. */
   step?: number;
   total?: number;
+  /** Celebration mode: a dismiss always CLOSES (never collapses to a pill), even
+   *  with a primary CTA present. Use for the finale, not for mid-setup steps. */
+  noCollapse?: boolean;
 }) {
   const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
 
   // An actionable step has a way forward; a bare celebration just auto-dismisses.
-  const isStep = !!(primaryLabel && onPrimary);
+  const isStep = !!(primaryLabel && onPrimary) && !noCollapse;
   // Dismiss gestures never strand her mid-setup: on a step they collapse to a
   // re-openable pill; on a celebration they close.
   const dismiss = () => { if (isStep) setCollapsed(true); else onClose(); };

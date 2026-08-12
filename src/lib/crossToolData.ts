@@ -698,7 +698,14 @@ export function hasMealPlan(): boolean {
 
 /** True once the user has any planned movement (workout program/freestyle or a yoga schedule). */
 export function hasMovementPlan(): boolean {
-  return readWorkoutPlanDays().length > 0 || readYogaPlanDays().length > 0;
+  // An enrolled flagship program lives under its own key — count it too, else a
+  // program-based plan doesn't register as "movement set up".
+  let hasProgram = false;
+  try {
+    const raw = localStorage.getItem("bloom:workout-active-program");
+    hasProgram = !!raw && raw !== "null";
+  } catch {}
+  return readWorkoutPlanDays().length > 0 || readYogaPlanDays().length > 0 || hasProgram;
 }
 
 /** Wipe EVERY Bloomzein key from localStorage — a true "start fresh" so the app
