@@ -1460,14 +1460,24 @@ export default function YogaPage() {
       )}
 
       {view.kind === "flows" && (
-        <FlowLibrary
-          onStart={(f) => {
-            if (!isPremium() && f.level !== "Beginner") { openPaywall("yoga"); return; }
-            setView({ kind: "session", flow: buildNamedFlow(f.poses), lang: "en", mode: "visual",
-              intention: f.intention, hold: holdSecondsFor(f.durationMin, f.level), durationMin: f.durationMin,
-              sound: DEFAULT_SOUND, title: f.title });
-          }}
-        />
+        <div className="space-y-6 yoga-fade">
+          {/* Titled, ready-made flows (searchable) */}
+          <FlowLibrary
+            onStart={(f) => {
+              if (!isPremium() && f.level !== "Beginner") { openPaywall("yoga"); return; }
+              setView({ kind: "session", flow: buildNamedFlow(f.poses), lang: "en", mode: "visual",
+                intention: f.intention, hold: holdSecondsFor(f.durationMin, f.level), durationMin: f.durationMin,
+                sound: DEFAULT_SOUND, title: f.title });
+            }}
+          />
+          {/* Flow sessions — find your moment (quick presets → customize) */}
+          <FlowSessionsSection onStart={(intention, durationMin) => { if (!isPremium()) { openPaywall("yoga"); return; } setView({ kind: "setup", preset: { intention, durationMin } }); }} />
+          {/* Curated plans — a week, set for you */}
+          <CuratedPlans onApply={(p) => {
+            try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ ...p.focus })); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
+            setView({ kind: "plan" });
+          }} />
+        </div>
       )}
 
       {view.kind === "home" && (
@@ -1478,13 +1488,6 @@ export default function YogaPage() {
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
           onSetup={(preset) => setView({ kind: "setup", preset })}
           onStepGoTo={(s) => advanceStep(s)}
-          onApplyPlan={(p) => {
-            try {
-              localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ ...p.focus }));
-              window.dispatchEvent(new Event("bloom:yoga-updated"));
-            } catch {}
-            setView({ kind: "plan" });
-          }}
         />
       )}
 
@@ -1643,6 +1646,11 @@ function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
   });
   return (
     <div className="yoga-fade mt-3">
+      <div className="mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow library</p>
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">press play, we'll guide you</h2>
+        <p className="mt-1 text-[11px] sm:text-xs text-rose/65">Ready-made flows for every need — search a title and start.</p>
+      </div>
       <div className="relative mb-4 max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/40" />
         <input
@@ -1794,13 +1802,12 @@ function useYogaPhaseAndStreak() {
 }
 
 function YogaHome({
-  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo, onApplyPlan,
+  onboarded, step, onBegin, onLibrary, onSetup, onStepGoTo,
 }: {
   onboarded: boolean; step: 1|2|3;
   onBegin: () => void; onLibrary: () => void;
   onSetup: (preset?: { intention: Intention; durationMin: number }) => void;
   onStepGoTo: (s: 1|2|3) => void;
-  onApplyPlan: (p: YogaProgram) => void;
 }) {
   return (
     <div className="space-y-2 yoga-fade">
@@ -1837,11 +1844,7 @@ function YogaHome({
         </div>
       </section>
 
-      {/* CURATED PLANS — themed weekly plans you can apply in one tap */}
-      <CuratedPlans onApply={onApplyPlan} />
-
-      {/* FLOW SESSIONS — by moment / by intention carousels */}
-      <FlowSessionsSection onStart={(intention, durationMin) => { if (!isPremium()) { openPaywall("yoga"); return; } onSetup({ intention, durationMin }); }} />
+      {/* Curated plans & Flow sessions now live on the Flows tab (see FlowLibrary). */}
     </div>
   );
 }
