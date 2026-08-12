@@ -3564,30 +3564,46 @@ function SessionPlayer({
           )}
         </div>
         )}
+        {!present && (
         <div className={["w-full max-w-lg lg:w-[26rem] rounded-full px-4 py-2 text-center lg:text-left animate-fade-in", glass].join(" ")}>
           <p className="flex items-center justify-center lg:justify-start gap-2 text-sm font-medium" style={{ color: skin.ink }}>
             <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {mantra}
           </p>
         </div>
+        )}
       </div>
 
       {/* ===================== PRESENTATION MODE ===================== */}
       {present && (
         <>
-          {/* Brand watermark — always on, so every recorded frame carries Bloomzein. */}
-          <div className="pointer-events-none absolute bottom-5 right-6 z-30 flex items-center gap-2 animate-fade-in">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white shadow-lg shadow-hotpink/30">
-              <BloomFlower size={17} />
-            </span>
-            <span className="font-script text-2xl leading-none text-white" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.4)" }}>
-              Bloomzein <span className="opacity-80">Yoga</span>
-            </span>
+          {/* Flow progress — kept, slim, across the top. */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-30 px-6 pt-4 sm:pt-5">
+            <div className="relative mx-auto h-1.5 max-w-3xl rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.30)" }}>
+              <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
+            </div>
           </div>
+
+          {/* Breath mantra — centered, like a soft subtitle. */}
+          <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-6 text-center">
+            <p key={mantra} className="font-script text-2xl sm:text-3xl leading-tight text-white animate-fade-in" style={{ textShadow: "0 2px 14px rgba(0,0,0,0.55)" }}>{mantra}</p>
+          </div>
+
+          {/* Brand logo — bottom-left, stacked (flower · Bloomzein · tagline), matching the app mark. */}
+          <div className="pointer-events-none absolute bottom-5 left-6 z-30 flex items-center gap-2.5 animate-fade-in">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white shadow-lg shadow-hotpink/30">
+              <BloomFlower size={20} />
+            </span>
+            <div className="leading-none">
+              <p className="font-script text-3xl leading-none text-white" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}>Bloomzein</p>
+              <p className="mt-1 text-[11px] font-semibold tracking-wide text-white/85" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>stay soft, bloom on. ✿</p>
+            </div>
+          </div>
+
           {/* Exit — auto-hides after a moment; move the mouse or press Esc to bring it back. */}
           <button
             onClick={() => setPresent(false)}
             title="Exit presentation mode (Esc)"
-            className={["absolute top-4 right-4 z-40 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity duration-500", glassBtn, chromeShow ? "opacity-100" : "opacity-0 pointer-events-none"].join(" ")}
+            className={["absolute top-6 right-4 z-40 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity duration-500", glassBtn, chromeShow ? "opacity-100" : "opacity-0 pointer-events-none"].join(" ")}
           >
             <X className="h-3.5 w-3.5" /> Exit
           </button>
