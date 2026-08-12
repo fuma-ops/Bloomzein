@@ -641,6 +641,7 @@ function RecipeModal({
                 : `makes ${recipe.servings} serving${recipe.servings === 1 ? "" : "s"}`}
             </span>
           </h3>
+          <p className="mt-0.5 text-[11px] text-rose/50">tbsp = tablespoon (a big spoon) · tsp = teaspoon (a small spoon) · 1 cup ≈ 240 ml</p>
           <ul className="mt-1 space-y-1 text-sm text-rose/90">
             {recipe.ingredients.map((ing) => (
               <li
