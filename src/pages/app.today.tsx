@@ -395,6 +395,7 @@ export default function TodayPage() {
   const [waterCount,          setWaterCount]          = useState(0);
   const [waterGoal,           setWaterGoal]           = useState(8);
   const [waterModalOpen,      setWaterModalOpen]      = useState(false);
+  const [waterPopoverOpen,    setWaterPopoverOpen]    = useState(false);
   const [waterLastAt,         setWaterLastAt]         = useState<number | null>(null);
   const [streak,              setStreak]              = useState(0);
   const [planDone,            setPlanDone]            = useState<string[]>([]);
@@ -433,6 +434,7 @@ export default function TodayPage() {
   const moodTileRef = useRef<HTMLButtonElement>(null);
   const symptomTileRef = useRef<HTMLButtonElement>(null);
   const sleepTileRef = useRef<HTMLButtonElement>(null);
+  const waterTileRef = useRef<HTMLButtonElement>(null);
 
   // Iron recipe for period/luteal nudge (used in plan section)
   const ironRecipe = useMemo(() =>
@@ -1035,6 +1037,18 @@ export default function TodayPage() {
         triggerRef={sleepTileRef}
       />
 
+      {/* WaterPopover — fast "I drank a glass" log, mirrors the mood popover.
+          Setting the daily goal is a discreet secondary link, not the default. */}
+      <WaterPopover
+        open={waterPopoverOpen}
+        onClose={() => setWaterPopoverOpen(false)}
+        count={waterCount}
+        goal={waterGoal}
+        onLog={tapWater}
+        onEditGoal={() => { setWaterPopoverOpen(false); setWaterModalOpen(true); }}
+        triggerRef={waterTileRef}
+      />
+
       {/* FINALE — the closing "your world is built" moment: a Barbie spotlight on
           Today's Plan for ~2s, matching every tool's setup step. */}
       {finaleOpen && (
@@ -1091,7 +1105,7 @@ export default function TodayPage() {
             const wp = waterGoal > 0 ? Math.min(100, Math.round((waterCount / waterGoal) * 100)) : 0;
             const C = 2 * Math.PI * 15; // ring circumference (r=15 in a 36-box)
             return (
-              <button onClick={() => setWaterModalOpen(true)}
+              <button ref={waterTileRef} onClick={() => setWaterPopoverOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={waterPopoverOpen}
                 className="relative group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
                 {/* corner water drop — signals this chip is your water insight */}
                 <Droplet aria-hidden className="absolute right-1 top-1 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
@@ -1998,6 +2012,93 @@ function MoodPopover({
           </button>
         ))}
       </div>
+    </div>,
+    document.body
+  );
+}
+
+const WATER_POPOVER_SIZE = { width: 248, height: 210 };
+
+/** Fast water log — a mood-style anchored popover (no gray overlay). Primary
+ *  action is "I drank a glass"; tapping any glass fills up to it (or empties back
+ *  down). The daily goal lives behind a small secondary link, not front-and-centre. */
+function WaterPopover({
+  open, onClose, count, goal, onLog, onEditGoal, triggerRef,
+}: {
+  open: boolean;
+  onClose: () => void;
+  count: number;
+  goal: number;
+  onLog: (idx: number) => void;
+  onEditGoal: () => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+}) {
+  const style = useSmartPopoverPosition(triggerRef, open, WATER_POPOVER_SIZE);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (triggerRef.current?.contains(target as Node)) return;
+      if (target.closest?.("[data-water-popover]")) return;
+      onClose();
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open, onClose, triggerRef]);
+
+  if (!open) return null;
+
+  const reached = count >= goal;
+
+  return createPortal(
+    <div
+      data-water-popover
+      style={style}
+      className="rounded-3xl bg-white/95 backdrop-blur-xl p-3.5 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
+    >
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">WATER TODAY 💧</p>
+
+      {/* Tappable glasses — fill up to the one you tap, or tap a filled one to undo. */}
+      <div className="mb-2.5 flex flex-wrap items-center justify-center gap-1">
+        {Array.from({ length: goal }).map((_, i) => {
+          const filled = i < count;
+          return (
+            <button
+              key={i}
+              onClick={() => onLog(i)}
+              aria-label={`Glass ${i + 1}`}
+              className="grid h-6 w-6 place-items-center rounded-full transition active:scale-90"
+            >
+              <Droplet
+                className={filled ? "h-5 w-5 text-hotpink" : "h-5 w-5 text-petal"}
+                fill={filled ? "currentColor" : "none"}
+                strokeWidth={filled ? 0 : 1.8}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="mb-2.5 text-center font-script text-xl leading-none text-hotpink">
+        {count} / {goal} glasses{reached ? " ✿" : ""}
+      </p>
+
+      <button
+        onClick={() => onLog(count)}
+        disabled={reached}
+        className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-bold text-white disabled:opacity-60 disabled:animate-none"
+      >
+        <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={0} />
+        {reached ? "Goal reached ✿" : "I drank a glass"}
+      </button>
+
+      <button
+        onClick={onEditGoal}
+        className="mt-1.5 block w-full text-center text-[10.5px] font-semibold text-rose/50 transition hover:text-hotpink"
+      >
+        Daily goal: {goal} · edit
+      </button>
     </div>,
     document.body
   );
