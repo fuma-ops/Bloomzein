@@ -321,6 +321,35 @@ function ensureMicroCoverage(
   }
 }
 
+/** Final sizing pass: scale a day's portions so its TOTAL calories land on the
+ *  target (±5%), not just each slot near its share. Without this, per-slot clamps
+ *  + dense recipes let a day drift well above target — e.g. a 'maintain' day
+ *  plating +400 kcal, which doesn't respect her goal. Portions stay realistic
+ *  (0.5×–2×, quarter servings). */
+function normalizeDayCalories(
+  dayPlan: Record<MealType, string | null>,
+  dayPortions: Partial<Record<MealType, number>>,
+  byId: Map<string, Recipe>,
+  dailyTarget: number,
+): void {
+  if (!dailyTarget || dailyTarget <= 0) return;
+  const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+  const total = slots.reduce((sum, t) => {
+    const r = dayPlan[t] ? byId.get(dayPlan[t]!) : undefined;
+    return r ? sum + (r.macros.calories || 0) * (dayPortions[t] ?? 1) : sum;
+  }, 0);
+  if (total <= 0) return;
+  const factor = dailyTarget / total;
+  if (factor >= 0.95 && factor <= 1.05) return; // already on target — leave it
+  for (const t of slots) {
+    const r = dayPlan[t] ? byId.get(dayPlan[t]!) : undefined;
+    if (!r || !(r.macros.calories > 0)) continue;
+    let next = (dayPortions[t] ?? 1) * factor;
+    next = Math.round(Math.max(0.5, Math.min(2, next)) * 4) / 4;
+    if (next === 1) delete dayPortions[t]; else dayPortions[t] = next;
+  }
+}
+
 function buildWeek(
   pool: Recipe[],
   intention: Intention,
@@ -354,6 +383,8 @@ function buildWeek(
     // just its phase/vibe — no more 0.0g on a nutrient the phase calls for.
     if (dailyTarget) portions[d] ??= {};
     ensureMicroCoverage(plan[d], portions[d], phase, pool, byId, owned, used, ratings, dailyTarget);
+    // Size the whole day to the target so 'Planned meals' actually matches the goal.
+    if (dailyTarget && portions[d]) normalizeDayCalories(plan[d], portions[d], byId, dailyTarget);
   });
   return { plan, portions };
 }
@@ -741,6 +772,7 @@ export default function MealsPage() {
     // meets iron / magnesium / omega-3 / vitamin C rather than leaving one at 0.
     const byId = new Map(myRulesPool.map((r) => [r.id, r]));
     ensureMicroCoverage(dayPlan, dayPortions, phase, myRulesPool, byId, owned, used, ratings, target);
+    normalizeDayCalories(dayPlan, dayPortions, byId, target);
     setPlan({ ...plan, [day]: dayPlan });
     // Replace this day's portions in the viewed week (whole day at once).
     setWeekPortions({ ...weekPortions, [day]: dayPortions });
