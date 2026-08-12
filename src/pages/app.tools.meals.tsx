@@ -2276,7 +2276,7 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
             <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">
               Ingredients{scaled ? " · portioned for your goal ✿" : ` · makes ${r.servings} serving${r.servings === 1 ? "" : "s"}`}
             </p>
-            <p className="text-[11px] text-rose/50 mb-1.5 normal-case">tbsp = tablespoon (a big spoon) · tsp = teaspoon (a small spoon) · 1 cup ≈ 240 ml</p>
+            <p className="text-[11px] text-rose/50 mb-1.5 normal-case">1 tablespoon ≈ 15 ml · 1 teaspoon ≈ 5 ml · 1 cup ≈ 240 ml</p>
             <ul className="space-y-1">
               {r.ingredients.map((i) => (
                 <li key={i.item} className="flex gap-2 text-sm text-rose">
