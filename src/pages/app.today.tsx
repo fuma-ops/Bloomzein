@@ -1857,7 +1857,7 @@ function PlanDetailModal({
             <div className="rounded-2xl bg-white p-3">
               <div className="mb-2 flex items-center justify-between">
                 <p className="flex items-center gap-1 text-[12px] font-bold text-[#9D174D]"><BloomFlower className="h-3 w-3 text-hotpink" /> Nutrition breakdown</p>
-                <a href="/app/tools/diet" className="inline-flex items-center gap-0.5 text-[10px] font-bold text-hotpink">More details <ChevronRight className="h-3 w-3" /></a>
+                <a href="/app/tools/diet?tab=cycle" className="inline-flex items-center gap-0.5 text-[10px] font-bold text-hotpink">More details <ChevronRight className="h-3 w-3" /></a>
               </div>
               <div className="grid grid-cols-5 gap-1.5 text-center">
                 {NUT.map((n) => (
