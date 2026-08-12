@@ -737,6 +737,10 @@ export default function MealsPage() {
         if (f !== 1) dayPortions[type] = f;
       }
     });
+    // Same phase-nutrient coverage as a full week build, so a re-rolled day also
+    // meets iron / magnesium / omega-3 / vitamin C rather than leaving one at 0.
+    const byId = new Map(myRulesPool.map((r) => [r.id, r]));
+    ensureMicroCoverage(dayPlan, dayPortions, phase, myRulesPool, byId, owned, used, ratings, target);
     setPlan({ ...plan, [day]: dayPlan });
     // Replace this day's portions in the viewed week (whole day at once).
     setWeekPortions({ ...weekPortions, [day]: dayPortions });
