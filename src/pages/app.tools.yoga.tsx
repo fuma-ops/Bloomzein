@@ -2,7 +2,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff, Video,
+  ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff, Video, Search,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
@@ -962,6 +962,91 @@ function buildFlow(opts: {
   return withSides;
 }
 
+/* ===================== TITLED FLOW LIBRARY =====================
+   Curated, FIXED sequences with searchable titles. One entry powers BOTH a
+   browsable in-app flow AND a ready-to-film YouTube video. The generator above
+   (buildFlow) stays untouched for the user's own personalized/parametered flow. */
+export type NamedFlow = {
+  slug: string; title: string; intention: Intention; phase?: Phase;
+  durationMin: number; level: Level; blurb: string; tags: string[];
+  poses: string[]; thumb?: string;
+};
+export const YOGA_FLOWS: NamedFlow[] = [
+  // — Cycle (the niche) —
+  { slug: "period-cramps", title: "Yoga for Period Cramps", intention: "cycle", phase: "menstrual", durationMin: 15, level: "Beginner",
+    blurb: "Gentle holds to soften cramps and ease the low belly.", tags: ["period", "cramps", "menstrual", "gentle", "PMS"],
+    poses: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "knees-to-chest", "supine-twist", "happy-baby", "banana-pose", "legs-up-wall", "savasana"] },
+  { slug: "pms-relief", title: "PMS Relief Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
+    blurb: "Calm the mood swings and release tension before your period.", tags: ["PMS", "luteal", "calm", "mood", "hormones"],
+    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "seated-forward-fold", "supine-twist", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+  { slug: "bloating-digestion", title: "Yoga for Bloating & Digestion", intention: "release", durationMin: 10, level: "Beginner",
+    blurb: "Twists and folds to ease a bloated, heavy belly.", tags: ["bloating", "digestion", "gut", "twist", "period"],
+    poses: ["cat-cow", "seated-twist", "knees-to-chest", "supine-twist", "childs-pose", "happy-baby", "seated-forward-fold", "savasana"] },
+  { slug: "follicular-energy", title: "Follicular Phase Energy Yoga", intention: "cycle", phase: "follicular", durationMin: 20, level: "Intermediate",
+    blurb: "Build gentle heat as your energy rises after your period.", tags: ["follicular", "energy", "flow", "strength"],
+    poses: ["cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"] },
+  { slug: "ovulation-glow", title: "Ovulation Glow Flow", intention: "cycle", phase: "ovulation", durationMin: 20, level: "Intermediate",
+    blurb: "Your strongest phase — open, energize and glow.", tags: ["ovulation", "energy", "glow", "strength"],
+    poses: ["cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"] },
+  { slug: "luteal-calm", title: "Luteal Phase Calm Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
+    blurb: "Wind down as your energy dips before your period.", tags: ["luteal", "calm", "restorative", "hormones"],
+    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "butterfly", "seated-twist", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+  // — Time & mood —
+  { slug: "morning-wake-up", title: "Morning Wake-Up Yoga", intention: "morning", durationMin: 10, level: "Beginner",
+    blurb: "A bright 10 minutes to wake the body and mind.", tags: ["morning", "wake up", "energy", "beginner"],
+    poses: ["cat-cow", "childs-pose", "downward-dog", "forward-fold", "low-lunge", "mountain", "standing-side-stretch", "cobra", "seated-twist", "savasana"] },
+  { slug: "bedtime-sleep", title: "Bedtime Yoga for Better Sleep", intention: "sleep", durationMin: 15, level: "Beginner",
+    blurb: "Slow, floor-based holds to melt into deep rest.", tags: ["sleep", "bedtime", "night", "wind down", "insomnia"],
+    poses: ["childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"] },
+  { slug: "stress-relief", title: "Stress Relief Yoga", intention: "stress", durationMin: 10, level: "Beginner",
+    blurb: "Let the shoulders drop and the breath slow down.", tags: ["stress", "relax", "tension", "calm"],
+    poses: ["easy-seat", "neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "seated-forward-fold", "supine-twist", "savasana"] },
+  { slug: "anxiety-breathe", title: "Yoga for Anxiety · Calm & Breathe", intention: "stress", durationMin: 10, level: "Beginner",
+    blurb: "Breathwork and grounding holds to settle a racing mind.", tags: ["anxiety", "breathe", "calm", "grounding"],
+    poses: ["easy-seat", "box-breathing", "alternate-nostril", "childs-pose", "cat-cow", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+  // — Body targets —
+  { slug: "lower-back", title: "Yoga for Lower Back Pain", intention: "backcare", durationMin: 12, level: "Beginner",
+    blurb: "Soothe and mobilize a tight, achy lower back.", tags: ["back pain", "lower back", "spine", "relief"],
+    poses: ["cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"] },
+  { slug: "neck-shoulders-desk", title: "Desk Break · Neck & Shoulder Yoga", intention: "backcare", durationMin: 5, level: "Beginner",
+    blurb: "A 5-minute reset for a stiff neck and shoulders at your desk.", tags: ["neck", "shoulders", "desk", "office", "quick"],
+    poses: ["neck-shoulder-rolls", "seated-twist", "standing-side-stretch", "thread-the-needle", "cat-cow", "childs-pose"] },
+  { slug: "hip-openers", title: "Hip-Opening Yoga", intention: "release", durationMin: 15, level: "Intermediate",
+    blurb: "Deep, patient holds to open tight hips.", tags: ["hips", "hip openers", "flexibility", "release"],
+    poses: ["cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"] },
+  { slug: "flexibility-hamstrings", title: "Yoga for Flexibility & Hamstrings", intention: "fullbody", durationMin: 15, level: "Beginner",
+    blurb: "Lengthen the backs of the legs and the whole spine.", tags: ["flexibility", "hamstrings", "stretch", "splits"],
+    poses: ["cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"] },
+  { slug: "core-power", title: "Core Power Yoga", intention: "core", durationMin: 15, level: "Intermediate",
+    blurb: "Build a strong, steady centre.", tags: ["core", "abs", "strength", "power"],
+    poses: ["cat-cow", "plank", "forearm-plank", "boat", "dead-bug", "hollow-hold", "bird-dog", "bridge", "modified-side-plank", "savasana"] },
+  { slug: "balance-focus", title: "Balance & Focus Yoga", intention: "balance", durationMin: 12, level: "Intermediate",
+    blurb: "Steady standing shapes to sharpen focus.", tags: ["balance", "focus", "standing", "stability"],
+    poses: ["mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"] },
+  { slug: "full-body-beginner", title: "Full-Body Beginner Yoga · 10 Min", intention: "fullbody", durationMin: 10, level: "Beginner",
+    blurb: "A friendly all-round flow for total beginners.", tags: ["beginner", "full body", "10 minute", "gentle"],
+    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"] },
+  { slug: "morning-stretch-5", title: "5-Minute Morning Stretch", intention: "morning", durationMin: 5, level: "Beginner",
+    blurb: "The quickest way to un-stiffen and start your day.", tags: ["morning", "quick", "5 minute", "stretch"],
+    poses: ["cat-cow", "childs-pose", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist"] },
+];
+
+/** Build a fixed titled flow: resolve slugs → poses, add the "other side" step
+ *  after each one-sided pose (same treatment as buildFlow). No randomness — the
+ *  filmed video always matches what the app plays. */
+export function buildNamedFlow(poseSlugs: string[]): Pose[] {
+  const seen = new Set<string>();
+  const poses = poseSlugs
+    .filter((s) => POSE_BY_SLUG[s] && !seen.has(s) && (seen.add(s), true))
+    .map((s) => POSE_BY_SLUG[s]);
+  const withSides: Pose[] = [];
+  for (const p of poses) {
+    withSides.push(p);
+    if (TWO_SIDED.has(p.slug)) withSides.push(makeSwitchStep(p));
+  }
+  return withSides;
+}
+
 /** Real session length (seconds) = sum of each pose's own hold. */
 function flowTotalSeconds(flow: Pose[]): number {
   return flow.reduce((a, p) => a + poseHoldSec(p), 0);
@@ -1230,10 +1315,11 @@ function BreathPacer({ phase, phaseProgress, lang, dim }: {
 type View =
   | { kind: "home" }
   | { kind: "library" }
+  | { kind: "flows" }
   | { kind: "plan" }
   | { kind: "setup"; preset?: { intention: Intention; durationMin: number } }
-  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string }
-  | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; moodBefore?: string; moodAfter?: string };
+  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string; title?: string }
+  | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; title?: string; moodBefore?: string; moodAfter?: string };
 
 export default function YogaPage() {
   const [onboarded, setOnboarded] = useState(false);
@@ -1321,7 +1407,7 @@ export default function YogaPage() {
     setTourDone(true);
     setShowTour(false);
   };
-  const isTabbed = view.kind === "plan" || view.kind === "home" || view.kind === "library";
+  const isTabbed = view.kind === "plan" || view.kind === "home" || view.kind === "library" || view.kind === "flows";
   const tourVisible = showTour || (hydrated && !tourDone && isTabbed);
 
   return (
@@ -1361,14 +1447,26 @@ export default function YogaPage() {
         </>
       )}
 
-      {!guided && (view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
+      {!guided && (view.kind === "home" || view.kind === "library" || view.kind === "flows" || view.kind === "plan") && (
         <YogaHero
           active={view.kind}
           onDiscover={() => setView({ kind: "home" })}
           onLibrary={() => { setView({ kind: "library" }); advanceStep(Math.max(step, 1) as 1|2|3); }}
+          onFlows={() => setView({ kind: "flows" })}
           onMyPlan={() => setView({ kind: "plan" })}
           onTryFlow={() => setView({ kind: "setup" })}
           onGuide={() => setShowTour(true)}
+        />
+      )}
+
+      {view.kind === "flows" && (
+        <FlowLibrary
+          onStart={(f) => {
+            if (!isPremium() && f.level !== "Beginner") { openPaywall("yoga"); return; }
+            setView({ kind: "session", flow: buildNamedFlow(f.poses), lang: "en", mode: "visual",
+              intention: f.intention, hold: holdSecondsFor(f.durationMin, f.level), durationMin: f.durationMin,
+              sound: DEFAULT_SOUND, title: f.title });
+          }}
         />
       )}
 
@@ -1428,8 +1526,9 @@ export default function YogaPage() {
           sound={view.sound}
           intention={view.intention}
           durationMin={view.durationMin}
-          onExit={() => setView({ kind: "home" })}
-          onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin })}
+          title={view.title}
+          onExit={() => setView({ kind: view.title ? "flows" : "home" })}
+          onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin, title: view.title })}
         />
       )}
 
@@ -1459,9 +1558,10 @@ export default function YogaPage() {
 
 // ===================== HERO (shared, stays visible across tabs) =====================
 
-const HERO_CONTENT: Record<"home" | "library" | "plan", { title: string; subtitle: string }> = {
+const HERO_CONTENT: Record<"home" | "library" | "flows" | "plan", { title: string; subtitle: string }> = {
   home: { title: "Yoga Flows", subtitle: "guided breath, gentle movement — your softest practice." },
   library: { title: "Learn the poses", subtitle: "Tap any pose to read how to enter it and find your breath." },
+  flows: { title: "Flow Library", subtitle: "ready-made flows for every need — pick a title and press play." },
   plan: { title: "Your soft week", subtitle: "your personalized plan, gently synced to your cycle." },
 };
 
@@ -1531,12 +1631,69 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
   );
 }
 
+/** Searchable grid of titled, ready-made flows (YOGA_FLOWS). Each card launches a
+ *  fixed curated sequence — the same one every time, so it doubles as YouTube content. */
+function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
+  const [q, setQ] = useState("");
+  const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const list = YOGA_FLOWS.filter((f) => {
+    if (!terms.length) return true;
+    const hay = `${f.title} ${f.blurb} ${f.tags.join(" ")} ${f.level}`.toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  });
+  return (
+    <div className="yoga-fade mt-3">
+      <div className="relative mb-4 max-w-md">
+        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/40" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search flows — period, sleep, back, energy…"
+          className="w-full rounded-full border border-petal/60 bg-white/90 pl-9 pr-4 py-2.5 text-sm text-rose placeholder:text-rose/40 outline-none focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {list.map((f, i) => {
+          const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
+          const plusLocked = f.level !== "Beginner" && !isPremium();
+          return (
+            <button
+              key={f.slug}
+              onClick={() => onStart(f)}
+              style={{ animationDelay: `${i * 40}ms` }}
+              className="group text-left rounded-3xl overflow-hidden border border-petal/60 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
+            >
+              <div className="relative h-32 w-full overflow-hidden bg-blush">
+                {thumb && <img src={thumb} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                <p className="absolute left-3 bottom-2 right-3 font-script text-lg text-white leading-tight" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{f.title}</p>
+                <span className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-hotpink shadow-md"><Play className="h-4 w-4 ml-0.5" /></span>
+                {plusLocked && <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-hotpink"><Lock className="h-2.5 w-2.5" /> Plus</span>}
+              </div>
+              <div className="p-3">
+                <p className="text-[12px] text-rose/70 leading-snug">{f.blurb}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
+                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{f.durationMin} min</span>
+                  <span>·</span><span>{f.level}</span>
+                  {f.phase && <><span>·</span><span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span></>}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {!list.length && <p className="text-center text-sm text-rose/50 py-8">No flow matches “{q}” — try “period”, “sleep”, “back”…</p>}
+    </div>
+  );
+}
+
 function YogaHero({
-  active, onDiscover, onLibrary, onMyPlan, onTryFlow, onGuide, onReset,
+  active, onDiscover, onLibrary, onFlows, onMyPlan, onTryFlow, onGuide, onReset,
 }: {
-  active: "home" | "library" | "plan";
+  active: "home" | "library" | "flows" | "plan";
   onDiscover: () => void;
   onLibrary: () => void;
+  onFlows: () => void;
   onMyPlan: () => void;
   onTryFlow: () => void;
   onGuide?: () => void;
@@ -1598,6 +1755,7 @@ function YogaHero({
         <div className="flex">
           <div className="inline-flex rounded-full bg-white/70 backdrop-blur border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
             <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
+            <button data-tour="yg-tab-flows" onClick={onFlows} className={tabClass(active === "flows")}>Flows</button>
             <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
             <button data-tour="yg-tab-library" onClick={() => { if (!isPremium()) { openPaywall("yoga"); return; } onLibrary(); }} className={tabClass(active === "library")}>Library{!isPremium() && <Lock className="inline h-3 w-3 ml-1 -mt-0.5 text-[#B76E79]" strokeWidth={2.4} />}</button>
           </div>
@@ -2722,8 +2880,8 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
 
 /** Plays the cinematic Bloomzein intro (title + duration) once, then hands off
  *  to the live session — so every recorded flow opens on the brand. */
-function SessionWithIntro({ durationMin, ...player }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; onExit: () => void; onDone: () => void;
+function SessionWithIntro({ durationMin, title, ...player }: {
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; title?: string; onExit: () => void; onDone: () => void;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const meta = FLOW_META[player.intention] ?? FLOW_META.morning;
@@ -2731,7 +2889,7 @@ function SessionWithIntro({ durationMin, ...player }: {
     return (
       <BloomzeinIntro
         channel="Yoga"
-        sessionTitle={meta.title}
+        sessionTitle={title ?? meta.title}
         sessionMeta={`${durationMin} Minutes`}
         pillars={meta.focus}
         onDone={() => setIntroDone(true)}
