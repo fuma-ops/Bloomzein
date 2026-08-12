@@ -369,7 +369,8 @@ export default function MealsPage() {
   const cyclePhaseNow = readCyclePhase();
   const guidedPhaseLabel = cyclePhaseNow && cyclePhaseNow !== "any" ? PHASE_LABEL[cyclePhaseNow] : undefined;
   // While guided, keep her on This Week — never the premium organiser tabs.
-  useEffect(() => { if (guided && tab !== "week") setTab("week"); }, [guided, tab]);
+  // While guided, keep her on This Week — but let her open My Pantry (and come back).
+  useEffect(() => { if (guided && tab !== "week" && tab !== "pantry") setTab("week"); }, [guided, tab]);
   // Free users browse & plan This Week manually; the organiser tabs are Bloom+.
   const goToTab = (key: TabKey) => {
     if (!premiumPlan && PREMIUM_MEALS_TABS.has(key)) { openPaywall("meals"); return; }
@@ -820,9 +821,6 @@ export default function MealsPage() {
             onOpen={openRecipeAt} toggleFav={toggleFav}
           />
         )}
-
-        {/* Clever shortcuts — only once a week is actually planned */}
-        {!planEmpty && <CleverRow onOpen={openRecipeAt} owned={owned} />}
       </div>
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
@@ -2045,34 +2043,6 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
         );
       })}
     </div>
-  );
-}
-
-/* ---------- Clever shortcuts ---------- */
-
-function CleverRow({ onOpen, owned }: { onOpen: (id: string) => void; owned: Set<string> }) {
-  const surprise = () => {
-    const r = RECIPES[Math.floor(Math.random() * RECIPES.length)];
-    onOpen(r.id);
-  };
-  const quick = () => {
-    const r = RECIPES.filter((x) => x.prepMin + x.cookMin <= 20)
-      .sort((a, b) => scoreRecipe(b, owned) - scoreRecipe(a, owned))[0];
-    if (r) onOpen(r.id);
-  };
-  const month = new Date().getMonth();
-  const season = SEASONAL[month] || [];
-  return (
-    <Glass className="p-4">
-      <p className="font-script text-xl text-hotpink">Clever shortcuts</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <PinkBtn variant="outline" onClick={quick}><Clock className="h-4 w-4" /> I have 10 minutes</PinkBtn>
-        <PinkBtn variant="outline" onClick={surprise}><Sparkles className="h-4 w-4" /> Surprise me</PinkBtn>
-        <span className="inline-flex items-center gap-1 text-xs text-rose/80 px-3 py-2 rounded-full bg-blush">
-          In season: <b className="text-hotpink">{season.join(", ")}</b>
-        </span>
-      </div>
-    </Glass>
   );
 }
 

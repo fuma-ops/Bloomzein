@@ -677,7 +677,7 @@ export default function WorkoutPage() {
   // While guided AND still setting up (no plan yet), keep her on My Plan — never
   // the discover/programs/library browser. Once a plan exists she can roam freely.
   useEffect(() => {
-    if (guided && !hasPlan && (view.kind === "discover" || view.kind === "programs" || view.kind === "library")) {
+    if (guided && !hasPlan && (view.kind === "discover" || view.kind === "library")) {
       setTab("program"); setView({ kind: "program" });
     }
   }, [guided, hasPlan, view.kind]);
@@ -799,20 +799,23 @@ export default function WorkoutPage() {
         <ArrowLeft className="h-4 w-4" /> All tools
       </a>
 
-      {/* Still setting up (guided, no plan yet) → focused hero + finish bar. */}
-      {guided && !hasPlan && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+      {/* Guided setup → focused hero + ONE finish bar, no tool chrome. Once her
+          week is set, "movement" hands off to Yoga (its other half) before Today. */}
+      {guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <>
           <GuidedFocusHero label="Movement" phaseLabel={guidedPhaseLabel} image={HERO_IMAGES.program} />
-          <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Set up your week to finish this step." className="mb-3" />
+          <GuidedFinishBar
+            toolLabel="Movement" phaseLabel={guidedPhaseLabel}
+            hint={hasPlan ? "Your week is set — next, set up your yoga flow." : "Set up your week to finish this step."}
+            href={hasPlan ? "/app/tools/yoga" : "/app/today"}
+            ctaLabel={hasPlan ? "Continue to yoga" : "Finish on Today"}
+            className="mb-3"
+          />
         </>
       )}
 
-      {/* Setup done (or not guided) → the full tool. Keep a slim finish bar while guided. */}
-      {(!guided || hasPlan) && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && guided && hasPlan && (
-        <GuidedFinishBar toolLabel="Movement" phaseLabel={guidedPhaseLabel} hint="Your week is set — explore the tool, or finish on Today." className="mb-3" />
-      )}
-
-      {(!guided || hasPlan) && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
+      {/* Not guided → the full tool header (tabs + guide). Hidden during setup. */}
+      {!guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <HeroHeader
           src={view.kind === "programs" ? HERO_IMAGES.bestShape : HERO_IMAGES[view.kind]}
           tab={tab}
@@ -847,7 +850,8 @@ export default function WorkoutPage() {
           profile={profile}
           onStartSession={(session) => setView({ kind: "session-start", session })}
           onOpenProgramSession={(programId, week, sessionIndex) => setView({ kind: "program-session", programId, week, sessionIndex, returnTo: "plan" })}
-          onBrowsePrograms={() => { if (guided) return guidedNudge(); setTab("programs"); setView({ kind: "programs" }); }}
+          onBrowsePrograms={() => { setTab("programs"); setView({ kind: "programs" }); }}
+          guided={guided}
         />
       )}
       {view.kind === "library" && <Library />}
@@ -2022,11 +2026,12 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
 
 // ===================== MY PROGRAM =====================
 
-function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowsePrograms }: {
+function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowsePrograms, guided = false }: {
   profile: WorkoutProfile;
   onStartSession: (s: WorkoutSession) => void;
   onOpenProgramSession: (programId: string, week: number, sessionIndex: number) => void;
   onBrowsePrograms: () => void;
+  guided?: boolean;
 }) {
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [program, setProgram] = useLS<Record<string, DayPlan | null> | null>(PROGRAM_KEY, null);
@@ -2265,7 +2270,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                 <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
                 <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1 text-[11px] font-bold shadow-sm">Done</button>
               </div>
-            ) : (
+            ) : guided ? null : (
               <div className="flex items-center gap-1 shrink-0">
                 <button onClick={onEditClick} title="Edit your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><Pencil className="h-3.5 w-3.5" /></button>
                 <button onClick={onGenerateClick} title="Regenerate your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><RotateCcw className="h-3.5 w-3.5" /></button>

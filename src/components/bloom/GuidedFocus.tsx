@@ -54,8 +54,8 @@ export function guidedNudge(msg = "Let's finish your setup first ✿") {
 
 /** The single primary action during guided setup: her plan is set, head to Today. */
 export function GuidedFinishBar({
-  toolLabel, phaseLabel, hint, className = "",
-}: { toolLabel: string; phaseLabel?: string; hint?: string; className?: string }) {
+  toolLabel, phaseLabel, hint, className = "", href = "/app/today", ctaLabel = "Finish on Today",
+}: { toolLabel: string; phaseLabel?: string; hint?: string; className?: string; href?: string; ctaLabel?: string }) {
   return (
     <div className={`relative overflow-hidden rounded-2xl border border-petal/60 bg-gradient-to-r from-blush/70 via-white to-petal/40 px-4 py-3 shadow-sm animate-fade-in ${className}`}>
       <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-hotpink/15 blur-2xl" />
@@ -70,10 +70,10 @@ export function GuidedFinishBar({
           <p className="text-sm font-bold text-rose leading-tight">{hint || "This is your plan — the rest fills in on Today."}</p>
         </div>
         <button
-          onClick={() => { window.location.href = "/app/today"; }}
+          onClick={() => { window.location.href = href; }}
           className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3.5 py-2 text-[11px] font-bold shadow-sm shadow-hotpink/30 active:scale-95 transition animate-cta-bounce"
         >
-          Finish on Today <ArrowRight className="h-3 w-3" />
+          {ctaLabel} <ArrowRight className="h-3 w-3" />
         </button>
       </div>
     </div>
