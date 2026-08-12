@@ -3586,19 +3586,15 @@ function SessionPlayer({
             </div>
           </div>
 
-          {/* Breath mantra — centered, like a soft subtitle. */}
-          <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-6 text-center">
-            <p key={mantra} className="font-script text-2xl sm:text-3xl leading-tight text-white animate-fade-in" style={{ textShadow: "0 2px 14px rgba(0,0,0,0.55)" }}>{mantra}</p>
-          </div>
-
-          {/* Brand logo — bottom-left, stacked (flower · Bloomzein · tagline), matching the app mark. */}
+          {/* Brand logo — bottom-left, stacked (flower · Bloomzein · tagline). The
+              flower breathes (zoom in/out); colours use the player's soft pink. */}
           <div className="pointer-events-none absolute bottom-5 left-6 z-30 flex items-center gap-2.5 animate-fade-in">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white shadow-lg shadow-hotpink/30">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/85 text-hotpink shadow-lg shadow-hotpink/20 ring-1 ring-hotpink/25 animate-icon-breathe">
               <BloomFlower size={20} />
             </span>
             <div className="leading-none">
-              <p className="font-script text-3xl leading-none text-white" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.5)" }}>Bloomzein</p>
-              <p className="mt-1 text-[11px] font-semibold tracking-wide text-white/85" style={{ textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>stay soft, bloom on. ✿</p>
+              <p className="font-script text-3xl leading-none text-hotpink" style={{ textShadow: "0 1px 10px rgba(255,255,255,0.85), 0 2px 4px rgba(255,255,255,0.55)" }}>Bloomzein</p>
+              <p className="mt-1 text-[11px] font-semibold tracking-wide text-rose/85" style={{ textShadow: "0 1px 6px rgba(255,255,255,0.75)" }}>stay soft, bloom on. ✿</p>
             </div>
           </div>
 
