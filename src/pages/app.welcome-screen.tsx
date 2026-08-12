@@ -25,7 +25,7 @@
  * The centre of every film stays clear: that is where she is on camera.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -277,26 +277,30 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
 
 /* ════════════════════════════════════════════════════════════════════════════
    SCREEN 2 — "Everything in your life, beautifully connected."
-   A centred vertical list: each pillar reveals one at a time — the icon glides
-   in from the left into a big circle, its label glides in from the right — the
-   rows stacking down a single centred connector line.
+   Eight frosted picture-cards (same anatomy as the Today cards on screen 3)
+   flank her — four to the left, four to the right — each with a small thumbnail
+   pulled from the live Today set-up. They arrive one after another.
    ════════════════════════════════════════════════════════════════════════════ */
-type Node = { icon: keyof typeof ico; a: string; b: string };
+type Node = {
+  icon: keyof typeof ico;
+  a: string;
+  b: string;
+  img: string; // a Today set-up thumbnail
+  side: "left" | "right";
+  top: string;
+};
 const NODES: Node[] = [
-  { icon: "lotus", a: "Understand", b: "your rhythm" },
-  { icon: "meditate", a: "Move", b: "your body" },
-  { icon: "bowl", a: "Nourish", b: "yourself" },
-  { icon: "check", a: "Build better", b: "habits" },
-  { icon: "brain", a: "Clear", b: "your mind" },
-  { icon: "wallet", a: "Feel more", b: "in control" },
-  { icon: "calheart", a: "Remember", b: "what matters" },
-  { icon: "droplet", a: "Take care", b: "of yourself" },
+  { icon: "lotus", a: "Understand", b: "your rhythm", img: "/images/setup-cycle.webp", side: "left", top: "11%" },
+  { icon: "meditate", a: "Move", b: "your body", img: "/images/workout-hero-session.webp", side: "left", top: "33%" },
+  { icon: "bowl", a: "Nourish", b: "yourself", img: "/images/setup-meals.webp", side: "left", top: "55%" },
+  { icon: "check", a: "Build better", b: "habits", img: "/images/setup-goal.webp", side: "left", top: "77%" },
+  { icon: "brain", a: "Clear", b: "your mind", img: "/images/welcome-mind.webp", side: "right", top: "11%" },
+  { icon: "wallet", a: "Feel more", b: "in control", img: "/images/read-money.webp", side: "right", top: "33%" },
+  { icon: "calheart", a: "Remember", b: "what matters", img: "/images/welcome-remember.webp", side: "right", top: "55%" },
+  { icon: "droplet", a: "Take care", b: "of yourself", img: "/images/read-selfcare.webp", side: "right", top: "77%" },
 ];
-const REVEAL_BASE = 0.35; // s before the first row
-const REVEAL_STEP = 0.5; // s between rows — paced so each can be read
 
 function ScreenConnected({ onNext }: { onNext: () => void }) {
-  const total = REVEAL_BASE + NODES.length * REVEAL_STEP;
   return (
     <div className="wz-stage">
       <Film src="/videos/entry-2.mp4" scrim="wz-scrim--soft" />
@@ -316,25 +320,27 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
           </h1>
         </header>
 
-        {/* the sequential list — a single centred connector line runs through
-            every icon, so the rows read as one connected column */}
-        <div className="wz-list">
-          <span className="wz-list-spine" style={{ animationDuration: `${total}s` }} aria-hidden />
-          {NODES.map((n, i) => {
-            const d = `${REVEAL_BASE + i * REVEAL_STEP}s`;
-            return (
-              <div className="wz-row" key={n.a + n.b}>
-                <span className="wz-row-ico" style={{ animationDelay: d }}>
-                  <svg viewBox="0 0 24 24" aria-hidden>
-                    {ico[n.icon]}
-                  </svg>
-                </span>
-                <span className="wz-row-txt" style={{ animationDelay: d }}>
-                  <b>{n.a}</b> {n.b}
-                </span>
+        {/* the eight cards flank her, arriving one by one */}
+        <div className="s2-flank" aria-hidden>
+          {NODES.map((n, i) => (
+            <article
+              key={n.a + n.b}
+              className="s3-card s3-photo"
+              style={{ [n.side]: "5%", top: n.top, animationDelay: `${0.35 + i * 0.16}s` } as CSSProperties}
+            >
+              <div className="s3-card-top">
+                <MiniBadge icon={n.icon} />
+                <div className="s3-card-heads">
+                  <b>
+                    {n.a} {n.b}
+                  </b>
+                </div>
               </div>
-            );
-          })}
+              <div className="s3-thumb">
+                <img src={n.img} alt="" loading="lazy" referrerPolicy="no-referrer" />
+              </div>
+            </article>
+          ))}
         </div>
 
         <div className="wz-foot-row">
@@ -730,38 +736,13 @@ function Styles() {
     .wz-h-script{font-family:var(--script);font-weight:700;color:var(--hot);
       font-size:clamp(28px,3.5vw,50px);line-height:1.06;margin-top:-2px}
 
-    /* sequential centred list with a single connector spine through the icons */
-    .wz-list{position:relative;flex:0 1 auto;min-height:0;margin:auto 0;width:min(540px,86%);align-self:center;
-      display:flex;flex-direction:column;gap:clamp(5px,.95vh,12px);
-      --ico:clamp(40px,3.7vw,64px)}
-    .wz-list-spine{position:absolute;left:calc(var(--ico) / 2);top:calc(var(--ico) / 2);
-      bottom:calc(var(--ico) / 2);width:2px;border-radius:2px;transform:translateX(-50%);
-      transform-origin:top;background:linear-gradient(180deg,rgba(233,30,132,.55),rgba(233,30,132,.22));
-      box-shadow:0 0 6px rgba(233,30,132,.35);
-      animation:wz-spine 4s ease forwards}
-    @keyframes wz-spine{from{transform:translateX(-50%) scaleY(0)}to{transform:translateX(-50%) scaleY(1)}}
-    .wz-row{display:flex;align-items:center;gap:clamp(11px,1.3vw,22px)}
-    .wz-row-ico{position:relative;z-index:1;flex:0 0 auto;display:grid;place-items:center;
-      width:var(--ico);height:var(--ico);border-radius:50%;
-      background:linear-gradient(160deg,#F871B0 0%,var(--pink) 46%,var(--deep) 100%);
-      box-shadow:0 11px 22px -8px rgba(219,39,119,.75),0 0 0 clamp(3px,.38vw,5px) rgba(255,255,255,.42),
-        inset 0 1px 0 rgba(255,255,255,.55);
-      opacity:0;animation:wz-in-left .7s cubic-bezier(.2,1.1,.4,1) forwards}
-    .wz-row-ico svg{width:52%;height:52%;fill:none;stroke:#fff;stroke-width:1.7;
-      stroke-linecap:round;stroke-linejoin:round}
-    .wz-row-txt{flex:1;min-width:0;
-      background:rgba(255,255,255,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-      border:1px solid rgba(255,255,255,.9);border-radius:clamp(12px,1.2vw,18px);
-      padding:clamp(7px,1vh,14px) clamp(14px,1.5vw,26px);
-      box-shadow:0 14px 30px -16px rgba(190,24,93,.5),inset 0 1px 0 rgba(255,255,255,.8);
-      font-weight:600;color:var(--ink);line-height:1.2;font-size:clamp(13px,1.3vw,22px);
-      opacity:0;animation:wz-in-right .7s cubic-bezier(.2,1.1,.4,1) forwards}
-    .wz-row-txt b{font-weight:800;color:var(--plum)}
-    @keyframes wz-in-left{from{opacity:0;transform:translateX(-46px) scale(.8)}to{opacity:1;transform:none}}
-    @keyframes wz-in-right{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
+    /* eight Today picture-cards flanking her (desktop). They reuse the screen-3
+       card anatomy (.s3-card / .s3-thumb) and are absolutely placed left/right. */
+    .s2-flank{position:absolute;inset:0;z-index:2;pointer-events:none}
 
+    /* the flank cards are absolute, so push the CTA to the bottom of the stage */
     .wz-foot-row{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
-      gap:clamp(8px,1.4vh,16px)}
+      gap:clamp(8px,1.4vh,16px);margin-top:auto}
 
     /* ══════════ SCREEN 3 ══════════ */
     .wz-content.s3{padding-bottom:clamp(16px,3vh,30px)}
@@ -856,10 +837,15 @@ function Styles() {
       .s1-script{font-size:clamp(40px,13vw,60px)}
       .s1-sub{font-size:15px}
 
-      /* screen 2: the sequential list carries straight down on phones too */
+      /* screen 2: the same picture-cards, compacted into a two-column grid on
+         phones and nudged down so her face stays clear above them */
       .wz-content.s2{pointer-events:auto}
-      .wz-list{width:100%;--ico:clamp(40px,12vw,56px);gap:clamp(9px,1.6vh,16px)}
-      .wz-row-txt{font-size:clamp(13px,4vw,17px)}
+      .s2-flank{position:static;z-index:auto;display:grid;grid-template-columns:1fr 1fr;
+        gap:7px clamp(6px,2.2vw,11px);margin:clamp(66px,16vh,150px) 0 auto;padding-top:0}
+      .s2-flank .s3-card{position:static;width:auto;padding:5px 7px 5px 5px}
+      .s2-flank .s3-card-heads b{font-size:11px}
+      .s2-flank .s3-thumb{aspect-ratio:16/7;margin-top:4px}
+      .s2-flank .s3-badge{width:24px;height:24px}
 
       /* screen 3 — floating cluster is desktop art; lead with promise + CTA */
       .s3-cards{display:none}
@@ -872,14 +858,12 @@ function Styles() {
       .s3-space{text-align:center}
     }
     @media (prefers-reduced-motion:reduce){
-      .wz-seq,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space,
-      .wz-row-ico,.wz-row-txt,.wz-list-spine{
+      .wz-seq,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space{
         animation-duration:.01s !important;animation-delay:0s !important}
       .wz-cta{animation:wz-cta-in .01s forwards}
       .wz-brand-mark{animation:none}
       .wz-sheen::after{display:none}
-      .wz-list-spine{transform:translateX(-50%) scaleY(1)}
-      .s1-sub,.s3-body-copy,.s3-space,.wz-row-ico,.wz-row-txt{opacity:1 !important;transform:none !important}
+      .s1-sub,.s3-body-copy,.s3-space{opacity:1 !important;transform:none !important}
     }
     `}</style>
   );
