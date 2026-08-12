@@ -2,7 +2,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff,
+  ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff, Video,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
   Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
@@ -2772,6 +2772,21 @@ function SessionPlayer({
   // Playback speed for the pose clip — yoga wants a calm, slow pace. 0.7× default.
   const [speed, setSpeed] = useState<number>(() => { try { return Number(localStorage.getItem(YOGA_SPEED_KEY)) || 0.7; } catch { return 0.7; } });
   const [showSpeed, setShowSpeed] = useState(false);
+  // Presentation / filming mode: hides every app control, plays hands-free, and
+  // shows the Bloomzein watermark — a clean stage to screen-record for YouTube.
+  const [present, setPresent] = useState(false);
+  const [chromeShow, setChromeShow] = useState(true); // the Exit affordance auto-hides
+  useEffect(() => {
+    if (!present) return;
+    let t: ReturnType<typeof setTimeout>;
+    const ping = () => { setChromeShow(true); clearTimeout(t); t = setTimeout(() => setChromeShow(false), 2600); };
+    ping();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPresent(false); };
+    window.addEventListener("mousemove", ping);
+    window.addEventListener("touchstart", ping);
+    window.addEventListener("keydown", onKey);
+    return () => { clearTimeout(t); window.removeEventListener("mousemove", ping); window.removeEventListener("touchstart", ping); window.removeEventListener("keydown", onKey); };
+  }, [present]);
   // Independent voice + music levels, adjustable from a little sound panel.
   const [voiceVol, setVoiceVol] = useState<number>(() => { try { const v = localStorage.getItem(YOGA_VOICE_KEY); return v == null ? 0.8 : Number(v); } catch { return 0.8; } });
   const [musicVol, setMusicVol] = useState<number>(() => { try { const v = localStorage.getItem(YOGA_MUSIC_KEY); return v == null ? 0.72 : Number(v); } catch { return 0.72; } });
@@ -3154,6 +3169,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== TOP BAR ===================== */}
+      {!present && (
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 sm:gap-3 px-3 sm:px-5 pb-2"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
         <button onClick={() => { stopAllAudio(); onExit(); }}
@@ -3186,8 +3202,14 @@ function SessionPlayer({
             className={["grid h-9 w-9 place-items-center rounded-full", showVolume ? "ring-2 ring-hotpink/50 " : "", glassBtn].join(" ")}>
             {muted || (voiceVol === 0 && musicVol === 0) ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
+          <button onClick={() => { setShowSpeed(false); setShowVolume(false); setRunning(true); setChromeShow(true); setPresent(true); }}
+            title="Presentation mode — hide controls & show the logo (for recording)"
+            className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
+            <Video className="h-4 w-4" />
+          </button>
         </div>
       </div>
+      )}
 
       {/* Tap-away catcher for the top-right popovers */}
       {(showSpeed || showVolume) && (
@@ -3356,6 +3378,7 @@ function SessionPlayer({
       {/* ===================== CONTROLS + MANTRA (bottom-left on desktop) === */}
       <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:left-5 z-20 flex flex-col items-center lg:items-start gap-2 px-3"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        {!present && (
         <div className={["flex items-center gap-1.5 sm:gap-2 rounded-full p-1.5 animate-fade-in", glass].join(" ")}>
           <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
             className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
@@ -3382,12 +3405,36 @@ function SessionPlayer({
             </button>
           )}
         </div>
+        )}
         <div className={["w-full max-w-lg lg:w-[26rem] rounded-full px-4 py-2 text-center lg:text-left animate-fade-in", glass].join(" ")}>
           <p className="flex items-center justify-center lg:justify-start gap-2 text-sm font-medium" style={{ color: skin.ink }}>
             <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {mantra}
           </p>
         </div>
       </div>
+
+      {/* ===================== PRESENTATION MODE ===================== */}
+      {present && (
+        <>
+          {/* Brand watermark — always on, so every recorded frame carries Bloomzein. */}
+          <div className="pointer-events-none absolute bottom-5 right-6 z-30 flex items-center gap-2 animate-fade-in">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white shadow-lg shadow-hotpink/30">
+              <BloomFlower size={17} />
+            </span>
+            <span className="font-script text-2xl leading-none text-white" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.4)" }}>
+              Bloomzein <span className="opacity-80">Yoga</span>
+            </span>
+          </div>
+          {/* Exit — auto-hides after a moment; move the mouse or press Esc to bring it back. */}
+          <button
+            onClick={() => setPresent(false)}
+            title="Exit presentation mode (Esc)"
+            className={["absolute top-4 right-4 z-40 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity duration-500", glassBtn, chromeShow ? "opacity-100" : "opacity-0 pointer-events-none"].join(" ")}
+          >
+            <X className="h-3.5 w-3.5" /> Exit
+          </button>
+        </>
+      )}
     </div>,
     document.body
   );
