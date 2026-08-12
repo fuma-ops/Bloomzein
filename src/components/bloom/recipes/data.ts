@@ -601,7 +601,6 @@ const INGREDIENT_MICROS: { match: RegExp; micros: Partial<Record<MicroKey, numbe
   // B6 / other
   { match: /chicken|turkey/i,                        micros: { vitaminB6: 0.5 } },
   { match: /\boats?\b|oatmeal|porridge|rolled oat/i, micros: { fibre: 4, magnesium: 40 } },
-<<<<<<< HEAD
   // --- extended coverage from a full audit of the real ingredient list ---
   // Vitamin C
   { match: /cabbage/i,                               micros: { vitaminC: 30, fibre: 2 } },
