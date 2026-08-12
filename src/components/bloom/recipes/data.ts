@@ -551,6 +551,81 @@ function phasesToCyclePhase(phases: DietPhase[]): CyclePhase[] {
   return Array.from(new Set(phases.map((p) => DIET_TO_CYCLE_PHASE[p])));
 }
 
+/* ---------- Micronutrients derived from ingredients ----------
+ * A recipe's `micros` are hand-authored and often incomplete — e.g. a dish with
+ * broccoli/greens/berries may declare no `vitaminC`, so the tracker counted 0.
+ * We approximate what its real ingredients contribute (per the amount a recipe
+ * typically uses) and FILL only the micros the author didn't set. Conservative
+ * on purpose; a hand-authored value always wins over a derived one. */
+type MicroKey = keyof Recipe["micros"];
+const INGREDIENT_MICROS: { match: RegExp; micros: Partial<Record<MicroKey, number>> }[] = [
+  // Vitamin C (mg)
+  { match: /broccoli/i,                              micros: { vitaminC: 65, fibre: 3 } },
+  { match: /bell pepper|red pepper|capsicum/i,       micros: { vitaminC: 60 } },
+  { match: /\bkale\b/i,                              micros: { vitaminC: 50, iron: 1 } },
+  { match: /brussels sprout/i,                       micros: { vitaminC: 50 } },
+  { match: /cauliflower/i,                           micros: { vitaminC: 40 } },
+  { match: /strawberr|raspberr|blueberr|blackberr|\bberries\b|\bberry\b/i, micros: { vitaminC: 30, fibre: 3 } },
+  { match: /orange|clementine|mandarin/i,            micros: { vitaminC: 60 } },
+  { match: /\bkiwi\b/i,                              micros: { vitaminC: 60 } },
+  { match: /\bmango\b/i,                             micros: { vitaminC: 40 } },
+  { match: /grapefruit/i,                            micros: { vitaminC: 40 } },
+  { match: /\bgreens\b|collard|swiss chard|\bchard\b/i, micros: { vitaminC: 30, iron: 2 } },
+  { match: /\btomato/i,                              micros: { vitaminC: 15 } },
+  { match: /parsley|cilantro/i,                      micros: { vitaminC: 15 } },
+  { match: /lemon|lime/i,                            micros: { vitaminC: 10 } },
+  { match: /sweet potato/i,                          micros: { vitaminC: 20, vitaminB6: 0.3, fibre: 4 } },
+  // Iron (mg)
+  { match: /spinach/i,                               micros: { iron: 3, magnesium: 50, vitaminC: 10 } },
+  { match: /lentil/i,                                micros: { iron: 3, fibre: 8, magnesium: 35 } },
+  { match: /chickpea|garbanzo/i,                     micros: { iron: 2, fibre: 7, magnesium: 40 } },
+  { match: /black bean|kidney bean|white bean|cannellini|butter bean|\bbeans\b/i, micros: { iron: 2, fibre: 7, magnesium: 45 } },
+  { match: /tofu|tempeh/i,                           micros: { iron: 3, calcium: 200, magnesium: 40 } },
+  { match: /beef|steak|red meat|\blamb\b/i,          micros: { iron: 3, vitaminB6: 0.4 } },
+  { match: /beetroot|\bbeet\b|\bbeets\b/i,           micros: { iron: 1, fibre: 3 } },
+  { match: /quinoa/i,                                micros: { iron: 1.5, magnesium: 60, fibre: 4 } },
+  // Magnesium (mg)
+  { match: /dark chocolate|cacao|cocoa/i,            micros: { magnesium: 60, iron: 3 } },
+  { match: /almond|cashew|walnut|\bnuts\b/i,         micros: { magnesium: 50 } },
+  { match: /pumpkin seed|sunflower seed|\bseeds\b/i, micros: { magnesium: 55, iron: 2 } },
+  { match: /avocado/i,                               micros: { magnesium: 30, fibre: 5, vitaminB6: 0.3 } },
+  { match: /\bbanana/i,                              micros: { magnesium: 30, vitaminB6: 0.4 } },
+  // Omega-3 (g)
+  { match: /salmon/i,                                micros: { omega3: 1.6 } },
+  { match: /sardine|mackerel/i,                      micros: { omega3: 1.6 } },
+  { match: /\btuna\b/i,                              micros: { omega3: 1.0 } },
+  { match: /chia/i,                                  micros: { omega3: 1.8, fibre: 5 } },
+  { match: /flax|linseed/i,                          micros: { omega3: 1.6 } },
+  { match: /hemp seed/i,                             micros: { omega3: 1.2 } },
+  { match: /edamame|soybean/i,                       micros: { omega3: 0.3, iron: 2 } },
+  // B6 / other
+  { match: /chicken|turkey/i,                        micros: { vitaminB6: 0.5 } },
+  { match: /\boats?\b|oatmeal|porridge|rolled oat/i, micros: { fibre: 4, magnesium: 40 } },
+];
+
+const MICRO_CAP: Record<MicroKey, number> = {
+  iron: 8, magnesium: 130, omega3: 3, vitaminC: 90, fibre: 16, vitaminB6: 1.6, calcium: 350, vitaminD: 400,
+};
+
+/** Sum the micro contributions of a recipe's ingredients, capped to realistic
+ *  single-meal ceilings. */
+function deriveMicros(ingredients: { name: string }[]): Partial<Record<MicroKey, number>> {
+  const out: Partial<Record<MicroKey, number>> = {};
+  for (const ing of ingredients) {
+    for (const rule of INGREDIENT_MICROS) {
+      if (!rule.match.test(ing.name)) continue;
+      for (const key of Object.keys(rule.micros) as MicroKey[]) {
+        out[key] = (out[key] ?? 0) + (rule.micros[key] ?? 0);
+      }
+    }
+  }
+  for (const key of Object.keys(out) as MicroKey[]) {
+    out[key] = Math.min(out[key] ?? 0, MICRO_CAP[key]);
+    out[key] = Math.round((out[key] ?? 0) * 10) / 10;
+  }
+  return out;
+}
+
 function inferIntentions(r: RawRecipe): Intention[] {
   const out = new Set<Intention>();
   if (r.prepTime + r.cookTime <= 15) out.add("quick");
@@ -593,6 +668,9 @@ function inferCategory(name: string): PantryCategoryKey {
 function finalizeRecipe(r: RawRecipe): Recipe {
   return {
     ...r,
+    // Fill undeclared micros from the real ingredients (a hand-authored value
+    // always wins), so a dish with broccoli/greens/berries isn't counted as 0 Vit C.
+    micros: { ...deriveMicros(r.ingredients), ...(r.micros ?? {}) },
     prepMin: r.prepTime,
     cookMin: r.cookTime,
     cyclePhase: r.cyclePhase ?? phasesToCyclePhase(r.phases),
