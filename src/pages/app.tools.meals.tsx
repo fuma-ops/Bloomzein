@@ -60,6 +60,7 @@ import {
   type PantryCategoryKey,
   type MealType,
 } from "@/components/bloom/meals/data";
+import { PHASE_MICROS } from "@/components/bloom/recipes/data";
 import { StepText } from "@/components/bloom/recipes/StepText";
 
 
@@ -213,6 +214,9 @@ function pickForSlot(
   //  · "budget" has no recipe tag — it scores the real cost field instead.
   const softIntention = intention !== "cycle" && intention !== "quick";
   const phaseAware = phase !== "any";
+  // Gently bias toward recipes that carry this phase's key micronutrients, so a
+  // nutrient-dense pick beats an equally-matched but nutrient-poor one.
+  const microKeys = phaseAware ? phaseKeyMicros(phase).map((m) => m.key) : [];
   // Calorie-aware: prefer recipes sized near this slot's calorie budget so the
   // day actually reaches the goal (a build day needs denser dishes than a lean
   // day). Recipes within a scalable window of the budget score highest.
@@ -228,6 +232,7 @@ function pickForSlot(
       + (softIntention && intention !== "budget" && r.intention.includes(intention) ? 0.6 : 0)
       + (intention === "budget" && r.cost === "$" ? 0.6 : 0)
       + (phaseAware && (r.cyclePhase.includes(phase) || r.cyclePhase.includes("any")) ? 0.35 : 0)
+      + (microKeys.length ? microKeys.filter((k) => (r.micros?.[k] ?? 0) > 0).length * 0.15 : 0)
       + calFit(r.macros.calories || 0)
       + Math.random() * 0.3,
   }));
@@ -237,6 +242,83 @@ function pickForSlot(
   // Crucial: never repeat a recipe already used this week while fresh ones exist.
   const fresh = order.filter((r) => !used.has(r.id));
   return (fresh.length ? fresh : order)[0];
+}
+
+/** The phase's key micronutrients (Diet's "Phase Nutrients" targets) — so the
+ *  generated week actually covers them, not just phase/vibe. Empty for "any". */
+function phaseKeyMicros(phase: CyclePhase): { key: keyof Recipe["micros"]; target: number }[] {
+  if (phase === "any") return [];
+  return (PHASE_MICROS[toDietPhase(phase)] ?? []).map((m) => ({ key: m.key, target: m.target }));
+}
+
+/** After a day is planned, make sure the phase's key nutrients aren't left at ~0
+ *  (e.g. omega-3 on a menstrual day). For any key micro that's essentially absent,
+ *  swap the ONE slot whose replacement adds the most of it — the best same-type
+ *  recipe that provides it, respecting the diet-filtered `pool`, ratings, calorie
+ *  budget and no-repeat. Only fills genuine gaps, so it never churns a plan that
+ *  is already reasonably covered. */
+function ensureMicroCoverage(
+  dayPlan: Record<MealType, string | null>,
+  dayPortions: Partial<Record<MealType, number>> | undefined,
+  phase: CyclePhase,
+  pool: Recipe[],
+  byId: Map<string, Recipe>,
+  owned: Set<string>,
+  used: Set<string>,
+  ratings: Record<string, "love" | "ok" | "never">,
+  dailyTarget?: number,
+): void {
+  const keys = phaseKeyMicros(phase);
+  if (!keys.length) return;
+  const slots: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
+
+  for (const km of keys) {
+    let total = 0;
+    for (const t of slots) {
+      const id = dayPlan[t]; if (!id) continue;
+      const r = byId.get(id); if (!r) continue;
+      total += (r.micros?.[km.key] ?? 0) * (dayPortions?.[t] ?? 1);
+    }
+    // Only fix a genuinely-missing nutrient — leave a partly-covered one alone.
+    if (total >= km.target * 0.25) continue;
+
+    let best: { t: MealType; src: Recipe; gain: number; score: number } | null = null;
+    for (const t of slots) {
+      const curId = dayPlan[t];
+      const cur = curId ? byId.get(curId) : undefined;
+      const curVal = (cur?.micros?.[km.key] ?? 0) * (dayPortions?.[t] ?? 1);
+      const budget = dailyTarget ? slotBudget(dailyTarget, t) : undefined;
+      for (const src of pool) {
+        if (src.mealType !== t || src.id === curId) continue;
+        if (ratings[src.id] === "never") continue;
+        if (used.has(src.id)) continue;
+        const srcMicro = src.micros?.[km.key] ?? 0;
+        const gain = srcMicro - curVal;
+        if (gain <= 0) continue;
+        const calFit = budget && src.macros.calories
+          ? (1 - Math.min(1, Math.abs(src.macros.calories - budget) / budget)) * 0.4 : 0;
+        const score = scoreRecipe(src, owned)
+          + (src.cyclePhase.includes(phase) || src.cyclePhase.includes("any") ? 0.4 : 0)
+          + (ratings[src.id] === "love" ? 0.2 : 0)
+          + Math.min(0.8, srcMicro / km.target)
+          + calFit;
+        if (!best || gain > best.gain + 0.001 || (Math.abs(gain - best.gain) <= 0.001 && score > best.score)) {
+          best = { t, src, gain, score };
+        }
+      }
+    }
+
+    if (best) {
+      const oldId = dayPlan[best.t];
+      if (oldId) used.delete(oldId);
+      dayPlan[best.t] = best.src.id;
+      used.add(best.src.id);
+      if (dailyTarget && dayPortions) {
+        const f = portionForRecipe(best.src.macros.calories || 0, best.t, dailyTarget);
+        if (f !== 1) dayPortions[best.t] = f; else delete dayPortions[best.t];
+      }
+    }
+  }
 }
 
 function buildWeek(
@@ -251,6 +333,7 @@ function buildWeek(
   const used = new Set<string>();
   const plan: Record<string, Record<MealType, string | null>> = {};
   const portions: Record<string, Partial<Record<MealType, number>>> = {};
+  const byId = new Map(pool.map((r) => [r.id, r]));
   DAYS.forEach((d) => {
     plan[d] = { breakfast: null, lunch: null, dinner: null, snack: null, lunchbox: null };
     (["breakfast", "lunch", "dinner", "snack"] as MealType[]).forEach((type) => {
@@ -267,6 +350,10 @@ function buildWeek(
         }
       }
     });
+    // Make the day actually meet the phase's key nutrients (e.g. omega-3), not
+    // just its phase/vibe — no more 0.0g on a nutrient the phase calls for.
+    if (dailyTarget) portions[d] ??= {};
+    ensureMicroCoverage(plan[d], portions[d], phase, pool, byId, owned, used, ratings, dailyTarget);
   });
   return { plan, portions };
 }

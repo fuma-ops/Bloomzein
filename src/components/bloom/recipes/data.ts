@@ -345,11 +345,13 @@ export const PHASE_MICROS: Record<DietPhase, { key: keyof Recipe["micros"]; labe
     { key: "iron", label: "Iron", target: 18, unit: "mg" },
     { key: "magnesium", label: "Magnesium", target: 310, unit: "mg" },
     { key: "omega3", label: "Omega-3", target: 1.6, unit: "g" },
+    { key: "vitaminC", label: "Vitamin C", target: 75, unit: "mg" },
   ],
   luteal: [
     { key: "iron", label: "Iron", target: 18, unit: "mg" },
     { key: "magnesium", label: "Magnesium", target: 310, unit: "mg" },
     { key: "omega3", label: "Omega-3", target: 1.6, unit: "g" },
+    { key: "vitaminC", label: "Vitamin C", target: 75, unit: "mg" },
   ],
   follicular: [
     { key: "vitaminB6", label: "Vitamin B", target: 1.5, unit: "mg" },
@@ -768,7 +770,7 @@ const RAW_RECIPES: RawRecipe[] = [
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
     macros: { calories: 420, protein: 14, carbs: 58, fat: 15 },
-    micros: { magnesium: 70, fibre: 6 },
+    micros: { magnesium: 70, fibre: 6, omega3: 1.2 },
     ingredients: [
       { name: "Oats", quantity: "1 cup" },
       { name: "Banana", quantity: "1" },
@@ -1186,7 +1188,7 @@ const RAW_RECIPES: RawRecipe[] = [
     phases: ["ovulatory", "follicular"], goal: ["lose", "maintain"],
     dietTags: ["vegetarian", "gluten-free"], allergens: ["nuts", "dairy"],
     macros: { calories: 470, protein: 13, carbs: 26, fat: 34 },
-    micros: { fibre: 8, vitaminC: 16, magnesium: 50 },
+    micros: { fibre: 8, vitaminC: 16, magnesium: 50, omega3: 2.0 },
     servings: 1,
     equipment: ["Small bowl", "Frying pan"],
     ingredients: [
@@ -1370,7 +1372,7 @@ const RAW_RECIPES: RawRecipe[] = [
     phases: ["luteal", "menstrual"], goal: ["maintain", "gain"],
     dietTags: ["vegetarian"], allergens: ["nuts"],
     macros: { calories: 230, protein: 4, carbs: 32, fat: 11 },
-    micros: { magnesium: 45, fibre: 4 },
+    micros: { magnesium: 45, fibre: 4, omega3: 0.6 },
     ingredients: [
       { name: "Banana", quantity: "1" },
       { name: "Dark chocolate", quantity: "1 square (10 g)" },
