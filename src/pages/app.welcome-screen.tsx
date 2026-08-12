@@ -188,17 +188,20 @@ function Film({
   scrim,
   loop = true,
   onEnded,
+  endLead = 0,
 }: {
   src: string;
   scrim: string;
   loop?: boolean;
   onEnded?: () => void;
+  endLead?: number; // fire `onEnded` this many ms BEFORE the clip finishes
 }) {
   const ref = useRef<HTMLVideoElement>(null);
 
-  // Screen 1 advances on the film's own end. Back the native `ended` event with
-  // a fallback keyed to the clip's REAL duration, so the film always plays in
-  // full (never cut short) and we still glide on if `ended` never fires.
+  // Screen 1 advances near the film's end. We fire `onEnded` `endLead` ms before
+  // the clip finishes (keyed to its REAL duration) so the next screen can begin
+  // cross-fading in while this film is still on its last moment — seamless, no
+  // stop. A native `ended` listener is the ultimate fallback.
   useEffect(() => {
     const v = ref.current;
     if (!v || !onEnded) return;
@@ -206,7 +209,7 @@ function Film({
     const arm = () => {
       if (isFinite(v.duration) && v.duration > 0) {
         clearTimeout(fb);
-        fb = setTimeout(onEnded, v.duration * 1000 + 600);
+        fb = setTimeout(onEnded, Math.max(0, v.duration * 1000 - endLead));
       }
     };
     if (v.readyState >= 1) arm();
@@ -215,7 +218,7 @@ function Film({
       v.removeEventListener("loadedmetadata", arm);
       clearTimeout(fb);
     };
-  }, [onEnded]);
+  }, [onEnded, endLead]);
 
   return (
     <div className="wz-bg" aria-hidden>
@@ -239,13 +242,12 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
     done.current = true;
     onNext();
   };
-  // When the (short) film ends, let its final frame settle for a beat before
-  // the transition, so it reads as a gentle pause — not a cut mid-movement.
-  const settleThenGo = () => window.setTimeout(go, 1100);
 
   return (
     <div className="wz-stage s1-stage" onClick={go} title="Continue">
-      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" loop={false} onEnded={settleThenGo} />
+      {/* start the hand-off ~0.9s before the film ends so screen 2 emerges
+          behind its final moment — smooth, no stop */}
+      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" loop={false} onEnded={go} endLead={900} />
       <div className="wz-content s1">
         <div className="wz-topbar">
           <BrandLockup />
@@ -288,17 +290,21 @@ type Node = {
   img: string; // a Today set-up thumbnail
   side: "left" | "right";
   top: string;
+  edge: string; // horizontal inset from its side — varied, so they read as scattered
+  order: number; // reveal order (interleaves the two sides)
 };
 const NODES: Node[] = [
-  { icon: "lotus", a: "Understand", b: "your rhythm", img: "/images/setup-cycle.webp", side: "left", top: "11%" },
-  { icon: "meditate", a: "Move", b: "your body", img: "/images/workout-hero-session.webp", side: "left", top: "33%" },
-  { icon: "bowl", a: "Nourish", b: "yourself", img: "/images/setup-meals.webp", side: "left", top: "55%" },
-  { icon: "check", a: "Build better", b: "habits", img: "/images/setup-goal.webp", side: "left", top: "77%" },
-  { icon: "brain", a: "Clear", b: "your mind", img: "/images/welcome-mind.webp", side: "right", top: "11%" },
-  { icon: "wallet", a: "Feel more", b: "in control", img: "/images/read-money.webp", side: "right", top: "33%" },
-  { icon: "calheart", a: "Remember", b: "what matters", img: "/images/welcome-remember.webp", side: "right", top: "55%" },
-  { icon: "droplet", a: "Take care", b: "of yourself", img: "/images/read-selfcare.webp", side: "right", top: "77%" },
+  { icon: "lotus", a: "Understand", b: "your rhythm", img: "/images/setup-cycle.webp", side: "left", top: "9%", edge: "4%", order: 0 },
+  { icon: "meditate", a: "Move", b: "your body", img: "/images/workout-hero-session.webp", side: "left", top: "34%", edge: "8%", order: 2 },
+  { icon: "bowl", a: "Nourish", b: "yourself", img: "/images/setup-meals.webp", side: "left", top: "58%", edge: "3%", order: 4 },
+  { icon: "check", a: "Build better", b: "habits", img: "/images/setup-goal.webp", side: "left", top: "80%", edge: "7%", order: 6 },
+  { icon: "brain", a: "Clear", b: "your mind", img: "/images/welcome-mind.webp", side: "right", top: "13%", edge: "5%", order: 1 },
+  { icon: "wallet", a: "Feel more", b: "in control", img: "/images/read-money.webp", side: "right", top: "36%", edge: "3%", order: 3 },
+  { icon: "calheart", a: "Remember", b: "what matters", img: "/images/welcome-remember.webp", side: "right", top: "57%", edge: "8%", order: 5 },
+  { icon: "droplet", a: "Take care", b: "of yourself", img: "/images/read-selfcare.webp", side: "right", top: "79%", edge: "4%", order: 7 },
 ];
+const CARD_BASE = 0.4; // s before the first card
+const CARD_STEP = 0.55; // s between cards — paced so each can be read
 
 function ScreenConnected({ onNext }: { onNext: () => void }) {
   return (
@@ -320,13 +326,14 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
           </h1>
         </header>
 
-        {/* the eight cards flank her, arriving one by one */}
+        {/* the eight cards scatter across the two sides, each arriving with
+            enough of a pause to read it before the next appears */}
         <div className="s2-flank" aria-hidden>
-          {NODES.map((n, i) => (
+          {NODES.map((n) => (
             <article
               key={n.a + n.b}
               className="s3-card s3-photo"
-              style={{ [n.side]: "5%", top: n.top, animationDelay: `${0.35 + i * 0.16}s` } as CSSProperties}
+              style={{ [n.side]: n.edge, top: n.top, animationDelay: `${CARD_BASE + n.order * CARD_STEP}s` } as CSSProperties}
             >
               <div className="s3-card-top">
                 <MiniBadge icon={n.icon} />
@@ -409,10 +416,24 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
 
         {/* ── floating life cards — arranged around a clear centre-top face zone ── */}
         <div className="s3-cards" aria-hidden>
-          {/* Morning Yoga — beside her, below the face line */}
-          <article className="s3-card s3-photo" style={{ left: "34%", top: "33%", animationDelay: ".15s" }}>
+          {/* Meditation — above Morning Yoga */}
+          <article className="s3-card s3-photo" style={{ left: "34%", top: "6%", animationDelay: ".15s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="meditate" />
+              <div className="s3-card-heads">
+                <b>Meditation</b>
+                <small>10 min • Calm</small>
+              </div>
+            </div>
+            <div className="s3-thumb">
+              <img src="/images/welcome-mind.webp" alt="" loading="lazy" />
+            </div>
+          </article>
+
+          {/* Morning Yoga — beside her, below the face line */}
+          <article className="s3-card s3-photo" style={{ left: "34%", top: "30%", animationDelay: ".3s" }}>
+            <div className="s3-card-top">
+              <MiniBadge icon="lotus" />
               <div className="s3-card-heads">
                 <b>Morning Yoga</b>
                 <small>20 min • Flow</small>
@@ -429,7 +450,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
           </article>
 
           {/* Nourishing Meal — lower-left of body */}
-          <article className="s3-card s3-photo" style={{ left: "34%", top: "60%", animationDelay: ".45s" }}>
+          <article className="s3-card s3-photo" style={{ left: "34%", top: "54%", animationDelay: ".45s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="bowl" />
               <div className="s3-card-heads">
@@ -438,12 +459,12 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
               <em className="s3-mini-heart">♡</em>
             </div>
             <div className="s3-thumb">
-              <img src="/images/meal-buddha.webp" alt="" loading="lazy" />
+              <img src="/images/meal-oats.webp" alt="" loading="lazy" />
             </div>
           </article>
 
-          {/* Journal — bottom centre, clear of the face */}
-          <article className="s3-card" style={{ left: "34%", top: "84%", animationDelay: ".75s" }}>
+          {/* Journal — bottom, clear of the face */}
+          <article className="s3-card" style={{ left: "34%", top: "78%", animationDelay: ".6s" }}>
             <div className="s3-card-top">
               <MiniBadge icon="book" />
               <div className="s3-card-heads">
@@ -547,49 +568,52 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
 /* ════════════════════════════════════════════════════════════════════════════
    Controller — sequences the three screens with a soft bloom-wipe transition.
    ════════════════════════════════════════════════════════════════════════════ */
-export default function WelcomeScreen() {
-  const [step, setStep] = useState(1);
-  const [veiling, setVeiling] = useState(false);
+function renderStep(step: number, advance: () => void, goApp: () => void) {
+  if (step === 1) return <ScreenIntro onNext={advance} />;
+  if (step === 2) return <ScreenConnected onNext={advance} />;
+  return <ScreenLife onEnter={goApp} />;
+}
 
-  // Soft cross-dissolve: a sakura "bloom" veil blooms over the screen, the step
-  // swaps underneath while it's opaque, then the veil clears.
-  const swap = (fn: () => void) => {
-    if (prefersReducedMotion()) {
-      fn();
-      return;
+const CROSS_MS = 900; // slightly longer than the .85s cross-fade, for a safe buffer
+
+export default function WelcomeScreen() {
+  // Each entry is a mounted screen with a stable key. The topmost fades in over
+  // the one below (which keeps playing its film), then the lower one unmounts —
+  // a seamless cross-dissolve, no stop, no flash, no remount of the outgoing
+  // video. The next screen literally emerges behind the last moment of the one
+  // before it.
+  const [layers, setLayers] = useState<{ step: number; key: number }[]>([{ step: 1, key: 0 }]);
+  const nextKey = useRef(1);
+  const busy = useRef(false);
+
+  const goApp = () => {
+    try {
+      window.history.pushState({}, "", "/app/today");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } catch {
+      window.location.assign("/app/today");
     }
-    setVeiling(true);
-    window.setTimeout(fn, 300);
-    window.setTimeout(() => setVeiling(false), 760);
   };
 
-  const goApp = () =>
-    swap(() => {
-      try {
-        window.history.pushState({}, "", "/app/today");
-        window.dispatchEvent(new PopStateEvent("popstate"));
-      } catch {
-        window.location.assign("/app/today");
-      }
-    });
+  const advanceFrom = (fromStep: number) => {
+    if (busy.current) return;
+    busy.current = true;
+    const key = nextKey.current++;
+    setLayers((ls) => [...ls, { step: fromStep + 1, key }]);
+    window.setTimeout(() => {
+      setLayers((ls) => ls.filter((l) => l.key === key));
+      busy.current = false;
+    }, CROSS_MS);
+  };
 
   return (
     <div className="wz-root">
       <Styles />
-      <div className="wz-seq" key={step}>
-        {step === 1 && <ScreenIntro onNext={() => swap(() => setStep(2))} />}
-        {step === 2 && <ScreenConnected onNext={() => swap(() => setStep(3))} />}
-        {step === 3 && <ScreenLife onEnter={goApp} />}
-      </div>
-
-      <div className={`wz-veil${veiling ? " on" : ""}`} aria-hidden>
-        <span className="wz-veil-bloom" />
-        {Array.from({ length: 7 }).map((_, i) => (
-          <span
-            key={i}
-            className="wz-petal"
-            style={{ left: `${8 + i * 13}%`, animationDelay: `${i * 0.05}s`, ["--r" as string]: `${(i % 3) - 1}` }}
-          />
+      <div className="wz-stack">
+        {layers.map((l, i) => (
+          <div key={l.key} className={`wz-layer${i === layers.length - 1 && layers.length > 1 ? " wz-in" : ""}`}>
+            {renderStep(l.step, () => advanceFrom(l.step), goApp)}
+          </div>
         ))}
       </div>
     </div>
@@ -611,9 +635,11 @@ function Styles() {
       font-family:var(--sans);
       background:radial-gradient(85% 65% at 50% 0%,#FFF6EE 0%,#FDE9F1 46%,#F8D3E4 100%)}
 
-    .wz-seq{width:100%;height:100%;display:grid;place-items:center;
-      animation:wz-seq-in .6s cubic-bezier(.16,.7,.2,1) both}
-    @keyframes wz-seq-in{from{opacity:0;transform:scale(1.035)}to{opacity:1;transform:none}}
+    /* stacked layers for a seamless cross-dissolve between screens */
+    .wz-stack{position:relative;width:100%;height:100%;display:grid}
+    .wz-layer{grid-area:1/1;width:100%;height:100%;display:grid;place-items:center}
+    .wz-in{animation:wz-cross-in .85s cubic-bezier(.4,0,.2,1) both}
+    @keyframes wz-cross-in{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
 
     /* Stage keeps the film's 16:9 shape on big screens so nothing is ever cropped */
     .wz-stage{position:relative;overflow:hidden;width:100%;height:100dvh;isolation:isolate}
@@ -696,7 +722,10 @@ function Styles() {
       animation:wz-word .7s cubic-bezier(.16,.7,.2,1) forwards}
     @keyframes wz-word{to{opacity:1;transform:none}}
     .wz-sp{display:inline-block;width:.26em}
-    .wz-sheen{position:relative;display:inline-block;overflow:hidden}
+    /* padding gives the script's descenders room inside the sheen's clip box,
+       negative margin keeps the surrounding layout unchanged */
+    .wz-sheen{position:relative;display:inline-block;overflow:hidden;
+      padding:.06em .12em .26em;margin:-.06em -.12em -.26em}
     .wz-sheen::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
       background:linear-gradient(105deg,transparent 34%,rgba(255,255,255,.85) 50%,transparent 66%);
       transform:translateX(-120%);
@@ -747,8 +776,8 @@ function Styles() {
     /* ══════════ SCREEN 3 ══════════ */
     .wz-content.s3{padding-bottom:clamp(16px,3vh,30px)}
     .s3-body{position:relative;z-index:3;flex:1;min-height:0;display:flex;flex-direction:column;
-      align-items:flex-start;justify-content:center;max-width:min(34%,420px);
-      gap:clamp(8px,1.5vh,16px);padding-left:clamp(0px,1vw,18px)}
+      align-items:flex-start;justify-content:flex-start;max-width:min(34%,420px);
+      gap:clamp(8px,1.5vh,16px);padding-left:clamp(0px,1vw,18px);padding-top:clamp(6px,3vh,34px)}
     .s3-h{margin:0;display:flex;flex-direction:column;gap:clamp(2px,.6vh,8px)}
     .s3-serif{font-family:var(--serif);font-weight:700;color:var(--plum);
       font-size:clamp(22px,2.9vw,44px);line-height:1.04}
@@ -810,20 +839,6 @@ function Styles() {
     .s3-plan-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .s3-plan-row small{color:var(--muted);font-weight:700;font-size:.86em;flex:0 0 auto}
 
-    /* ── soft bloom-wipe transition veil ── */
-    .wz-veil{position:absolute;inset:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .3s ease}
-    .wz-veil.on{opacity:1}
-    .wz-veil-bloom{position:absolute;inset:0;transform:scale(.5);opacity:0;
-      background:radial-gradient(circle at 50% 54%,rgba(255,244,250,.97) 0%,rgba(251,209,232,.82) 38%,
-        rgba(246,201,223,.42) 68%,rgba(246,201,223,0) 100%)}
-    .wz-veil.on .wz-veil-bloom{animation:wz-bloom .76s ease both}
-    @keyframes wz-bloom{0%{transform:scale(.5);opacity:0}38%{opacity:1}100%{transform:scale(1.5);opacity:0}}
-    .wz-petal{position:absolute;top:-6%;width:14px;height:14px;border-radius:60% 40% 60% 40%;
-      background:radial-gradient(circle at 34% 30%,#fff,var(--petal) 70%);opacity:0}
-    .wz-veil.on .wz-petal{animation:wz-petal-fall .8s ease-in both}
-    @keyframes wz-petal-fall{0%{opacity:0;transform:translateY(0) rotate(0)}30%{opacity:.9}
-      100%{opacity:0;transform:translateY(70dvh) rotate(calc(var(--r) * 120deg))}}
-
     /* ── mobile ── */
     @media (max-width:767px){
       .wz-scrim--left{background:
@@ -858,7 +873,7 @@ function Styles() {
       .s3-space{text-align:center}
     }
     @media (prefers-reduced-motion:reduce){
-      .wz-seq,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space{
+      .wz-in,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space{
         animation-duration:.01s !important;animation-delay:0s !important}
       .wz-cta{animation:wz-cta-in .01s forwards}
       .wz-brand-mark{animation:none}
