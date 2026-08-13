@@ -971,65 +971,86 @@ export type NamedFlow = {
   slug: string; title: string; intention: Intention; phase?: Phase;
   durationMin: number; level: Level; blurb: string; tags: string[];
   poses: string[]; thumb?: string;
+  /** One practical, expert-teacher tip shown on the flow card (when to practise,
+   *  how to breathe, what to watch for) — the "coach's note" for this flow. */
+  advice?: string;
 };
 export const YOGA_FLOWS: NamedFlow[] = [
   // — Cycle (the niche) —
   { slug: "period-cramps", title: "Yoga for Period Cramps", intention: "cycle", phase: "menstrual", durationMin: 15, level: "Beginner",
     blurb: "Gentle holds to soften cramps and ease the low belly.", tags: ["period", "cramps", "menstrual", "gentle", "PMS"],
-    poses: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "knees-to-chest", "supine-twist", "happy-baby", "banana-pose", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "knees-to-chest", "supine-twist", "happy-baby", "banana-pose", "legs-up-wall", "savasana"],
+    advice: "Keep everything gentle and skip anything that strains the belly. Breathe slowly into the low belly to warm and relax the cramping muscles — warmth and calm, never force." },
   { slug: "pms-relief", title: "PMS Relief Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
     blurb: "Calm the mood swings and release tension before your period.", tags: ["PMS", "luteal", "calm", "mood", "hormones"],
-    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "seated-forward-fold", "supine-twist", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "seated-forward-fold", "supine-twist", "reclined-bound-angle", "legs-up-wall", "savasana"],
+    advice: "Practise in the evening when symptoms peak. Move slowly and let long, slow exhales settle the mood — the aim is to down-shift, not to push." },
   { slug: "bloating-digestion", title: "Yoga for Bloating & Digestion", intention: "release", durationMin: 10, level: "Beginner",
     blurb: "Twists and folds to ease a bloated, heavy belly.", tags: ["bloating", "digestion", "gut", "twist", "period"],
-    poses: ["cat-cow", "seated-twist", "knees-to-chest", "supine-twist", "childs-pose", "happy-baby", "seated-forward-fold", "savasana"] },
+    poses: ["cat-cow", "knees-to-chest", "seated-twist", "supine-twist", "seated-forward-fold", "childs-pose", "legs-up-wall", "savasana"],
+    advice: "Best on an empty-ish stomach — 2–3 h after eating, never right after a big meal. Make each exhale longer than the inhale to switch on 'rest & digest', and let the twists gently wring the belly." },
   { slug: "follicular-energy", title: "Follicular Phase Energy Yoga", intention: "cycle", phase: "follicular", durationMin: 20, level: "Intermediate",
     blurb: "Build gentle heat as your energy rises after your period.", tags: ["follicular", "energy", "flow", "strength"],
-    poses: ["cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"],
+    advice: "Your energy is climbing after your period — this is the phase to build a little heat. Take the standing poses with strong, steady legs and enjoy feeling capable again." },
   { slug: "ovulation-glow", title: "Ovulation Glow Flow", intention: "cycle", phase: "ovulation", durationMin: 20, level: "Intermediate",
     blurb: "Your strongest phase — open, energize and glow.", tags: ["ovulation", "energy", "glow", "strength"],
-    poses: ["cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"],
+    advice: "Your peak-energy phase — go for the fuller expression of each pose. Keep the breath smooth and even as the shapes get bigger and juicier." },
   { slug: "luteal-calm", title: "Luteal Phase Calm Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
     blurb: "Wind down as your energy dips before your period.", tags: ["luteal", "calm", "restorative", "hormones"],
-    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "butterfly", "seated-twist", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "butterfly", "seated-twist", "reclined-bound-angle", "legs-up-wall", "savasana"],
+    advice: "Energy naturally dips before your period — honour it. Hold longer, breathe slower, and don't chase depth. This is a practice of letting go." },
   // — Time & mood —
   { slug: "morning-wake-up", title: "Morning Wake-Up Yoga", intention: "morning", durationMin: 10, level: "Beginner",
     blurb: "A bright 10 minutes to wake the body and mind.", tags: ["morning", "wake up", "energy", "beginner"],
-    poses: ["cat-cow", "childs-pose", "downward-dog", "forward-fold", "low-lunge", "mountain", "standing-side-stretch", "cobra", "seated-twist", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "cobra", "mountain", "standing-side-stretch", "seated-twist", "childs-pose", "savasana"],
+    advice: "Do it right after waking, before screens. Breathe big and full and let the poses build a little heat — think of it as opening the curtains on your body." },
   { slug: "bedtime-sleep", title: "Bedtime Yoga for Better Sleep", intention: "sleep", durationMin: 15, level: "Beginner",
     blurb: "Slow, floor-based holds to melt into deep rest.", tags: ["sleep", "bedtime", "night", "wind down", "insomnia"],
-    poses: ["childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"] },
+    poses: ["childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"],
+    advice: "Dim the lights and do this in bed or beside it. Everything stays slow and floor-based — nothing should raise your heart rate. Let savasana melt straight into sleep." },
   { slug: "stress-relief", title: "Stress Relief Yoga", intention: "stress", durationMin: 10, level: "Beginner",
     blurb: "Let the shoulders drop and the breath slow down.", tags: ["stress", "relax", "tension", "calm"],
-    poses: ["easy-seat", "neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "seated-forward-fold", "supine-twist", "savasana"] },
+    poses: ["easy-seat", "neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "seated-forward-fold", "supine-twist", "savasana"],
+    advice: "Make every exhale longer than the inhale — that's the switch that calms the nervous system. Consciously soften the jaw and the space between your brows." },
   { slug: "anxiety-breathe", title: "Yoga for Anxiety · Calm & Breathe", intention: "stress", durationMin: 10, level: "Beginner",
     blurb: "Breathwork and grounding holds to settle a racing mind.", tags: ["anxiety", "breathe", "calm", "grounding"],
-    poses: ["easy-seat", "box-breathing", "alternate-nostril", "childs-pose", "cat-cow", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "box-breathing", "alternate-nostril", "childs-pose", "cat-cow", "reclined-bound-angle", "legs-up-wall", "savasana"],
+    advice: "Start with the breathwork and don't rush it — the poses are just here to keep you grounded. Whenever the mind races, come back to counting the breath." },
   // — Body targets —
   { slug: "lower-back", title: "Yoga for Lower Back Pain", intention: "backcare", durationMin: 12, level: "Beginner",
     blurb: "Soothe and mobilize a tight, achy lower back.", tags: ["back pain", "lower back", "spine", "relief"],
-    poses: ["cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"] },
+    poses: ["cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"],
+    advice: "Move only within a pain-free range — a gentle stretch, never a sharp pinch. Keep the belly lightly drawn in to support the spine, and back off any pose that hurts." },
   { slug: "neck-shoulders-desk", title: "Desk Break · Neck & Shoulder Yoga", intention: "backcare", durationMin: 5, level: "Beginner",
     blurb: "A 5-minute reset for a stiff neck and shoulders at your desk.", tags: ["neck", "shoulders", "desk", "office", "quick"],
-    poses: ["neck-shoulder-rolls", "seated-twist", "standing-side-stretch", "thread-the-needle", "cat-cow", "childs-pose"] },
+    poses: ["neck-shoulder-rolls", "seated-twist", "standing-side-stretch", "thread-the-needle", "cat-cow", "childs-pose"],
+    advice: "Do it right at your desk, no need to change clothes. Drop the shoulders away from the ears and move slowly — quality of movement over range." },
   { slug: "hip-openers", title: "Hip-Opening Yoga", intention: "release", durationMin: 15, level: "Intermediate",
     blurb: "Deep, patient holds to open tight hips.", tags: ["hips", "hip openers", "flexibility", "release"],
-    poses: ["cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"] },
+    poses: ["cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"],
+    advice: "Hips hold tension and emotion — go slow, hold each shape for several breaths, and let it melt open. Never force a hip; breathe into the resistance instead." },
   { slug: "flexibility-hamstrings", title: "Yoga for Flexibility & Hamstrings", intention: "fullbody", durationMin: 15, level: "Beginner",
     blurb: "Lengthen the backs of the legs and the whole spine.", tags: ["flexibility", "hamstrings", "stretch", "splits"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"],
+    advice: "Warm up first — never stretch cold hamstrings hard. Micro-bend the knees and hinge from the hips, not the low back. Flexibility comes from consistency, not force." },
   { slug: "core-power", title: "Core Power Yoga", intention: "core", durationMin: 15, level: "Intermediate",
     blurb: "Build a strong, steady centre.", tags: ["core", "abs", "strength", "power"],
-    poses: ["cat-cow", "plank", "forearm-plank", "boat", "dead-bug", "hollow-hold", "bird-dog", "bridge", "modified-side-plank", "savasana"] },
+    poses: ["cat-cow", "bird-dog", "plank", "forearm-plank", "dead-bug", "hollow-hold", "boat", "modified-side-plank", "bridge", "savasana"],
+    advice: "Keep the low back gently pressing down and breathe steadily — never hold your breath. Stop a hold when your form breaks, not when you're wrecked. Bridge at the end un-rounds the spine." },
   { slug: "balance-focus", title: "Balance & Focus Yoga", intention: "balance", durationMin: 12, level: "Intermediate",
     blurb: "Steady standing shapes to sharpen focus.", tags: ["balance", "focus", "standing", "stability"],
-    poses: ["mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"] },
+    poses: ["mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"],
+    advice: "Fix your gaze on one still point (a drishti) to steady each balance — wobbling is part of it, just breathe and reset. Practise when you're alert, not exhausted." },
   { slug: "full-body-beginner", title: "Full-Body Beginner Yoga · 10 Min", intention: "fullbody", durationMin: 10, level: "Beginner",
     blurb: "A friendly all-round flow for total beginners.", tags: ["beginner", "full body", "10 minute", "gentle"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"],
+    advice: "There's no 'perfect' shape — just move with your breath and go where it feels good. Rest in child's pose any time you need a pause." },
   { slug: "morning-stretch-5", title: "5-Minute Morning Stretch", intention: "morning", durationMin: 5, level: "Beginner",
     blurb: "The quickest way to un-stiffen and start your day.", tags: ["morning", "quick", "5 minute", "stretch"],
-    poses: ["cat-cow", "childs-pose", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist", "childs-pose"],
+    advice: "Five minutes is enough to un-stiffen — do it before coffee. Yawn, stretch big, and don't worry about doing it 'right'." },
 ];
 
 /** Build a fixed titled flow: resolve slugs → poses, add the "other side" step
@@ -1686,6 +1707,12 @@ function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
                   <span>·</span><span>{f.level}</span>
                   {f.phase && <><span>·</span><span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span></>}
                 </div>
+                {f.advice && (
+                  <div className="mt-2.5 flex items-start gap-1.5 rounded-2xl bg-blush/50 border border-petal/50 px-2.5 py-2">
+                    <Sparkle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" />
+                    <p className="text-[11px] leading-snug text-rose/75"><span className="font-bold text-hotpink">Coach's note · </span>{f.advice}</p>
+                  </div>
+                )}
               </div>
             </button>
           );
