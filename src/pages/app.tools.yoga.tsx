@@ -77,7 +77,7 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "reverse-plank", "standing-figure-four", "tree", "upward-dog", "warrior-2",
   "banana-pose", "bow", "camel", "chaturanga", "cow-face",
   "crescent-twist", "dancer", "garland", "half-moon", "pigeon",
-  "revolved-triangle", "triangle", "warrior-3",
+  "revolved-triangle", "triangle", "warrior-3", "supine-twist",
 ]);
 
 /** Poses whose clip should play once and settle on the last (pose) frame,
@@ -2010,31 +2010,24 @@ function StepCard({
 // ===================== FLOW SESSIONS (grid presentation) =====================
 
 function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index: number; onClick: () => void }) {
+  // Same Curated-plans / FlowCard shape: a tall image strip on the left + content
+  // on the right, so the whole page reads as one harmonious set of cards.
   return (
     <button
       onClick={onClick}
-      className="relative overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in hover-scale group"
-      style={{ animationDelay: `${index * 60}ms`, aspectRatio: '1/1' }}
+      style={{ animationDelay: `${index * 60}ms` }}
+      className="group flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
     >
-      <img
-        src={preset.image} alt="" loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition duration-300 group-hover:scale-105"
-      />
-      {/* subtle vignette so text is always readable */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-      {/* Duration badge */}
-      <span className="absolute top-1.5 right-1.5 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white">
-        {preset.duration} min
-      </span>
-      {/* Glass label strip */}
-      <div
-        className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
-        style={{
-          background: 'rgba(255,255,255,0.20)',
-          borderTop: '1px solid rgba(255,255,255,0.28)',
-        }}
-      >
-        <p className="text-[10px] font-bold leading-tight text-white drop-shadow">{preset.label}</p>
+      <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
+        <img src={preset.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
+      </div>
+      <div className="flex-1 min-w-0 p-3 flex flex-col">
+        <p className="inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-rose/55"><Clock className="h-3 w-3" />{preset.duration} min</p>
+        <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{preset.label}</h3>
+        <span className="mt-auto pt-2 inline-flex items-center gap-1 self-start rounded-full bg-blush/60 border border-petal/50 px-2.5 py-1 text-[10px] font-bold text-hotpink">
+          Start <Play className="h-3 w-3" fill="currentColor" strokeWidth={0} />
+        </span>
       </div>
     </button>
   );
@@ -2067,7 +2060,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
         </div>
       </div>
 
-      <div key={tab} className="mt-4 grid grid-cols-3 gap-2 lg:grid-cols-4">
+      <div key={tab} className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
         {sessions.map((s, i) => (
           <SessionCard key={s.label} preset={s} index={i} onClick={() => onStart(s.intention, s.duration)} />
         ))}
