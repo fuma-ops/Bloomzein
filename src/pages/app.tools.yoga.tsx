@@ -77,7 +77,7 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "reverse-plank", "standing-figure-four", "tree", "upward-dog", "warrior-2",
   "banana-pose", "bow", "camel", "chaturanga", "cow-face",
   "crescent-twist", "dancer", "garland", "half-moon", "pigeon",
-  "revolved-triangle", "triangle", "warrior-3",
+  "revolved-triangle", "triangle", "warrior-3", "supine-twist",
 ]);
 
 /** Poses whose clip should play once and settle on the last (pose) frame,
@@ -1001,15 +1001,15 @@ export const YOGA_FLOWS: NamedFlow[] = [
     advice: "Practise in the evening when symptoms peak. Move slowly and let long, slow exhales settle the mood — the aim is to down-shift, not to push." },
   { slug: "bloating-digestion", title: "Yoga for Bloating & Digestion", intention: "release", durationMin: 10, level: "Beginner",
     blurb: "Twists and folds to ease a bloated, heavy belly.", tags: ["bloating", "digestion", "gut", "twist", "period"],
-    poses: ["cat-cow", "knees-to-chest", "seated-twist", "supine-twist", "seated-forward-fold", "childs-pose", "legs-up-wall", "savasana"],
+    poses: ["easy-seat", "cat-cow", "knees-to-chest", "seated-twist", "supine-twist", "seated-forward-fold", "childs-pose", "legs-up-wall", "savasana"],
     advice: "Best on an empty-ish stomach — 2–3 h after eating, never right after a big meal. Make each exhale longer than the inhale to switch on 'rest & digest', and let the twists gently wring the belly." },
   { slug: "follicular-energy", title: "Follicular Phase Energy Yoga", intention: "cycle", phase: "follicular", durationMin: 20, level: "Intermediate",
     blurb: "Build gentle heat as your energy rises after your period.", tags: ["follicular", "energy", "flow", "strength"],
-    poses: ["cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"],
+    poses: ["easy-seat", "cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"],
     advice: "Your energy is climbing after your period — this is the phase to build a little heat. Take the standing poses with strong, steady legs and enjoy feeling capable again." },
   { slug: "ovulation-glow", title: "Ovulation Glow Flow", intention: "cycle", phase: "ovulation", durationMin: 20, level: "Intermediate",
     blurb: "Your strongest phase — open, energize and glow.", tags: ["ovulation", "energy", "glow", "strength"],
-    poses: ["cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"],
+    poses: ["easy-seat", "cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"],
     advice: "Your peak-energy phase — go for the fuller expression of each pose. Keep the breath smooth and even as the shapes get bigger and juicier." },
   { slug: "luteal-calm", title: "Luteal Phase Calm Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
     blurb: "Wind down as your energy dips before your period.", tags: ["luteal", "calm", "restorative", "hormones"],
@@ -1018,11 +1018,11 @@ export const YOGA_FLOWS: NamedFlow[] = [
   // — Time & mood —
   { slug: "morning-wake-up", title: "Morning Wake-Up Yoga", intention: "morning", durationMin: 10, level: "Beginner",
     blurb: "A bright 10 minutes to wake the body and mind.", tags: ["morning", "wake up", "energy", "beginner"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "cobra", "mountain", "standing-side-stretch", "seated-twist", "childs-pose", "savasana"],
+    poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "low-lunge", "cobra", "mountain", "standing-side-stretch", "seated-twist", "childs-pose", "savasana"],
     advice: "Do it right after waking, before screens. Breathe big and full and let the poses build a little heat — think of it as opening the curtains on your body." },
   { slug: "bedtime-sleep", title: "Bedtime Yoga for Better Sleep", intention: "sleep", durationMin: 15, level: "Beginner",
     blurb: "Slow, floor-based holds to melt into deep rest.", tags: ["sleep", "bedtime", "night", "wind down", "insomnia"],
-    poses: ["childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"],
+    poses: ["easy-seat", "childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"],
     advice: "Dim the lights and do this in bed or beside it. Everything stays slow and floor-based — nothing should raise your heart rate. Let savasana melt straight into sleep." },
   { slug: "stress-relief", title: "Stress Relief Yoga", intention: "stress", durationMin: 10, level: "Beginner",
     blurb: "Let the shoulders drop and the breath slow down.", tags: ["stress", "relax", "tension", "calm"],
@@ -1035,7 +1035,7 @@ export const YOGA_FLOWS: NamedFlow[] = [
   // — Body targets —
   { slug: "lower-back", title: "Yoga for Lower Back Pain", intention: "backcare", durationMin: 12, level: "Beginner",
     blurb: "Soothe and mobilize a tight, achy lower back.", tags: ["back pain", "lower back", "spine", "relief"],
-    poses: ["cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"],
+    poses: ["easy-seat", "cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"],
     advice: "Move only within a pain-free range — a gentle stretch, never a sharp pinch. Keep the belly lightly drawn in to support the spine, and back off any pose that hurts." },
   { slug: "neck-shoulders-desk", title: "Desk Break · Neck & Shoulder Yoga", intention: "backcare", durationMin: 5, level: "Beginner",
     blurb: "A 5-minute reset for a stiff neck and shoulders at your desk.", tags: ["neck", "shoulders", "desk", "office", "quick"],
@@ -1043,27 +1043,27 @@ export const YOGA_FLOWS: NamedFlow[] = [
     advice: "Do it right at your desk, no need to change clothes. Drop the shoulders away from the ears and move slowly — quality of movement over range." },
   { slug: "hip-openers", title: "Hip-Opening Yoga", intention: "release", durationMin: 15, level: "Intermediate",
     blurb: "Deep, patient holds to open tight hips.", tags: ["hips", "hip openers", "flexibility", "release"],
-    poses: ["cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"],
+    poses: ["easy-seat", "cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"],
     advice: "Hips hold tension and emotion — go slow, hold each shape for several breaths, and let it melt open. Never force a hip; breathe into the resistance instead." },
   { slug: "flexibility-hamstrings", title: "Yoga for Flexibility & Hamstrings", intention: "fullbody", durationMin: 15, level: "Beginner",
     blurb: "Lengthen the backs of the legs and the whole spine.", tags: ["flexibility", "hamstrings", "stretch", "splits"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"],
+    poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"],
     advice: "Warm up first — never stretch cold hamstrings hard. Micro-bend the knees and hinge from the hips, not the low back. Flexibility comes from consistency, not force." },
   { slug: "core-power", title: "Core Power Yoga", intention: "core", durationMin: 15, level: "Intermediate",
     blurb: "Build a strong, steady centre.", tags: ["core", "abs", "strength", "power"],
-    poses: ["cat-cow", "bird-dog", "plank", "forearm-plank", "dead-bug", "hollow-hold", "boat", "modified-side-plank", "bridge", "savasana"],
+    poses: ["easy-seat", "cat-cow", "bird-dog", "plank", "forearm-plank", "dead-bug", "hollow-hold", "boat", "modified-side-plank", "bridge", "savasana"],
     advice: "Keep the low back gently pressing down and breathe steadily — never hold your breath. Stop a hold when your form breaks, not when you're wrecked. Bridge at the end un-rounds the spine." },
   { slug: "balance-focus", title: "Balance & Focus Yoga", intention: "balance", durationMin: 12, level: "Intermediate",
     blurb: "Steady standing shapes to sharpen focus.", tags: ["balance", "focus", "standing", "stability"],
-    poses: ["mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"],
+    poses: ["easy-seat", "mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"],
     advice: "Fix your gaze on one still point (a drishti) to steady each balance — wobbling is part of it, just breathe and reset. Practise when you're alert, not exhausted." },
   { slug: "full-body-beginner", title: "Full-Body Beginner Yoga · 10 Min", intention: "fullbody", durationMin: 10, level: "Beginner",
     blurb: "A friendly all-round flow for total beginners.", tags: ["beginner", "full body", "10 minute", "gentle"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"],
+    poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"],
     advice: "There's no 'perfect' shape — just move with your breath and go where it feels good. Rest in child's pose any time you need a pause." },
   { slug: "morning-stretch-5", title: "5-Minute Morning Stretch", intention: "morning", durationMin: 5, level: "Beginner",
     blurb: "The quickest way to un-stiffen and start your day.", tags: ["morning", "quick", "5 minute", "stretch"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist", "childs-pose"],
+    poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist", "childs-pose"],
     advice: "Five minutes is enough to un-stiffen — do it before coffee. Yawn, stretch big, and don't worry about doing it 'right'." },
 ];
 
@@ -2010,31 +2010,24 @@ function StepCard({
 // ===================== FLOW SESSIONS (grid presentation) =====================
 
 function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index: number; onClick: () => void }) {
+  // Same Curated-plans / FlowCard shape: a tall image strip on the left + content
+  // on the right, so the whole page reads as one harmonious set of cards.
   return (
     <button
       onClick={onClick}
-      className="relative overflow-hidden rounded-2xl text-left transition active:scale-95 animate-scale-in hover-scale group"
-      style={{ animationDelay: `${index * 60}ms`, aspectRatio: '1/1' }}
+      style={{ animationDelay: `${index * 60}ms` }}
+      className="group flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
     >
-      <img
-        src={preset.image} alt="" loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition duration-300 group-hover:scale-105"
-      />
-      {/* subtle vignette so text is always readable */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-      {/* Duration badge */}
-      <span className="absolute top-1.5 right-1.5 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-semibold text-white">
-        {preset.duration} min
-      </span>
-      {/* Glass label strip */}
-      <div
-        className="absolute bottom-0 left-0 right-0 px-2 py-2.5 text-center"
-        style={{
-          background: 'rgba(255,255,255,0.20)',
-          borderTop: '1px solid rgba(255,255,255,0.28)',
-        }}
-      >
-        <p className="text-[10px] font-bold leading-tight text-white drop-shadow">{preset.label}</p>
+      <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
+        <img src={preset.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
+      </div>
+      <div className="flex-1 min-w-0 p-3 flex flex-col">
+        <p className="inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-rose/55"><Clock className="h-3 w-3" />{preset.duration} min</p>
+        <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{preset.label}</h3>
+        <span className="mt-auto pt-2 inline-flex items-center gap-1 self-start rounded-full bg-blush/60 border border-petal/50 px-2.5 py-1 text-[10px] font-bold text-hotpink">
+          Start <Play className="h-3 w-3" fill="currentColor" strokeWidth={0} />
+        </span>
       </div>
     </button>
   );
@@ -2067,7 +2060,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
         </div>
       </div>
 
-      <div key={tab} className="mt-4 grid grid-cols-3 gap-2 lg:grid-cols-4">
+      <div key={tab} className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
         {sessions.map((s, i) => (
           <SessionCard key={s.label} preset={s} index={i} onClick={() => onStart(s.intention, s.duration)} />
         ))}
