@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff, Video, Search,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
-  Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
+  Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft, ChevronDown,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
   Trash2, CircleCheck, Circle, Tv, Wind, Waves, Gauge, type LucideIcon,
 } from "lucide-react";
@@ -1656,6 +1656,63 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
   );
 }
 
+/** One flow card — Curated-plans shape: a tall image strip on the left (so the
+ *  whole pose fits, sides cropped not head/legs) + content on the right, with the
+ *  Coach's note tucked into a collapsible toggle so cards stay compact. */
+function FlowCard({ f, index, onStart }: { f: NamedFlow; index: number; onStart: (f: NamedFlow) => void }) {
+  const [open, setOpen] = useState(false);
+  const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
+  const plusLocked = f.level !== "Beginner" && !isPremium();
+  return (
+    <div
+      style={{ animationDelay: `${index * 40}ms` }}
+      className="group flex flex-col overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 animate-scale-in"
+    >
+      <div className="flex items-stretch">
+        {/* Tall image strip (left) — whole pose fits; cover crops the sides. */}
+        <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
+          {thumb && <img src={thumb} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
+          {plusLocked && <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink shadow-sm"><Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Plus</span>}
+        </button>
+        {/* Content (right). */}
+        <div className="flex-1 min-w-0 p-3 flex flex-col">
+          <div className="flex flex-wrap items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-wide text-rose/55">
+            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{f.durationMin} min</span>
+            <span>·</span><span>{f.level}</span>
+            {f.phase && <span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span>}
+          </div>
+          <button onClick={() => onStart(f)} className="text-left">
+            <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{f.title}</h3>
+          </button>
+          <p className="mt-0.5 text-[11px] text-rose/65 leading-snug line-clamp-1">{f.blurb}</p>
+          <div className="mt-auto pt-2 flex items-center justify-between gap-2">
+            {f.advice ? (
+              <button onClick={() => setOpen((o) => !o)} aria-expanded={open}
+                className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/50 px-2 py-1 text-[10px] font-bold text-hotpink active:scale-95 transition">
+                <Sparkle className="h-3 w-3" /> Coach's note <ChevronDown className={["h-3 w-3 transition-transform", open ? "rotate-180" : ""].join(" ")} strokeWidth={2.4} />
+              </button>
+            ) : <span />}
+            <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30 active:scale-90 transition">
+              <Play className="h-4 w-4 ml-0.5" fill="currentColor" strokeWidth={0} />
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Collapsible Coach's note. */}
+      {open && f.advice && (
+        <div className="px-3 pb-3 animate-fade-in">
+          <div className="flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-2.5 py-2">
+            <Sparkle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" />
+            <p className="text-[11px] leading-snug text-rose/75">{f.advice}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Searchable grid of titled, ready-made flows (YOGA_FLOWS). Each card launches a
  *  fixed curated sequence — the same one every time, so it doubles as YouTube content. */
 function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
@@ -1682,41 +1739,8 @@ function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
           className="w-full rounded-full border border-petal/60 bg-white/90 pl-9 pr-4 py-2.5 text-sm text-rose placeholder:text-rose/40 outline-none focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20"
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {list.map((f, i) => {
-          const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
-          const plusLocked = f.level !== "Beginner" && !isPremium();
-          return (
-            <button
-              key={f.slug}
-              onClick={() => onStart(f)}
-              style={{ animationDelay: `${i * 40}ms` }}
-              className="group text-left rounded-3xl overflow-hidden border border-petal/60 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
-            >
-              <div className="relative h-32 w-full overflow-hidden bg-blush">
-                {thumb && <img src={thumb} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-                <p className="absolute left-3 bottom-2 right-3 font-script text-lg text-white leading-tight" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{f.title}</p>
-                <span className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-hotpink shadow-md"><Play className="h-4 w-4 ml-0.5" /></span>
-                {plusLocked && <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-hotpink"><Lock className="h-2.5 w-2.5" /> Plus</span>}
-              </div>
-              <div className="p-3">
-                <p className="text-[12px] text-rose/70 leading-snug">{f.blurb}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{f.durationMin} min</span>
-                  <span>·</span><span>{f.level}</span>
-                  {f.phase && <><span>·</span><span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span></>}
-                </div>
-                {f.advice && (
-                  <div className="mt-2.5 flex items-start gap-1.5 rounded-2xl bg-blush/50 border border-petal/50 px-2.5 py-2">
-                    <Sparkle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" />
-                    <p className="text-[11px] leading-snug text-rose/75"><span className="font-bold text-hotpink">Coach's note · </span>{f.advice}</p>
-                  </div>
-                )}
-              </div>
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+        {list.map((f, i) => <FlowCard key={f.slug} f={f} index={i} onStart={onStart} />)}
       </div>
       {!list.length && <p className="text-center text-sm text-rose/50 py-8">No flow matches “{q}” — try “period”, “sleep”, “back”…</p>}
     </div>
