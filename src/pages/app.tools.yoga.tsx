@@ -14,6 +14,7 @@ import { readCyclePhase, toYogaPhase, hasCycleSettings, PHASE_LABEL, type CycleP
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { BloomzeinIntro } from "@/components/bloom/BloomzeinIntro";
+import { useAuth } from "@/contexts/AuthContext";
 import { readLaunch, LAUNCH_YOGA_KEY } from "@/components/bloom/phasePlan";
 import { readFuelInPlan, writeFuelInPlan, incrementYogaSession, logYogaSession, yogaSessionKcal, readYogaStreak, readYogaSessionCount, resetToolState, readYogaPlanDays, readMovementLevel, yogaFocusImage } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
@@ -2888,18 +2889,23 @@ function SessionWithIntro({ durationMin, title, ...player }: {
 }) {
   const [introDone, setIntroDone] = useState(false);
   const meta = FLOW_META[player.intention] ?? FLOW_META.morning;
-  if (!introDone) {
-    return (
-      <BloomzeinIntro
-        channel="Yoga"
-        sessionTitle={title ?? meta.title}
-        sessionMeta={`${durationMin} Minutes`}
-        pillars={meta.focus}
-        onDone={() => setIntroDone(true)}
-      />
-    );
-  }
-  return <SessionPlayer {...player} />;
+  // The player mounts UNDER the intro from the start, so its first pose is fully
+  // painted before the intro dissolves — no white flash at the hand-off.
+  return (
+    <>
+      <SessionPlayer {...player} />
+      {!introDone && (
+        <BloomzeinIntro
+          channel="Yoga"
+          sessionTitle={title ?? meta.title}
+          sessionMeta={`${durationMin} Minutes`}
+          pillars={meta.focus}
+          audioUrl={MUSIC[player.sound] || MUSIC[DEFAULT_SOUND]}
+          onDone={() => setIntroDone(true)}
+        />
+      )}
+    </>
+  );
 }
 
 function SessionPlayer({
@@ -2937,6 +2943,8 @@ function SessionPlayer({
   // shows the Bloomzein watermark — a clean stage to screen-record for YouTube.
   const [present, setPresent] = useState(false);
   const [chromeShow, setChromeShow] = useState(true); // the Exit affordance auto-hides
+  const { user: authUser } = useAuth();
+  const isOwner = authUser?.email === "khfuma@gmail.com"; // private one-tap record button
   useEffect(() => {
     if (!present) return;
     let t: ReturnType<typeof setTimeout>;
@@ -3186,7 +3194,9 @@ function SessionPlayer({
       <style>{`.yoga-vol-slider{-webkit-appearance:none;appearance:none;height:7px;border-radius:9999px;accent-color:#EC4899;background:rgba(236,72,153,0.18);outline:none;cursor:pointer}
         .yoga-vol-slider::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:18px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer;transition:transform .12s}
         .yoga-vol-slider::-webkit-slider-thumb:active{transform:scale(1.18)}
-        .yoga-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}`}</style>
+        .yoga-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}
+        @keyframes bzPoseFade{from{opacity:0}to{opacity:1}}
+        .bz-pose-fade{animation:bzPoseFade 1400ms ease-in-out both}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3248,7 +3258,7 @@ function SessionPlayer({
           alt={pose.name}
           onLoad={() => setImgReady(true)}
           onError={() => setImgReady(false)}
-          className={["absolute inset-0 w-full h-full object-cover object-center drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)] transition-opacity ease-in-out duration-[1400ms]", imgReady ? "opacity-100" : "opacity-0", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+          className={["bz-pose-fade absolute inset-0 w-full h-full object-cover object-center drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
           style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
         />
         {pose.video && !videoBroken && (
@@ -3260,7 +3270,7 @@ function SessionPlayer({
             autoPlay loop={!pose.hold} muted playsInline preload="auto"
             aria-label={pose.name}
             onError={() => setVideoBroken(true)}
-            className={["absolute inset-0 w-full h-full object-cover object-center drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
+            className={["bz-pose-fade absolute inset-0 w-full h-full object-cover object-center drop-shadow-[0_10px_40px_rgba(236,72,153,0.20)]", pose.switchStep ? "scale-x-[-1]" : ""].join(" ")}
             style={{ filter: skin.imgFilter === "none" ? undefined : skin.imgFilter }}
           />
         )}
@@ -3363,11 +3373,18 @@ function SessionPlayer({
             className={["grid h-9 w-9 place-items-center rounded-full", showVolume ? "ring-2 ring-hotpink/50 " : "", glassBtn].join(" ")}>
             {muted || (voiceVol === 0 && musicVol === 0) ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
-          <button onClick={() => { setShowSpeed(false); setShowVolume(false); setRunning(true); setChromeShow(true); setPresent(true); }}
+          <button onClick={() => { setShowSpeed(false); setShowVolume(false); if (!running) togglePlay(); setChromeShow(true); setPresent(true); }}
             title="Presentation mode — hide controls & show the logo (for recording)"
             className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
             <Video className="h-4 w-4" />
           </button>
+          {isOwner && (
+            <button onClick={() => { setShowSpeed(false); setShowVolume(false); if (!running) togglePlay(); setChromeShow(true); setPresent(true); try { toggleFullscreen(); } catch {} }}
+              title="Record for YouTube — presentation mode, play & fullscreen in one tap"
+              className="inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-3 h-9 text-[11px] font-black tracking-wide shadow-md shadow-red-600/30 active:scale-95 transition">
+              <Video className="h-4 w-4" /> REC
+            </button>
+          )}
         </div>
       </div>
       )}
@@ -3428,7 +3445,7 @@ function SessionPlayer({
 
       {/* ===================== LEFT RAIL (desktop) ===================== */}
       {!dim && (
-        <div className="hidden lg:flex flex-col gap-3 absolute left-5 top-28 w-64 z-20">
+        <div className="hidden lg:flex flex-col gap-3 absolute left-5 top-20 w-64 z-20">
           <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
               <Flower className="h-3.5 w-3.5" /> Today's Flow
@@ -3589,8 +3606,8 @@ function SessionPlayer({
           {/* Brand logo — bottom-left, stacked (flower · Bloomzein · tagline). The
               flower breathes (zoom in/out); colours use the player's soft pink. */}
           <div className="pointer-events-none absolute bottom-5 left-6 z-30 flex items-center gap-2.5 animate-fade-in">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/85 text-hotpink shadow-lg shadow-hotpink/20 ring-1 ring-hotpink/25 animate-icon-breathe">
-              <BloomFlower size={20} />
+            <span className="grid place-items-center text-hotpink animate-icon-breathe" style={{ filter: "drop-shadow(0 2px 10px rgba(255,255,255,0.55))" }}>
+              <BloomFlower size={48} />
             </span>
             <div className="leading-none">
               <p className="font-script text-3xl leading-none text-hotpink" style={{ textShadow: "0 1px 10px rgba(255,255,255,0.85), 0 2px 4px rgba(255,255,255,0.55)" }}>Bloomzein</p>
