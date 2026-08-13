@@ -3233,7 +3233,16 @@ function SessionPlayer({
     // (never cropped), THEN reveal the celebration/summary.
     let handed = false;
     const hand = () => { if (!handed) { handed = true; onDone(); } };
-    if (!muted) playEndOutro(intention, hand);
+    if (record) {
+      // Owner recording: hold the premium branded Bloomzein outro on screen for
+      // its full run (~18s) so it's captured in one take. Play the soothing
+      // meditation "namaste" close OVER the visual outro (its end must NOT hand
+      // off early — we hold the full outro), while the music bed keeps playing
+      // and fades down softly near the very end.
+      if (!muted) playEndOutro(intention);
+      window.setTimeout(() => { try { const m = musicRef.current; if (m) fadeAudioTo(m, 0, 2400); } catch {} }, 15600);
+      window.setTimeout(hand, 18400);
+    } else if (!muted) playEndOutro(intention, hand);
     else window.setTimeout(hand, 6000);
     window.setTimeout(hand, 90000); // last-resort safety net, long enough to never cut the outro
     // streak
@@ -3285,7 +3294,11 @@ function SessionPlayer({
         .yoga-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}
         @keyframes bzPoseFade{from{opacity:0}to{opacity:1}}
         .bz-pose-fade{animation:bzPoseFade 1400ms ease-in-out both}
-        @keyframes bzSpin{to{transform:rotate(360deg)}}`}</style>
+        @keyframes bzSpin{to{transform:rotate(360deg)}}
+        @keyframes bzOutroUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+        .bz-outro-up{animation:bzOutroUp 1100ms cubic-bezier(.16,.84,.34,1) both}
+        @keyframes bzBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+        @keyframes bzPetalRise{0%{transform:translateY(30px) rotate(0deg);opacity:0}18%{opacity:.55}100%{transform:translateY(-140px) rotate(180deg);opacity:0}}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3400,7 +3413,7 @@ function SessionPlayer({
       )}
 
       {/* Soft "The End" — a faded wash over the last pose while the outro plays. */}
-      {finished && (
+      {finished && !record && (
         <div
           onClick={() => { stopAllAudio(); onDone(); }}
           className="absolute inset-0 z-[70] grid place-items-center animate-fade-in cursor-pointer"
@@ -3409,6 +3422,70 @@ function SessionPlayer({
           <div className="text-center animate-scale-in px-6">
             <p className="animate-wk-end-breathe font-script text-white leading-none drop-shadow-[0_6px_30px_oklch(0.5_0.28_350/0.8)]" style={{ fontSize: "clamp(3rem, 14vw, 8rem)" }}>The&nbsp;End&nbsp;✿</p>
             <p className="mt-3 font-semibold uppercase tracking-[0.34em] text-white/85 text-xs sm:text-sm">Namaste</p>
+          </div>
+        </div>
+      )}
+
+      {/* ===== BLOOMZEIN FLOW OUTRO — the branded "wow" close, captured straight
+          into the recording (owner REC only). Center stack; the bottom-right
+          quadrant is kept intentionally clear as the YouTube end-screen zone. ===== */}
+      {finished && record && (
+        <div
+          className="absolute inset-0 z-[80] overflow-hidden animate-fade-in"
+          style={{ background: "linear-gradient(165deg, oklch(0.95 0.045 350), oklch(0.86 0.10 348) 55%, oklch(0.8 0.13 344))" }}
+        >
+          {/* ambient drifting petals — soft continuous motion, never a static frame */}
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span
+              key={i}
+              aria-hidden
+              className="pointer-events-none absolute rounded-full"
+              style={{
+                left: `${(i * 8.3 + 5) % 96}%`,
+                bottom: "-6%",
+                width: `${10 + (i % 4) * 5}px`,
+                height: `${10 + (i % 4) * 5}px`,
+                background: "radial-gradient(circle at 35% 30%, #fff, #F9A8D4 70%, #EC4899)",
+                filter: "blur(0.3px)",
+                opacity: 0,
+                animation: `bzPetalRise ${8 + (i % 5) * 1.6}s ease-in-out ${i * 0.7}s infinite`,
+              }}
+            />
+          ))}
+
+          <div className="absolute inset-0 grid place-items-center px-8 text-center">
+            <div className="-mt-[6vh] flex flex-col items-center">
+              {/* completion beat */}
+              <div className="bz-outro-up" style={{ animationDelay: "0.3s" }}>
+                <p className="font-script text-rose leading-none" style={{ fontSize: "clamp(2.2rem,7vw,4.5rem)", textShadow: "0 2px 18px rgba(255,255,255,0.6)" }}>
+                  Your practice is complete ✿
+                </p>
+              </div>
+
+              {/* brand bloom — all-pink flower, breathing + rotating */}
+              <span className="mt-[4vh] grid place-items-center bz-outro-up" style={{ animationDelay: "2s", animation: "bzBreathe 4.6s ease-in-out infinite", filter: "drop-shadow(0 8px 26px rgba(190,24,93,0.35))" }}>
+                <BloomFlower size={116} petal="#EC4899" center="#BE185D" style={{ animation: "bzSpin 16s linear infinite" }} />
+              </span>
+
+              <p className="mt-[2.5vh] font-script leading-none text-hotpink bz-outro-up" style={{ animationDelay: "2.8s", fontSize: "clamp(3rem,10vw,6.5rem)", textShadow: "0 2px 20px rgba(255,255,255,0.75)" }}>
+                Bloomzein
+              </p>
+              <p className="mt-[1.4vh] font-semibold tracking-wide text-rose/85 bz-outro-up" style={{ animationDelay: "3.4s", fontSize: "clamp(0.85rem,2.4vw,1.2rem)", textShadow: "0 1px 8px rgba(255,255,255,0.7)" }}>
+                stay soft, bloom on. ✿
+              </p>
+
+              {/* subtle calls to action — app + subscribe */}
+              <span className="mt-[3.2vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
+                style={{ animationDelay: "4.4s", fontSize: "clamp(0.8rem,2.2vw,1.05rem)" }}>
+                <Flower className="h-4 w-4 text-hotpink" strokeWidth={2} />
+                <span className="font-semibold">Sync your yoga to your cycle — get the app</span>
+              </span>
+              <span className="mt-[1.6vh] inline-flex items-center gap-2 text-rose/80 bz-outro-up font-semibold"
+                style={{ animationDelay: "5.2s", fontSize: "clamp(0.72rem,1.9vw,0.95rem)", textShadow: "0 1px 7px rgba(255,255,255,0.7)" }}>
+                <Heart className="h-3.5 w-3.5 text-hotpink" fill="currentColor" strokeWidth={0} />
+                Subscribe for a new flow every week ✿
+              </span>
+            </div>
           </div>
         </div>
       )}
