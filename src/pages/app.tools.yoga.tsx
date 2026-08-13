@@ -3234,14 +3234,24 @@ function SessionPlayer({
     let handed = false;
     const hand = () => { if (!handed) { handed = true; onDone(); } };
     if (record) {
-      // Owner recording: hold the premium branded Bloomzein outro on screen for
-      // its full run (~18s) so it's captured in one take. Play the soothing
-      // meditation "namaste" close OVER the visual outro (its end must NOT hand
-      // off early — we hold the full outro), while the music bed keeps playing
-      // and fades down softly near the very end.
-      if (!muted) playEndOutro(intention);
-      window.setTimeout(() => { try { const m = musicRef.current; if (m) fadeAudioTo(m, 0, 2400); } catch {} }, 15600);
-      window.setTimeout(hand, 18400);
+      // Owner recording: keep the branded Bloomzein outro on screen over the last
+      // pose (washed soft pink) and NEVER cut the meditation "namaste" close —
+      // hand off only once that audio has played to its natural end (with a
+      // minimum hold so the visual reveal always completes), THEN fade the music
+      // bed down softly. Nothing is cropped.
+      const MIN_OUTRO_MS = 14000;
+      const startedAt = Date.now();
+      const closeOut = () => {
+        try { const m = musicRef.current; if (m) fadeAudioTo(m, 0, 1900); } catch {}
+        window.setTimeout(hand, 2000);
+      };
+      const tryClose = () => {
+        const elapsed = Date.now() - startedAt;
+        if (elapsed >= MIN_OUTRO_MS) closeOut();
+        else window.setTimeout(closeOut, MIN_OUTRO_MS - elapsed);
+      };
+      if (!muted) playEndOutro(intention, tryClose); // tryClose fires when the audio ENDS — never cropped
+      else window.setTimeout(closeOut, MIN_OUTRO_MS);
     } else if (!muted) playEndOutro(intention, hand);
     else window.setTimeout(hand, 6000);
     window.setTimeout(hand, 90000); // last-resort safety net, long enough to never cut the outro
@@ -3432,7 +3442,7 @@ function SessionPlayer({
       {finished && record && (
         <div
           className="absolute inset-0 z-[80] overflow-hidden animate-fade-in"
-          style={{ background: "linear-gradient(165deg, oklch(0.95 0.045 350), oklch(0.86 0.10 348) 55%, oklch(0.8 0.13 344))" }}
+          style={{ background: "linear-gradient(165deg, oklch(0.94 0.05 350 / 0.60), oklch(0.85 0.11 346 / 0.66) 55%, oklch(0.78 0.13 344 / 0.72))", backdropFilter: "blur(3px)" }}
         >
           {/* ambient drifting petals — soft continuous motion, never a static frame */}
           {Array.from({ length: 12 }).map((_, i) => (
@@ -3452,6 +3462,27 @@ function SessionPlayer({
               }}
             />
           ))}
+
+          {/* App-preview cards — a glimpse of what the app offers, framing the
+              brand (echoes the welcome screen). Kept to the sides & upper area so
+              the bottom-right stays clear for the YouTube end-screen card. */}
+          {[
+            { icon: CircleDot, label: "Understand your rhythm", sub: "Cycle-synced, every day", pos: "left-4 lg:left-8 top-[13%]", d: "0.6s" },
+            { icon: Activity, label: "Move your body", sub: "Yoga & workouts for your phase", pos: "left-6 lg:left-12 top-[40%]", d: "1s" },
+            { icon: Utensils, label: "Nourish yourself", sub: "Meals that match your cycle", pos: "right-4 lg:right-8 top-[13%]", d: "0.8s" },
+            { icon: Moon, label: "Clear your mind", sub: "Calm · journal · sleep", pos: "right-6 lg:right-12 top-[40%]", d: "1.2s" },
+          ].map((c) => {
+            const Icon = c.icon;
+            return (
+              <div key={c.label} className={["hidden md:flex absolute z-[5] items-center gap-2.5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/70 px-3.5 py-2.5 shadow-lg shadow-rose/10 bz-outro-up max-w-[15rem]", c.pos].join(" ")} style={{ animationDelay: c.d }}>
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-md"><Icon className="h-4 w-4" strokeWidth={2.2} /></span>
+                <span className="leading-tight">
+                  <span className="block font-bold text-rose text-[13px]">{c.label}</span>
+                  <span className="block text-rose/65 text-[10.5px]">{c.sub}</span>
+                </span>
+              </div>
+            );
+          })}
 
           <div className="absolute inset-0 grid place-items-center px-8 text-center">
             <div className="-mt-[6vh] flex flex-col items-center">
@@ -3480,11 +3511,16 @@ function SessionPlayer({
                 <Flower className="h-4 w-4 text-hotpink" strokeWidth={2} />
                 <span className="font-semibold">Sync your yoga to your cycle — get the app</span>
               </span>
-              <span className="mt-[1.6vh] inline-flex items-center gap-2 text-rose/80 bz-outro-up font-semibold"
-                style={{ animationDelay: "5.2s", fontSize: "clamp(0.72rem,1.9vw,0.95rem)", textShadow: "0 1px 7px rgba(255,255,255,0.7)" }}>
-                <Heart className="h-3.5 w-3.5 text-hotpink" fill="currentColor" strokeWidth={0} />
-                Subscribe for a new flow every week ✿
-              </span>
+              {/* BIG subscribe CTA — beautifully written, breathing (zoom in/out)
+                  to grab the eye. Matches the welcome-screen script + magenta. */}
+              <div className="mt-[3vh] bz-outro-up" style={{ animationDelay: "5.2s" }}>
+                <span className="inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-white shadow-xl shadow-hotpink/45"
+                  style={{ background: "linear-gradient(90deg, #EC4899, #BE185D)", animation: "bzBreathe 2.4s ease-in-out infinite" }}>
+                  <Heart className="h-6 w-6 shrink-0" fill="currentColor" strokeWidth={0} />
+                  <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribe</span>
+                  <span className="font-semibold tracking-wide leading-tight" style={{ fontSize: "clamp(0.78rem,1.9vw,1rem)" }}>for a new<br />flow every week ♡</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
