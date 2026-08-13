@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import {
   ArrowLeft, ArrowRight, Sparkles, Play, Pause, SkipForward, X, Eye, EyeOff, Video, Search,
   Clock, Heart, Moon, Sun, Sparkle, Activity, CircleDot, Volume2, VolumeX,
-  Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft,
+  Bell, Languages, Music, Calendar, Flame, ChevronRight, ChevronLeft, ChevronDown,
   GraduationCap, BookOpen, Headphones, Flower, BellRing, Info, Utensils, RotateCcw, Lock,
   Trash2, CircleCheck, Circle, Tv, Wind, Waves, Gauge, type LucideIcon,
 } from "lucide-react";
@@ -985,65 +985,86 @@ export type NamedFlow = {
   slug: string; title: string; intention: Intention; phase?: Phase;
   durationMin: number; level: Level; blurb: string; tags: string[];
   poses: string[]; thumb?: string;
+  /** One practical, expert-teacher tip shown on the flow card (when to practise,
+   *  how to breathe, what to watch for) — the "coach's note" for this flow. */
+  advice?: string;
 };
 export const YOGA_FLOWS: NamedFlow[] = [
   // — Cycle (the niche) —
   { slug: "period-cramps", title: "Yoga for Period Cramps", intention: "cycle", phase: "menstrual", durationMin: 15, level: "Beginner",
     blurb: "Gentle holds to soften cramps and ease the low belly.", tags: ["period", "cramps", "menstrual", "gentle", "PMS"],
-    poses: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "knees-to-chest", "supine-twist", "happy-baby", "banana-pose", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "knees-to-chest", "supine-twist", "happy-baby", "banana-pose", "legs-up-wall", "savasana"],
+    advice: "Keep everything gentle and skip anything that strains the belly. Breathe slowly into the low belly to warm and relax the cramping muscles — warmth and calm, never force." },
   { slug: "pms-relief", title: "PMS Relief Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
     blurb: "Calm the mood swings and release tension before your period.", tags: ["PMS", "luteal", "calm", "mood", "hormones"],
-    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "seated-forward-fold", "supine-twist", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "seated-forward-fold", "supine-twist", "reclined-bound-angle", "legs-up-wall", "savasana"],
+    advice: "Practise in the evening when symptoms peak. Move slowly and let long, slow exhales settle the mood — the aim is to down-shift, not to push." },
   { slug: "bloating-digestion", title: "Yoga for Bloating & Digestion", intention: "release", durationMin: 10, level: "Beginner",
     blurb: "Twists and folds to ease a bloated, heavy belly.", tags: ["bloating", "digestion", "gut", "twist", "period"],
-    poses: ["cat-cow", "seated-twist", "knees-to-chest", "supine-twist", "childs-pose", "happy-baby", "seated-forward-fold", "savasana"] },
+    poses: ["cat-cow", "knees-to-chest", "seated-twist", "supine-twist", "seated-forward-fold", "childs-pose", "legs-up-wall", "savasana"],
+    advice: "Best on an empty-ish stomach — 2–3 h after eating, never right after a big meal. Make each exhale longer than the inhale to switch on 'rest & digest', and let the twists gently wring the belly." },
   { slug: "follicular-energy", title: "Follicular Phase Energy Yoga", intention: "cycle", phase: "follicular", durationMin: 20, level: "Intermediate",
     blurb: "Build gentle heat as your energy rises after your period.", tags: ["follicular", "energy", "flow", "strength"],
-    poses: ["cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"],
+    advice: "Your energy is climbing after your period — this is the phase to build a little heat. Take the standing poses with strong, steady legs and enjoy feeling capable again." },
   { slug: "ovulation-glow", title: "Ovulation Glow Flow", intention: "cycle", phase: "ovulation", durationMin: 20, level: "Intermediate",
     blurb: "Your strongest phase — open, energize and glow.", tags: ["ovulation", "energy", "glow", "strength"],
-    poses: ["cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"],
+    advice: "Your peak-energy phase — go for the fuller expression of each pose. Keep the breath smooth and even as the shapes get bigger and juicier." },
   { slug: "luteal-calm", title: "Luteal Phase Calm Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
     blurb: "Wind down as your energy dips before your period.", tags: ["luteal", "calm", "restorative", "hormones"],
-    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "butterfly", "seated-twist", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "butterfly", "seated-twist", "reclined-bound-angle", "legs-up-wall", "savasana"],
+    advice: "Energy naturally dips before your period — honour it. Hold longer, breathe slower, and don't chase depth. This is a practice of letting go." },
   // — Time & mood —
   { slug: "morning-wake-up", title: "Morning Wake-Up Yoga", intention: "morning", durationMin: 10, level: "Beginner",
     blurb: "A bright 10 minutes to wake the body and mind.", tags: ["morning", "wake up", "energy", "beginner"],
-    poses: ["cat-cow", "childs-pose", "downward-dog", "forward-fold", "low-lunge", "mountain", "standing-side-stretch", "cobra", "seated-twist", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "cobra", "mountain", "standing-side-stretch", "seated-twist", "childs-pose", "savasana"],
+    advice: "Do it right after waking, before screens. Breathe big and full and let the poses build a little heat — think of it as opening the curtains on your body." },
   { slug: "bedtime-sleep", title: "Bedtime Yoga for Better Sleep", intention: "sleep", durationMin: 15, level: "Beginner",
     blurb: "Slow, floor-based holds to melt into deep rest.", tags: ["sleep", "bedtime", "night", "wind down", "insomnia"],
-    poses: ["childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"] },
+    poses: ["childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"],
+    advice: "Dim the lights and do this in bed or beside it. Everything stays slow and floor-based — nothing should raise your heart rate. Let savasana melt straight into sleep." },
   { slug: "stress-relief", title: "Stress Relief Yoga", intention: "stress", durationMin: 10, level: "Beginner",
     blurb: "Let the shoulders drop and the breath slow down.", tags: ["stress", "relax", "tension", "calm"],
-    poses: ["easy-seat", "neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "seated-forward-fold", "supine-twist", "savasana"] },
+    poses: ["easy-seat", "neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "seated-forward-fold", "supine-twist", "savasana"],
+    advice: "Make every exhale longer than the inhale — that's the switch that calms the nervous system. Consciously soften the jaw and the space between your brows." },
   { slug: "anxiety-breathe", title: "Yoga for Anxiety · Calm & Breathe", intention: "stress", durationMin: 10, level: "Beginner",
     blurb: "Breathwork and grounding holds to settle a racing mind.", tags: ["anxiety", "breathe", "calm", "grounding"],
-    poses: ["easy-seat", "box-breathing", "alternate-nostril", "childs-pose", "cat-cow", "reclined-bound-angle", "legs-up-wall", "savasana"] },
+    poses: ["easy-seat", "box-breathing", "alternate-nostril", "childs-pose", "cat-cow", "reclined-bound-angle", "legs-up-wall", "savasana"],
+    advice: "Start with the breathwork and don't rush it — the poses are just here to keep you grounded. Whenever the mind races, come back to counting the breath." },
   // — Body targets —
   { slug: "lower-back", title: "Yoga for Lower Back Pain", intention: "backcare", durationMin: 12, level: "Beginner",
     blurb: "Soothe and mobilize a tight, achy lower back.", tags: ["back pain", "lower back", "spine", "relief"],
-    poses: ["cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"] },
+    poses: ["cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"],
+    advice: "Move only within a pain-free range — a gentle stretch, never a sharp pinch. Keep the belly lightly drawn in to support the spine, and back off any pose that hurts." },
   { slug: "neck-shoulders-desk", title: "Desk Break · Neck & Shoulder Yoga", intention: "backcare", durationMin: 5, level: "Beginner",
     blurb: "A 5-minute reset for a stiff neck and shoulders at your desk.", tags: ["neck", "shoulders", "desk", "office", "quick"],
-    poses: ["neck-shoulder-rolls", "seated-twist", "standing-side-stretch", "thread-the-needle", "cat-cow", "childs-pose"] },
+    poses: ["neck-shoulder-rolls", "seated-twist", "standing-side-stretch", "thread-the-needle", "cat-cow", "childs-pose"],
+    advice: "Do it right at your desk, no need to change clothes. Drop the shoulders away from the ears and move slowly — quality of movement over range." },
   { slug: "hip-openers", title: "Hip-Opening Yoga", intention: "release", durationMin: 15, level: "Intermediate",
     blurb: "Deep, patient holds to open tight hips.", tags: ["hips", "hip openers", "flexibility", "release"],
-    poses: ["cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"] },
+    poses: ["cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"],
+    advice: "Hips hold tension and emotion — go slow, hold each shape for several breaths, and let it melt open. Never force a hip; breathe into the resistance instead." },
   { slug: "flexibility-hamstrings", title: "Yoga for Flexibility & Hamstrings", intention: "fullbody", durationMin: 15, level: "Beginner",
     blurb: "Lengthen the backs of the legs and the whole spine.", tags: ["flexibility", "hamstrings", "stretch", "splits"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"],
+    advice: "Warm up first — never stretch cold hamstrings hard. Micro-bend the knees and hinge from the hips, not the low back. Flexibility comes from consistency, not force." },
   { slug: "core-power", title: "Core Power Yoga", intention: "core", durationMin: 15, level: "Intermediate",
     blurb: "Build a strong, steady centre.", tags: ["core", "abs", "strength", "power"],
-    poses: ["cat-cow", "plank", "forearm-plank", "boat", "dead-bug", "hollow-hold", "bird-dog", "bridge", "modified-side-plank", "savasana"] },
+    poses: ["cat-cow", "bird-dog", "plank", "forearm-plank", "dead-bug", "hollow-hold", "boat", "modified-side-plank", "bridge", "savasana"],
+    advice: "Keep the low back gently pressing down and breathe steadily — never hold your breath. Stop a hold when your form breaks, not when you're wrecked. Bridge at the end un-rounds the spine." },
   { slug: "balance-focus", title: "Balance & Focus Yoga", intention: "balance", durationMin: 12, level: "Intermediate",
     blurb: "Steady standing shapes to sharpen focus.", tags: ["balance", "focus", "standing", "stability"],
-    poses: ["mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"] },
+    poses: ["mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"],
+    advice: "Fix your gaze on one still point (a drishti) to steady each balance — wobbling is part of it, just breathe and reset. Practise when you're alert, not exhausted." },
   { slug: "full-body-beginner", title: "Full-Body Beginner Yoga · 10 Min", intention: "fullbody", durationMin: 10, level: "Beginner",
     blurb: "A friendly all-round flow for total beginners.", tags: ["beginner", "full body", "10 minute", "gentle"],
-    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"],
+    advice: "There's no 'perfect' shape — just move with your breath and go where it feels good. Rest in child's pose any time you need a pause." },
   { slug: "morning-stretch-5", title: "5-Minute Morning Stretch", intention: "morning", durationMin: 5, level: "Beginner",
     blurb: "The quickest way to un-stiffen and start your day.", tags: ["morning", "quick", "5 minute", "stretch"],
-    poses: ["cat-cow", "childs-pose", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist"] },
+    poses: ["cat-cow", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist", "childs-pose"],
+    advice: "Five minutes is enough to un-stiffen — do it before coffee. Yawn, stretch big, and don't worry about doing it 'right'." },
 ];
 
 /** Build a fixed titled flow: resolve slugs → poses, add the "other side" step
@@ -1650,6 +1671,72 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
   );
 }
 
+/** One flow card — Curated-plans shape: a tall image strip on the left (so the
+ *  whole pose fits, sides cropped not head/legs) + content on the right, with the
+ *  Coach's note tucked into a collapsible toggle so cards stay compact. */
+function FlowCard({ f, index, onStart, isOwner }: { f: NamedFlow; index: number; onStart: (f: NamedFlow, record?: boolean) => void; isOwner?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
+  const plusLocked = f.level !== "Beginner" && !isPremium();
+  return (
+    <div
+      style={{ animationDelay: `${index * 40}ms` }}
+      className="group flex flex-col overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 animate-scale-in"
+    >
+      <div className="flex items-stretch">
+        {/* Tall image strip (left) — whole pose fits; cover crops the sides. */}
+        <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
+          {thumb && <img src={thumb} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
+          {plusLocked && <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink shadow-sm"><Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Plus</span>}
+        </button>
+        {/* Content (right). */}
+        <div className="flex-1 min-w-0 p-3 flex flex-col">
+          <div className="flex flex-wrap items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-wide text-rose/55">
+            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{f.durationMin} min</span>
+            <span>·</span><span>{f.level}</span>
+            {f.phase && <span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span>}
+          </div>
+          <button onClick={() => onStart(f)} className="text-left">
+            <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{f.title}</h3>
+          </button>
+          <p className="mt-0.5 text-[11px] text-rose/65 leading-snug line-clamp-1">{f.blurb}</p>
+          <div className="mt-auto pt-2 flex items-center justify-between gap-2">
+            {f.advice ? (
+              <button onClick={() => setOpen((o) => !o)} aria-expanded={open}
+                className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/50 px-2 py-1 text-[10px] font-bold text-hotpink active:scale-95 transition">
+                <Sparkle className="h-3 w-3" /> Coach's note <ChevronDown className={["h-3 w-3 transition-transform", open ? "rotate-180" : ""].join(" ")} strokeWidth={2.4} />
+              </button>
+            ) : <span />}
+            <div className="flex shrink-0 items-center gap-1.5">
+              {isOwner && (
+                <button onClick={() => onStart(f, true)}
+                  title="Record: start this flow straight into presentation mode, playing"
+                  className="inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-2.5 h-9 text-[10px] font-black tracking-wide shadow-md shadow-red-600/40 active:scale-90 transition">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> REC
+                </button>
+              )}
+              <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30 active:scale-90 transition">
+                <Play className="h-4 w-4 ml-0.5" fill="currentColor" strokeWidth={0} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Collapsible Coach's note. */}
+      {open && f.advice && (
+        <div className="px-3 pb-3 animate-fade-in">
+          <div className="flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-2.5 py-2">
+            <Sparkle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" />
+            <p className="text-[11px] leading-snug text-rose/75">{f.advice}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Searchable grid of titled, ready-made flows (YOGA_FLOWS). Each card launches a
  *  fixed curated sequence — the same one every time, so it doubles as YouTube content. */
 function FlowLibrary({ onStart }: { onStart: (f: NamedFlow, record?: boolean) => void }) {
@@ -1678,43 +1765,8 @@ function FlowLibrary({ onStart }: { onStart: (f: NamedFlow, record?: boolean) =>
           className="w-full rounded-full border border-petal/60 bg-white/90 pl-9 pr-4 py-2.5 text-sm text-rose placeholder:text-rose/40 outline-none focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20"
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {list.map((f, i) => {
-          const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
-          const plusLocked = f.level !== "Beginner" && !isPremium();
-          return (
-            <button
-              key={f.slug}
-              onClick={() => onStart(f)}
-              style={{ animationDelay: `${i * 40}ms` }}
-              className="group text-left rounded-3xl overflow-hidden border border-petal/60 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
-            >
-              <div className="relative h-32 w-full overflow-hidden bg-blush">
-                {thumb && <img src={thumb} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-                <p className="absolute left-3 bottom-2 right-3 font-script text-lg text-white leading-tight" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{f.title}</p>
-                <span className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/85 text-hotpink shadow-md"><Play className="h-4 w-4 ml-0.5" /></span>
-                {plusLocked && <span className="absolute left-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-hotpink"><Lock className="h-2.5 w-2.5" /> Plus</span>}
-                {isOwner && (
-                  <span role="button" tabIndex={0}
-                    onClick={(e) => { e.stopPropagation(); onStart(f, true); }}
-                    title="Record: start this flow straight into presentation mode, playing"
-                    className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-2.5 h-7 text-[10px] font-black tracking-wide shadow-md shadow-red-600/40 cursor-pointer active:scale-95">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> REC
-                  </span>
-                )}
-              </div>
-              <div className="p-3">
-                <p className="text-[12px] text-rose/70 leading-snug">{f.blurb}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{f.durationMin} min</span>
-                  <span>·</span><span>{f.level}</span>
-                  {f.phase && <><span>·</span><span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span></>}
-                </div>
-              </div>
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+        {list.map((f, i) => <FlowCard key={f.slug} f={f} index={i} onStart={onStart} isOwner={isOwner} />)}
       </div>
       {!list.length && <p className="text-center text-sm text-rose/50 py-8">No flow matches “{q}” — try “period”, “sleep”, “back”…</p>}
     </div>
