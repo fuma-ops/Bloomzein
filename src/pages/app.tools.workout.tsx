@@ -3789,10 +3789,19 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               keeps the row above the photo slim so the image gets more height. */}
           <div className="shrink-0 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2 lg:gap-4">
             <div className="min-w-0">
-              <h2 className="font-script text-[1.75rem] sm:text-4xl lg:text-5xl text-hotpink leading-none">
-                {phase === "rest" ? "Rest & breathe" : isSwitch ? "Switch sides" : exercise.name}
+              <h2 className="font-serif font-bold leading-[0.95] text-[oklch(0.46_0.19_350)] text-[2.1rem] sm:text-4xl lg:text-5xl">
+                {phase === "rest" ? (<>Rest &amp; <span className="italic text-hotpink">Breathe</span></>)
+                  : isSwitch ? "Switch sides" : exercise.name}
               </h2>
-              <div className="mt-1 h-1 w-24 rounded-full bg-gradient-to-r from-hotpink to-transparent" />
+              <div className="mt-2 flex items-center gap-2">
+                <BloomFlower size={15} />
+                <span className="h-px w-16 rounded-full bg-gradient-to-r from-hotpink/70 to-transparent" />
+              </div>
+              {(phase === "rest" || isSwitch) && (
+                <p className="mt-1.5 text-sm text-rose/75 leading-snug max-w-xs">
+                  {phase === "rest" ? "Take a moment to rest, breathe in… and out. ✿" : "Ease gently over to the other side ✿"}
+                </p>
+              )}
               {/* muscle tags — sit right under the title */}
               {!isSwitch && phase === "exercise" && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -3938,17 +3947,60 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             />
           )}
 
-          {/* Phone: the rep/timer ring lives BIG and centred in the open space
-              under the photo (no longer floating over the image), for BOTH the
-              exercise and the rest phase — so the empty band is put to work. */}
+          {/* Phone: a clean stacked layout — a "Coming up next" card beside the
+              rep/timer ring, then an "About this session" card — so the open band
+              reads like a premium dashboard instead of one floating ring. */}
           {!isSwitch && (
-            <div className="md:hidden flex-1 min-h-0 grid place-items-center py-1">
-              <RepRing size={172} percent={ringPct}
-                label={phase === "rest" ? "Rest" : ringLabel}
-                speaking={phase === "exercise" && briefing} goKey={goRing}
-                rep={phase === "exercise" && stepReps > 0 ? currentRep : undefined}
-                total={phase === "exercise" && stepReps > 0 ? stepReps : undefined}
-                seconds={remaining} />
+            <div className="md:hidden flex flex-col gap-2.5 py-1">
+              {/* Coming up + timer row */}
+              <div className="flex items-stretch gap-2.5">
+                {next ? (
+                  <div className="flex-1 min-w-0 rounded-3xl bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.14)] p-2.5 flex items-center gap-2.5 animate-fade-in">
+                    <div className="h-16 w-16 shrink-0 rounded-2xl overflow-hidden border border-white/60">
+                      <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="h-full w-full object-cover" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">Coming up next</p>
+                      <p className="font-bold text-rose text-sm leading-tight truncate">{next.name}</p>
+                      <p className="text-[11px] text-rose/70 leading-tight truncate">{nextStepObj?.label ?? "Hold & breathe"}{nextReps ? ` · ${nextReps}` : ""}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 rounded-3xl bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.12)] p-3 grid place-items-center animate-fade-in">
+                    <p className="text-center text-xs font-bold text-rose/75 leading-snug">Last one — finish strong ✿</p>
+                  </div>
+                )}
+                <div className="shrink-0 grid place-items-center rounded-3xl bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.14)] px-3 animate-scale-in">
+                  <RepRing size={124} percent={ringPct}
+                    label={phase === "rest" ? "Rest" : ringLabel}
+                    speaking={phase === "exercise" && briefing} goKey={goRing}
+                    rep={phase === "exercise" && stepReps > 0 ? currentRep : undefined}
+                    total={phase === "exercise" && stepReps > 0 ? stepReps : undefined}
+                    seconds={remaining} />
+                </div>
+              </div>
+
+              {/* About this session */}
+              <div className="rounded-3xl bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.12)] px-4 py-3 animate-fade-in">
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70 mb-2.5">About this session</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} />
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-rose/50">Focus</span>
+                    <span className="text-xs font-bold text-rose leading-tight">{phase === "rest" ? "Recovery" : cap(primaryMuscle)}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 border-x border-white/60">
+                    <Clock className="h-4 w-4 text-hotpink" strokeWidth={2} />
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-rose/50">Duration</span>
+                    <span className="text-xs font-bold text-rose leading-tight">{(() => { const t = steps.reduce((a, s) => a + (s.workSec || 0) + (s.restSec || 0), 0); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; })()}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Flame className="h-4 w-4 text-hotpink" strokeWidth={2} />
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-rose/50">Intensity</span>
+                    <span className="text-xs font-bold text-rose leading-tight">{session.level}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
