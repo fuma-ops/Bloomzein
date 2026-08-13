@@ -3239,7 +3239,7 @@ function SessionPlayer({
       // hand off only once that audio has played to its natural end (with a
       // minimum hold so the visual reveal always completes), THEN fade the music
       // bed down softly. Nothing is cropped.
-      const MIN_OUTRO_MS = 14000;
+      const MIN_OUTRO_MS = 15500; // long enough for the cards + cursor-click "wow" to fully play
       const startedAt = Date.now();
       const closeOut = () => {
         try { const m = musicRef.current; if (m) fadeAudioTo(m, 0, 1900); } catch {}
@@ -3308,7 +3308,12 @@ function SessionPlayer({
         @keyframes bzOutroUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
         .bz-outro-up{animation:bzOutroUp 1100ms cubic-bezier(.16,.84,.34,1) both}
         @keyframes bzBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
-        @keyframes bzPetalRise{0%{transform:translateY(30px) rotate(0deg);opacity:0}18%{opacity:.55}100%{transform:translateY(-140px) rotate(180deg);opacity:0}}`}</style>
+        @keyframes bzPetalRise{0%{transform:translateY(30px) rotate(0deg);opacity:0}18%{opacity:.55}100%{transform:translateY(-140px) rotate(180deg);opacity:0}}
+        @keyframes bzCardPop{0%{opacity:0;transform:translateY(16px) scale(.7)}60%{opacity:1;transform:translateY(-3px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
+        .bz-card-pop{animation:bzCardPop 700ms cubic-bezier(.18,.9,.34,1.2) both}
+        @keyframes bzClickCursor{0%{opacity:0;transform:translate(170px,-200px) scale(1)}12%{opacity:1;transform:translate(150px,-180px) scale(1)}40%{transform:translate(46px,-104px) scale(1)}45%{transform:translate(46px,-104px) scale(.78)}51%{transform:translate(46px,-104px) scale(1)}84%{transform:translate(2px,2px) scale(1)}90%{transform:translate(2px,2px) scale(.78)}96%{transform:translate(2px,2px) scale(1)}100%{opacity:1;transform:translate(2px,2px) scale(1)}}
+        @keyframes bzHeartBurst{0%{opacity:0;transform:translate(0,0) scale(.4)}18%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),-96px) scale(1.15)}}
+        @keyframes bzPressRing{0%{opacity:.55;transform:translate(-50%,-50%) scale(.55)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3463,24 +3468,35 @@ function SessionPlayer({
             />
           ))}
 
-          {/* App-preview cards — a glimpse of what the app offers, framing the
-              brand (echoes the welcome screen). Kept to the sides & upper area so
-              the bottom-right stays clear for the YouTube end-screen card. */}
+          {/* App-preview cards — the SAME rich image cards as the welcome screen,
+              popping in one-by-one to fill the empty sides (workout · yoga ·
+              nutrition · journaling · self-care …) so the viewer sees what the app
+              offers and gets curious. */}
           {[
-            { icon: CircleDot, label: "Understand your rhythm", sub: "Cycle-synced, every day", pos: "left-4 lg:left-8 top-[13%]", d: "0.6s" },
-            { icon: Activity, label: "Move your body", sub: "Yoga & workouts for your phase", pos: "left-6 lg:left-12 top-[40%]", d: "1s" },
-            { icon: Utensils, label: "Nourish yourself", sub: "Meals that match your cycle", pos: "right-4 lg:right-8 top-[13%]", d: "0.8s" },
-            { icon: Moon, label: "Clear your mind", sub: "Calm · journal · sleep", pos: "right-6 lg:right-12 top-[40%]", d: "1.2s" },
+            { t: "Understand your rhythm", img: "/images/setup-cycle.webp", Icon: CircleDot, side: "left", top: "8%", edge: "2.5%", d: 1.3 },
+            { t: "Move your body", img: "/images/workout-hero-session.webp", Icon: Activity, side: "left", top: "35%", edge: "5%", d: 2.5 },
+            { t: "Nourish yourself", img: "/images/setup-meals.webp", Icon: Utensils, side: "left", top: "62%", edge: "2%", d: 3.9 },
+            { t: "Build better habits", img: "/images/setup-goal.webp", Icon: CircleCheck, side: "left", top: "84%", edge: "6%", d: 4.9 },
+            { t: "Clear your mind", img: "/images/welcome-mind.webp", Icon: Moon, side: "right", top: "9%", edge: "3%", d: 1.9 },
+            { t: "Feel more in control", img: "/images/read-money.webp", Icon: Sparkles, side: "right", top: "35%", edge: "5%", d: 3.1 },
+            { t: "Remember what matters", img: "/images/welcome-remember.webp", Icon: Calendar, side: "right", top: "61%", edge: "2%", d: 4.3 },
+            { t: "Take care of yourself", img: "/images/read-selfcare.webp", Icon: Waves, side: "right", top: "83%", edge: "6%", d: 5.4 },
           ].map((c) => {
-            const Icon = c.icon;
+            const Icon = c.Icon;
             return (
-              <div key={c.label} className={["hidden md:flex absolute z-[5] items-center gap-2.5 rounded-2xl bg-white/60 backdrop-blur-md border border-white/70 px-3.5 py-2.5 shadow-lg shadow-rose/10 bz-outro-up max-w-[15rem]", c.pos].join(" ")} style={{ animationDelay: c.d }}>
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-md"><Icon className="h-4 w-4" strokeWidth={2.2} /></span>
-                <span className="leading-tight">
-                  <span className="block font-bold text-rose text-[13px]">{c.label}</span>
-                  <span className="block text-rose/65 text-[10.5px]">{c.sub}</span>
-                </span>
-              </div>
+              <article
+                key={c.t}
+                className="hidden md:block absolute z-[6] w-[9.5rem] lg:w-44 rounded-2xl bg-white/85 backdrop-blur-md border border-white/80 shadow-xl shadow-rose/15 overflow-hidden bz-card-pop"
+                style={{ [c.side]: c.edge, top: c.top, animationDelay: `${c.d}s` } as React.CSSProperties}
+              >
+                <div className="flex items-center gap-2 px-2.5 pt-2.5 pb-1.5">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-sm"><Icon className="h-3.5 w-3.5" strokeWidth={2.4} /></span>
+                  <b className="text-[12px] leading-tight text-rose">{c.t}</b>
+                </div>
+                <div className="mx-2.5 mb-2.5 h-16 lg:h-20 rounded-xl overflow-hidden bg-blush">
+                  <img src={c.img} alt="" loading="lazy" className="h-full w-full object-cover" />
+                </div>
+              </article>
             );
           })}
 
@@ -3505,20 +3521,47 @@ function SessionPlayer({
                 stay soft, bloom on. ✿
               </p>
 
-              {/* subtle calls to action — app + subscribe */}
-              <span className="mt-[3.2vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
+              {/* call to action — get the app (a cute cursor "taps" it) */}
+              <span className="relative mt-[3.2vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
                 style={{ animationDelay: "4.4s", fontSize: "clamp(0.8rem,2.2vw,1.05rem)" }}>
                 <Flower className="h-4 w-4 text-hotpink" strokeWidth={2} />
                 <span className="font-semibold">Sync your yoga to your cycle — get the app</span>
+                {/* tap ripple when the cursor passes it */}
+                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-16 rounded-full border-2 border-hotpink" style={{ animation: "bzPressRing 700ms ease-out 7.8s both" }} />
               </span>
-              {/* BIG subscribe CTA — beautifully written, breathing (zoom in/out)
-                  to grab the eye. Matches the welcome-screen script + magenta. */}
-              <div className="mt-[3vh] bz-outro-up" style={{ animationDelay: "5.2s" }}>
+
+              {/* BIG subscribe CTA + the cute pink cursor that clicks it, a heart
+                  burst, and a "Subscribed" confirmation — the "wow" moment that
+                  nudges the viewer to actually subscribe. */}
+              <div className="relative mt-[3vh] bz-outro-up" style={{ animationDelay: "5.2s" }}>
                 <span className="inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-white shadow-xl shadow-hotpink/45"
                   style={{ background: "linear-gradient(90deg, #EC4899, #BE185D)", animation: "bzBreathe 2.4s ease-in-out infinite" }}>
                   <Heart className="h-6 w-6 shrink-0" fill="currentColor" strokeWidth={0} />
                   <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribe</span>
                   <span className="font-semibold tracking-wide leading-tight" style={{ fontSize: "clamp(0.78rem,1.9vw,1rem)" }}>for a new<br />flow every week ♡</span>
+                </span>
+
+                {/* click ripple on the button */}
+                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-24 rounded-full border-2 border-white" style={{ animation: "bzPressRing 700ms ease-out 10s both" }} />
+
+                {/* heart burst on click */}
+                {[-64, -40, -16, 12, 38, 62].map((dx, i) => (
+                  <span key={i} aria-hidden className="pointer-events-none absolute left-1/2 top-1 text-hotpink"
+                    style={{ ["--dx" as string]: `${dx}px`, fontSize: "20px", animation: `bzHeartBurst 1.5s ease-out ${10 + i * 0.05}s both` }}>♥</span>
+                ))}
+
+                {/* "Subscribed" confirmation pops after the click */}
+                <span className="absolute left-1/2 -translate-x-1/2 -top-9 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-hotpink/25 bz-outro-up"
+                  style={{ animationDelay: "10.3s" }}>
+                  <CircleCheck className="h-4 w-4" strokeWidth={2.6} /> Subscribed ♥
+                </span>
+
+                {/* the cute pink cursor — glides in, taps "get the app", then
+                    clicks Subscribe */}
+                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 z-[95]" style={{ animation: "bzClickCursor 5s cubic-bezier(.5,0,.25,1) 5.6s both", filter: "drop-shadow(0 3px 6px rgba(120,8,60,0.4))" }}>
+                  <svg width="38" height="42" viewBox="0 0 38 42" fill="none">
+                    <path d="M6 4 L6 33 L13.5 25.5 L19 39 L25 36 L19.5 22.5 L31 22 Z" fill="#fff" stroke="#EC4899" strokeWidth="2.6" strokeLinejoin="round" />
+                  </svg>
                 </span>
               </div>
             </div>
