@@ -3242,8 +3242,11 @@ function SessionPlayer({
     const hand = () => { if (!handed) { handed = true; onDone(); } };
     if (record) {
       // Owner recording: hold the premium branded Bloomzein outro on screen for
-      // its full run (~18s) so the whole thing is captured in one take — no voice
-      // outro over it, just the music bed, which fades down softly near the end.
+      // its full run (~18s) so it's captured in one take. Play the soothing
+      // meditation "namaste" close OVER the visual outro (its end must NOT hand
+      // off early — we hold the full outro), while the music bed keeps playing
+      // and fades down softly near the very end.
+      if (!muted) playEndOutro(intention);
       window.setTimeout(() => { try { const m = musicRef.current; if (m) fadeAudioTo(m, 0, 2400); } catch {} }, 15600);
       window.setTimeout(hand, 18400);
     } else if (!muted) playEndOutro(intention, hand);
@@ -3478,11 +3481,16 @@ function SessionPlayer({
                 stay soft, bloom on. ✿
               </p>
 
-              {/* subtle app cue */}
+              {/* subtle calls to action — app + subscribe */}
               <span className="mt-[3.2vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
                 style={{ animationDelay: "4.4s", fontSize: "clamp(0.8rem,2.2vw,1.05rem)" }}>
                 <Flower className="h-4 w-4 text-hotpink" strokeWidth={2} />
                 <span className="font-semibold">Sync your yoga to your cycle — get the app</span>
+              </span>
+              <span className="mt-[1.6vh] inline-flex items-center gap-2 text-rose/80 bz-outro-up font-semibold"
+                style={{ animationDelay: "5.2s", fontSize: "clamp(0.72rem,1.9vw,0.95rem)", textShadow: "0 1px 7px rgba(255,255,255,0.7)" }}>
+                <Heart className="h-3.5 w-3.5 text-hotpink" fill="currentColor" strokeWidth={0} />
+                Subscribe for a new flow every week ✿
               </span>
             </div>
           </div>
