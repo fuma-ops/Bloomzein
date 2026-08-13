@@ -3236,18 +3236,9 @@ function RestBreatheStage({ videoSrc, paused, remaining, ringPct, next, nextReps
           </div>
         </div>
       </div>
-      {/* On phones the rest timer is shown BIG in the open space below the stage
-          (see the section's phone ring), not floating over the clip. Tablet/
-          desktop use the right-rail ring. */}
-      {/* coming-up chip so the next move stays visible */}
-      {next && (
-        <div className="absolute bottom-2.5 left-2.5 z-[25] max-w-[70%] rounded-2xl bg-white/80 backdrop-blur-md border border-white/70 shadow-[0_8px_24px_rgba(236,72,153,0.18)] px-3 py-1.5">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-hotpink/60">Coming up{nextLabel ? ` · ${nextLabel}` : ""}</p>
-          <p className="text-sm font-bold text-rose leading-tight truncate">
-            {next.name}{nextReps ? <span className="ml-1.5 text-xs font-semibold text-hotpink">{nextReps}</span> : null}
-          </p>
-        </div>
-      )}
+      {/* The "coming up next" move now lives in the dedicated card below the stage
+          (phone) and the right-rail Next-up card (tablet/desktop), so it is no
+          longer duplicated as a chip inside the rest clip. */}
     </div>
   );
 }
@@ -3773,7 +3764,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       {/* ── Smart-responsive dashboard ──────────────────────────────────────
           phone: single scrolling column · tablet: centre + right rail ·
           desktop: left rail + centre + right rail (the reference layout). */}
-      <main className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden">
+      <main className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden max-md:[grid-template-rows:minmax(0,1fr)]">
 
         {/* LEFT RAIL — desktop only */}
         <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
@@ -3783,7 +3774,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
         </aside>
 
         {/* CENTRE STAGE */}
-        <section className="relative min-h-0 flex flex-col gap-2">
+        <section className="relative min-h-0 flex flex-col gap-2 max-md:h-full">
           {/* Title on the left · Bloom Coach + the muscle tags sit together in the
               empty top band (right on desktop, under the title on phones) — this
               keeps the row above the photo slim so the image gets more height. */}
@@ -3830,6 +3821,9 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             )}
           </div>
 
+          {/* Player + up-next, centred as ONE group so the phone screen is filled
+              (no empty band) while desktop keeps its normal flow (display:contents). */}
+          <div className="contents max-md:flex max-md:flex-1 max-md:min-h-0 max-md:flex-col max-md:justify-center max-md:gap-2.5">
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
             <div
@@ -3947,11 +3941,10 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             />
           )}
 
-          {/* Phone: a clean stacked layout — a "Coming up next" card beside the
-              rep/timer ring, then an "About this session" card — so the open band
-              reads like a premium dashboard instead of one floating ring. */}
+          {/* Phone: a "Coming up next" card beside the rep/timer ring — grouped
+              with the stage above and centred so the screen is filled, not empty. */}
           {!isSwitch && (
-            <div className="md:hidden flex flex-col gap-2.5 py-1">
+            <div className="md:hidden shrink-0">
               {/* Coming up + timer row */}
               <div className="flex items-stretch gap-2.5">
                 {next ? (
@@ -3979,30 +3972,9 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
                     seconds={remaining} />
                 </div>
               </div>
-
-              {/* About this session */}
-              <div className="rounded-3xl bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.12)] px-4 py-3 animate-fade-in">
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-hotpink/70 mb-2.5">About this session</p>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} />
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-rose/50">Focus</span>
-                    <span className="text-xs font-bold text-rose leading-tight">{phase === "rest" ? "Recovery" : cap(primaryMuscle)}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 border-x border-white/60">
-                    <Clock className="h-4 w-4 text-hotpink" strokeWidth={2} />
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-rose/50">Duration</span>
-                    <span className="text-xs font-bold text-rose leading-tight">{(() => { const t = steps.reduce((a, s) => a + (s.workSec || 0) + (s.restSec || 0), 0); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`; })()}</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <Flame className="h-4 w-4 text-hotpink" strokeWidth={2} />
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-rose/50">Intensity</span>
-                    <span className="text-xs font-bold text-rose leading-tight">{session.level}</span>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
+          </div>{/* /player + up-next centred group */}
 
           {/* Bloom Coach is intentionally NOT shown on phones — the stage + big
               centred ring keep the screen clean; the coach card lives in the
