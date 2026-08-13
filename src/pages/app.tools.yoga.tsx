@@ -3239,7 +3239,7 @@ function SessionPlayer({
       // hand off only once that audio has played to its natural end (with a
       // minimum hold so the visual reveal always completes), THEN fade the music
       // bed down softly. Nothing is cropped.
-      const MIN_OUTRO_MS = 15500; // long enough for the cards + cursor-click "wow" to fully play
+      const MIN_OUTRO_MS = 16000; // long enough for get-app → cards activate → subscribe → like to fully play
       const startedAt = Date.now();
       const closeOut = () => {
         try { const m = musicRef.current; if (m) fadeAudioTo(m, 0, 1900); } catch {}
@@ -3313,7 +3313,11 @@ function SessionPlayer({
         .bz-card-pop{animation:bzCardPop 700ms cubic-bezier(.18,.9,.34,1.2) both}
         @keyframes bzClickCursor{0%{opacity:0;transform:translate(170px,-200px) scale(1)}12%{opacity:1;transform:translate(150px,-180px) scale(1)}40%{transform:translate(46px,-104px) scale(1)}45%{transform:translate(46px,-104px) scale(.78)}51%{transform:translate(46px,-104px) scale(1)}84%{transform:translate(2px,2px) scale(1)}90%{transform:translate(2px,2px) scale(.78)}96%{transform:translate(2px,2px) scale(1)}100%{opacity:1;transform:translate(2px,2px) scale(1)}}
         @keyframes bzHeartBurst{0%{opacity:0;transform:translate(0,0) scale(.4)}18%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),-96px) scale(1.15)}}
-        @keyframes bzPressRing{0%{opacity:.55;transform:translate(-50%,-50%) scale(.55)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}`}</style>
+        @keyframes bzPressRing{0%{opacity:.55;transform:translate(-50%,-50%) scale(.55)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+        @keyframes bzCursor3{0%{opacity:0;transform:translate(150px,-150px) scale(1)}10%{opacity:1}26%{transform:translate(2px,-88px) scale(1)}30%{transform:translate(2px,-88px) scale(.76)}34%{transform:translate(2px,-88px) scale(1)}56%{transform:translate(2px,2px) scale(1)}60%{transform:translate(2px,2px) scale(.76)}64%{transform:translate(2px,2px) scale(1)}86%{transform:translate(2px,72px) scale(1)}90%{transform:translate(2px,72px) scale(.76)}94%{transform:translate(2px,72px) scale(1)}100%{opacity:1;transform:translate(2px,72px) scale(1)}}
+        @keyframes bzHeartFloat{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(var(--dx,0px),-120px) scale(1)}}
+        @keyframes bzFadeUpSm{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
+        @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3468,19 +3472,19 @@ function SessionPlayer({
             />
           ))}
 
-          {/* App-preview cards — the SAME rich image cards as the welcome screen,
-              popping in one-by-one to fill the empty sides (workout · yoga ·
-              nutrition · journaling · self-care …) so the viewer sees what the app
-              offers and gets curious. */}
+          {/* App-preview cards — the SAME rich image cards as the welcome screen.
+              They stay HIDDEN until the cursor taps "get the app" (~7s), then
+              cascade in one-by-one — the "you activated something" effect. Bottom
+              rows sit higher so nothing feels cropped. */}
           {[
-            { t: "Understand your rhythm", img: "/images/setup-cycle.webp", Icon: CircleDot, side: "left", top: "8%", edge: "2.5%", d: 1.3 },
-            { t: "Move your body", img: "/images/workout-hero-session.webp", Icon: Activity, side: "left", top: "35%", edge: "5%", d: 2.5 },
-            { t: "Nourish yourself", img: "/images/setup-meals.webp", Icon: Utensils, side: "left", top: "62%", edge: "2%", d: 3.9 },
-            { t: "Build better habits", img: "/images/setup-goal.webp", Icon: CircleCheck, side: "left", top: "84%", edge: "6%", d: 4.9 },
-            { t: "Clear your mind", img: "/images/welcome-mind.webp", Icon: Moon, side: "right", top: "9%", edge: "3%", d: 1.9 },
-            { t: "Feel more in control", img: "/images/read-money.webp", Icon: Sparkles, side: "right", top: "35%", edge: "5%", d: 3.1 },
-            { t: "Remember what matters", img: "/images/welcome-remember.webp", Icon: Calendar, side: "right", top: "61%", edge: "2%", d: 4.3 },
-            { t: "Take care of yourself", img: "/images/read-selfcare.webp", Icon: Waves, side: "right", top: "83%", edge: "6%", d: 5.4 },
+            { t: "Understand your rhythm", img: "/images/setup-cycle.webp", Icon: CircleDot, side: "left", top: "6%", edge: "2.5%", d: 7.0 },
+            { t: "Move your body", img: "/images/workout-hero-session.webp", Icon: Activity, side: "left", top: "30%", edge: "5%", d: 7.5 },
+            { t: "Nourish yourself", img: "/images/setup-meals.webp", Icon: Utensils, side: "left", top: "53%", edge: "2%", d: 8.0 },
+            { t: "Build better habits", img: "/images/setup-goal.webp", Icon: CircleCheck, side: "left", top: "72%", edge: "6%", d: 8.5 },
+            { t: "Clear your mind", img: "/images/welcome-mind.webp", Icon: Moon, side: "right", top: "7%", edge: "3%", d: 7.25 },
+            { t: "Feel more in control", img: "/images/read-money.webp", Icon: Sparkles, side: "right", top: "30%", edge: "5%", d: 7.75 },
+            { t: "Remember what matters", img: "/images/welcome-remember.webp", Icon: Calendar, side: "right", top: "53%", edge: "2%", d: 8.25 },
+            { t: "Take care of yourself", img: "/images/read-selfcare.webp", Icon: Waves, side: "right", top: "72%", edge: "6%", d: 8.75 },
           ].map((c) => {
             const Icon = c.Icon;
             return (
@@ -3501,64 +3505,72 @@ function SessionPlayer({
           })}
 
           <div className="absolute inset-0 grid place-items-center px-8 text-center">
-            <div className="-mt-[6vh] flex flex-col items-center">
-              {/* completion beat */}
-              <div className="bz-outro-up" style={{ animationDelay: "0.3s" }}>
-                <p className="font-script text-rose leading-none" style={{ fontSize: "clamp(2.2rem,7vw,4.5rem)", textShadow: "0 2px 18px rgba(255,255,255,0.6)" }}>
-                  Your practice is complete ✿
-                </p>
-              </div>
-
+            <div className="-mt-[2vh] flex flex-col items-center">
               {/* brand bloom — all-pink flower, breathing + rotating */}
-              <span className="mt-[4vh] grid place-items-center bz-outro-up" style={{ animationDelay: "2s", animation: "bzBreathe 4.6s ease-in-out infinite", filter: "drop-shadow(0 8px 26px rgba(190,24,93,0.35))" }}>
-                <BloomFlower size={116} petal="#EC4899" center="#BE185D" style={{ animation: "bzSpin 16s linear infinite" }} />
+              <span className="grid place-items-center bz-outro-up" style={{ animationDelay: "0.4s", animation: "bzBreathe 4.6s ease-in-out infinite", filter: "drop-shadow(0 8px 26px rgba(190,24,93,0.35))" }}>
+                <BloomFlower size={120} petal="#EC4899" center="#BE185D" style={{ animation: "bzSpin 16s linear infinite" }} />
               </span>
 
-              <p className="mt-[2.5vh] font-script leading-none text-hotpink bz-outro-up" style={{ animationDelay: "2.8s", fontSize: "clamp(3rem,10vw,6.5rem)", textShadow: "0 2px 20px rgba(255,255,255,0.75)" }}>
+              {/* BIG script wordmark — matches the welcome-screen logo font */}
+              <p className="mt-[1.4vh] font-script leading-none text-hotpink bz-outro-up" style={{ animationDelay: "1s", fontSize: "clamp(3.6rem,12vw,8rem)", textShadow: "0 2px 22px rgba(255,255,255,0.8)" }}>
                 Bloomzein
               </p>
-              <p className="mt-[1.4vh] font-semibold tracking-wide text-rose/85 bz-outro-up" style={{ animationDelay: "3.4s", fontSize: "clamp(0.85rem,2.4vw,1.2rem)", textShadow: "0 1px 8px rgba(255,255,255,0.7)" }}>
+              <p className="mt-[1vh] font-semibold tracking-wide text-rose/85 bz-outro-up" style={{ animationDelay: "1.6s", fontSize: "clamp(0.9rem,2.5vw,1.25rem)", textShadow: "0 1px 8px rgba(255,255,255,0.7)" }}>
                 stay soft, bloom on. ✿
               </p>
 
-              {/* call to action — get the app (a cute cursor "taps" it) */}
-              <span className="relative mt-[3.2vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
-                style={{ animationDelay: "4.4s", fontSize: "clamp(0.8rem,2.2vw,1.05rem)" }}>
+              {/* reworded closing line — sits under the brand (moved down) */}
+              <p className="mt-[1.8vh] font-script text-rose leading-none bz-outro-up" style={{ animationDelay: "2.2s", fontSize: "clamp(1.5rem,4.4vw,2.9rem)", textShadow: "0 2px 16px rgba(255,255,255,0.6)" }}>
+                You showed up for yourself today ✿
+              </p>
+
+              {/* call to action — get the app (the cursor taps this to "activate" the cards) */}
+              <span className="relative mt-[2.6vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
+                style={{ animationDelay: "3s", fontSize: "clamp(0.8rem,2.2vw,1.05rem)" }}>
                 <Flower className="h-4 w-4 text-hotpink" strokeWidth={2} />
                 <span className="font-semibold">Sync your yoga to your cycle — get the app</span>
-                {/* tap ripple when the cursor passes it */}
-                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-16 rounded-full border-2 border-hotpink" style={{ animation: "bzPressRing 700ms ease-out 7.8s both" }} />
+                {/* tap ripple when the cursor taps it (~6.9s) */}
+                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-16 rounded-full border-2 border-hotpink" style={{ animation: "bzPressRing 700ms ease-out 6.9s both" }} />
               </span>
 
-              {/* BIG subscribe CTA + the cute pink cursor that clicks it, a heart
-                  burst, and a "Subscribed" confirmation — the "wow" moment that
-                  nudges the viewer to actually subscribe. */}
-              <div className="relative mt-[3vh] bz-outro-up" style={{ animationDelay: "5.2s" }}>
-                <span className="inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-white shadow-xl shadow-hotpink/45"
-                  style={{ background: "linear-gradient(90deg, #EC4899, #BE185D)", animation: "bzBreathe 2.4s ease-in-out infinite" }}>
-                  <Heart className="h-6 w-6 shrink-0" fill="currentColor" strokeWidth={0} />
-                  <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribe</span>
-                  <span className="font-semibold tracking-wide leading-tight" style={{ fontSize: "clamp(0.78rem,1.9vw,1rem)" }}>for a new<br />flow every week ♡</span>
+              {/* Subscribe → Subscribed, a Like button, gentle hearts, and the cute
+                  cursor that clicks through it all — the "wow" that nudges viewers. */}
+              <div className="relative mt-[2.6vh] bz-outro-up" style={{ animationDelay: "3.6s" }}>
+                {/* button + its "Subscribed" overlay breathe together */}
+                <div className="relative inline-block align-middle" style={{ animation: "bzBreathe 2.4s ease-in-out infinite" }}>
+                  <span className="inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-white shadow-xl shadow-hotpink/45"
+                    style={{ background: "linear-gradient(90deg, #EC4899, #BE185D)" }}>
+                    <Heart className="h-6 w-6 shrink-0" fill="currentColor" strokeWidth={0} />
+                    <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribe</span>
+                    <span className="font-semibold tracking-wide leading-tight" style={{ fontSize: "clamp(0.78rem,1.9vw,1rem)" }}>for a new<br />flow every week ♡</span>
+                  </span>
+                  {/* the button turns into "Subscribed" once clicked (~9s) */}
+                  <span aria-hidden className="absolute inset-0 flex items-center justify-center gap-2.5 rounded-full text-white"
+                    style={{ background: "linear-gradient(90deg, #DB2777, #9D174D)", opacity: 0, animation: "bzFadeIn 500ms ease-out 9s both" }}>
+                    <CircleCheck className="h-7 w-7 shrink-0" strokeWidth={2.6} />
+                    <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribed</span>
+                  </span>
+                </div>
+
+                {/* click ripple on subscribe (~9s) */}
+                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-24 rounded-full border-2 border-white" style={{ animation: "bzPressRing 700ms ease-out 9s both" }} />
+
+                {/* Like button below — the cursor taps it (~11.1s) */}
+                <span className="absolute left-1/2 -translate-x-1/2 top-full mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/80 px-4 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-rose/15 bz-outro-up"
+                  style={{ animationDelay: "7.4s" }}>
+                  <Heart className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Like
+                  {/* like tap ripple (~11.1s) */}
+                  <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-14 rounded-full border-2 border-hotpink" style={{ animation: "bzPressRing 700ms ease-out 11.1s both" }} />
                 </span>
 
-                {/* click ripple on the button */}
-                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-24 rounded-full border-2 border-white" style={{ animation: "bzPressRing 700ms ease-out 10s both" }} />
-
-                {/* heart burst on click */}
-                {[-64, -40, -16, 12, 38, 62].map((dx, i) => (
-                  <span key={i} aria-hidden className="pointer-events-none absolute left-1/2 top-1 text-hotpink"
-                    style={{ ["--dx" as string]: `${dx}px`, fontSize: "20px", animation: `bzHeartBurst 1.5s ease-out ${10 + i * 0.05}s both` }}>♥</span>
+                {/* a FEW cute hearts float up gently after the Like tap (~11.1s) */}
+                {[-26, -8, 12, 28].map((dx, i) => (
+                  <span key={i} aria-hidden className="pointer-events-none absolute left-1/2 top-full mt-6 text-hotpink"
+                    style={{ ["--dx" as string]: `${dx}px`, fontSize: "18px", animation: `bzHeartFloat 2.4s ease-out ${11.1 + i * 0.22}s both` }}>♥</span>
                 ))}
 
-                {/* "Subscribed" confirmation pops after the click */}
-                <span className="absolute left-1/2 -translate-x-1/2 -top-9 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-hotpink/25 bz-outro-up"
-                  style={{ animationDelay: "10.3s" }}>
-                  <CircleCheck className="h-4 w-4" strokeWidth={2.6} /> Subscribed ♥
-                </span>
-
-                {/* the cute pink cursor — glides in, taps "get the app", then
-                    clicks Subscribe */}
-                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 z-[95]" style={{ animation: "bzClickCursor 5s cubic-bezier(.5,0,.25,1) 5.6s both", filter: "drop-shadow(0 3px 6px rgba(120,8,60,0.4))" }}>
+                {/* the cute pink cursor — taps get-the-app, clicks Subscribe, then Like */}
+                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 z-[95]" style={{ animation: "bzCursor3 7s cubic-bezier(.5,0,.25,1) 4.8s both", filter: "drop-shadow(0 3px 6px rgba(120,8,60,0.4))" }}>
                   <svg width="38" height="42" viewBox="0 0 38 42" fill="none">
                     <path d="M6 4 L6 33 L13.5 25.5 L19 39 L25 36 L19.5 22.5 L31 22 Z" fill="#fff" stroke="#EC4899" strokeWidth="2.6" strokeLinejoin="round" />
                   </svg>
