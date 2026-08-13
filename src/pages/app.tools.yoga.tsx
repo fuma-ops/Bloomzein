@@ -832,6 +832,20 @@ function fadeAudioTo(el: HTMLAudioElement, target: number, ms: number, done?: ()
     if (n >= steps) { clearInterval(iv); done?.(); }
   }, dt);
 }
+
+// ONE continuous music bed for a whole flow — started when the flow opens (during
+// the intro) and adopted by the player, so the music never stops-and-restarts at
+// the first pose. Kept at module scope so it survives the intro→player hand-off.
+let flowBedEl: HTMLAudioElement | null = null;
+function startFlowBed(sound: string): HTMLAudioElement {
+  if (!flowBedEl) {
+    flowBedEl = new Audio(MUSIC[sound] || MUSIC[DEFAULT_SOUND]);
+    flowBedEl.loop = true;
+    flowBedEl.preload = "auto";
+  }
+  return flowBedEl;
+}
+function stopFlowBed() { try { flowBedEl?.pause(); } catch {} flowBedEl = null; }
 /** Play the outro for this intention — fades in, and gently fades itself out after
  *  a short window so a long track never hijacks the next screen. */
 function playEndOutro(intention: Intention, onEnded?: () => void) {
@@ -1340,7 +1354,7 @@ type View =
   | { kind: "flows" }
   | { kind: "plan" }
   | { kind: "setup"; preset?: { intention: Intention; durationMin: number } }
-  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string; title?: string }
+  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string; title?: string; record?: boolean }
   | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; title?: string; moodBefore?: string; moodAfter?: string };
 
 export default function YogaPage() {
@@ -1485,11 +1499,11 @@ export default function YogaPage() {
         <div className="space-y-6 yoga-fade">
           {/* Titled, ready-made flows (searchable) */}
           <FlowLibrary
-            onStart={(f) => {
+            onStart={(f, record) => {
               if (!isPremium() && f.level !== "Beginner") { openPaywall("yoga"); return; }
               setView({ kind: "session", flow: buildNamedFlow(f.poses), lang: "en", mode: "visual",
                 intention: f.intention, hold: holdSecondsFor(f.durationMin, f.level), durationMin: f.durationMin,
-                sound: DEFAULT_SOUND, title: f.title });
+                sound: DEFAULT_SOUND, title: f.title, record });
             }}
           />
           {/* Flow sessions — find your moment (quick presets → customize) */}
@@ -1552,6 +1566,7 @@ export default function YogaPage() {
           intention={view.intention}
           durationMin={view.durationMin}
           title={view.title}
+          record={view.record}
           onExit={() => setView({ kind: view.title ? "flows" : "home" })}
           onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin, title: view.title })}
         />
@@ -1659,7 +1674,7 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
 /** One flow card — Curated-plans shape: a tall image strip on the left (so the
  *  whole pose fits, sides cropped not head/legs) + content on the right, with the
  *  Coach's note tucked into a collapsible toggle so cards stay compact. */
-function FlowCard({ f, index, onStart }: { f: NamedFlow; index: number; onStart: (f: NamedFlow) => void }) {
+function FlowCard({ f, index, onStart, isOwner }: { f: NamedFlow; index: number; onStart: (f: NamedFlow, record?: boolean) => void; isOwner?: boolean }) {
   const [open, setOpen] = useState(false);
   const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
   const plusLocked = f.level !== "Beginner" && !isPremium();
@@ -1693,10 +1708,19 @@ function FlowCard({ f, index, onStart }: { f: NamedFlow; index: number; onStart:
                 <Sparkle className="h-3 w-3" /> Coach's note <ChevronDown className={["h-3 w-3 transition-transform", open ? "rotate-180" : ""].join(" ")} strokeWidth={2.4} />
               </button>
             ) : <span />}
-            <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30 active:scale-90 transition">
-              <Play className="h-4 w-4 ml-0.5" fill="currentColor" strokeWidth={0} />
-            </button>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {isOwner && (
+                <button onClick={() => onStart(f, true)}
+                  title="Record: start this flow straight into presentation mode, playing"
+                  className="inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-2.5 h-9 text-[10px] font-black tracking-wide shadow-md shadow-red-600/40 active:scale-90 transition">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> REC
+                </button>
+              )}
+              <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30 active:scale-90 transition">
+                <Play className="h-4 w-4 ml-0.5" fill="currentColor" strokeWidth={0} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1715,7 +1739,9 @@ function FlowCard({ f, index, onStart }: { f: NamedFlow; index: number; onStart:
 
 /** Searchable grid of titled, ready-made flows (YOGA_FLOWS). Each card launches a
  *  fixed curated sequence — the same one every time, so it doubles as YouTube content. */
-function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
+function FlowLibrary({ onStart }: { onStart: (f: NamedFlow, record?: boolean) => void }) {
+  const { user } = useAuth();
+  const isOwner = user?.email === "khfuma@gmail.com"; // private one-tap record launcher
   const [q, setQ] = useState("");
   const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const list = YOGA_FLOWS.filter((f) => {
@@ -1740,7 +1766,7 @@ function FlowLibrary({ onStart }: { onStart: (f: NamedFlow) => void }) {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
-        {list.map((f, i) => <FlowCard key={f.slug} f={f} index={i} onStart={onStart} />)}
+        {list.map((f, i) => <FlowCard key={f.slug} f={f} index={i} onStart={onStart} isOwner={isOwner} />)}
       </div>
       {!list.length && <p className="text-center text-sm text-rose/50 py-8">No flow matches “{q}” — try “period”, “sleep”, “back”…</p>}
     </div>
@@ -2936,10 +2962,20 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
 /** Plays the cinematic Bloomzein intro (title + duration) once, then hands off
  *  to the live session — so every recorded flow opens on the brand. */
 function SessionWithIntro({ durationMin, title, ...player }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; title?: string; onExit: () => void; onDone: () => void;
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; title?: string; record?: boolean; onExit: () => void; onDone: () => void;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const meta = FLOW_META[player.intention] ?? FLOW_META.morning;
+  // Start ONE continuous music bed the moment the flow opens (during the intro),
+  // and let the player adopt it — so the music plays through the intro and keeps
+  // going into the flow, never stopping/restarting at the first pose.
+  useEffect(() => {
+    const bed = startFlowBed(player.sound);
+    bed.volume = 0;
+    bed.play().then(() => fadeAudioTo(bed, 0.72, 1600)).catch(() => {});
+    return () => { stopFlowBed(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // The player mounts UNDER the intro from the start, so its first pose is fully
   // painted before the intro dissolves — no white flash at the hand-off.
   return (
@@ -2951,7 +2987,6 @@ function SessionWithIntro({ durationMin, title, ...player }: {
           sessionTitle={title ?? meta.title}
           sessionMeta={`${durationMin} Minutes`}
           pillars={meta.focus}
-          audioUrl={MUSIC[player.sound] || MUSIC[DEFAULT_SOUND]}
           onDone={() => setIntroDone(true)}
         />
       )}
@@ -2960,9 +2995,9 @@ function SessionWithIntro({ durationMin, title, ...player }: {
 }
 
 function SessionPlayer({
-  flow, lang, mode, hold, sound, intention, onExit, onDone,
+  flow, lang, mode, hold, sound, intention, onExit, onDone, record,
 }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; onExit: () => void; onDone: () => void;
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; onExit: () => void; onDone: () => void; record?: boolean;
 }) {
   const [skinPref, setSkinPref] = useState<SkinPref>(() => {
     try { return (localStorage.getItem(YOGA_SKIN_KEY) as SkinPref) || "auto"; } catch { return "auto"; }
@@ -3068,13 +3103,9 @@ function SessionPlayer({
   // effect/updater, which mobile browsers treat as "not a user gesture" and
   // block). The narration voice is handled by its own effect on `running`.
   const ensureMusic = () => {
-    let a = musicRef.current;
-    if (!a) {
-      a = new Audio(MUSIC[sound] || MUSIC[DEFAULT_SOUND]);
-      a.loop = true; a.volume = musicVol; a.preload = "auto";
-      musicRef.current = a;
-    }
-    return a;
+    // Adopt the continuous bed started at flow open (intro) so it never restarts.
+    if (!musicRef.current) { musicRef.current = startFlowBed(sound); musicRef.current.loop = true; }
+    return musicRef.current;
   };
   // Mute/unmute that also pauses or gently resumes the music bed.
   const setMuteState = (n: boolean) => {
@@ -3087,16 +3118,29 @@ function SessionPlayer({
     if (next) {
       if (!muted) {
         try {
-          // Fade the music in gently at the start of a flow (no abrupt cut-in).
           const m = ensureMusic();
-          m.volume = 0;
-          m.play().then(() => fadeAudioTo(m, musicVol, 1600)).catch(() => {});
+          // The bed is already playing from the intro — just settle its volume
+          // (no restart). Only fade-from-silence if it was actually paused.
+          if (m.paused) { m.volume = 0; m.play().then(() => fadeAudioTo(m, musicVol, 1600)).catch(() => {}); }
+          else fadeAudioTo(m, musicVol, 800);
         } catch {}
       }
     }
     else { stopAllAudio(); }
     setRunning(next);
   };
+
+  // Launched via the REC button: enter presentation mode and start playing on
+  // mount (behind the intro), so when the intro dissolves it's already recording-ready.
+  const recAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!record || recAppliedRef.current) return;
+    recAppliedRef.current = true;
+    setChromeShow(true);
+    setPresent(true);
+    if (!running) togglePlay();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [record]);
 
   // Wake Lock so audio mode keeps screen / audio alive
   useEffect(() => {
@@ -3247,7 +3291,8 @@ function SessionPlayer({
         .yoga-vol-slider::-webkit-slider-thumb:active{transform:scale(1.18)}
         .yoga-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}
         @keyframes bzPoseFade{from{opacity:0}to{opacity:1}}
-        .bz-pose-fade{animation:bzPoseFade 1400ms ease-in-out both}`}</style>
+        .bz-pose-fade{animation:bzPoseFade 1400ms ease-in-out both}
+        @keyframes bzSpin{to{transform:rotate(360deg)}}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3657,8 +3702,8 @@ function SessionPlayer({
           {/* Brand logo — bottom-left, stacked (flower · Bloomzein · tagline). The
               flower breathes (zoom in/out); colours use the player's soft pink. */}
           <div className="pointer-events-none absolute bottom-5 left-6 z-30 flex items-center gap-2.5 animate-fade-in">
-            <span className="grid place-items-center text-hotpink animate-icon-breathe" style={{ filter: "drop-shadow(0 2px 10px rgba(255,255,255,0.55))" }}>
-              <BloomFlower size={48} />
+            <span className="grid place-items-center" style={{ filter: "drop-shadow(0 2px 10px rgba(255,255,255,0.5))" }}>
+              <BloomFlower size={64} petal="#EC4899" center="#BE185D" style={{ animation: "bzSpin 14s linear infinite" }} />
             </span>
             <div className="leading-none">
               <p className="font-script text-3xl leading-none text-hotpink" style={{ textShadow: "0 1px 10px rgba(255,255,255,0.85), 0 2px 4px rgba(255,255,255,0.55)" }}>Bloomzein</p>
