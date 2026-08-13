@@ -113,7 +113,7 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     phase: "menstrual",
     label: PHASE_INFO.menstrual.label,
     dayRange: PHASE_DAY_RANGE.menstrual,
-    heroImage: "/images/read-cycle.webp",
+    heroImage: "/images/cycle-phase-menstrual.webp",
     accent: "oklch(0.58 0.23 0)",
     tagline: "Rest is productive too — nourish deeply and be tender with yourself.",
     chartNote:
@@ -199,7 +199,7 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     phase: "follicular",
     label: PHASE_INFO.follicular.label,
     dayRange: PHASE_DAY_RANGE.follicular,
-    heroImage: "/images/cycle-insight-hero.webp",
+    heroImage: "/images/cycle-phase-follicular.webp",
     accent: "oklch(0.64 0.22 350)",
     tagline: "Your energy is climbing — say yes to something new and fuel the momentum.",
     chartNote:
@@ -285,7 +285,7 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     phase: "ovulatory",
     label: PHASE_INFO.ovulatory.label,
     dayRange: PHASE_DAY_RANGE.ovulatory,
-    heroImage: "/images/hero-girl.webp",
+    heroImage: "/images/cycle-phase-ovulatory.webp",
     accent: "oklch(0.62 0.24 12)",
     tagline: "You're at your brightest — shine, connect and enjoy how good you feel.",
     chartNote:
@@ -363,7 +363,7 @@ export const CYCLE_NUTRITION: Record<DietPhase, CycleNutritionContent> = {
     phase: "luteal",
     label: PHASE_INFO.luteal.label,
     dayRange: PHASE_DAY_RANGE.luteal,
-    heroImage: "/images/landing-cycle-personalized.webp",
+    heroImage: "/images/cycle-phase-luteal.webp",
     accent: "oklch(0.55 0.2 320)",
     tagline: "Cravings and big feelings are normal now — comfort yourself, kindly.",
     chartNote:
