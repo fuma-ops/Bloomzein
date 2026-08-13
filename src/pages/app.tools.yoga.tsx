@@ -2977,6 +2977,8 @@ function SessionPlayer({
   // shows the Bloomzein watermark — a clean stage to screen-record for YouTube.
   const [present, setPresent] = useState(false);
   const [chromeShow, setChromeShow] = useState(true); // the Exit affordance auto-hides
+  const { user: authUser } = useAuth();
+  const isOwner = authUser?.email === "khfuma@gmail.com"; // private one-tap record button
   useEffect(() => {
     if (!present) return;
     let t: ReturnType<typeof setTimeout>;
@@ -3420,6 +3422,13 @@ function SessionPlayer({
             className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
             <Video className="h-4 w-4" />
           </button>
+          {isOwner && (
+            <button onClick={() => { setShowSpeed(false); setShowVolume(false); if (!running) togglePlay(); setChromeShow(true); setPresent(true); try { toggleFullscreen(); } catch {} }}
+              title="Record for YouTube — presentation mode, play & fullscreen in one tap"
+              className="inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-3 h-9 text-[11px] font-black tracking-wide shadow-md shadow-red-600/30 active:scale-95 transition">
+              <Video className="h-4 w-4" /> REC
+            </button>
+          )}
         </div>
       </div>
       )}
