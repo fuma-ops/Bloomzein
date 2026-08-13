@@ -511,10 +511,8 @@ export function CycleNutritionView({
       <section className="overflow-hidden rounded-[1.85rem] border border-petal/60 bg-gradient-to-br from-blush/50 via-white/70 to-petal/30 p-2.5 sm:p-3.5 shadow-xl shadow-rose/10 animate-card-pop-in">
         {/* elegant segmented phase bar (part of the hero section) */}
         <div className="rounded-[1.5rem] border border-petal/50 bg-white/65 backdrop-blur p-1.5">
-          <div className="flex items-center justify-between px-2 pb-1.5 pt-0.5">
-            <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-hotpink/70">
-              <Flower2 className="h-3.5 w-3.5" strokeWidth={2} /> Choose your phase
-            </p>
+          <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
+            <p className="font-script text-2xl text-hotpink leading-none">Your Cycle</p>
             {!isToday && (
               <button
                 onClick={() => setSelected(todayPhase)}
@@ -565,27 +563,29 @@ export function CycleNutritionView({
         >
           {/* Main — body today */}
           <Card className="lg:col-span-3 relative overflow-hidden p-0">
-            <div className="relative h-36 sm:h-44 w-full overflow-hidden">
+            <div className="relative h-44 sm:h-52 w-full overflow-hidden">
               <img
                 src={content.heroImage}
                 alt=""
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover object-[75%_28%]"
                 loading="lazy"
                 onError={(e) => {
                   const el = e.currentTarget as HTMLImageElement;
                   if (!el.src.endsWith("/images/hero-girl.webp")) el.src = "/images/hero-girl.webp";
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/55 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/25 to-transparent" />
-              <div className="absolute bottom-2.5 left-4 right-4">
+              {/* light top-left scrim only — keeps the photo vibrant while the
+                  title stays legible; a thin bottom fade blends into the card */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/60 via-white/10 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/85 to-transparent" />
+              <div className="absolute top-3 left-4 right-4">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-hotpink shadow-sm">
                   <Sparkles className="h-3 w-3" strokeWidth={2} /> Your Body Today
                 </span>
-                <h2 className="mt-1.5 font-script text-3xl sm:text-4xl text-hotpink leading-none drop-shadow-[0_1px_4px_rgba(255,255,255,0.9)]">
+                <h2 className="mt-1.5 font-script text-3xl sm:text-4xl text-hotpink leading-none drop-shadow-[0_1px_5px_rgba(255,255,255,0.95)]">
                   <AnimatedWords text={`${content.label} Phase`} stagger={110} />
                 </h2>
-                <p className="text-[12px] font-bold text-rose/80 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
+                <p className="text-[12px] font-bold text-rose/80 drop-shadow-[0_1px_3px_rgba(255,255,255,0.95)]">
                   {cycleDay ? `Day ${cycleDay} of your cycle` : content.dayRange}
                 </p>
               </div>
