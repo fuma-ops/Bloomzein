@@ -3342,6 +3342,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   const [showVolume, setShowVolume] = useState(false);        // sound-levels popover
   const [favs, setFavs] = useLS<string[]>(WK_FAV_KEY, []);    // saved moves (heart)
   const elapsedRef = useRef(0);
+  const [elapsedSec, setElapsedSec] = useState(0); // live, for the phone calories/time bar
   // Voice/beeps level → shared with the module-level sound helpers (tone/playCue).
   useEffect(() => { _voiceGain = voiceVol; }, [voiceVol]);
   // Live-apply the music level to the shared music element (honour mute/pause).
@@ -3531,6 +3532,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
     if (paused || starting || briefing || finishedRef.current) return;
     const t = setInterval(() => {
       elapsedRef.current += 1;
+      setElapsedSec((e) => e + 1);
       setRemaining((r) => {
         const nr = r - 1;
         // Rhythm. On a rep-based work step, a clear beep PER REP (so you can
@@ -3823,7 +3825,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
 
           {/* Player + up-next, centred as ONE group so the phone screen is filled
               (no empty band) while desktop keeps its normal flow (display:contents). */}
-          <div className="contents max-md:flex max-md:flex-1 max-md:min-h-0 max-md:flex-col max-md:justify-center max-md:gap-2.5">
+          <div className="contents max-md:flex max-md:flex-1 max-md:min-h-0 max-md:flex-col max-md:justify-start max-md:gap-2.5">
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
             <div
@@ -3974,6 +3976,38 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               </div>
             </div>
           )}
+
+          {/* Calories + elapsed time — fills the band above the controls (phone
+              only, all sizes). Calories are an estimate from the session's planned
+              burn scaled by elapsed time; the bar + time count up as she goes. */}
+          {!isSwitch && (() => {
+            const totalSec = steps.reduce((a, s) => a + (s.workSec || 0) + (s.restSec || 0), 0);
+            const kcal = sessionCalories(session.intention, elapsedSec);
+            const fmt = (x: number) => `${Math.floor(x / 60)}:${String(Math.floor(Math.max(0, x) % 60)).padStart(2, "0")}`;
+            const pct = totalSec > 0 ? Math.min(100, (elapsedSec / totalSec) * 100) : 0;
+            return (
+              <div className="md:hidden flex-1 min-h-0 flex items-center animate-fade-in">
+                <div className="w-full rounded-3xl bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.12)] px-4 py-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-md"><Flame className="h-5 w-5" strokeWidth={2} /></span>
+                      <div className="leading-none">
+                        <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-hotpink/70">Calories</p>
+                        <p className="mt-0.5 font-black text-rose tabular-nums whitespace-nowrap" style={{ fontSize: "1.15rem" }}>~{kcal}<span className="text-[11px] font-bold text-rose/50"> kcal</span></p>
+                      </div>
+                    </div>
+                    <div className="text-right leading-none">
+                      <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-hotpink/70">Time</p>
+                      <p className="mt-0.5 font-black text-rose tabular-nums whitespace-nowrap" style={{ fontSize: "1.15rem" }}>{fmt(elapsedSec)}<span className="text-[11px] font-bold text-rose/50"> / {fmt(totalSec)}</span></p>
+                    </div>
+                  </div>
+                  <div className="mt-2.5 h-2 rounded-full bg-white/70 overflow-hidden shadow-inner">
+                    <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-1000" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           </div>{/* /player + up-next centred group */}
 
           {/* Bloom Coach is intentionally NOT shown on phones — the stage + big
