@@ -3690,26 +3690,53 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
         </div>
       </div>
 
-      {/* ── Top bar: close · session progress · sound ── */}
-      <header className="relative z-10 flex items-center gap-3 px-3 sm:px-5 py-2.5 shrink-0">
-        <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+      {/* ── Top bar: close · session progress · sound (desktop/tablet, one row) ── */}
+      <header className="relative z-10 hidden md:flex items-center gap-3 px-5 py-2.5 shrink-0">
+        <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
-          <p className="text-center text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
+          <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
           <div className="flex items-center gap-2.5">
             <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
               <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${finished ? 100 : ((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
             </div>
-            <span className="text-xs sm:text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
+            <span className="text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
         </div>
-        <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+        <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           <Tv className="h-5 w-5" />
         </button>
         <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
-          className={["grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border shadow-sm active:scale-90 transition",
+          className={["grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border shadow-sm active:scale-90 transition",
             showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/70"].join(" ")}>
           {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </button>
+      </header>
+
+      {/* ── Top bar (phone): an icon row, then SESSION PROGRESS on its OWN row
+             below — pushes the whole session down a notch. ── */}
+      <header className="relative z-10 md:hidden shrink-0 px-3 pt-2.5 pb-1.5 flex flex-col gap-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+          <div className="flex items-center gap-2.5">
+            <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition">
+              <Tv className="h-5 w-5" />
+            </button>
+            <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
+              className={["grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border shadow-sm active:scale-90 transition",
+                showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/60"].join(" ")}>
+              {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+        <div className="rounded-full bg-white/40 backdrop-blur-2xl border border-white/55 shadow-[0_6px_20px_rgba(236,72,153,0.1)] px-3.5 py-1.5">
+          <p className="text-center text-[9px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
+          <div className="flex items-center gap-2.5">
+            <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
+              <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${finished ? 100 : ((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
+            </div>
+            <span className="text-xs font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
+          </div>
+        </div>
       </header>
 
       {/* Sound-levels popover — mute toggle + Music & Voice sliders, like yoga. */}
@@ -3950,7 +3977,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               {/* Coming up + timer row */}
               <div className="flex items-stretch gap-2.5">
                 {next ? (
-                  <div className="flex-1 min-w-0 rounded-3xl bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.14)] p-2.5 flex items-center gap-2.5 animate-fade-in">
+                  <div className="flex-1 min-w-0 rounded-3xl bg-white/45 backdrop-blur-2xl border border-white/55 shadow-[0_14px_36px_rgba(236,72,153,0.16)] p-2.5 flex items-center gap-2.5 animate-fade-in">
                     <div className="h-16 w-16 shrink-0 rounded-2xl overflow-hidden border border-white/60">
                       <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="h-full w-full object-cover" />
                     </div>
@@ -3961,11 +3988,11 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex-1 rounded-3xl bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.12)] p-3 grid place-items-center animate-fade-in">
+                  <div className="flex-1 rounded-3xl bg-white/45 backdrop-blur-2xl border border-white/55 shadow-[0_14px_36px_rgba(236,72,153,0.16)] p-3 grid place-items-center animate-fade-in">
                     <p className="text-center text-xs font-bold text-rose/75 leading-snug">Last one — finish strong ✿</p>
                   </div>
                 )}
-                <div className="shrink-0 grid place-items-center rounded-3xl bg-white/70 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.14)] px-3 animate-scale-in">
+                <div className="shrink-0 grid place-items-center rounded-3xl bg-white/45 backdrop-blur-2xl border border-white/55 shadow-[0_14px_36px_rgba(236,72,153,0.16)] px-3 animate-scale-in">
                   <RepRing size={124} percent={ringPct}
                     label={phase === "rest" ? "Rest" : ringLabel}
                     speaking={phase === "exercise" && briefing} goKey={goRing}
@@ -3977,33 +4004,22 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             </div>
           )}
 
-          {/* Calories + elapsed time — fills the band above the controls (phone
-              only, all sizes). Calories are an estimate from the session's planned
-              burn scaled by elapsed time; the bar + time count up as she goes. */}
+          {/* Calories + elapsed time — a TINY secondary strip (it's not the focus),
+              tucked just above the controls. Calories are an estimate from the
+              session's planned burn scaled by elapsed time. */}
           {!isSwitch && (() => {
             const totalSec = steps.reduce((a, s) => a + (s.workSec || 0) + (s.restSec || 0), 0);
             const kcal = sessionCalories(session.intention, elapsedSec);
             const fmt = (x: number) => `${Math.floor(x / 60)}:${String(Math.floor(Math.max(0, x) % 60)).padStart(2, "0")}`;
             const pct = totalSec > 0 ? Math.min(100, (elapsedSec / totalSec) * 100) : 0;
             return (
-              <div className="md:hidden flex-1 min-h-0 flex items-center animate-fade-in">
-                <div className="w-full rounded-3xl bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.12)] px-4 py-3.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-md"><Flame className="h-5 w-5" strokeWidth={2} /></span>
-                      <div className="leading-none">
-                        <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-hotpink/70">Calories</p>
-                        <p className="mt-0.5 font-black text-rose tabular-nums whitespace-nowrap" style={{ fontSize: "1.15rem" }}>~{kcal}<span className="text-[11px] font-bold text-rose/50"> kcal</span></p>
-                      </div>
-                    </div>
-                    <div className="text-right leading-none">
-                      <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-hotpink/70">Time</p>
-                      <p className="mt-0.5 font-black text-rose tabular-nums whitespace-nowrap" style={{ fontSize: "1.15rem" }}>{fmt(elapsedSec)}<span className="text-[11px] font-bold text-rose/50"> / {fmt(totalSec)}</span></p>
-                    </div>
-                  </div>
-                  <div className="mt-2.5 h-2 rounded-full bg-white/70 overflow-hidden shadow-inner">
+              <div className="md:hidden shrink-0 mt-auto animate-fade-in">
+                <div className="rounded-full bg-white/40 backdrop-blur-2xl border border-white/55 shadow-[0_8px_24px_rgba(236,72,153,0.12)] px-3 py-1.5 flex items-center gap-2.5">
+                  <span className="inline-flex items-center gap-1 shrink-0 text-hotpink font-bold text-[11px] tabular-nums whitespace-nowrap"><Flame className="h-3.5 w-3.5" strokeWidth={2.4} />~{kcal} kcal</span>
+                  <div className="h-1 flex-1 rounded-full bg-white/60 overflow-hidden">
                     <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-1000" style={{ width: `${pct}%` }} />
                   </div>
+                  <span className="shrink-0 text-rose/70 font-semibold text-[11px] tabular-nums whitespace-nowrap">{fmt(elapsedSec)} / {fmt(totalSec)}</span>
                 </div>
               </div>
             );
