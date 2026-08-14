@@ -3701,8 +3701,10 @@ function SessionPlayer({
       )}
 
       {/* ===================== LEFT RAIL (desktop) ===================== */}
+      {/* On very wide / foldable screens the rail hugs a centred ~96rem frame
+          instead of the raw viewport edge, so panels stay grouped, not scattered. */}
       {!dim && (
-        <div className="hidden lg:flex flex-col gap-3 absolute left-5 top-20 w-64 z-20">
+        <div className="hidden lg:flex flex-col gap-3 absolute top-20 w-64 z-20" style={{ left: "max(1.25rem, calc((100vw - 96rem) / 2))" }}>
           <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
               <Flower className="h-3.5 w-3.5" /> Today's Flow
@@ -3731,7 +3733,7 @@ function SessionPlayer({
 
       {/* ===================== RIGHT RAIL (desktop only) ============ */}
       {!dim && (
-        <div className="hidden lg:flex absolute right-3 sm:right-5 top-24 sm:top-28 z-20 flex-col items-end gap-3">
+        <div className="hidden lg:flex absolute top-24 sm:top-28 z-20 flex-col items-end gap-3" style={{ right: "max(1.25rem, calc((100vw - 96rem) / 2))" }}>
           <div className={["hidden lg:block w-64 rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
               <Activity className="h-3.5 w-3.5" /> Pose
@@ -3790,7 +3792,7 @@ function SessionPlayer({
 
       {/* ===================== FLOW QUOTE (bottom-right, tablet+) ========== */}
       {!dim && (
-        <div className="hidden md:block absolute right-4 lg:right-5 bottom-3 z-10 w-60 lg:w-64 pointer-events-none">
+        <div className="hidden md:block absolute bottom-3 z-10 w-60 lg:w-64 pointer-events-none" style={{ right: "max(1rem, calc((100vw - 96rem) / 2))" }}>
           <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
             <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
           </div>
@@ -3811,7 +3813,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== CONTROLS + MANTRA (bottom-left on desktop) === */}
-      <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:left-5 z-20 flex flex-col items-center lg:items-start gap-2 px-3"
+      <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:left-[max(1.25rem,calc((100vw_-_96rem)/2))] z-20 flex flex-col items-center lg:items-start gap-2 px-3"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         {!present && (
         <div className={["flex items-center gap-1.5 sm:gap-2 rounded-full p-1.5 animate-fade-in", glass].join(" ")}>
