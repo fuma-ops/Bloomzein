@@ -3214,7 +3214,7 @@ function RestBreatheStage({ videoSrc, paused, remaining, ringPct, next, nextReps
     if (paused) v.pause(); else v.play().catch(() => {});
   }, [paused]);
   return (
-    <div className="relative w-full aspect-video max-h-[78vh] mx-auto rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.9_0.06_350)]"
+    <div className="relative w-full max-md:flex-1 max-md:min-h-0 md:aspect-video max-h-[78vh] mx-auto rounded-[1.75rem] overflow-hidden border border-white/60 shadow-lg bg-[oklch(0.9_0.06_350)]"
       style={{ maxWidth: "min(100%, calc(78vh * 16 / 9))" }}>
       {/* calm rest clip, cover-filled like the move stage */}
       <video ref={vidRef} key={videoSrc} src={videoSrc} autoPlay loop muted playsInline
@@ -3809,9 +3809,8 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               keeps the row above the photo slim so the image gets more height. */}
           <div className="shrink-0 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2 lg:gap-4">
             <div className="min-w-0">
-              <h2 className="font-serif font-bold leading-[0.95] text-[oklch(0.46_0.19_350)] text-[2.1rem] sm:text-4xl lg:text-5xl">
-                {phase === "rest" ? (<>Rest &amp; <span className="italic text-hotpink">Breathe</span></>)
-                  : isSwitch ? "Switch sides" : exercise.name}
+              <h2 className="font-script leading-[0.95] text-hotpink text-[2.6rem] sm:text-5xl lg:text-6xl">
+                {phase === "rest" ? "Rest & Breathe" : isSwitch ? "Switch sides" : exercise.name}
               </h2>
               <div className="mt-2 flex items-center gap-2">
                 <BloomFlower size={15} />
@@ -3864,7 +3863,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               // no crop and no letterbox bands. Still-image moves stay taller.
               exercise.video
                 ? "aspect-video max-h-[78vh] mx-auto"
-                : "aspect-[4/5] sm:aspect-[16/10] md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
+                : "max-md:flex-1 max-md:min-h-0 md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
@@ -4013,7 +4012,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             const fmt = (x: number) => `${Math.floor(x / 60)}:${String(Math.floor(Math.max(0, x) % 60)).padStart(2, "0")}`;
             const pct = totalSec > 0 ? Math.min(100, (elapsedSec / totalSec) * 100) : 0;
             return (
-              <div className="md:hidden shrink-0 mt-auto animate-fade-in">
+              <div className="md:hidden shrink-0 animate-fade-in">
                 <div className="rounded-full bg-white/40 backdrop-blur-2xl border border-white/55 shadow-[0_8px_24px_rgba(236,72,153,0.12)] px-3 py-1.5 flex items-center gap-2.5">
                   <span className="inline-flex items-center gap-1 shrink-0 text-hotpink font-bold text-[11px] tabular-nums whitespace-nowrap"><Flame className="h-3.5 w-3.5" strokeWidth={2.4} />~{kcal} kcal</span>
                   <div className="h-1 flex-1 rounded-full bg-white/60 overflow-hidden">
