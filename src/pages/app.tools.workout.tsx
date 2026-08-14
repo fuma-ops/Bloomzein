@@ -3728,13 +3728,13 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             </button>
           </div>
         </div>
-        <div className="rounded-full bg-white/40 backdrop-blur-2xl border border-white/55 shadow-[0_6px_20px_rgba(236,72,153,0.1)] px-3.5 py-1.5">
-          <p className="text-center text-[9px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
+        <div className="px-1">
+          <p className="text-center font-script text-hotpink text-xl leading-none mb-1.5">Session progress</p>
           <div className="flex items-center gap-2.5">
             <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
               <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${finished ? 100 : ((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
             </div>
-            <span className="text-xs font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
+            <span className="text-sm font-extrabold text-hotpink tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
         </div>
       </header>
