@@ -3311,6 +3311,7 @@ function SessionPlayer({
         @keyframes bzPetalRise{0%{transform:translateY(30px) rotate(0deg);opacity:0}18%{opacity:.55}100%{transform:translateY(-140px) rotate(180deg);opacity:0}}
         @keyframes bzCardPop{0%{opacity:0;transform:translateY(16px) scale(.7)}60%{opacity:1;transform:translateY(-3px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
         .bz-card-pop{animation:bzCardPop 700ms cubic-bezier(.18,.9,.34,1.2) both}
+        @keyframes bzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
         @keyframes bzClickCursor{0%{opacity:0;transform:translate(170px,-200px) scale(1)}12%{opacity:1;transform:translate(150px,-180px) scale(1)}40%{transform:translate(46px,-104px) scale(1)}45%{transform:translate(46px,-104px) scale(.78)}51%{transform:translate(46px,-104px) scale(1)}84%{transform:translate(2px,2px) scale(1)}90%{transform:translate(2px,2px) scale(.78)}96%{transform:translate(2px,2px) scale(1)}100%{opacity:1;transform:translate(2px,2px) scale(1)}}
         @keyframes bzHeartBurst{0%{opacity:0;transform:translate(0,0) scale(.4)}18%{opacity:1}100%{opacity:0;transform:translate(var(--dx,0px),-96px) scale(1.15)}}
         @keyframes bzPressRing{0%{opacity:.55;transform:translate(-50%,-50%) scale(.55)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
@@ -3485,22 +3486,28 @@ function SessionPlayer({
             { t: "Feel more in control", img: "/images/read-money.webp", Icon: Sparkles, side: "right", top: "30%", edge: "5%", d: 7.75 },
             { t: "Remember what matters", img: "/images/welcome-remember.webp", Icon: Calendar, side: "right", top: "53%", edge: "2%", d: 8.25 },
             { t: "Take care of yourself", img: "/images/read-selfcare.webp", Icon: Waves, side: "right", top: "72%", edge: "6%", d: 8.75 },
-          ].map((c) => {
+          ].map((c, i) => {
             const Icon = c.Icon;
             return (
-              <article
+              // Outer wrapper floats gently (continuous bob); inner card pops in.
+              <div
                 key={c.t}
-                className="hidden md:block absolute z-[6] w-[9.5rem] lg:w-44 rounded-2xl bg-white/85 backdrop-blur-md border border-white/80 shadow-xl shadow-rose/15 overflow-hidden bz-card-pop"
-                style={{ [c.side]: c.edge, top: c.top, animationDelay: `${c.d}s` } as React.CSSProperties}
+                className="hidden md:block absolute z-[6]"
+                style={{ [c.side]: c.edge, top: c.top, animation: `bzFloat ${4.5 + (i % 4) * 0.8}s ease-in-out ${0.3 + i * 0.35}s infinite` } as React.CSSProperties}
               >
-                <div className="flex items-center gap-2 px-2.5 pt-2.5 pb-1.5">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-sm"><Icon className="h-3.5 w-3.5" strokeWidth={2.4} /></span>
-                  <b className="text-[12px] leading-tight text-rose">{c.t}</b>
-                </div>
-                <div className="mx-2.5 mb-2.5 h-16 lg:h-20 rounded-xl overflow-hidden bg-blush">
-                  <img src={c.img} alt="" loading="lazy" className="h-full w-full object-cover" />
-                </div>
-              </article>
+                <article
+                  className="w-[9.5rem] lg:w-44 rounded-2xl bg-white/85 backdrop-blur-md border border-white/80 shadow-xl shadow-rose/15 overflow-hidden bz-card-pop"
+                  style={{ animationDelay: `${c.d}s` }}
+                >
+                  <div className="flex items-center gap-2 px-2.5 pt-2.5 pb-1.5">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-sm"><Icon className="h-3.5 w-3.5" strokeWidth={2.4} /></span>
+                    <b className="text-[12px] leading-tight text-rose">{c.t}</b>
+                  </div>
+                  <div className="mx-2.5 mb-2.5 h-16 lg:h-20 rounded-xl overflow-hidden bg-blush">
+                    <img src={c.img} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  </div>
+                </article>
+              </div>
             );
           })}
 
@@ -3524,13 +3531,12 @@ function SessionPlayer({
                 You showed up for yourself today ✿
               </p>
 
-              {/* call to action — get the app (the cursor taps this to "activate" the cards) */}
-              <span className="relative mt-[2.6vh] inline-flex items-center gap-2 rounded-full bg-white/55 backdrop-blur-md border border-white/70 px-5 py-2.5 text-rose bz-outro-up shadow-lg shadow-rose/10"
-                style={{ animationDelay: "3s", fontSize: "clamp(0.8rem,2.2vw,1.05rem)" }}>
-                <Flower className="h-4 w-4 text-hotpink" strokeWidth={2} />
-                <span className="font-semibold">Sync your yoga to your cycle — get the app</span>
-                {/* tap ripple when the cursor taps it (~6.9s) */}
-                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-16 rounded-full border-2 border-hotpink" style={{ animation: "bzPressRing 700ms ease-out 6.9s both" }} />
+              {/* call to action — get the app (catchy: gradient pill, sparkle icon,
+                  script font). The cursor taps this to "activate" the cards. */}
+              <span className="relative mt-[2.6vh] inline-flex items-center gap-2.5 rounded-full text-white bz-outro-up shadow-xl shadow-hotpink/40 px-6 py-3"
+                style={{ animationDelay: "3s", background: "linear-gradient(90deg, #FB7EA8, #EC4899)" }}>
+                <Sparkles className="h-5 w-5 shrink-0" strokeWidth={2.2} />
+                <span className="font-script leading-none" style={{ fontSize: "clamp(1.4rem,4.2vw,2.1rem)", textShadow: "0 2px 10px rgba(120,8,60,0.3)" }}>Get the Bloomzein app ✿</span>
               </span>
 
               {/* Subscribe → Subscribed, a Like button, gentle hearts, and the cute
@@ -3552,15 +3558,10 @@ function SessionPlayer({
                   </span>
                 </div>
 
-                {/* click ripple on subscribe (~9s) */}
-                <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-24 rounded-full border-2 border-white" style={{ animation: "bzPressRing 700ms ease-out 9s both" }} />
-
                 {/* Like button below — the cursor taps it (~11.1s) */}
                 <span className="absolute left-1/2 -translate-x-1/2 top-full mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/80 px-4 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-rose/15 bz-outro-up"
                   style={{ animationDelay: "7.4s" }}>
                   <Heart className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Like
-                  {/* like tap ripple (~11.1s) */}
-                  <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-full w-14 rounded-full border-2 border-hotpink" style={{ animation: "bzPressRing 700ms ease-out 11.1s both" }} />
                 </span>
 
                 {/* a FEW cute hearts float up gently after the Like tap (~11.1s) */}
