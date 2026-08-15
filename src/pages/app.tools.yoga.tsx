@@ -3457,7 +3457,7 @@ function SessionPlayer({
       {finished && record && (
         <div
           className="absolute inset-0 z-[80] overflow-hidden animate-fade-in"
-          style={{ background: "linear-gradient(165deg, oklch(0.95 0.05 350 / 0.32), oklch(0.86 0.11 346 / 0.38) 55%, oklch(0.8 0.13 344 / 0.44))" }}
+          style={{ background: "linear-gradient(165deg, oklch(0.94 0.06 350 / 0.44), oklch(0.85 0.12 346 / 0.5) 55%, oklch(0.79 0.14 344 / 0.56))" }}
         >
           {/* Soft center glow — keeps the wordmark legible without blurring the
               whole scene, so the woman/pose still reads clearly behind. */}
@@ -3617,7 +3617,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== TOP BAR ===================== */}
-      {!present && (
+      {!present && !finished && (
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 sm:gap-3 px-3 sm:px-5 pb-2"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
         <button onClick={() => { stopAllAudio(); onExit(); }}
@@ -3723,7 +3723,7 @@ function SessionPlayer({
       {/* ===================== LEFT RAIL (desktop) ===================== */}
       {/* On very wide / foldable screens the rail hugs a centred ~96rem frame
           instead of the raw viewport edge, so panels stay grouped, not scattered. */}
-      {!dim && (
+      {!dim && !finished && (
         <div className="hidden lg:flex flex-col gap-3 absolute top-20 w-64 z-20" style={{ left: "max(1.25rem, calc((100vw - 96rem) / 2))" }}>
           <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
@@ -3752,7 +3752,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== RIGHT RAIL (desktop only) ============ */}
-      {!dim && (
+      {!dim && !finished && (
         <div className="hidden lg:flex absolute top-24 sm:top-28 z-20 flex-col items-end gap-3" style={{ right: "max(1.25rem, calc((100vw - 96rem) / 2))" }}>
           <div className={["hidden lg:block w-64 rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
@@ -3782,7 +3782,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== MOBILE: Up-next + ring row, then a slim progress bar ===================== */}
-      {!dim && (
+      {!dim && !finished && (
         <div className="lg:hidden absolute inset-x-3 z-20 flex flex-col gap-2"
           style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 2.9rem)" }}>
           <div className="flex items-center gap-2.5">
@@ -3811,7 +3811,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== FLOW QUOTE (bottom-right, tablet+) ========== */}
-      {!dim && (
+      {!dim && !finished && (
         <div className="hidden md:block absolute bottom-3 z-10 w-60 lg:w-64 pointer-events-none" style={{ right: "max(1rem, calc((100vw - 96rem) / 2))" }}>
           <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
             <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
@@ -3820,7 +3820,7 @@ function SessionPlayer({
       )}
 
       {/* ===================== POSE NAME (mobile) ===================== */}
-      {!dim && (
+      {!dim && !finished && (
         <div className="lg:hidden absolute left-4 right-4 bottom-36 z-20 pointer-events-none">
           <div key={idx} className="animate-pose-in">
             <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
@@ -3835,7 +3835,7 @@ function SessionPlayer({
       {/* ===================== CONTROLS + MANTRA (bottom-left on desktop) === */}
       <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:left-[max(1.25rem,calc((100vw_-_96rem)/2))] z-20 flex flex-col items-center lg:items-start gap-2 px-3"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
-        {!present && (
+        {!present && !finished && (
         <div className={["flex items-center gap-1.5 sm:gap-2 rounded-full p-1.5 animate-fade-in", glass].join(" ")}>
           <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
             className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
@@ -3863,7 +3863,7 @@ function SessionPlayer({
           )}
         </div>
         )}
-        {!present && (
+        {!present && !finished && (
         <div className={["w-full max-w-lg lg:w-[26rem] rounded-full px-4 py-2 text-center lg:text-left animate-fade-in", glass].join(" ")}>
           <p className="flex items-center justify-center lg:justify-start gap-2 text-sm font-medium" style={{ color: skin.ink }}>
             <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {mantra}
