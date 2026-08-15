@@ -3452,8 +3452,11 @@ function SessionPlayer({
       {finished && record && (
         <div
           className="absolute inset-0 z-[80] overflow-hidden animate-fade-in"
-          style={{ background: "linear-gradient(165deg, oklch(0.94 0.05 350 / 0.60), oklch(0.85 0.11 346 / 0.66) 55%, oklch(0.78 0.13 344 / 0.72))", backdropFilter: "blur(3px)" }}
+          style={{ background: "linear-gradient(165deg, oklch(0.95 0.05 350 / 0.32), oklch(0.86 0.11 346 / 0.38) 55%, oklch(0.8 0.13 344 / 0.44))" }}
         >
+          {/* Soft center glow — keeps the wordmark legible without blurring the
+              whole scene, so the woman/pose still reads clearly behind. */}
+          <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(52% 44% at 50% 46%, rgba(255,255,255,0.55), transparent 72%)" }} />
           {/* ambient drifting petals — soft continuous motion, never a static frame */}
           {Array.from({ length: 12 }).map((_, i) => (
             <span
@@ -3513,8 +3516,14 @@ function SessionPlayer({
 
           <div className="absolute inset-0 grid place-items-center px-8 text-center">
             <div className="-mt-[2vh] flex flex-col items-center">
+              {/* "Session complete" — a calm, unmistakable close marker */}
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md border border-white/80 px-4 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-rose/15 bz-outro-up"
+                style={{ animationDelay: "0.2s" }}>
+                <CircleCheck className="h-4 w-4" strokeWidth={2.6} /> Session complete
+              </span>
+
               {/* brand bloom — all-pink flower, breathing + rotating */}
-              <span className="grid place-items-center bz-outro-up" style={{ animationDelay: "0.4s", animation: "bzBreathe 4.6s ease-in-out infinite", filter: "drop-shadow(0 8px 26px rgba(190,24,93,0.35))" }}>
+              <span className="mt-[1.6vh] grid place-items-center bz-outro-up" style={{ animationDelay: "0.6s", animation: "bzBreathe 4.6s ease-in-out infinite", filter: "drop-shadow(0 8px 26px rgba(190,24,93,0.35))" }}>
                 <BloomFlower size={120} petal="#EC4899" center="#BE185D" style={{ animation: "bzSpin 16s linear infinite" }} />
               </span>
 
@@ -3524,6 +3533,11 @@ function SessionPlayer({
               </p>
               <p className="mt-[1vh] font-semibold tracking-wide text-rose/85 bz-outro-up" style={{ animationDelay: "1.6s", fontSize: "clamp(0.9rem,2.5vw,1.25rem)", textShadow: "0 1px 8px rgba(255,255,255,0.7)" }}>
                 stay soft, bloom on. ✿
+              </p>
+
+              {/* session stats — a soft sense of accomplishment, meditation close */}
+              <p className="mt-[1.2vh] font-bold uppercase tracking-[0.16em] text-hotpink/80 bz-outro-up" style={{ animationDelay: "1.9s", fontSize: "clamp(0.62rem,1.6vw,0.8rem)", textShadow: "0 1px 6px rgba(255,255,255,0.7)" }}>
+                {Math.max(1, Math.round(flowTotalSeconds(flow) / 60))} min · {realTotal} poses · Namaste ✿
               </p>
 
               {/* reworded closing line — sits under the brand (moved down) */}
