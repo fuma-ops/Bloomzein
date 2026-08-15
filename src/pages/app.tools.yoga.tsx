@@ -77,7 +77,12 @@ const YOGA_VIDEO_SLUGS = new Set<string>([
   "reverse-plank", "standing-figure-four", "tree", "upward-dog", "warrior-2",
   "banana-pose", "bow", "camel", "chaturanga", "cow-face",
   "crescent-twist", "dancer", "garland", "half-moon", "pigeon",
-  "revolved-triangle", "triangle", "warrior-3", "supine-twist",
+  "revolved-triangle", "triangle", "warrior-3",
+  // NOTE: "supine-twist" intentionally omitted — the only pose-supine-twist.mp4
+  // in the repo is a copy of the WORKOUT supine-twist clip, so yoga would play
+  // the workout footage. Until a real yoga supine-twist clip is added, this pose
+  // falls back to its still image (/images/pose-supine-twist.webp). Re-add the
+  // slug here once /videos/pose-supine-twist.mp4 is a genuine yoga clip.
 ]);
 
 /** Poses whose clip should play once and settle on the last (pose) frame,
