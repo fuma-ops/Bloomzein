@@ -3691,7 +3691,9 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       </div>
 
       {/* ── Top bar: close · session progress · sound (desktop/tablet, one row) ── */}
-      <header className="relative z-10 hidden md:flex items-center gap-3 px-5 py-2.5 shrink-0">
+      {/* Capped to a centred ~104rem frame so ultra-wide / foldable screens keep
+          the dashboard grouped instead of stretching edge-to-edge. */}
+      <header className="relative z-10 hidden md:flex items-center gap-3 px-5 py-2.5 shrink-0 w-full max-w-[104rem] mx-auto">
         <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
           <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
@@ -3793,7 +3795,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       {/* ── Smart-responsive dashboard ──────────────────────────────────────
           phone: single scrolling column · tablet: centre + right rail ·
           desktop: left rail + centre + right rail (the reference layout). */}
-      <main className="relative z-10 flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden max-md:[grid-template-rows:minmax(0,1fr)]">
+      <main className="relative z-10 w-full max-w-[104rem] mx-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden max-md:[grid-template-rows:minmax(0,1fr)]">
 
         {/* LEFT RAIL — desktop only */}
         <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
