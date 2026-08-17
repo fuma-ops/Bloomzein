@@ -585,7 +585,7 @@ function renderStep(step: number, advance: () => void, goApp: () => void) {
 
 const CROSS_MS = 900; // slightly longer than the .85s cross-fade, for a safe buffer
 
-export default function WelcomeScreen() {
+export default function WelcomeScreen({ onDone }: { onDone?: () => void } = {}) {
   // Each entry is a mounted screen with a stable key. The topmost fades in over
   // the one below (which keeps playing its film), then the lower one unmounts —
   // a seamless cross-dissolve, no stop, no flash, no remount of the outgoing
@@ -596,6 +596,11 @@ export default function WelcomeScreen() {
   const busy = useRef(false);
 
   const goApp = () => {
+    // When rendered inside the AuthGate as the post-sign-in welcome, the parent
+    // marks setup done and swaps to Today itself — no navigation (which would
+    // re-trigger the gate and loop the welcome). Standalone (/welcome) still
+    // navigates to Today.
+    if (onDone) { onDone(); return; }
     try {
       window.history.pushState({}, "", "/app/today");
       window.dispatchEvent(new PopStateEvent("popstate"));
