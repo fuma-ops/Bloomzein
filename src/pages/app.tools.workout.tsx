@@ -382,6 +382,15 @@ function ExercisePhoto({ exercise, zone, className, staticOnly, hold, preferImag
         preload="metadata"
         aria-label={exercise.name}
         onLoadedMetadata={skipIntroDissolve}
+        onTimeUpdate={exercise.holdAtApex ? (e) => {
+          // Boomerang-style hold clip: keep playing UNTIL she reaches the deep
+          // pose (~midpoint apex), then freeze there — instead of playing on to
+          // the end where the clip returns to the start pose.
+          const v = e.currentTarget;
+          if (v.duration && isFinite(v.duration) && v.currentTime >= v.duration / 2) {
+            try { v.pause(); v.currentTime = v.duration / 2; } catch {}
+          }
+        } : undefined}
         onError={() => setBroken(true)}
       />
     );
