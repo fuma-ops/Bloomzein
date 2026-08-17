@@ -348,10 +348,14 @@ export const ZONE_INTENTION_EXERCISES: Record<string, string[]> = {
   "legs-stretch": ["standing-quad-stretch", "seated-hamstring-stretch", "lizard-lunge", "it-band-stretch"],
   "legs-recover": ["legs-up-wall", "gentle-calf-raises", "reclined-hamstring-stretch"],
 
-  "full-body-tonify": ["pilates-circuit", "banded-total-body", "low-impact-cardio-sculpt"],
-  "full-body-strengthen": ["hiit-circuit", "functional-training", "strength-circuit"],
-  "full-body-stretch": ["full-body-flow", "sun-salutation-adapted", "morning-mobility-routine"],
-  "full-body-recover": ["yin-sequence", "body-scan-stretch", "full-body-foam-roll"],
+  // Full Body is now a TRUE circuit of real, demonstrated movements (a squat, a
+  // push, a pull, a hinge, a core move…) — not an abstract "HIIT Circuit" the
+  // user can't actually follow. The session builder slices the first 4–6 by
+  // duration, so the most-compound moves lead.
+  "full-body-tonify": ["sumo-squat", "push-up-knees", "banded-row", "glute-bridge", "lateral-raises", "bicycle-crunch"],
+  "full-body-strengthen": ["squat", "push-up", "bent-over-row", "deadlift", "overhead-press", "plank-hold"],
+  "full-body-stretch": ["cat-cow", "childs-pose", "thread-the-needle", "seated-forward-fold", "standing-quad-stretch", "chest-opener"],
+  "full-body-recover": ["reclined-butterfly", "supine-spinal-twist", "legs-up-wall", "foam-roll-thoracic", "supported-fish-pose", "childs-pose"],
 };
 
 /* ==================== ZONE → ALL EXERCISES (for Library) ==================== */
