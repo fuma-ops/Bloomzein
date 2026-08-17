@@ -134,9 +134,12 @@ const HOLD_SLUGS = new Set<string>([
   "thread-the-needle",
 ]);
 
-/** Explosive moves whose single frame always looks awkward (mid-air, blurred),
- *  so previews use the previous library illustration instead of a video poster. */
-const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump"]);
+/** Moves whose dedicated "-still.webp" poster frame doesn't exist (or looks
+ *  awkward mid-air), so the video poster + preview fall back to the clean
+ *  illustrated `-{slug}.webp` image instead of a missing/blurred poster.
+ *  (thread-the-needle: its `-still.webp` was never shipped → 404; its `.webp`
+ *  correctly shows the threaded pose, so use that.) */
+const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump", "thread-the-needle"]);
 
 /** Moves whose clip is baked as a boomerang (forward+reverse) so the rep motion
  *  ping-pong loops perfectly smoothly — no cut and no dissolve on repeat. */
