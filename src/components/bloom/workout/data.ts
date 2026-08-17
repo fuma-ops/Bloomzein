@@ -42,6 +42,11 @@ export interface Exercise {
    *  loops perfectly smoothly — no cut, no dissolve. Such clips must NOT skip an
    *  intro (there is none) and just loop. */
   boomerang?: boolean;
+  /** The clip is a boomerang-style file (start pose → deep pose → back to start),
+   *  so playing it once would freeze on the START pose. Instead, play up to the
+   *  APEX (the deep held pose, ~midpoint) and hold there — "keep playing until
+   *  she's in the pose, then hold." */
+  holdAtApex?: boolean;
   /** Spoken coaching clip for this move ("/audio/workout-{slug}.mp3"). Optional
    *  — the player just stays silent if a move has no recording yet. */
   audio?: string;
@@ -134,9 +139,17 @@ const HOLD_SLUGS = new Set<string>([
   "thread-the-needle",
 ]);
 
-/** Explosive moves whose single frame always looks awkward (mid-air, blurred),
- *  so previews use the previous library illustration instead of a video poster. */
-const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump"]);
+/** Boomerang-style hold clips (start → deep pose → back to start): play to the
+ *  deep-pose apex (~midpoint) and hold there, instead of the play-once freeze
+ *  landing back on the start frame. */
+const HOLD_AT_APEX_SLUGS = new Set<string>(["thread-the-needle"]);
+
+/** Moves whose dedicated "-still.webp" poster frame doesn't exist (or looks
+ *  awkward mid-air), so the video poster + preview fall back to the clean
+ *  illustrated `-{slug}.webp` image instead of a missing/blurred poster.
+ *  (thread-the-needle: its `-still.webp` was never shipped → 404; its `.webp`
+ *  correctly shows the threaded pose, so use that.) */
+const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump", "thread-the-needle"]);
 
 /** Moves whose clip is baked as a boomerang (forward+reverse) so the rep motion
  *  ping-pong loops perfectly smoothly — no cut and no dissolve on repeat. */
@@ -180,6 +193,7 @@ const E = (slug: string, name: string, muscles: string, opts?: { audio?: boolean
     ? { video: `/videos/workout-${slug}.mp4`, ...(NO_POSTER_SLUGS.has(slug) ? {} : { poster: `/images/workout-${slug}-still.webp` }) }
     : {}),
   ...(HOLD_SLUGS.has(slug) ? { hold: true } : {}),
+  ...(HOLD_AT_APEX_SLUGS.has(slug) ? { holdAtApex: true } : {}),
   ...(BOOMERANG_SLUGS.has(slug) ? { boomerang: true } : {}),
   ...(opts?.audio ? { audio: `/audio/workout-${slug}.mp3` } : {}),
   ...(opts?.uni ? { unilateral: true } : {}),
