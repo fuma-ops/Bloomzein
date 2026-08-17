@@ -243,6 +243,15 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
     onNext();
   };
 
+  // Safety net: the intro normally glides on when the film ends, but if the
+  // video fails to autoplay (blocked/slow/large) `onEnded` never fires and the
+  // screen would hang. Auto-advance after a max wait so it never gets stuck.
+  useEffect(() => {
+    const t = window.setTimeout(go, 9000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="wz-stage s1-stage" onClick={go} title="Continue">
       {/* start the hand-off ~0.9s before the film ends so screen 2 emerges
