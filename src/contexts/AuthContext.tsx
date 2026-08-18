@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadProfile(session.user.id)
         syncedUserId = session.user.id
         void startCloudSync(session.user.id)
-        void refreshEntitlement(session.user.id) // sync Bloom+ status from billing
+        void refreshEntitlement(session.user.id, session.user.email) // sync Bloom+ status from billing
       }
       setLoading(false)
     })
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (syncedUserId !== session.user.id) {
           syncedUserId = session.user.id
           void startCloudSync(session.user.id)
-          void refreshEntitlement(session.user.id)
+          void refreshEntitlement(session.user.id, session.user.email)
         }
       } else {
         setProfile(null)
