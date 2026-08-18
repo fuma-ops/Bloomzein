@@ -25,7 +25,7 @@
  * webhook's Supabase env.
  */
 import { supabase } from "./supabase";
-import { setPlan } from "./entitlements";
+import { setPlan, isOwnerEmail } from "./entitlements";
 
 /** "sandbox" while testing, "production" once your Paddle account is live. */
 export const PADDLE_ENV: "sandbox" | "production" =
@@ -227,7 +227,13 @@ export async function fetchLocalizedPrices(): Promise<LocalizedPrices> {
  *  - NO row at all → leave the local value untouched, so the dev toggle (and
  *    logged-out users) keep working before billing goes live.
  */
-export async function refreshEntitlement(userId: string): Promise<void> {
+export async function refreshEntitlement(userId: string, email?: string | null): Promise<void> {
+  // Owner/founder accounts always have Bloom+, independent of billing — grant it
+  // up front so it holds on every device and even offline (before any lookup).
+  if (isOwnerEmail(email)) {
+    setPlan("plus");
+    return;
+  }
   try {
     const { data } = await supabase
       .from("subscriptions")

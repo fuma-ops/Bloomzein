@@ -16,6 +16,18 @@ const KEY = "bloom:plan";
 export const PLAN_UPDATED = "bloom:plan-updated";
 export const OPEN_PAYWALL = "bloom:open-paywall";
 
+/**
+ * Accounts that always have Bloom+ regardless of billing — the owner/founder
+ * (and any teammate we add here). Checked by `refreshEntitlement` on every
+ * sign-in, so premium follows the ACCOUNT across every device, in sandbox and
+ * production alike. Emails are compared case-insensitively.
+ */
+export const OWNER_EMAILS = ["khfuma@gmail.com"];
+export function isOwnerEmail(email: string | null | undefined): boolean {
+  const e = String(email ?? "").trim().toLowerCase();
+  return !!e && OWNER_EMAILS.some((o) => o.toLowerCase() === e);
+}
+
 export function readPlan(): Plan {
   try { return localStorage.getItem(KEY) === "plus" ? "plus" : "free"; } catch { return "free"; }
 }
