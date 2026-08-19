@@ -797,6 +797,24 @@ const poseHoldSec = (p: Pose): number => (p.switchStep ? SWITCH_HOLD : holdOf(p.
 /** The audio a step should play. */
 const poseAudioFor = (p: Pose): string | undefined => (p.switchStep ? SWITCH_AUDIO : poseAudioUrl(p.slug));
 
+// ── Music-only guided holds (record experiment) ─────────────────────────────
+// When a flow is filmed music-only (no voice), the on-screen ring + pose name +
+// "up next" are the ONLY guide, so each hold follows real yoga timing rather
+// than narration length. Kept short and logical: gentle restorative holds, a
+// longer final rest, brief second sides — a "10 min" flow really lands ~7–8 min.
+const GUIDE_HOLD_DEFAULT = 40;
+const GUIDE_HOLD: Record<string, number> = {
+  "easy-seat": 30, "box-breathing": 40, "alternate-nostril": 40, "neck-shoulder-rolls": 30,
+  "cat-cow": 35, "childs-pose": 40, "thread-the-needle": 30, "bird-dog": 30, "standing-side-stretch": 30,
+  "reclined-bound-angle": 45, "knees-to-chest": 35, "happy-baby": 35, "banana-pose": 40,
+  "legs-up-wall": 60, "supine-twist": 30, "seated-forward-fold": 40, "reclined-figure-four": 40,
+  "butterfly": 40, "low-lunge": 35, "pigeon": 45, "gate-pose": 35, "sphinx": 35, "cobra": 30, "bridge": 35,
+  "savasana": 60, "supported-savasana": 60,
+};
+/** This step's hold when the session is filmed music-only. */
+const guideHoldSec = (p: Pose): number =>
+  p.switchStep ? 20 : (GUIDE_HOLD[p.slug] ?? GUIDE_HOLD_DEFAULT);
+
 // ── End-of-flow outro ───────────────────────────────────────────────────────
 // A gentle closing track that plays as a flow finishes, so a session never just
 // cuts to silence — it softly announces the end. One suitable outro per session
@@ -1359,7 +1377,7 @@ type View =
   | { kind: "flows" }
   | { kind: "plan" }
   | { kind: "setup"; preset?: { intention: Intention; durationMin: number } }
-  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string; title?: string; record?: boolean }
+  | { kind: "session"; flow: Pose[]; lang: Lang; mode: Mode; intention: Intention; hold: number; durationMin: number; sound: string; title?: string; record?: boolean; silentGuide?: boolean }
   | { kind: "summary"; flow: Pose[]; intention: Intention; durationMin: number; title?: string; moodBefore?: string; moodAfter?: string };
 
 export default function YogaPage() {
@@ -1508,7 +1526,11 @@ export default function YogaPage() {
               if (!isPremium() && f.level !== "Beginner") { openPaywall("yoga"); return; }
               setView({ kind: "session", flow: buildNamedFlow(f.poses), lang: "en", mode: "visual",
                 intention: f.intention, hold: holdSecondsFor(f.durationMin, f.level), durationMin: f.durationMin,
-                sound: DEFAULT_SOUND, title: f.title, record });
+                sound: DEFAULT_SOUND, title: f.title, record,
+                // Experiment: film Period Cramps music-only (no voice), short holds,
+                // the on-screen ring/pose-name/up-next as the sole guide. If it
+                // performs, drop the slug check to generalize to every REC.
+                silentGuide: !!record && f.slug === "period-cramps" });
             }}
           />
           {/* Flow sessions — find your moment (quick presets → customize) */}
@@ -1572,6 +1594,7 @@ export default function YogaPage() {
           durationMin={view.durationMin}
           title={view.title}
           record={view.record}
+          silentGuide={view.silentGuide}
           onExit={() => setView({ kind: view.title ? "flows" : "home" })}
           onDone={() => setView({ kind: "summary", flow: view.flow, intention: view.intention, durationMin: view.durationMin, title: view.title })}
         />
@@ -2960,7 +2983,7 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
 /** Plays the cinematic Bloomzein intro (title + duration) once, then hands off
  *  to the live session — so every recorded flow opens on the brand. */
 function SessionWithIntro({ durationMin, title, ...player }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; title?: string; record?: boolean; onExit: () => void; onDone: () => void;
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; title?: string; record?: boolean; silentGuide?: boolean; onExit: () => void; onDone: () => void;
 }) {
   const [introDone, setIntroDone] = useState(false);
   const meta = FLOW_META[player.intention] ?? FLOW_META.morning;
@@ -2993,10 +3016,14 @@ function SessionWithIntro({ durationMin, title, ...player }: {
 }
 
 function SessionPlayer({
-  flow, lang, mode, hold, sound, intention, onExit, onDone, record,
+  flow, lang, mode, hold, sound, intention, onExit, onDone, record, silentGuide,
 }: {
-  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; onExit: () => void; onDone: () => void; record?: boolean;
+  flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; onExit: () => void; onDone: () => void; record?: boolean; silentGuide?: boolean;
 }) {
+  // Music-only guided session (record experiment): the on-screen ring/pose-name/
+  // "up next" pace the flow, so holds follow real yoga timing instead of the
+  // voice-narration length. One helper feeds the timer, the ring and the labels.
+  const holdFor = (p: Pose): number => (silentGuide ? guideHoldSec(p) : poseHoldSec(p));
   const [skinPref, setSkinPref] = useState<SkinPref>(() => {
     try { return (localStorage.getItem(YOGA_SKIN_KEY) as SkinPref) || "auto"; } catch { return "auto"; }
   });
@@ -3010,11 +3037,13 @@ function SessionPlayer({
   const pose = flow[idx];
   // Each pose lasts its OWN recorded-narration length (rounded up); poses with
   // no recording fall back to the uniform hold.
-  const poseHold = pose ? poseHoldSec(pose) : hold;
+  const poseHold = pose ? holdFor(pose) : hold;
+  // Whole-session length under the active timing model (guided vs narration).
+  const flowTotalSec = flow.reduce((a, p) => a + holdFor(p), 0);
   // Pose numbering counts real poses only (switch-side steps don't add to it).
   const realTotal = flow.filter((p) => !p.switchStep).length;
   const stepNum = flow.slice(0, idx + 1).filter((p) => !p.switchStep).length;
-  const [remaining, setRemaining] = useState(() => (flow[0] ? poseHoldSec(flow[0]) : hold));
+  const [remaining, setRemaining] = useState(() => (flow[0] ? holdFor(flow[0]) : hold));
   const [finished, setFinished] = useState(false); // holds the last pose with a soft "The End" while the outro plays
   const [muted, setMuted] = useState(false);
   const [peek, setPeek] = useState(false);
@@ -3170,6 +3199,9 @@ function SessionPlayer({
     // Nothing plays until the practice is actually running (after Start).
     if (!running || muted) return;
     if (isNewPose) playBell();
+    // Music-only guided session: no spoken narration — a soft transition bell
+    // marks each pose change, and the visual ring/labels do the coaching.
+    if (silentGuide) return;
     const url = poseAudioFor(pose);
     if (!url) return;
     const a = new Audio(url);
@@ -3274,7 +3306,7 @@ function SessionPlayer({
     } catch {}
     incrementYogaSession(); // feeds the movement level (logical, real count)
     // Log the flow's calories so yoga counts toward the daily energy balance.
-    const practiceMin = Math.max(5, Math.round(flowTotalSeconds(flow) / 60));
+    const practiceMin = Math.max(5, Math.round(flowTotalSec / 60));
     logYogaSession(practiceMin, readDietProfile().weight);
   }
 
@@ -3402,7 +3434,7 @@ function SessionPlayer({
           />
         )}
         {/* Gentle "other side" cue at the start of a second-side step. */}
-        {pose.switchStep && (poseHoldSec(pose) - remaining) < 2.6 && (
+        {pose.switchStep && (holdFor(pose) - remaining) < 2.6 && (
           <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center animate-fade-in">
             <div className="text-center px-5 py-3 rounded-[1.5rem] bg-white/70 backdrop-blur-md border border-white/70 shadow-lg animate-scale-in">
               <div className="text-3xl sm:text-4xl text-hotpink animate-spin" style={{ animationDuration: "1.8s" }}>↺</div>
@@ -3542,7 +3574,7 @@ function SessionPlayer({
 
               {/* session stats — a soft sense of accomplishment, meditation close */}
               <p className="mt-[1.2vh] font-bold uppercase tracking-[0.16em] text-hotpink/80 bz-outro-up" style={{ animationDelay: "1.9s", fontSize: "clamp(0.62rem,1.6vw,0.8rem)", textShadow: "0 1px 6px rgba(255,255,255,0.7)" }}>
-                {Math.max(1, Math.round(flowTotalSeconds(flow) / 60))} min · {realTotal} poses · Namaste ✿
+                {Math.max(1, Math.round(flowTotalSec / 60))} min · {realTotal} poses · Namaste ✿
               </p>
 
               {/* reworded closing line — sits under the brand (moved down) */}
@@ -3773,7 +3805,7 @@ function SessionPlayer({
                 <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-20 rounded-xl object-cover shrink-0 border border-white/50" />
                 <div className="min-w-0">
                   <p className="font-semibold text-sm truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
-                  <p className="text-xs" style={{ color: skin.inkSoft }}>{poseHoldSec(nextPose)}s</p>
+                  <p className="text-xs" style={{ color: skin.inkSoft }}>{holdFor(nextPose)}s</p>
                 </div>
               </div>
             </div>
@@ -3792,7 +3824,7 @@ function SessionPlayer({
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Up next</p>
                   <p className="font-semibold text-sm leading-tight truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
-                  <p className="text-[11px]" style={{ color: skin.inkSoft }}>{poseHoldSec(nextPose)}s</p>
+                  <p className="text-[11px]" style={{ color: skin.inkSoft }}>{holdFor(nextPose)}s</p>
                 </div>
               </div>
             ) : <div className="flex-1" />}
