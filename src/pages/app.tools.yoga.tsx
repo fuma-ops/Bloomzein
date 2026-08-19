@@ -3067,7 +3067,7 @@ function SessionPlayer({
   // "Get ready" chrono shown at the very start of a recording: a soft 2s countdown
   // that zooms in big + centred, then gently glides to the ring's corner as the
   // first hold begins. Non-record sessions skip straight to "done".
-  const [chrono, setChrono] = useState<number | null>(record ? 2 : null);
+  const [chrono, setChrono] = useState<number | null>(record ? 5 : null);
   const [chronoPhase, setChronoPhase] = useState<"in" | "count" | "fly" | "done">(record ? "in" : "done");
   // Playback speed for the pose clip — yoga wants a calm, slow pace. 0.7× default.
   const [speed, setSpeed] = useState<number>(() => { try { return Number(localStorage.getItem(YOGA_SPEED_KEY)) || 0.7; } catch { return 0.7; } });
@@ -3195,7 +3195,7 @@ function SessionPlayer({
     if (!record) return;
     playTick(620);
     const tin = setTimeout(() => setChronoPhase("count"), 440);
-    let n = 2;
+    let n = 5;
     const iv = setInterval(() => {
       n -= 1;
       if (n >= 1) { playTick(620); setChrono(n); return; }
@@ -3398,7 +3398,9 @@ function SessionPlayer({
         @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
         @keyframes bzChronoIn{0%{opacity:0;transform:scale(2.4)}100%{opacity:1;transform:scale(1)}}
         @keyframes bzChronoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
-        @keyframes bzChronoFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(38vw,-40vh) scale(.42)}}`}</style>
+        @keyframes bzChronoFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(38vw,-40vh) scale(.42)}}
+        @keyframes bzPoseIn{0%{opacity:0;transform:translateY(12px) scale(.9)}55%{opacity:1;transform:translateY(-2px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes bzNextIn{0%{opacity:0;transform:translateY(10px) scale(.95)}60%{transform:translateY(-2px) scale(1.03)}100%{opacity:1;transform:translateY(0) scale(1)}}`}</style>
 
       {/* "Get ready" chrono — the recording's opener: zooms in big + centred,
           softly counts 2·1 with a tick, then glides toward the ring's corner as
@@ -3406,15 +3408,15 @@ function SessionPlayer({
       {chronoPhase !== "done" && (
         <div className="pointer-events-none fixed inset-0 z-[60] grid place-items-center">
           <div
-            className="grid place-items-center h-40 w-40 rounded-full bg-white/15 backdrop-blur-md border border-white/45 shadow-[0_12px_50px_rgba(236,72,153,0.35)]"
+            className="flex flex-col items-center justify-center text-center h-60 w-60 rounded-full bg-white/15 backdrop-blur-md border border-white/45 shadow-[0_14px_60px_rgba(236,72,153,0.38)]"
             style={{
               animation:
                 chronoPhase === "in" ? "bzChronoIn 440ms cubic-bezier(.16,.84,.34,1) both"
                 : chronoPhase === "fly" ? "bzChronoFly 640ms cubic-bezier(.5,0,.2,1) forwards"
                 : "bzChronoPulse 1s ease-in-out infinite",
             }}>
-            <span className="font-script text-7xl leading-none text-hotpink drop-shadow-[0_2px_14px_rgba(255,255,255,0.75)]">{chrono ?? "✿"}</span>
-            <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.25em] text-hotpink/80">get ready</span>
+            <span className="font-script text-[6.5rem] leading-[0.75] text-hotpink drop-shadow-[0_2px_14px_rgba(255,255,255,0.75)]">{chrono ?? "✿"}</span>
+            <span className="mt-2 text-xs font-bold uppercase tracking-[0.3em] text-hotpink/80">get ready</span>
           </div>
         </div>
       )}
@@ -3852,7 +3854,7 @@ function SessionPlayer({
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
               <Activity className="h-3.5 w-3.5" /> Pose
             </p>
-            <h3 className="font-script text-2xl leading-tight mt-0.5" style={{ color: skin.ink }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
+            <h3 key={idx} className="font-script text-2xl leading-tight mt-0.5" style={{ color: skin.ink, animation: "bzPoseIn 620ms cubic-bezier(.18,.9,.34,1.2) both" }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
             {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{pose.sanskrit}</p>}
             <div className="my-2.5 h-px" style={{ background: isDark ? "rgba(255,255,255,0.14)" : "rgba(190,24,93,0.14)" }} />
             <p className="text-sm leading-snug" style={{ color: skin.inkSoft }}>{benefit}</p>
@@ -3861,7 +3863,8 @@ function SessionPlayer({
             <HoldRing remaining={remaining} total={poseHold} ink={skin.ink} inkSoft={skin.inkSoft} />
           </div>
           {nextPose && (
-            <div className={["hidden lg:block w-64 rounded-3xl p-3 animate-fade-in", glass].join(" ")}>
+            <div key={`${idx}:${chronoPhase}`} className={["hidden lg:block w-64 rounded-3xl p-3", glass].join(" ")}
+              style={{ animation: "bzNextIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
               <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: skin.inkSoft }}>Up next</p>
               <div className="flex items-center gap-3">
                 <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-20 rounded-xl object-cover shrink-0 border border-white/50" />
@@ -3881,7 +3884,8 @@ function SessionPlayer({
           style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 2.9rem)" }}>
           <div className="flex items-center gap-2.5">
             {nextPose ? (
-              <div className={["flex-1 min-w-0 rounded-2xl p-2 flex items-center gap-2.5 animate-fade-in", glass].join(" ")}>
+              <div key={`${idx}:${chronoPhase}`} className={["flex-1 min-w-0 rounded-2xl p-2 flex items-center gap-2.5", glass].join(" ")}
+                style={{ animation: "bzNextIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
                 <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-16 rounded-xl object-cover shrink-0 border border-white/50" />
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Up next</p>
@@ -3920,7 +3924,7 @@ function SessionPlayer({
             <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
               Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
             </p>
-            <h3 className="font-script text-4xl leading-none" style={{ color: skin.ink }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
+            <h3 className="font-script text-4xl leading-none" style={{ color: skin.ink, animation: "bzPoseIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
             {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{pose.sanskrit}</p>}
           </div>
         </div>
