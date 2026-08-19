@@ -3351,8 +3351,7 @@ function SessionPlayer({
         @keyframes bzCursor3{0%{opacity:0;transform:translate(150px,-150px) scale(1)}10%{opacity:1}26%{transform:translate(2px,-88px) scale(1)}30%{transform:translate(2px,-88px) scale(.76)}34%{transform:translate(2px,-88px) scale(1)}56%{transform:translate(2px,2px) scale(1)}60%{transform:translate(2px,2px) scale(.76)}64%{transform:translate(2px,2px) scale(1)}86%{transform:translate(2px,72px) scale(1)}90%{transform:translate(2px,72px) scale(.76)}94%{transform:translate(2px,72px) scale(1)}100%{opacity:1;transform:translate(2px,72px) scale(1)}}
         @keyframes bzHeartFloat{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(var(--dx,0px),-120px) scale(1)}}
         @keyframes bzFadeUpSm{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
-        @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
-        @keyframes bzHoldZoom{0%,100%{opacity:.9;transform:translateX(-50%) scale(.9)}50%{opacity:1;transform:translateX(-50%) scale(1.14)}}`}</style>
+        @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3438,20 +3437,6 @@ function SessionPlayer({
               <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">Other side</p>
               <p className="text-[11px] font-semibold text-rose/70">ease gently over ✿</p>
             </div>
-          </div>
-        )}
-        {/* "Hold ❤️" cue on the footage — once she's settled into the shape, big
-            pink zooming text tells her to hold the pose (essential in music-only
-            mode where there's no voice). Skipped for flowing warm-ups (cat-cow) and
-            the first settle-in seconds / the last beat before the change. */}
-        {running && !finished && !dim && !pose.switchStep
-          && !["cat-cow", "neck-shoulder-rolls"].includes(pose.slug)
-          && (poseHold - remaining) >= 3 && remaining > 2 && (
-          <div className="pointer-events-none absolute left-1/2 bottom-20 sm:bottom-24 z-20"
-            style={{ animation: "bzHoldZoom 2.4s ease-in-out infinite" }}>
-            <span className="font-script text-5xl sm:text-6xl text-hotpink drop-shadow-[0_2px_12px_rgba(255,255,255,0.7)]">
-              Hold&nbsp;❤️
-            </span>
           </div>
         )}
         {/* Preload the next pose so transitions stay instant. */}
