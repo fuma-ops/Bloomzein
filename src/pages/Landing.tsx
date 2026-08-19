@@ -1,14 +1,17 @@
 import {
-  ArrowRight, Download, Instagram, Youtube, Facebook, Mail, X, Sparkles, Heart,
-  Flower2, Utensils, Dumbbell, HeartPulse, ChevronDown,
+  ArrowRight, Download, Instagram, Youtube, Facebook, Mail, X, Heart, Sparkles,
+  Flower2, Dumbbell, Utensils, Salad, CalendarHeart, BookHeart, NotebookPen,
+  Wallet, MessageCircleHeart, BookOpen, Sun, HeartPulse, ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
-import { AnimatedWords } from "@/components/bloom/AnimatedWords";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { trackEvent } from "@/lib/analytics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/* Brand glyphs lucide-react no longer ships. */
+const START = "/app/today";
+
+/* Brand glyphs lucide no longer ships. */
 function TikTokIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -24,45 +27,79 @@ function PinterestIcon({ className = "" }: { className?: string }) {
   );
 }
 
-/** Reveal-on-scroll: fades + rises its children the first time they enter view. */
+/** Word-by-word float-up (mirrors the welcome screen). */
+function Words({ text, className = "", delay = 0, stagger = 90 }: { text: string; className?: string; delay?: number; stagger?: number }) {
+  return (
+    <span className={className}>
+      {text.split(" ").map((w, i) => (
+        <span key={i} className="bzl-word" style={{ animationDelay: `${delay + i * stagger}ms` }}>
+          {w}{i < text.split(" ").length - 1 ? " " : ""}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Reveal on scroll — fade + rise the first time it enters view. */
 function Reveal({ children, delay = 0, className = "" }: { children: ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } },
-      { threshold: 0.18 },
-    );
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } }, { threshold: 0.15 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: shown ? 1 : 0,
-        transform: shown ? "none" : "translateY(26px)",
-        transition: `opacity 700ms ease, transform 700ms cubic-bezier(.18,.9,.34,1)`,
-        transitionDelay: `${delay}ms`,
-      }}
-    >
-      {children}
-    </div>
+    <div ref={ref} className={className} style={{
+      opacity: shown ? 1 : 0,
+      transform: shown ? "none" : "translateY(30px)",
+      transition: "opacity .8s ease, transform .8s cubic-bezier(.16,.84,.34,1)",
+      transitionDelay: `${delay}ms`,
+    }}>{children}</div>
   );
 }
+
+/* ───────── flagship features (big alternating rows) ───────── */
+type Feat = { icon: LucideIcon; kicker: string; title: string; body: string; img: string; href: string };
+const FLAGSHIP: Feat[] = [
+  { icon: HeartPulse, kicker: "Cycle sync", title: "Know your body like never before.", body: "Track your cycle once and watch every tool adapt to your phase — automatically. Your energy, cravings and mood, finally decoded.", img: "/images/cycle-insight-hero.webp", href: "/app/tools/cycle" },
+  { icon: Flower2, kicker: "Yoga studio", title: "Flows that meet you where you are.", body: "Cycle-aware yoga, guided and beautiful — from 5-minute resets to full classes that soften cramps or wake up your glow.", img: "/images/pose-childs-pose.webp", href: "/app/tools/yoga" },
+  { icon: Dumbbell, kicker: "Workouts", title: "Move with your energy, not against it.", body: "Strength, HIIT and mobility that rise when you're powerful and rest when you're not — perfectly matched to your phase.", img: "/images/pose-boat.webp", href: "/app/tools/workout" },
+  { icon: Utensils, kicker: "Meals & recipes", title: "Eat exactly what your body's asking for.", body: "Phase-smart recipes and a weekly meal plan that writes itself — nourishing, gorgeous, and effortless.", img: "/images/meals-hero-new.webp", href: "/app/tools/meals" },
+];
+
+/* ───────── the rest (illustrated grid) ───────── */
+const GRID: Feat[] = [
+  { icon: Sun, kicker: "Today", title: "Your day, already planned.", body: "One calm home screen that pulls it all together each morning.", img: "/images/page-bg-today-morning.webp", href: START },
+  { icon: CalendarHeart, kicker: "Calendar", title: "Your whole month, at a glance.", body: "Every phase, symptom and plan on one gorgeous calendar.", img: "/images/calendar-hero.webp", href: "/app/calendar" },
+  { icon: Salad, kicker: "Diet & nutrition", title: "Your numbers, finally making sense.", body: "Calorie & macro targets that flex with your training and phase.", img: "/images/goal-path-bloom.webp", href: "/app/tools/diet" },
+  { icon: BookHeart, kicker: "Dreamy diary", title: "A soft place for every feeling.", body: "Journal your mood and let gentle patterns reveal themselves.", img: "/images/diary-hero.webp", href: "/app/tools/diary" },
+  { icon: NotebookPen, kicker: "Notes & reminders", title: "Never drop a thing.", body: "Gentle nudges for water, meds, movement and me-time.", img: "/images/notes-hero.webp", href: "/app/tools/notes" },
+  { icon: Wallet, kicker: "Budget", title: "Glow without the money stress.", body: "A calm, cute budget that keeps your self-care sustainable.", img: "/images/budget-hero.webp", href: "/budget" },
+  { icon: MessageCircleHeart, kicker: "Bloom coach", title: "A wise friend in your pocket.", body: "Personalized guidance that connects every tool for you.", img: "/images/coach-bloom-hero.webp", href: "/app/today" },
+  { icon: BookOpen, kicker: "Read", title: "Wellness wisdom, beautifully written.", body: "A magazine of cycle, beauty, sleep & mind reads.", img: "/images/read-CY001.webp", href: "/app/read" },
+];
 
 export default function Landing() {
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
+  const [showBar, setShowBar] = useState(false);
 
   useEffect(() => {
     if (!iosHint) return;
     const t = setTimeout(() => setIosHint(false), 5000);
     return () => clearTimeout(t);
   }, [iosHint]);
+
+  // Floating mobile CTA appears once the hero scrolls away.
+  useEffect(() => {
+    const onScroll = () => setShowBar(window.scrollY > window.innerHeight * 0.85);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,196 +110,203 @@ export default function Landing() {
     setInstalling(false);
   };
 
-  const START = "/app/today";
-
   return (
-    <div className="relative min-h-screen bg-[#fff5fa] text-[#831843]">
-      {/* ══════════════════ HERO ══════════════════ */}
+    <div className="bzl">
+      <style>{`
+        .bzl{
+          --hot:#E6007E; --pink:#EC4899; --deep:#DB2777; --plum:#6B1238;
+          --ink:#7A1440; --muted:#A2657F; --petal:#F9A8D4;
+          --serif:"Playfair Display",Georgia,serif;
+          --script:"Dancing Script","Caveat",cursive;
+          --sans:"Quicksand",system-ui,sans-serif;
+          font-family:var(--sans); color:var(--ink);
+          background:radial-gradient(120% 60% at 50% 0%,#FFFDFC 0%,#FFF1F7 40%,#FDE7F2 72%,#FBD3E6 100%);
+          min-height:100vh; overflow-x:hidden;
+        }
+        .bzl-serif{font-family:var(--serif);font-weight:700;color:var(--plum)}
+        .bzl-script{font-family:var(--script);font-weight:700;color:var(--hot);line-height:.96}
+        .bzl-kicker{font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--hot)}
+        .bzl-word{display:inline-block;opacity:0;transform:translateY(14px);
+          animation:bzl-word .7s cubic-bezier(.16,.7,.2,1) forwards}
+        @keyframes bzl-word{to{opacity:1;transform:none}}
+        .bzl-fade{opacity:0;animation:bzl-fade .8s ease forwards}
+        @keyframes bzl-fade{to{opacity:1}}
+        /* living CTA — copied from the welcome screen */
+        .bzl-cta{position:relative;display:inline-flex;align-items:center;gap:12px;border:none;cursor:pointer;
+          font-family:var(--sans);font-weight:800;color:#fff;border-radius:999px;
+          background:linear-gradient(180deg,#FF57AC 0%,#EC0F86 52%,#D30D78 100%);
+          box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 4px rgba(233,30,132,.22),
+            0 20px 42px -16px rgba(219,39,119,.85),inset 0 1px 0 rgba(255,255,255,.5);
+          animation:bzl-glow 3s ease-in-out infinite;transition:transform .2s}
+        @keyframes bzl-glow{
+          0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 4px rgba(233,30,132,.2),0 18px 40px -16px rgba(219,39,119,.8),inset 0 1px 0 rgba(255,255,255,.5)}
+          50%{box-shadow:0 0 0 2px rgba(255,255,255,.7),0 0 0 7px rgba(233,30,132,.14),0 26px 60px -14px rgba(233,30,132,.95),inset 0 1px 0 rgba(255,255,255,.6)}}
+        .bzl-cta:hover{transform:translateY(-1px) scale(1.02)} .bzl-cta:active{transform:scale(.96)}
+        .bzl-sheen{position:relative;display:inline-block;overflow:hidden;padding:.06em .12em .28em;margin:-.06em -.12em -.28em}
+        .bzl-sheen::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
+          background:linear-gradient(105deg,transparent 34%,rgba(255,255,255,.85) 50%,transparent 66%);
+          transform:translateX(-120%);animation:bzl-sweep 1.6s ease-in-out 1.1s 1 forwards}
+        @keyframes bzl-sweep{to{transform:translateX(120%)}}
+        .bzl-float{animation:bzl-float 6s ease-in-out infinite}
+        @keyframes bzl-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+      `}</style>
+
+      {/* ═════════════ HERO ═════════════ */}
       <section className="relative flex min-h-[100svh] flex-col overflow-hidden">
-        {/* Cinematic background video (placeholder — swap for the final hero clip) */}
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          autoPlay muted loop playsInline preload="auto"
-          poster="/images/landing-hero.webp"
-          aria-hidden
-        >
+        <video className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="auto" poster="/images/landing-hero.webp" aria-hidden>
           <source src="/videos/entry-1.mp4" type="video/mp4" />
         </video>
-        {/* Soft rose veil — legible, premium, never hides the woman completely */}
-        <div className="absolute inset-0" aria-hidden style={{
-          background:
-            "linear-gradient(180deg, rgba(74,20,45,0.28) 0%, rgba(157,23,77,0.10) 32%, rgba(236,72,153,0.14) 62%, rgba(60,10,35,0.62) 100%)",
-        }} />
-        <div className="absolute inset-0" aria-hidden style={{
-          background: "radial-gradient(120% 80% at 50% 28%, transparent 40%, rgba(60,10,35,0.35))",
-        }} />
+        {/* welcome-style scrim: soft on the left/bottom so text is legible + the woman shows through */}
+        <div className="absolute inset-0" aria-hidden style={{ background:
+          "linear-gradient(90deg,rgba(255,245,250,.92) 0%,rgba(255,245,250,.7) 26%,rgba(255,245,250,.2) 50%,rgba(255,245,250,0) 66%),linear-gradient(180deg,rgba(255,247,241,.4) 0%,rgba(255,240,246,0) 30%,rgba(255,240,246,0) 66%,rgba(107,18,56,.5) 100%)" }} />
 
-        {/* Top bar */}
         <header className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <div className="[&_span]:!text-white [&_span]:!bg-none">
-            <BloomLogo />
-          </div>
-          <a
-            href={START}
-            onClick={() => trackEvent("get_started_click", { location: "header" })}
-            className="hover-scale inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/15 px-4 py-1.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white hover:text-hotpink"
-          >
+          <BloomLogo />
+          <a href={START} onClick={() => trackEvent("get_started_click", { location: "header" })}
+            className="hover-scale inline-flex items-center gap-1.5 rounded-full border-2 px-4 py-1.5 text-sm font-bold transition"
+            style={{ borderColor: "var(--hot)", color: "var(--hot)" }}>
             Start Blooming <ArrowRight className="h-3.5 w-3.5" />
           </a>
         </header>
 
-        {/* Hero content */}
-        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
-          <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-white/40 bg-white/15 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md animate-fade-in">
-            <Sparkles className="h-3 w-3" /> Cycle-synced wellness
-          </span>
-
-          <AnimatedWords
-            text="Wellness that flows with your cycle."
-            stagger={150}
-            className="font-script text-[2.7rem] leading-[1.05] text-white drop-shadow-[0_2px_20px_rgba(74,20,45,0.55)] sm:text-6xl lg:text-7xl"
-          />
-
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/90 drop-shadow-[0_1px_8px_rgba(74,20,45,0.6)] sm:text-lg animate-fade-in" style={{ animationDelay: "700ms" }}>
-            Yoga, meals, movement and tracking — all synced to your phase,
-            all in one calm, beautiful place made for your body.
-          </p>
-
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row animate-fade-in" style={{ animationDelay: "900ms" }}>
-            <a
-              href={START}
-              onClick={() => trackEvent("get_started_click", { location: "hero" })}
-              className="bloom-luxury-btn animate-cta-glow hover-scale inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-base font-bold text-white shadow-xl shadow-hotpink/30 transition active:scale-95"
-            >
-              Start Blooming <ArrowRight className="h-4 w-4" />
-            </a>
-            <button
-              onClick={handleDownload}
-              disabled={installing}
-              className="hover-scale inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20 disabled:opacity-70"
-            >
-              {installing ? "Preparing…" : "Get the app"} <Download className="h-4 w-4" />
-            </button>
-          </div>
-
-          <p className="mt-5 text-xs font-medium tracking-wide text-white/75 animate-fade-in" style={{ animationDelay: "1100ms" }}>
-            Free to start · No credit card · Made for your body 🌸
-          </p>
-        </div>
-
-        {/* Scroll cue */}
-        <div className="relative z-10 pb-6 text-center">
-          <ChevronDown className="mx-auto h-6 w-6 animate-bounce text-white/70" />
-        </div>
-      </section>
-
-      {/* ══════════════════ BEAT 1 — the promise ══════════════════ */}
-      <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 sm:px-8 lg:grid-cols-2 lg:py-28">
-        <Reveal>
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-hotpink">Your body has a rhythm</p>
-          <h2 className="font-script text-4xl leading-tight text-bloom-gradient sm:text-5xl">
-            An app that finally moves with you — not against you.
-          </h2>
-          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-[#9d174d]/80">
-            Bloomzein knows where you are in your cycle and gently adapts everything —
-            the yoga you flow through, the food that fuels you, the movement your body
-            wants today. No more guessing. Just care that fits the moment.
-          </p>
-          <a
-            href={START}
-            onClick={() => trackEvent("get_started_click", { location: "promise" })}
-            className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-hotpink transition hover:gap-3"
-          >
-            See your first day <ArrowRight className="h-4 w-4" />
-          </a>
-        </Reveal>
-
-        <Reveal delay={120} className="flex justify-center">
-          {/* Phone mock — cinematic app preview (placeholder clip) */}
-          <div className="relative w-[240px] shrink-0 sm:w-[280px]">
-            <div className="animate-card-breathe overflow-hidden rounded-[2.5rem] border-[6px] border-white bg-white shadow-2xl shadow-hotpink/25">
-              <div className="relative aspect-[9/19] w-full overflow-hidden bg-blush">
-                <video className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="auto" poster="/images/landing-hero.webp" aria-hidden>
-                  <source src="/videos/entry-2.mp4" type="video/mp4" />
-                </video>
-                <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 55%, rgba(60,10,35,0.55))" }} />
-                <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Today · Luteal phase</p>
-                  <p className="font-script text-2xl leading-tight">Soften &amp; restore</p>
-                </div>
-              </div>
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 pb-20 sm:px-8">
+          <div className="max-w-[38rem]">
+            <p className="bzl-kicker mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "200ms" }}>
+              Your cycle-synced companion 🌸
+            </p>
+            <h1 className="m-0 flex flex-col gap-1">
+              <Words text="One app for your body, mind & cycle." className="bzl-serif text-2xl leading-tight sm:text-4xl lg:text-[2.7rem]" stagger={70} />
+              <span className="bzl-sheen">
+                <Words text="Welcome to your Bloom." className="bzl-script text-5xl sm:text-7xl lg:text-8xl" delay={520} stagger={110} />
+              </span>
+            </h1>
+            <p className="bzl-fade mt-5 max-w-lg text-[15px] font-semibold leading-relaxed sm:text-lg" style={{ color: "var(--ink)", animationDelay: "1300ms" }}>
+              Yoga, workouts, meals, cycle tracking, journaling & more — all synced to your
+              phase, all in one breathtakingly simple place.
+            </p>
+            <div className="bzl-fade mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center" style={{ animationDelay: "1500ms" }}>
+              <a href={START} onClick={() => trackEvent("get_started_click", { location: "hero" })}
+                className="bzl-cta px-8 py-3.5 text-base">
+                Start Blooming — free <ArrowRight className="h-4 w-4" />
+              </a>
+              <button onClick={handleDownload} disabled={installing}
+                className="hover-scale inline-flex items-center gap-2 rounded-full border-2 bg-white/60 px-6 py-3.5 text-sm font-bold backdrop-blur transition disabled:opacity-70"
+                style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
+                {installing ? "Preparing…" : "Get the app"} <Download className="h-4 w-4" />
+              </button>
             </div>
-            <span aria-hidden className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-hotpink/20 blur-2xl" />
-            <span aria-hidden className="pointer-events-none absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-rose/25 blur-3xl" />
+            <p className="bzl-fade mt-4 text-xs font-semibold" style={{ color: "var(--muted)", animationDelay: "1700ms" }}>
+              No credit card · Made for your body · Loved by women like you
+            </p>
           </div>
+        </div>
+        <div className="relative z-10 pb-6 text-center">
+          <ChevronDown className="mx-auto h-6 w-6 animate-bounce" style={{ color: "var(--deep)" }} />
+        </div>
+      </section>
+
+      {/* ═════════════ INTRO LINE ═════════════ */}
+      <section className="mx-auto max-w-3xl px-6 py-16 text-center sm:py-24">
+        <Reveal>
+          <p className="bzl-kicker mb-3 text-xs">Everything, connected</p>
+          <h2 className="bzl-script text-4xl sm:text-6xl">Ten tools. One you.</h2>
+          <p className="mx-auto mt-4 max-w-xl text-[15px] font-semibold sm:text-lg" style={{ color: "var(--ink)" }}>
+            No more juggling six apps that don't talk to each other. Bloomzein reads your
+            cycle once and quietly tunes <em>everything</em> — so your whole day just fits.
+          </p>
         </Reveal>
       </section>
 
-      {/* ══════════════════ BEAT 2 — what adapts ══════════════════ */}
-      <section className="relative overflow-hidden px-6 py-20 sm:px-8 lg:py-24" style={{ background: "linear-gradient(180deg,#fff5fa 0%,#fde7f2 100%)" }}>
-        <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-hotpink">Everything, in sync</p>
-          <h2 className="font-script text-4xl leading-tight text-bloom-gradient sm:text-5xl">
-            One calm place for your whole self.
-          </h2>
-        </Reveal>
-
-        <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-          {[
-            { icon: Flower2, title: "Yoga", line: "Gentle flows matched to your phase & mood." },
-            { icon: Utensils, title: "Meals", line: "Recipes that fuel exactly what your body needs." },
-            { icon: Dumbbell, title: "Movement", line: "Workouts that rise and rest with your energy." },
-            { icon: HeartPulse, title: "Cycle", line: "Tracking that turns your rhythm into guidance." },
-          ].map(({ icon: Icon, title, line }, i) => (
-            <Reveal key={title} delay={i * 90}>
-              <div className="h-full rounded-3xl border border-white bg-white/70 p-5 text-center shadow-lg shadow-hotpink/10 backdrop-blur transition hover:-translate-y-1 hover:shadow-xl hover:shadow-hotpink/20">
-                <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-petal to-hotpink text-white shadow-md shadow-hotpink/30">
-                  <Icon className="h-6 w-6" />
+      {/* ═════════════ FLAGSHIP ROWS ═════════════ */}
+      <section className="mx-auto max-w-6xl space-y-16 px-6 pb-8 sm:space-y-24 sm:px-8">
+        {FLAGSHIP.map((f, i) => {
+          const Icon = f.icon;
+          const flip = i % 2 === 1;
+          return (
+            <Reveal key={f.kicker} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+              {/* image — never full width on desktop; capped to its column */}
+              <div className={`relative ${flip ? "lg:order-2" : ""}`}>
+                <div className="bzl-float overflow-hidden rounded-[2rem] border-[5px] border-white shadow-2xl" style={{ boxShadow: "0 30px 70px -30px rgba(150,30,80,.5)" }}>
+                  <img src={f.img} alt={f.kicker} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                </div>
+                <span aria-hidden className="pointer-events-none absolute -right-5 -top-5 h-24 w-24 rounded-full" style={{ background: "radial-gradient(circle,rgba(236,72,153,.28),transparent 70%)" }} />
+              </div>
+              <div className={flip ? "lg:order-1" : ""}>
+                <span className="mb-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest shadow-sm" style={{ color: "var(--hot)" }}>
+                  <Icon className="h-4 w-4" /> {f.kicker}
                 </span>
-                <p className="font-script text-2xl text-hotpink">{title}</p>
-                <p className="mt-1 text-[13px] leading-snug text-[#9d174d]/75">{line}</p>
+                <h3 className="bzl-serif text-2xl leading-snug sm:text-3xl lg:text-4xl">{f.title}</h3>
+                <p className="mt-3 max-w-md text-[15px] font-medium leading-relaxed sm:text-base" style={{ color: "var(--ink)" }}>{f.body}</p>
+                <a href={f.href} onClick={() => trackEvent("feature_click", { feature: f.kicker })}
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-bold transition hover:gap-3" style={{ color: "var(--hot)" }}>
+                  Explore <ArrowRight className="h-4 w-4" />
+                </a>
               </div>
             </Reveal>
-          ))}
+          );
+        })}
+      </section>
+
+      {/* ═════════════ GRID — the rest ═════════════ */}
+      <section className="relative mt-16 px-6 py-16 sm:px-8 sm:py-24" style={{ background: "linear-gradient(180deg,transparent,#FDE7F2 22%,#FBD3E6 100%)" }}>
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <p className="bzl-kicker mb-3 text-xs">And so much more</p>
+          <h2 className="bzl-script text-4xl sm:text-6xl">Your whole life, in bloom.</h2>
+        </Reveal>
+        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+          {GRID.map((f, i) => {
+            const Icon = f.icon;
+            return (
+              <Reveal key={f.kicker} delay={(i % 4) * 80}>
+                <a href={f.href} onClick={() => trackEvent("feature_click", { feature: f.kicker })}
+                  className="group block h-full overflow-hidden rounded-3xl border border-white bg-white/70 shadow-lg backdrop-blur transition hover:-translate-y-1.5 hover:shadow-2xl"
+                  style={{ boxShadow: "0 16px 40px -24px rgba(150,30,80,.4)" }}>
+                  <div className="relative aspect-[5/4] overflow-hidden">
+                    <img src={f.img} alt={f.kicker} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                    <span className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full text-white shadow-md" style={{ background: "linear-gradient(180deg,#FF57AC,#D30D78)" }}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="bzl-script text-2xl" style={{ color: "var(--hot)" }}>{f.kicker}</p>
+                    <p className="mt-0.5 text-[12.5px] font-medium leading-snug" style={{ color: "var(--ink)" }}>{f.body}</p>
+                  </div>
+                </a>
+              </Reveal>
+            );
+          })}
         </div>
       </section>
 
-      {/* ══════════════════ BEAT 3 — trust + CTA ══════════════════ */}
+      {/* ═════════════ TRUST + CTA ═════════════ */}
       <section className="relative overflow-hidden px-6 py-24 text-center sm:px-8">
-        <div className="absolute inset-0" aria-hidden style={{ background: "linear-gradient(160deg,#fbcfe8 0%,#f9a8d4 55%,#f472b6 100%)" }} />
+        <div className="absolute inset-0" aria-hidden style={{ background: "linear-gradient(160deg,#FF7FBE 0%,#EC0F86 55%,#C60C6E 100%)" }} />
         <span aria-hidden className="pointer-events-none absolute -left-16 top-8 h-64 w-64 rounded-full bg-white/25 blur-3xl" />
         <span aria-hidden className="pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
         <Reveal className="relative z-10 mx-auto max-w-2xl">
           <div className="mb-4 flex items-center justify-center gap-1 text-white">
             {Array.from({ length: 5 }).map((_, i) => <Sparkles key={i} className="h-4 w-4 fill-white" />)}
           </div>
-          <h2 className="font-script text-4xl leading-tight text-white drop-shadow-[0_2px_14px_rgba(131,24,67,0.4)] sm:text-6xl">
-            Bloom with your cycle, not against it.
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-[15px] text-white/90">
-            Join the women turning their rhythm into their superpower — one gentle,
-            beautiful day at a time.
+          <h2 className="bzl-script text-4xl text-white sm:text-6xl" style={{ color: "#fff" }}>Bloom with your cycle, not against it.</h2>
+          <p className="mx-auto mt-4 max-w-md text-[15px] font-medium text-white/90">
+            Join the women turning their rhythm into their superpower — one gentle, beautiful day at a time.
           </p>
-          <a
-            href={START}
-            onClick={() => trackEvent("get_started_click", { location: "footer_cta" })}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-9 py-4 text-base font-bold text-hotpink shadow-xl shadow-[#9d174d]/25 transition hover:scale-105 active:scale-95 animate-card-breathe"
-          >
+          <a href={START} onClick={() => trackEvent("get_started_click", { location: "footer_cta" })}
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-9 py-4 text-base font-extrabold shadow-xl transition hover:scale-105 active:scale-95"
+            style={{ color: "var(--hot)" }}>
             Start Blooming — free <ArrowRight className="h-4 w-4" />
           </a>
-          <p className="mt-4 text-xs font-medium text-white/80">No credit card · Cancel anytime 🌸</p>
+          <p className="mt-4 text-xs font-semibold text-white/80">No credit card · Cancel anytime 🌸</p>
         </Reveal>
       </section>
 
-      {/* ══════════════════ SLIM FOOTER ══════════════════ */}
-      <footer id="contact" className="bg-[#fff5fa] px-6 py-12 sm:px-8">
+      {/* ═════════════ FOOTER ═════════════ */}
+      <footer id="contact" className="px-6 py-12 sm:px-8" style={{ background: "#FFF5FA" }}>
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
           <BloomLogo />
-          <p className="max-w-sm text-sm leading-relaxed text-[#9d174d]/70">
+          <p className="max-w-sm text-sm font-medium leading-relaxed" style={{ color: "var(--muted)" }}>
             Cycle tracking, nutrition, fitness &amp; self-care — designed for your body, mind &amp; life.
           </p>
-
-          {/* Socials */}
           <div className="flex flex-wrap justify-center gap-2">
             {[
               { href: "https://www.instagram.com/bloomzein/", label: "Instagram", icon: <Instagram className="h-4 w-4" />, bg: "bg-blush text-hotpink hover:bg-petal" },
@@ -274,46 +318,44 @@ export default function Landing() {
             ].map(({ href, label, icon, bg }) => {
               const external = href.startsWith("http");
               return (
-                <a key={label} href={href} aria-label={label}
-                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className={`grid h-9 w-9 place-items-center rounded-full transition ${bg}`}>
-                  {icon}
-                </a>
+                <a key={label} href={href} aria-label={label} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  className={`grid h-9 w-9 place-items-center rounded-full transition ${bg}`}>{icon}</a>
               );
             })}
           </div>
-
-          {/* Legal / links */}
-          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-semibold text-[#9d174d]/70">
+          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-bold" style={{ color: "var(--muted)" }}>
             {[
-              { label: "Pricing", href: "/pricing" },
-              { label: "Privacy", href: "/privacy" },
-              { label: "Terms", href: "/terms" },
-              { label: "Refunds", href: "/refund" },
-              { label: "Help", href: "/help" },
-              { label: "FAQ", href: "/faq" },
+              { label: "Pricing", href: "/pricing" }, { label: "Privacy", href: "/privacy" },
+              { label: "Terms", href: "/terms" }, { label: "Refunds", href: "/refund" },
+              { label: "Help", href: "/help" }, { label: "FAQ", href: "/faq" },
             ].map(({ label, href }) => (
-              <a key={label} href={href} className="hover:text-hotpink transition">{label}</a>
+              <a key={label} href={href} className="transition hover:text-hotpink">{label}</a>
             ))}
           </nav>
-
-          <div className="flex items-center gap-1.5 text-xs text-[#9d174d]/55">
+          <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--muted)" }}>
             <span>© {new Date().getFullYear()} Bloomzein.</span>
             <span className="flex items-center gap-1">Made with love <Heart className="h-3 w-3 fill-hotpink text-hotpink" /></span>
           </div>
         </div>
       </footer>
 
+      {/* Floating mobile CTA — the primary action is always one tap away */}
+      <div className={`fixed inset-x-0 bottom-0 z-40 p-3 sm:hidden transition-all duration-300 ${showBar ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <a href={START} onClick={() => trackEvent("get_started_click", { location: "mobile_bar" })}
+          className="bzl-cta w-full justify-center px-6 py-3.5 text-base">
+          Start Blooming — free <ArrowRight className="h-4 w-4" />
+        </a>
+      </div>
+
       {iosHint && (
-        <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 animate-fade-in">
-          <div className="flex items-center gap-3 rounded-2xl bg-[#831843] px-4 py-3 shadow-xl">
+        <div className="fixed bottom-24 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 animate-fade-in sm:bottom-6">
+          <div className="flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl" style={{ background: "var(--plum)" }}>
             <Download className="h-4 w-4 shrink-0 text-white" />
             <p className="text-xs font-semibold leading-snug text-white">
               Sur iPhone : <span className="font-normal">Partager</span> → <span className="font-normal">Sur l'écran d'accueil</span>
             </p>
-            <button onClick={() => setIosHint(false)} className="ml-auto shrink-0 text-white/70 hover:text-white" aria-label="Dismiss">
-              <X className="h-4 w-4" />
-            </button>
+            <button onClick={() => setIosHint(false)} className="ml-auto shrink-0 text-white/70 hover:text-white" aria-label="Dismiss"><X className="h-4 w-4" /></button>
           </div>
         </div>
       )}
