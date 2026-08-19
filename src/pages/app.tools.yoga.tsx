@@ -1242,6 +1242,22 @@ function playBell() {
   } catch {}
 }
 
+/** A soft, short "tick" — the get-ready countdown beep before a recording starts. */
+function playTick(freq = 640) {
+  try {
+    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+    const ctx = new Ctx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + 0.2);
+  } catch {}
+}
+
 // ===================== BREATH PACER =====================
 
 type BreathPhase = "inhale" | "hold" | "exhale";
@@ -2981,7 +2997,10 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
 function SessionWithIntro({ durationMin, title, ...player }: {
   flow: Pose[]; lang: Lang; mode: Mode; hold: number; sound: string; intention: Intention; durationMin: number; title?: string; record?: boolean; silentGuide?: boolean; onExit: () => void; onDone: () => void;
 }) {
-  const [introDone, setIntroDone] = useState(false);
+  // Recording (REC) skips the cinematic Bloomzein intro entirely — the video
+  // opens straight on the first pose, where the player's own "get ready" chrono
+  // (2s, big-centre → glides to its corner) takes over as the opener.
+  const [introDone, setIntroDone] = useState(!!player.record);
   const meta = FLOW_META[player.intention] ?? FLOW_META.morning;
   // Start ONE continuous music bed the moment the flow opens (during the intro),
   // and let the player adopt it — so the music plays through the intro and keeps
@@ -3045,6 +3064,11 @@ function SessionPlayer({
   const [peek, setPeek] = useState(false);
   const [breathOpen, setBreathOpen] = useState(false); // centered breath-guide overlay (from the "Breath" control)
   const [tvHint, setTvHint] = useState(false); // brief "cast your tab" guide after going full-screen
+  // "Get ready" chrono shown at the very start of a recording: a soft 2s countdown
+  // that zooms in big + centred, then gently glides to the ring's corner as the
+  // first hold begins. Non-record sessions skip straight to "done".
+  const [chrono, setChrono] = useState<number | null>(record ? 2 : null);
+  const [chronoPhase, setChronoPhase] = useState<"in" | "count" | "fly" | "done">(record ? "in" : "done");
   // Playback speed for the pose clip — yoga wants a calm, slow pace. 0.7× default.
   const [speed, setSpeed] = useState<number>(() => { try { return Number(localStorage.getItem(YOGA_SPEED_KEY)) || 0.7; } catch { return 0.7; } });
   const [showSpeed, setShowSpeed] = useState(false);
@@ -3165,6 +3189,26 @@ function SessionPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [record]);
 
+  // "Get ready" chrono: zoom in (in) → count 2·1 (count) → glide to corner (fly) →
+  // done. Soft ticks pace it; the first hold's timer waits until it's "done".
+  useEffect(() => {
+    if (!record) return;
+    playTick(620);
+    const tin = setTimeout(() => setChronoPhase("count"), 440);
+    let n = 2;
+    const iv = setInterval(() => {
+      n -= 1;
+      if (n >= 1) { playTick(620); setChrono(n); return; }
+      playTick(920); // final "go" tick
+      clearInterval(iv);
+      setChrono(null);
+      setChronoPhase("fly");
+      setTimeout(() => setChronoPhase("done"), 640);
+    }, 1000);
+    return () => { clearInterval(iv); clearTimeout(tin); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [record]);
+
   // Wake Lock so audio mode keeps screen / audio alive
   useEffect(() => {
     let cancelled = false;
@@ -3227,7 +3271,7 @@ function SessionPlayer({
 
   // Timer — counts down THIS pose's own hold (its narration length rounded up).
   useEffect(() => {
-    if (!running) return;
+    if (!running || chronoPhase !== "done") return; // wait out the get-ready chrono
     setRemaining(poseHold);
     const t = setInterval(() => {
       setRemaining((r) => {
@@ -3249,7 +3293,7 @@ function SessionPlayer({
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [idx, running, poseHold]);
+  }, [idx, running, poseHold, chronoPhase]);
 
   function finishSession() {
     // Gentle close instead of an abrupt cut: stop the voice, fade the music down,
@@ -3351,7 +3395,29 @@ function SessionPlayer({
         @keyframes bzCursor3{0%{opacity:0;transform:translate(150px,-150px) scale(1)}10%{opacity:1}26%{transform:translate(2px,-88px) scale(1)}30%{transform:translate(2px,-88px) scale(.76)}34%{transform:translate(2px,-88px) scale(1)}56%{transform:translate(2px,2px) scale(1)}60%{transform:translate(2px,2px) scale(.76)}64%{transform:translate(2px,2px) scale(1)}86%{transform:translate(2px,72px) scale(1)}90%{transform:translate(2px,72px) scale(.76)}94%{transform:translate(2px,72px) scale(1)}100%{opacity:1;transform:translate(2px,72px) scale(1)}}
         @keyframes bzHeartFloat{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(var(--dx,0px),-120px) scale(1)}}
         @keyframes bzFadeUpSm{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
-        @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}`}</style>
+        @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+        @keyframes bzChronoIn{0%{opacity:0;transform:scale(2.4)}100%{opacity:1;transform:scale(1)}}
+        @keyframes bzChronoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+        @keyframes bzChronoFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(38vw,-40vh) scale(.42)}}`}</style>
+
+      {/* "Get ready" chrono — the recording's opener: zooms in big + centred,
+          softly counts 2·1 with a tick, then glides toward the ring's corner as
+          the first hold starts. Record mode only. */}
+      {chronoPhase !== "done" && (
+        <div className="pointer-events-none fixed inset-0 z-[60] grid place-items-center">
+          <div
+            className="grid place-items-center h-40 w-40 rounded-full bg-white/15 backdrop-blur-md border border-white/45 shadow-[0_12px_50px_rgba(236,72,153,0.35)]"
+            style={{
+              animation:
+                chronoPhase === "in" ? "bzChronoIn 440ms cubic-bezier(.16,.84,.34,1) both"
+                : chronoPhase === "fly" ? "bzChronoFly 640ms cubic-bezier(.5,0,.2,1) forwards"
+                : "bzChronoPulse 1s ease-in-out infinite",
+            }}>
+            <span className="font-script text-7xl leading-none text-hotpink drop-shadow-[0_2px_14px_rgba(255,255,255,0.75)]">{chrono ?? "✿"}</span>
+            <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.25em] text-hotpink/80">get ready</span>
+          </div>
+        </div>
+      )}
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
