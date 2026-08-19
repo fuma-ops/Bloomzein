@@ -3352,8 +3352,7 @@ function SessionPlayer({
         @keyframes bzHeartFloat{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(var(--dx,0px),-120px) scale(1)}}
         @keyframes bzFadeUpSm{0%{opacity:0;transform:translate(-50%,8px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
         @keyframes bzFadeIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
-        @keyframes bzHoldIn{0%{opacity:0;transform:translateX(-50%) scale(.72)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
-        @keyframes bzHoldBreathe{0%,100%{transform:scale(1);box-shadow:0 8px 30px rgba(236,72,153,0.20)}50%{transform:scale(1.07);box-shadow:0 10px 40px rgba(236,72,153,0.38)}}`}</style>
+        @keyframes bzHoldZoom{0%,100%{opacity:.9;transform:translateX(-50%) scale(.9)}50%{opacity:1;transform:translateX(-50%) scale(1.14)}}`}</style>
 
       {/* ===================== FULL-BLEED STAGE — the pose fills the whole
           screen; every panel floats over it, blended. ===================== */}
@@ -3441,20 +3440,18 @@ function SessionPlayer({
             </div>
           </div>
         )}
-        {/* Frosted "Hold" cue on the footage — once she's settled into the shape,
-            a soft breathing badge guides her to hold (essential in music-only mode
-            where there's no voice). Skipped for flowing warm-ups (cat-cow) and the
-            first settle-in seconds / the last beat before the change. */}
+        {/* "Hold ❤️" cue on the footage — once she's settled into the shape, big
+            pink zooming text tells her to hold the pose (essential in music-only
+            mode where there's no voice). Skipped for flowing warm-ups (cat-cow) and
+            the first settle-in seconds / the last beat before the change. */}
         {running && !finished && !dim && !pose.switchStep
           && !["cat-cow", "neck-shoulder-rolls"].includes(pose.slug)
           && (poseHold - remaining) >= 3 && remaining > 2 && (
-          <div className="pointer-events-none absolute left-1/2 bottom-24 sm:bottom-28 z-20"
-            style={{ animation: "bzHoldIn 520ms cubic-bezier(.18,.9,.34,1.2) both" }}>
-            <div className="grid place-items-center h-[4.6rem] w-[4.6rem] rounded-full bg-white/20 backdrop-blur-md border border-white/45"
-              style={{ animation: "bzHoldBreathe 2.8s ease-in-out infinite" }}>
-              <span className="font-script text-[1.6rem] leading-none text-white drop-shadow-[0_1px_6px_rgba(190,24,93,0.55)]">Hold</span>
-              <span className="text-[0.7rem] leading-none mt-0.5 text-white/90 drop-shadow-[0_1px_4px_rgba(190,24,93,0.5)]">breathe ♥</span>
-            </div>
+          <div className="pointer-events-none absolute left-1/2 bottom-20 sm:bottom-24 z-20"
+            style={{ animation: "bzHoldZoom 2.4s ease-in-out infinite" }}>
+            <span className="font-script text-5xl sm:text-6xl text-hotpink drop-shadow-[0_2px_12px_rgba(255,255,255,0.7)]">
+              Hold&nbsp;❤️
+            </span>
           </div>
         )}
         {/* Preload the next pose so transitions stay instant. */}
