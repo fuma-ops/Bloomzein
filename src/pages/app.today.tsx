@@ -179,6 +179,37 @@ function computeBloomStreak(): number {
   }
 }
 
+/**
+ * "Days blooming" — the journey counter shown in the hero. This is *days since
+ * you started*, not a fragile activity streak: it increments every calendar day
+ * (day 1 on the day you joined) and never resets. Anchored to the account's
+ * created_at when known, otherwise to a locally-stamped first-seen date so it
+ * still counts up before/without a signed-in profile.
+ */
+const FIRST_SEEN_KEY = "bloom:first-seen";
+function daysBlooming(createdISO?: string | null): number {
+  try {
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    // Stamp a local first-seen the very first time we run.
+    let firstSeen = localStorage.getItem(FIRST_SEEN_KEY);
+    const todayISO = ymdLocal(new Date());
+    if (!firstSeen) { firstSeen = todayISO; try { localStorage.setItem(FIRST_SEEN_KEY, firstSeen); } catch {} }
+
+    // Anchor = the EARLIER of account creation and local first-seen (most honest).
+    const candidates: number[] = [];
+    if (createdISO) { const t = new Date(createdISO).getTime(); if (isFinite(t)) candidates.push(startOfDay(new Date(t))); }
+    const fsT = new Date(firstSeen + "T00:00:00").getTime();
+    if (isFinite(fsT)) candidates.push(fsT);
+    if (!candidates.length) return 1;
+    const anchor = Math.min(...candidates);
+
+    const days = Math.floor((startOfDay(new Date()) - anchor) / 86400000) + 1; // day of joining = 1
+    return Math.max(1, days);
+  } catch {
+    return 1;
+  }
+}
+
 // ── Phase content ────────────────────────────────────────────────────────────
 // Each quote is stored as short lines (~3 words). On PHONE these stack into a
 // narrow left column so the text stays off the hero face; on sm+ the same lines
@@ -387,6 +418,8 @@ export default function TodayPage() {
   const cycleSettings   = useMemo(readCycleSettings, []);
   const pillLabel       = cycleSettings.contraceptiveMethod.charAt(0).toUpperCase() + cycleSettings.contraceptiveMethod.slice(1);
   const displayName     = profile?.name?.split(" ")[0] || "Beautiful";
+  // Days-since-you-started journey counter (increments every day, never resets).
+  const bloomDays       = daysBlooming(profile?.created_at);
 
   // Core state
   const [mood,                setMood]                = useState<string | null>(null);
@@ -845,7 +878,7 @@ export default function TodayPage() {
   const [ringRef, ringInView] = useInView<HTMLDivElement>();
   const ringPercent = Math.round(useCountUp(bloomPercent, ringInView));
   // Streak counts up on load (it's in the always-visible hero).
-  const shownStreak = Math.round(useCountUp(streak, true));
+  const shownStreak = Math.round(useCountUp(bloomDays, true));
 
   // FINALE — when her whole world is built (cycle + meals + diet + movement +
   // today's mood) AND she's still on the guided flow, play the closing moment:
@@ -996,10 +1029,10 @@ export default function TodayPage() {
 
         {/* Streak badge — top-right so it clears the glass cards below */}
         <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[2] rounded-2xl bg-white/60 backdrop-blur px-2.5 py-1 sm:px-3 sm:py-1.5 text-center border border-white/50 shadow-md">
-          {streak > 0 ? (
+          {bloomDays > 0 ? (
             <>
               <p className="font-script text-lg sm:text-xl text-hotpink leading-none tabular-nums">{shownStreak}</p>
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{streak === 1 ? "day blooming" : "days blooming"}</p>
+              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{bloomDays === 1 ? "day blooming" : "days blooming"}</p>
             </>
           ) : (
             <>
