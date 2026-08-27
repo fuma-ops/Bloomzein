@@ -185,12 +185,14 @@ function Words({ text, className, base = 0, step = 0.085 }: { text: string; clas
 /* ── film background + readability scrim ──────────────────────────────────── */
 function Film({
   src,
+  poster,
   scrim,
   loop = true,
   onEnded,
   endLead = 0,
 }: {
   src: string;
+  poster?: string; // first-frame still — paints instantly while the clip loads
   scrim: string;
   loop?: boolean;
   onEnded?: () => void;
@@ -222,7 +224,7 @@ function Film({
 
   return (
     <div className="wz-bg" aria-hidden>
-      <video ref={ref} className="wz-video" autoPlay muted loop={loop} playsInline preload="auto" onEnded={onEnded}>
+      <video ref={ref} className="wz-video" autoPlay muted loop={loop} playsInline preload="auto" poster={poster} onEnded={onEnded}>
         <source src={src} type="video/mp4" />
       </video>
       <div className={`wz-scrim ${scrim}`} />
@@ -256,7 +258,7 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
     <div className="wz-stage s1-stage" onClick={go} title="Continue">
       {/* start the hand-off ~0.9s before the film ends so screen 2 emerges
           behind its final moment — smooth, no stop */}
-      <Film src="/videos/entry-1.mp4" scrim="wz-scrim--left" loop={false} onEnded={go} endLead={900} />
+      <Film src="/videos/entry-1.mp4" poster="/images/entry-1-poster.webp" scrim="wz-scrim--left" loop={false} onEnded={go} endLead={900} />
       <div className="wz-content s1">
         <div className="wz-topbar">
           <BrandLockup />
@@ -318,7 +320,7 @@ const CARD_STEP = 0.55; // s between cards — paced so each can be read
 function ScreenConnected({ onNext }: { onNext: () => void }) {
   return (
     <div className="wz-stage">
-      <Film src="/videos/entry-2.mp4" scrim="wz-scrim--soft" />
+      <Film src="/videos/entry-2.mp4" poster="/images/entry-2-poster.webp" scrim="wz-scrim--soft" />
 
       <div className="wz-content s2">
         <div className="wz-topbar wz-topbar--center">
@@ -385,7 +387,7 @@ function MiniBadge({ icon }: { icon: keyof typeof ico }) {
 function ScreenLife({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="wz-stage">
-      <Film src="/videos/entry-3.mp4" scrim="wz-scrim--left" />
+      <Film src="/videos/entry-3.mp4" poster="/images/entry-3-poster.webp" scrim="wz-scrim--left" />
       <div className="wz-content s3">
         <div className="wz-topbar">
           <BrandLockup />
