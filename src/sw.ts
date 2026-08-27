@@ -1,27 +1,71 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from "workbox-precaching";
+import { registerRoute } from "workbox-routing";
+import { CacheFirst, StaleWhileRevalidate } from "workbox-strategies";
+import { ExpirationPlugin } from "workbox-expiration";
+import { CacheableResponsePlugin } from "workbox-cacheable-response";
+import { RangeRequestsPlugin } from "workbox-range-requests";
 
 declare let self: ServiceWorkerGlobalScope;
 
-// Empty manifest (globPatterns: []) — no asset caching, push-notifications only.
+// Empty manifest (globPatterns: []) — no build precaching, push + runtime caching.
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Skip waiting immediately so this SW takes over from any stale version.
 self.skipWaiting();
 
-// On activation: wipe stale caches and claim clients.
-// Do NOT force-reload clients — the main.tsx purge mechanism handles that
-// when needed, and auto-reloading causes infinite loops in dev previews.
+// ── Runtime caching ──────────────────────────────────────────────────────────
+// The app pulls its poses, meals, hero art etc. from the CDN every open; on a
+// weak connection they show up blank and slow. Cache them so a second open (and
+// every screen after the first) paints instantly, refreshing quietly in the
+// background. These cache names are PRESERVED across SW updates (see activate).
+const IMG_CACHE = "bloom-images-v1";
+const VIDEO_CACHE = "bloom-videos-v1";
+const KEEP_CACHES = new Set<string>([IMG_CACHE, VIDEO_CACHE]);
+
+// Images: cache-first — they never change once shipped, so instant is safe.
+registerRoute(
+  ({ request }) => request.destination === "image",
+  new CacheFirst({
+    cacheName: IMG_CACHE,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new ExpirationPlugin({ maxEntries: 400, maxAgeSeconds: 30 * 24 * 60 * 60, purgeOnQuotaError: true }),
+    ],
+  }),
+);
+
+// Videos (pose/exercise clips): cache-first with range-request support so the
+// yoga/workout players don't re-stream the same clip every session.
+registerRoute(
+  ({ request, url }) => request.destination === "video" || url.pathname.endsWith(".mp4"),
+  new CacheFirst({
+    cacheName: VIDEO_CACHE,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new RangeRequestsPlugin(),
+      new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 14 * 24 * 60 * 60, purgeOnQuotaError: true }),
+    ],
+  }),
+);
+
+// Google Fonts stylesheet + files — stale-while-revalidate so the script font
+// is ready instantly on repeat opens.
+registerRoute(
+  ({ url }) => url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com",
+  new StaleWhileRevalidate({ cacheName: "bloom-fonts-v1" }),
+);
+
+// On activation: wipe STALE caches but KEEP the media caches so they survive SW
+// updates (otherwise every deploy would re-download every image). Do NOT
+// force-reload clients — main.tsx handles that when needed.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((names) => Promise.all(names.map((n) => caches.delete(n))))
+      .then((names) => Promise.all(names.filter((n) => !KEEP_CACHES.has(n)).map((n) => caches.delete(n))))
       .then(() => self.clients.claim())
   );
 });
-
-// No asset precaching — Vercel CDN serves everything fresh.
-// This SW exists solely for push notifications.
 
 interface PushPayload {
   title?: string;
