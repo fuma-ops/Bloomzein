@@ -6,7 +6,7 @@ import {
 import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { hasMealPlan, hasMovementPlan } from "@/lib/crossToolData";
 import { hasDietSetup, RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
-import { startGuide } from "@/lib/guidedSetup";
+import { startGuide, isGuided } from "@/lib/guidedSetup";
 
 /* ============================================================================
    Build your Bloom world — the guided setup on Today, as ONE premium container:
@@ -149,8 +149,21 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
   ];
 
   const doneCount = STEPS.filter((s) => s.done).length;
-  if (doneCount === STEPS.length) return null;
   const nextIdx = STEPS.findIndex((s) => !s.done && !s.sync);
+  const nextKey = STEPS[nextIdx]?.key;
+
+  // Smart motion director: when she comes back to Today mid guided-setup (having
+  // just finished a step), gently glide the NEXT step to the centre of the screen
+  // so it's never hidden below the fold — matching the "watch Today come alive" cue.
+  useEffect(() => {
+    if (!isGuided() || !nextKey) return;
+    const t = window.setTimeout(() => {
+      try { document.querySelector('[data-next-step="1"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
+    }, 480); // let the page paint + entrance animations settle first
+    return () => window.clearTimeout(t);
+  }, [nextKey]);
+
+  if (doneCount === STEPS.length) return null;
 
   return (
     <section className="mt-4 sm:mt-6 animate-card-pop-in" style={{ animationDelay: "30ms" }}>
