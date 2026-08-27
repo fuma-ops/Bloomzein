@@ -3882,6 +3882,20 @@ function SessionPlayer({
       {!dim && !finished && (
         <div className="lg:hidden absolute inset-x-3 z-20 flex flex-col gap-2"
           style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 2.9rem)" }}>
+          {/* Pose title — framed like the workout player (never bare on the image) */}
+          <div key={idx} className={["self-start max-w-[75%] rounded-2xl px-3.5 py-2 animate-fade-in", glass].join(" ")}>
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: skin.inkSoft }}>
+              Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
+            </p>
+            <h3 className="font-script text-3xl leading-none mt-0.5" style={{ color: skin.ink, animation: "bzPoseIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
+              {pose.name}{pose.switchStep ? " ↺" : ""}
+            </h3>
+            <div className="mt-1 flex items-center gap-1.5">
+              <Flower className="h-3 w-3 shrink-0" style={{ color: "#EC4899" }} />
+              <span className="h-px w-10 rounded-full" style={{ background: "linear-gradient(90deg, rgba(236,72,153,0.65), transparent)" }} />
+              {pose.sanskrit && <span className="text-[10px] italic truncate" style={{ color: skin.inkSoft }}>{pose.sanskrit}</span>}
+            </div>
+          </div>
           <div className="flex items-center gap-2.5">
             {nextPose ? (
               <div key={`${idx}:${chronoPhase}`} className={["flex-1 min-w-0 rounded-2xl p-2 flex items-center gap-2.5", glass].join(" ")}
@@ -3913,19 +3927,6 @@ function SessionPlayer({
         <div className="hidden md:block absolute bottom-3 z-10 w-60 lg:w-64 pointer-events-none" style={{ right: "max(1rem, calc((100vw - 96rem) / 2))" }}>
           <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
             <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
-          </div>
-        </div>
-      )}
-
-      {/* ===================== POSE NAME (mobile) ===================== */}
-      {!dim && !finished && (
-        <div className="lg:hidden absolute left-4 right-4 bottom-36 z-20 pointer-events-none">
-          <div key={idx} className="animate-pose-in">
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
-              Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
-            </p>
-            <h3 className="font-script text-4xl leading-none" style={{ color: skin.ink, animation: "bzPoseIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
-            {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{pose.sanskrit}</p>}
           </div>
         </div>
       )}
