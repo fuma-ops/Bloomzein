@@ -403,6 +403,16 @@ export default function TodayPage() {
   const movementPlanned = useMemo(hasMovementPlan, []);
   const [finaleOpen,    setFinaleOpen]    = useState(false);
   const [dayCelebrate,  setDayCelebrate]  = useState(false);
+  // Bounced here from a tool she tapped before setting up? Show a soft nudge.
+  const [setupNudge,    setSetupNudge]    = useState(false);
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("bloom:setup-nudge") === "1") {
+        sessionStorage.removeItem("bloom:setup-nudge");
+        if (!hasCycleSettings()) setSetupNudge(true);
+      }
+    } catch {}
+  }, []);
   // Today's Plan only appears once she's begun building her world — a brand-new
   // (or freshly reset) user sees the setup checklist instead of a placeholder plan.
   // Real plan only once she's actually planned meals or movement. If she's set
@@ -1084,6 +1094,32 @@ export default function TodayPage() {
 
       {/* FINALE — the closing "your world is built" moment: a Barbie spotlight on
           Today's Plan for ~2s, matching every tool's setup step. */}
+      {setupNudge && (
+        <div className="fixed inset-0 z-[70] grid place-items-center p-5 animate-fade-in"
+          style={{ background: "rgba(107,18,56,0.42)", backdropFilter: "blur(4px)" }}
+          onClick={() => setSetupNudge(false)}>
+          <div onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-[1.75rem] bg-white p-6 text-center shadow-2xl animate-scale-in"
+            style={{ boxShadow: "0 30px 70px -28px rgba(150,30,80,0.55)" }}>
+            <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full" style={{ background: "linear-gradient(180deg,#FF7FBE,#EC0F86)" }}>
+              <Sparkles className="h-8 w-8 text-white" />
+            </div>
+            <h3 className="font-script text-3xl leading-none text-hotpink">Let's set up your Today first</h3>
+            <p className="mt-2 text-sm leading-relaxed text-rose/80">
+              A few gentle taps and your whole app syncs to your cycle — your meals, movement,
+              mood and more all tune to you. Then every tool is ready ✿
+            </p>
+            <button
+              onClick={() => { startGuide(); setSetupNudge(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-bold text-white shadow-lg active:scale-95 transition"
+              style={{ background: "linear-gradient(180deg,#FF57AC,#EC0F86 52%,#D30D78)", boxShadow: "0 16px 36px -14px rgba(219,39,119,0.85)" }}>
+              Set up my Today ✿
+            </button>
+            <button onClick={() => setSetupNudge(false)} className="mt-2 text-xs font-semibold text-rose/60">Maybe later</button>
+          </div>
+        </div>
+      )}
+
       {finaleOpen && (
         <SpotlightCoach
           targetId="daily-checkin"

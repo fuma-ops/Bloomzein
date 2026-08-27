@@ -55,7 +55,8 @@ const DiaryPage = lazyRetry(() => import("./pages/app.tools.diary"));
 const CycleTracker = lazyRetry(() => import("./components/bloom/CycleTracker").then((m) => ({ default: m.CycleTracker })));
 import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { hasCycleSettings } from "./components/bloom/cyclePhase";
 import { AuthGate } from "./components/bloom/AuthGate";
 import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
 import { ArrowLeft } from "lucide-react";
@@ -74,6 +75,22 @@ function PageLoader() {
 
 function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
+  const { user, profile } = useAuth();
+
+  // New-user gate: after the welcome, she must set up her Today (her cycle) before
+  // any other tool/menu. If she taps into one first, bounce her to Today and raise
+  // a soft "set up first" nudge there. (Today + Me stay reachable so she's never
+  // trapped; owner preview and un-set-up detection use hasCycleSettings.)
+  useEffect(() => {
+    const gated = (path === "/app/calendar" || path === "/app/read" || path === "/app/shop"
+      || path === "/budget" || (path.startsWith("/app/tools") && path !== "/app/today"));
+    if (user && profile?.setup_done && gated && !hasCycleSettings()) {
+      try { sessionStorage.setItem("bloom:setup-nudge", "1"); } catch {}
+      window.history.replaceState({}, "", "/app/today");
+      setPath("/app/today");
+      window.scrollTo(0, 0);
+    }
+  }, [path, user, profile]);
 
   // GA4 page tracking. index.html already sent the page_view for the initial
   // load, so we skip the first render here and only report SPA navigations —
