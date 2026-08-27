@@ -517,6 +517,7 @@ function HeroHeader({
   sectionSubtitle,
   onGuide,
   onReset,
+  onlyPlanTab = false,
 }: {
   src: string;
   tab: WorkoutTab;
@@ -525,6 +526,7 @@ function HeroHeader({
   sectionSubtitle: string;
   onGuide?: () => void;
   onReset?: () => void;
+  onlyPlanTab?: boolean; // guided setup: only "My Plan" — no Discover/Programs/Library
 }) {
   const [broken, setBroken] = useState(false);
   return (
@@ -573,7 +575,7 @@ function HeroHeader({
           <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{sectionSubtitle}</p>
           <CyclePhasePill className="mt-1.5" />
         </div>
-        <div className="flex">
+        <div className={onlyPlanTab ? "hidden" : "flex"}>
           <div className="inline-flex flex-wrap rounded-full bg-white/70 backdrop-blur border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
             {(["program", "discover", "programs", "library"] as const).map((t) => (
               <button
@@ -690,7 +692,8 @@ export default function WorkoutPage() {
   // While guided AND still setting up (no plan yet), keep her on My Plan — never
   // the discover/programs/library browser. Once a plan exists she can roam freely.
   useEffect(() => {
-    if (guided && !hasPlan && (view.kind === "discover" || view.kind === "library")) {
+    if (guided && !hasPlan && (view.kind === "discover" || view.kind === "library"
+      || view.kind === "programs" || view.kind === "program-detail")) {
       setTab("program"); setView({ kind: "program" });
     }
   }, [guided, hasPlan, view.kind]);
@@ -2338,6 +2341,9 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
             </button>
           )}
+          {/* Flagship programs are a post-setup, premium journey — hidden during
+              guided setup so she completes her week here instead of hitting a wall. */}
+          {!guided && (
           <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Trophy className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
@@ -2346,6 +2352,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
           </button>
+          )}
           <button onClick={onGenerateClick} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
