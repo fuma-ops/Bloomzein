@@ -57,6 +57,7 @@ import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { hasCycleSettings } from "./components/bloom/cyclePhase";
+import { isGuided } from "./lib/guidedSetup";
 import { AuthGate } from "./components/bloom/AuthGate";
 import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
 import { ArrowLeft } from "lucide-react";
@@ -84,7 +85,9 @@ function AppContent() {
   useEffect(() => {
     const gated = (path === "/app/calendar" || path === "/app/read" || path === "/app/shop"
       || path === "/budget" || (path.startsWith("/app/tools") && path !== "/app/today"));
-    if (user && profile?.setup_done && gated && !hasCycleSettings()) {
+    // While she's actively in the guided setup, let her walk INTO the tools
+    // (cycle → meals → …) — that IS the setup. Only bounce a user who skips it.
+    if (user && profile?.setup_done && gated && !hasCycleSettings() && !isGuided()) {
       try { sessionStorage.setItem("bloom:setup-nudge", "1"); } catch {}
       window.history.replaceState({}, "", "/app/today");
       setPath("/app/today");
