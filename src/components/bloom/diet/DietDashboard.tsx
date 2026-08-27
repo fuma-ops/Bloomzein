@@ -22,20 +22,17 @@ import { BloomPlanSetup } from "@/components/bloom/diet/BloomPlanSetup";
 
 const go = (href: string) => () => { window.location.href = href; };
 
-// Adequate snack ideas for the calories she has left — real snack recipes that
-// fit inside her remaining budget (largest-that-still-fits first, so they feel
-// satisfying without going over), falling back to the lightest if few fit.
+// Snack ideas that actually FIT the calories she has left — real snack recipes
+// within her remaining budget (a small +15 kcal grace so a near-fit still counts),
+// largest-that-still-fits first so they feel satisfying without blowing the day.
+// If nothing fits (her budget is nearly spent) this returns [] — the UI then shows
+// an honest "you're on track, sip water/tea" note instead of over-budget snacks.
 function snackIdeasFor(remaining: number, n = 4) {
-  const budget = Math.max(0, remaining);
-  const snacks = RECIPES.filter((r) => r.mealType === "snack");
-  const fits = snacks
-    .filter((r) => r.macros.calories <= budget)
-    .sort((a, b) => b.macros.calories - a.macros.calories);
-  if (fits.length >= n) return fits.slice(0, n);
-  const over = snacks
-    .filter((r) => r.macros.calories > budget)
-    .sort((a, b) => a.macros.calories - b.macros.calories);
-  return [...fits, ...over].slice(0, n);
+  const budget = Math.max(0, remaining) + 15;
+  return RECIPES
+    .filter((r) => r.mealType === "snack" && r.macros.calories <= budget)
+    .sort((a, b) => b.macros.calories - a.macros.calories)
+    .slice(0, n);
 }
 
 /* ---------- tiny progress ring ---------- */
@@ -415,6 +412,9 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
     : remaining > 0 ? "Plenty of room left — fuel up with something nourishing."
     : "You're right on target — beautifully done today.";
   const snacks = remaining > 0 ? snackIdeasFor(remaining, 4) : [];
+  // Budget nearly spent (a few kcal left, nothing sensible fits): don't push
+  // over-budget snacks — gently tell her she's on track.
+  const tightBudget = remaining > 0 && snacks.length === 0;
 
   return (
     <div ref={cardRef} className="relative overflow-hidden rounded-[1.75rem] border border-petal/60 bg-white shadow-[0_12px_34px_rgba(219,39,119,0.10)] animate-fade-in">
@@ -480,6 +480,17 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
             </div>
           </div>
         </div>
+
+        {/* ── SMART IDEA — nearly no budget left: an honest, kind note ── */}
+        {tightBudget && (
+          <div className="mt-4 rounded-2xl bg-white/70 border border-petal/50 p-3.5 flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-md shadow-hotpink/25"><Heart className="h-5 w-5 fill-white" /></span>
+            <div className="min-w-0">
+              <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} /> You're right on track</p>
+              <p className="mt-1 text-[11.5px] text-rose/70 leading-snug">Only <span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()} kcal</span> left — best to gently close the day here 🌸 If you're peckish, water or a warm herbal tea keeps you cozy for almost no calories.</p>
+            </div>
+          </div>
+        )}
 
         {/* ── SMART IDEA — adequate snacks that lead to real recipes ── */}
         {snacks.length > 0 && (
