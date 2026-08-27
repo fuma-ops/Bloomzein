@@ -3474,7 +3474,13 @@ function SessionPlayer({
         )}
         {/* The sharp pose — big, whole, centred. The still is ALWAYS the base
             layer (so the pose appears instantly and never blanks if the clip is
-            slow or fails to load); the flow clip plays on top when it's ready. */}
+            slow or fails to load); the flow clip plays on top when it's ready.
+            PHONE: contained in a rounded stage card (workout-player style) with
+            the blurred backdrop showing above/below. Desktop + recording stay
+            full-bleed. */}
+        <div className={present
+          ? "absolute inset-0"
+          : "absolute inset-x-3 top-[7.75rem] bottom-[13.75rem] overflow-hidden rounded-[1.75rem] border-[5px] border-white/70 shadow-[0_24px_60px_-24px_rgba(150,30,80,0.55)] lg:inset-x-0 lg:top-0 lg:bottom-0 lg:rounded-none lg:border-0 lg:shadow-none"}>
         <img
           key={idx + "-sharp"}
           src={pose.image}
@@ -3507,6 +3513,7 @@ function SessionPlayer({
             </div>
           </div>
         )}
+        </div>
         {/* Preload the next pose so transitions stay instant. */}
         {nextPose && <img src={nextPose.image} alt="" aria-hidden className="hidden" />}
       </div>
@@ -3878,12 +3885,14 @@ function SessionPlayer({
         </div>
       )}
 
-      {/* ===================== MOBILE: Up-next + ring row, then a slim progress bar ===================== */}
+      {/* ===================== MOBILE (workout-style): framed title on top, the
+             contained stage between, then up-next + ring + progress in a band
+             just above the controls. ===================== */}
       {!dim && !finished && (
-        <div className="lg:hidden absolute inset-x-3 z-20 flex flex-col gap-2"
+        <div className="lg:hidden absolute inset-x-3 z-20"
           style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 2.9rem)" }}>
           {/* Pose title — framed like the workout player (never bare on the image) */}
-          <div key={idx} className={["self-start max-w-[75%] rounded-2xl px-3.5 py-2 animate-fade-in", glass].join(" ")}>
+          <div key={idx} className={["self-start max-w-[78%] rounded-2xl px-3.5 py-2 animate-fade-in", glass].join(" ")}>
             <p className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: skin.inkSoft }}>
               Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
             </p>
@@ -3896,11 +3905,17 @@ function SessionPlayer({
               {pose.sanskrit && <span className="text-[10px] italic truncate" style={{ color: skin.inkSoft }}>{pose.sanskrit}</span>}
             </div>
           </div>
+        </div>
+      )}
+      {/* Phone: Up-next + hold ring, then the flow-progress bar — sit in the band
+          below the contained stage, right above the controls. */}
+      {!dim && !finished && !present && (
+        <div className="lg:hidden absolute inset-x-3 z-20 flex flex-col gap-2" style={{ bottom: "8.25rem" }}>
           <div className="flex items-center gap-2.5">
             {nextPose ? (
               <div key={`${idx}:${chronoPhase}`} className={["flex-1 min-w-0 rounded-2xl p-2 flex items-center gap-2.5", glass].join(" ")}
                 style={{ animation: "bzNextIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
-                <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-16 rounded-xl object-cover shrink-0 border border-white/50" />
+                <img src={nextPose.poster ?? nextPose.image} alt="" className="h-12 w-14 rounded-xl object-cover shrink-0 border border-white/50" />
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Up next</p>
                   <p className="font-semibold text-sm leading-tight truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
