@@ -3,7 +3,7 @@ import {
   Sparkles, Wallet,
   ChevronRight, Camera, Trash2,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
-  Check, Inbox,
+  Check, Inbox, Eye,
 } from "lucide-react";
 
 /** Only this account sees the private admin inbox link. */
@@ -20,6 +20,7 @@ import { RECIPES } from "@/components/bloom/recipes/data";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
+import { isOwnerEmail } from "@/lib/entitlements";
 import { readAvatar, setAvatar, fileToAvatarDataUrl, AVATAR_EVENT } from "@/lib/profileAvatar";
 
 // Time-of-day hero photo — the same blended scene as the Today page, so Me
@@ -98,7 +99,7 @@ function readFavorites(): { items: FavItem[]; isReal: boolean } {
   };
 }
 
-type SettingAction = "edit" | "logout" | "replay" | "reset";
+type SettingAction = "edit" | "logout" | "replay" | "reset" | "preview-first-time";
 type SettingItem = { Icon: typeof User; label: string; href?: string; action?: SettingAction; soon?: boolean };
 const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
   {
@@ -127,9 +128,16 @@ export default function MePage() {
 
   // Add the private "Messages" inbox link only for the admin account.
   const isAdmin = user?.email === ADMIN_EMAIL;
-  const groups: { items: SettingItem[]; danger?: boolean }[] = isAdmin
+  // Owner-only (khfuma@gmail.com): a one-tap way to see exactly what a brand-new
+  // user meets — the welcome cinematic + re-triggered onboarding.
+  const isOwner = isOwnerEmail(user?.email);
+  const ownerItems: SettingItem[] = [
+    ...(isAdmin ? [{ Icon: Inbox, label: "Messages", href: "/admin" } as SettingItem] : []),
+    ...(isOwner ? [{ Icon: Eye, label: "Preview first-time (new user)", action: "preview-first-time" } as SettingItem] : []),
+  ];
+  const groups: { items: SettingItem[]; danger?: boolean }[] = ownerItems.length
     ? [
-        { items: [{ Icon: Inbox, label: "Messages", href: "/admin" }, ...settingsGroups[0].items] },
+        { items: [...ownerItems, ...settingsGroups[0].items] },
         ...settingsGroups.slice(1),
       ]
     : settingsGroups;
@@ -141,6 +149,23 @@ export default function MePage() {
       localStorage.removeItem("bloomzein_visited_tools");
     } catch {}
     await updateProfile({ setup_done: false });
+    window.location.href = "/app/today";
+  }
+
+  // Owner preview: replay the brand-new-user first impression — the welcome
+  // cinematic + every tool's onboarding/tour + the "day 1" counter — WITHOUT
+  // deleting real logs. (Use "Start fresh" below for a truly empty world.)
+  async function previewFirstTime() {
+    const flags = [
+      "bloomzein_onboarding", "bloomzein_visited_tools",
+      "bloom:first-seen", "bloom:setup-guide",
+      "bloom:cycle-onboarded", "bloom:diet-onboarded", "bloom:diet-setup-complete",
+      "bloom:meals-onboarded", "bloom:notes-welcomed",
+      "bloom:workout-onboarded", "bloom:workout-tour-done",
+      "bloom:yoga-onboarded", "bloom:yoga-tour-done",
+    ];
+    try { flags.forEach((k) => localStorage.removeItem(k)); } catch {}
+    await updateProfile({ setup_done: false }); // AuthGate replays the welcome cinematic
     window.location.href = "/app/today";
   }
 
@@ -389,6 +414,7 @@ export default function MePage() {
                 const onClick = item.action === "logout" ? () => signOut()
                   : item.action === "replay" ? () => replayOnboarding()
                   : item.action === "reset" ? () => resetWorld()
+                  : item.action === "preview-first-time" ? () => previewFirstTime()
                   : item.action === "edit" ? () => setEditOpen(true)
                   : undefined;
                 return <button key={item.label} onClick={onClick} disabled={item.soon} className={cls}>{inner}</button>;
