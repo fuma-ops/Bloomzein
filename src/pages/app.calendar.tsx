@@ -80,11 +80,13 @@ interface PlanningItem {
 
 /** Calendar Key categories — order here drives the legend order too. */
 const CATEGORY_META: Record<string, { label: string; Icon: LucideIcon; chip: string; cell?: string }> = {
-  period:      { label: "Period",           Icon: Droplet,        chip: "bg-rose-100 text-rose-600",       cell: "bg-rose-50 border-rose-200" },
-  fertile:     { label: "Fertile Window",   Icon: Sprout,         chip: "bg-amber-100 text-amber-600",     cell: "bg-amber-50 border-amber-200" },
+  // Cycle phases stay inside ONE pink family — a soft rose→pink→fuchsia degradé —
+  // so the month never breaks into yellow/blue patches.
+  period:      { label: "Period",           Icon: Droplet,        chip: "bg-rose-100 text-rose-600",       cell: "bg-rose-100 border-rose-200" },
+  fertile:     { label: "Fertile Window",   Icon: Sprout,         chip: "bg-pink-100 text-pink-600",       cell: "bg-pink-100 border-pink-200" },
   ovulation:   { label: "Ovulation",        Icon: Star,           chip: "bg-fuchsia-100 text-fuchsia-600", cell: "bg-fuchsia-50 border-fuchsia-200" },
-  luteal:      { label: "Luteal Phase",     Icon: Moon,           chip: "bg-violet-100 text-violet-600",   cell: "bg-violet-50 border-violet-200" },
-  follicular:  { label: "Follicular Phase", Icon: Circle,         chip: "bg-sky-100 text-sky-600",         cell: "bg-sky-50 border-sky-200" },
+  luteal:      { label: "Luteal Phase",     Icon: Moon,           chip: "bg-rose-100 text-rose-500",       cell: "bg-rose-50 border-rose-200" },
+  follicular:  { label: "Follicular Phase", Icon: Circle,         chip: "bg-pink-100 text-pink-500",       cell: "bg-pink-50 border-pink-200" },
   workout:     { label: "Workout",          Icon: Dumbbell,       chip: "bg-orange-100 text-orange-600" },
   yoga:        { label: "Yoga",             Icon: PersonStanding, chip: "bg-teal-100 text-teal-600" },
   journal:     { label: "Journal",          Icon: BookOpen,       chip: "bg-indigo-100 text-indigo-600" },
@@ -94,7 +96,7 @@ const CATEGORY_META: Record<string, { label: string; Icon: LucideIcon; chip: str
   selfcare:    { label: "Self Care",        Icon: Heart,          chip: "bg-pink-100 text-pink-600" },
   water:       { label: "Water Goal",       Icon: Droplets,       chip: "bg-cyan-100 text-cyan-600" },
   birthday:    { label: "Birthday",         Icon: Cake,           chip: "bg-fuchsia-100 text-fuchsia-600" },
-  vacation:    { label: "Vacation",         Icon: Plane,          chip: "bg-blue-100 text-blue-600",       cell: "bg-blue-50 border-blue-200" },
+  vacation:    { label: "Vacation",         Icon: Plane,          chip: "bg-pink-100 text-pink-600",       cell: "bg-pink-50 border-pink-200" },
 };
 
 /** Maps a Reminders "event" sub-category onto a Calendar Key category. */
