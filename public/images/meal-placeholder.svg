@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132" width="132" height="132" role="img" aria-label="Bloomzein meal">
+  <defs>
+    <linearGradient id="mp-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE4F1"/>
+      <stop offset="0.55" stop-color="#FBCFE8"/>
+      <stop offset="1" stop-color="#F9A8D4"/>
+    </linearGradient>
+    <radialGradient id="mp-glow" cx="0.5" cy="0.42" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="132" height="132" fill="url(#mp-bg)"/>
+  <rect width="132" height="132" fill="url(#mp-glow)"/>
+  <!-- soft flower mark -->
+  <g transform="translate(66 62)" fill="#EC4899" fill-opacity="0.42">
+    <g id="petal">
+      <ellipse cx="0" cy="-16" rx="8.5" ry="15"/>
+    </g>
+    <use href="#petal" transform="rotate(72)"/>
+    <use href="#petal" transform="rotate(144)"/>
+    <use href="#petal" transform="rotate(216)"/>
+    <use href="#petal" transform="rotate(288)"/>
+    <circle cx="0" cy="0" r="7.5" fill="#FFF0F6" fill-opacity="0.95"/>
+  </g>
+  <text x="66" y="104" text-anchor="middle" font-family="'Dancing Script','Comfortaa',cursive" font-size="15" font-weight="700" fill="#BE185D" fill-opacity="0.7">Bloomzein</text>
+</svg>

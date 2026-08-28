@@ -327,13 +327,9 @@ function planItemTiming(time: string): "now" | "upcoming" | "past" | null {
 }
 
 // ── Meal display helpers ─────────────────────────────────────────────────────
-const MEAL_PHOTO: Record<string, string> = {
-  breakfast: "/images/meal-oats.webp",
-  lunch:     "/images/meal-buddha.webp",
-  dinner:    "/images/meal-stew.webp",
-  lunchbox:  "/images/meal-lunchbox.webp",
-  snack:     "/images/meal-lunchbox.webp",
-};
+// A branded pink tile shown for empty meal slots and whenever a recipe's own
+// photo is missing — so a generic stock dish NEVER stands in for a real meal.
+const MEAL_PLACEHOLDER = "/images/meal-placeholder.svg";
 const MEAL_SLOT_LABEL: Record<string, string> = {
   breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", lunchbox: "Lunchbox", snack: "Snack",
 };
@@ -750,13 +746,13 @@ export default function TodayPage() {
       const r = rid ? RECIPES.find((x) => x.id === rid) : null;
       if (r) return {
         id: `meal-${slot}`, label: r.name, time: MEAL_SLOT_TIME[slot], Icon: Heart,
-        tool: "/app/tools/meals", image: recipeImageSrc(r), fallback: MEAL_PHOTO[slot],
+        tool: "/app/tools/meals", image: recipeImageSrc(r), fallback: MEAL_PLACEHOLDER,
         blurb: `${MEAL_SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`,
         launch: { key: LAUNCH_MEAL_KEY, val: r.id },
       };
       return {
         id: `meal-${slot}`, label: `Plan your ${MEAL_SLOT_LABEL[slot].toLowerCase()}`, time: MEAL_SLOT_TIME[slot], Icon: Heart,
-        tool: "/app/tools/meals", image: MEAL_PHOTO[slot],
+        tool: "/app/tools/meals", image: MEAL_PLACEHOLDER,
         blurb: cycleReady
           ? `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`
           : `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} ✿`,
