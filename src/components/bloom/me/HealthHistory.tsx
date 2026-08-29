@@ -1691,12 +1691,6 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
     () => (h.range ? predictedSymptomSeries(h.range.startISO, futureISO(7), 1) : []),
     [h],
   );
-  // Future symptom load as light "predicted" bars (by phase), appended after the
-  // logged days — solid past + light future, same as the burn charts.
-  const symptomForecast: ChartPoint[] = symptomPred
-    .filter((d) => d.date > futureISO(0) && Math.round(d.value) > 0)
-    .slice(0, 6)
-    .map((d) => ({ key: d.date, label: shortDay(d.date), value: Math.round(d.value), predicted: true, readout: `~${Math.round(d.value)} expected · by phase` }));
 
   // Cycle bars = her real cycles + a few faded predicted ones, so it's never empty.
   const cycleAllPoints: ChartPoint[] = [
@@ -1730,6 +1724,18 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
     date: d.date,
     value: d.quality,
     readout: `${d.quality}/5${d.hours != null ? ` · ${d.hours}h` : ""}`,
+  }));
+
+  // Burn & symptoms as CURVES (solid logged line + light future forecast).
+  const burnActual = (days: DayBurn[]): ForecastActual[] =>
+    days.map((d) => ({ key: d.date, date: d.date, value: d.kcal, readout: `${d.kcal} kcal · ${d.sessions} session${d.sessions === 1 ? "" : "s"}` }));
+  const toDV = (pts: ChartPoint[]): DatedValue[] => pts.map((p) => ({ date: p.key, value: p.value }));
+  const workoutActual = burnActual(h.movement.workoutDaily);
+  const yogaActual = burnActual(h.movement.yogaDaily);
+  const workoutPredDV = toDV(burnForecast(readWorkoutPlanDays(), avgBurn(h.movement.workoutDaily) || 210, "workout"));
+  const yogaPredDV = toDV(burnForecast(readYogaPlanDays(), avgBurn(h.movement.yogaDaily) || 130, "yoga flow"));
+  const symptomActual: ForecastActual[] = h.symptoms.daily.map((d) => ({
+    key: d.date, date: d.date, value: d.labels.length, readout: d.labels.join(", ") || "no symptoms",
   }));
 
   // Planned-vs-eaten: dashed plan across the month + solid eaten line.
@@ -1905,24 +1911,34 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel bg={CHART_BG.workout}>
               <PanelHead Icon={Dumbbell} title="Workout burn" hint="per day" />
-              <BarsChart
-                points={[...burnPoints(h.movement.workoutDaily), ...burnForecast(readWorkoutPlanDays(), avgBurn(h.movement.workoutDaily) || 210, "workout")]}
+              <ForecastLineChart
+                actual={workoutActual}
+                predicted={workoutPredDV}
                 unit="kcal"
-                color={BAR_C}
-                tapHint="Tap a day to see calories burned & sessions."
-                ghostShape={[0.75, 0.15, 0.85, 0.25, 0.9, 0.2, 0.6]}
+                actualLabel="Logged"
+                predictedLabel="Planned"
+                predictedColor={PRED_C}
+                yMin={0}
+                tapHint="Tap a point to see calories burned & sessions."
+                ghostShape={[0.35, 0.62, 0.4, 0.78, 0.5, 0.9, 0.6]}
                 interpretation={h.patterns.workout}
+                note={<>The light line is what your planned workout days should burn — it fills in solid as you finish real sessions.</>}
               />
             </Panel>
             <Panel bg={CHART_BG.yoga}>
               <PanelHead Icon={Sparkles} title="Yoga burn" hint="per day" />
-              <BarsChart
-                points={[...burnPoints(h.movement.yogaDaily), ...burnForecast(readYogaPlanDays(), avgBurn(h.movement.yogaDaily) || 130, "yoga flow")]}
+              <ForecastLineChart
+                actual={yogaActual}
+                predicted={yogaPredDV}
                 unit="kcal"
-                color={BAR_C}
-                tapHint="Tap a day to see calories burned & flows."
-                ghostShape={[0.5, 0.68, 0.4, 0.72, 0.55, 0.68, 0.48]}
+                actualLabel="Logged"
+                predictedLabel="Planned"
+                predictedColor={PRED_C}
+                yMin={0}
+                tapHint="Tap a point to see calories burned & flows."
+                ghostShape={[0.42, 0.6, 0.45, 0.7, 0.52, 0.66, 0.5]}
                 interpretation={h.patterns.yoga}
+                note={<>The light line is what your planned yoga days should burn — it fills in solid as you finish real flows.</>}
               />
             </Panel>
           </div>
@@ -1963,13 +1979,18 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 title="Symptoms by day"
                 hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
               />
-              <BarsChart
-                points={[...symptomPoints(h.symptoms.daily), ...symptomForecast]}
+              <ForecastLineChart
+                actual={symptomActual}
+                predicted={symptomPred}
                 unit="count"
-                color={BAR_C}
-                tapHint="Tap a day to see which symptoms you logged."
-                ghostShape={[0.35, 0.55, 0.2, 0.6, 0.3, 0.15, 0.45]}
+                actualLabel="Logged"
+                predictedLabel="By phase"
+                predictedColor={PRED_C}
+                yMin={0}
+                tapHint="Tap a point to see which symptoms you logged."
+                ghostShape={[0.3, 0.5, 0.25, 0.58, 0.32, 0.18, 0.44]}
                 interpretation={h.patterns.symptoms}
+                note={<>The light line is how many symptoms tend to show up across your cycle — more around your period and the days before. Your logs correct it over time.</>}
               />
             </Panel>
           </div>
