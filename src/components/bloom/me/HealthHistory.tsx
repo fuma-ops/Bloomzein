@@ -42,6 +42,7 @@ import {
   type DatedValue,
 } from "@/lib/mePredictions";
 import { goalProjection } from "@/lib/nutritionTargets";
+import { readWorkoutPlanDays, readYogaPlanDays } from "@/lib/crossToolData";
 import {
   computeHealthHistory,
   prettyDate,
@@ -803,6 +804,28 @@ const REG_META = {
 
 /* ---------- point builders ---------- */
 
+// A realistic FUTURE burn forecast from her planned days: for each of the next
+// ~2 weeks whose weekday she's scheduled, add a light "predicted" bar (avg of her
+// real sessions, or a sensible default). Rendered hollow/dashed, so past = solid
+// logged, future = light prediction — and it adjusts as she logs real sessions.
+const WK_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const avgBurn = (days: DayBurn[]): number => {
+  const vals = days.map((d) => d.kcal).filter((v) => v > 0);
+  return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+};
+const burnForecast = (plannedWeekdays: string[], kcal: number, label: string): ChartPoint[] => {
+  if (!plannedWeekdays.length || kcal <= 0) return [];
+  const planned = new Set(plannedWeekdays);
+  const base = new Date(); base.setHours(0, 0, 0, 0);
+  const out: ChartPoint[] = [];
+  for (let n = 1; n <= 14 && out.length < 6; n++) {
+    const d = new Date(base.getTime() + n * DAY);
+    if (!planned.has(WK_LABELS[d.getDay()])) continue;
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    out.push({ key: iso, label: shortDay(iso), value: kcal, readout: `~${kcal} kcal · ${label} (planned)`, predicted: true });
+  }
+  return out;
+};
 const burnPoints = (days: DayBurn[]): ChartPoint[] =>
   days.map((d) => ({
     key: d.date,
@@ -1848,7 +1871,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <Panel bg={CHART_BG.workout}>
               <PanelHead Icon={Dumbbell} title="Workout burn" hint="per day" />
               <BarsChart
-                points={burnPoints(h.movement.workoutDaily)}
+                points={[...burnPoints(h.movement.workoutDaily), ...burnForecast(readWorkoutPlanDays(), avgBurn(h.movement.workoutDaily) || 210, "workout")]}
                 unit="kcal"
                 color={BAR_C}
                 tapHint="Tap a day to see calories burned & sessions."
@@ -1859,7 +1882,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <Panel bg={CHART_BG.yoga}>
               <PanelHead Icon={Sparkles} title="Yoga burn" hint="per day" />
               <BarsChart
-                points={burnPoints(h.movement.yogaDaily)}
+                points={[...burnPoints(h.movement.yogaDaily), ...burnForecast(readYogaPlanDays(), avgBurn(h.movement.yogaDaily) || 130, "yoga flow")]}
                 unit="kcal"
                 color={BAR_C}
                 tapHint="Tap a day to see calories burned & flows."
