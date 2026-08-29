@@ -124,6 +124,39 @@ export function predictedMoodSeries(fromISO: string, toISO: string, stepDays = 1
   return out;
 }
 
+/* ---------- sleep & symptoms: predict the shape of the month by phase ---------- */
+
+// Typical sleep quality (1–5) and symptom load (count) per cycle phase — the
+// reference her real logs then correct. Keys cover the different phase spellings
+// phaseForDay may return; a fallback keeps it safe.
+const SLEEP_BY_PHASE: Record<string, number> = {
+  menstrual: 3.0, period: 3.0, follicular: 4.0, ovulation: 4.2, ovulatory: 4.2, fertile: 4.0, luteal: 3.1,
+};
+const SYMPTOMS_BY_PHASE: Record<string, number> = {
+  menstrual: 2.4, period: 2.4, follicular: 0.6, ovulation: 0.8, ovulatory: 0.8, fertile: 0.7, luteal: 1.8,
+};
+
+function seriesByPhase(fromISO: string, toISO: string, map: Record<string, number>, fallback: number, stepDays = 1): DatedValue[] {
+  if (!hasCycleSettings()) return [];
+  const s = readCycleSettings();
+  const out: DatedValue[] = [];
+  const t1 = toTime(toISO);
+  for (let t = toTime(fromISO); t <= t1; t += stepDays * MS_DAY) {
+    const ph = String(phaseForDay(new Date(t), s));
+    out.push({ date: isoFromT(t), value: +(map[ph] ?? fallback).toFixed(2) });
+  }
+  return out;
+}
+
+/** Predicted nightly sleep quality across a window, from her phase→sleep map. */
+export function predictedSleepSeries(fromISO: string, toISO: string, stepDays = 1): DatedValue[] {
+  return seriesByPhase(fromISO, toISO, SLEEP_BY_PHASE, 3.5, stepDays);
+}
+/** Predicted daily symptom load across a window, from her phase→symptom map. */
+export function predictedSymptomSeries(fromISO: string, toISO: string, stepDays = 1): DatedValue[] {
+  return seriesByPhase(fromISO, toISO, SYMPTOMS_BY_PHASE, 1, stepDays);
+}
+
 /** A near-future window end for forecasts (today + N days), local ISO. */
 export function futureISO(days: number): string {
   return isoFromT(toTime(todayISO()) + days * MS_DAY);

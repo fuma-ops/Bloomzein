@@ -37,6 +37,8 @@ import {
   predictedCycleBars,
   predictedWeightSeries,
   predictedMoodSeries,
+  predictedSleepSeries,
+  predictedSymptomSeries,
   predictedCycleLength,
   futureISO,
   type DatedValue,
@@ -373,19 +375,16 @@ function BarsChart({
             >
               <rect x={bx} y={y0} width={bw} height={y1 - y0} fill="transparent" />
               {p.predicted ? (
-                // A forecast bar — hollow with a dashed brand outline, so it reads
-                // clearly as "predicted", not a logged fact.
+                // A forecast bar — the same soft pink, just LIGHT (no dashes), so
+                // it reads as gentle "predicted" next to the full logged bars.
                 <rect
                   x={bx + gap / 2}
                   y={yv(p.value)}
                   width={bodyW}
                   height={Math.max(p.value > 0 ? 1.5 : 0, y1 - yv(p.value))}
                   rx={1.5}
-                  fill={color}
-                  fillOpacity={0.12}
-                  stroke={active ? SEL_C : color}
-                  strokeWidth={1.2}
-                  strokeDasharray="2.5 2"
+                  fill={`url(#${gid})`}
+                  opacity={active ? 0.6 : 0.34}
                 />
               ) : (
                 <rect
@@ -1683,6 +1682,20 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
     () => (h.range ? predictedMoodSeries(h.range.startISO, futureISO(7), 1) : []),
     [h],
   );
+  const sleepPred = useMemo<DatedValue[]>(
+    () => (h.range ? predictedSleepSeries(h.range.startISO, futureISO(7), 1) : []),
+    [h],
+  );
+  const symptomPred = useMemo<DatedValue[]>(
+    () => (h.range ? predictedSymptomSeries(h.range.startISO, futureISO(7), 1) : []),
+    [h],
+  );
+  // Future symptom load as light "predicted" bars (by phase), appended after the
+  // logged days — solid past + light future, same as the burn charts.
+  const symptomForecast: ChartPoint[] = symptomPred
+    .filter((d) => d.date > futureISO(0) && Math.round(d.value) > 0)
+    .slice(0, 6)
+    .map((d) => ({ key: d.date, label: shortDay(d.date), value: Math.round(d.value), predicted: true, readout: `~${Math.round(d.value)} expected · by phase` }));
 
   // Cycle bars = her real cycles + a few faded predicted ones, so it's never empty.
   const cycleAllPoints: ChartPoint[] = [
@@ -1710,6 +1723,12 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
     date: m.date,
     value: m.score,
     readout: `${titleCase(m.mood)} · ${m.score}/5`,
+  }));
+  const sleepActual: ForecastActual[] = h.sleep.series.map((d) => ({
+    key: d.date,
+    date: d.date,
+    value: d.quality,
+    readout: `${d.quality}/5${d.hours != null ? ` · ${d.hours}h` : ""}`,
   }));
 
   // Planned-vs-eaten: dashed plan across the month + solid eaten line.
@@ -1944,7 +1963,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
               />
               <BarsChart
-                points={symptomPoints(h.symptoms.daily)}
+                points={[...symptomPoints(h.symptoms.daily), ...symptomForecast]}
                 unit="count"
                 color={BAR_C}
                 tapHint="Tap a day to see which symptoms you logged."
@@ -2027,14 +2046,25 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 title="Sleep over time"
                 hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
               />
-              <LineChart
-                points={sleepPoints(h.sleep.series)}
+              <ForecastLineChart
+                actual={sleepActual}
+                predicted={sleepPred}
                 unit="score"
-                color={LINE_C}
+                actualLabel="Logged"
+                predictedLabel="By phase"
+                predictedColor={PRED_C}
                 yMin={1}
                 yMax={5}
                 tapHint="Tap a point to see that night's sleep."
+                ghostShape={[0.62, 0.7, 0.6, 0.72, 0.55, 0.68, 0.58]}
                 interpretation={h.patterns.sleep}
+                note={
+                  <>
+                    The light line is how well you tend to sleep across your cycle — often lighter in
+                    the days before your period. It starts from that typical pattern and shifts toward{" "}
+                    <b>your</b> real nights as you log them.
+                  </>
+                }
               />
             </Panel>
           </div>
