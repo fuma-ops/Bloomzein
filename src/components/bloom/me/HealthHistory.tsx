@@ -65,6 +65,10 @@ const shortDay = (iso: string) => {
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 };
 const MAX_POINTS = 40; // keep charts legible; the report table carries the full history
+// A minimum horizontal window so a couple of early data points don't stretch
+// edge-to-edge (which fakes a dramatic trend). Data sits compact on the LEFT and
+// grows rightward day by day — room to fill.
+const MIN_SLOTS = 14;
 
 // Soft, themed background photo per chart (heavily faded behind a white veil in
 // Panel). Lightweight webp so eight of them barely cost anything on load.
@@ -475,7 +479,8 @@ function LineChart({
     hi += pad;
   }
   const span = hi - lo || 1;
-  const x = (i: number) => x0 + (i / (shown.length - 1)) * (x1 - x0);
+  const denom = Math.max(shown.length - 1, MIN_SLOTS - 1); // left-aligned min window
+  const x = (i: number) => x0 + (i / denom) * (x1 - x0);
   const y = (v: number) => y0 + (1 - (v - lo) / span) * (y1 - y0);
   const d = shown
     .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`)
@@ -605,15 +610,23 @@ function ForecastLineChart({
     y0 = mT,
     y1 = H - mB;
 
-  // Keep the two series on the SAME window: the reference is clipped to start
-  // where the (capped) logged data starts, so it never spills wider than the real
-  // line and squishes it — while still reaching a little into the future.
+  // Prediction lives ONLY in the FUTURE — from the last logged day forward. It is
+  // never drawn under days she's already logged (that reads as chaos: a dashed
+  // line sitting beneath the real one). Once a day is checked, the real value wins
+  // and the forecast simply continues from there.
+  const lastActualT = shownActual.length ? toTime(shownActual[shownActual.length - 1].date) : -Infinity;
   const clipFromT = shownActual.length
-    ? toTime(shownActual[0].date)
+    ? lastActualT
     : predicted.length
       ? toTime(predicted[0].date)
       : 0;
-  const shownPred = predicted.filter((p) => toTime(p.date) >= clipFromT - DAY);
+  let shownPred = predicted.filter((p) => toTime(p.date) > clipFromT);
+  // Anchor the dashed forecast to the last real point so it flows out of it
+  // seamlessly (continuity), instead of floating detached in the future.
+  if (shownActual.length && shownPred.length) {
+    const la = shownActual[shownActual.length - 1];
+    shownPred = [{ date: la.date, value: la.value }, ...shownPred];
+  }
 
   const hasA = shownActual.length > 0;
   const hasP = shownPred.length >= 2;
@@ -650,7 +663,9 @@ function ForecastLineChart({
   const allT = [...shownActual.map((p) => toTime(p.date)), ...shownPred.map((p) => toTime(p.date))];
   const tMin = Math.min(...allT);
   const tMax = Math.max(...allT);
-  const tSpan = tMax - tMin || DAY;
+  // Hold a minimum window so a couple of points don't stretch the whole width —
+  // data stays compact on the left with room to grow rightward.
+  const tSpan = Math.max(tMax - tMin, (MIN_SLOTS - 1) * DAY) || DAY;
   const xAt = (iso: string) => x0 + ((toTime(iso) - tMin) / tSpan) * (x1 - x0);
 
   const allV = [...shownActual.map((p) => p.value), ...shownPred.map((p) => p.value)];
