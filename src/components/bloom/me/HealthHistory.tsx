@@ -613,11 +613,28 @@ function ForecastLineChart({
   const hasA = shownActual.length > 0;
   const hasP = shownPred.length >= 2;
   if (!hasA && !hasP) {
+    // Nothing logged yet → a soft, cute "ghost" preview: a faint rising trend line
+    // (dashed, with gentle dots) so she sees the pattern that will bloom here and
+    // wants to come back and fill it in. Purely decorative.
+    const gN = 7;
+    const gcol = predictedColor || "#EC4899";
+    const gx = (i: number) => x0 + (i / (gN - 1)) * (x1 - x0);
+    const hs = [0.4, 0.55, 0.47, 0.68, 0.58, 0.8, 0.72];
+    const gy = (f: number) => y1 - f * (y1 - y0);
+    const gline = hs.map((f, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(f).toFixed(1)}`).join(" ");
     return (
       <div>
-        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
-          Not enough logged yet
-        </div>
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Preview">
+          <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+          <g aria-hidden>
+            <path d={`${gline} L ${gx(gN - 1).toFixed(1)} ${y1.toFixed(1)} L ${gx(0).toFixed(1)} ${y1.toFixed(1)} Z`} fill={gcol} fillOpacity={0.06} />
+            <path d={gline} fill="none" stroke={gcol} strokeOpacity={0.3} strokeWidth={1.5} strokeDasharray="3 3" strokeLinecap="round" strokeLinejoin="round" />
+            {hs.map((f, i) => <circle key={i} cx={gx(i)} cy={gy(f)} r={1.5} fill={gcol} fillOpacity={0.38} />)}
+            <text x={(x0 + x1) / 2} y={gy(0.5) + 3} textAnchor="middle" style={{ fontSize: 8, fill: gcol, fillOpacity: 0.6, fontWeight: 700 }}>
+              your rhythm blooms here ✿
+            </text>
+          </g>
+        </svg>
         <ChartFooter sel={null} hint={tapHint} interpretation={interpretation} />
         <PredictionNote>{note}</PredictionNote>
       </div>
