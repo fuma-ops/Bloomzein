@@ -331,6 +331,29 @@ function BarsChart({
           </g>
         ))}
         <line x1={x0} x2={x0 + usedW} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
+        {/* Nothing logged yet → a soft, cute "ghost" preview: faint bars in a
+            lively rhythm + a dashed trend line, so she sees the pattern that will
+            bloom here and wants to come back and fill it in. Purely decorative. */}
+        {shown.every((p) => !p.value) && (() => {
+          const gN = 7;
+          const gw = Math.min(MAX_SLOT, (x1 - x0) / gN);
+          const hs = [0.34, 0.6, 0.44, 0.82, 0.5, 0.92, 0.46];
+          const cx = (i: number) => x0 + i * gw + gw / 2;
+          const cy = (f: number) => y1 - f * (y1 - y0);
+          const line = hs.map((f, i) => `${i === 0 ? "M" : "L"} ${cx(i).toFixed(1)} ${cy(f).toFixed(1)}`).join(" ");
+          return (
+            <g aria-hidden>
+              {hs.map((f, i) => (
+                <rect key={i} x={x0 + i * gw + 1.5} y={cy(f)} width={Math.max(0.6, gw - 3)} height={y1 - cy(f)} rx={2} fill={color} fillOpacity={0.09} />
+              ))}
+              <path d={line} fill="none" stroke={color} strokeOpacity={0.3} strokeWidth={1.3} strokeDasharray="3 3" strokeLinecap="round" strokeLinejoin="round" />
+              {hs.map((f, i) => <circle key={i} cx={cx(i)} cy={cy(f)} r={1.5} fill={color} fillOpacity={0.38} />)}
+              <text x={(x0 + x1) / 2} y={cy(0.5) + 3} textAnchor="middle" style={{ fontSize: 8, fill: color, fillOpacity: 0.6, fontWeight: 700 }}>
+                your rhythm blooms here ✿
+              </text>
+            </g>
+          );
+        })()}
         {shown.map((p, i) => {
           const active = p.key === sel;
           const bx = x0 + i * bw;
