@@ -384,7 +384,7 @@ function BarsChart({
                   height={Math.max(p.value > 0 ? 1.5 : 0, y1 - yv(p.value))}
                   rx={1.5}
                   fill={`url(#${gid})`}
-                  opacity={active ? 0.6 : 0.34}
+                  opacity={active ? 0.5 : 0.22}
                 />
               ) : (
                 <rect
@@ -733,7 +733,8 @@ function ForecastLineChart({
             d={predPath}
             fill="none"
             stroke={predictedColor}
-            strokeWidth={2}
+            strokeOpacity={0.4}
+            strokeWidth={1.4}
             strokeDasharray="4 3"
             strokeLinecap="round"
             strokeLinejoin="round"
