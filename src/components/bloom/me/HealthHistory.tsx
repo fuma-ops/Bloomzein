@@ -273,6 +273,7 @@ function BarsChart({
   interpretation,
   valueLabels = false,
   perBarLabels = false,
+  ghostShape,
 }: {
   points: ChartPoint[];
   unit: string;
@@ -281,6 +282,7 @@ function BarsChart({
   interpretation: string;
   valueLabels?: boolean;
   perBarLabels?: boolean;
+  ghostShape?: number[]; // empty-state preview: normalized 0..1 heights, Emma-like
 }) {
   const shown = points.slice(-MAX_POINTS);
   const [sel, setSel] = useState<string | null>(null);
@@ -335,9 +337,9 @@ function BarsChart({
             lively rhythm + a dashed trend line, so she sees the pattern that will
             bloom here and wants to come back and fill it in. Purely decorative. */}
         {shown.every((p) => !p.value) && (() => {
-          const gN = 7;
+          const hs = ghostShape ?? [0.34, 0.6, 0.44, 0.82, 0.5, 0.92, 0.46];
+          const gN = hs.length;
           const gw = Math.min(MAX_SLOT, (x1 - x0) / gN);
-          const hs = [0.34, 0.6, 0.44, 0.82, 0.5, 0.92, 0.46];
           const cx = (i: number) => x0 + i * gw + gw / 2;
           const cy = (f: number) => y1 - f * (y1 - y0);
           const line = hs.map((f, i) => `${i === 0 ? "M" : "L"} ${cx(i).toFixed(1)} ${cy(f).toFixed(1)}`).join(" ");
@@ -577,6 +579,7 @@ function ForecastLineChart({
   interpretation,
   note,
   actualDots = false,
+  ghostShape,
 }: {
   actual: ForecastActual[];
   predicted: DatedValue[];
@@ -590,6 +593,7 @@ function ForecastLineChart({
   interpretation: string;
   note: React.ReactNode;
   actualDots?: boolean; // render the logged series as scatter dots (no plunging line)
+  ghostShape?: number[]; // empty-state preview: normalized 0..1 points, Emma-like
 }) {
   const shownActual = actual.slice(-MAX_POINTS);
   const [sel, setSel] = useState<string | null>(null);
@@ -616,10 +620,10 @@ function ForecastLineChart({
     // Nothing logged yet → a soft, cute "ghost" preview: a faint rising trend line
     // (dashed, with gentle dots) so she sees the pattern that will bloom here and
     // wants to come back and fill it in. Purely decorative.
-    const gN = 7;
+    const hs = ghostShape ?? [0.4, 0.55, 0.47, 0.68, 0.58, 0.8, 0.72];
+    const gN = hs.length;
     const gcol = predictedColor || "#EC4899";
     const gx = (i: number) => x0 + (i / (gN - 1)) * (x1 - x0);
-    const hs = [0.4, 0.55, 0.47, 0.68, 0.58, 0.8, 0.72];
     const gy = (f: number) => y1 - f * (y1 - y0);
     const gline = hs.map((f, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(f).toFixed(1)}`).join(" ");
     return (
@@ -1817,6 +1821,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 predictedLabel="On-plan path"
                 predictedColor={PRED_C}
                 tapHint="Tap a point to see that day's weight. Dashed = your on-plan path."
+                ghostShape={[0.82, 0.76, 0.72, 0.64, 0.6, 0.52, 0.45]}
                 interpretation={h.patterns.weight}
                 note={
                   proj && weightPred ? (
@@ -1847,6 +1852,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 unit="kcal"
                 color={BAR_C}
                 tapHint="Tap a day to see calories burned & sessions."
+                ghostShape={[0.75, 0.15, 0.85, 0.25, 0.9, 0.2, 0.6]}
                 interpretation={h.patterns.workout}
               />
             </Panel>
@@ -1857,6 +1863,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 unit="kcal"
                 color={BAR_C}
                 tapHint="Tap a day to see calories burned & flows."
+                ghostShape={[0.5, 0.68, 0.4, 0.72, 0.55, 0.68, 0.48]}
                 interpretation={h.patterns.yoga}
               />
             </Panel>
@@ -1880,6 +1887,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 yMin={1}
                 yMax={5}
                 tapHint="Tap a point to see that day's mood. Dashed = expected by phase."
+                ghostShape={[0.5, 0.68, 0.55, 0.72, 0.62, 0.85, 0.8]}
                 interpretation={h.patterns.mood}
                 note={
                   <>
@@ -1902,6 +1910,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 unit="count"
                 color={BAR_C}
                 tapHint="Tap a day to see which symptoms you logged."
+                ghostShape={[0.35, 0.55, 0.2, 0.6, 0.3, 0.15, 0.45]}
                 interpretation={h.patterns.symptoms}
               />
             </Panel>
