@@ -657,14 +657,13 @@ function Styles() {
     .wz-in{animation:wz-cross-in .85s cubic-bezier(.4,0,.2,1) both}
     @keyframes wz-cross-in{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
 
-    /* Stage keeps the film's 16:9 shape on big screens so nothing is ever cropped */
-    .wz-stage{position:relative;overflow:hidden;width:100%;height:100dvh;isolation:isolate}
-    @media (min-width:768px){
-      .wz-stage{width:min(100vw,calc(100dvh * 16 / 9));height:auto;aspect-ratio:16/9;max-height:100dvh}
-    }
-    @media (min-width:1200px){
-      .wz-stage{width:min(95vw,calc(93dvh * 16 / 9));border-radius:26px;
-        box-shadow:0 46px 110px -46px rgba(150,30,80,.5)}
+    /* Phones AND tablets FILL the whole screen (the video is object-cover), so a
+       Redmi/iPad-shaped screen never shows letterbox bands. Only a large desktop
+       shows it as a premium framed 16:9 preview card. */
+    .wz-stage{position:relative;overflow:hidden;width:100vw;height:100dvh;isolation:isolate}
+    @media (min-width:1280px){
+      .wz-stage{width:min(95vw,calc(93dvh * 16 / 9));height:auto;aspect-ratio:16/9;max-height:100dvh;
+        border-radius:26px;box-shadow:0 46px 110px -46px rgba(150,30,80,.5)}
     }
 
     /* ── film background + scrims ── */
