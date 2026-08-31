@@ -887,6 +887,44 @@ function Styles() {
       .s3-divider,.s3-space{align-self:center}
       .s3-space{text-align:center}
     }
+
+    /* ── tablet (Redmi/iPad, portrait & landscape): the screen is filled, so lay
+       it out cleanly — a centred hero + CTA, and the feature cards as a tidy grid,
+       never scattered over the CTA (the floating cluster is desktop-only art). ── */
+    @media (min-width:768px) and (max-width:1279px){
+      .wz-content{padding:clamp(20px,3.4vh,38px) clamp(24px,5vw,60px) clamp(22px,3.6vh,42px)}
+
+      /* screen 1 — centred promise */
+      .s1-body{max-width:min(780px,92%);margin:0 auto;align-items:center;text-align:center;
+        justify-content:center;gap:clamp(10px,2vh,22px);padding-left:0}
+      .s1-serif{font-size:clamp(30px,4.6vw,52px)}
+      .s1-script{font-size:clamp(42px,7vw,84px)}
+      .s1-sub{font-size:clamp(15px,1.9vw,20px)}
+
+      /* screen 2 — flank cards → a centred 2-col grid under the heading */
+      .wz-content.s2{pointer-events:auto}
+      .s2-flank{position:static;z-index:auto;display:grid;grid-template-columns:1fr 1fr;
+        gap:clamp(10px,1.6vw,16px);max-width:660px;margin:clamp(18px,3vh,34px) auto 0;padding-top:0}
+      .s2-flank .s3-card{position:static !important;left:auto !important;top:auto !important;width:auto}
+
+      /* screen 3 — centred hero + CTA, then a tidy 2×2 grid of the key cards */
+      .s3-body{flex:0 0 auto;max-width:min(740px,94%);margin:0 auto;
+        align-items:center;text-align:center;justify-content:flex-start;gap:clamp(8px,1.6vh,18px)}
+      .s3-serif{font-size:clamp(26px,4vw,44px)}
+      .s3-script{font-size:clamp(32px,5.6vw,58px)}
+      .s3-body-copy{max-width:52ch;font-size:clamp(14px,1.7vw,18px)}
+      .s3-divider,.s3-space{align-self:center}
+      .s3-space{text-align:center}
+      .s3-cards{position:static;inset:auto;flex:1 1 auto;display:grid;
+        grid-template-columns:repeat(2,1fr);gap:clamp(10px,1.8vw,16px);
+        align-content:center;max-width:600px;margin:0 auto;width:100%;
+        padding-top:clamp(14px,2.6vh,28px);overflow:hidden}
+      .s3-card{position:static !important;left:auto !important;top:auto !important;
+        width:auto;animation-delay:0s}
+      .s3-card:nth-child(n+5){display:none}
+      .s3-thumb{aspect-ratio:16/8;margin-top:4px}
+    }
+
     @media (prefers-reduced-motion:reduce){
       .wz-in,.wz-word,.wz-fade,.wz-cta,.s3-card,.s3-body-copy,.s3-divider,.s3-space{
         animation-duration:.01s !important;animation-delay:0s !important}
