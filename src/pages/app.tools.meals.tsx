@@ -791,7 +791,12 @@ export default function MealsPage() {
       {guided && (
         <>
           <GuidedFocusHero label="Meals" phaseLabel={guidedPhaseLabel} image="/images/meals-hero-new.webp" />
-          <GuidedFinishBar toolLabel="Meals" phaseLabel={guidedPhaseLabel} hint="Your week of meals is set — the rest fills in on Today." className="mb-3" />
+          {/* Only claim it's set — and offer "Finish on Today" — once a week plan
+              actually has meals in it. Before that she still needs to Plan my week
+              below (in-memory `plan`, so it flips the instant she plans). */}
+          {Object.values(plan).some((d) => d && Object.values(d).some(Boolean)) && (
+            <GuidedFinishBar toolLabel="Meals" phaseLabel={guidedPhaseLabel} hint="Your week of meals is set — the rest fills in on Today." className="mb-3" />
+          )}
         </>
       )}
       {/* HERO — compact, matches Budget Planner height */}
