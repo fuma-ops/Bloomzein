@@ -907,22 +907,23 @@ function Styles() {
         gap:clamp(10px,1.6vw,16px);max-width:660px;margin:clamp(18px,3vh,34px) auto 0;padding-top:0}
       .s2-flank .s3-card{position:static !important;left:auto !important;top:auto !important;width:auto}
 
-      /* screen 3 — centred hero + CTA, then a tidy 2×2 grid of the key cards */
+      /* screen 3 — centred hero + CTA, then ALL the life cards as a tidy 2-col
+         grid (the lone last card centres across the row). Compact so 7 cards fit. */
       .s3-body{flex:0 0 auto;max-width:min(740px,94%);margin:0 auto;
-        align-items:center;text-align:center;justify-content:flex-start;gap:clamp(8px,1.6vh,18px)}
-      .s3-serif{font-size:clamp(26px,4vw,44px)}
-      .s3-script{font-size:clamp(32px,5.6vw,58px)}
-      .s3-body-copy{max-width:52ch;font-size:clamp(14px,1.7vw,18px)}
+        align-items:center;text-align:center;justify-content:flex-start;gap:clamp(6px,1.2vh,14px)}
+      .s3-serif{font-size:clamp(24px,3.6vw,40px)}
+      .s3-script{font-size:clamp(30px,5.2vw,54px)}
+      .s3-body-copy{max-width:52ch;font-size:clamp(13px,1.6vw,17px)}
       .s3-divider,.s3-space{align-self:center}
       .s3-space{text-align:center}
       .s3-cards{position:static;inset:auto;flex:1 1 auto;display:grid;
-        grid-template-columns:repeat(2,1fr);gap:clamp(10px,1.8vw,16px);
-        align-content:center;max-width:600px;margin:0 auto;width:100%;
-        padding-top:clamp(14px,2.6vh,28px);overflow:hidden}
+        grid-template-columns:repeat(2,1fr);gap:clamp(8px,1.5vw,14px);
+        align-content:center;max-width:620px;margin:0 auto;width:100%;
+        padding-top:clamp(12px,2.2vh,24px)}
       .s3-card{position:static !important;left:auto !important;top:auto !important;
-        width:auto;animation-delay:0s}
-      .s3-card:nth-child(n+5){display:none}
-      .s3-thumb{aspect-ratio:16/8;margin-top:4px}
+        width:auto;padding:clamp(6px,.9vw,9px);animation-delay:0s}
+      .s3-card:last-child{grid-column:1 / -1;justify-self:center;width:min(48%,270px)}
+      .s3-thumb{aspect-ratio:16/8;margin-top:3px}
     }
 
     @media (prefers-reduced-motion:reduce){
