@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Sparkles, Wallet,
   ChevronRight, Camera, Trash2,
@@ -483,9 +484,12 @@ function EditProfileModal({
     if (error) setErr(error); else onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm grid place-items-center p-4 animate-fade-in" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 sm:p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+  // Portal to <body> so `position:fixed` centres on the viewport regardless of
+  // any transformed/animated ancestor on the Me page (otherwise it lands at the
+  // scrolled page-top and she has to scroll up to find it).
+  return createPortal(
+    <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm grid place-items-center p-4 overflow-y-auto animate-fade-in" onClick={onClose}>
+      <div className="w-full max-w-sm my-auto max-h-[90dvh] overflow-y-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 sm:p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-script text-3xl text-hotpink leading-none">Edit profile ✿</h2>
           <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-blush text-rose/70 active:scale-90"><ChevronRight className="h-4 w-4 rotate-90" /></button>
@@ -544,6 +548,7 @@ function EditProfileModal({
         </button>
         <p className="mt-2 text-center text-[10px] text-rose/50">Syncs to your Diet plan & profile ✿</p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
