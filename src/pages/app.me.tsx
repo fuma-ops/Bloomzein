@@ -17,7 +17,8 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { computeHealthHistory, type HealthHistory } from "@/lib/healthHistory";
 import { useAuth } from "@/contexts/AuthContext";
-import { RECIPES } from "@/components/bloom/recipes/data";
+import { RECIPES, readDietProfile, updateDietProfile } from "@/components/bloom/recipes/data";
+import { todayISO } from "@/lib/localDate";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
@@ -180,6 +181,29 @@ export default function MePage() {
     resetEverything();
     window.location.href = "/app/today";
   }
+
+  // Editing age/weight on the account MUST flow into the canonical Diet profile —
+  // the ONE store the BMR, calorie targets and goal projection read — so the
+  // account and every tool agree (never "account says X, Diet says Y"). Weight is
+  // stored in kg there and logged as today's weigh-in so the projection updates too.
+  const saveProfileAndSync = async (patch: Parameters<typeof updateProfile>[0]) => {
+    const res = await updateProfile(patch);
+    try {
+      const dp: Partial<Parameters<typeof updateDietProfile>[0]> = {};
+      if (patch.age != null) dp.age = patch.age;
+      if (patch.weight != null && patch.weight > 0) {
+        const unit = patch.weight_unit ?? profile?.weight_unit ?? "kg";
+        const kg = unit === "lbs" ? Math.round((patch.weight / 2.2046) * 10) / 10 : patch.weight;
+        dp.weight = kg;
+        const hist = (readDietProfile().weightHistory ?? []).filter((e) => e.date !== todayISO());
+        hist.push({ date: todayISO(), kg });
+        hist.sort((a, b) => (a.date < b.date ? -1 : 1));
+        dp.weightHistory = hist;
+      }
+      if (Object.keys(dp).length) updateDietProfile(dp);
+    } catch { /* diet sync is best-effort — the account save already succeeded */ }
+    return res;
+  };
 
   const [editOpen, setEditOpen] = useState(false);
   const [favs, setFavs] = useState<{ items: FavItem[]; isReal: boolean }>({ items: CURATED_READS, isReal: false });
@@ -433,7 +457,7 @@ export default function MePage() {
           initialWeight={profile?.weight ?? null}
           initialUnit={profile?.weight_unit ?? "kg"}
           onClose={() => setEditOpen(false)}
-          onSave={updateProfile}
+          onSave={saveProfileAndSync}
         />
       )}
     </div>
