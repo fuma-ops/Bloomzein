@@ -450,16 +450,29 @@ export default function MePage() {
         <p className="mt-6 text-center font-script text-lg text-rose/70">stay soft, bloom on ✿</p>
       </section>
 
-      {editOpen && (
+      {editOpen && (() => {
+        // Show the CANONICAL current body data (the Diet profile the tools read),
+        // so the account form always matches what you've set anywhere — a weigh-in
+        // in Diet shows up here too. Weight is stored in kg; convert to the account
+        // unit for display.
+        const acctUnit = profile?.weight_unit ?? "kg";
+        const dp = readDietProfile();
+        const canonKg = dp.weightHistory?.length ? dp.weightHistory[dp.weightHistory.length - 1].kg : (dp.weight > 0 ? dp.weight : null);
+        const shownWeight = canonKg != null && canonKg > 0
+          ? (acctUnit === "lbs" ? Math.round(canonKg * 2.2046 * 10) / 10 : Math.round(canonKg * 10) / 10)
+          : (profile?.weight ?? null);
+        const shownAge = dp.age ?? profile?.age ?? null;
+        return (
         <EditProfileModal
           initialName={profile?.name ?? ""}
-          initialAge={profile?.age ?? null}
-          initialWeight={profile?.weight ?? null}
-          initialUnit={profile?.weight_unit ?? "kg"}
+          initialAge={shownAge}
+          initialWeight={shownWeight}
+          initialUnit={acctUnit}
           onClose={() => setEditOpen(false)}
           onSave={saveProfileAndSync}
         />
-      )}
+        );
+      })()}
     </div>
   );
 }
