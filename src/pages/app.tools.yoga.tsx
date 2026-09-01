@@ -3495,7 +3495,7 @@ function SessionPlayer({
             key={idx + "-clip"}
             ref={flowVideoRef}
             src={pose.video}
-            poster={pose.poster ?? pose.image}
+            poster={pose.image}
             autoPlay loop={!pose.hold} muted playsInline preload="auto"
             aria-label={pose.name}
             onError={() => setVideoBroken(true)}
@@ -3939,7 +3939,7 @@ function SessionPlayer({
 
       {/* ===================== FLOW QUOTE (bottom-right, tablet+) ========== */}
       {!dim && !finished && (
-        <div className="hidden md:block absolute bottom-3 z-10 w-60 lg:w-64 pointer-events-none" style={{ right: "max(1rem, calc((100vw - 96rem) / 2))" }}>
+        <div className="hidden lg:block absolute bottom-3 z-10 w-60 lg:w-64 pointer-events-none" style={{ right: "max(1rem, calc((100vw - 96rem) / 2))" }}>
           <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
             <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
           </div>
