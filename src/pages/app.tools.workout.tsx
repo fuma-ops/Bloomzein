@@ -3695,7 +3695,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       {/* Brand logo — no frame, part of the background: strong-pink flower (white
           centre) ABOVE the wordmark, both in the same pink. It just turns gently
           and breathes — no flash / light-sweep. */}
-      <div aria-hidden className="hidden md:block pointer-events-none absolute bottom-3 left-3 z-[15]">
+      <div aria-hidden className="hidden lg:block pointer-events-none absolute bottom-3 left-3 z-[15]">
         <div className="inline-flex flex-col items-center gap-1">
           <span className="animate-wk-flower-spin drop-shadow-sm">
             <span className="block animate-wk-logo-breathe">
@@ -3869,7 +3869,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
 
           {/* Player + up-next, centred as ONE group so the phone screen is filled
               (no empty band) while desktop keeps its normal flow (display:contents). */}
-          <div className="flex flex-1 min-h-0 flex-col justify-center gap-2.5 lg:contents">
+          <div className="flex flex-col gap-2.5 min-h-0 max-md:flex-1 max-md:justify-center md:justify-start lg:contents">
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
             <div
@@ -3880,8 +3880,8 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               // height clamps, so the 16:9 clip fills it edge-to-edge (cover) with
               // no crop and no letterbox bands. Still-image moves stay taller.
               exercise.video
-                ? "aspect-video max-h-[78vh] w-full mx-auto"
-                : "flex-1 min-h-0 lg:aspect-auto lg:max-h-none"].join(" ")}>
+                ? "aspect-video w-full mx-auto max-h-[52vh] lg:max-h-[78vh]"
+                : "max-md:flex-1 max-md:min-h-0 md:aspect-[4/5] md:max-h-[52vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
@@ -4053,8 +4053,8 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
 
         {/* RIGHT RAIL — tablet + desktop */}
         <aside className="hidden md:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
-          <GlassCard className="!py-3.5" delay={40}>
-            <RepRing size={150} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
+          <GlassCard className="!py-2.5" delay={40}>
+            <RepRing size={122} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
               rep={stepReps > 0 && !isSwitch && phase === "exercise" ? currentRep : undefined}
               total={stepReps > 0 && !isSwitch && phase === "exercise" ? stepReps : undefined}
               seconds={remaining} />
