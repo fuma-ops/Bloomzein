@@ -3811,7 +3811,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       {/* ── Smart-responsive dashboard ──────────────────────────────────────
           phone: single scrolling column · tablet: centre + right rail ·
           desktop: left rail + centre + right rail (the reference layout). */}
-      <main className="relative z-10 w-full max-w-[104rem] mx-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden max-md:[grid-template-rows:minmax(0,1fr)]">
+      <main className="relative z-10 w-full max-w-[104rem] mx-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden [grid-template-rows:minmax(0,1fr)]">
 
         {/* LEFT RAIL — desktop only */}
         <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
@@ -3821,7 +3821,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
         </aside>
 
         {/* CENTRE STAGE */}
-        <section className="relative min-h-0 flex flex-col gap-2 max-md:h-full">
+        <section className="relative min-h-0 flex flex-col gap-2 h-full">
           {/* Title on the left · Bloom Coach + the muscle tags sit together in the
               empty top band (right on desktop, under the title on phones) — this
               keeps the row above the photo slim so the image gets more height. */}
@@ -3869,7 +3869,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
 
           {/* Player + up-next, centred as ONE group so the phone screen is filled
               (no empty band) while desktop keeps its normal flow (display:contents). */}
-          <div className="contents max-md:flex max-md:flex-1 max-md:min-h-0 max-md:flex-col max-md:justify-start max-md:gap-2.5">
+          <div className="flex flex-1 min-h-0 flex-col justify-center gap-2.5 lg:contents">
           {/* Stage: the photo (exercise) or the rest card */}
           {phase === "exercise" ? (
             <div
@@ -3880,8 +3880,8 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               // height clamps, so the 16:9 clip fills it edge-to-edge (cover) with
               // no crop and no letterbox bands. Still-image moves stay taller.
               exercise.video
-                ? "aspect-video max-h-[78vh] mx-auto"
-                : "max-md:flex-1 max-md:min-h-0 md:aspect-[4/5] md:max-h-[60vh] lg:aspect-auto lg:max-h-none lg:flex-1 lg:min-h-0"].join(" ")}>
+                ? "aspect-video max-h-[78vh] w-full mx-auto"
+                : "flex-1 min-h-0 lg:aspect-auto lg:max-h-none"].join(" ")}>
               {/* Side-band "bleed": the same pose photo, blurred, fills the stage so
                   the sharp contained photo sits framed by its own dreamy blur —
                   no empty pink margins. */}
