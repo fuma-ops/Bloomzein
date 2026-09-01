@@ -41,6 +41,10 @@ const CSS = `
 .bz-logo-spin{animation:bzSpin 26s linear infinite;filter:drop-shadow(0 10px 34px rgba(120,8,60,.6));}
 .bz-script{font-family:"Pacifico","Satisfy","Dancing Script",cursive;color:#fff;line-height:1;
   text-shadow:0 3px 26px rgba(120,8,60,.6),0 1px 0 rgba(255,255,255,.25);}
+/* Hidden from first paint so nothing ever flashes at full opacity in the frames
+   before the async-loaded GSAP applies its start states. GSAP animates them to
+   opacity:1 (fromTo below); if GSAP never loads, the safety timer still dismisses. */
+.bz-logo,.bz-wordmark,.bz-title-line,.bz-pillar{opacity:0;}
 `;
 
 /** Our flower — the logo mark WITHOUT the rounded square. White sakura petals. */
@@ -110,13 +114,13 @@ export function BloomzeinIntro({
       // LOGO — rises small from centre, zooms OUT (grows), then settles IN
       tl.fromTo(".bz-logo", { scale: 0, opacity: 0 }, { scale: 1.18, opacity: 1, duration: 2.1, ease: "back.out(1.5)" }, 0.3)
         .to(".bz-logo", { scale: 1.0, duration: 1.0, ease: "power2.inOut" }, 2.4)
-        .from(".bz-wordmark", { opacity: 0, y: 22, duration: 1.0 }, 2.3);
+        .fromTo(".bz-wordmark", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 1.0 }, 2.3);
 
       // brand eases away, then the session title + duration appear and HOLD
       const infoStart = titleDone - 1.6;
       tl.to(".bz-brand", { yPercent: -12, scale: 0.9, opacity: 0, duration: 0.9, ease: "power2.inOut" }, infoStart)
-        .from(".bz-title-line", { opacity: 0, y: 26, duration: 0.9, stagger: 0.4, ease: "power2.out" }, infoStart + 0.4)
-        .from(".bz-pillar", { opacity: 0, y: 14, duration: 0.6, stagger: 0.14 }, titleDone - 0.4)
+        .fromTo(".bz-title-line", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, stagger: 0.4, ease: "power2.out" }, infoStart + 0.4)
+        .fromTo(".bz-pillar", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.14 }, titleDone - 0.4)
         .to(root, { opacity: 0, duration: 0.6, ease: "power2.inOut" }, dissolveAt);
 
       // Every element's start state is now applied — reveal the (until-now hidden)
