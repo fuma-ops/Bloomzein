@@ -3489,7 +3489,13 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       return () => window.clearTimeout(t);
     }
 
-    const willSpeak = sound && voice && step.side !== "second" && !!exercise.audio;
+    // Only coach the move the FIRST time it appears. When the same move comes
+    // back in a later round (after a rest), repeating the whole spoken cue feels
+    // robotic — so we skip the voice and just let her flow straight back in.
+    const spokenBefore = steps
+      .slice(0, index)
+      .some((s) => s.exercise.slug === exercise.slug && s.kind !== "switch" && s.side !== "second");
+    const willSpeak = sound && voice && step.side !== "second" && !!exercise.audio && !spokenBefore;
     if (willSpeak) {
       briefingRef.current = true; setBriefing(true);
       playCue(exercise.audio, cueRef.current);
@@ -3626,11 +3632,10 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   const isSwitch = step.kind === "switch";
   // Mirror the demo horizontally on the second side of a one-sided move (and
   // during the switch cue) so it genuinely reads as "now the other side".
-  // NOT for video clips: flipping a clip reverses any baked-in text/branding on
-  // the wall (the "Bloomzein" mark reads backwards) — and these clips already
-  // show the movement alternating both sides, so a mirror adds nothing but
-  // chaos. Still-image moves keep the flip.
-  const mirrored = (isSwitch || step.side === "second") && !exercise.video;
+  // Videos flip too — just like the yoga player mirrors a one-sided pose on its
+  // switch — so the move visibly changes sides and the user instantly grasps the
+  // switch (worth more than keeping any baked-in wall text un-reversed).
+  const mirrored = isSwitch || step.side === "second";
   // Held stretches settle on the deep-stretch frame with a gentle breathing pulse
   // instead of looping. Driven by the exercise's explicit hold flag (kept in sync
   // with the play-once clips) — NOT "no reps", so continuous mobility moves like

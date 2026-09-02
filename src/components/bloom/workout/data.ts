@@ -452,6 +452,10 @@ const moveAudioSec = (slug: string) => AUDIO_SEC[slug] ?? 0;
  *  the music keeps playing while you switch. */
 export const SWITCH_SEC = 10;
 
+// Rest between moves is capped: a short 20s breather is enough to recover and
+// keeps the session flowing — longer rests made it drag and feel dead.
+export const MAX_REST_SEC = 20;
+
 // Rep-driven work: reps × a controlled tempo, so a "15-rep" move really lasts
 // long enough to do 15 controlled reps — the timer follows the reps, not a
 // blank countdown. Rep counts are chosen so reps × tempo is a clean 5s number,
@@ -477,7 +481,7 @@ export function pushMove(
   workSec: number, restSec: number, label: string, repTarget: string | undefined, reps: number,
 ) {
   const w = audioSafeSec(ex.slug, workSec);
-  const r = restSec > 0 ? ceil5(restSec) : 0;
+  const r = restSec > 0 ? Math.min(ceil5(restSec), MAX_REST_SEC) : 0;
   if (ex.unilateral) {
     steps.push({ exercise: ex, kind, workSec: w, restSec: 0, label: `${label} · 1st side`, repTarget, reps, side: "first" });
     steps.push({ exercise: ex, kind: "switch", workSec: SWITCH_SEC, restSec: 0, label: "Switch sides", repTarget: "other side", side: "second" });
@@ -586,7 +590,7 @@ export function buildSession(
   const repWork = reps > 0 ? reps * tempo : HOLD_SEC[level];
   const workFor = (slug: string) => ceil5(Math.max(repWork, moveAudioSec(slug) + AUDIO_TAIL));
   const holdWork = (slug: string) => ceil5(Math.max(30, moveAudioSec(slug) + AUDIO_TAIL));
-  const restSec = ceil5(Math.max(base.restSec * ph.restMult * lv.restMult, 6.6 + AUDIO_TAIL));
+  const restSec = Math.min(ceil5(Math.max(base.restSec * ph.restMult * lv.restMult, 6.6 + AUDIO_TAIL)), MAX_REST_SEC);
   const workSec = repWork; // representative (used by previews)
   const repTargetStr = reps > 0 ? `${reps} reps` : "Hold & breathe";
 
