@@ -444,21 +444,48 @@ const IMG = (k, cls = "", ph = 1) =>
 const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
 
 /* ─────────────────────────── media store (IndexedDB) ─────────────────── */
+/* IndexedDB where it is allowed, memory where it is not: some embedded
+   frames refuse storage outright, and a refused save must never look like
+   a dead button — the media still loads, it just won't survive a reload. */
+let storageNote = "";
 const DB = (() => {
-  let p;
-  const open = () => p || (p = new Promise((res, rej) => {
-    const r = indexedDB.open("bloomzein-post-studio", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("media", { keyPath: "id" });
-    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-  }));
-  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => {
-    const t = db.transaction("media", mode), rq = fn(t.objectStore("media"));
-    rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error);
-  }); };
+  const mem = new Map();
+  let p = null, broken = false;
+  const open = () => {
+    if (broken) return Promise.reject(new Error("no idb"));
+    return p || (p = new Promise((res, rej) => {
+      let r;
+      try { r = indexedDB.open("bloomzein-post-studio", 1); } catch (e) { return rej(e); }
+      r.onupgradeneeded = () => r.result.createObjectStore("media", { keyPath: "id" });
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.onblocked = () => rej(new Error("blocked"));
+    }).catch(e => { broken = true; throw e; }));
+  };
+  const tx = async (mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction("media", mode), rq = fn(t.objectStore("media"));
+      rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error);
+    });
+  };
+  const fell = () => { if (!storageNote) storageNote = "This browser blocked local storage for this page, so your photos and clips load for this session only."; };
   return {
-    put: (id, blob, name, kind) => tx("readwrite", s => s.put({ id, blob, name, kind })),
-    get: id => tx("readonly", s => s.get(id)),
-    del: id => tx("readwrite", s => s.delete(id)),
+    async put(id, blob, name, kind) {
+      mem.set(id, { id, blob, name, kind });
+      try { await tx("readwrite", s => s.put({ id, blob, name, kind })); }
+      catch (e) { fell(); }
+      return id;
+    },
+    async get(id) {
+      if (mem.has(id)) return mem.get(id);
+      try { return await tx("readonly", s => s.get(id)); }
+      catch (e) { fell(); return null; }
+    },
+    async del(id) {
+      mem.delete(id);
+      try { await tx("readwrite", s => s.delete(id)); } catch (e) { }
+    },
   };
 })();
 const urls = new Map();
@@ -678,7 +705,8 @@ function applyFrames(root, st) {
 async function applyMedia(root, st) {
   for (const [k, m] of Object.entries(st.media || {})) {
     const holder = $(`[data-media="${k}"]`, root); if (!holder || !m || !m.id) continue;
-    const u = await mediaURL(m.id); if (!u) continue;
+    const u = await mediaURL(m.id);
+    if (!u) { st.media[k] = { id: null, kind: "image", name: "", in: 0, out: 0 }; save(); continue; }
     holder.innerHTML = "";
     if (m.kind === "video") {
       const v = document.createElement("video");
@@ -781,6 +809,22 @@ function section(title, icon) {
   s.innerHTML = `<h3><svg width="13" height="13" style="color:var(--hot)"><use href="#${icon}"/></svg>${title}</h3>`;
   return s;
 }
+function wireDrop(drop, onFile) {
+  const input = $("input[type=file]", drop);
+  const pick = () => { try { input.click(); } catch (e) { } };
+  $(".mini.pick", drop)?.addEventListener("click", e => { e.stopPropagation(); pick(); });
+  drop.addEventListener("click", e => { if (!e.target.closest(".mini") && e.target !== input) pick(); });
+  input.addEventListener("change", e => { const f = e.target.files[0]; if (f) onFile(f); input.value = ""; });
+  ["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.style.borderColor = "var(--hot)"; }));
+  ["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.style.borderColor = ""; }));
+  drop.addEventListener("drop", e => { const f = e.dataTransfer?.files?.[0]; if (f) onFile(f); });
+}
+function storageWarning() {
+  if (!storageNote) return null;
+  const p = document.createElement("p"); p.className = "hint";
+  p.style.color = "var(--deep)"; p.textContent = storageNote; return p;
+}
+
 function syncPanelField(k, v) { const el = $(`#panel [data-field="${k}"]`); if (el && el.value !== v) el.value = v; }
 
 const LBL = {
@@ -823,14 +867,14 @@ function buildPanel() {
     const m = (st.media[im.k] ||= { id: null, kind: "image", name: "", in: 0, out: 0 });
     const drop = document.createElement("div"); drop.className = "drop";
     drop.innerHTML = `<div class="pv"></div>
-      <div class="txt"><b>${m.name ? esc(m.name) : "Add a photo or clip"}</b><small>${m.name ? (m.kind === "video" ? "Video" : "Photo") : "JPG · PNG · MP4 · MOV"}</small></div>
-      ${m.id ? '<button class="mini" type="button">Remove</button>' : ""}
+      <div class="txt"><b>${m.name ? esc(m.name) : "Add a photo or clip"}</b><small>${m.name ? (m.kind === "video" ? "Video" : "Photo") : "JPG · PNG · MP4 · MOV · drag one in"}</small></div>
+      <button class="mini pick" type="button">${m.id ? "Replace" : "Choose"}</button>
+      ${m.id ? '<button class="mini rm" type="button">Remove</button>' : ""}
       <input type="file" accept="image/*,video/*" aria-label="${esc(im.label)}">`;
     const pv = $(".pv", drop);
     if (m.id) mediaURL(m.id).then(u => { if (u) pv.innerHTML = m.kind === "video" ? `<video src="${u}" muted playsinline></video>` : `<img src="${u}" alt="">`; });
     else pv.innerHTML = `<svg width="16" height="16" style="color:#fff"><use href="#i-image"/></svg>`;
-    $("input[type=file]", drop).addEventListener("change", async e => {
-      const file = e.target.files[0]; if (!file) return;
+    wireDrop(drop, async file => {
       const id = "m" + Date.now() + Math.random().toString(36).slice(2, 7);
       const kind = file.type.startsWith("video") ? "video" : "image";
       await DB.put(id, file, file.name, kind);
@@ -838,12 +882,14 @@ function buildPanel() {
       st.media[im.k] = { id, kind, name: file.name, in: 0, out: 0 };
       save(); blip(880, .13); renderStage(); renderThumb(def.id); buildPanel();
     });
-    $(".mini", drop)?.addEventListener("click", () => {
+    $(".mini.rm", drop)?.addEventListener("click", e => {
+      e.stopPropagation();
       if (m.id) { DB.del(m.id); urls.delete(m.id); }
       st.media[im.k] = { id: null, kind: "image", name: "", in: 0, out: 0 };
       save(); renderStage(); renderThumb(def.id); buildPanel();
     });
     s.appendChild(drop);
+    const warn = storageWarning(); if (warn) s.appendChild(warn);
 
     if (m.kind === "video" && m.id) {
       const row = document.createElement("div"); row.className = "row"; row.style.marginTop = "9px";
@@ -886,10 +932,10 @@ function buildPanel() {
   const M = S.music;
   const mdrop = document.createElement("div"); mdrop.className = "drop";
   mdrop.innerHTML = `<div class="pv" style="height:38px;width:38px;border-radius:50%"><svg width="16" height="16" style="color:#fff"><use href="#i-note"/></svg></div>
-    <div class="txt"><b>${M.name ? esc(M.name) : "Add a track"}</b><small>${M.name ? "Plays through record mode" : "MP3 · M4A · WAV"}</small></div>
+    <div class="txt"><b>${M.name ? esc(M.name) : "Add a track"}</b><small>${M.name ? "Plays through record mode" : "MP3 · M4A · WAV · drag one in"}</small></div>
+    <button class="mini pick" type="button">${M.name ? "Replace" : "Choose"}</button>
     <input type="file" accept="audio/*" aria-label="Music track">`;
-  $("input[type=file]", mdrop).addEventListener("change", async e => {
-    const file = e.target.files[0]; if (!file) return;
+  wireDrop(mdrop, async file => {
     const id = "a" + Date.now();
     await DB.put(id, file, file.name, "audio");
     if (M.id) { DB.del(M.id); urls.delete(M.id); }
