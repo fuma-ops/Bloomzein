@@ -3356,6 +3356,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   const [musicVol, setMusicVol] = useLS<number>(MUSIC_VOL_KEY, MUSIC_VOL); // music level
   const [voiceVol, setVoiceVol] = useLS<number>(VOICE_VOL_KEY, 0.8);       // voice + beeps level
   const [showVolume, setShowVolume] = useState(false);        // sound-levels popover
+  const [recording, setRecording] = useState(false);          // clean capture — hide chrome (controls) for a screen-recording, like yoga REC
   const [favs, setFavs] = useLS<string[]>(WK_FAV_KEY, []);    // saved moves (heart)
   const elapsedRef = useRef(0);
   const [elapsedSec, setElapsedSec] = useState(0); // live, for the phone calories/time bar
@@ -3715,7 +3716,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       {/* Capped to a centred ~104rem frame so ultra-wide / foldable screens keep
           the dashboard grouped instead of stretching edge-to-edge. */}
       <header className="relative z-10 hidden md:flex items-center gap-3 px-5 py-2.5 shrink-0 w-full max-w-[104rem] mx-auto">
-        <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+        {!recording && <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>}
         <div className="flex-1 min-w-0">
           <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
           <div className="flex items-center gap-2.5">
@@ -3725,13 +3726,21 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             <span className="text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
           </div>
         </div>
-        <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+        {!recording && <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           <Tv className="h-5 w-5" />
-        </button>
-        <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
+        </button>}
+        {!recording && <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
           className={["grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border shadow-sm active:scale-90 transition",
             showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/70"].join(" ")}>
           {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </button>}
+        {/* REC — clean capture: hides every control for a screen-recording (like yoga). */}
+        <button onClick={() => setRecording((r) => !r)} aria-label={recording ? "Show controls" : "Clean recording view"}
+          title={recording ? "Show the controls again" : "Hide the controls for a clean screen-recording"}
+          className={["grid h-11 shrink-0 place-items-center rounded-full backdrop-blur-md border shadow-sm active:scale-90 transition",
+            recording ? "w-auto gap-2 px-4 bg-red-500/90 text-white border-red-300 animate-pulse" : "w-11 bg-white/70 text-rose border-white/70"].join(" ")}>
+          <span className={["block rounded-full bg-red-500", recording ? "h-2.5 w-2.5 bg-white" : "h-3.5 w-3.5"].join(" ")} />
+          {recording && <span className="text-xs font-extrabold tracking-wide">REC · tap to stop</span>}
         </button>
       </header>
 
@@ -3739,15 +3748,22 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
              below — pushes the whole session down a notch. ── */}
       <header className="relative z-10 md:hidden shrink-0 px-3 pt-2.5 pb-1.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between gap-3">
-          <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+          {!recording ? <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button> : <span />}
           <div className="flex items-center gap-2.5">
-            <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition">
+            {!recording && <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition">
               <Tv className="h-5 w-5" />
-            </button>
-            <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
+            </button>}
+            {!recording && <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
               className={["grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border shadow-sm active:scale-90 transition",
                 showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/60"].join(" ")}>
               {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </button>}
+            {/* REC — clean capture toggle (hides all controls for a screen-recording). */}
+            <button onClick={() => setRecording((r) => !r)} aria-label={recording ? "Show controls" : "Clean recording view"}
+              className={["grid h-10 shrink-0 place-items-center rounded-full backdrop-blur-2xl border shadow-sm active:scale-90 transition",
+                recording ? "w-auto gap-1.5 px-3 bg-red-500/90 text-white border-red-300 animate-pulse" : "w-10 bg-white/55 text-rose border-white/60"].join(" ")}>
+              <span className={["block rounded-full bg-red-500", recording ? "h-2 w-2 bg-white" : "h-3 w-3"].join(" ")} />
+              {recording && <span className="text-[11px] font-extrabold tracking-wide">REC · stop</span>}
             </button>
           </div>
         </div>
@@ -4053,7 +4069,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
               top band on tablet/desktop. */}
 
           {/* Control bar — inside the centre column on tablet/desktop */}
-          <div className="hidden md:block shrink-0 pt-1">{controlBar}</div>
+          {!recording && <div className="hidden md:block shrink-0 pt-1">{controlBar}</div>}
         </section>
 
         {/* RIGHT RAIL — tablet + desktop */}
@@ -4082,7 +4098,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       </main>
 
       {/* Control bar — pinned to the bottom on phones */}
-      <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{controlBar}</div>
+      {!recording && <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{controlBar}</div>}
 
       {/* Session complete — no page switch. Phase A: "The End" breathes over the
           pink veil while the music fades out (~5s). Phase B: the congratulation
