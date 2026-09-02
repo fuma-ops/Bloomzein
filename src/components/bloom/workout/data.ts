@@ -130,7 +130,7 @@ const VIDEO_SLUGS = new Set<string>([
  *  Continuous mobility moves (e.g. hip circles) are deliberately NOT here — they
  *  loop even though they're timed. */
 const HOLD_SLUGS = new Set<string>([
-  "figure-four-stretch", "pigeon-pose", "reclined-butterfly",
+  "pigeon-pose", "reclined-butterfly",
   // Play once and settle on their deep pose. supine-twist and
   // reclined-hamstring-stretch are NOT here — they play back (boomerang / full
   // clip); superman-hold plays back too (see BOOMERANG_SLUGS).
@@ -156,7 +156,7 @@ const NO_POSTER_SLUGS = new Set<string>(["jump-squat", "squat-jump", "thread-the
 const BOOMERANG_SLUGS = new Set<string>([
   "dead-bug", "bird-dog",
   "sumo-squat", "romanian-deadlift", "step-ups", "kettlebell-swing",
-  "low-lunge-hip-flexor", "butterfly-seated",
+  "low-lunge-hip-flexor", "butterfly-seated", "figure-four-stretch",
   // Glutes
   "side-lying-leg-raises", "bulgarian-split-squat", "foam-roll-glutes", "childs-pose",
   // Core
