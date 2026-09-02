@@ -12,7 +12,8 @@ import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
-import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
+import { isPremium, openPaywall, usePremium, isOwnerEmail } from "@/lib/entitlements";
+import { useAuth } from "@/contexts/AuthContext";
 import { PlusLock, LockChip } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { LevelStreak } from "@/components/bloom/LevelStreak";
@@ -647,7 +648,7 @@ type View =
   | { kind: "program-detail"; programId: string }
   | { kind: "program-session"; programId: string; week: number; sessionIndex: number; returnTo?: "detail" | "plan" }
   | { kind: "session-start"; session: WorkoutSession; programRef?: ProgramRef; returnTo?: WorkoutTab }
-  | { kind: "session-active"; session: WorkoutSession; programRef?: ProgramRef; returnTo?: WorkoutTab }
+  | { kind: "session-active"; session: WorkoutSession; programRef?: ProgramRef; returnTo?: WorkoutTab; record?: boolean }
   | { kind: "session-end"; session: WorkoutSession; elapsedSec: number; programRef?: ProgramRef; returnTo?: WorkoutTab };
 
 type ProgramRef = { programId: string; week: number; sessionIndex: number };
@@ -727,13 +728,14 @@ export default function WorkoutPage() {
   }
 
   if (view.kind === "session-start") {
-    return <SessionStart session={view.session} onStart={() => setView({ kind: "session-active", session: view.session, programRef: view.programRef, returnTo: view.returnTo })} onExit={() => setView({ kind: view.returnTo ?? tab })} />;
+    return <SessionStart session={view.session} onStart={(record) => setView({ kind: "session-active", session: view.session, programRef: view.programRef, returnTo: view.returnTo, record })} onExit={() => setView({ kind: view.returnTo ?? tab })} />;
   }
   if (view.kind === "session-active") {
     return (
       <SessionActiveWithIntro
         session={view.session}
         programRef={view.programRef}
+        record={view.record}
         onExit={() => setView({ kind: view.returnTo ?? tab })}
         onDone={() => setView({ kind: view.returnTo ?? tab })}
       />
@@ -2677,7 +2679,9 @@ function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zo
 
 // ===================== SESSION MODE =====================
 
-function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; onStart: () => void; onExit: () => void }) {
+function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; onStart: (record?: boolean) => void; onExit: () => void }) {
+  const { user } = useAuth();
+  const isOwner = isOwnerEmail(user?.email); // private one-tap record launcher (content capture)
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [voice, setVoice] = useLS<boolean>(VOICE_KEY, true);
   const [musicTrack, setMusicTrack] = useLS<number>(MUSIC_KEY, 0);
@@ -2768,9 +2772,20 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
             </div>
           </div>
 
-          <button onClick={onStart} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3.5 text-base font-bold text-white">
-            <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start session
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => onStart(false)} className="bloom-luxury-btn animate-cta-bounce flex-1 inline-flex items-center justify-center gap-2 py-3.5 text-base font-bold text-white">
+              <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start session
+            </button>
+            {/* REC — owner-only clean capture: launches straight onto the first move
+                with a 5·4·3 get-ready chrono and every control hidden, to screen-record
+                for the channel (mirrors the yoga REC launcher). */}
+            {isOwner && (
+              <button onClick={() => onStart(true)} aria-label="Record this session (clean capture)" title="Record — clean capture with a 5·4·3 get-ready chrono"
+                className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-red-500 text-white font-extrabold py-3.5 px-4 shadow-lg shadow-red-500/30 active:scale-95 transition">
+                <span className="block h-3.5 w-3.5 rounded-full bg-white animate-pulse" /> REC
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -3260,8 +3275,11 @@ function RestBreatheStage({ videoSrc, paused, remaining, ringPct, next, nextReps
 }
 
 /** Plays the cinematic Bloomzein intro (title + duration) once, then the session. */
-function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: ProgramRef; onExit: () => void; onDone: () => void }) {
-  const [introDone, setIntroDone] = useState(false);
+function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: ProgramRef; record?: boolean; onExit: () => void; onDone: () => void }) {
+  // Recording (REC) skips the cinematic Bloomzein opener entirely and drops
+  // straight onto the first move, where the player's own get-ready chrono
+  // (5·4·3…) runs — a clean stage to screen-record, exactly like yoga's REC.
+  const [introDone, setIntroDone] = useState(!!props.record);
   const [sound] = useLS<boolean>(SOUND_KEY, true);
   const [musicTrack] = useLS<number>(MUSIC_KEY, 0);
   const [musicVol] = useLS<number>(MUSIC_VOL_KEY, MUSIC_VOL);
@@ -3311,15 +3329,16 @@ function SessionActiveWithIntro(props: { session: WorkoutSession; programRef?: P
           onDone={() => setIntroDone(true)}
         />
       ) : (
-        <SessionActive {...props} musicRef={musicRef} />
+        <SessionActive {...props} record={props.record} musicRef={musicRef} />
       )}
     </>
   );
 }
 
-function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
+function SessionActive({ session, programRef, record, onExit, onDone, musicRef }: {
   session: WorkoutSession;
   programRef?: ProgramRef;
+  record?: boolean;
   onExit: () => void;
   onDone: (elapsedSec: number) => void;
   musicRef: React.RefObject<HTMLAudioElement | null>;
@@ -3356,7 +3375,10 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   const [musicVol, setMusicVol] = useLS<number>(MUSIC_VOL_KEY, MUSIC_VOL); // music level
   const [voiceVol, setVoiceVol] = useLS<number>(VOICE_VOL_KEY, 0.8);       // voice + beeps level
   const [showVolume, setShowVolume] = useState(false);        // sound-levels popover
-  const [recording, setRecording] = useState(false);          // clean capture — hide chrome (controls) for a screen-recording, like yoga REC
+  // Clean capture: when the session was launched via REC, every control is
+  // hidden so the player screen-records clean (chrome comes back only after the
+  // session, on the finish screen). Driven by the launch, not an in-player button.
+  const recording = !!record;
   const [favs, setFavs] = useLS<string[]>(WK_FAV_KEY, []);    // saved moves (heart)
   const elapsedRef = useRef(0);
   const [elapsedSec, setElapsedSec] = useState(0); // live, for the phone calories/time bar
@@ -3458,9 +3480,12 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
   // now bursts from the ring once the coach has introduced the first move.
   useEffect(() => {
     let cancelled = false;
-    const frames: { c: number | "go" | null; t: number }[] = [
-      { c: null, t: 1400 }, { c: 3, t: 720 }, { c: 2, t: 720 }, { c: 1, t: 720 },
-    ];
+    // REC opens straight on the first move (no cinematic intro), so it gets a
+    // longer "get ready" chrono counting 5·4·3·2·1 — like yoga's record opener.
+    // A normal session keeps the quick 3·2·1 after the branded intro.
+    const frames: { c: number | "go" | null; t: number }[] = record
+      ? [{ c: null, t: 900 }, { c: 5, t: 760 }, { c: 4, t: 760 }, { c: 3, t: 760 }, { c: 2, t: 760 }, { c: 1, t: 760 }]
+      : [{ c: null, t: 1400 }, { c: 3, t: 720 }, { c: 2, t: 720 }, { c: 1, t: 720 }];
     let i = 0;
     const run = () => {
       if (cancelled) return;
@@ -3716,7 +3741,7 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
       {/* Capped to a centred ~104rem frame so ultra-wide / foldable screens keep
           the dashboard grouped instead of stretching edge-to-edge. */}
       <header className="relative z-10 hidden md:flex items-center gap-3 px-5 py-2.5 shrink-0 w-full max-w-[104rem] mx-auto">
-        {!recording && <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>}
+        <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
           <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
           <div className="flex items-center gap-2.5">
@@ -3734,21 +3759,13 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
             showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/70"].join(" ")}>
           {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </button>}
-        {/* REC — clean capture: hides every control for a screen-recording (like yoga). */}
-        <button onClick={() => setRecording((r) => !r)} aria-label={recording ? "Show controls" : "Clean recording view"}
-          title={recording ? "Show the controls again" : "Hide the controls for a clean screen-recording"}
-          className={["grid h-11 shrink-0 place-items-center rounded-full backdrop-blur-md border shadow-sm active:scale-90 transition",
-            recording ? "w-auto gap-2 px-4 bg-red-500/90 text-white border-red-300 animate-pulse" : "w-11 bg-white/70 text-rose border-white/70"].join(" ")}>
-          <span className={["block rounded-full bg-red-500", recording ? "h-2.5 w-2.5 bg-white" : "h-3.5 w-3.5"].join(" ")} />
-          {recording && <span className="text-xs font-extrabold tracking-wide">REC · tap to stop</span>}
-        </button>
       </header>
 
       {/* ── Top bar (phone): an icon row, then SESSION PROGRESS on its OWN row
              below — pushes the whole session down a notch. ── */}
       <header className="relative z-10 md:hidden shrink-0 px-3 pt-2.5 pb-1.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between gap-3">
-          {!recording ? <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button> : <span />}
+          <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
           <div className="flex items-center gap-2.5">
             {!recording && <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition">
               <Tv className="h-5 w-5" />
@@ -3758,13 +3775,6 @@ function SessionActive({ session, programRef, onExit, onDone, musicRef }: {
                 showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/60"].join(" ")}>
               {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </button>}
-            {/* REC — clean capture toggle (hides all controls for a screen-recording). */}
-            <button onClick={() => setRecording((r) => !r)} aria-label={recording ? "Show controls" : "Clean recording view"}
-              className={["grid h-10 shrink-0 place-items-center rounded-full backdrop-blur-2xl border shadow-sm active:scale-90 transition",
-                recording ? "w-auto gap-1.5 px-3 bg-red-500/90 text-white border-red-300 animate-pulse" : "w-10 bg-white/55 text-rose border-white/60"].join(" ")}>
-              <span className={["block rounded-full bg-red-500", recording ? "h-2 w-2 bg-white" : "h-3 w-3"].join(" ")} />
-              {recording && <span className="text-[11px] font-extrabold tracking-wide">REC · stop</span>}
-            </button>
           </div>
         </div>
         <div className="px-1">
