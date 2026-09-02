@@ -19,14 +19,22 @@ self.skipWaiting();
 // weak connection they show up blank and slow. Cache them so a second open (and
 // every screen after the first) paints instantly, refreshing quietly in the
 // background. These cache names are PRESERVED across SW updates (see activate).
-const IMG_CACHE = "bloom-images-v1";
-const VIDEO_CACHE = "bloom-videos-v1";
+// NOTE: bump the version suffix whenever cached media is re-rendered at the SAME
+// url — the activate handler deletes any cache not in KEEP_CACHES, so a bump
+// wipes the now-stale entries and forces a fresh fetch. v1 → v2 flushes the old
+// posters/clips that were cached before assets were re-rendered.
+const IMG_CACHE = "bloom-images-v2";
+const VIDEO_CACHE = "bloom-videos-v2";
 const KEEP_CACHES = new Set<string>([IMG_CACHE, VIDEO_CACHE]);
 
-// Images: cache-first — they never change once shipped, so instant is safe.
+// Images: stale-while-revalidate — paint instantly from cache, but ALWAYS
+// re-fetch in the background so a re-rendered image (e.g. a replaced poster
+// still) heals itself on the next view instead of flashing the ancient cached
+// frame forever (CacheFirst never re-fetched a same-url asset — that was the
+// "flash of an old clip" bug).
 registerRoute(
   ({ request }) => request.destination === "image",
-  new CacheFirst({
+  new StaleWhileRevalidate({
     cacheName: IMG_CACHE,
     plugins: [
       new CacheableResponsePlugin({ statuses: [0, 200] }),
