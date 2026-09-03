@@ -278,7 +278,8 @@ body.counting .count{display:grid}
 /* sits in the platform-reserved strip below the safe area, like a permanent
    corner tag — small and subtle enough that a caption/button overlapping it
    there is fine, but never competing with a template's own bottom content */
-.brandmark{position:absolute;right:4%;bottom:2.4%;z-index:16;
+.brandmark{position:absolute;right:4%;bottom:2.4%;z-index:16;opacity:0;
+  animation:rise .5s cubic-bezier(.22,.75,.2,1) forwards;
   display:flex;align-items:center;gap:.3em;background:rgba(255,255,255,.94);
   padding:.3em .6em .3em .42em;border-radius:999px;box-shadow:0 2px 6px rgba(60,6,30,.22);pointer-events:none}
 .brandmark svg{width:calc(2.2*var(--u));height:calc(2.2*var(--u));color:var(--hot);flex:none}
@@ -472,6 +473,33 @@ body.counting .count{display:grid}
   50%{box-shadow:0 calc(1.2*var(--u)) calc(3*var(--u)) -calc(.4*var(--u)) rgba(230,0,126,1)}
 }
 
+/* ---- 13 DAY IN MY LIFE — one full-bleed clip, big words scattered around it ---- */
+.t-dayinlife .full{position:absolute;inset:0}
+.t-dayinlife .scrim-t{height:26%}
+.t-dayinlife .scrim-b{height:32%}
+.t-dayinlife .cream-big{font-family:Quicksand,sans-serif;font-weight:800;font-size:calc(9*var(--u));line-height:.9;
+  color:#FFF7FB;text-shadow:0 calc(.3*var(--u)) calc(1.7*var(--u)) rgba(60,6,30,.5)}
+.t-dayinlife .tl{position:absolute;left:6%;top:calc(var(--safe-t) + 2%);z-index:12}
+.t-dayinlife .tl .eyebrow{display:block;font-family:Quicksand;font-weight:700;font-size:calc(2.6*var(--u));
+  color:#FFF7FB;text-shadow:0 1px 5px rgba(60,6,30,.55)}
+.t-dayinlife .tl .big{display:block;margin-top:.04em}
+.t-dayinlife .mid{position:absolute;left:6%;top:43%;z-index:12}
+.t-dayinlife .br{position:absolute;right:6%;bottom:calc(var(--safe-b) + 3%);z-index:12;text-align:right}
+.t-dayinlife .br .time{display:inline-block;padding:.32em .85em;background:rgba(255,247,251,.22);
+  border:1px solid rgba(255,247,251,.6);border-radius:999px;font-family:Quicksand;font-weight:700;
+  font-size:calc(2.3*var(--u));color:#FFF7FB}
+.t-dayinlife .br .big{display:block;margin-top:.16em}
+
+/* ---- 14 THREE-PART DAY — three stacked full-bleed clips, one word each ---- */
+.t-montage3 .bands{position:absolute;inset:0;display:flex;flex-direction:column}
+.t-montage3 .band{position:relative;flex:1;overflow:hidden}
+.t-montage3 .band .cap{position:absolute;left:0;right:0;text-align:center;z-index:5;
+  font-family:"Playfair Display",serif;font-style:italic;font-weight:500;font-size:calc(5.4*var(--u));
+  color:#fff;text-shadow:0 calc(.3*var(--u)) calc(1.5*var(--u)) rgba(60,6,30,.5)}
+.t-montage3 .band:nth-child(1) .cap{top:48%}
+.t-montage3 .band:nth-child(2) .cap{top:45%}
+.t-montage3 .band:nth-child(3) .cap{top:12%}
+
 /* ---- per-format fit: the same design, re-composed for wider frames ---- */
 .stage[data-fmt="4x5"] .copy{left:10%;right:10%}
 .stage[data-fmt="1x1"] .copy{left:14%;right:14%}
@@ -613,7 +641,18 @@ const T = (k, cls = "", tag = "span") =>
 const IMG = (k, cls = "", ph = 1) =>
   `<div class="slot an ${cls}" data-slot="${k}"><div class="media" data-media="${k}"><div class="ph ph${ph}"></div></div></div>`;
 const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
-const BRAND = () => `<div class="brandmark an"><svg viewBox="0 0 24 24"><use href="#i-bloom"/></svg><span>bloomzein</span></div>`;
+/* the brand mark is opt-in per scene (off by default everywhere), added from
+   the settings panel, never baked into a template's own html() — so it never
+   hides or competes with whatever photo/clip is already in that slot */
+function applyBrand(root, st, mode) {
+  if (!st.brand?.on) return;
+  const el = document.createElement("div");
+  el.className = "brandmark";
+  el.innerHTML = `<svg viewBox="0 0 24 24"><use href="#i-bloom"/></svg><span>bloomzein</span>`;
+  if (mode === "thumb") { el.style.opacity = "1"; }
+  else { el.style.animationDelay = Math.max(0, st.brand.at || 0) + "s"; }
+  root.appendChild(el);
+}
 
 /* ─────────────────────────── media store (IndexedDB) ─────────────────── */
 /* IndexedDB where it is allowed, memory where it is not: some embedded
@@ -683,8 +722,7 @@ const TEMPLATES = [
           ${T("line", "line wordreveal")}
         </div>
         <div class="note paper an">${T("note")}<svg class="doodle heart" viewBox="0 0 24 22"><use href="#d-heart"/></svg></div>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "empathy", name: "Problem + empathy", hint: "Full-bleed photo · one torn note",
@@ -701,8 +739,7 @@ const TEMPLATES = [
           ${T("post", "line1")}
           ${T("line2", "line2")}
         </div>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "routine", name: "Routine overview", hint: "Full-bleed collage · one script word",
@@ -713,8 +750,7 @@ const TEMPLATES = [
       <div class="scrim-b"></div>
       ${PETALS(4)}
       <div class="tagline an">${T("pre", "pre wordreveal")}${T("post", "post wordreveal")}</div>
-      ${T("word", "word")}
-      ${BRAND()}`
+      ${T("word", "word")}`
   },
   {
     id: "appfocus", name: "Solution + app focus", hint: "Full-bleed photo (the phone is in the shot) · one line",
@@ -726,8 +762,7 @@ const TEMPLATES = [
       ${PETALS(4)}
       <div class="copy">
         <div class="headline an">${T("pre", "", "span")} <span class="pill t" data-t="hi" contenteditable="plaintext-only" spellcheck="false"></span> ${T("post", "", "span")}</div>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "feature", name: "Feature highlight", hint: "Full-bleed photo · one checklist card",
@@ -742,8 +777,7 @@ const TEMPLATES = [
           ${T("pre", "title")}${T("script", "title script")}
         </div></div>
         <ul class="checklist an">${[1, 2, 3, 4, 5].map(i => `<li><span class="dot"><svg width="58%" height="58%" viewBox="0 0 24 24"><use href="#d-spark"/></svg></span>${T("l" + i)}<span class="ok"><svg viewBox="0 0 24 24"><use href="#d-check"/></svg></span></li>`).join("")}</ul>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "motivation", name: "Motivation + aesthetic", hint: "Full-bleed photo · one plain line, nothing else",
@@ -756,8 +790,7 @@ const TEMPLATES = [
       <div class="copy">
         ${T("line1", "line wordreveal")}
         ${T("line2", "line wordreveal")}
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "education", name: "Education + value", hint: "Full-bleed photo · one torn note · one doodle",
@@ -773,8 +806,7 @@ const TEMPLATES = [
           ${T("bracket", "bracket")}
           <svg class="doodle heart" viewBox="0 0 24 22"><use href="#d-heart"/></svg>
         </div>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "tips", name: "Tips + how-to", hint: "Full-bleed photo · one plain stacked line, two pill words",
@@ -791,8 +823,7 @@ const TEMPLATES = [
           ${T("mid", "line wordreveal")}
           <span class="pill t" data-t="h2" contenteditable="plaintext-only" spellcheck="false"></span>
         </div>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "trend", name: "Trend + engagement", hint: "Full-bleed collage · one taped tag · one doodle arrow",
@@ -802,8 +833,7 @@ const TEMPLATES = [
       <div class="grid">${IMG("g1", "", 2)}${IMG("g2", "", 6)}${IMG("g3", "", 4)}${IMG("g4", "", 3)}</div>
       <div class="tagwrap"><div class="paper an"><div class="tape"></div>${T("title", "title")}</div></div>
       <span class="sub t an" data-t="sub" contenteditable="plaintext-only" spellcheck="false" style="left:14%;bottom:calc(var(--safe-b) + 6%)"></span>
-      <svg class="doodle arrow an" viewBox="0 0 40 34" style="left:20%;bottom:calc(var(--safe-b) + 13%)"><use href="#d-arrow"/></svg>
-      ${BRAND()}`
+      <svg class="doodle arrow an" viewBox="0 0 40 34" style="left:20%;bottom:calc(var(--safe-b) + 13%)"><use href="#d-arrow"/></svg>`
   },
   {
     id: "curiosity", name: "Curiosity + discovery", hint: "Full-bleed photo · one plain line · one small torn note",
@@ -820,8 +850,7 @@ const TEMPLATES = [
           ${T("pov", "pov")}
           ${T("blank", "blank")}
         </div>
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "steps", name: "Step reveal", hint: "4 zones unlock one by one — built for curiosity",
@@ -842,8 +871,7 @@ const TEMPLATES = [
           <div class="cap">${T("s" + i)}</div>
           <div class="cover"><b>${i}</b><span>peek</span></div>
         </div>`).join("")}
-      </div>
-      ${BRAND()}`
+      </div>`
   },
   {
     id: "outro", name: "Outro · Call to action", hint: "Rotating flower → wordmark → CTA, choreographed to land at 4 seconds",
@@ -857,6 +885,36 @@ const TEMPLATES = [
         <span class="t wordmark" data-t="wordmark" contenteditable="plaintext-only" spellcheck="false"></span>
         <span class="t tagline" data-t="tagline" contenteditable="plaintext-only" spellcheck="false"></span>
         <div class="ctawrap"><span class="t cta" data-t="cta" contenteditable="plaintext-only" spellcheck="false"></span></div>
+      </div>`
+  },
+  {
+    id: "dayinlife", name: "Day in my life", hint: "One full-bleed clip · big words scattered around it",
+    text: { eyebrow: "a productive", w1: "day", w2: "in", time: "6:00am – 4:00pm", w3: "my life" },
+    images: [{ k: "bg", label: "Photo or clip", ph: 4 }],
+    html: () => `
+      ${IMG("bg", "full", 4)}
+      <div class="scrim-t"></div>
+      <div class="scrim-b"></div>
+      ${PETALS(4)}
+      <div class="tl an">
+        <span class="eyebrow t" data-t="eyebrow" contenteditable="plaintext-only" spellcheck="false"></span>
+        <span class="big cream-big t" data-t="w1" contenteditable="plaintext-only" spellcheck="false"></span>
+      </div>
+      <span class="mid cream-big t an" data-t="w2" contenteditable="plaintext-only" spellcheck="false"></span>
+      <div class="br an">
+        <span class="time t" data-t="time" contenteditable="plaintext-only" spellcheck="false"></span>
+        <span class="big cream-big t" data-t="w3" contenteditable="plaintext-only" spellcheck="false"></span>
+      </div>`
+  },
+  {
+    id: "montage3", name: "Three-part day", hint: "Three stacked full-bleed clips, one word each",
+    text: { c1: "workout", c2: "study", c3: "selfcare" },
+    images: [{ k: "m1", label: "Clip 1 (top)", ph: 2 }, { k: "m2", label: "Clip 2 (middle)", ph: 5 }, { k: "m3", label: "Clip 3 (bottom)", ph: 6 }],
+    html: () => `
+      <div class="bands">
+        <div class="band an">${IMG("m1", "full", 2)}<span class="cap t" data-t="c1" contenteditable="plaintext-only" spellcheck="false"></span></div>
+        <div class="band an">${IMG("m2", "full", 5)}<span class="cap t" data-t="c2" contenteditable="plaintext-only" spellcheck="false"></span></div>
+        <div class="band an">${IMG("m3", "full", 6)}<span class="cap t" data-t="c3" contenteditable="plaintext-only" spellcheck="false"></span></div>
       </div>`
   },
 ];
@@ -880,9 +938,10 @@ let S = blank();
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) { }
 const save = (() => { let h; return () => { clearTimeout(h); h = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }, 180); }; })();
 
-function freshState() { return { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 } }; }
+function freshState() { return { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 }, brand: { on: false, at: 1.5 } }; }
 function fillDefaults(st, def) {
   st.copy = Object.assign({ x: 0, y: 0, s: 1 }, st.copy);
+  st.brand = Object.assign({ on: false, at: 1.5 }, st.brand);
   for (const k in def.text) if (typeof st.text[k] !== "string") st.text[k] = def.text[k];
   for (const im of def.images) st.frames[im.k] = Object.assign({ x: 0, y: 0, s: 1 }, st.frames[im.k]);
   return st;
@@ -1021,6 +1080,7 @@ function buildTplRoot(def, st, mode) {
       $$(".wordreveal[data-t]", root).forEach(wordSplit);
     }
   }
+  applyBrand(root, st, mode);
   return root;
 }
 function wordSplit(el) {
@@ -1251,10 +1311,11 @@ const LBL = {
   ben: "Benefit", note: "Hand note", pov: "POV label", hi: "Emphasized word",
   blank: "Fill in the blank", bracket: "Bracketed line", script: "Script line",
   mid: "Middle word", h1: "Pill word 1", h2: "Pill word 2",
-  title: "Title", wordmark: "Wordmark", tagline: "Tagline", cta: "Call to action",
+  title: "Title", wordmark: "Wordmark", tagline: "Tagline", cta: "Call to action", time: "Time range",
 };
 const labelFor = k => LBL[k] || k.replace(/^n(\d)$/, "Pick $1").replace(/^l(\d)$/, "Item $1")
-  .replace(/^w(\d)$/, "Line $1").replace(/^s(\d)$/, "Step $1 caption").replace(/^g(\d)$/, "Photo $1");
+  .replace(/^w(\d)$/, "Word $1").replace(/^s(\d)$/, "Step $1 caption").replace(/^g(\d)$/, "Photo $1")
+  .replace(/^c(\d)$/, "Clip $1 caption");
 
 function buildPanel() {
   const def = currentDef(), st = currentState();
@@ -1349,6 +1410,26 @@ function buildPanel() {
   }));
   layout.appendChild(sc);
   panel.appendChild(layout);
+
+  /* — brand mark — */
+  const bmSec = section("Brand mark", "i-bloom");
+  const bmSw = document.createElement("div"); bmSw.className = "sw";
+  bmSw.innerHTML = `<p>Add the Bloomzein logo to this scene</p><button class="toggle" type="button" aria-pressed="${st.brand.on}" aria-label="Brand mark"></button>`;
+  $(".toggle", bmSw).addEventListener("click", e => {
+    st.brand.on = !st.brand.on; save(); blip(700, .1);
+    e.currentTarget.setAttribute("aria-pressed", String(st.brand.on));
+    renderStage(); refreshPreview(def);
+  });
+  bmSec.appendChild(bmSw);
+  const bmHint = document.createElement("p"); bmHint.className = "hint"; bmHint.style.margin = "6px 0 8px";
+  bmHint.textContent = "Your photo or clip always stays underneath — this only adds a small flower + wordmark on top, timed to fade in whenever you choose. Off by default on every scene; turn it on wherever you want it, most often your last one.";
+  bmSec.appendChild(bmHint);
+  bmSec.appendChild(sliderRow("Appears at", 0, 8, .1, st.brand.at, v => v.toFixed(1) + "s", v => {
+    st.brand.at = v; save();
+    const bm = $(".tpl .brandmark", stage);
+    if (bm) bm.style.animationDelay = v + "s";
+  }));
+  panel.appendChild(bmSec);
 
   /* — music — */
   const mus = section("Music", "i-note");
