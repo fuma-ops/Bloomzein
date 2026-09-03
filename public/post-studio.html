@@ -493,21 +493,20 @@ body.counting .count{display:grid}
 
 /* ---- 13 DAY IN MY LIFE — one full-bleed clip, big words scattered around it ---- */
 .t-dayinlife .full{position:absolute;inset:0}
-.t-dayinlife .scrim-t{height:26%}
-.t-dayinlife .scrim-b{height:32%}
-.t-dayinlife .cream-big{font-family:Quicksand,sans-serif;font-weight:800;font-size:calc(12.5*var(--u));line-height:.86;
-  letter-spacing:-.01em;color:var(--hot);-webkit-text-stroke:calc(.11*var(--u)) rgba(255,247,251,.95);
-  paint-order:stroke fill;text-shadow:0 calc(.3*var(--u)) calc(1.3*var(--u)) rgba(60,6,30,.4)}
-.t-dayinlife .tl{position:absolute;left:6%;top:calc(var(--safe-t) + 2%);z-index:12}
+.t-dayinlife .scrim-t{height:24%}
+.t-dayinlife .scrim-b{height:30%}
+.t-dayinlife .cream-big{display:block;font-family:Quicksand,sans-serif;font-weight:800;font-size:calc(18*var(--u));
+  line-height:.82;letter-spacing:-.015em;color:var(--hot);-webkit-text-stroke:calc(.13*var(--u)) rgba(255,247,251,.95);
+  paint-order:stroke fill;text-shadow:0 calc(.35*var(--u)) calc(1.5*var(--u)) rgba(60,6,30,.4)}
+.t-dayinlife .tl{position:absolute;left:4%;right:30%;top:calc(var(--safe-t) + 2%);z-index:12}
 .t-dayinlife .tl .eyebrow{display:block;font-family:Quicksand;font-weight:700;font-size:calc(2.6*var(--u));
   color:#FFF7FB;text-shadow:0 1px 5px rgba(60,6,30,.55)}
-.t-dayinlife .tl .big{display:block;margin-top:.04em}
-.t-dayinlife .mid{position:absolute;left:6%;top:43%;z-index:12}
-.t-dayinlife .br{position:absolute;right:6%;bottom:calc(var(--safe-b) + 3%);z-index:12;text-align:right}
-.t-dayinlife .br .time{display:inline-block;padding:.32em .85em;background:rgba(255,247,251,.22);
+.t-dayinlife .tl .cream-big{margin-top:.04em}
+.t-dayinlife .mid{position:absolute;left:4%;right:45%;top:40%;z-index:12}
+.t-dayinlife .br{position:absolute;right:4%;left:30%;bottom:calc(var(--safe-b) + 2.5%);z-index:12;text-align:right}
+.t-dayinlife .br .time{display:inline-block;margin-bottom:.2em;padding:.3em .8em;background:rgba(255,247,251,.22);
   border:1px solid rgba(255,247,251,.6);border-radius:999px;font-family:Quicksand;font-weight:700;
-  font-size:calc(2.3*var(--u));color:#FFF7FB}
-.t-dayinlife .br .big{display:block;margin-top:.16em}
+  font-size:calc(2.2*var(--u));color:#FFF7FB}
 
 /* ---- 14 THREE-PART DAY — three stacked full-bleed clips, one word each ---- */
 .t-montage3 .bands{position:absolute;inset:0;display:flex;flex-direction:column}
@@ -694,11 +693,13 @@ function applyBrand(root, st, mode) {
     $(".flower", el).style.animationDelay = at + "s";
     $(".word", el).style.animationDelay = (at + .5) + "s";
     $(".tag", el).style.animationDelay = (at + 1) + "s";
-    // the scene's own text/doodles would otherwise sit right behind the wordmark —
-    // clear the stage for the brand moment by fading them out as it arrives.
+    // the scene's own TEXT/doodles would otherwise sit right behind the wordmark —
+    // clear those for the brand moment as it arrives. The background photo/clip's
+    // own wrapper also carries ".an" for its entrance fade, so it must be excluded
+    // here explicitly, or "clearing the stage" would fade the clip out too.
     // Cancel each element's own entrance animation first: it still "owns" opacity
     // via fill:forwards, so a plain inline opacity would just be overridden by it.
-    const clearers = $$(".an", root).filter(x => !el.contains(x));
+    const clearers = $$(".an", root).filter(x => !el.contains(x) && !x.matches(".slot") && !x.closest(".slot"));
     if (clearers.length) {
       setTimeout(() => {
         if (!root.isConnected) return;
@@ -948,7 +949,7 @@ const TEMPLATES = [
   },
   {
     id: "dayinlife", name: "Day in my life", hint: "One full-bleed clip · big words scattered around it",
-    text: { eyebrow: "a productive", w1: "day", w2: "in", time: "6:00am – 4:00pm", w3: "my life" },
+    text: { eyebrow: "a productive", w1: "day", w2: "in", time: "6:00am – 4:00pm", w3: "my", w4: "life" },
     images: [{ k: "bg", label: "Photo or clip", ph: 4 }],
     html: () => `
       ${IMG("bg", "full", 4)}
@@ -957,12 +958,13 @@ const TEMPLATES = [
       ${PETALS(4)}
       <div class="tl an">
         <span class="eyebrow t" data-t="eyebrow" contenteditable="plaintext-only" spellcheck="false"></span>
-        <span class="big cream-big t" data-t="w1" contenteditable="plaintext-only" spellcheck="false"></span>
+        <span class="cream-big t" data-t="w1" contenteditable="plaintext-only" spellcheck="false"></span>
       </div>
       <span class="mid cream-big t an" data-t="w2" contenteditable="plaintext-only" spellcheck="false"></span>
       <div class="br an">
         <span class="time t" data-t="time" contenteditable="plaintext-only" spellcheck="false"></span>
-        <span class="big cream-big t" data-t="w3" contenteditable="plaintext-only" spellcheck="false"></span>
+        <span class="cream-big t" data-t="w3" contenteditable="plaintext-only" spellcheck="false"></span>
+        <span class="cream-big t" data-t="w4" contenteditable="plaintext-only" spellcheck="false"></span>
       </div>`
   },
   {
