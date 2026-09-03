@@ -133,10 +133,10 @@ body.guides .stage .safe{display:block}
 .field{margin-bottom:10px}
 .field:last-child{margin-bottom:0}
 .field label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin-bottom:4px}
-.field input[type=text],.field textarea,.field input[type=number]{
+.field input[type=text],.field textarea,.field input[type=number],.field select{
   width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12.5px;font-weight:500;color:var(--plum);transition:.15s}
 .field textarea{resize:vertical;min-height:58px;line-height:1.45}
-.field input:focus,.field textarea:focus{outline:none;border-color:var(--hot);box-shadow:0 0 0 3px rgba(230,0,126,.1)}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--hot);box-shadow:0 0 0 3px rgba(230,0,126,.1)}
 .row{display:flex;gap:8px}
 .row>*{flex:1;min-width:0}
 
@@ -284,6 +284,24 @@ body.counting .count{display:grid}
   padding:.3em .6em .3em .42em;border-radius:999px;box-shadow:0 2px 6px rgba(60,6,30,.22);pointer-events:none}
 .brandmark svg{width:calc(2.2*var(--u));height:calc(2.2*var(--u));color:var(--hot);flex:none}
 .brandmark span{font-family:Quicksand;font-weight:700;font-size:calc(1.7*var(--u));letter-spacing:.02em;color:var(--plum);white-space:nowrap}
+
+/* the big reveal — the Outro template's flower + wordmark moment, reusable as an
+   overlay on top of any scene's own photo or clip, timed to a chosen second */
+.brandreveal{position:absolute;inset:0;z-index:17;pointer-events:none}
+.brandreveal .scrim{position:absolute;left:0;right:0;bottom:0;height:54%;
+  background:linear-gradient(to top,rgba(60,6,30,.8),rgba(60,6,30,.38) 55%,rgba(60,6,30,0))}
+.brandreveal .stack{position:absolute;left:0;right:0;bottom:calc(var(--safe-b) + 3%);
+  display:flex;flex-direction:column;align-items:center;gap:calc(.5*var(--u));text-align:center;padding:0 10%}
+.brandreveal .glow{position:absolute;left:50%;bottom:5cqh;width:26cqw;height:26cqw;transform:translateX(-50%);
+  border-radius:50%;background:radial-gradient(circle,rgba(230,0,126,.55),rgba(230,0,126,0) 70%);
+  opacity:0;animation:pulse 2.4s ease-in-out infinite}
+.brandreveal .flower{width:11cqw;height:11cqw;opacity:0;animation:outroFlowerIn 1s cubic-bezier(.34,1.56,.64,1) forwards}
+.brandreveal .flower svg{width:100%;height:100%;color:#fff;
+  filter:drop-shadow(0 calc(.4*var(--u)) calc(1.1*var(--u)) rgba(60,6,30,.4));animation:outroSpin 14s linear infinite}
+.brandreveal .word{display:block;font-family:"Dancing Script",cursive;font-weight:700;font-size:calc(6.4*var(--u));
+  color:#fff;line-height:1;opacity:0;animation:outroRise .6s cubic-bezier(.22,.75,.2,1) forwards}
+.brandreveal .tag{display:block;font-family:Quicksand;font-weight:600;font-size:calc(2.2*var(--u));
+  color:rgba(255,255,255,.92);opacity:0;animation:outroRise .5s cubic-bezier(.22,.75,.2,1) forwards}
 .doodle.an{animation:doodlepop .6s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes doodlepop{0%{opacity:0;transform:scale(.35) rotate(-10deg)}62%{opacity:1;transform:scale(1.18) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
 
@@ -477,8 +495,9 @@ body.counting .count{display:grid}
 .t-dayinlife .full{position:absolute;inset:0}
 .t-dayinlife .scrim-t{height:26%}
 .t-dayinlife .scrim-b{height:32%}
-.t-dayinlife .cream-big{font-family:Quicksand,sans-serif;font-weight:800;font-size:calc(9*var(--u));line-height:.9;
-  color:#FFF7FB;text-shadow:0 calc(.3*var(--u)) calc(1.7*var(--u)) rgba(60,6,30,.5)}
+.t-dayinlife .cream-big{font-family:Quicksand,sans-serif;font-weight:800;font-size:calc(12.5*var(--u));line-height:.86;
+  letter-spacing:-.01em;color:var(--hot);-webkit-text-stroke:calc(.11*var(--u)) rgba(255,247,251,.95);
+  paint-order:stroke fill;text-shadow:0 calc(.3*var(--u)) calc(1.3*var(--u)) rgba(60,6,30,.4)}
 .t-dayinlife .tl{position:absolute;left:6%;top:calc(var(--safe-t) + 2%);z-index:12}
 .t-dayinlife .tl .eyebrow{display:block;font-family:Quicksand;font-weight:700;font-size:calc(2.6*var(--u));
   color:#FFF7FB;text-shadow:0 1px 5px rgba(60,6,30,.55)}
@@ -646,11 +665,51 @@ const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
    hides or competes with whatever photo/clip is already in that slot */
 function applyBrand(root, st, mode) {
   if (!st.brand?.on) return;
+  const at = Math.max(0, st.brand.at || 0);
+  if (!st.brand.big) {
+    const el = document.createElement("div");
+    el.className = "brandmark";
+    el.innerHTML = `<svg viewBox="0 0 24 24"><use href="#i-bloom"/></svg><span>bloomzein</span>`;
+    if (mode === "thumb") el.style.opacity = "1";
+    else el.style.animationDelay = at + "s";
+    root.appendChild(el);
+    return;
+  }
+  // the big reveal — the same flower + wordmark moment as the Outro template,
+  // laid over whatever photo or clip is already in this scene at a chosen second
   const el = document.createElement("div");
-  el.className = "brandmark";
-  el.innerHTML = `<svg viewBox="0 0 24 24"><use href="#i-bloom"/></svg><span>bloomzein</span>`;
-  if (mode === "thumb") { el.style.opacity = "1"; }
-  else { el.style.animationDelay = Math.max(0, st.brand.at || 0) + "s"; }
+  el.className = "brandreveal";
+  el.innerHTML = `
+    <div class="scrim"></div>
+    <div class="stack">
+      <div class="glow"></div>
+      <div class="flower"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bloom"/></svg></div>
+      <span class="word">Bloomzein</span>
+      <span class="tag">Your softest era starts here.</span>
+    </div>`;
+  if (mode === "thumb") {
+    $$(".glow,.flower,.word,.tag", el).forEach(n => { n.style.animation = "none"; n.style.opacity = "1"; });
+  } else {
+    $(".glow", el).style.animationDelay = at + "s";
+    $(".flower", el).style.animationDelay = at + "s";
+    $(".word", el).style.animationDelay = (at + .5) + "s";
+    $(".tag", el).style.animationDelay = (at + 1) + "s";
+    // the scene's own text/doodles would otherwise sit right behind the wordmark —
+    // clear the stage for the brand moment by fading them out as it arrives.
+    // Cancel each element's own entrance animation first: it still "owns" opacity
+    // via fill:forwards, so a plain inline opacity would just be overridden by it.
+    const clearers = $$(".an", root).filter(x => !el.contains(x));
+    if (clearers.length) {
+      setTimeout(() => {
+        if (!root.isConnected) return;
+        clearers.forEach(t => {
+          t.getAnimations().forEach(a => a.cancel());
+          t.style.transition = "opacity .45s ease";
+          t.style.opacity = "0";
+        });
+      }, Math.max(0, at - .4) * 1000);
+    }
+  }
   root.appendChild(el);
 }
 
@@ -938,10 +997,10 @@ let S = blank();
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) { }
 const save = (() => { let h; return () => { clearTimeout(h); h = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }, 180); }; })();
 
-function freshState() { return { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 }, brand: { on: false, at: 1.5 } }; }
+function freshState() { return { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 }, brand: { on: false, at: 1.5, big: false } }; }
 function fillDefaults(st, def) {
   st.copy = Object.assign({ x: 0, y: 0, s: 1 }, st.copy);
-  st.brand = Object.assign({ on: false, at: 1.5 }, st.brand);
+  st.brand = Object.assign({ on: false, at: 1.5, big: false }, st.brand);
   for (const k in def.text) if (typeof st.text[k] !== "string") st.text[k] = def.text[k];
   for (const im of def.images) st.frames[im.k] = Object.assign({ x: 0, y: 0, s: 1 }, st.frames[im.k]);
   return st;
@@ -1422,12 +1481,31 @@ function buildPanel() {
   });
   bmSec.appendChild(bmSw);
   const bmHint = document.createElement("p"); bmHint.className = "hint"; bmHint.style.margin = "6px 0 8px";
-  bmHint.textContent = "Your photo or clip always stays underneath — this only adds a small flower + wordmark on top, timed to fade in whenever you choose. Off by default on every scene; turn it on wherever you want it, most often your last one.";
+  bmHint.textContent = "Your photo or clip always stays underneath either way — this only lays the mark on top, timed to appear whenever you choose. Off by default on every scene.";
   bmSec.appendChild(bmHint);
+  const styleField = document.createElement("div"); styleField.className = "field";
+  styleField.innerHTML = `<label>Style</label>
+    <select data-brand-style>
+      <option value="small">Small corner tag</option>
+      <option value="big">Big reveal — the flower + Bloomzein wordmark</option>
+    </select>`;
+  $("select", styleField).value = st.brand.big ? "big" : "small";
+  $("select", styleField).addEventListener("change", e => {
+    st.brand.big = e.target.value === "big"; save(); blip(700, .1);
+    renderStage(); refreshPreview(def);
+  });
+  bmSec.appendChild(styleField);
   bmSec.appendChild(sliderRow("Appears at", 0, 8, .1, st.brand.at, v => v.toFixed(1) + "s", v => {
     st.brand.at = v; save();
-    const bm = $(".tpl .brandmark", stage);
-    if (bm) bm.style.animationDelay = v + "s";
+    if (st.brand.big) {
+      const rv = $(".tpl .brandreveal", stage); if (!rv) return;
+      $(".glow", rv).style.animationDelay = v + "s";
+      $(".flower", rv).style.animationDelay = v + "s";
+      $(".word", rv).style.animationDelay = (v + .5) + "s";
+      $(".tag", rv).style.animationDelay = (v + 1) + "s";
+    } else {
+      const bm = $(".tpl .brandmark", stage); if (bm) bm.style.animationDelay = v + "s";
+    }
   }));
   panel.appendChild(bmSec);
 
