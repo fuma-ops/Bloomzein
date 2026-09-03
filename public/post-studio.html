@@ -48,6 +48,13 @@ button{cursor:pointer;background:none;border:0}
 .thumb:active{transform:scale(.985)}
 .thumb[aria-pressed="true"]{border-color:var(--hot);box-shadow:0 0 0 1px var(--hot),0 10px 22px -14px rgba(230,0,126,.7)}
 .thumb .frame{position:relative;width:100%;aspect-ratio:9/16;border-radius:7px;overflow:hidden;container-type:size;container-name:post;background:var(--cream);pointer-events:none}
+/* thumbnails and filmstrip cards live outside .stage, so they never inherit its
+   --safe-t/--safe-b — without a value, anything sizing itself off both insets at
+   once (not just positioning off one) collapses to zero height. Always fixed 9:16. */
+.thumb .frame,.scene .sframe{--safe-t:11.5%;--safe-b:22%}
+/* static previews freeze the step-reveal covers open, so a still frame shows the
+   photos rather than an arbitrary covered/uncovered instant */
+.thumb .frame .cover,.scene .sframe .cover{animation:none !important;opacity:0 !important;transform:none !important}
 .thumb .meta{display:flex;align-items:baseline;gap:6px;padding:7px 4px 3px}
 .thumb .n{font-size:9px;font-weight:700;color:var(--hot);font-variant-numeric:tabular-nums}
 .thumb .nm{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
@@ -69,6 +76,36 @@ button{cursor:pointer;background:none;border:0}
 
 .canvas{flex:1;min-height:0;display:grid;place-items:center;padding:22px;background:
   radial-gradient(120% 90% at 50% 0%,#fff 0%,var(--shell) 60%)}
+
+/* ── reel builder: hidden in single-post mode, a filmstrip + transport in reel mode ── */
+.reelbar{display:none;flex:none;flex-direction:column;border-top:1px solid var(--line-soft);background:var(--panel)}
+body.mode-reel .reelbar{display:flex}
+body.mode-reel .canvas{padding-bottom:12px}
+.reelbar-top{display:flex;align-items:center;gap:10px;padding:10px 16px 6px}
+.reel-meta{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.02em;white-space:nowrap}
+.reel-opt{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.reel-opt select{font:inherit;font-size:11.5px;font-weight:700;color:var(--ink);text-transform:none;letter-spacing:0;
+  padding:5px 7px;border-radius:7px;border:1px solid var(--line);background:#fff}
+.filmstrip{display:flex;gap:10px;padding:6px 16px 16px;overflow-x:auto;min-height:132px}
+.reel-empty{margin:22px 16px;font-size:12px;color:var(--muted);font-weight:600;max-width:520px}
+.scene{flex:none;width:96px;border-radius:11px;border:1px solid var(--line-soft);background:#fff;
+  box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.scene:hover{transform:translateY(-2px)}
+.scene.active{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}
+.scene .sframe{position:relative;width:100%;aspect-ratio:9/16;container-type:size;container-name:post;overflow:hidden;background:var(--cream);pointer-events:none}
+.scene .sctrl{display:flex;align-items:center;justify-content:space-between;padding:3px 4px;background:var(--shell)}
+.scene .sn{font-size:10px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.scene .sdur{display:flex;align-items:center;gap:3px;padding:3px 5px;font-size:9.5px;font-weight:700;color:var(--muted)}
+.scene .sdur input{width:34px;font:inherit;font-size:10px;font-weight:700;color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:1px 3px;text-align:right}
+.scene .srow{display:flex;justify-content:flex-end;gap:2px;padding:2px 4px 4px}
+.sbtn{width:19px;height:19px;border-radius:5px;font-size:11px;font-weight:800;color:var(--muted);line-height:1;background:transparent}
+.sbtn:hover{background:#fff;color:var(--hot)}
+.sbtn:disabled{opacity:.3;pointer-events:none}
+.sbtn.danger:hover{color:#fff;background:var(--hot)}
+body.mode-reel #thumbs .thumb{position:relative}
+body.mode-reel #thumbs .thumb::after{content:"+ add";position:absolute;right:6px;bottom:6px;z-index:20;
+  background:var(--hot);color:#fff;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 7px;border-radius:99px;box-shadow:0 2px 6px rgba(107,18,56,.35)}
 .stage{
   position:relative; container-type:size; container-name:post;
   background:var(--cream); overflow:hidden;
@@ -235,6 +272,11 @@ body.counting .count{display:grid}
 .tape::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.4) 0 2px,transparent 2px 7px)}
 
 .doodle{position:absolute;color:var(--hot);opacity:.85;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(60,6,30,.12))}
+.doodle.an{animation:doodlepop .6s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes doodlepop{0%{opacity:0;transform:scale(.35) rotate(-10deg)}62%{opacity:1;transform:scale(1.18) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+
+/* word-by-word reveal — used for playback/export, never inside the live editable box */
+.wr{display:inline-block;animation:rise .5s cubic-bezier(.22,.75,.2,1) both}
 
 /* checklist card — the app-preview list style (Move / Nourish / Journal …) */
 .checklist{background:#fff;border-radius:calc(2.6*var(--u));padding:calc(2.2*var(--u)) calc(2.6*var(--u));
@@ -355,6 +397,43 @@ body.counting .count{display:grid}
 .t-curiosity .note .blank{display:block;margin-top:calc(.2*var(--u));font-family:"Playfair Display",serif;font-style:italic;
   font-weight:600;font-size:calc(3.6*var(--u));color:var(--plum)}
 
+/* ---- 11 STEP REVEAL — four zones unlock one by one, built for curiosity ---- */
+.t-steps{background:var(--cream)}
+.t-steps .kicker{position:absolute;left:0;right:0;top:calc(var(--safe-t) + 1%);z-index:14;text-align:center}
+.t-steps .kicker .t{display:inline-block;font-family:Quicksand;font-weight:700;font-size:calc(2.6*var(--u));letter-spacing:.22em;text-transform:uppercase;color:var(--hot)}
+.t-steps .title{position:absolute;left:8%;right:8%;top:calc(var(--safe-t) + 5.5%);z-index:14;text-align:center;
+  font-family:"Playfair Display",serif;font-weight:500;font-style:italic;font-size:calc(4.4*var(--u));line-height:1.16;color:var(--plum)}
+.t-steps .zones{position:absolute;left:6%;right:6%;top:calc(var(--safe-t) + 16%);bottom:calc(var(--safe-b) + 2.5%);
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:calc(1.6*var(--u))}
+.t-steps .zone{position:relative;border-radius:calc(2.4*var(--u));overflow:hidden;
+  box-shadow:0 calc(1*var(--u)) calc(2.6*var(--u)) -calc(1.4*var(--u)) rgba(60,6,30,.4)}
+.t-steps .zone .slot{position:absolute;inset:0}
+.t-steps .zone .cap{position:absolute;left:0;right:0;bottom:0;padding:calc(1*var(--u)) calc(1.4*var(--u)) calc(1.1*var(--u));
+  background:linear-gradient(to top,rgba(60,6,30,.72),transparent);z-index:5}
+.t-steps .zone .cap .t{font-family:Quicksand;font-weight:700;font-size:calc(2.2*var(--u));color:#fff;line-height:1.2}
+.t-steps .zone .num{position:absolute;left:calc(.9*var(--u));top:calc(.9*var(--u));z-index:6;
+  width:calc(4.6*var(--u));height:calc(4.6*var(--u));border-radius:50%;background:#fff;color:var(--hot);
+  display:grid;place-items:center;font-family:"Playfair Display",serif;font-weight:700;font-size:calc(2.4*var(--u));
+  box-shadow:0 2px 6px rgba(60,6,30,.3)}
+.t-steps .cover{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:calc(.6*var(--u));background:linear-gradient(155deg,var(--hot),var(--deep));
+  animation:stepReveal 7s cubic-bezier(.65,0,.35,1) infinite;transform-origin:center}
+.t-steps .zone:nth-child(1) .cover{animation-delay:0s}
+.t-steps .zone:nth-child(2) .cover{animation-delay:.55s}
+.t-steps .zone:nth-child(3) .cover{animation-delay:1.1s}
+.t-steps .zone:nth-child(4) .cover{animation-delay:1.65s}
+.t-steps .cover b{font-family:"Playfair Display",serif;font-weight:700;font-size:calc(6*var(--u));color:#fff;line-height:1}
+.t-steps .cover span{font-family:Quicksand;font-weight:700;font-size:calc(1.8*var(--u));letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.85)}
+.t-steps .cover::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);
+  animation:coverGlow 1.8s ease-in-out infinite}
+@keyframes stepReveal{
+  0%,4%{opacity:1;transform:scale(1) rotate(0deg)}
+  12%{opacity:0;transform:scale(.2) rotate(-16deg)}
+  88%{opacity:0;transform:scale(.2) rotate(-16deg)}
+  96%,100%{opacity:1;transform:scale(1) rotate(0deg)}
+}
+@keyframes coverGlow{0%,100%{opacity:.5}50%{opacity:1}}
+
 /* ---- per-format fit: the same design, re-composed for wider frames ---- */
 .stage[data-fmt="4x5"] .copy{left:10%;right:10%}
 .stage[data-fmt="1x1"] .copy{left:14%;right:14%}
@@ -424,6 +503,10 @@ body.counting .count{display:grid}
   <!-- ── stage ───────────────────────────────────────── -->
   <main class="stagecol">
     <div class="bar">
+      <div class="seg" id="modeTabs" role="group" aria-label="Editing mode">
+        <button data-mode="single" aria-pressed="true">Single post</button>
+        <button data-mode="reel" aria-pressed="false">Reel</button>
+      </div>
       <div class="seg" id="fmt" role="group" aria-label="Post format">
         <button data-fmt="9x16" aria-pressed="true">9:16</button>
         <button data-fmt="4x5" aria-pressed="false">4:5</button>
@@ -441,6 +524,33 @@ body.counting .count{display:grid}
       <div class="stage" id="stage" data-fmt="9x16">
         <div class="safe" aria-hidden="true"><u></u><i></i><i></i><u></u></div>
       </div>
+    </div>
+    <div class="reelbar" id="reelbar">
+      <div class="reelbar-top">
+        <span id="reelMeta" class="reel-meta"></span>
+        <span class="grow"></span>
+        <label class="reel-opt">Transition
+          <select id="transitionSel">
+            <option value="fade">Crossfade</option>
+            <option value="slideL">Slide</option>
+            <option value="slideU">Rise</option>
+            <option value="cut">Hard cut</option>
+          </select>
+        </label>
+        <label class="reel-opt">Export
+          <select id="resSel">
+            <option value="1080">1080 × 1920 (HD)</option>
+            <option value="2160">2160 × 3840 (Ultra HD)</option>
+          </select>
+        </label>
+        <button class="ghost" id="playReelBtn">
+          <svg width="14" height="14"><use href="#i-rec"/></svg>Play reel
+        </button>
+        <button class="rec" id="exportReelBtn">
+          <svg width="14" height="14" style="color:#fff"><use href="#i-grid"/></svg>Export &amp; download
+        </button>
+      </div>
+      <div class="filmstrip" id="filmstrip"></div>
     </div>
   </main>
 
@@ -531,7 +641,7 @@ const TEMPLATES = [
       <div class="copy">
         <div class="hookline an">
           <span class="pov t" data-t="pov" contenteditable="plaintext-only" spellcheck="false"></span>
-          ${T("line", "line")}
+          ${T("line", "line wordreveal")}
         </div>
         <div class="note paper an">${T("note")}<svg class="doodle heart" viewBox="0 0 24 22"><use href="#d-heart"/></svg></div>
       </div>`
@@ -561,7 +671,7 @@ const TEMPLATES = [
       <div class="grid">${IMG("g1", "", 5)}${IMG("g2", "", 2)}${IMG("g3", "", 4)}</div>
       <div class="scrim-b"></div>
       ${PETALS(4)}
-      <div class="tagline an">${T("pre", "pre")}${T("post", "post")}</div>
+      <div class="tagline an">${T("pre", "pre wordreveal")}${T("post", "post wordreveal")}</div>
       ${T("word", "word")}`
   },
   {
@@ -600,8 +710,8 @@ const TEMPLATES = [
       <div class="scrim-b"></div>
       ${PETALS(4)}
       <div class="copy">
-        ${T("line1", "line")}
-        ${T("line2", "line")}
+        ${T("line1", "line wordreveal")}
+        ${T("line2", "line wordreveal")}
       </div>`
   },
   {
@@ -614,7 +724,7 @@ const TEMPLATES = [
       ${PETALS(4)}
       <div class="copy">
         <div class="note paper an">
-          ${T("pre", "pre")}
+          ${T("pre", "pre wordreveal")}
           ${T("bracket", "bracket")}
           <svg class="doodle heart" viewBox="0 0 24 22"><use href="#d-heart"/></svg>
         </div>
@@ -630,9 +740,9 @@ const TEMPLATES = [
       ${PETALS(4)}
       <div class="copy">
         <div class="stack an">
-          ${T("pre", "line")}
+          ${T("pre", "line wordreveal")}
           <span class="pill t" data-t="h1" contenteditable="plaintext-only" spellcheck="false"></span>
-          ${T("mid", "line")}
+          ${T("mid", "line wordreveal")}
           <span class="pill t" data-t="h2" contenteditable="plaintext-only" spellcheck="false"></span>
         </div>
       </div>`
@@ -657,11 +767,32 @@ const TEMPLATES = [
       ${PETALS(4)}
       <svg class="doodle spark an" viewBox="0 0 24 24"><use href="#d-spark"/></svg>
       <div class="copy">
-        ${T("line", "line")}
+        ${T("line", "line wordreveal")}
         <div class="note paper an">
           ${T("pov", "pov")}
           ${T("blank", "blank")}
         </div>
+      </div>`
+  },
+  {
+    id: "steps", name: "Step reveal", hint: "4 zones unlock one by one — built for curiosity",
+    text: {
+      kicker: "wait for it", title: "4 steps to your softest morning",
+      s1: "Wake without the phone", s2: "Warm water first", s3: "Five minutes of stretch", s4: "One line in the journal"
+    },
+    images: [{ k: "z1", label: "Zone 1", ph: 2 }, { k: "z2", label: "Zone 2", ph: 5 }, { k: "z3", label: "Zone 3", ph: 1 }, { k: "z4", label: "Zone 4", ph: 4 }],
+    html: () => `
+      ${PETALS(4)}
+      <div class="kicker an">${T("kicker", "", "span")}</div>
+      <div class="title an">${T("title")}</div>
+      <div class="zones">
+        ${[1, 2, 3, 4].map(i => `
+        <div class="zone an">
+          ${IMG("z" + i, "", [2, 5, 1, 4][i - 1])}
+          <div class="num">${i}</div>
+          <div class="cap">${T("s" + i)}</div>
+          <div class="cover"><b>${i}</b><span>peek</span></div>
+        </div>`).join("")}
       </div>`
   },
 ];
@@ -673,20 +804,46 @@ const blank = () => ({
   fmt: "9x16", guides: false, scrim: .62, tpl: "hook",
   sound: true, soundVol: .45,
   music: { id: null, name: "", in: 0, out: 0, vol: .7, fade: 2.5 },
-  t: {}
+  t: {},
+  mode: "single",
+  reel: [],          // [{ id, tpl, duration }] — the sequence, in order
+  sceneState: {},     // { [sceneId]: {text,frames,media,copy} } — one instance per scene
+  activeScene: null,
+  transition: "fade", // fade | slideL | slideU | cut
+  exportRes: 1080,
 });
 let S = blank();
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) { }
 const save = (() => { let h; return () => { clearTimeout(h); h = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }, 180); }; })();
 
-function ts(id) {
-  const def = TPL[id];
-  if (!S.t[id]) S.t[id] = { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 } };
-  const st = S.t[id];
+function freshState() { return { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 } }; }
+function fillDefaults(st, def) {
   st.copy = Object.assign({ x: 0, y: 0, s: 1 }, st.copy);
   for (const k in def.text) if (typeof st.text[k] !== "string") st.text[k] = def.text[k];
   for (const im of def.images) st.frames[im.k] = Object.assign({ x: 0, y: 0, s: 1 }, st.frames[im.k]);
   return st;
+}
+function ts(id) {
+  const def = TPL[id];
+  if (!S.t[id]) S.t[id] = freshState();
+  return fillDefaults(S.t[id], def);
+}
+/* — reel scenes: each scene owns an independent copy of a template's state,
+   so using the same template twice in a reel never shares text or photos — */
+function sceneState(sceneId) {
+  const scene = S.reel.find(sc => sc.id === sceneId); if (!scene) return null;
+  const def = TPL[scene.tpl];
+  if (!S.sceneState[sceneId]) S.sceneState[sceneId] = freshState();
+  return fillDefaults(S.sceneState[sceneId], def);
+}
+function activeSceneObj() { return S.reel.find(sc => sc.id === S.activeScene) || null; }
+function currentDef() {
+  if (S.mode === "reel") { const sc = activeSceneObj(); return sc ? TPL[sc.tpl] : null; }
+  return TPL[S.tpl];
+}
+function currentState() {
+  if (S.mode === "reel") { const sc = activeSceneObj(); return sc ? sceneState(sc.id) : null; }
+  return ts(S.tpl);
 }
 
 /* ─────────────────────────── interface sound ─────────────────────────── */
@@ -775,52 +932,208 @@ function counters(root, st) {
   });
 }
 
-function renderStage() {
-  const def = TPL[S.tpl], st = ts(S.tpl);
-  $(".tpl", stage)?.remove();
+/* mode: "edit" (interactive, in the main stage) · "thumb" (static, tiny preview)
+   · "play" (animated, read-only — reel playback and export) */
+function buildTplRoot(def, st, mode) {
   const root = document.createElement("div");
   root.className = "tpl t-" + def.id;
   root.dataset.tpl = def.id;
   root.innerHTML = def.html();
-  stage.insertBefore(root, $(".safe", stage));
-  applyText(root, st); applyFrames(root, st); fillPetals(root); stagger(root); counters(root, st);
-  applyMedia(root, st);
-  $$("[data-t]", root).forEach(el => {
-    el.addEventListener("input", () => { st.text[el.dataset.t] = el.textContent; save(); syncPanelField(el.dataset.t, el.textContent); renderThumb(def.id); });
-  });
-  $("#tplName").textContent = def.name;
-  stage.style.setProperty("--scrim", S.scrim);
-  stage.dataset.fmt = S.fmt;
+  applyText(root, st); applyFrames(root, st); counters(root, st); applyMedia(root, st);
+  if (mode === "thumb") {
+    $$("[data-petals]", root).forEach(l => l.remove());
+    $$(".an", root).forEach(el => el.classList.remove("an"));
+    $$("[contenteditable]", root).forEach(el => el.removeAttribute("contenteditable"));
+  } else {
+    fillPetals(root); stagger(root);
+    if (mode === "play") {
+      $$("[contenteditable]", root).forEach(el => el.removeAttribute("contenteditable"));
+      $$(".wordreveal[data-t]", root).forEach(wordSplit);
+    }
+  }
+  return root;
+}
+function wordSplit(el) {
+  const words = (el.textContent || "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return;
+  el.innerHTML = words.map((w, i) => `<span class="wr" style="animation-delay:${i * 65}ms">${esc(w)}</span>`).join(" ");
 }
 
-/* ── thumbnails ── */
+/* ── crossfade / slide swap between two `.tpl` roots — used on every template
+   switch and to cut between scenes when a reel plays or exports ── */
+function crossTransition(fromEl, toEl, type) {
+  if (!fromEl) return Promise.resolve();
+  if (type === "cut" || !("animate" in fromEl)) { fromEl.remove(); return Promise.resolve(); }
+  const dur = 550, easing = "cubic-bezier(.22,.75,.2,1)";
+  const OUT = {
+    fade: [{ opacity: 1 }, { opacity: 0 }],
+    slideL: [{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(-5%)" }],
+    slideU: [{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(-5%)" }],
+  }[type] || [{ opacity: 1 }, { opacity: 0 }];
+  const IN = {
+    fade: [{ opacity: 0 }, { opacity: 1 }],
+    slideL: [{ opacity: 0, transform: "translateX(5%)" }, { opacity: 1, transform: "translateX(0)" }],
+    slideU: [{ opacity: 0, transform: "translateY(5%)" }, { opacity: 1, transform: "translateY(0)" }],
+  }[type] || [{ opacity: 0 }, { opacity: 1 }];
+  const p1 = fromEl.animate(OUT, { duration: dur, easing, fill: "forwards" }).finished.catch(() => { });
+  const p2 = toEl.animate(IN, { duration: dur, easing, fill: "forwards" }).finished.catch(() => { });
+  return Promise.all([p1, p2]).then(() => fromEl.remove());
+}
+
+function refreshPreview(def) { S.mode === "reel" ? renderFilmstrip() : renderThumb(def.id); }
+
+function renderStage() {
+  const def = currentDef(), st = currentState();
+  // rapid successive calls (fast clicking through templates/scenes) must never
+  // leave more than one stale .tpl behind mid-transition — cancel and clear first
+  const olds = $$(".tpl", stage);
+  olds.forEach(el => el.getAnimations().forEach(a => a.cancel()));
+  const old = olds[olds.length - 1] || null;
+  olds.slice(0, -1).forEach(el => el.remove());
+  if (!def || !st) { old?.remove(); $("#tplName").textContent = ""; return; }
+  const root = buildTplRoot(def, st, "edit");
+  stage.insertBefore(root, $(".safe", stage));
+  $$("[data-t]", root).forEach(el => {
+    el.addEventListener("input", () => {
+      st.text[el.dataset.t] = el.textContent; save(); syncPanelField(el.dataset.t, el.textContent);
+      refreshPreview(def);
+    });
+  });
+  $("#tplName").textContent = def.name + (S.mode === "reel" ? " · scene" : "");
+  stage.style.setProperty("--scrim", S.scrim);
+  stage.dataset.fmt = S.fmt;
+  crossTransition(old, root, S.transition || "fade");
+}
+
+/* ── template rail thumbnails ── */
 function renderThumb(id) {
   const frame = $(`#thumbs [data-thumb="${id}"] .frame`); if (!frame) return;
   const def = TPL[id], st = ts(id);
   frame.innerHTML = "";
-  const root = document.createElement("div");
-  root.className = "tpl t-" + id;
-  root.dataset.tpl = id;
-  root.innerHTML = def.html();
-  frame.appendChild(root);
+  frame.appendChild(buildTplRoot(def, st, "thumb"));
   frame.style.setProperty("--scrim", S.scrim);
-  applyText(root, st); applyFrames(root, st); applyMedia(root, st);
-  $$("[data-petals]", root).forEach(l => l.remove());
-  $$(".an", root).forEach(el => el.classList.remove("an"));
-  $$("[contenteditable]", root).forEach(el => el.removeAttribute("contenteditable"));
 }
 function buildThumbs() {
   $("#thumbs").innerHTML = TEMPLATES.map((t, i) => `
-    <button class="thumb" data-thumb="${t.id}" aria-pressed="${t.id === S.tpl}" title="${esc(t.hint)}">
+    <button class="thumb" data-thumb="${t.id}" aria-pressed="${t.id === S.tpl && S.mode === "single"}" title="${esc(t.hint)}">
       <div class="frame"></div>
       <div class="meta"><span class="n">${String(i + 1).padStart(2, "0")}</span><span class="nm">${esc(t.name)}</span></div>
     </button>`).join("");
   TEMPLATES.forEach(t => renderThumb(t.id));
   $$("#thumbs .thumb").forEach(b => b.addEventListener("click", () => {
+    if (S.mode === "reel") { addScene(b.dataset.thumb); return; }
     S.tpl = b.dataset.thumb; save(); blip(720, .1);
     $$("#thumbs .thumb").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
     renderStage(); buildPanel();
   }));
+}
+
+/* ══════════════════════════════ REEL BUILDER ══════════════════════════════
+   A reel is an ordered list of scenes; each scene is one template instance
+   with its own independent text/photos, so the same template can appear
+   twice in a reel without the two copies fighting over one set of content. */
+const uid = () => "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function setMode(mode) {
+  S.mode = mode; save();
+  $$("#modeTabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  document.body.classList.toggle("mode-reel", mode === "reel");
+  if (mode === "reel" && !S.activeScene && S.reel.length) S.activeScene = S.reel[0].id;
+  if (mode === "reel" && S.activeScene) { const sc = activeSceneObj(); if (sc) S.tpl = sc.tpl; }
+  $$("#thumbs .thumb").forEach(x => x.setAttribute("aria-pressed", String(mode === "single" && x.dataset.thumb === S.tpl)));
+  renderFilmstrip(); renderStage(); buildPanel();
+}
+function addScene(tplId) {
+  const id = uid();
+  S.reel.push({ id, tpl: tplId, duration: 2.6 });
+  sceneState(id);
+  S.activeScene = id; S.tpl = tplId; save(); blip(820, .12);
+  renderFilmstrip(); renderStage(); buildPanel();
+}
+function selectScene(id) {
+  if (!S.reel.some(s => s.id === id)) return;
+  S.activeScene = id; S.tpl = S.reel.find(s => s.id === id).tpl; save();
+  renderFilmstrip(); renderStage(); buildPanel();
+}
+function duplicateScene(id) {
+  const idx = S.reel.findIndex(s => s.id === id); if (idx < 0) return;
+  const src = S.reel[idx], newId = uid();
+  S.reel.splice(idx + 1, 0, { ...src, id: newId });
+  S.sceneState[newId] = JSON.parse(JSON.stringify(sceneState(id)));
+  save(); blip(760, .1); selectScene(newId);
+}
+function removeScene(id) {
+  const idx = S.reel.findIndex(s => s.id === id); if (idx < 0) return;
+  S.reel.splice(idx, 1); delete S.sceneState[id];
+  if (S.activeScene === id) S.activeScene = (S.reel[Math.max(0, idx - 1)] || S.reel[0])?.id || null;
+  save();
+  if (S.activeScene) selectScene(S.activeScene);
+  else { renderFilmstrip(); $$(".tpl", stage).forEach(el => el.remove()); $("#tplName").textContent = ""; buildPanel(); }
+}
+function moveScene(id, dir) {
+  const idx = S.reel.findIndex(s => s.id === id); if (idx < 0) return;
+  const j = idx + dir; if (j < 0 || j >= S.reel.length) return;
+  [S.reel[idx], S.reel[j]] = [S.reel[j], S.reel[idx]];
+  save(); renderFilmstrip();
+}
+function updateReelMeta() {
+  const el = $("#reelMeta"); if (!el) return;
+  const total = S.reel.reduce((a, s) => a + (s.duration || 2.6), 0);
+  el.textContent = S.reel.length ? `${S.reel.length} scene${S.reel.length === 1 ? "" : "s"} · ${total.toFixed(1)}s total` : "";
+}
+function renderFilmstrip() {
+  const bar = $("#filmstrip"); if (!bar) return;
+  if (!S.reel.length) {
+    bar.innerHTML = `<p class="reel-empty">Click any template on the left to add it as your first scene — keep clicking to build the reel, in order. Reuse the same template as many times as you like; each copy keeps its own text and photos.</p>`;
+    updateReelMeta(); return;
+  }
+  bar.innerHTML = S.reel.map((sc, i) => `
+    <div class="scene ${sc.id === S.activeScene ? "active" : ""}" data-scene="${sc.id}" title="${esc(TPL[sc.tpl].name)}">
+      <div class="sframe"></div>
+      <div class="sctrl">
+        <button class="sbtn" type="button" data-act="left" ${i === 0 ? "disabled" : ""} title="Move earlier">‹</button>
+        <span class="sn">${i + 1}</span>
+        <button class="sbtn" type="button" data-act="right" ${i === S.reel.length - 1 ? "disabled" : ""} title="Move later">›</button>
+      </div>
+      <div class="sdur"><input type="number" min="0.6" max="8" step="0.1" value="${sc.duration}" data-act="dur"> s</div>
+      <div class="srow">
+        <button class="sbtn" type="button" data-act="dup" title="Duplicate scene">⧉</button>
+        <button class="sbtn danger" type="button" data-act="del" title="Remove scene">✕</button>
+      </div>
+    </div>`).join("");
+  $$(".scene", bar).forEach(el => {
+    const id = el.dataset.scene, sc = S.reel.find(s => s.id === id), def = TPL[sc.tpl], st = sceneState(id);
+    const frame = $(".sframe", el);
+    frame.appendChild(buildTplRoot(def, st, "thumb"));
+    frame.style.setProperty("--scrim", S.scrim);
+    el.addEventListener("click", e => { if (!e.target.closest("[data-act]")) selectScene(id); });
+    $('[data-act="left"]', el)?.addEventListener("click", e => { e.stopPropagation(); moveScene(id, -1); });
+    $('[data-act="right"]', el)?.addEventListener("click", e => { e.stopPropagation(); moveScene(id, 1); });
+    $('[data-act="dup"]', el).addEventListener("click", e => { e.stopPropagation(); duplicateScene(id); });
+    $('[data-act="del"]', el).addEventListener("click", e => { e.stopPropagation(); removeScene(id); });
+    $('[data-act="dur"]', el).addEventListener("input", e => { sc.duration = clamp(+e.target.value || 2.6, .6, 8); save(); updateReelMeta(); });
+    $('[data-act="dur"]', el).addEventListener("click", e => e.stopPropagation());
+  });
+  updateReelMeta();
+}
+
+function sleep(ms, signal) {
+  return new Promise((res, rej) => {
+    const t = setTimeout(res, ms);
+    signal?.addEventListener("abort", () => { clearTimeout(t); rej(new DOMException("aborted", "AbortError")); });
+  });
+}
+async function playReelSequence(container, { signal } = {}) {
+  for (const sc of S.reel) {
+    if (signal?.aborted) throw new DOMException("aborted", "AbortError");
+    const def = TPL[sc.tpl], st = sceneState(sc.id);
+    const root = buildTplRoot(def, st, "play");
+    const old = $(".tpl", container);
+    container.insertBefore(root, $(".safe", container) || null);
+    await crossTransition(old, root, S.transition || "fade");
+    if (signal?.aborted) throw new DOMException("aborted", "AbortError");
+    await sleep((sc.duration || 2.6) * 1000, signal);
+  }
 }
 </script>
 <script>
@@ -870,8 +1183,12 @@ const LBL = {
 const labelFor = k => LBL[k] || k.replace(/^n(\d)$/, "Pick $1").replace(/^l(\d)$/, "Item $1").replace(/^w(\d)$/, "Line $1");
 
 function buildPanel() {
-  const def = TPL[S.tpl], st = ts(S.tpl);
+  const def = currentDef(), st = currentState();
   panel.innerHTML = "";
+  if (!def || !st) {
+    panel.innerHTML = '<p class="hint" style="padding:16px">Select a scene in the filmstrip, or add one from the templates on the left, to edit it here.</p>';
+    return;
+  }
 
   /* — copy — */
   const txt = section("Copy · " + def.name, "i-type");
@@ -884,7 +1201,7 @@ function buildPanel() {
     input.addEventListener("input", () => {
       st.text[k] = input.value; save();
       const el = $(`.tpl [data-t="${k}"]`, stage); if (el && document.activeElement !== el) el.textContent = input.value;
-      renderThumb(def.id);
+      refreshPreview(def);
     });
     txt.appendChild(f);
   }
@@ -912,13 +1229,13 @@ function buildPanel() {
       await DB.put(id, file, file.name, kind);
       if (m.id) { DB.del(m.id); urls.delete(m.id); }
       st.media[im.k] = { id, kind, name: file.name, in: 0, out: 0 };
-      save(); blip(880, .13); renderStage(); renderThumb(def.id); buildPanel();
+      save(); blip(880, .13); renderStage(); refreshPreview(def); buildPanel();
     });
     $(".mini.rm", drop)?.addEventListener("click", e => {
       e.stopPropagation();
       if (m.id) { DB.del(m.id); urls.delete(m.id); }
       st.media[im.k] = { id: null, kind: "image", name: "", in: 0, out: 0 };
-      save(); renderStage(); renderThumb(def.id); buildPanel();
+      save(); renderStage(); refreshPreview(def); buildPanel();
     });
     s.appendChild(drop);
     const warn = storageWarning(); if (warn) s.appendChild(warn);
@@ -938,9 +1255,9 @@ function buildPanel() {
     const f = st.frames[im.k];
     const fr = document.createElement("div"); fr.style.marginTop = "9px";
     fr.innerHTML = `<p class="hint" style="margin:0 0 2px">Framing · % of stage</p>`;
-    fr.appendChild(sliderRow("X", -50, 50, 1, f.x, v => v + "%", v => { f.x = v; save(); applyFrames($(".tpl", stage), st); renderThumb(def.id); }));
-    fr.appendChild(sliderRow("Y", -50, 50, 1, f.y, v => v + "%", v => { f.y = v; save(); applyFrames($(".tpl", stage), st); renderThumb(def.id); }));
-    fr.appendChild(sliderRow("Scale", 1, 3, .01, f.s, v => v.toFixed(2) + "×", v => { f.s = v; save(); applyFrames($(".tpl", stage), st); renderThumb(def.id); }));
+    fr.appendChild(sliderRow("X", -50, 50, 1, f.x, v => v + "%", v => { f.x = v; save(); applyFrames($(".tpl", stage), st); refreshPreview(def); }));
+    fr.appendChild(sliderRow("Y", -50, 50, 1, f.y, v => v + "%", v => { f.y = v; save(); applyFrames($(".tpl", stage), st); refreshPreview(def); }));
+    fr.appendChild(sliderRow("Scale", 1, 3, .01, f.s, v => v.toFixed(2) + "×", v => { f.s = v; save(); applyFrames($(".tpl", stage), st); refreshPreview(def); }));
     s.appendChild(fr);
     panel.appendChild(s);
   }
@@ -954,7 +1271,7 @@ function buildPanel() {
   sc.innerHTML = `<p class="hint" style="margin:0 0 2px">Scrim — graded up from the frame edge, so type stays readable without a blur over a face.</p>`;
   sc.appendChild(sliderRow("Scrim", 0, 1, .01, S.scrim, v => Math.round(v * 100) + "%", v => {
     S.scrim = v; save(); stage.style.setProperty("--scrim", v);
-    $$("#thumbs .frame").forEach(fr2 => fr2.style.setProperty("--scrim", v));
+    $$("#thumbs .frame, .scene .sframe").forEach(fr2 => fr2.style.setProperty("--scrim", v));
   }));
   layout.appendChild(sc);
   panel.appendChild(layout);
@@ -1008,7 +1325,7 @@ function buildPanel() {
     for (const k in def.text) st.text[k] = def.text[k];
     for (const im of def.images) { st.frames[im.k] = { x: 0, y: 0, s: 1 }; }
     st.copy = { x: 0, y: 0, s: 1 };
-    save(); renderStage(); renderThumb(def.id); buildPanel(); blip(600, .12);
+    save(); renderStage(); refreshPreview(def); buildPanel(); blip(600, .12);
   });
   rst.appendChild(b);
   panel.appendChild(rst);
@@ -1044,36 +1361,113 @@ $("#guidesBtn").addEventListener("click", e => {
 $("#replayBtn").addEventListener("click", () => { renderStage(); blip(820, .1); });
 
 function exitRecord() {
-  document.body.classList.remove("rec-mode", "counting");
+  document.body.classList.remove("rec-mode", "counting", "reel-playing");
   stopMusic();
   $$(".tpl [data-t]", stage).forEach(el => el.setAttribute("contenteditable", "plaintext-only"));
 }
-$("#recBtn").addEventListener("click", () => {
-  document.body.classList.add("rec-mode", "counting");
+function countdown(n = 3) {
+  document.body.classList.add("counting");
+  $("#countNum").textContent = n;
+  return new Promise(res => {
+    const iv = setInterval(() => {
+      n--;
+      if (n > 0) { $("#countNum").textContent = n; $("#countNum").style.animation = "none"; void $("#countNum").offsetWidth; $("#countNum").style.animation = ""; blip(560, .1); }
+      else { clearInterval(iv); document.body.classList.remove("counting"); res(); }
+    }, 1000);
+  });
+}
+$("#recBtn").addEventListener("click", async () => {
+  document.body.classList.add("rec-mode");
   $$(".tpl [data-t]", stage).forEach(el => el.setAttribute("contenteditable", "false"));
-  let n = 3; $("#countNum").textContent = n;
-  const iv = setInterval(() => {
-    n--;
-    if (n > 0) { $("#countNum").textContent = n; $("#countNum").style.animation = "none"; void $("#countNum").offsetWidth; $("#countNum").style.animation = ""; blip(560, .1); }
-    else {
-      clearInterval(iv);
-      document.body.classList.remove("counting");
-      renderStage();
-      $$(".tpl [data-t]", stage).forEach(el => el.setAttribute("contenteditable", "false"));
-      startMusic();
-    }
-  }, 1000);
   blip(500, .12);
+  await countdown(3);
+  renderStage();
+  $$(".tpl [data-t]", stage).forEach(el => el.setAttribute("contenteditable", "false"));
+  startMusic();
 });
 $("#exitBtn").addEventListener("click", exitRecord);
-document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("rec-mode")) exitRecord(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("rec-mode")) { reelAbort?.abort(); exitRecord(); } });
+
+/* ══════════════════════════ reel playback & export ════════════════════════ */
+let reelAbort = null;
+async function runReel({ record = false } = {}) {
+  if (!S.reel.length) { alert("Add at least one scene to your reel first — click a template on the left to add it."); return; }
+  document.body.classList.add("rec-mode", "reel-playing");
+  blip(500, .12);
+  await countdown(3);
+
+  let recorder = null, chunks = [], stream = null;
+  if (record) {
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      document.body.classList.remove("rec-mode", "reel-playing");
+      alert("This browser can't record video. Recording needs a Chromium or Firefox browser over a real (non-preview) page.");
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30 }, audio: true,
+        preferCurrentTab: true, selfBrowserSurface: "include", surfaceSwitching: "exclude",
+      });
+    } catch (e) {
+      document.body.classList.remove("rec-mode", "reel-playing");
+      alert("Recording needs permission to capture this tab. When the picker opens, choose \"This tab\" and turn on \"Share tab audio\" so your music is included — then click Export again.");
+      return;
+    }
+    const mime = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp9", "video/webm"].find(m => window.MediaRecorder?.isTypeSupported(m)) || "video/webm";
+    const highRes = +S.exportRes >= 2160;
+    try {
+      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: highRes ? 45_000_000 : 16_000_000 });
+    } catch (e) { recorder = new MediaRecorder(stream); }
+    recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    recorder.start(250);
+    stream.getVideoTracks()[0]?.addEventListener("ended", () => reelAbort?.abort());
+  }
+
+  startMusic();
+  reelAbort = new AbortController();
+  $$(".tpl", stage).forEach(el => el.remove());
+  try {
+    await playReelSequence(stage, { signal: reelAbort.signal });
+  } catch (e) { /* stopped early — still export whatever was captured */ }
+  stopMusic();
+
+  if (record) {
+    await sleep(200).catch(() => { });
+    recorder.state !== "inactive" && recorder.stop();
+    await new Promise(res => { recorder.onstop = res; });
+    stream.getTracks().forEach(t => t.stop());
+    const blob = new Blob(chunks, { type: "video/webm" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `bloomzein-reel-${Date.now()}.webm`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
+  exitRecord();
+  if (S.activeScene) selectScene(S.activeScene); else renderStage();
+}
+$("#playReelBtn").addEventListener("click", () => runReel({ record: false }));
+$("#exportReelBtn").addEventListener("click", () => runReel({ record: true }));
+
+/* ────────────────────────── mode & reel controls ──────────────────────── */
+$$("#modeTabs button").forEach(b => b.addEventListener("click", () => { setMode(b.dataset.mode); blip(700, .1); }));
+$("#transitionSel").addEventListener("change", e => { S.transition = e.target.value; save(); });
+$("#resSel").addEventListener("change", e => { S.exportRes = +e.target.value; save(); });
 
 /* ───────────────────────────────── boot ──────────────────────────────── */
 document.body.classList.toggle("guides", S.guides);
 $("#guidesBtn").setAttribute("aria-pressed", String(S.guides));
 $$("#fmt button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fmt === S.fmt)));
 if (!TPL[S.tpl]) S.tpl = "hook";
+S.reel = (S.reel || []).filter(sc => TPL[sc.tpl]);
+if (S.activeScene && !S.reel.some(sc => sc.id === S.activeScene)) S.activeScene = S.reel[0]?.id || null;
+$$("#modeTabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === S.mode)));
+document.body.classList.toggle("mode-reel", S.mode === "reel");
+$("#transitionSel").value = S.transition || "fade";
+$("#resSel").value = String(S.exportRes || 1080);
 buildThumbs();
+renderFilmstrip();
 renderStage();
 buildPanel();
 loadMusic();
