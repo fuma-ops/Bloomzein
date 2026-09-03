@@ -272,6 +272,17 @@ body.counting .count{display:grid}
 .tape::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.4) 0 2px,transparent 2px 7px)}
 
 .doodle{position:absolute;color:var(--hot);opacity:.85;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(60,6,30,.12))}
+
+/* brand watermark — a quiet flower + wordmark, present on every scene so a
+   reel still reads as Bloomzein mid-sequence, not only on the outro */
+/* sits in the platform-reserved strip below the safe area, like a permanent
+   corner tag — small and subtle enough that a caption/button overlapping it
+   there is fine, but never competing with a template's own bottom content */
+.brandmark{position:absolute;right:4%;bottom:2.4%;z-index:16;
+  display:flex;align-items:center;gap:.3em;background:rgba(255,255,255,.94);
+  padding:.3em .6em .3em .42em;border-radius:999px;box-shadow:0 2px 6px rgba(60,6,30,.22);pointer-events:none}
+.brandmark svg{width:calc(2.2*var(--u));height:calc(2.2*var(--u));color:var(--hot);flex:none}
+.brandmark span{font-family:Quicksand;font-weight:700;font-size:calc(1.7*var(--u));letter-spacing:.02em;color:var(--plum);white-space:nowrap}
 .doodle.an{animation:doodlepop .6s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes doodlepop{0%{opacity:0;transform:scale(.35) rotate(-10deg)}62%{opacity:1;transform:scale(1.18) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
 
@@ -434,6 +445,33 @@ body.counting .count{display:grid}
 }
 @keyframes coverGlow{0%,100%{opacity:.5}50%{opacity:1}}
 
+/* ---- 12 OUTRO — rotating flower, then the wordmark, then the CTA, in 4s ---- */
+.t-outro{background:linear-gradient(165deg,#FFF7FB 0%,#FDE7F3 46%,#F9A8D4 100%)}
+.t-outro .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:calc(1.4*var(--u));text-align:center;padding:0 8%}
+.t-outro .flowerglow{position:absolute;left:50%;top:37%;width:40cqw;height:40cqw;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(circle,rgba(230,0,126,.48),rgba(230,0,126,0) 70%);
+  animation:pulse 2.4s ease-in-out infinite}
+.t-outro .flowerwrap{width:21cqw;height:21cqw;animation:outroFlowerIn 1s cubic-bezier(.34,1.56,.64,1) both}
+.t-outro .flowerwrap svg{width:100%;height:100%;color:var(--hot);
+  filter:drop-shadow(0 calc(.6*var(--u)) calc(1.6*var(--u)) rgba(60,6,30,.35));
+  animation:outroSpin 16s linear 1s infinite}
+.t-outro .wordmark{display:block;font-family:"Dancing Script",cursive;font-weight:700;font-size:calc(11*var(--u));
+  color:var(--deep);line-height:1;opacity:0;animation:outroRise .7s cubic-bezier(.22,.75,.2,1) 1.6s forwards}
+.t-outro .tagline{display:block;font-family:"Playfair Display",serif;font-style:italic;font-weight:500;
+  font-size:calc(3.2*var(--u));color:var(--ink);opacity:0;animation:outroRise .6s cubic-bezier(.22,.75,.2,1) 2.6s forwards}
+.t-outro .ctawrap{margin-top:calc(.6*var(--u));opacity:0;animation:outroRise .6s cubic-bezier(.22,.75,.2,1) 3.2s forwards}
+.t-outro .cta{display:inline-block;padding:.62em 1.4em;background:var(--hot);color:#fff;border-radius:999px;
+  font-family:Quicksand;font-weight:700;font-size:calc(2.7*var(--u));letter-spacing:.03em;
+  animation:ctaBreathe 2.4s ease-in-out 3.8s infinite}
+@keyframes outroFlowerIn{0%{opacity:0;transform:scale(.3) rotate(-70deg)}65%{opacity:1;transform:scale(1.12) rotate(10deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes outroSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes outroRise{from{opacity:0;transform:translateY(10%)}to{opacity:1;transform:translateY(0)}}
+@keyframes ctaBreathe{
+  0%,100%{box-shadow:0 calc(.8*var(--u)) calc(2*var(--u)) -calc(.6*var(--u)) rgba(230,0,126,.75)}
+  50%{box-shadow:0 calc(1.2*var(--u)) calc(3*var(--u)) -calc(.4*var(--u)) rgba(230,0,126,1)}
+}
+
 /* ---- per-format fit: the same design, re-composed for wider frames ---- */
 .stage[data-fmt="4x5"] .copy{left:10%;right:10%}
 .stage[data-fmt="1x1"] .copy{left:14%;right:14%}
@@ -575,6 +613,7 @@ const T = (k, cls = "", tag = "span") =>
 const IMG = (k, cls = "", ph = 1) =>
   `<div class="slot an ${cls}" data-slot="${k}"><div class="media" data-media="${k}"><div class="ph ph${ph}"></div></div></div>`;
 const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
+const BRAND = () => `<div class="brandmark an"><svg viewBox="0 0 24 24"><use href="#i-bloom"/></svg><span>bloomzein</span></div>`;
 
 /* ─────────────────────────── media store (IndexedDB) ─────────────────── */
 /* IndexedDB where it is allowed, memory where it is not: some embedded
@@ -644,7 +683,8 @@ const TEMPLATES = [
           ${T("line", "line wordreveal")}
         </div>
         <div class="note paper an">${T("note")}<svg class="doodle heart" viewBox="0 0 24 22"><use href="#d-heart"/></svg></div>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "empathy", name: "Problem + empathy", hint: "Full-bleed photo · one torn note",
@@ -661,7 +701,8 @@ const TEMPLATES = [
           ${T("post", "line1")}
           ${T("line2", "line2")}
         </div>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "routine", name: "Routine overview", hint: "Full-bleed collage · one script word",
@@ -672,7 +713,8 @@ const TEMPLATES = [
       <div class="scrim-b"></div>
       ${PETALS(4)}
       <div class="tagline an">${T("pre", "pre wordreveal")}${T("post", "post wordreveal")}</div>
-      ${T("word", "word")}`
+      ${T("word", "word")}
+      ${BRAND()}`
   },
   {
     id: "appfocus", name: "Solution + app focus", hint: "Full-bleed photo (the phone is in the shot) · one line",
@@ -684,7 +726,8 @@ const TEMPLATES = [
       ${PETALS(4)}
       <div class="copy">
         <div class="headline an">${T("pre", "", "span")} <span class="pill t" data-t="hi" contenteditable="plaintext-only" spellcheck="false"></span> ${T("post", "", "span")}</div>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "feature", name: "Feature highlight", hint: "Full-bleed photo · one checklist card",
@@ -699,7 +742,8 @@ const TEMPLATES = [
           ${T("pre", "title")}${T("script", "title script")}
         </div></div>
         <ul class="checklist an">${[1, 2, 3, 4, 5].map(i => `<li><span class="dot"><svg width="58%" height="58%" viewBox="0 0 24 24"><use href="#d-spark"/></svg></span>${T("l" + i)}<span class="ok"><svg viewBox="0 0 24 24"><use href="#d-check"/></svg></span></li>`).join("")}</ul>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "motivation", name: "Motivation + aesthetic", hint: "Full-bleed photo · one plain line, nothing else",
@@ -712,7 +756,8 @@ const TEMPLATES = [
       <div class="copy">
         ${T("line1", "line wordreveal")}
         ${T("line2", "line wordreveal")}
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "education", name: "Education + value", hint: "Full-bleed photo · one torn note · one doodle",
@@ -728,7 +773,8 @@ const TEMPLATES = [
           ${T("bracket", "bracket")}
           <svg class="doodle heart" viewBox="0 0 24 22"><use href="#d-heart"/></svg>
         </div>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "tips", name: "Tips + how-to", hint: "Full-bleed photo · one plain stacked line, two pill words",
@@ -745,7 +791,8 @@ const TEMPLATES = [
           ${T("mid", "line wordreveal")}
           <span class="pill t" data-t="h2" contenteditable="plaintext-only" spellcheck="false"></span>
         </div>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "trend", name: "Trend + engagement", hint: "Full-bleed collage · one taped tag · one doodle arrow",
@@ -755,7 +802,8 @@ const TEMPLATES = [
       <div class="grid">${IMG("g1", "", 2)}${IMG("g2", "", 6)}${IMG("g3", "", 4)}${IMG("g4", "", 3)}</div>
       <div class="tagwrap"><div class="paper an"><div class="tape"></div>${T("title", "title")}</div></div>
       <span class="sub t an" data-t="sub" contenteditable="plaintext-only" spellcheck="false" style="left:14%;bottom:calc(var(--safe-b) + 6%)"></span>
-      <svg class="doodle arrow an" viewBox="0 0 40 34" style="left:20%;bottom:calc(var(--safe-b) + 13%)"><use href="#d-arrow"/></svg>`
+      <svg class="doodle arrow an" viewBox="0 0 40 34" style="left:20%;bottom:calc(var(--safe-b) + 13%)"><use href="#d-arrow"/></svg>
+      ${BRAND()}`
   },
   {
     id: "curiosity", name: "Curiosity + discovery", hint: "Full-bleed photo · one plain line · one small torn note",
@@ -772,7 +820,8 @@ const TEMPLATES = [
           ${T("pov", "pov")}
           ${T("blank", "blank")}
         </div>
-      </div>`
+      </div>
+      ${BRAND()}`
   },
   {
     id: "steps", name: "Step reveal", hint: "4 zones unlock one by one — built for curiosity",
@@ -793,6 +842,21 @@ const TEMPLATES = [
           <div class="cap">${T("s" + i)}</div>
           <div class="cover"><b>${i}</b><span>peek</span></div>
         </div>`).join("")}
+      </div>
+      ${BRAND()}`
+  },
+  {
+    id: "outro", name: "Outro · Call to action", hint: "Rotating flower → wordmark → CTA, choreographed to land at 4 seconds",
+    text: { wordmark: "Bloomzein", tagline: "Your softest era starts here.", cta: "www.bloomzein.com" },
+    images: [],
+    html: () => `
+      ${PETALS(3)}
+      <div class="center">
+        <div class="flowerglow"></div>
+        <div class="flowerwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bloom"/></svg></div>
+        <span class="t wordmark" data-t="wordmark" contenteditable="plaintext-only" spellcheck="false"></span>
+        <span class="t tagline" data-t="tagline" contenteditable="plaintext-only" spellcheck="false"></span>
+        <div class="ctawrap"><span class="t cta" data-t="cta" contenteditable="plaintext-only" spellcheck="false"></span></div>
       </div>`
   },
 ];
@@ -915,8 +979,14 @@ async function applyMedia(root, st) {
     }
   }
 }
+/* every template's reveal choreography lands at exactly 4s, whether it has
+   3 elements or 10 — the stagger step is computed backward from that, never
+   a fixed 80ms, so the last piece always finishes right on 4000ms */
+const REVEAL_TOTAL = 4000, REVEAL_DUR = 420;
 function stagger(root) {
-  $$(".an", root).forEach((el, i) => { el.style.animationDelay = (i * 80) + "ms"; });
+  const els = $$(".an", root); if (!els.length) return;
+  const step = els.length > 1 ? (REVEAL_TOTAL - REVEAL_DUR) / (els.length - 1) : 0;
+  els.forEach((el, i) => { el.style.animationDelay = Math.round(i * step) + "ms"; });
 }
 function counters(root, st) {
   $$("[data-count]", root).forEach(el => {
@@ -1045,7 +1115,7 @@ function setMode(mode) {
 }
 function addScene(tplId) {
   const id = uid();
-  S.reel.push({ id, tpl: tplId, duration: 2.6 });
+  S.reel.push({ id, tpl: tplId, duration: 4 });
   sceneState(id);
   S.activeScene = id; S.tpl = tplId; save(); blip(820, .12);
   renderFilmstrip(); renderStage(); buildPanel();
@@ -1078,7 +1148,7 @@ function moveScene(id, dir) {
 }
 function updateReelMeta() {
   const el = $("#reelMeta"); if (!el) return;
-  const total = S.reel.reduce((a, s) => a + (s.duration || 2.6), 0);
+  const total = S.reel.reduce((a, s) => a + (s.duration || 4), 0);
   el.textContent = S.reel.length ? `${S.reel.length} scene${S.reel.length === 1 ? "" : "s"} · ${total.toFixed(1)}s total` : "";
 }
 function renderFilmstrip() {
@@ -1111,7 +1181,7 @@ function renderFilmstrip() {
     $('[data-act="right"]', el)?.addEventListener("click", e => { e.stopPropagation(); moveScene(id, 1); });
     $('[data-act="dup"]', el).addEventListener("click", e => { e.stopPropagation(); duplicateScene(id); });
     $('[data-act="del"]', el).addEventListener("click", e => { e.stopPropagation(); removeScene(id); });
-    $('[data-act="dur"]', el).addEventListener("input", e => { sc.duration = clamp(+e.target.value || 2.6, .6, 8); save(); updateReelMeta(); });
+    $('[data-act="dur"]', el).addEventListener("input", e => { sc.duration = clamp(+e.target.value || 4, .6, 8); save(); updateReelMeta(); });
     $('[data-act="dur"]', el).addEventListener("click", e => e.stopPropagation());
   });
   updateReelMeta();
@@ -1132,7 +1202,7 @@ async function playReelSequence(container, { signal } = {}) {
     container.insertBefore(root, $(".safe", container) || null);
     await crossTransition(old, root, S.transition || "fade");
     if (signal?.aborted) throw new DOMException("aborted", "AbortError");
-    await sleep((sc.duration || 2.6) * 1000, signal);
+    await sleep((sc.duration || 4) * 1000, signal);
   }
 }
 </script>
@@ -1178,9 +1248,13 @@ const LBL = {
   site: "Site line", foot: "Footnote", num: "Number", what: "What it is",
   terms: "Terms", head: "Script header", cap: "Caption", pre: "Lead-in",
   ttl: "Title", q: "Quote", by: "Attribution", feat: "Feature label",
-  ben: "Benefit", note: "Hand note"
+  ben: "Benefit", note: "Hand note", pov: "POV label", hi: "Emphasized word",
+  blank: "Fill in the blank", bracket: "Bracketed line", script: "Script line",
+  mid: "Middle word", h1: "Pill word 1", h2: "Pill word 2",
+  title: "Title", wordmark: "Wordmark", tagline: "Tagline", cta: "Call to action",
 };
-const labelFor = k => LBL[k] || k.replace(/^n(\d)$/, "Pick $1").replace(/^l(\d)$/, "Item $1").replace(/^w(\d)$/, "Line $1");
+const labelFor = k => LBL[k] || k.replace(/^n(\d)$/, "Pick $1").replace(/^l(\d)$/, "Item $1")
+  .replace(/^w(\d)$/, "Line $1").replace(/^s(\d)$/, "Step $1 caption").replace(/^g(\d)$/, "Photo $1");
 
 function buildPanel() {
   const def = currentDef(), st = currentState();
