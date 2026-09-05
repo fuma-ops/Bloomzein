@@ -715,6 +715,7 @@ const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
    which has no background to recolor */
 const BG_CARRIERS = ".paper,.pill,.time,.checklist";
 const HL_STYLES = ["hl-pill", "hl-rect", "hl-stroke", "hl-brush", "hl-circle", "hl-tape", "hl-marks", "hl-blob", "hl-underline", "hl-heart", "hl-glass", "hl-glow"];
+const NO_CARD_SHADOW = "0 1px 4px rgba(60,6,30,.55), 0 1px 14px rgba(60,6,30,.4)";
 function applyStyleOverrides(root, st) {
   const sc = st.style || {};
   if (sc.scale && sc.scale !== 1) root.style.setProperty("--u", `calc(min(1cqw, .68cqh) * ${sc.scale})`);
@@ -723,7 +724,38 @@ function applyStyleOverrides(root, st) {
     el.style.color = sc.color || "";
     el.style.fontFamily = sc.font || "";
   });
-  $$(BG_CARRIERS, root).forEach(el => { el.style.backgroundColor = sc.bg || ""; el.style.backgroundImage = sc.bg ? "none" : ""; });
+  // bg: "" (default) — no card at all, text floats straight on the photo/clip;
+  // "template" — the template's own card, exactly as designed; any other value
+  // is a custom color. Default is "no card" per how this is meant to work —
+  // the card only comes back once you explicitly choose "Template style".
+  const bg = sc.bg ?? "";
+  $$(BG_CARRIERS, root).forEach(el => {
+    const tape = el.querySelector(":scope > .tape") || el.parentElement?.querySelector(":scope > .tape");
+    if (bg === "template") {
+      el.style.backgroundColor = ""; el.style.backgroundImage = ""; el.style.boxShadow = "";
+      if (tape) tape.style.display = "";
+    } else if (bg) {
+      el.style.backgroundColor = bg; el.style.backgroundImage = "none"; el.style.boxShadow = "";
+      if (tape) tape.style.display = "";
+    } else {
+      el.style.backgroundColor = "transparent"; el.style.backgroundImage = "none"; el.style.boxShadow = "none";
+      if (tape) tape.style.display = "none";
+    }
+    $$("[data-t]", el).forEach(t => {
+      // this text was written assuming an opaque paper card behind it (dark
+      // plum/muted ink) — with the card gone it needs to read like every
+      // other on-photo line in the app: white, with a shadow to hold it there.
+      // The hero word's own accent color is deliberate either way, so it's left alone.
+      const isAccent = t.matches(".hi,.pill") || !!t.closest(".hi,.pill");
+      if (!bg) {
+        t.style.textShadow = NO_CARD_SHADOW;
+        if (!sc.color && !isAccent) t.style.color = "#FFF7FB";
+      } else {
+        t.style.textShadow = "";
+        if (!sc.color) t.style.color = "";
+      }
+    });
+  });
   // the highlight style targets this scene's own hero word — whichever element
   // the template itself marks as .hi (an emphasized word) or .pill (a boxed one)
   $$(".hi,.pill", root).forEach(el => {
@@ -1545,21 +1577,32 @@ function buildPanel() {
   });
   tyle.appendChild(fontRow);
   const bgRow = document.createElement("div"); bgRow.className = "field"; bgRow.style.marginTop = "8px";
-  bgRow.innerHTML = `<label>Text background</label>
+  bgRow.innerHTML = `<label>Text background — off unless you choose otherwise</label>
     <div class="row">
-      <input type="color" value="${st.style.bg || "#fffdfb"}" style="width:44px;padding:2px;flex:none">
-      <button class="ghost" type="button">Use template style</button>
+      <button class="ghost" type="button" data-bg="none">No background</button>
+      <button class="ghost" type="button" data-bg="template">Template style</button>
+      <input type="color" value="${(st.style.bg && st.style.bg !== "template") ? st.style.bg : "#fffdfb"}" style="width:44px;padding:2px;flex:none">
     </div>`;
+  const markBgActive = () => {
+    const mode = st.style.bg === "template" ? "template" : (st.style.bg ? "custom" : "none");
+    $$("[data-bg]", bgRow).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.bg === mode)));
+  };
+  $('[data-bg="none"]', bgRow).addEventListener("click", () => {
+    st.style.bg = ""; save(); markBgActive();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  $('[data-bg="template"]', bgRow).addEventListener("click", () => {
+    st.style.bg = "template"; save(); markBgActive();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
   $("input[type=color]", bgRow).addEventListener("input", e => {
-    st.style.bg = e.target.value; save();
+    st.style.bg = e.target.value; save(); markBgActive();
     const root = liveTpl(); if (root) applyStyleOverrides(root, st);
     refreshPreview(def);
   });
-  $("button", bgRow).addEventListener("click", () => {
-    st.style.bg = ""; save(); $("input[type=color]", bgRow).value = "#fffdfb";
-    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
-    refreshPreview(def);
-  });
+  markBgActive();
   tyle.appendChild(bgRow);
   const hlRow = document.createElement("div"); hlRow.className = "field"; hlRow.style.marginTop = "8px";
   hlRow.innerHTML = `<label>Highlight style — this scene's hero word</label>
@@ -1586,7 +1629,7 @@ function buildPanel() {
   });
   tyle.appendChild(hlRow);
   const tyleHint = document.createElement("p"); tyleHint.className = "hint"; tyleHint.style.margin = "8px 0 0";
-  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color, font and background apply across all of this scene's text and cards at once, replacing the template's own palette — leave any of them at their defaults to keep the original look. Background only affects cards, notes, pills and chips — plain type sitting on a photo has no background to recolor. Highlight style only affects a scene's designated hero word (e.g. \"period\", \"ONE\") — templates without one won't show a change.";
+  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color and font apply across all of this scene's text at once, replacing the template's own palette — leave them at their defaults to keep the original look. Text background only affects cards, notes, pills and chips (plain type sitting on a photo has none to begin with), and starts off — pick \"Template style\" to bring back that card, or a color for your own. Highlight style only affects a scene's designated hero word (e.g. \"period\", \"ONE\") — templates without one won't show a change.";
   tyle.appendChild(tyleHint);
   panel.appendChild(tyle);
 
