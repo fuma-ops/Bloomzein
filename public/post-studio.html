@@ -520,10 +520,17 @@ body.counting .count{display:grid}
 }
 @keyframes coverGlow{0%,100%{opacity:.5}50%{opacity:1}}
 
-/* ---- 12 OUTRO — rotating flower, then the wordmark, then the CTA, in 4s ---- */
+/* ---- 12 OUTRO — photo/clip behind a rotating flower, wordmark, CTA, app link, in 4s ---- */
 .t-outro{background:linear-gradient(165deg,#FFF7FB 0%,#FDE7F3 46%,#F9A8D4 100%)}
+.t-outro .full{position:absolute;inset:0}
+/* light enough that an uploaded photo/clip still reads clearly behind the
+   flower — not the near-opaque wash that would just hide it — but still a
+   consistent magenta-plum tint so white text stays legible either way,
+   whether that's over the pale placeholder or a real photo */
+.t-outro .outroscrim{position:absolute;inset:0;
+  background:radial-gradient(120% 90% at 50% 45%,rgba(230,0,126,.26) 0%,rgba(157,10,74,.46) 55%,rgba(74,10,38,.66) 100%)}
 .t-outro .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:calc(1.4*var(--u));text-align:center;padding:0 8%}
+  gap:calc(1.4*var(--u));text-align:center;padding:0 8%;z-index:5}
 .t-outro .flowerglow{position:absolute;left:50%;top:37%;width:40cqw;height:40cqw;transform:translate(-50%,-50%);
   border-radius:50%;background:radial-gradient(circle,rgba(230,0,126,.48),rgba(230,0,126,0) 70%);
   animation:pulse 2.4s ease-in-out infinite}
@@ -532,13 +539,19 @@ body.counting .count{display:grid}
   filter:drop-shadow(0 calc(.6*var(--u)) calc(1.6*var(--u)) rgba(60,6,30,.35));
   animation:outroSpin 16s linear 1s infinite}
 .t-outro .wordmark{display:block;font-family:"Dancing Script",cursive;font-weight:700;font-size:calc(11*var(--u));
-  color:var(--deep);line-height:1;opacity:0;animation:outroRise .7s cubic-bezier(.22,.75,.2,1) 1.6s forwards}
+  color:#FFF7FB;line-height:1;text-shadow:0 calc(.3*var(--u)) calc(1.6*var(--u)) rgba(60,6,30,.55);
+  opacity:0;animation:outroRise .7s cubic-bezier(.22,.75,.2,1) 1.6s forwards}
 .t-outro .tagline{display:block;font-family:"Playfair Display",serif;font-style:italic;font-weight:500;
-  font-size:calc(3.2*var(--u));color:var(--ink);opacity:0;animation:outroRise .6s cubic-bezier(.22,.75,.2,1) 2.6s forwards}
+  font-size:calc(3.2*var(--u));color:#FFF7FB;text-shadow:0 1px 8px rgba(60,6,30,.5);
+  opacity:0;animation:outroRise .6s cubic-bezier(.22,.75,.2,1) 2.6s forwards}
 .t-outro .ctawrap{margin-top:calc(.6*var(--u));opacity:0;animation:outroRise .6s cubic-bezier(.22,.75,.2,1) 3.2s forwards}
 .t-outro .cta{display:inline-block;padding:.62em 1.4em;background:var(--hot);color:#fff;border-radius:999px;
   font-family:Quicksand;font-weight:700;font-size:calc(2.7*var(--u));letter-spacing:.03em;
   animation:ctaBreathe 2.4s ease-in-out 3.8s infinite}
+.t-outro .applink{display:flex;flex-direction:column;align-items:center;gap:calc(.3*var(--u));
+  margin-top:calc(.3*var(--u));opacity:0;animation:outroRise .5s cubic-bezier(.22,.75,.2,1) 3.5s forwards}
+.t-outro .applink svg{width:calc(3.2*var(--u));height:calc(3.2*var(--u));color:#FFF7FB;filter:drop-shadow(0 1px 4px rgba(60,6,30,.5))}
+.t-outro .applink span{font-family:Quicksand;font-weight:700;font-size:calc(2.2*var(--u));color:#FFF7FB;text-shadow:0 1px 6px rgba(60,6,30,.5)}
 @keyframes outroFlowerIn{0%{opacity:0;transform:scale(.3) rotate(-70deg)}65%{opacity:1;transform:scale(1.12) rotate(10deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
 @keyframes outroSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 @keyframes outroRise{from{opacity:0;transform:translateY(10%)}to{opacity:1;transform:translateY(0)}}
@@ -588,6 +601,20 @@ body.counting .count{display:grid}
       <path d="M12 12c0-3 1.6-5.4 4-6-.4 2.9-1.8 5-4 6Z"/><path d="M12 12c-2.6-1.5-3.8-4-3.4-7 2.5 1.3 3.7 3.7 3.4 7Z"/>
       <path d="M12 12c-3 .2-5.3-1.1-6.4-3.6 2.8-.5 5 .6 6.4 3.6Z"/><path d="M12 12c1.9 2.3 2.1 5 .6 7.6-1.7-2.2-1.9-4.8-.6-7.6Z"/>
       <path d="M12 12c3 .5 4.9 2.3 5.4 5.2-2.8-.2-4.6-1.9-5.4-5.2Z"/>
+    </symbol>
+    <symbol id="i-bloom-fill" viewBox="0 0 24 24">
+      <g fill="currentColor">
+        <ellipse cx="12" cy="6.7" rx="2.75" ry="4.6" transform="rotate(0 12 12)"/>
+        <ellipse cx="12" cy="6.7" rx="2.75" ry="4.6" transform="rotate(60 12 12)"/>
+        <ellipse cx="12" cy="6.7" rx="2.75" ry="4.6" transform="rotate(120 12 12)"/>
+        <ellipse cx="12" cy="6.7" rx="2.75" ry="4.6" transform="rotate(180 12 12)"/>
+        <ellipse cx="12" cy="6.7" rx="2.75" ry="4.6" transform="rotate(240 12 12)"/>
+        <ellipse cx="12" cy="6.7" rx="2.75" ry="4.6" transform="rotate(300 12 12)"/>
+      </g>
+      <circle cx="12" cy="12" r="2.15" fill="#fff"/>
+    </symbol>
+    <symbol id="d-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3.5v11.5M7.5 11l4.5 4.5L16.5 11"/><path d="M4.5 17.5v1.8a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-1.8"/>
     </symbol>
     <symbol id="i-rec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"/>
@@ -1051,17 +1078,23 @@ const TEMPLATES = [
       </div>`
   },
   {
-    id: "outro", name: "Outro · Call to action", hint: "Rotating flower → wordmark → CTA, choreographed to land at 4 seconds",
-    text: { wordmark: "Bloomzein", tagline: "Your softest era starts here.", cta: "www.bloomzein.com" },
-    images: [],
+    id: "outro", name: "Outro · Call to action", hint: "Photo or clip behind a rotating flower → wordmark → CTA → app download, choreographed to land at 4 seconds",
+    text: { wordmark: "Bloomzein", tagline: "Your softest era starts here.", cta: "www.bloomzein.com", applabel: "Download the Bloomzein app" },
+    images: [{ k: "bg", label: "Photo or clip (optional)", ph: 3 }],
     html: () => `
+      ${IMG("bg", "full", 3)}
+      <div class="outroscrim"></div>
       ${PETALS(3)}
       <div class="center">
         <div class="flowerglow"></div>
-        <div class="flowerwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bloom"/></svg></div>
+        <div class="flowerwrap"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><use href="#i-bloom-fill"/></svg></div>
         <span class="t wordmark" data-t="wordmark" contenteditable="plaintext-only" spellcheck="false"></span>
         <span class="t tagline" data-t="tagline" contenteditable="plaintext-only" spellcheck="false"></span>
         <div class="ctawrap"><span class="t cta" data-t="cta" contenteditable="plaintext-only" spellcheck="false"></span></div>
+        <div class="applink">
+          <svg viewBox="0 0 24 24"><use href="#d-download"/></svg>
+          <span class="t" data-t="applabel" contenteditable="plaintext-only" spellcheck="false"></span>
+        </div>
       </div>`
   },
   {
@@ -1546,6 +1579,7 @@ const LBL = {
   blank: "Fill in the blank", bracket: "Bracketed line", script: "Script line",
   mid: "Middle word", h1: "Pill word 1", h2: "Pill word 2",
   title: "Title", wordmark: "Wordmark", tagline: "Tagline", cta: "Call to action", time: "Time range",
+  applabel: "App download line",
 };
 const labelFor = k => LBL[k] || k.replace(/^n(\d)$/, "Pick $1").replace(/^l(\d)$/, "Item $1")
   .replace(/^w(\d)$/, "Word $1").replace(/^s(\d)$/, "Step $1 caption").replace(/^g(\d)$/, "Photo $1")
