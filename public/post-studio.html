@@ -92,6 +92,9 @@ body.mode-reel .canvas{padding-bottom:12px}
   box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
 .scene:hover{transform:translateY(-2px)}
 .scene.active{border-color:var(--hot);box-shadow:0 0 0 2px var(--hot)}
+.scene{cursor:grab}
+.scene.dragging{opacity:.4}
+.scene.drag-over{border-color:var(--hot);box-shadow:0 0 0 3px rgba(230,0,126,.35);transform:scale(1.03)}
 .scene .sframe{position:relative;width:100%;aspect-ratio:9/16;container-type:size;container-name:post;overflow:hidden;background:var(--cream);pointer-events:none}
 .scene .sctrl{display:flex;align-items:center;justify-content:space-between;padding:3px 4px;background:var(--shell)}
 .scene .sn{font-size:10px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -137,6 +140,7 @@ body.guides .stage .safe{display:block}
   width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12.5px;font-weight:500;color:var(--plum);transition:.15s}
 .field textarea{resize:vertical;min-height:58px;line-height:1.45}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--hot);box-shadow:0 0 0 3px rgba(230,0,126,.1)}
+.field input[type=color]{width:44px;height:34px;padding:2px;border-radius:8px;cursor:pointer}
 .row{display:flex;gap:8px}
 .row>*{flex:1;min-width:0}
 
@@ -662,6 +666,21 @@ const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
 /* the brand mark is opt-in per scene (off by default everywhere), added from
    the settings panel, never baked into a template's own html() — so it never
    hides or competes with whatever photo/clip is already in that slot */
+/* scene-wide type overrides — every size in a template is calc(N * var(--u)),
+   so scaling the one shared unit scales every piece of type (and the
+   decoration sized off it) together, proportionally, without touching any
+   per-template CSS. Color/font are simpler: a blanket inline override on
+   every text element, since colors and fonts are hand-picked per element
+   with no single shared variable to redirect the way --u covers size. */
+function applyStyleOverrides(root, st) {
+  const sc = st.style || {};
+  if (sc.scale && sc.scale !== 1) root.style.setProperty("--u", `calc(min(1cqw, .68cqh) * ${sc.scale})`);
+  else root.style.removeProperty("--u");
+  $$("[data-t]", root).forEach(el => {
+    el.style.color = sc.color || "";
+    el.style.fontFamily = sc.font || "";
+  });
+}
 function applyBrand(root, st, mode) {
   if (!st.brand?.on) return;
   const at = Math.max(0, st.brand.at || 0);
@@ -999,10 +1018,17 @@ let S = blank();
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) { }
 const save = (() => { let h; return () => { clearTimeout(h); h = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }, 180); }; })();
 
-function freshState() { return { text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 }, brand: { on: false, at: 1.5, big: false } }; }
+function freshState() {
+  return {
+    text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 },
+    brand: { on: false, at: 1.5, big: false },
+    style: { scale: 1, color: "", font: "" },
+  };
+}
 function fillDefaults(st, def) {
   st.copy = Object.assign({ x: 0, y: 0, s: 1 }, st.copy);
   st.brand = Object.assign({ on: false, at: 1.5, big: false }, st.brand);
+  st.style = Object.assign({ scale: 1, color: "", font: "" }, st.style);
   for (const k in def.text) if (typeof st.text[k] !== "string") st.text[k] = def.text[k];
   for (const im of def.images) st.frames[im.k] = Object.assign({ x: 0, y: 0, s: 1 }, st.frames[im.k]);
   return st;
@@ -1130,6 +1156,7 @@ function buildTplRoot(def, st, mode) {
   root.dataset.tpl = def.id;
   root.innerHTML = def.html();
   applyText(root, st); applyFrames(root, st); counters(root, st); applyMedia(root, st);
+  applyStyleOverrides(root, st);
   if (mode === "thumb") {
     $$("[data-petals]", root).forEach(l => l.remove());
     $$(".an", root).forEach(el => el.classList.remove("an"));
@@ -1224,6 +1251,7 @@ function buildThumbs() {
    with its own independent text/photos, so the same template can appear
    twice in a reel without the two copies fighting over one set of content. */
 const uid = () => "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+let dragSceneId = null;
 
 function setMode(mode) {
   S.mode = mode; save();
@@ -1279,7 +1307,7 @@ function renderFilmstrip() {
     updateReelMeta(); return;
   }
   bar.innerHTML = S.reel.map((sc, i) => `
-    <div class="scene ${sc.id === S.activeScene ? "active" : ""}" data-scene="${sc.id}" title="${esc(TPL[sc.tpl].name)}">
+    <div class="scene ${sc.id === S.activeScene ? "active" : ""}" data-scene="${sc.id}" title="${esc(TPL[sc.tpl].name)} — drag to reorder">
       <div class="sframe"></div>
       <div class="sctrl">
         <button class="sbtn" type="button" data-act="left" ${i === 0 ? "disabled" : ""} title="Move earlier">‹</button>
@@ -1304,6 +1332,25 @@ function renderFilmstrip() {
     $('[data-act="del"]', el).addEventListener("click", e => { e.stopPropagation(); removeScene(id); });
     $('[data-act="dur"]', el).addEventListener("input", e => { sc.duration = clamp(+e.target.value || 4, .6, 8); save(); updateReelMeta(); });
     $('[data-act="dur"]', el).addEventListener("click", e => e.stopPropagation());
+
+    /* drag to reorder — the ‹ › buttons stay as the precise, no-drag alternative */
+    el.draggable = true;
+    el.addEventListener("dragstart", e => {
+      dragSceneId = id; el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", id);
+    });
+    el.addEventListener("dragend", () => { dragSceneId = null; $$(".scene", bar).forEach(x => x.classList.remove("dragging", "drag-over")); });
+    el.addEventListener("dragover", e => { if (dragSceneId && dragSceneId !== id) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; el.classList.add("drag-over"); } });
+    el.addEventListener("dragleave", () => el.classList.remove("drag-over"));
+    el.addEventListener("drop", e => {
+      e.preventDefault(); el.classList.remove("drag-over");
+      if (!dragSceneId || dragSceneId === id) return;
+      const from = S.reel.findIndex(s => s.id === dragSceneId), to = S.reel.findIndex(s => s.id === id);
+      if (from < 0 || to < 0) return;
+      const [moved] = S.reel.splice(from, 1);
+      S.reel.splice(to, 0, moved);
+      save(); blip(700, .08); renderFilmstrip();
+    });
   });
   updateReelMeta();
 }
@@ -1405,6 +1452,52 @@ function buildPanel() {
   tip.textContent = "You can also click any line on the post itself and type straight into it.";
   txt.appendChild(tip);
   panel.appendChild(txt);
+
+  /* — text style: size, color, font, applied across every text element in this scene — */
+  const tyle = section("Text style", "i-type");
+  const liveTpl = () => $(".tpl", stage);
+  tyle.appendChild(sliderRow("Size", .6, 1.6, .01, st.style.scale, v => Math.round(v * 100) + "%", v => {
+    st.style.scale = v; save();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  }));
+  const colorRow = document.createElement("div"); colorRow.className = "field"; colorRow.style.marginTop = "8px";
+  colorRow.innerHTML = `<label>Text color</label>
+    <div class="row">
+      <input type="color" value="${st.style.color || "#7A1440"}" style="width:44px;padding:2px;flex:none">
+      <button class="ghost" type="button">Use template colors</button>
+    </div>`;
+  $("input[type=color]", colorRow).addEventListener("input", e => {
+    st.style.color = e.target.value; save();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  $("button", colorRow).addEventListener("click", () => {
+    st.style.color = ""; save(); $("input[type=color]", colorRow).value = "#7A1440";
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  tyle.appendChild(colorRow);
+  const fontRow = document.createElement("div"); fontRow.className = "field"; fontRow.style.marginTop = "8px";
+  fontRow.innerHTML = `<label>Font</label>
+    <select>
+      <option value="">Template default</option>
+      <option value="Quicksand,sans-serif">Quicksand</option>
+      <option value="'Playfair Display',serif">Playfair Display</option>
+      <option value="'Dancing Script',cursive">Dancing Script</option>
+      <option value="Caveat,cursive">Caveat</option>
+    </select>`;
+  $("select", fontRow).value = st.style.font || "";
+  $("select", fontRow).addEventListener("change", e => {
+    st.style.font = e.target.value; save();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  tyle.appendChild(fontRow);
+  const tyleHint = document.createElement("p"); tyleHint.className = "hint"; tyleHint.style.margin = "8px 0 0";
+  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color and font apply to all of this scene's text at once, replacing the template's own palette — leave them at their defaults to keep the original look.";
+  tyle.appendChild(tyleHint);
+  panel.appendChild(tyle);
 
   /* — media + framing — */
   for (const im of def.images) {
