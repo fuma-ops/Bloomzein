@@ -98,6 +98,11 @@ body.mode-reel .canvas{padding-bottom:12px}
 .tl-seg .tl-end{position:absolute;bottom:2px;right:3px;font-size:9px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .filmstrip{display:flex;gap:10px;padding:6px 16px 16px;overflow-x:auto;min-height:132px}
 .reel-empty{margin:22px 16px;font-size:12px;color:var(--muted);font-weight:600;max-width:520px}
+#bootBanner{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:999;display:flex;align-items:center;gap:10px;
+  max-width:min(92vw,560px);padding:10px 14px;border-radius:11px;background:var(--ink);color:#fff;box-shadow:var(--shadow);font-size:12px;font-weight:600}
+#bootBanner button{flex:none;font:inherit;font-weight:800;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.16);color:#fff}
+#bootBanner button:hover{background:rgba(255,255,255,.28)}
+#bootBanner #bootReset{background:var(--hot)}
 .scene{flex:none;width:96px;border-radius:11px;border:1px solid var(--line-soft);background:#fff;
   box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
 .scene:hover{transform:translateY(-2px)}
@@ -1947,19 +1952,49 @@ $("#transitionSel").addEventListener("change", e => { S.transition = e.target.va
 $("#resSel").addEventListener("change", e => { S.exportRes = +e.target.value; save(); });
 
 /* ───────────────────────────────── boot ──────────────────────────────── */
-document.body.classList.toggle("guides", S.guides);
-$("#guidesBtn").setAttribute("aria-pressed", String(S.guides));
-$$("#fmt button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fmt === S.fmt)));
-if (!TPL[S.tpl]) S.tpl = "hook";
-S.reel = (S.reel || []).filter(sc => TPL[sc.tpl]);
-if (S.activeScene && !S.reel.some(sc => sc.id === S.activeScene)) S.activeScene = S.reel[0]?.id || null;
-$$("#modeTabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === S.mode)));
-document.body.classList.toggle("mode-reel", S.mode === "reel");
-$("#transitionSel").value = S.transition || "fade";
-$("#resSel").value = String(S.exportRes || 1080);
-buildThumbs();
-renderFilmstrip();
-renderStage();
-buildPanel();
-loadMusic();
+/* A returning visitor's saved project (localStorage) survives every future
+   version of this file, forever, on the same fixed KEY — so a schema change
+   that an empty-storage test never catches can still crash boot on THEIR
+   real data, every single time they open it, because the crash never
+   touches the save that keeps reproducing it. Each step below is isolated so
+   one bad section (e.g. a corrupted reel) can't blank the whole page or
+   leave the rest of the UI's buttons dead; a visible banner (with a way to
+   wipe the saved project and start clean) appears only if something failed. */
+let bootFailed = false;
+function safeBoot(label, fn) {
+  try { fn(); } catch (e) { bootFailed = true; console.error(`Post Studio: ${label} failed to load —`, e); }
+}
+function showBootBanner() {
+  if ($("#bootBanner")) return;
+  const bar = document.createElement("div");
+  bar.id = "bootBanner";
+  bar.innerHTML = `<span>Something in your saved project didn't load right — the app should still mostly work.</span>
+    <button type="button" id="bootRetry">Try again</button>
+    <button type="button" id="bootReset">Reset saved project</button>`;
+  document.body.appendChild(bar);
+  $("#bootRetry", bar).addEventListener("click", () => location.reload());
+  $("#bootReset", bar).addEventListener("click", () => {
+    try { localStorage.removeItem(KEY); } catch (e) { }
+    location.reload();
+  });
+}
+safeBoot("mode/format toggles", () => {
+  document.body.classList.toggle("guides", S.guides);
+  $("#guidesBtn").setAttribute("aria-pressed", String(S.guides));
+  $$("#fmt button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fmt === S.fmt)));
+  if (!TPL[S.tpl]) S.tpl = "hook";
+  S.reel = (S.reel || []).filter(sc => sc && TPL[sc.tpl]);
+  if (S.activeScene && !S.reel.some(sc => sc.id === S.activeScene)) S.activeScene = S.reel[0]?.id || null;
+  if (S.mode !== "single" && S.mode !== "reel") S.mode = "single";
+  $$("#modeTabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === S.mode)));
+  document.body.classList.toggle("mode-reel", S.mode === "reel");
+  $("#transitionSel").value = S.transition || "fade";
+  $("#resSel").value = String(S.exportRes || 1080);
+});
+safeBoot("thumbnails", buildThumbs);
+safeBoot("reel filmstrip", renderFilmstrip);
+safeBoot("stage", renderStage);
+safeBoot("settings panel", buildPanel);
+safeBoot("music", loadMusic);
+if (bootFailed) showBootBanner();
 </script>
