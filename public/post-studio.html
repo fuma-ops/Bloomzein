@@ -1199,7 +1199,7 @@ function applyFrames(root, st) {
   const c = $(".copy", root);
   if (c) { c.style.setProperty("--cx", st.copy.x + "%"); c.style.setProperty("--cy", st.copy.y + "%"); c.style.setProperty("--cs", st.copy.s); }
 }
-async function applyMedia(root, st) {
+async function applyMedia(root, st, mode) {
   for (const [k, m] of Object.entries(st.media || {})) {
     const holder = $(`[data-media="${k}"]`, root); if (!holder || !m || !m.id) continue;
     const u = await mediaURL(m.id);
@@ -1207,16 +1207,26 @@ async function applyMedia(root, st) {
     holder.innerHTML = "";
     if (m.kind === "video") {
       const v = document.createElement("video");
-      v.src = u; v.muted = true; v.playsInline = true; v.loop = true; v.autoplay = true;
-      v.addEventListener("loadedmetadata", () => {
-        const out = m.out > 0 ? Math.min(m.out, v.duration) : v.duration;
-        v.currentTime = clamp(m.in || 0, 0, out);
-        v.play().catch(() => { });
-      });
-      v.addEventListener("timeupdate", () => {
-        const out = m.out > 0 ? Math.min(m.out, v.duration || m.out) : (v.duration || 0);
-        if (out && v.currentTime >= out - .04) v.currentTime = clamp(m.in || 0, 0, out);
-      });
+      v.src = u; v.muted = true; v.playsInline = true;
+      if (mode === "thumb") {
+        // a thumbnail is a still preview, not a player — every sidebar template and every
+        // reel scene card would otherwise be its own live, looping, decoding video all at
+        // once (and rebuilt from scratch on nearly every keystroke), which is exactly the
+        // kind of runaway memory/GPU load that crashes the tab. One seek, one paint, done.
+        v.loop = false; v.autoplay = false; v.preload = "metadata";
+        v.addEventListener("loadedmetadata", () => { v.currentTime = clamp(m.in || 0, 0, v.duration || 0); }, { once: true });
+      } else {
+        v.loop = true; v.autoplay = true;
+        v.addEventListener("loadedmetadata", () => {
+          const out = m.out > 0 ? Math.min(m.out, v.duration) : v.duration;
+          v.currentTime = clamp(m.in || 0, 0, out);
+          v.play().catch(() => { });
+        });
+        v.addEventListener("timeupdate", () => {
+          const out = m.out > 0 ? Math.min(m.out, v.duration || m.out) : (v.duration || 0);
+          if (out && v.currentTime >= out - .04) v.currentTime = clamp(m.in || 0, 0, out);
+        });
+      }
       holder.appendChild(v);
     } else {
       const i = document.createElement("img"); i.src = u; i.alt = ""; holder.appendChild(i);
@@ -1253,7 +1263,7 @@ function buildTplRoot(def, st, mode) {
   root.className = "tpl t-" + def.id;
   root.dataset.tpl = def.id;
   root.innerHTML = def.html();
-  applyText(root, st); applyFrames(root, st); counters(root, st); applyMedia(root, st);
+  applyText(root, st); applyFrames(root, st); counters(root, st); applyMedia(root, st, mode);
   applyStyleOverrides(root, st);
   if (mode === "thumb") {
     $$("[data-petals]", root).forEach(l => l.remove());
