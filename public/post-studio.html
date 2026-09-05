@@ -672,6 +672,11 @@ const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
    per-template CSS. Color/font are simpler: a blanket inline override on
    every text element, since colors and fonts are hand-picked per element
    with no single shared variable to redirect the way --u covers size. */
+/* the elements that carry a solid card/pill/chip behind their own text —
+   the torn-paper note, a highlighted pill word, the day-in-life time chip,
+   the feature checklist card — as opposed to plain type sitting on a photo,
+   which has no background to recolor */
+const BG_CARRIERS = ".paper,.pill,.time,.checklist";
 function applyStyleOverrides(root, st) {
   const sc = st.style || {};
   if (sc.scale && sc.scale !== 1) root.style.setProperty("--u", `calc(min(1cqw, .68cqh) * ${sc.scale})`);
@@ -680,6 +685,7 @@ function applyStyleOverrides(root, st) {
     el.style.color = sc.color || "";
     el.style.fontFamily = sc.font || "";
   });
+  $$(BG_CARRIERS, root).forEach(el => { el.style.backgroundColor = sc.bg || ""; el.style.backgroundImage = sc.bg ? "none" : ""; });
 }
 function applyBrand(root, st, mode) {
   if (!st.brand?.on) return;
@@ -1022,13 +1028,13 @@ function freshState() {
   return {
     text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 },
     brand: { on: false, at: 1.5, big: false },
-    style: { scale: 1, color: "", font: "" },
+    style: { scale: 1, color: "", font: "", bg: "" },
   };
 }
 function fillDefaults(st, def) {
   st.copy = Object.assign({ x: 0, y: 0, s: 1 }, st.copy);
   st.brand = Object.assign({ on: false, at: 1.5, big: false }, st.brand);
-  st.style = Object.assign({ scale: 1, color: "", font: "" }, st.style);
+  st.style = Object.assign({ scale: 1, color: "", font: "", bg: "" }, st.style);
   for (const k in def.text) if (typeof st.text[k] !== "string") st.text[k] = def.text[k];
   for (const im of def.images) st.frames[im.k] = Object.assign({ x: 0, y: 0, s: 1 }, st.frames[im.k]);
   return st;
@@ -1494,8 +1500,25 @@ function buildPanel() {
     refreshPreview(def);
   });
   tyle.appendChild(fontRow);
+  const bgRow = document.createElement("div"); bgRow.className = "field"; bgRow.style.marginTop = "8px";
+  bgRow.innerHTML = `<label>Text background</label>
+    <div class="row">
+      <input type="color" value="${st.style.bg || "#fffdfb"}" style="width:44px;padding:2px;flex:none">
+      <button class="ghost" type="button">Use template style</button>
+    </div>`;
+  $("input[type=color]", bgRow).addEventListener("input", e => {
+    st.style.bg = e.target.value; save();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  $("button", bgRow).addEventListener("click", () => {
+    st.style.bg = ""; save(); $("input[type=color]", bgRow).value = "#fffdfb";
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  tyle.appendChild(bgRow);
   const tyleHint = document.createElement("p"); tyleHint.className = "hint"; tyleHint.style.margin = "8px 0 0";
-  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color and font apply to all of this scene's text at once, replacing the template's own palette — leave them at their defaults to keep the original look.";
+  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color, font and background apply across all of this scene's text and cards at once, replacing the template's own palette — leave any of them at their defaults to keep the original look. Background only affects cards, notes, pills and chips — plain type sitting on a photo has no background to recolor.";
   tyle.appendChild(tyleHint);
   panel.appendChild(tyle);
 
