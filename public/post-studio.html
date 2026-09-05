@@ -328,6 +328,43 @@ body.counting .count{display:grid}
 .pill{display:inline-block;background:var(--hot);color:#fff;padding:.12em .5em;border-radius:.28em;
   box-decoration-break:clone;-webkit-box-decoration-break:clone}
 
+/* highlight styles — decorative treatments for a scene's own hero word
+   (whichever element carries .hi or .pill), selectable per scene. Applied
+   alongside .hl-active, which clears the plain .pill fill so the chosen
+   treatment's own background (behind the word, via ::before) actually shows. */
+/* position+z-index together opens a fresh, LOCAL stacking context, so the
+   decoration's z-index:-1 tucks behind this word's own text only — without
+   it, -1 escapes upward past .paper/.tpl (neither of which stack on their
+   own) and paints behind the whole card, or the photo, invisibly */
+.hi.hl-active,.pill.hl-active{background:transparent;position:relative;z-index:0}
+.hl-pill::before{content:"";position:absolute;inset:-.1em -.32em;z-index:-1;background:rgba(249,168,212,.55);border-radius:999px}
+.hl-rect::before{content:"";position:absolute;inset:-.07em -.24em;z-index:-1;background:rgba(249,168,212,.6);border-radius:.32em}
+.hl-stroke::before{content:"";position:absolute;inset:-.03em -.32em;z-index:-1;background:rgba(249,168,212,.62);
+  clip-path:polygon(1% 22%,100% 4%,99% 82%,0% 96%)}
+.hl-brush::before{content:"";position:absolute;inset:-.12em -.38em;z-index:-1;background:rgba(255,247,251,.94);
+  clip-path:polygon(2% 30%,22% 6%,48% 18%,71% 2%,98% 20%,96% 78%,74% 96%,50% 82%,26% 98%,3% 74%)}
+.hl-circle::before{content:"";position:absolute;inset:-.16em -.42em;z-index:-1;border:.09em solid currentColor;
+  border-radius:50%;transform:rotate(-3deg);opacity:.85}
+.hl-tape::before{content:"";position:absolute;inset:16% -.36em;z-index:-1;transform:rotate(-1.5deg);
+  background:linear-gradient(100deg,rgba(244,120,178,.88),rgba(249,168,212,.62) 55%,rgba(244,120,178,.88));
+  box-shadow:0 1px 3px rgba(60,6,30,.22)}
+.hl-tape::after{content:"";position:absolute;inset:16% -.36em;z-index:-1;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.4) 0 2px,transparent 2px 7px)}
+.hl-marks::before,.hl-marks::after{position:absolute;top:50%;transform:translateY(-50%);font-family:Quicksand;
+  font-weight:700;color:var(--hot);font-size:.62em;opacity:.85}
+.hl-marks::before{content:"›";left:-.6em}
+.hl-marks::after{content:"‹";right:-.6em}
+.hl-blob::before{content:"";position:absolute;inset:-.18em -.4em;z-index:-1;background:rgba(249,168,212,.55);
+  border-radius:63% 37% 54% 46%/42% 47% 53% 58%;transform:rotate(-2deg)}
+.hl-underline::after{content:"";position:absolute;left:-.05em;right:-.05em;bottom:-.14em;height:.09em;
+  background:var(--hot);border-radius:99px}
+.hl-heart::after{content:"";position:absolute;right:-.45em;top:-.32em;width:.6em;height:.55em;z-index:2;
+  background:var(--hot);clip-path:path('M12 20C4 14.8 1.5 10.6 1.5 6.9 1.5 3.8 3.9 2 6.5 2c2 0 3.8 1.3 5.5 3.6C13.7 3.3 15.5 2 17.5 2c2.6 0 5 1.8 5 4.9 0 3.7-2.5 7.9-10.5 13.1Z')}
+.hl-glass::before{content:"";position:absolute;inset:-.1em -.36em;z-index:-1;background:rgba(255,255,255,.55);
+  border-radius:.6em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),0 2px 8px rgba(60,6,30,.14)}
+.hl-glow::before{content:"";position:absolute;inset:-.55em -.75em;z-index:-1;border-radius:50%;
+  background:radial-gradient(circle,rgba(230,0,126,.45),rgba(230,0,126,0) 70%)}
+
 /* ---- 1 HOOK + REAL MOMENT — full-bleed photo, bold line, one torn note ---- */
 .t-hook .full{position:absolute;inset:0;filter:saturate(.96)}
 .t-hook .scrim-t{height:36%}
@@ -677,6 +714,7 @@ const PETALS = n => `<div class="petals" data-petals="${n}"></div>`;
    the feature checklist card — as opposed to plain type sitting on a photo,
    which has no background to recolor */
 const BG_CARRIERS = ".paper,.pill,.time,.checklist";
+const HL_STYLES = ["hl-pill", "hl-rect", "hl-stroke", "hl-brush", "hl-circle", "hl-tape", "hl-marks", "hl-blob", "hl-underline", "hl-heart", "hl-glass", "hl-glow"];
 function applyStyleOverrides(root, st) {
   const sc = st.style || {};
   if (sc.scale && sc.scale !== 1) root.style.setProperty("--u", `calc(min(1cqw, .68cqh) * ${sc.scale})`);
@@ -686,6 +724,12 @@ function applyStyleOverrides(root, st) {
     el.style.fontFamily = sc.font || "";
   });
   $$(BG_CARRIERS, root).forEach(el => { el.style.backgroundColor = sc.bg || ""; el.style.backgroundImage = sc.bg ? "none" : ""; });
+  // the highlight style targets this scene's own hero word — whichever element
+  // the template itself marks as .hi (an emphasized word) or .pill (a boxed one)
+  $$(".hi,.pill", root).forEach(el => {
+    el.classList.remove("hl-active", ...HL_STYLES);
+    if (sc.highlight) el.classList.add("hl-active", sc.highlight);
+  });
 }
 function applyBrand(root, st, mode) {
   if (!st.brand?.on) return;
@@ -1028,13 +1072,13 @@ function freshState() {
   return {
     text: {}, frames: {}, media: {}, copy: { x: 0, y: 0, s: 1 },
     brand: { on: false, at: 1.5, big: false },
-    style: { scale: 1, color: "", font: "", bg: "" },
+    style: { scale: 1, color: "", font: "", bg: "", highlight: "" },
   };
 }
 function fillDefaults(st, def) {
   st.copy = Object.assign({ x: 0, y: 0, s: 1 }, st.copy);
   st.brand = Object.assign({ on: false, at: 1.5, big: false }, st.brand);
-  st.style = Object.assign({ scale: 1, color: "", font: "", bg: "" }, st.style);
+  st.style = Object.assign({ scale: 1, color: "", font: "", bg: "", highlight: "" }, st.style);
   for (const k in def.text) if (typeof st.text[k] !== "string") st.text[k] = def.text[k];
   for (const im of def.images) st.frames[im.k] = Object.assign({ x: 0, y: 0, s: 1 }, st.frames[im.k]);
   return st;
@@ -1517,8 +1561,32 @@ function buildPanel() {
     refreshPreview(def);
   });
   tyle.appendChild(bgRow);
+  const hlRow = document.createElement("div"); hlRow.className = "field"; hlRow.style.marginTop = "8px";
+  hlRow.innerHTML = `<label>Highlight style — this scene's hero word</label>
+    <select>
+      <option value="">Template default</option>
+      <option value="hl-pill">Rounded pill</option>
+      <option value="hl-rect">Soft rectangle</option>
+      <option value="hl-stroke">Highlight stroke</option>
+      <option value="hl-brush">Brush stroke</option>
+      <option value="hl-circle">Hand-drawn circle</option>
+      <option value="hl-tape">Tape</option>
+      <option value="hl-marks">Accent marks</option>
+      <option value="hl-blob">Blob</option>
+      <option value="hl-underline">Underline</option>
+      <option value="hl-heart">Heart accent</option>
+      <option value="hl-glass">Soft glass</option>
+      <option value="hl-glow">Soft glow</option>
+    </select>`;
+  $("select", hlRow).value = st.style.highlight || "";
+  $("select", hlRow).addEventListener("change", e => {
+    st.style.highlight = e.target.value; save();
+    const root = liveTpl(); if (root) applyStyleOverrides(root, st);
+    refreshPreview(def);
+  });
+  tyle.appendChild(hlRow);
   const tyleHint = document.createElement("p"); tyleHint.className = "hint"; tyleHint.style.margin = "8px 0 0";
-  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color, font and background apply across all of this scene's text and cards at once, replacing the template's own palette — leave any of them at their defaults to keep the original look. Background only affects cards, notes, pills and chips — plain type sitting on a photo has no background to recolor.";
+  tyleHint.textContent = "Size scales every piece of type in this scene together, so the design stays in proportion. Color, font and background apply across all of this scene's text and cards at once, replacing the template's own palette — leave any of them at their defaults to keep the original look. Background only affects cards, notes, pills and chips — plain type sitting on a photo has no background to recolor. Highlight style only affects a scene's designated hero word (e.g. \"period\", \"ONE\") — templates without one won't show a change.";
   tyle.appendChild(tyleHint);
   panel.appendChild(tyle);
 
