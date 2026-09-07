@@ -103,6 +103,11 @@ body.mode-reel .canvas{padding-bottom:12px}
 #bootBanner button{flex:none;font:inherit;font-weight:800;padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.16);color:#fff}
 #bootBanner button:hover{background:rgba(255,255,255,.28)}
 #bootBanner #bootReset{background:var(--hot)}
+#notice{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:200;display:flex;align-items:flex-start;gap:12px;
+  max-width:min(92vw,520px);padding:12px 14px;border-radius:11px;background:var(--ink);color:#fff;
+  box-shadow:var(--shadow);font-size:12px;font-weight:600;line-height:1.45}
+#notice button{flex:none;font:inherit;font-weight:800;color:#fff;opacity:.7;background:transparent;padding:0 2px}
+#notice button:hover{opacity:1}
 .scene{flex:none;width:96px;border-radius:11px;border:1px solid var(--line-soft);background:#fff;
   box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
 .scene:hover{transform:translateY(-2px)}
@@ -282,22 +287,24 @@ body.counting .count{display:grid}
 @keyframes recBlink{0%,49%{opacity:1}50%,100%{opacity:.25}}
 @keyframes grainShift{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(-1%,-1%)}100%{transform:translate(0,0)}}
 /* a quick autofocus snap plays once as the shot opens, camcorder-style: the
-   reticle overshoots, "hunts" back, then settles and fades — then it's gone,
-   never distracting from the actual reveal choreography that follows */
+   reticle overshoots, "hunts" back and settles fast — then simply STAYS,
+   held on screen until --focus-hold (half this clip's own duration, set per
+   scene in JS) before fading out. Two separate animations rather than one,
+   because the snap timing is fixed while the hold varies per clip. */
 .filmfx .focusbox{position:absolute;left:50%;top:44%;width:30cqw;height:30cqw;transform:translate(-50%,-50%);
   border:calc(.16*var(--u)) solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);
-  animation:focusSnap .9s cubic-bezier(.3,.9,.4,1) both}
+  animation:focusSnap .8s cubic-bezier(.3,.9,.4,1) both,
+            focusOut .45s ease var(--focus-hold,2s) forwards}
 .filmfx .focusbox .dot{position:absolute;left:50%;top:50%;width:calc(1.2*var(--u));height:calc(1.2*var(--u));
   border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
 @keyframes focusSnap{
   0%{opacity:0;transform:translate(-50%,-50%) scale(1.55)}
-  18%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
-  34%{opacity:1;transform:translate(-50%,-50%) scale(.92)}
-  50%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
-  65%{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  85%{opacity:1}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+  40%{opacity:1;transform:translate(-50%,-50%) scale(.92)}
+  60%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
 }
+@keyframes focusOut{from{opacity:1}to{opacity:0}}
 .t{display:block;outline:none;text-wrap:balance}
 .t[contenteditable="true"]:hover{box-shadow:inset 0 -calc(.35*var(--u)) 0 rgba(230,0,126,.45)}
 .t[contenteditable="true"]:focus{box-shadow:inset 0 -calc(.35*var(--u)) 0 var(--hot)}
@@ -1332,6 +1339,12 @@ function applyFx(root, st) {
 }
 
 /* ───────────────────────── filming / record effect ────────────────────── */
+/* how long this scene is on screen — its own duration in a reel, else the
+   4s a single post's reveal is choreographed to */
+function sceneDuration(st) {
+  const scene = S.reel.find(sc => sceneState(sc.id) === st);
+  return scene ? (scene.duration || 4) : 4;
+}
 /* a camcorder overlay — grain + vignette + a blinking REC label, plus a
    quick autofocus snap that plays once as the shot opens — layered above
    the media but below the copy, so it reads as part of the shot itself */
@@ -1348,6 +1361,10 @@ function applyFilmFx(root, st, mode) {
     // once-only autofocus snap are motion that has nothing to focus on there
     $(".grain", el).style.display = "none";
     $(".focusbox", el).style.display = "none";
+  } else {
+    // the reticle snaps in fast, then HOLDS for half this clip's own length
+    // before fading — so a 6s clip keeps it for 3s, a 2s clip for 1s
+    $(".focusbox", el).style.setProperty("--focus-hold", (sceneDuration(st) / 2) + "s");
   }
   // appended last and z-indexed between the photo and the copy text (never
   // guessing DOM order across 15 differently-structured templates) so the
@@ -2106,39 +2123,105 @@ $("#exitBtn").addEventListener("click", exitRecord);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("rec-mode")) { reelAbort?.abort(); exitRecord(); } });
 
 /* ══════════════════════════ reel playback & export ════════════════════════ */
+/* An in-page notice rather than alert(): a sandboxed embed can have modals
+   switched off entirely, and a blocked alert() is how "the export button
+   does nothing" looks from the outside — no dialog, no file, no reason. */
+function notice(msg, ms = 7000) {
+  $("#notice")?.remove();
+  const el = document.createElement("div");
+  el.id = "notice";
+  el.innerHTML = `<span></span><button type="button" aria-label="Dismiss">✕</button>`;
+  $("span", el).textContent = msg;
+  $("button", el).addEventListener("click", () => el.remove());
+  document.body.appendChild(el);
+  if (ms) setTimeout(() => el.remove(), ms);
+}
+
+/* Inside the claude.ai artifact viewer a plain <a download> — blob: URLs
+   included — is inert: a page only ever hands the viewer a file through the
+   downloads capability. Anywhere else (bloomzein.com, or this file opened
+   on its own) that capability doesn't exist and the anchor is the only way.
+   Try the capability, fall back to the anchor, and say which happened. */
+async function deliverFile(blob, filename) {
+  let downloads = null;
+  try { downloads = await window.claude?.use?.("downloads"); } catch (e) { }
+  if (downloads) {
+    try { await downloads.save({ filename, data: blob }); return { ok: true }; }
+    catch (e) {
+      const code = e?.code || "";
+      if (code === "declined") return { ok: false, msg: "Download cancelled — your reel wasn't saved." };
+      if (code === "rate_limited") return { ok: false, msg: "A save prompt is already open — finish that one, then export again." };
+      return { ok: false, msg: "Couldn't save the file (" + (code || e?.message || "unknown error") + ")." };
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return { ok: true };
+}
+
+/* Crop the captured tab down to the stage element, so the file is a true
+   9:16 (or 4:5 / 1:1) video instead of the whole browser window with the
+   post sitting in the middle of it. Region Capture is Chromium-only —
+   without it the recording still works, it's just the full window. */
+async function cropToStage(track) {
+  try {
+    if (window.CropTarget?.fromElement && track.cropTo) {
+      await track.cropTo(await CropTarget.fromElement(stage));
+      return true;
+    }
+  } catch (e) { }
+  return false;
+}
+
 let reelAbort = null;
 async function runReel({ record = false } = {}) {
-  if (!S.reel.length) { alert("Add at least one scene to your reel first — click a template on the left to add it."); return; }
-  document.body.classList.add("rec-mode", "reel-playing");
-  blip(500, .12);
-  await countdown(3);
+  if (!S.reel.length) { notice("Add at least one scene to your reel first — click a template on the left to add it."); return; }
 
-  let recorder = null, chunks = [], stream = null;
+  let recorder = null, chunks = [], stream = null, track = null;
   if (record) {
     if (!navigator.mediaDevices?.getDisplayMedia) {
-      document.body.classList.remove("rec-mode", "reel-playing");
-      alert("This browser can't record video. Recording needs a Chromium or Firefox browser over a real (non-preview) page.");
+      notice("This browser can't capture video. Recording needs Chrome, Edge or Firefox — and it can't run inside a preview frame that blocks screen capture. Open the page in its own tab and try again.", 12000);
       return;
     }
+    // Ask for the capture FIRST, while the click that started this still
+    // counts as user activation — behind the 3s countdown the activation has
+    // long expired and the browser rejects the request outright.
     try {
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: 30 }, audio: true,
         preferCurrentTab: true, selfBrowserSurface: "include", surfaceSwitching: "exclude",
       });
     } catch (e) {
-      document.body.classList.remove("rec-mode", "reel-playing");
-      alert("Recording needs permission to capture this tab. When the picker opens, choose \"This tab\" and turn on \"Share tab audio\" so your music is included — then click Export again.");
+      const why = e?.name === "NotAllowedError"
+        ? "Screen capture was blocked or dismissed. Pick \"This tab\" in the picker (and turn on \"Share tab audio\" for your music). If no picker appeared at all, the page is in a frame that isn't allowed to capture — open it in its own tab."
+        : "Couldn't start screen capture (" + (e?.name || "unknown error") + ").";
+      notice(why, 12000);
       return;
     }
+    track = stream.getVideoTracks()[0];
+    const cropped = await cropToStage(track);
+    // then ask for the chosen export size; the browser scales the cropped
+    // region up to it where it can, and quietly ignores it where it can't
+    const h = +S.exportRes >= 2160 ? 3840 : 1920;
+    const ratio = { "9x16": 9 / 16, "4x5": 4 / 5, "1x1": 1 }[S.fmt] || 9 / 16;
+    try { await track.applyConstraints({ height: { ideal: h }, width: { ideal: Math.round(h * ratio) }, frameRate: 30 }); } catch (e) { }
+    if (!cropped) notice("Heads up: this browser can't crop the capture to the post, so the file will be the whole window. Chrome or Edge crops it to a clean vertical video.", 9000);
+
     const mime = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp9", "video/webm"].find(m => window.MediaRecorder?.isTypeSupported(m)) || "video/webm";
-    const highRes = +S.exportRes >= 2160;
     try {
-      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: highRes ? 45_000_000 : 16_000_000 });
+      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: +S.exportRes >= 2160 ? 45_000_000 : 16_000_000 });
     } catch (e) { recorder = new MediaRecorder(stream); }
     recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    recorder.start(250);
-    stream.getVideoTracks()[0]?.addEventListener("ended", () => reelAbort?.abort());
+    track.addEventListener("ended", () => reelAbort?.abort());
   }
+
+  document.body.classList.add("rec-mode", "reel-playing");
+  blip(500, .12);
+  await countdown(3);
+  if (recorder) recorder.start(250);
 
   startMusic();
   reelAbort = new AbortController();
@@ -2150,18 +2233,26 @@ async function runReel({ record = false } = {}) {
 
   if (record) {
     await sleep(200).catch(() => { });
-    recorder.state !== "inactive" && recorder.stop();
-    await new Promise(res => { recorder.onstop = res; });
+    if (recorder.state !== "inactive") {
+      const stopped = new Promise(res => { recorder.onstop = res; });
+      recorder.stop();
+      await stopped;
+    }
+    const settings = track?.getSettings?.() || {};
     stream.getTracks().forEach(t => t.stop());
-    const blob = new Blob(chunks, { type: "video/webm" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `bloomzein-reel-${Date.now()}.webm`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    exitRecord();
+    if (!chunks.length) {
+      notice("Nothing was captured — the recording stopped before any video arrived. Try again and leave this tab in front while it plays.", 10000);
+    } else {
+      const blob = new Blob(chunks, { type: "video/webm" });
+      const res = await deliverFile(blob, `bloomzein-reel-${Date.now()}.webm`);
+      const size = settings.width && settings.height ? `${settings.width}×${settings.height}` : "";
+      if (res.ok) notice(`Reel exported${size ? " at " + size : ""} · ${(blob.size / 1048576).toFixed(1)} MB (WebM).`, 9000);
+      else notice(res.msg, 10000);
+    }
+  } else {
+    exitRecord();
   }
-
-  exitRecord();
   if (S.activeScene) selectScene(S.activeScene); else renderStage();
 }
 $("#playReelBtn").addEventListener("click", () => runReel({ record: false }));
