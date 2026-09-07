@@ -1213,8 +1213,10 @@ export default function TodayPage() {
       {!isOnboarded() && <BuildBloomWorld moodDone={!!mood} onLogMood={() => setMoodPickerOpen(true)} />}
 
       {/* Until her world is fully set up, show a blurred, locked peek of the real
-          Today she'll unlock (instead of half-empty coach/reads sections). */}
-      {!allSetup && <PersonalizedBloomPreview />}
+          Today she'll unlock (instead of half-empty coach/reads sections).
+          Once she's completed the full onboarding, everything is set up, so we
+          always show the COMPLETE Today — never the locked peek. */}
+      {!allSetup && !isOnboarded() && <PersonalizedBloomPreview />}
 
       {/* ══ DESKTOP: 60% main content + 40% sticky smart panel (CLAUDE.md) ══ */}
       <div className="lg:grid lg:grid-cols-5 lg:gap-x-6 lg:items-start">
