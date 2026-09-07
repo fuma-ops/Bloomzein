@@ -109,12 +109,11 @@ body.mode-reel .canvas{padding-bottom:12px}
 #notice .body{display:flex;flex-direction:column;gap:9px;flex:1;min-width:0}
 #notice button.x{flex:none;font:inherit;font-weight:800;color:#fff;opacity:.7;background:transparent;padding:0 2px}
 #notice button.x:hover{opacity:1}
-#notice .urlrow{display:flex;gap:6px}
-#notice .urlrow input{flex:1;min-width:0;font:inherit;font-weight:600;font-size:11px;color:#fff;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:6px 8px}
-#notice .urlrow .copybtn{flex:none;font:inherit;font-weight:800;color:#fff;background:var(--hot);
-  padding:6px 11px;border-radius:7px;white-space:nowrap}
-#notice .urlrow .copybtn:hover{filter:brightness(1.08)}
+#notice .actrow{display:flex}
+#notice .actbtn{font:inherit;font-weight:800;color:#fff;background:var(--hot);
+  padding:8px 13px;border-radius:8px;white-space:nowrap}
+#notice .actbtn:hover{filter:brightness(1.08)}
+#notice .actbtn[disabled]{opacity:.6;cursor:default}
 .framedhint{display:none;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--muted)}
 body.framed .framedhint{display:flex}
 .framedhint button{font:inherit;font-weight:800;color:var(--hot);background:transparent;text-decoration:underline;padding:0}
@@ -779,7 +778,7 @@ body.counting .count{display:grid}
         <button class="ghost" id="playReelBtn">
           <svg width="14" height="14"><use href="#i-rec"/></svg>Play reel
         </button>
-        <span class="framedhint">Export needs its own browser tab <button type="button" id="framedWhy">how?</button></span>
+        <span class="framedhint">Export can't record here <button type="button" id="framedWhy">what to do</button></span>
         <button class="rec" id="exportReelBtn">
           <svg width="14" height="14" style="color:#fff"><use href="#i-grid"/></svg>Export &amp; download
         </button>
@@ -2142,40 +2141,97 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && document.b
    and window.open alike, so a link here is a button that does nothing.
    Copy-and-paste into the address bar is the one route out that always
    works, so that is what the notice offers. */
-function notice(msg, ms = 7000, url = null) {
+function notice(msg, ms = 7000, action = null) {
   $("#notice")?.remove();
   const el = document.createElement("div");
   el.id = "notice";
-  el.innerHTML = `<div class="body"><span></span>${url ? `<div class="urlrow"><input type="text" readonly spellcheck="false"><button type="button" class="copybtn">Copy</button></div>` : ""}</div>
+  el.innerHTML = `<div class="body"><span></span>${action ? `<div class="actrow"><button type="button" class="actbtn"></button></div>` : ""}</div>
     <button type="button" class="x" aria-label="Dismiss">✕</button>`;
   $("span", el).textContent = msg;
-  if (url) {
-    const input = $("input", el);
-    input.value = url;
-    input.addEventListener("focus", () => input.select());
-    input.addEventListener("click", () => input.select());
-    $(".copybtn", el).addEventListener("click", async e => {
-      const btn = e.currentTarget;
-      input.select();
-      let ok = false;
-      try { await navigator.clipboard.writeText(url); ok = true; }
-      catch (err) { try { ok = document.execCommand("copy"); } catch (err2) { ok = false; } }
-      btn.textContent = ok ? "Copied" : "Select & copy";
-    });
+  if (action) {
+    const btn = $(".actbtn", el);
+    btn.textContent = action.label;
+    btn.addEventListener("click", () => action.run(btn));
   }
   $(".x", el).addEventListener("click", () => el.remove());
   document.body.appendChild(el);
   if (ms) setTimeout(() => el.remove(), ms);
+  return el;
 }
 
-/* Recording captures the browser tab, which a framed page is not allowed to
-   do — inside an embed the picker never even opens. The app cannot code
-   around that, and it cannot open a tab for you either (see notice()), so
-   all it can do is hand over the address to paste somewhere it will work.
-   A blob:/data:/srcdoc frame has no address worth pasting — say so instead
-   of offering a URL that leads nowhere. */
-const isFramed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
-const topLevelURL = /^https?:$/.test(location.protocol) ? location.href : null;
+/* Whether this page may capture the screen at all. Being in a frame is NOT
+   the test — a frame permitted display-capture records fine, and the
+   claude.ai viewer keeps the page framed even at its own address, so
+   "open it in a new tab" is advice that leads in a circle. Ask the
+   permissions policy directly; null means the browser won't say, and an
+   unknown answer must not produce a warning. */
+function captureAllowed() {
+  if (!navigator.mediaDevices?.getDisplayMedia) return false;
+  try {
+    const fp = document.featurePolicy || document.permissionsPolicy;
+    if (fp?.allowsFeature) return !!fp.allowsFeature("display-capture");
+  } catch (e) { }
+  return null;
+}
+
+/* ── the way out of a page that cannot record: save a standalone copy ──
+   Screen capture is refused to this page, and it cannot open a tab for
+   itself either (a sandboxed embed blocks target=_blank and window.open
+   alike). What it CAN do is hand over a complete .html file — the studio
+   plus this project's text, layout and clips baked in — which opens as an
+   ordinary local page where recording is allowed and the reel exports
+   normally. */
+async function collectSeed() {
+  const wanted = new Map();
+  const scan = st => { for (const m of Object.values(st?.media || {})) if (m?.id) wanted.set(m.id, m); };
+  Object.values(S.t || {}).forEach(scan);
+  Object.values(S.sceneState || {}).forEach(scan);
+  if (S.music?.id) wanted.set(S.music.id, { id: S.music.id, kind: "audio", name: S.music.name });
+  const media = [];
+  for (const [id, m] of wanted) {
+    const rec = await DB.get(id);
+    if (!rec?.blob) continue;
+    const dataURL = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = () => res(r.result); r.onerror = () => res(null);
+      r.readAsDataURL(rec.blob);
+    });
+    if (dataURL) media.push({ id, kind: rec.kind || m.kind || "image", name: rec.name || m.name || "", dataURL });
+  }
+  return { state: S, media };
+}
+async function saveStandaloneCopy(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = "Packing…"; }
+  let src = "";
+  try { src = await (await fetch(location.href, { cache: "no-store" })).text(); } catch (e) { }
+  if (!/<\/body>/i.test(src)) src = "<!doctype html>\n" + document.documentElement.outerHTML;
+  const seed = await collectSeed();
+  // "</" is escaped so a filename or caption can never close this script early
+  const tag = `<script>window.__BZ_SEED__=${JSON.stringify(seed).replace(/<\//g, "<\\/")}<\/script>`;
+  const out = src.replace(/<body([^>]*)>/i, m => m + "\n" + tag);
+  const blob = new Blob([out], { type: "text/html" });
+  const res = await deliverFile(blob, "bloomzein-post-studio.html");
+  if (res.ok) notice(`Saved bloomzein-post-studio.html (${(blob.size / 1048576).toFixed(1)} MB) — your clips and text are inside it. Open that file in Chrome and Export works there.`, 0);
+  else notice(res.msg, 10000);
+  if (btn) { btn.disabled = false; btn.textContent = "Save studio as a file"; }
+}
+const saveCopyAction = { label: "Save studio as a file", run: saveStandaloneCopy };
+
+/* the saved copy opens with the project already in it — but only ever
+   seeds a copy that has no project of its own, so re-opening the file
+   later never overwrites what was done in it since */
+async function importSeed() {
+  const seed = window.__BZ_SEED__;
+  if (!seed) return;
+  try { if (localStorage.getItem(KEY)) return; } catch (e) { }
+  if (seed.state) { S = Object.assign(blank(), seed.state); save(); }
+  for (const m of seed.media || []) {
+    try {
+      const blob = await (await fetch(m.dataURL)).blob();
+      await DB.put(m.id, blob, m.name || "", m.kind || "image");
+    } catch (e) { }
+  }
+}
 
 /* Inside the claude.ai artifact viewer a plain <a download> — blob: URLs
    included — is inert: a page only ever hands the viewer a file through the
@@ -2223,12 +2279,8 @@ async function runReel({ record = false } = {}) {
   let recorder = null, chunks = [], stream = null, track = null;
   if (record) {
     if (!navigator.mediaDevices?.getDisplayMedia) {
-      notice(isFramed
-        ? (topLevelURL
-          ? "Video export can't run inside this preview — screen capture is blocked in an embedded frame. Copy this address, paste it into a new browser tab, and Export works there."
-          : "Video export can't run inside this preview — screen capture is blocked in an embedded frame. Save this page as an .html file and open it in Chrome, and Export works there.")
-        : "This browser can't capture video. Recording needs Chrome, Edge or Firefox.",
-        0, isFramed ? topLevelURL : null);
+      notice("This page isn't allowed to record the screen, so it can't build the video here. Save the studio as a file — your clips and text come with it — then open that file in Chrome and Export works.",
+        0, saveCopyAction);
       return;
     }
     // Ask for the capture FIRST, while the click that started this still
@@ -2241,14 +2293,15 @@ async function runReel({ record = false } = {}) {
       });
     } catch (e) {
       const blocked = e?.name === "NotAllowedError";
+      // A picker that never opened is the page being refused permission; a
+      // picker the viewer closed is a dismissal. Only the first needs the file.
+      const refused = blocked && captureAllowed() === false;
       const why = !blocked
         ? "Couldn't start screen capture (" + (e?.name || "unknown error") + ")."
-        : isFramed
-          ? (topLevelURL
-            ? "No screen-capture picker can open inside this preview — that's why nothing happened. Copy this address and paste it into a new browser tab; there, Export opens the picker: choose \"This tab\" and tick \"Also share tab audio\" for your music."
-            : "No screen-capture picker can open inside this preview — that's why nothing happened. Save this page as an .html file, open it in Chrome, and Export works there: choose \"This tab\" in the picker and tick \"Also share tab audio\" for your music.")
-          : "Screen capture was dismissed. Click Export again, choose \"This tab\" in the picker, and tick \"Also share tab audio\" if you want your music in the file.";
-      notice(why, blocked && isFramed ? 0 : 16000, blocked && isFramed ? topLevelURL : null);
+        : refused
+          ? "This page isn't allowed to record the screen — that's why no picker appeared. Save the studio as a file (your clips and text come with it), open that file in Chrome, and Export works there."
+          : "No video was captured. If a picker appeared, click Export again and choose \"This tab\", ticking \"Also share tab audio\" for your music. If no picker appeared at all, this page isn't allowed to record — save the studio as a file and open that in Chrome instead.";
+      notice(why, 0, blocked ? saveCopyAction : null);
       return;
     }
     track = stream.getVideoTracks()[0];
@@ -2340,7 +2393,12 @@ function showBootBanner() {
     location.reload();
   });
 }
-safeBoot("mode/format toggles", () => {
+/* a copy saved out of a page that couldn't record carries the project with
+   it; import that BEFORE the first render, because applyMedia() clears a
+   media reference whose blob it can't find and would wipe the clips */
+async function boot() {
+  try { await importSeed(); } catch (e) { bootFailed = true; console.error("Post Studio: project import failed —", e); }
+  safeBoot("mode/format toggles", () => {
   document.body.classList.toggle("guides", S.guides);
   $("#guidesBtn").setAttribute("aria-pressed", String(S.guides));
   $$("#fmt button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fmt === S.fmt)));
@@ -2353,22 +2411,24 @@ safeBoot("mode/format toggles", () => {
   $("#transitionSel").value = S.transition || "fade";
   $("#resSel").value = String(S.exportRes || 1080);
 });
-safeBoot("thumbnails", buildThumbs);
-safeBoot("reel filmstrip", renderFilmstrip);
-safeBoot("stage", renderStage);
-safeBoot("settings panel", buildPanel);
-safeBoot("music", loadMusic);
-safeBoot("crop drag", wireCropDragGlobal);
-safeBoot("framed-embed hint", () => {
-  if (!isFramed) return;
+  safeBoot("thumbnails", buildThumbs);
+  safeBoot("reel filmstrip", renderFilmstrip);
+  safeBoot("stage", renderStage);
+  safeBoot("settings panel", buildPanel);
+  safeBoot("music", loadMusic);
+  safeBoot("crop drag", wireCropDragGlobal);
+  safeBoot("no-capture hint", () => {
+  // only when the browser positively says capture is refused — an unknown
+  // answer must not nag someone whose Export would have worked fine
+  if (captureAllowed() !== false) return;
   document.body.classList.add("framed");
-  $("#exportReelBtn").title = "Screen capture can't run inside an embedded frame — open this page in its own browser tab to export.";
+  $("#exportReelBtn").title = "This page isn't allowed to record the screen — save the studio as a file and open that in Chrome to export.";
   $("#framedWhy").addEventListener("click", () => {
-    notice(topLevelURL
-      ? "Recording the screen isn't allowed inside an embedded preview, and this frame can't open a tab for you either. Copy this address, paste it into a new browser tab, and Export works there."
-      : "Recording the screen isn't allowed inside an embedded preview. Save this page as an .html file and open it in Chrome — Export works there.",
-      0, topLevelURL);
+    notice("Recording the screen isn't allowed on this page, and it can't open a tab for itself either — so Export can't build the video here. Save the studio as a file instead: your clips, text and reel come with it, and opening that file in Chrome lets Export record and download normally.",
+      0, saveCopyAction);
   });
 });
-if (bootFailed) showBootBanner();
+  if (bootFailed) showBootBanner();
+}
+boot();
 </script>
