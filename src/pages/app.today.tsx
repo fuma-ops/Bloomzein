@@ -37,7 +37,7 @@ import { PlusLock, DiscoverBloomPlus } from "@/components/bloom/premium/PremiumK
 import { PHASE_PLAN as SHARED_PHASE_PLAN, LAUNCH_YOGA_KEY, LAUNCH_WORKOUT_KEY, LAUNCH_MEAL_KEY, DIARY_PROMPT_KEY, writeLaunch } from "@/components/bloom/phasePlan";
 import { readWorkoutStreak, readYogaStreak, readTodayPlannedDay, readYogaPlanDays, readWorkoutPlanDays, hasMealPlan, hasMovementPlan, SYMPTOM_OPTIONS, readSymptomsForDay, toggleSymptomForDay, isPillTaken, setPillTaken as savePillTaken, readEatenToday, didWorkoutToday, didYogaToday, hasDiaryEntryToday, readYogaFocusForDay, YOGA_FOCUS } from "@/lib/crossToolData";
 import { hasDietSetup } from "@/components/bloom/recipes/data";
-import { startGuide, endGuide, isGuided } from "@/lib/guidedSetup";
+import { startGuide, endGuide, isGuided, isOnboarded } from "@/lib/guidedSetup";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { BloomDayCelebration } from "@/components/bloom/BloomDayCelebration";
 import { RECIPES, PHASE_MICROS, recipeImageSrc } from "@/components/bloom/recipes/data";
@@ -1208,8 +1208,9 @@ export default function TodayPage() {
       </div>
 
       {/* ── BUILD YOUR WORLD — rich guided setup cards; disappears once every
-             tool is configured. (self-hides when all steps are done) ── */}
-      <BuildBloomWorld moodDone={!!mood} onLogMood={() => setMoodPickerOpen(true)} />
+             tool is configured. Hidden entirely once she's completed the full
+             post-signup onboarding (which already set every tool up). ── */}
+      {!isOnboarded() && <BuildBloomWorld moodDone={!!mood} onLogMood={() => setMoodPickerOpen(true)} />}
 
       {/* Until her world is fully set up, show a blurred, locked peek of the real
           Today she'll unlock (instead of half-empty coach/reads sections). */}

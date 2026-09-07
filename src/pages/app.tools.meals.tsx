@@ -65,7 +65,7 @@ import { StepText } from "@/components/bloom/recipes/StepText";
 
 
 
-import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, removeShoppingExtra, ownsIngredient, resetToolState, readMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
+import { readTodaySymptoms, readWorkoutPlanDays, readYogaPlanDays, readShoppingExtras, removeShoppingExtra, ownsIngredient, resetToolState, readMonthPlan, writeMonthPlan, currentMealWeekIndex, MEAL_WEEKS, MEALS_MONTH_KEY, type MonthPlan } from "@/lib/crossToolData";
 import { flushCloudSync } from "@/lib/cloudSync";
 import { trainingAwarenessComment, normalizePhase } from "@/components/bloom/trainingFuel";
 import { readCyclePhase, hasCycleSettings, readCycleSettings, phaseForDay, toDietPhase, PHASE_LABEL } from "@/components/bloom/cyclePhase";
@@ -387,6 +387,45 @@ function buildWeek(
     if (dailyTarget && portions[d]) normalizeDayCalories(plan[d], portions[d], byId, dailyTarget);
   });
   return { plan, portions };
+}
+
+/**
+ * Onboarding seed: build & save a full cycle-synced 4-week meal MONTH straight
+ * from the user's saved Diet profile — no UI needed. Called at the end of the
+ * post-signup onboarding so the Meals tool (and Today) open already planned,
+ * exactly as if she'd tapped "make it match my phase" in the Planner. Returns
+ * a small summary for the onboarding preview page.
+ */
+export function seedMealMonthFromProfile(): { meals: number; sample: string[] } {
+  try {
+    const profile = readDietProfile();
+    const pool = RECIPES.filter((r) => passesMyRules(r, profile));
+    const target = computeTargets(true).calories;
+    const real = readCyclePhase();
+    const phase = (real && real !== "any" ? real : "follicular") as CyclePhase;
+    const proteinBoost = new Set<string>(readWorkoutPlanDays());
+    const plans: MonthPlan["plans"] = [];
+    const portions: MonthPlan["portions"] = [];
+    const usedSoFar = new Set<string>();
+    for (let i = 0; i < MEAL_WEEKS; i++) {
+      const fresh = pool.filter((r) => !usedSoFar.has(r.id));
+      const usePool = fresh.length >= 28 ? fresh : pool;
+      const { plan, portions: pt } = buildWeek(usePool, "cycle", phase, new Set(), {}, proteinBoost, target);
+      plans.push(plan);
+      portions.push(pt);
+      Object.values(plan).forEach((d) => Object.values(d).forEach((id) => { if (id) usedSoFar.add(id as string); }));
+    }
+    writeMonthPlan({ plans, portions });
+    // Mark it as tuned to her goal + owned (Diet won't silently overwrite it).
+    try { localStorage.setItem("bloom:meals-plan-goal", profile.goal); localStorage.removeItem("bloom:meals-from-diet"); } catch {}
+    // Small preview: count planned slots + a few recipe names from week 1.
+    const byId = new Map(RECIPES.map((r) => [r.id, r.name] as const));
+    let meals = 0; const sample: string[] = [];
+    Object.values(plans[0]).forEach((d) => Object.values(d).forEach((id) => {
+      if (id) { meals++; if (sample.length < 3) { const n = byId.get(id as string); if (n && !sample.includes(n)) sample.push(n); } }
+    }));
+    return { meals: meals * MEAL_WEEKS, sample };
+  } catch { return { meals: 0, sample: [] }; }
 }
 
 // Workout → Meals: after a strength/tonify session today, bias tonight's
