@@ -2218,10 +2218,22 @@ async function saveStandaloneCopy(btn, skipMedia = false) {
     // into the middle of the script. Anchored at ^, nothing in the code can
     // match, and sitting right after the doctype keeps standards mode while
     // guaranteeing the seed runs before the app's own scripts.
-    if (!/^\s*<!doctype/i.test(src)) src = "<!doctype html>\n" + document.documentElement.outerHTML;
+    // Keep the FETCHED source whenever there is one: fetch decodes as UTF-8
+    // regardless of what header the page was served with, whereas
+    // documentElement.outerHTML inherits whatever the browser guessed — so
+    // when the page is served without a charset, outerHTML is already
+    // mojibake and saving it bakes the damage in. outerHTML is a last
+    // resort only, for when the fetch itself failed.
+    if (src) { if (!/^\s*<!doctype/i.test(src)) src = "<!doctype html>\n" + src; }
+    else src = "<!doctype html>\n" + document.documentElement.outerHTML;
     const doctype = /^\s*<!doctype[^>]*>/i.exec(src);
     const cut = doctype[0].length;
-    const parts = [src.slice(0, cut), "\n<script>window.__BZ_SEED__={\"state\":",
+    const seedId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    // declare the encoding first: the saved file is opened from disk with no
+    // server header to say UTF-8, and without this the browser sniffs Latin-1
+    // and mangles every accent, dash and symbol in the page AND in your text
+    const parts = [src.slice(0, cut), "\n<meta charset=\"utf-8\">",
+      "\n<script>window.__BZ_SEED__={\"id\":" + JSON.stringify(seedId) + ",\"state\":",
       JSON.stringify(S).replace(/<\//g, "<\\/"), ",\"media\":["];
     const tailHTML = src.slice(cut);
 
@@ -2257,7 +2269,7 @@ async function saveStandaloneCopy(btn, skipMedia = false) {
     parts.push("]};<\/script>", tailHTML);
 
     label("Saving…");
-    const blob = new Blob(parts, { type: "text/html" });
+    const blob = new Blob(parts, { type: "text/html;charset=utf-8" });
     const res = await deliverFile(blob, "bloomzein-post-studio.html");
     done();
     if (res.ok) notice(skipMedia
@@ -2271,20 +2283,30 @@ async function saveStandaloneCopy(btn, skipMedia = false) {
 }
 const saveCopyAction = { label: "Save studio as a file", run: saveStandaloneCopy };
 
-/* the saved copy opens with the project already in it — but only ever
-   seeds a copy that has no project of its own, so re-opening the file
-   later never overwrites what was done in it since */
+/* A saved copy carries its project and loads it on first open. The test is
+   NOT "does this browser already have a project" — opening any earlier
+   saved copy leaves one behind, and file:// pages often share one storage
+   area, so that check silently skipped the import and the file opened
+   empty. Instead each saved copy carries its own id and is imported once
+   per browser: a different copy always loads, and re-opening the same file
+   keeps whatever was edited in it since. */
+const SEED_MARK = KEY + ":seed";
 async function importSeed() {
   const seed = window.__BZ_SEED__;
-  if (!seed) return;
-  try { if (localStorage.getItem(KEY)) return; } catch (e) { }
-  if (seed.state) { S = Object.assign(blank(), seed.state); save(); }
+  if (!seed?.id) return null;
+  try { if (localStorage.getItem(SEED_MARK) === seed.id) return null; } catch (e) { }
+  if (seed.state) S = Object.assign(blank(), seed.state);
+  let loaded = 0;
   for (const m of seed.media || []) {
     try {
       const blob = await (await fetch(m.dataURL)).blob();
       await DB.put(m.id, blob, m.name || "", m.kind || "image");
+      loaded++;
     } catch (e) { }
   }
+  try { localStorage.setItem(SEED_MARK, seed.id); } catch (e) { }
+  save();
+  return { clips: loaded, expected: (seed.media || []).length };
 }
 
 /* Inside the claude.ai artifact viewer a plain <a download> — blob: URLs
@@ -2451,7 +2473,8 @@ function showBootBanner() {
    it; import that BEFORE the first render, because applyMedia() clears a
    media reference whose blob it can't find and would wipe the clips */
 async function boot() {
-  try { await importSeed(); } catch (e) { bootFailed = true; console.error("Post Studio: project import failed —", e); }
+  let imported = null;
+  try { imported = await importSeed(); } catch (e) { bootFailed = true; console.error("Post Studio: project import failed —", e); }
   safeBoot("mode/format toggles", () => {
   document.body.classList.toggle("guides", S.guides);
   $("#guidesBtn").setAttribute("aria-pressed", String(S.guides));
@@ -2483,6 +2506,11 @@ async function boot() {
   });
 });
   if (bootFailed) showBootBanner();
+  if (imported) {
+    notice(imported.clips === imported.expected
+      ? `Your project loaded from this file — ${imported.clips} clip${imported.clips === 1 ? "" : "s"} restored. Export works here.`
+      : `Project loaded, but only ${imported.clips} of ${imported.expected} clips came through — re-add the missing ones before exporting.`, 9000);
+  }
 }
 boot();
 </script>
