@@ -29,3 +29,22 @@ export function endGuide(): void {
   try { sessionStorage.removeItem(GUIDE_KEY); } catch {}
   try { window.dispatchEvent(new Event("bloom:guide-updated")); } catch {}
 }
+
+/**
+ * Full-screen post-signup ONBOARDING (the "Let's make Bloomzein yours" flow).
+ * Once she completes it, every tool is set up from her answers, so the old
+ * per-tool "Build your Bloom world" checklist on Today is hidden. This flag is
+ * durable (localStorage) so the onboarding only ever runs once.
+ */
+const ONBOARDED_KEY = "bloom:onboarded";
+
+/** True once she has finished the full onboarding flow at least once. */
+export function isOnboarded(): boolean {
+  try { return localStorage.getItem(ONBOARDED_KEY) === "1"; } catch { return false; }
+}
+
+/** Mark the onboarding as complete (all tools set up). */
+export function setOnboarded(): void {
+  try { localStorage.setItem(ONBOARDED_KEY, "1"); } catch {}
+  try { window.dispatchEvent(new Event("bloom:guide-updated")); } catch {}
+}

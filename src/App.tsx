@@ -45,6 +45,7 @@ const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
 const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
 const IntroPreviewPage = lazyRetry(() => import("./pages/app.intro-preview"));
 const WelcomeScreen = lazyRetry(() => import("./pages/app.welcome-screen"));
+const BloomOnboarding = lazyRetry(() => import("./components/bloom/onboarding/BloomOnboarding"));
 const TodayPage = lazyRetry(() => import("./pages/app.today"));
 const ReadPage = lazyRetry(() => import("./pages/app.read"));
 const ShopPage = lazyRetry(() => import("./pages/app.shop"));
@@ -57,7 +58,7 @@ import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { hasCycleSettings } from "./components/bloom/cyclePhase";
-import { isGuided } from "./lib/guidedSetup";
+import { isGuided, isOnboarded } from "./lib/guidedSetup";
 import { AuthGate } from "./components/bloom/AuthGate";
 import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
 import { ArrowLeft } from "lucide-react";
@@ -171,6 +172,12 @@ function AppContent() {
     return <Suspense fallback={<PageLoader />}><WelcomeScreen /></Suspense>;
   }
 
+  // Standalone DESIGN PREVIEW of the new-user onboarding flow — writes nothing,
+  // for reviewing the screens without resetting an account.
+  if (path === "/onboarding") {
+    return <Suspense fallback={<PageLoader />}><BloomOnboarding preview onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); }} /></Suspense>;
+  }
+
   // Legal pages — public, standalone, no auth (needed before collecting data)
   if (path === "/privacy") {
     return <Suspense fallback={<PageLoader />}><PrivacyPage /></Suspense>;
@@ -271,6 +278,18 @@ function AppContent() {
   if (content) {
     // Today, Calendar, Tools and Me require an account — Shop and Read stay public for visibility/SEO
     const isProtected = path === "/app/today" || path === "/app/calendar" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
+
+    // ── New-user ONBOARDING ──────────────────────────────────────────────────
+    // The full "Let's make Bloomzein yours" flow. Runs once for a signed-in user
+    // who hasn't set up her cycle yet, and sets up EVERY tool from her answers —
+    // so there's no separate Today setup afterwards.
+    if (isProtected && user && !isOnboarded() && !hasCycleSettings()) {
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <BloomOnboarding onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); window.scrollTo(0, 0); }} />
+        </Suspense>
+      );
+    }
     return (
       <>
         <AppShell currentPath={path}>
